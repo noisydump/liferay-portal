@@ -28,7 +28,7 @@ import javax.annotation.Generated;
  * @generated
  */
 @Generated("")
-public class StructuredContentFolder {
+public class StructuredContentFolder implements Cloneable {
 
 	public static enum ViewableBy {
 
@@ -61,16 +61,17 @@ public class StructuredContentFolder {
 
 	}
 
-	public Map<String, Map> getActions() {
+	public Map<String, Map<String, String>> getActions() {
 		return actions;
 	}
 
-	public void setActions(Map<String, Map> actions) {
+	public void setActions(Map<String, Map<String, String>> actions) {
 		this.actions = actions;
 	}
 
 	public void setActions(
-		UnsafeSupplier<Map<String, Map>, Exception> actionsUnsafeSupplier) {
+		UnsafeSupplier<Map<String, Map<String, String>>, Exception>
+			actionsUnsafeSupplier) {
 
 		try {
 			actions = actionsUnsafeSupplier.get();
@@ -80,7 +81,7 @@ public class StructuredContentFolder {
 		}
 	}
 
-	protected Map<String, Map> actions;
+	protected Map<String, Map<String, String>> actions;
 
 	public Creator getCreator() {
 		return creator;
@@ -371,6 +372,11 @@ public class StructuredContentFolder {
 	}
 
 	protected ViewableBy viewableBy;
+
+	@Override
+	public StructuredContentFolder clone() throws CloneNotSupportedException {
+		return (StructuredContentFolder)super.clone();
+	}
 
 	@Override
 	public boolean equals(Object object) {

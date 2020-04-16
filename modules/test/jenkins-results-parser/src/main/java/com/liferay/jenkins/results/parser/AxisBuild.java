@@ -113,6 +113,12 @@ public class AxisBuild extends BaseBuild {
 		return axisVariable;
 	}
 
+	public String getBatchName() {
+		BatchBuild parentBatchBuild = getParentBatchBuild();
+
+		return parentBatchBuild.getBatchName();
+	}
+
 	@Override
 	public String getBrowser() {
 		Build parentBuild = getParentBuild();
@@ -342,6 +348,16 @@ public class AxisBuild extends BaseBuild {
 		Build parentBuild = getParentBuild();
 
 		return parentBuild.getOperatingSystem();
+	}
+
+	public BatchBuild getParentBatchBuild() {
+		Build parentBuild = getParentBuild();
+
+		if (parentBuild instanceof BatchBuild) {
+			return (BatchBuild)parentBuild;
+		}
+
+		return null;
 	}
 
 	@Override

@@ -104,9 +104,13 @@ public class JournalArticleLocalizationModelImpl
 
 	public static final long ARTICLEPK_COLUMN_BITMASK = 1L;
 
-	public static final long LANGUAGEID_COLUMN_BITMASK = 2L;
+	public static final long COMPANYID_COLUMN_BITMASK = 2L;
 
-	public static final long ARTICLELOCALIZATIONID_COLUMN_BITMASK = 4L;
+	public static final long LANGUAGEID_COLUMN_BITMASK = 4L;
+
+	public static final long TITLE_COLUMN_BITMASK = 8L;
+
+	public static final long ARTICLELOCALIZATIONID_COLUMN_BITMASK = 16L;
 
 	public static void setEntityCacheEnabled(boolean entityCacheEnabled) {
 		_entityCacheEnabled = entityCacheEnabled;
@@ -344,7 +348,19 @@ public class JournalArticleLocalizationModelImpl
 
 	@Override
 	public void setCompanyId(long companyId) {
+		_columnBitmask |= COMPANYID_COLUMN_BITMASK;
+
+		if (!_setOriginalCompanyId) {
+			_setOriginalCompanyId = true;
+
+			_originalCompanyId = _companyId;
+		}
+
 		_companyId = companyId;
+	}
+
+	public long getOriginalCompanyId() {
+		return _originalCompanyId;
 	}
 
 	@Override
@@ -381,7 +397,17 @@ public class JournalArticleLocalizationModelImpl
 
 	@Override
 	public void setTitle(String title) {
+		_columnBitmask |= TITLE_COLUMN_BITMASK;
+
+		if (_originalTitle == null) {
+			_originalTitle = _title;
+		}
+
 		_title = title;
+	}
+
+	public String getOriginalTitle() {
+		return GetterUtil.getString(_originalTitle);
 	}
 
 	@Override
@@ -537,10 +563,18 @@ public class JournalArticleLocalizationModelImpl
 		JournalArticleLocalizationModelImpl
 			journalArticleLocalizationModelImpl = this;
 
+		journalArticleLocalizationModelImpl._originalCompanyId =
+			journalArticleLocalizationModelImpl._companyId;
+
+		journalArticleLocalizationModelImpl._setOriginalCompanyId = false;
+
 		journalArticleLocalizationModelImpl._originalArticlePK =
 			journalArticleLocalizationModelImpl._articlePK;
 
 		journalArticleLocalizationModelImpl._setOriginalArticlePK = false;
+
+		journalArticleLocalizationModelImpl._originalTitle =
+			journalArticleLocalizationModelImpl._title;
 
 		journalArticleLocalizationModelImpl._originalLanguageId =
 			journalArticleLocalizationModelImpl._languageId;
@@ -676,10 +710,13 @@ public class JournalArticleLocalizationModelImpl
 	private long _ctCollectionId;
 	private long _articleLocalizationId;
 	private long _companyId;
+	private long _originalCompanyId;
+	private boolean _setOriginalCompanyId;
 	private long _articlePK;
 	private long _originalArticlePK;
 	private boolean _setOriginalArticlePK;
 	private String _title;
+	private String _originalTitle;
 	private String _description;
 	private String _languageId;
 	private String _originalLanguageId;

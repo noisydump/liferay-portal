@@ -15,69 +15,13 @@
 import {ClayCheckbox, ClayInput} from '@clayui/form';
 import {Treeview} from 'frontend-js-components-web';
 import PropTypes from 'prop-types';
-import React, {useState, useEffect, useMemo, useContext} from 'react';
+import React, {useEffect, useMemo, useState} from 'react';
 
-import {ConfigContext} from '../config/index';
 import {useSelector} from '../store/index';
 import AllowedFragmentTreeNode from './AllowedFragmentTreeNode';
 
-const getSelectedNodeIds = (
-	allowNewFragmentEntries,
-	fragmentEntryKeys = [],
-	fragmentEntryKeysArray
-) => {
-	return allowNewFragmentEntries
-		? fragmentEntryKeysArray.filter(
-				fragmentEntryKey =>
-					!fragmentEntryKeys.includes(fragmentEntryKey)
-		  )
-		: fragmentEntryKeys;
-};
-
-const toNodes = collections => {
-	return [
-		{
-			children: collections.map(collection => {
-				const children = collection.fragmentEntries.map(
-					fragmentEntry => ({
-						id: fragmentEntry.fragmentEntryKey,
-						name: fragmentEntry.name
-					})
-				);
-
-				return {
-					children,
-					expanded: false,
-					id: collection.fragmentCollectionId,
-					name: collection.name
-				};
-			}),
-			expanded: true,
-			id: 'lfr-all-fragments-id',
-			name: Liferay.Language.get('all-fragments')
-		}
-	];
-};
-
-const toFragmentEntryKeysArray = collections => {
-	const fragmentEntryKeysArray = [];
-
-	collections.forEach(collection => {
-		collection.fragmentEntries.forEach(fragmentEntry =>
-			fragmentEntryKeysArray.push(fragmentEntry.fragmentEntryKey)
-		);
-
-		fragmentEntryKeysArray.push(collection.fragmentCollectionId);
-	});
-
-	fragmentEntryKeysArray.push('lfr-all-fragments-id');
-
-	return fragmentEntryKeysArray;
-};
-
-const AllowedFragmentSelector = ({onSelectedFragment}) => {
-	const {fragments} = useContext(ConfigContext);
-	const layoutData = useSelector(state => state.layoutData);
+const AllowedFragmentSelector = ({dropZoneConfig, onSelectedFragment}) => {
+	const fragments = useSelector(state => state.fragments);
 
 	const fragmentEntryKeysArray = useMemo(
 		() => toFragmentEntryKeysArray(fragments),
@@ -85,11 +29,11 @@ const AllowedFragmentSelector = ({onSelectedFragment}) => {
 	);
 
 	const initialAllowNewFragmentEntries =
-		layoutData.allowNewFragmentEntries == undefined
+		dropZoneConfig.allowNewFragmentEntries == undefined
 			? true
-			: layoutData.allowNewFragmentEntries;
+			: dropZoneConfig.allowNewFragmentEntries;
 
-	const initialFragmentEntryKeys = layoutData.fragmentEntryKeys || [];
+	const initialFragmentEntryKeys = dropZoneConfig.fragmentEntryKeys || [];
 
 	const [filter, setFilter] = useState('');
 
@@ -116,13 +60,13 @@ const AllowedFragmentSelector = ({onSelectedFragment}) => {
 
 		onSelectedFragment({
 			allowNewFragmentEntries,
-			selectedFragments: newFragmentEntryKeys
+			selectedFragments: newFragmentEntryKeys,
 		});
 	}, [
 		fragmentEntryKeys,
 		allowNewFragmentEntries,
 		fragmentEntryKeysArray,
-		onSelectedFragment
+		onSelectedFragment,
 	]);
 
 	return (
@@ -136,11 +80,11 @@ const AllowedFragmentSelector = ({onSelectedFragment}) => {
 					type="text"
 				/>
 
-				<div className="fragments-editor__allowed-fragment__tree">
+				<div className="page-editor__allowed-fragment__tree">
 					<Treeview
 						filterQuery={filter}
 						inheritSelection
-						initialSelectedNodeIds={fragmentEntryKeys}
+						initialSelectedNodeIds={[...fragmentEntryKeys]}
 						NodeComponent={AllowedFragmentTreeNode}
 						nodes={nodes}
 						onSelectedNodesChange={setFragmentEntryKeys}
@@ -148,7 +92,7 @@ const AllowedFragmentSelector = ({onSelectedFragment}) => {
 				</div>
 			</div>
 
-			<div className="fragments-editor__allowed-fragment__new-fragments-checkbox">
+			<div className="page-editor__allowed-fragment__new-fragments-checkbox">
 				<ClayCheckbox
 					aria-label={Liferay.Language.get(
 						'select-new-fragments-automatically'
@@ -167,8 +111,66 @@ const AllowedFragmentSelector = ({onSelectedFragment}) => {
 };
 
 AllowedFragmentSelector.propTypes = {
-	onSelectedFragment: PropTypes.func.isRequired
+	dropZoneConfig: PropTypes.shape({
+		allowNewFragmentEntries: PropTypes.bool,
+		fragmentEntryKeys: PropTypes.array,
+	}).isRequired,
+	onSelectedFragment: PropTypes.func.isRequired,
 };
 
 export {AllowedFragmentSelector};
 export default AllowedFragmentSelector;
+
+const getSelectedNodeIds = (
+	allowNewFragmentEntries,
+	fragmentEntryKeys = [],
+	fragmentEntryKeysArray
+) => {
+	return allowNewFragmentEntries
+		? fragmentEntryKeysArray.filter(
+				fragmentEntryKey =>
+					!fragmentEntryKeys.includes(fragmentEntryKey)
+		  )
+		: fragmentEntryKeys;
+};
+
+const toNodes = collections => {
+	return [
+		{
+			children: collections.map(collection => {
+				const children = collection.fragmentEntries.map(
+					fragmentEntry => ({
+						id: fragmentEntry.fragmentEntryKey,
+						name: fragmentEntry.name,
+					})
+				);
+
+				return {
+					children,
+					expanded: false,
+					id: collection.fragmentCollectionId,
+					name: collection.name,
+				};
+			}),
+			expanded: true,
+			id: 'lfr-all-fragments-id',
+			name: Liferay.Language.get('all-fragments'),
+		},
+	];
+};
+
+const toFragmentEntryKeysArray = collections => {
+	const fragmentEntryKeysArray = [];
+
+	collections.forEach(collection => {
+		collection.fragmentEntries.forEach(fragmentEntry =>
+			fragmentEntryKeysArray.push(fragmentEntry.fragmentEntryKey)
+		);
+
+		fragmentEntryKeysArray.push(collection.fragmentCollectionId);
+	});
+
+	fragmentEntryKeysArray.push('lfr-all-fragments-id');
+
+	return fragmentEntryKeysArray;
+};

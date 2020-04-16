@@ -26,6 +26,8 @@ definition {
 
 		SelectFrameTop();
 
+		Pause(locator1 = "3000");
+
 		AssertClick(
 			locator1 = "Button#DONE",
 			value1 = "Done");
@@ -308,7 +310,7 @@ definition {
 	macro assignSiteRoleCP {
 		LexiconCard.clickEllipsisItem(
 			card = "${resourceName}",
-			item = "Assign Site Roles");
+			item = "Assign Roles");
 
 		SelectFrame(locator1 = "IFrame#DIALOG");
 
@@ -335,9 +337,9 @@ definition {
 		Click(locator1 = "SiteMembershipsUserGroups#USER_GROUP_TABLE_ACTIONS");
 
 		AssertClick(
-			key_menuItem = "Assign Site Roles",
+			key_menuItem = "Assign Roles",
 			locator1 = "MenuItem#ANY_MENU_ITEM",
-			value1 = "Assign Site Roles");
+			value1 = "Assign Roles");
 
 		SelectFrame(locator1 = "IFrame#DIALOG");
 
@@ -359,9 +361,17 @@ definition {
 
 		AssertVisible(locator1 = "Button#DONE");
 
-		SelectFrame(locator1 = "IFrame#DIALOG");
+		if (isSet(depotName)) {
+			SelectFrame(locator1 = "IFrame#ADD_USERS_TO_ASSET_LIBRARY");
+		}
+
+		else {
+			SelectFrame(locator1 = "IFrame#ADD_USERS_TO_SITE");
+		}
 
 		Pause(locator1 = "3000");
+
+		LexiconEntry.changeDisplayStyle(displayStyle = "cards");
 
 		if (isSet(userMiddleName)) {
 			LexiconCard.checkCardCheckbox(card = "${userFirstName} ${userMiddleName} ${userLastName}");
@@ -830,6 +840,8 @@ definition {
 			panel = "Site Administration",
 			portlet = "Settings");
 
+		Pause(locator1 = "5000");
+
 		if ("${selectMembershipType}" == "true") {
 			AssertTextEquals(
 				locator1 = "SitesEditSite#MEMBERSHIP_OPTIONS_MEMBERSHIP_TYPE_LABEL",
@@ -881,6 +893,58 @@ definition {
 		LexiconCard.clickEllipsisItem(
 			card = "${userScreenName}",
 			item = "Remove Membership");
+
+		Confirm();
+
+		Alert.viewSuccessMessage();
+	}
+
+	macro removeOrganizationCP {
+		LexiconEntry.changeDisplayStyle(displayStyle = "table");
+
+		if (isSet(bulkEditing)) {
+			for (var orgName : list "${orgNameList}") {
+				Check(
+					key_tableEntry = "${userGroupName}",
+					locator1 = "LexiconTable#TABLE_ENTRY_CHECKBOX");
+			}
+
+			ClickNoError(locator1 = "Icon#DELETE");
+		}
+		else {
+			Search.searchCP(searchTerm = "${orgName}");
+
+			LexiconTable.clickEllipsisItem(
+				item = "Remove Membership",
+				tableEntry = "${orgName}");
+		}
+
+		Confirm();
+
+		Alert.viewSuccessMessage();
+	}
+
+	macro removeUserGroupCP {
+		LexiconEntry.changeDisplayStyle(displayStyle = "table");
+
+		if (isSet(bulkEditing)) {
+			for (var userGroupName : list "${userGroupNameList}") {
+				Check(
+					key_tableEntry = "${userGroupName}",
+					locator1 = "LexiconTable#TABLE_ENTRY_CHECKBOX");
+			}
+
+			ClickNoError(locator1 = "Icon#DELETE");
+		}
+		else {
+			Search.searchCP(searchTerm = "${userGroupName}");
+
+			Click.waitForMenuToggleJSClick(
+				key_rowEntry = "${userGroupName}",
+				locator1 = "Icon#TABLE_VERTICAL_ELLIPSIS");
+
+			MenuItem.clickNoError(menuItem = "Remove Membership");
+		}
 
 		Confirm();
 
@@ -1012,7 +1076,7 @@ definition {
 
 		LexiconEntry.openEntryMenu(rowEntry = "${userGroupName}");
 
-		MenuItem.click(menuItem = "Unassign Site Roles");
+		MenuItem.click(menuItem = "Unassign Roles");
 
 		SelectFrame(locator1 = "IFrame#DIALOG");
 
@@ -1029,6 +1093,8 @@ definition {
 
 	macro viewCannotAdd {
 		LexiconEntry.gotoAdd();
+
+		MetalComponent.waitForCard(card = "Blank Site");
 
 		LexiconEntry.gotoEntry(rowEntry = "Blank Site");
 
@@ -1124,6 +1190,34 @@ definition {
 				locator1 = "Select#DEFAULT_LANGUAGE",
 				value1 = "${defaultSiteLanguage}");
 		}
+	}
+
+	macro viewCustomSiteLogoInDifferentViews {
+		ProductMenuHelper.expandPanel(panel = "Site Administration");
+
+		ProductMenuHelper.openWorkspace();
+
+		SelectFrame(locator1 = "IFrame#DIALOG");
+
+		Pause(locator1 = "3000");
+
+		Navigator.gotoNavItem(navItem = "My Sites");
+
+		LexiconEntry.changeDisplayStyle(displayStyle = "Cards");
+
+		SiteSelector._searchSite(site = "${site}");
+
+		AssertElementPresent(
+			key_card = "${site}",
+			locator1 = "LexiconCard#CARD_CUSTOM_LOGO");
+
+		SiteSelector._searchSite(site = "${site}");
+
+		LexiconEntry.changeDisplayStyle(displayStyle = "List");
+
+		AssertElementPresent(
+			key_listEntry = "${site}",
+			locator1 = "LexiconList#LIST_CUSTOM_LOGO");
 	}
 
 	macro viewGlobalLandingDefault {

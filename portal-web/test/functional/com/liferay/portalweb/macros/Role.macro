@@ -100,6 +100,7 @@ definition {
 
 	macro definePermissionCmdCP {
 		Role.editPermissionCmdCP(
+			assetLibrariesScope = "${assetLibrariesScope}",
 			define = "true",
 			permissionDefinitionKey = "${permissionDefinitionKey}",
 			permissionDefinitionKeyChange = "${permissionDefinitionKeyChange}",
@@ -109,6 +110,7 @@ definition {
 			permissionNavigationValue = "${permissionNavigationValue}",
 			remove = "${remove}",
 			roleTitle = "${roleTitle}",
+			roleTitleEdit = "${roleTitleEdit}",
 			roleType = "${roleType}",
 			roleUser = "${roleUser}",
 			siteNameScope = "${siteNameScope}");
@@ -116,8 +118,10 @@ definition {
 
 	macro definePermissionCP {
 		Role.definePermissionCmdCP(
+			assetLibrariesScope = "${assetLibrariesScope}",
 			permissionDefinitionKey = "${permissionDefinitionKey}",
 			roleTitle = "${roleTitle}",
+			roleTitleEdit = "${roleTitleEdit}",
 			roleType = "${roleType}",
 			roleUser = "${roleUser}",
 			siteNameScope = "${siteNameScope}");
@@ -126,7 +130,8 @@ definition {
 			permissionDefinitionKey = "${permissionDefinitionKey}",
 			permissionDefinitionValue = "${permissionDefinitionValue}",
 			permissionNavigationValue = "${permissionNavigationValue}",
-			remove = "${remove}");
+			remove = "${remove}",
+			siteNameScope = "${siteNameScope}");
 	}
 
 	macro definePermissionPG {
@@ -172,7 +177,7 @@ definition {
 	macro editPermissionCmdCP {
 		var key_roleTitle = "${roleTitle}";
 
-		if (contains("Organization,Site", "${roleType}")) {
+		if (contains("Asset Library,Organization,Site", "${roleType}")) {
 			Navigator.gotoNavItem(navItem = "${roleType} Roles");
 		}
 		else {
@@ -194,6 +199,14 @@ definition {
 			AssertClick(
 				locator1 = "ListGroupItem#ITEM_NAME_LINK",
 				value1 = "${roleTitle}");
+		}
+
+		if (isSet(roleTitleEdit)) {
+			PortletEntry.inputTitle(title = "${roleTitleEdit}");
+
+			AssertClick(
+				locator1 = "Button#SUBMIT",
+				value1 = "Save");
 		}
 
 		Navigator.gotoNavItem(navItem = "Define Permissions");
@@ -281,6 +294,10 @@ definition {
 				var permissionNavigationKey = "SITE_ADMIN_CATEGORIES";
 				var permissionNavigationValue = "Categories";
 			}
+			else if (contains("${permissionDefinitionKey}", "SITE_ADMIN_CONTENT_COLLECTIONS")) {
+				var permissionNavigationKey = "SITE_ADMIN_CONTENT_COLLECTIONS";
+				var permissionNavigationValue = "Collections";
+			}
 			else if (contains("${permissionDefinitionKey}", "SITE_ADMIN_CONTENT_DOCUMENTS_AND_MEDIA")) {
 				var permissionNavigationKey = "SITE_ADMIN_CONTENT_DOCUMENTS_AND_MEDIA";
 				var permissionNavigationValue = "Documents and Media";
@@ -354,12 +371,28 @@ definition {
 					locator1 = "RolesPermissions#${permissionDefinitionKeyChange}",
 					value1 = "Change");
 
-				var key_siteNameScope = "${siteNameScope}";
+				var key_card = "${siteNameScope}";
 
 				SelectFrame(locator1 = "RolesPermissionsSelectSite#SELECT_SITE_IFRAME");
 
+				AssertClick(
+					locator1 = "NavBar#RECENT",
+					value1 = "Recent");
+
+				if ("${assetLibrariesScope}" == "true") {
+					AssertClick(
+						locator1 = "NavBar#ASSET_LIBRARIES",
+						value1 = "Asset Libraries");
+				}
+				else {
+					AssertClick(
+						locator1 = "NavBar#MY_SITES",
+						value1 = "My Sites");
+
+				}
+
 				AssertClick.assertPartialTextClickAt(
-					locator1 = "RolesPermissionsSelectSite#SCOPE_SITES_TABLE_NAME",
+					locator1 = "LexiconCard#CARD_TITLE",
 					value1 = "${siteNameScope}");
 
 				var key_siteNameScope = "${siteNameScope}";
@@ -484,7 +517,7 @@ definition {
 	}
 
 	macro viewCP {
-		if (contains("Organization,Site", "${roleType}")) {
+		if (contains("Asset Library,Organization,Site", "${roleType}")) {
 			Navigator.gotoNavItem(navItem = "${roleType} Roles");
 		}
 		else {
@@ -596,6 +629,10 @@ definition {
 			var permissionNavigationKey = "SITE_ADMIN_CONTENT_BLOGS";
 			var permissionNavigationValue = "Blogs";
 		}
+		else if (contains("${permissionDefinitionKey}", "SITE_ADMIN_CONTENT_COLLECTIONS")) {
+			var permissionNavigationKey = "SITE_ADMIN_CONTENT_COLLECTIONS";
+			var permissionNavigationValue = "Collections";
+		}
 		else if (contains("${permissionDefinitionKey}", "SITE_ADMIN_CONTENT_DOCUMENTS_AND_MEDIA")) {
 			var permissionNavigationKey = "SITE_ADMIN_CONTENT_DOCUMENTS_AND_MEDIA";
 			var permissionNavigationValue = "Documents and Media";
@@ -642,9 +679,7 @@ definition {
 		}
 		else {
 			while (IsElementNotPresent(locator1 = "Roles#PERMISSION_TABLE_PERMISSIONS")) {
-				AssertClick(
-					locator1 = "Pagination#NEXT_LINK",
-					value1 = "Next");
+				Click(locator1 = "Pagination#NEXT_LINK");
 			}
 
 			AssertTextEquals.assertPartialText(
@@ -654,6 +689,13 @@ definition {
 			AssertTextEquals(
 				locator1 = "RolesPermissionsSummary#PERMISSION_TABLE_REMOVE",
 				value1 = "Remove");
+
+			if (isSet(siteNameScope)) {
+				AssertTextEquals(
+					key_siteNameScope = "${siteNameScope}",
+					locator1 = "RolesPermissionsSummary#PERMISSION_TABLE_SCOPE",
+					value1 = "${siteNameScope}");
+			}
 		}
 	}
 

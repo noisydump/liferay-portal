@@ -30,6 +30,10 @@ definition {
 		PortletEntry.inputName(name = "${pageTemplateName}");
 
 		Button.clickSave();
+
+		if (("${pageTemplateType}" == "Content Page Template") && (!(isSet(duplicatePageTemplate)))) {
+			PageEditor.assertFragmentSidebarLoaded();
+		}
 	}
 
 	macro _gotoAddCollection {
@@ -53,6 +57,7 @@ definition {
 
 	macro addDuplicatePageTemplate {
 		PageTemplatesAdmin._addPageTemplate(
+			duplicatePageTemplate = "${duplicatePageTemplate}",
 			menuItem = "${menuItem}",
 			pageTemplateName = "${pageTemplateName}",
 			pageTemplateType = "${pageTemplateType}",
@@ -80,10 +85,6 @@ definition {
 			pageTemplateName = "${pageTemplateName}",
 			pageTemplateType = "${pageTemplateType}",
 			siteTemplate = "${siteTemplate}");
-
-		if ("${pageTemplateType}" == "Content Page Template") {
-			PageEditor.assertFragmentSidebarLoaded();
-		}
 	}
 
 	macro configureWidgetPageTemplateLayout {

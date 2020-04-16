@@ -37,10 +37,11 @@ UserGroup userGroup = (UserGroup)row.getObject();
 		</portlet:renderURL>
 
 		<%
-		Map<String, Object> assignData = new HashMap<>();
-
-		assignData.put("href", assignURL.toString());
-		assignData.put("usergroupid", userGroup.getUserGroupId());
+		Map<String, Object> assignData = HashMapBuilder.<String, Object>put(
+			"href", assignURL.toString()
+		).put(
+			"usergroupid", userGroup.getUserGroupId()
+		).build();
 		%>
 
 		<liferay-ui:icon
@@ -59,10 +60,11 @@ UserGroup userGroup = (UserGroup)row.getObject();
 		</portlet:renderURL>
 
 		<%
-		Map<String, Object> unassignData = new HashMap<>();
-
-		unassignData.put("href", unassignURL.toString());
-		unassignData.put("usergroupid", userGroup.getUserGroupId());
+		Map<String, Object> unassignData = HashMapBuilder.<String, Object>put(
+			"href", unassignURL.toString()
+		).put(
+			"usergroupid", userGroup.getUserGroupId()
+		).build();
 		%>
 
 		<liferay-ui:icon
@@ -107,14 +109,14 @@ UserGroup userGroup = (UserGroup)row.getObject();
 				document.<portlet:namespace />addUserGroupGroupRoleFm;
 
 			Liferay.Util.setFormValues(addUserGroupGroupRoleFm, {
-				userGroupId: target.dataset.usergroupid
+				userGroupId: target.dataset.usergroupid,
 			});
 
 			var itemSelectorDialog = new ItemSelectorDialog.default({
 				buttonAddLabel: '<liferay-ui:message key="done" />',
 				eventName: '<portlet:namespace />selectUserGroupsRoles',
 				title: '<liferay-ui:message key="assign-roles" />',
-				url: target.dataset.href
+				url: target.dataset.href,
 			});
 
 			itemSelectorDialog.on('selectedItemChange', function(event) {
@@ -154,14 +156,14 @@ UserGroup userGroup = (UserGroup)row.getObject();
 				document.<portlet:namespace />unassignUserGroupGroupRoleFm;
 
 			Liferay.Util.setFormValues(unassignUserGroupGroupRoleFm, {
-				userGroupId: target.dataset.usergroupid
+				userGroupId: target.dataset.usergroupid,
 			});
 
 			var itemSelectorDialog = new ItemSelectorDialog.default({
 				buttonAddLabel: '<liferay-ui:message key="done" />',
 				eventName: '<portlet:namespace />selectUserGroupsRoles',
 				title: '<liferay-ui:message key="unassign-roles" />',
-				url: target.dataset.href
+				url: target.dataset.href,
 			});
 
 			itemSelectorDialog.on('selectedItemChange', function(event) {

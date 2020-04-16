@@ -19,6 +19,11 @@
 	<td></td>
 </tr>
 <tr>
+	<td>SAVE_FORM_BUTTON_LOCALE</td>
+	<td>//button[contains(.,'${key_localeSaveForm}') and not (contains(@class,'disabled'))]</td>
+	<td></td>
+</tr>
+<tr>
 	<td>SAVE_FORM_BUTTON_LOCALIZED</td>
 	<td>//div[contains(@class,'button-holder')]//button[contains(.,'${key_saveButton}') and not (contains(@class,'disabled'))]</td>
 	<td></td>
@@ -116,7 +121,7 @@
 </tr>
 <tr>
 	<td>ADD_FIELD_TYPE</td>
-	<td>//a[contains(@class,'field-type')]/div/h4[contains(.,'${key_fieldType}')] | //li[contains(@class,'field-type')]/div/h4[contains(.,'${key_fieldType}')] | //div[contains(@class,'list-group-body')]//div/h4[contains(.,'${key_fieldType}')] | //h4[contains(@class, 'list-group-title text-truncate')]//span[contains(.,'${key_fieldType}')]</td>
+	<td>//div[contains(@class,'field-type')]//span[contains(text(),'${key_fieldType}')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -207,12 +212,12 @@
 <!--FIELD-->
 <tr>
 	<td>FIELD_BODY</td>
-	<td>//div[contains(@class,'form-group')]//label[contains(text(),'${key_fieldName}')] | //div[contains(@data-field-name,'${key_fieldName}')] | //div[contains(@class,'form-group')]//input[contains(@name,'${key_fieldName}')]/parent::div/parent::div</td>
+	<td>//div[contains(@class,'form-group')]//p[contains(text(),'${key_fieldName}')] | //div[contains(@data-field-name,'${key_fieldName}')] | //div[contains(@class,'form-group')]//input[contains(@name,'${key_fieldName}')]/parent::div/parent::div</td>
 	<td></td>
 </tr>
 <tr>
 	<td>FIELD_LABEL</td>
-	<td>//div[contains(@data-field-name,'${key_fieldName}')]//label | //div[contains(@class,'ddm-field-container')]//label[contains(text(),'${key_fieldName}')]</td>
+	<td>//div[contains(@data-field-name,'${key_fieldName}')]//p | //div[contains(@class,'ddm-field-container')]//p[contains(text(),'${key_fieldName}')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -232,6 +237,11 @@
 	<td></td>
 </tr>
 <tr>
+	<td>SIDEBAR_ADVANCED_TAB_LOCALE</td>
+	<td>//a[contains(@class,'tab') and .='${key_localeAdvanced}'] | //a[contains(@aria-controls,'sidebarLightDetails')]//*[contains(text(),'${key_localeAdvanced}')]</td>
+	<td></td>
+</tr>
+<tr>
 	<td>SIDEBAR_PROPERTIES_TAB</td>
 	<td>//a[contains(@class,'tab') and .='Properties'] | //a[contains(@aria-controls,'sidebarLightDetails')]//*[contains(text(),'Properties')]</td>
 	<td></td>
@@ -247,8 +257,18 @@
 	<td></td>
 </tr>
 <tr>
+	<td>SIDEBAR_BASIC_TAB_LOCALE</td>
+	<td>//a[contains(@class,'tab') and .='${key_localeBasic}'] | //a[contains(@aria-controls,'sidebarLightDetails')]//*[contains(text(),'${key_localeBasic}')]</td>
+	<td></td>
+</tr>
+<tr>
 	<td>SIDEBAR_ELEMENTS_TAB</td>
 	<td>//a[contains(@class,'tab') and .='Elements'] | //a[contains(@class,'nav-link active') and .='Elements']</td>
+	<td></td>
+</tr>
+<tr>
+	<td>SIDEBAR_ELEMENTS_TAB_LOCALE</td>
+	<td>//a[contains(@class,'tab') and .='${key_localeElements}'] | //a[contains(@class,'nav-link active') and .='${key_localeElements}']</td>
 	<td></td>
 </tr>
 <tr>
@@ -289,7 +309,7 @@
 </tr>
 <tr>
 	<td>DATA_PROVIDER_OUTPUT_PARAMETER_PATH_FIELD_2</td>
-	<td>//div[contains(@data-field-name,'outputParameters')]/../following-sibling::div/div//input[@type='text' and contains(@name,'outputParameters') and contains(@placeholder,'path')]</td>
+	<td>//div[contains(@data-field-name,'outputParameters')]/following-sibling::div/div//input[@type='text' and contains(@name,'outputParameters') and contains(@placeholder,'path')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -299,7 +319,7 @@
 </tr>
 <tr>
 	<td>DATA_PROVIDER_OUTPUT_PARAMETER_LABEL_FIELD_2</td>
-	<td>//div[contains(@data-field-name,'outputParameters')]/../following-sibling::div/div//input[@type='text' and contains(@name,'outputParameters') and contains(@placeholder,'label')]</td>
+	<td>//div[contains(@data-field-name,'outputParameters')]/following-sibling::div/div//input[@type='text' and contains(@name,'outputParameters') and contains(@placeholder,'label')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -309,7 +329,7 @@
 </tr>
 <tr>
 	<td>DATA_PROVIDER_OUTPUT_PARAMETER_TYPE_FIELD_2</td>
-	<td>//div[contains(@data-field-name,'outputParameters')]/../following-sibling::div//div[contains(@data-field-name,'outputParameterType')]//button</td>
+	<td>//div[contains(@data-field-name,'outputParameters')]/following-sibling::div//div[contains(@data-field-name,'outputParameterType')]//button</td>
 	<td></td>
 </tr>
 <tr>

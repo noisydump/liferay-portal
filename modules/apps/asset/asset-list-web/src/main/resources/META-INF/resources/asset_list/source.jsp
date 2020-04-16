@@ -17,7 +17,7 @@
 <%@ include file="/init.jsp" %>
 
 <%
-List<AssetRendererFactory<?>> classTypesAssetRendererFactories = new ArrayList();
+List<AssetRendererFactory<?>> classTypesAssetRendererFactories = new ArrayList<>();
 %>
 
 <liferay-frontend:fieldset-group>
@@ -90,6 +90,8 @@ List<AssetRendererFactory<?>> classTypesAssetRendererFactories = new ArrayList()
 		</div>
 
 		<%
+		UnicodeProperties properties = editAssetListDisplayContext.getUnicodeProperties();
+
 		List<AssetRendererFactory<?>> assetRendererFactories = ListUtil.sort(AssetRendererFactoryRegistryUtil.getAssetRendererFactories(company.getCompanyId()), new AssetRendererFactoryTypeNameComparator(locale));
 
 		for (AssetRendererFactory<?> assetRendererFactory : assetRendererFactories) {
@@ -278,7 +280,8 @@ List<AssetRendererFactory<?>> classTypesAssetRendererFactories = new ArrayList()
 
 			if (showOptions) {
 				<%= className %>Options.classList.remove('hide');
-			} else {
+			}
+			else {
 				<%= className %>Options.classList.add('hide');
 			}
 
@@ -420,10 +423,12 @@ List<AssetRendererFactory<?>> classTypesAssetRendererFactories = new ArrayList()
 
 						if (structureOptions) {
 							subtypeFieldsWrapper.classList.remove('hide');
-						} else if (hideSubtypeFilterEnableWrapper) {
+						}
+						else if (hideSubtypeFilterEnableWrapper) {
 							subtypeFieldsWrapper.classList.add('hide');
 						}
-					} else if (hideSubtypeFilterEnableWrapper) {
+					}
+					else if (hideSubtypeFilterEnableWrapper) {
 						subtypeFieldsWrapper.classList.add('hide');
 					}
 				});
@@ -567,13 +572,13 @@ List<AssetRendererFactory<?>> classTypesAssetRendererFactories = new ArrayList()
 			{
 				dialog: {
 					constrain: true,
-					modal: true
+					modal: true,
 				},
 				eventName: '<portlet:namespace />selectDDMStructureField',
 				id: '<portlet:namespace />selectDDMStructure' + delegateTarget.id,
 				title:
 					'<liferay-ui:message arguments="structure-field" key="select-x" />',
-				uri: uri
+				uri: uri,
 			},
 			function(event) {
 				setDDMFields(

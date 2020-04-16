@@ -9,53 +9,74 @@
  * distribution rights of the Software.
  */
 
-import {useContext, useEffect} from 'react';
+import {useCallback, useContext, useEffect} from 'react';
 
 import {AppContext} from '../../../../components/AppContext.es';
-import {useRouterParams} from '../../../hooks/useRouterParams.es';
-import {buildFilterItems, mergeItemsArray} from '../util/filterUtil.es';
+import {FilterContext} from '../FilterContext.es';
+import {
+	buildFilterItems,
+	getCapitalizedFilterKey,
+	mergeItemsArray,
+} from '../util/filterUtil.es';
 import {useFilterState} from './useFilterState.es';
 
 const useFilterFetch = ({
-	dispatch,
 	filterKey,
-	parseItems = items => items,
 	prefixKey,
-	requestUrl,
-	staticItems
+	requestBody: data = {},
+	propertyKey,
+	requestMethod: method = 'get',
+	requestParams: params = {},
+	requestUrl: url,
+	staticData,
+	staticItems,
+	withoutRouteParams,
 }) => {
 	const {client} = useContext(AppContext);
-	const {filters} = useRouterParams();
+	const {dispatchFilterError} = useContext(FilterContext);
+	const {items, selectedItems, selectedKeys, setItems} = useFilterState(
+		getCapitalizedFilterKey(prefixKey, filterKey),
+		withoutRouteParams
+	);
 
-	const prefixedFilterKey = `${prefixKey}${filterKey}`;
-	const {items, selectedItems, setItems} = useFilterState(
-		dispatch,
-		prefixedFilterKey
+	const fetchCallback = useCallback(
+		({data = {}}) => {
+			const mergedItems = mergeItemsArray(staticItems, data.items);
+			const mappedItems = buildFilterItems({
+				items: mergedItems,
+				propertyKey,
+				selectedKeys,
+			});
+
+			setItems(mappedItems);
+		},
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+		[selectedKeys, staticItems]
 	);
 
 	useEffect(
 		() => {
-			client.get(requestUrl).then(({data = {}}) => {
-				const mergedItems = mergeItemsArray(staticItems, data.items);
-				const parsedItems = parseItems
-					? parseItems(mergedItems)
-					: mergedItems;
+			dispatchFilterError(filterKey, true);
 
-				const mappedItems = buildFilterItems(
-					parsedItems,
-					filters[prefixedFilterKey]
-				);
-
-				setItems(mappedItems);
-			});
+			if (staticData) {
+				fetchCallback({data: {items: staticData}});
+			}
+			else {
+				client
+					.request({data, method, params, url})
+					.then(fetchCallback)
+					.catch(() => {
+						dispatchFilterError(filterKey);
+					});
+			}
 		},
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-		[staticItems]
+		[]
 	);
 
 	return {
 		items,
-		selectedItems
+		selectedItems,
 	};
 };
 

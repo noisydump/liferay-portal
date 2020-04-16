@@ -12,10 +12,18 @@
  * details.
  */
 
+import {compose} from 'dynamic-data-mapping-form-renderer';
 import Component from 'metal-jsx';
+import {Config} from 'metal-state';
 
 import LayoutProvider from '../LayoutProvider/LayoutProvider.es';
-import FormBuilder from './FormBuilder.es';
+import {FormBuilderBase} from './FormBuilder.es';
+import withActionableFields from './withActionableFields.es';
+import withClickableFields from './withClickableFields.es';
+import withEditablePageHeader from './withEditablePageHeader.es';
+import withMoveableFields from './withMoveableFields.es';
+import withMultiplePages from './withMultiplePages.es';
+import withResizeableColumns from './withResizeableColumns.es';
 
 /**
  * LayoutProvider listens to your children's events to
@@ -23,13 +31,25 @@ import FormBuilder from './FormBuilder.es';
  * @extends Component
  */
 
-class LayoutProviderWithFormBuilder extends Component {
+class FormBuilderWithLayoutProvider extends Component {
 	render() {
 		const {formBuilderProps, layoutProviderProps} = this.props;
 
 		const LProvider = LayoutProvider;
 
-		const FBuilder = FormBuilder;
+		const composeList = [
+			withActionableFields,
+			withClickableFields,
+			withMoveableFields,
+			withResizeableColumns,
+		];
+
+		if (layoutProviderProps.allowMultiplePages) {
+			composeList.push(withMultiplePages);
+			composeList.push(withEditablePageHeader);
+		}
+
+		const FBuilder = compose(...composeList)(FormBuilderBase);
 
 		return (
 			<LProvider {...layoutProviderProps}>
@@ -39,4 +59,9 @@ class LayoutProviderWithFormBuilder extends Component {
 	}
 }
 
-export default LayoutProviderWithFormBuilder;
+FormBuilderWithLayoutProvider.PROPS = {
+	formBuilderProps: Config.object(),
+	layoutProviderProps: Config.object(),
+};
+
+export default FormBuilderWithLayoutProvider;

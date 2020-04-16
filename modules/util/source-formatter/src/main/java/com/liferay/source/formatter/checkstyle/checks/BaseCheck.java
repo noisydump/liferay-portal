@@ -437,7 +437,10 @@ public abstract class BaseCheck extends AbstractCheck {
 		boolean globalVariable = false;
 		DetailAST rangeDetailAST = null;
 
-		if (parentDetailAST.getType() == TokenTypes.OBJBLOCK) {
+		if (parentDetailAST.getType() == TokenTypes.FOR_INIT) {
+			rangeDetailAST = parentDetailAST.getParent();
+		}
+		else if (parentDetailAST.getType() == TokenTypes.OBJBLOCK) {
 			rangeDetailAST = parentDetailAST;
 
 			globalVariable = true;
@@ -453,7 +456,8 @@ public abstract class BaseCheck extends AbstractCheck {
 			rangeDetailAST = parentDetailAST.getLastChild();
 		}
 
-		if ((rangeDetailAST.getType() != TokenTypes.OBJBLOCK) &&
+		if ((rangeDetailAST.getType() != TokenTypes.LITERAL_FOR) &&
+			(rangeDetailAST.getType() != TokenTypes.OBJBLOCK) &&
 			(rangeDetailAST.getType() != TokenTypes.SLIST)) {
 
 			return variableCallerDetailASTList;
@@ -511,12 +515,20 @@ public abstract class BaseCheck extends AbstractCheck {
 	protected DetailAST getVariableTypeDetailAST(
 		DetailAST detailAST, String variableName) {
 
+		return getVariableTypeDetailAST(detailAST, variableName, true);
+	}
+
+	protected DetailAST getVariableTypeDetailAST(
+		DetailAST detailAST, String variableName,
+		boolean includeGlobalVariables) {
+
 		DetailAST previousDetailAST = detailAST;
 
 		while (true) {
-			if ((previousDetailAST.getType() == TokenTypes.CLASS_DEF) ||
-				(previousDetailAST.getType() == TokenTypes.ENUM_DEF) ||
-				(previousDetailAST.getType() == TokenTypes.INTERFACE_DEF)) {
+			if (includeGlobalVariables &&
+				((previousDetailAST.getType() == TokenTypes.CLASS_DEF) ||
+				 (previousDetailAST.getType() == TokenTypes.ENUM_DEF) ||
+				 (previousDetailAST.getType() == TokenTypes.INTERFACE_DEF))) {
 
 				DetailAST objBlockDetailAST = previousDetailAST.findFirstToken(
 					TokenTypes.OBJBLOCK);
@@ -592,8 +604,14 @@ public abstract class BaseCheck extends AbstractCheck {
 					}
 				}
 			}
-			else if (previousDetailAST.getType() == TokenTypes.VARIABLE_DEF) {
-				if (variableName.equals(_getVariableName(previousDetailAST))) {
+			else if ((previousDetailAST.getType() == TokenTypes.VARIABLE_DEF) &&
+					 variableName.equals(_getVariableName(previousDetailAST))) {
+
+				DetailAST parentDetailAST = previousDetailAST.getParent();
+
+				if (includeGlobalVariables ||
+					(parentDetailAST.getType() != TokenTypes.OBJBLOCK)) {
+
 					return previousDetailAST.findFirstToken(TokenTypes.TYPE);
 				}
 			}
@@ -734,9 +752,19 @@ public abstract class BaseCheck extends AbstractCheck {
 		TokenTypes.STAR
 	};
 
+	protected static final int[] CONDITIONAL_OPERATOR_TOKEN_TYPES = {
+		TokenTypes.BAND, TokenTypes.BOR, TokenTypes.BXOR, TokenTypes.LAND,
+		TokenTypes.LOR
+	};
+
 	protected static final int[] RELATIONAL_OPERATOR_TOKEN_TYPES = {
 		TokenTypes.EQUAL, TokenTypes.GE, TokenTypes.GT, TokenTypes.LE,
 		TokenTypes.LT, TokenTypes.NOT_EQUAL
+	};
+
+	protected static final int[] UNARY_OPERATOR_TOKEN_TYPES = {
+		TokenTypes.DEC, TokenTypes.INC, TokenTypes.LNOT, TokenTypes.POST_DEC,
+		TokenTypes.POST_INC, TokenTypes.UNARY_MINUS, TokenTypes.UNARY_PLUS
 	};
 
 	private String _getVariableName(DetailAST variableDefinitionDetailAST) {

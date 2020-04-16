@@ -150,7 +150,18 @@ public class SQLEqualsTest {
 		sb.append("select t1.pk from SQLEqualsTest t1 inner join ");
 		sb.append("SQLEqualsTest t2 on t1.pk != 1 and t2.pk = 1 and ");
 
-		if (columnName.equals("typeText")) {
+		if (columnName.equals("typeBlob") &&
+			(db.getDBType() == DBType.SQLSERVER)) {
+
+			sb.append("CAST(t1.");
+			sb.append(columnName);
+			sb.append(" as varbinary)");
+			sb.append(compare);
+			sb.append("CAST(t2.");
+			sb.append(columnName);
+			sb.append(" as varbinary)");
+		}
+		else if (columnName.equals("typeText")) {
 			sb.append("CAST_CLOB_TEXT(t1.");
 			sb.append(columnName);
 			sb.append(")");

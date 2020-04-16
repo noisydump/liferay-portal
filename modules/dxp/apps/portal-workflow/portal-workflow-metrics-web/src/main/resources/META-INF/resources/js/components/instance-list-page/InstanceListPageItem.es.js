@@ -10,84 +10,95 @@
  */
 
 import {ClayCheckbox} from '@clayui/form';
+import ClayIcon from '@clayui/icon';
 import ClayTable from '@clayui/table';
-import React, {useContext, useState, useCallback, useEffect} from 'react';
+import React, {useContext, useEffect, useState} from 'react';
 
-import Icon from '../../shared/components/Icon.es';
 import QuickActionKebab from '../../shared/components/quick-action-kebab/QuickActionKebab.es';
 import moment from '../../shared/util/moment.es';
-import {ModalContext} from './modal/ModalContext.es';
-import {InstanceListContext} from './store/InstanceListPageStore.es';
+import {capitalize} from '../../shared/util/util.es';
+import {AppContext} from '../AppContext.es';
+import {processStatusConstants} from '../filter/ProcessStatusFilter.es';
+import {InstanceListContext} from './InstanceListPageProvider.es';
+import {ModalContext} from './modal/ModalProvider.es';
 
 const getSLAStatusIcon = slaStatus => {
-	if (slaStatus === 'OnTime') {
-		return {
+	const items = {
+		OnTime: {
 			bgColor: 'bg-success-light',
 			iconColor: 'text-success',
-			iconName: 'check-circle'
-		};
-	}
-
-	if (slaStatus === 'Overdue') {
-		return {
+			iconName: 'check-circle',
+		},
+		Overdue: {
 			bgColor: 'bg-danger-light',
 			iconColor: 'text-danger',
-			iconName: 'exclamation-circle'
-		};
-	}
-
-	return {
-		bgColor: 'bg-info-light',
-		iconColor: 'text-info',
-		iconName: 'hr'
+			iconName: 'exclamation-circle',
+		},
+		Untracked: {
+			bgColor: 'bg-info-light',
+			iconColor: 'text-info',
+			iconName: 'hr',
+		},
 	};
+
+	return items[slaStatus] || items.Untracked;
 };
 
-const Item = taskItem => {
-	const {selectedItems = [], setInstanceId, setSelectedItems} = useContext(
-		InstanceListContext
-	);
+const Item = ({totalCount, ...instance}) => {
+	const {userId} = useContext(AppContext);
+	const {
+		selectedItems = [],
+		setInstanceId,
+		setSelectAll,
+		setSelectedItems,
+	} = useContext(InstanceListContext);
+	const {setVisibleModal} = useContext(ModalContext);
+
 	const [checked, setChecked] = useState(false);
 
 	const {
 		assetTitle,
 		assetType,
-		assigneeUsers = [],
-		creatorUser,
+		assignees = [],
+		creator,
 		dateCreated,
 		id,
 		status,
 		slaStatus,
-		taskNames = []
-	} = taskItem;
+		taskNames = [Liferay.Language.get('not-available')],
+	} = instance;
 
 	useEffect(() => {
-		setChecked(selectedItems.find(item => item.id === id) !== undefined);
+		setChecked(!!selectedItems.find(item => item.id === id));
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [selectedItems]);
 
-	const completed = status === 'Completed';
+	const assignedToUser = !!assignees.find(({id}) => id === Number(userId));
+	const assigneeNames = assignees.map(user => user.name).join(', ');
+	const completed = status === processStatusConstants.completed;
+	const {reviewer} = assignees.find(({id}) => id === -1) || {};
+
+	const disableCheckbox = (!assignedToUser && !reviewer) || completed;
 	const slaStatusIcon = getSLAStatusIcon(slaStatus);
 
-	const assigneeUserNames = assigneeUsers
-		.map(assigneeUser => assigneeUser.name)
-		.join(', ');
-
 	const formattedAssignees = !completed
-		? assigneeUserNames || Liferay.Language.get('unassigned')
+		? assigneeNames
 		: Liferay.Language.get('not-available');
+
+	const formattedTaskNames = !completed
+		? taskNames.join(', ')
+		: Liferay.Language.get('completed');
 
 	const handleCheck = ({target}) => {
 		setChecked(target.checked);
 
-		if (target.checked) {
-			setSelectedItems([...selectedItems, taskItem]);
-		} else {
-			setSelectedItems(selectedItems.filter(item => item.id !== id));
-		}
-	};
+		const updatedItems = target.checked
+			? [...selectedItems, instance]
+			: selectedItems.filter(item => item.id !== id);
 
-	const updateInstanceId = () => setInstanceId(id);
+		setSelectAll(totalCount > 0 && totalCount === updatedItems.length);
+		setSelectedItems(updatedItems);
+	};
 
 	return (
 		<ClayTable.Row
@@ -99,7 +110,7 @@ const Item = taskItem => {
 					<ClayCheckbox
 						checked={checked}
 						data-testid="instanceCheckbox"
-						disabled={completed}
+						disabled={disableCheckbox}
 						onChange={handleCheck}
 					/>
 
@@ -107,9 +118,10 @@ const Item = taskItem => {
 						className={`sticker sticker-sm ${slaStatusIcon.bgColor}`}
 					>
 						<span className="inline-item">
-							<Icon
-								elementClasses={slaStatusIcon.iconColor}
-								iconName={slaStatusIcon.iconName}
+							<ClayIcon
+								className={slaStatusIcon.iconColor}
+								data-testid="statusIcon"
+								symbol={slaStatusIcon.iconName}
 							/>
 						</span>
 					</span>
@@ -119,10 +131,12 @@ const Item = taskItem => {
 			<ClayTable.Cell>
 				<span
 					className="link-text"
-					data-target="#instanceDetailModal"
 					data-testid="instanceIdLink"
-					data-toggle="modal"
-					onClick={updateInstanceId}
+					onClick={() => {
+						setInstanceId(id);
+
+						setVisibleModal('instanceDetails');
+					}}
 					tabIndex="-1"
 				>
 					<strong>{id}</strong>
@@ -130,21 +144,19 @@ const Item = taskItem => {
 			</ClayTable.Cell>
 
 			<ClayTable.Cell data-testid="assetInfoCell">
-				{`${assetType}: ${assetTitle} `}
+				{`${assetType}: ${assetTitle}`}
 			</ClayTable.Cell>
 
 			<ClayTable.Cell data-testid="taskNamesCell">
-				{!completed
-					? taskNames.join(', ')
-					: Liferay.Language.get('completed')}
+				{formattedTaskNames}
 			</ClayTable.Cell>
 
 			<ClayTable.Cell data-testid="assigneesCell">
 				{formattedAssignees}
 			</ClayTable.Cell>
 
-			<ClayTable.Cell data-testid="creatorUserCell">
-				{creatorUser ? creatorUser.name : ''}
+			<ClayTable.Cell data-testid="creatorCell">
+				{creator ? creator.name : ''}
 			</ClayTable.Cell>
 
 			<ClayTable.Cell data-testid="dateCreatedCell">
@@ -154,39 +166,87 @@ const Item = taskItem => {
 			</ClayTable.Cell>
 
 			<ClayTable.Cell style={{paddingRight: '0rem'}}>
-				<QuickActionMenu disabled={completed} taskItem={taskItem} />
+				<QuickActionMenu
+					disabled={disableCheckbox}
+					instance={instance}
+				/>
 			</ClayTable.Cell>
 		</ClayTable.Row>
 	);
 };
 
-const QuickActionMenu = ({disabled, taskItem}) => {
-	const {bulkModal, setBulkModal, setSingleModal} = useContext(ModalContext);
+const QuickActionMenu = ({disabled, instance}) => {
+	const {setSingleTransition, setVisibleModal} = useContext(ModalContext);
+	const {setSelectedItem, setSelectedItems} = useContext(InstanceListContext);
+	const {transitions = [], taskNames = []} = instance;
 
-	const handleClickReassignTask = useCallback(
-		() => {
-			if (taskItem.taskNames.length > 1) {
-				setBulkModal({...bulkModal, visible: true});
+	const handleClick = (bulkModal, singleModal) => {
+		if (taskNames.length > 1) {
+			setSelectedItems([instance]);
+			setVisibleModal(bulkModal);
+		}
+		else {
+			setSelectedItem(instance);
+			setVisibleModal(singleModal);
+		}
+	};
 
-				setSingleModal({selectedItem: taskItem});
-			} else {
-				setSingleModal({
-					selectedItem: taskItem,
-					visible: true
-				});
-			}
-		},
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-		[taskItem]
-	);
+	const transitionLabel = capitalize(Liferay.Language.get('transition'));
+	const updateDueDateItem = {
+		icon: 'date',
+		label: Liferay.Language.get('update-due-date'),
+		onClick: () => handleClick('bulkUpdateDueDate', 'updateDueDate'),
+	};
 
 	const kebabItems = [
 		{
-			action: handleClickReassignTask,
 			icon: 'change',
-			title: Liferay.Language.get('reassign-task')
-		}
+			label: Liferay.Language.get('reassign-task'),
+			onClick: () => handleClick('bulkReassign', 'singleReassign'),
+		},
+		updateDueDateItem,
 	];
+
+	if (transitions.length > 0) {
+		const transitionItems = [
+			{
+				type: 'divider',
+			},
+			{
+				items: transitions.map(({label, name}) => ({
+					label,
+					name,
+					onClick: () => {
+						setVisibleModal('singleTransition');
+						setSelectedItem(instance);
+						setSingleTransition({
+							title: label,
+							transitionName: name,
+						});
+					},
+				})),
+				label: transitionLabel,
+				name: transitionLabel,
+				type: 'group',
+			},
+		];
+
+		kebabItems.push(...transitionItems);
+	}
+	else if (transitions.length === 0 && taskNames.length > 1) {
+		kebabItems.splice(
+			1,
+			1,
+			{
+				label: transitionLabel,
+				onClick: () => {
+					setSelectedItems([instance]);
+					setVisibleModal('bulkTransition');
+				},
+			},
+			updateDueDateItem
+		);
+	}
 
 	return (
 		<div className="autofit-col">

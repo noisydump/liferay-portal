@@ -66,7 +66,7 @@ public interface RepositoryLocalService
 	public Repository addRepository(
 			long userId, long groupId, long classNameId, long parentFolderId,
 			String name, String description, String portletId,
-			UnicodeProperties typeSettingsProperties, boolean hidden,
+			UnicodeProperties typeSettingsUnicodeProperties, boolean hidden,
 			ServiceContext serviceContext)
 		throws PortalException;
 
@@ -80,6 +80,12 @@ public interface RepositoryLocalService
 	public Repository addRepository(Repository repository);
 
 	public void checkRepository(long repositoryId);
+
+	/**
+	 * @throws PortalException
+	 */
+	public PersistedModel createPersistedModel(Serializable primaryKeyObj)
+		throws PortalException;
 
 	/**
 	 * Creates a new repository with the primary key. Does not add the repository to the database.
@@ -230,6 +236,9 @@ public interface RepositoryLocalService
 	 */
 	public String getOSGiServiceIdentifier();
 
+	/**
+	 * @throws PortalException
+	 */
 	@Override
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public PersistedModel getPersistedModel(Serializable primaryKeyObj)
@@ -322,7 +331,7 @@ public interface RepositoryLocalService
 		throws PortalException;
 
 	public void updateRepository(
-			long repositoryId, UnicodeProperties typeSettingsProperties)
+			long repositoryId, UnicodeProperties typeSettingsUnicodeProperties)
 		throws PortalException;
 
 	/**

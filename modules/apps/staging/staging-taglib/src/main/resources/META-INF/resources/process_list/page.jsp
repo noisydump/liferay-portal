@@ -164,7 +164,7 @@
 					deleteMenu="<%= deleteMenu %>"
 					localPublishing="<%= localPublishing %>"
 					relaunchMenu="<%= relaunchMenu %>"
-					summaryMenu="<%= summaryMenu %>"
+					summaryMenu="<%= summaryMenu && !(backgroundTask.getStatus() == BackgroundTaskConstants.STATUS_FAILED) %>"
 				/>
 			</liferay-ui:search-container-column-text>
 		</liferay-ui:search-container-row>
@@ -196,8 +196,8 @@
 					deleteBackgroundTaskIds: Liferay.Util.listCheckedExcept(
 						form,
 						'<portlet:namespace />allRowIds'
-					)
-				}
+					),
+				},
 			});
 		}
 	}

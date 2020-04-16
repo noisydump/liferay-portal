@@ -49,10 +49,11 @@ String referringPortletResource = ParamUtil.getString(request, "referringPortlet
 			<c:when test="<%= curArticle != null %>">
 
 				<%
-				Map<String, Object> rowData = new HashMap<String, Object>();
-
-				rowData.put("actions", journalDisplayContext.getAvailableActions(curArticle));
-				rowData.put("draggable", !BrowserSnifferUtil.isMobile(request) && (JournalArticlePermission.contains(permissionChecker, curArticle, ActionKeys.DELETE) || JournalArticlePermission.contains(permissionChecker, curArticle, ActionKeys.UPDATE)));
+				Map<String, Object> rowData = HashMapBuilder.<String, Object>put(
+					"actions", journalDisplayContext.getAvailableActions(curArticle)
+				).put(
+					"draggable", !BrowserSnifferUtil.isMobile(request) && (JournalArticlePermission.contains(permissionChecker, curArticle, ActionKeys.DELETE) || JournalArticlePermission.contains(permissionChecker, curArticle, ActionKeys.UPDATE))
+				).build();
 
 				String title = curArticle.getTitle(locale);
 
@@ -233,13 +234,17 @@ String referringPortletResource = ParamUtil.getString(request, "referringPortlet
 			<c:when test="<%= curFolder != null %>">
 
 				<%
-				Map<String, Object> rowData = new HashMap<String, Object>();
-
-				rowData.put("actions", journalDisplayContext.getAvailableActions(curFolder));
-				rowData.put("draggable", !BrowserSnifferUtil.isMobile(request) && (JournalFolderPermission.contains(permissionChecker, curFolder, ActionKeys.DELETE) || JournalFolderPermission.contains(permissionChecker, curFolder, ActionKeys.UPDATE)));
-				rowData.put("folder", true);
-				rowData.put("folder-id", curFolder.getFolderId());
-				rowData.put("title", HtmlUtil.escape(curFolder.getName()));
+				Map<String, Object> rowData = HashMapBuilder.<String, Object>put(
+					"actions", journalDisplayContext.getAvailableActions(curFolder)
+				).put(
+					"draggable", !BrowserSnifferUtil.isMobile(request) && (JournalFolderPermission.contains(permissionChecker, curFolder, ActionKeys.DELETE) || JournalFolderPermission.contains(permissionChecker, curFolder, ActionKeys.UPDATE))
+				).put(
+					"folder", true
+				).put(
+					"folder-id", curFolder.getFolderId()
+				).put(
+					"title", HtmlUtil.escape(curFolder.getName())
+				).build();
 
 				row.setData(rowData);
 				row.setPrimaryKey(String.valueOf(curFolder.getPrimaryKey()));
@@ -399,12 +404,12 @@ String referringPortletResource = ParamUtil.getString(request, "referringPortlet
 		editEntryUrl: '<portlet:actionURL />',
 		form: {
 			method: 'POST',
-			node: A.one(document.<portlet:namespace />fm)
+			node: A.one(document.<portlet:namespace />fm),
 		},
 		moveEntryUrl:
 			'<portlet:renderURL><portlet:param name="mvcPath" value="/move_entries.jsp" /><portlet:param name="redirect" value="<%= currentURL %>" /></portlet:renderURL>',
 		namespace: '<portlet:namespace />',
-		searchContainerId: 'articles'
+		searchContainerId: 'articles',
 	});
 
 	var clearJournalNavigationHandles = function(event) {

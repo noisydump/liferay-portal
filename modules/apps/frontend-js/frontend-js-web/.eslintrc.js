@@ -16,6 +16,5 @@ module.exports = {
 	globals: {
 		__CONFIG__: true,
 		global: true,
-		process: true
-	}
+	},
 };

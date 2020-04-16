@@ -126,7 +126,8 @@
 
 			if (searchContainerData) {
 				searchContainerData = searchContainerData.split(',');
-			} else {
+			}
+			else {
 				searchContainerData = [];
 			}
 
@@ -138,7 +139,7 @@
 						eventName:
 							'<%= inputAssetLinksDisplayContext.getEventName() %>',
 						title: event.currentTarget.attr('data-title'),
-						url: event.currentTarget.attr('data-href')
+						url: event.currentTarget.attr('data-href'),
 					});
 
 					itemSelectorDialog.open();

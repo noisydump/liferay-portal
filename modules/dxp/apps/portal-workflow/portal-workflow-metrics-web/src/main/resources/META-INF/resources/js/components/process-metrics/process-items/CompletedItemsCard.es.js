@@ -9,10 +9,11 @@
  * distribution rights of the Software.
  */
 
-import React from 'react';
+import React, {useMemo} from 'react';
 
 import {useFilter} from '../../../shared/hooks/useFilter.es';
 import TimeRangeFilter from '../../filter/TimeRangeFilter.es';
+import {getTimeRangeParams} from '../../filter/util/timeRangeUtil.es';
 import ProcessItemsCard from './ProcessItemsCard.es';
 
 const CompletedItemsCard = ({routeParams}) => {
@@ -21,22 +22,29 @@ const CompletedItemsCard = ({routeParams}) => {
 	const prefixKeys = [prefixKey];
 
 	const {
-		dispatch,
-		filterState: {completedtimeRange: timeRange = []}
-	} = useFilter(filterKeys, prefixKeys);
+		filterValues: {
+			completedDateEnd,
+			completedDateStart,
+			completedTimeRange: [key] = [],
+		},
+		filtersError,
+	} = useFilter({filterKeys, prefixKeys});
 
-	const timeRangeParams = timeRange && timeRange.length ? timeRange[0] : {};
+	const timeRange = useMemo(
+		() => getTimeRangeParams(completedDateStart, completedDateEnd),
+		[completedDateEnd, completedDateStart]
+	);
 
 	return (
 		<ProcessItemsCard
 			completed={true}
 			description={Liferay.Language.get('completed-items-description')}
-			timeRange={timeRangeParams}
+			timeRange={{key, ...timeRange}}
 			title={Liferay.Language.get('completed-items')}
 			{...routeParams}
 		>
 			<TimeRangeFilter
-				dispatch={dispatch}
+				disabled={filtersError}
 				options={{position: 'right'}}
 				prefixKey={prefixKey}
 			/>

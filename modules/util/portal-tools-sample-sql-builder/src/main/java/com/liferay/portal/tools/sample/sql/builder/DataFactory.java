@@ -160,6 +160,7 @@ import com.liferay.message.boards.model.impl.MBThreadModelImpl;
 import com.liferay.message.boards.social.MBActivityKeys;
 import com.liferay.petra.reflect.ReflectionUtil;
 import com.liferay.petra.string.CharPool;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.io.OutputStreamWriter;
@@ -186,6 +187,7 @@ import com.liferay.portal.kernel.model.LayoutTypePortletConstants;
 import com.liferay.portal.kernel.model.ModelHintsUtil;
 import com.liferay.portal.kernel.model.PortletConstants;
 import com.liferay.portal.kernel.model.PortletPreferencesModel;
+import com.liferay.portal.kernel.model.ReleaseConstants;
 import com.liferay.portal.kernel.model.ReleaseModel;
 import com.liferay.portal.kernel.model.ResourceConstants;
 import com.liferay.portal.kernel.model.ResourcePermission;
@@ -213,12 +215,13 @@ import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.ObjectValuePair;
 import com.liferay.portal.kernel.util.PortletKeys;
-import com.liferay.portal.kernel.util.StringBundler;
+import com.liferay.portal.kernel.util.ReleaseInfo;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.TextFormatter;
 import com.liferay.portal.kernel.util.Time;
 import com.liferay.portal.kernel.util.UnicodeProperties;
 import com.liferay.portal.kernel.util.Validator;
+import com.liferay.portal.kernel.version.Version;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.model.impl.AccountModelImpl;
 import com.liferay.portal.model.impl.ClassNameModelImpl;
@@ -235,6 +238,7 @@ import com.liferay.portal.model.impl.RoleModelImpl;
 import com.liferay.portal.model.impl.UserModelImpl;
 import com.liferay.portal.model.impl.UserNotificationDeliveryModelImpl;
 import com.liferay.portal.model.impl.VirtualHostModelImpl;
+import com.liferay.portal.upgrade.PortalUpgradeProcess;
 import com.liferay.portal.util.PropsValues;
 import com.liferay.portlet.PortletPreferencesFactoryImpl;
 import com.liferay.portlet.PortletPreferencesImpl;
@@ -861,8 +865,7 @@ public class DataFactory {
 				assetTagModel.setCreateDate(new Date());
 				assetTagModel.setModifiedDate(new Date());
 				assetTagModel.setName(
-					StringBundler.concat(
-						"TestTag_", String.valueOf(i), "_", String.valueOf(j)));
+					StringBundler.concat("TestTag_", i, "_", j));
 				assetTagModel.setLastPublishDate(new Date());
 
 				assetTagModels.add(assetTagModel);
@@ -1571,12 +1574,15 @@ public class DataFactory {
 		layoutModel.setType(LayoutConstants.TYPE_CONTENT);
 		layoutModel.setFriendlyURL(StringPool.FORWARD_SLASH + name);
 
-		UnicodeProperties typeSettingsProperties = new UnicodeProperties(true);
+		UnicodeProperties typeSettingsUnicodeProperties = new UnicodeProperties(
+			true);
 
-		typeSettingsProperties.setProperty("fragmentEntries", fragmentEntries);
+		typeSettingsUnicodeProperties.setProperty(
+			"fragmentEntries", fragmentEntries);
 
 		layoutModel.setTypeSettings(
-			StringUtil.replace(typeSettingsProperties.toString(), '\n', "\\n"));
+			StringUtil.replace(
+				typeSettingsUnicodeProperties.toString(), '\n', "\\n"));
 
 		layoutModel.setLastPublishDate(new Date());
 
@@ -2438,15 +2444,17 @@ public class DataFactory {
 		layoutModel.setType(LayoutConstants.TYPE_PORTLET);
 		layoutModel.setFriendlyURL(StringPool.FORWARD_SLASH + name);
 
-		UnicodeProperties typeSettingsProperties = new UnicodeProperties(true);
+		UnicodeProperties typeSettingsUnicodeProperties = new UnicodeProperties(
+			true);
 
-		typeSettingsProperties.setProperty(
+		typeSettingsUnicodeProperties.setProperty(
 			LayoutTypePortletConstants.LAYOUT_TEMPLATE_ID, "2_columns_ii");
-		typeSettingsProperties.setProperty("column-1", column1);
-		typeSettingsProperties.setProperty("column-2", column2);
+		typeSettingsUnicodeProperties.setProperty("column-1", column1);
+		typeSettingsUnicodeProperties.setProperty("column-2", column2);
 
 		layoutModel.setTypeSettings(
-			StringUtil.replace(typeSettingsProperties.toString(), '\n', "\\n"));
+			StringUtil.replace(
+				typeSettingsUnicodeProperties.toString(), '\n', "\\n"));
 
 		layoutModel.setLastPublishDate(new Date());
 
@@ -2619,25 +2627,29 @@ public class DataFactory {
 		long parentMessageId = 0;
 		String subject = null;
 		String body = null;
+		String urlSubject = null;
 
 		if (index == 0) {
 			messageId = mbThreadModel.getRootMessageId();
 			parentMessageId = MBMessageConstants.DEFAULT_PARENT_MESSAGE_ID;
 			subject = String.valueOf(classPK);
 			body = String.valueOf(classPK);
+			urlSubject = String.valueOf(mbThreadModel.getRootMessageId());
 		}
 		else {
 			messageId = _counter.get();
 			parentMessageId = mbThreadModel.getRootMessageId();
 			subject = "N/A";
 			body = "This is test comment " + index + ".";
+			urlSubject = "test-comment-" + index;
 		}
 
 		return newMBMessageModel(
 			mbThreadModel.getGroupId(), classNameId, classPK,
 			MBCategoryConstants.DISCUSSION_CATEGORY_ID,
 			mbThreadModel.getThreadId(), messageId,
-			mbThreadModel.getRootMessageId(), parentMessageId, subject, body);
+			mbThreadModel.getRootMessageId(), parentMessageId, subject,
+			urlSubject, body);
 	}
 
 	public List<MBMessageModel> newMBMessageModels(
@@ -2652,7 +2664,7 @@ public class DataFactory {
 				mbThreadModel.getThreadId(), mbThreadModel.getRootMessageId(),
 				mbThreadModel.getRootMessageId(),
 				MBMessageConstants.DEFAULT_PARENT_MESSAGE_ID, "Test Message 1",
-				"This is test message 1."));
+				"test-message-1", "This is test message 1."));
 
 		for (int i = 2; i <= _maxMBMessageCount; i++) {
 			mbMessageModels.add(
@@ -2661,7 +2673,7 @@ public class DataFactory {
 					mbThreadModel.getCategoryId(), mbThreadModel.getThreadId(),
 					_counter.get(), mbThreadModel.getRootMessageId(),
 					mbThreadModel.getRootMessageId(), "Test Message " + i,
-					"This is test message " + i + "."));
+					"test-message-" + i, "This is test message " + i + "."));
 		}
 
 		return mbMessageModels;
@@ -2891,6 +2903,16 @@ public class DataFactory {
 	public List<ReleaseModel> newReleaseModels() throws IOException {
 		List<ReleaseModel> releases = new ArrayList<>();
 
+		Version latestSchemaVersion =
+			PortalUpgradeProcess.getLatestSchemaVersion();
+
+		releases.add(
+			newReleaseModel(
+				ReleaseConstants.DEFAULT_ID,
+				ReleaseConstants.DEFAULT_SERVLET_CONTEXT_NAME,
+				latestSchemaVersion.toString(), ReleaseInfo.getBuildNumber(),
+				false, ReleaseConstants.TEST_STRING));
+
 		try (InputStream is = DataFactory.class.getResourceAsStream(
 				"dependencies/releases.txt");
 			Reader reader = new InputStreamReader(is);
@@ -2907,7 +2929,9 @@ public class DataFactory {
 					String schemaVersion = parts[1];
 
 					releases.add(
-						newReleaseModel(servletContextName, schemaVersion));
+						newReleaseModel(
+							_counter.get(), servletContextName, schemaVersion,
+							0, true, null));
 				}
 			}
 		}
@@ -4032,7 +4056,7 @@ public class DataFactory {
 	protected MBMessageModel newMBMessageModel(
 		long groupId, long classNameId, long classPK, long categoryId,
 		long threadId, long messageId, long rootMessageId, long parentMessageId,
-		String subject, String body) {
+		String subject, String urlSubject, String body) {
 
 		MBMessageModel mBMessageModel = new MBMessageModelImpl();
 
@@ -4051,6 +4075,7 @@ public class DataFactory {
 		mBMessageModel.setRootMessageId(rootMessageId);
 		mBMessageModel.setParentMessageId(parentMessageId);
 		mBMessageModel.setSubject(subject);
+		mBMessageModel.setUrlSubject(urlSubject + "-" + messageId);
 		mBMessageModel.setBody(body);
 		mBMessageModel.setFormat(MBMessageConstants.DEFAULT_FORMAT);
 		mBMessageModel.setLastPublishDate(new Date());
@@ -4104,18 +4129,21 @@ public class DataFactory {
 	}
 
 	protected ReleaseModelImpl newReleaseModel(
-			String servletContextName, String schemaVersion)
+			long releaseId, String servletContextName, String schemaVersion,
+			int buildNumber, boolean verified, String testString)
 		throws IOException {
 
 		ReleaseModelImpl releaseModelImpl = new ReleaseModelImpl();
 
-		releaseModelImpl.setReleaseId(_counter.get());
+		releaseModelImpl.setReleaseId(releaseId);
 		releaseModelImpl.setCreateDate(new Date());
 		releaseModelImpl.setModifiedDate(new Date());
 		releaseModelImpl.setServletContextName(servletContextName);
 		releaseModelImpl.setSchemaVersion(schemaVersion);
+		releaseModelImpl.setBuildNumber(buildNumber);
 		releaseModelImpl.setBuildDate(new Date());
-		releaseModelImpl.setVerified(true);
+		releaseModelImpl.setVerified(verified);
+		releaseModelImpl.setTestString(testString);
 
 		return releaseModelImpl;
 	}
@@ -4304,8 +4332,8 @@ public class DataFactory {
 		wikiPageModel.setVersion(WikiPageConstants.VERSION_DEFAULT);
 		wikiPageModel.setContent(
 			StringBundler.concat(
-				"This is Test Page ", String.valueOf(index), " of ",
-				wikiNodeModel.getName(), "."));
+				"This is Test Page ", index, " of ", wikiNodeModel.getName(),
+				"."));
 		wikiPageModel.setFormat("creole");
 		wikiPageModel.setHead(true);
 		wikiPageModel.setLastPublishDate(new Date());

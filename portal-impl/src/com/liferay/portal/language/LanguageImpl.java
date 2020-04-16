@@ -15,6 +15,7 @@
 package com.liferay.portal.language;
 
 import com.liferay.petra.string.CharPool;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.cache.PortalCache;
 import com.liferay.portal.kernel.cache.PortalCacheHelperUtil;
@@ -48,7 +49,6 @@ import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.PropsKeys;
 import com.liferay.portal.kernel.util.ResourceBundleLoader;
 import com.liferay.portal.kernel.util.ResourceBundleUtil;
-import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Time;
 import com.liferay.portal.kernel.util.UnicodeProperties;
@@ -798,6 +798,49 @@ public class LanguageImpl implements Language, Serializable {
 		}
 
 		return value;
+	}
+
+	/**
+	 * Returns the translated and formatted storage size
+	 *
+	 * @param  size the storage size
+	 * @param  locale the locale to translate to
+	 * @return the translated storage size
+	 */
+	@Override
+	public String formatStorageSize(double size, Locale locale) {
+		NumberFormat numberFormat = NumberFormat.getInstance(locale);
+
+		numberFormat.setMaximumFractionDigits(0);
+
+		numberFormat.setMinimumFractionDigits(0);
+
+		String suffix = "storage.size.suffix.b";
+
+		if (size >= _STORAGE_SIZE_DENOMINATOR) {
+			suffix = "storage.size.suffix.kb";
+
+			size /= _STORAGE_SIZE_DENOMINATOR;
+		}
+
+		if (size >= _STORAGE_SIZE_DENOMINATOR) {
+			suffix = "storage.size.suffix.mb";
+
+			size /= _STORAGE_SIZE_DENOMINATOR;
+
+			numberFormat.setMaximumFractionDigits(1);
+		}
+
+		if (size >= _STORAGE_SIZE_DENOMINATOR) {
+			suffix = "storage.size.suffix.gb";
+
+			size /= _STORAGE_SIZE_DENOMINATOR;
+		}
+
+		suffix = get(locale, suffix);
+
+		return StringBundler.concat(
+			numberFormat.format(size), StringPool.SPACE, suffix);
 	}
 
 	/**
@@ -1696,10 +1739,10 @@ public class LanguageImpl implements Language, Serializable {
 
 			defaultLocale = PortalUtil.getSiteDefaultLocale(group);
 
-			UnicodeProperties typeSettingsProperties =
+			UnicodeProperties typeSettingsUnicodeProperties =
 				group.getTypeSettingsProperties();
 
-			String groupLanguageIds = typeSettingsProperties.getProperty(
+			String groupLanguageIds = typeSettingsUnicodeProperties.getProperty(
 				PropsKeys.LOCALES);
 
 			if (groupLanguageIds != null) {
@@ -1946,6 +1989,8 @@ public class LanguageImpl implements Language, Serializable {
 
 	private static final String _GROUP_LOCALES_PORTAL_CACHE_NAME =
 		LanguageImpl.class.getName() + "._groupLocalesPortalCache";
+
+	private static final double _STORAGE_SIZE_DENOMINATOR = 1024.0;
 
 	private static final Log _log = LogFactoryUtil.getLog(LanguageImpl.class);
 

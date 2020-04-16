@@ -20,7 +20,12 @@
 </tr>
 <tr>
 	<td>FRAGMENT_DROP_TARGET</td>
-	<td>//div[contains(@class,'drop-target')]</td>
+	<td>//div[contains(@class,'page-editor__root page-editor__topper')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>FOOTER_DROP_TARGET</td>
+	<td>//button[contains(.,'Configure Allowed Fragments')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -52,7 +57,7 @@
 <!--FRAGMENT_SIDEBAR-->
 <tr>
 	<td>FRAGMENT_SIDEBAR</td>
-	<td>//div[contains(@class,'fragments-editor-sidebar')]</td>
+	<td>//div[contains(@class,'page-editor__sidebar__buttons')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -61,8 +66,8 @@
 	<td></td>
 </tr>
 <tr>
-	<td>FRAGMENT_SIDEBAR_COLLAPSED</td>
-	<td>//div[contains(@class,'fragments-editor-sidebar') and contains(@class,'collapsed')]</td>
+	<td>FRAGMENT_SIDEBAR_TAB_COLLAPSED</td>
+	<td>//button[@title='${key_tabName}' and contains(@aria-pressed,'false')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -102,17 +107,17 @@
 </tr>
 <tr>
 	<td>FRAGMENT_SIDEBAR_COMMENT_LIST_TITLE</td>
-	<td>//h1[contains(@class,'fragments-editor-sidebar-section__title') and contains(.,'Comments')]</td>
+	<td>//h1[contains(@class,'page-editor__sidebar__panel-header')and contains(.,'Comments')]</td>
 	<td></td>
 </tr>
 <tr>
 	<td>FRAGMENT_SIDEBAR_COMMENT_SECTION_NAME</td>
-	<td>//h1[contains(@class,'fragments-editor-sidebar-section')]//span[contains(.,'${key_fragmentName}')]</td>
+	<td>//h1[contains(@class,'page-editor__sidebar__panel-header')]//span[contains(.,'${key_fragmentName}')]</td>
 	<td></td>
 </tr>
 <tr>
 	<td>FRAGMENT_SIDEBAR_ENTRY_N</td>
-	<td>xpath=(//div[contains(@class,'fragments-editor-sidebar')]//li[contains(@data-fragments-editor-item-type,'fragments-editor-mapped-item')])[${key_rowNumber}]</td>
+	<td>xpath=(//div[contains(@class,'page-editor-sidebar')]//li[contains(@class,'page-editor__contents__page-content')])[${key_rowNumber}]</td>
 	<td></td>
 </tr>
 <tr>
@@ -122,7 +127,7 @@
 </tr>
 <tr>
 	<td>FRAGMENT_SIDEBAR_LOADED</td>
-	<td>//div[@class='fragments-editor-sidebar-sections-buttons']/button</td>
+	<td>//div[contains(@class,'sidebar')]/div[contains(@class,'buttons')]/button</td>
 	<td></td>
 </tr>
 <tr>
@@ -157,17 +162,17 @@
 </tr>
 <tr>
 	<td>FRAGMENT_SIDEBAR_COLLECTION_PANEL</td>
-	<td>//button[normalize-space()='${key_collectionName}']</td>
+	<td>//*[normalize-space()='${key_collectionName}']</td>
 	<td></td>
 </tr>
 <tr>
 	<td>FRAGMENT_SIDEBAR_COLLECTION_PANEL_COLLAPSED</td>
-	<td>//button[@aria-expanded='false'][normalize-space()='${key_collectionName}']</td>
+	<td>//*[contains(@class,'sheet-subtitle collapsed')][normalize-space()='${key_collectionName}']</td>
 	<td></td>
 </tr>
 <tr>
 	<td>FRAGMENT_SIDEBAR_COLLECTION_PANEL_EXPANDED</td>
-	<td>//button[@aria-expanded='true'][normalize-space()='${key_collectionName}']</td>
+	<td>//*[@class='collapse-icon sheet-subtitle'][normalize-space()='${key_collectionName}']</td>
 	<td></td>
 </tr>
 <tr>
@@ -182,7 +187,7 @@
 </tr>
 <tr>
 	<td>FRAGMENT_SIDEBAR_SECTION_TITLE</td>
-	<td>//div[contains(@class,'sidebar-section')]//h1</td>
+	<td>//div[contains(@class,'page-editor')]/div/h1</td>
 	<td></td>
 </tr>
 <tr>
@@ -202,17 +207,17 @@
 </tr>
 <tr>
 	<td>FRAGMENT_SIDEBAR_TAB_BUTTON</td>
-	<td>//button[@data-title='${key_tabName}']</td>
+	<td>//div[contains(@class,'page-editor__sidebar__buttons')]//*[contains(@title,'${key_tabName}')]</td>
 	<td></td>
 </tr>
 <tr>
 	<td>FRAGMENT_SIDEBAR_TAB_BUTTON_ACTIVE</td>
-	<td>//button[@data-title='${key_tabName}'][contains(@class,'active')]</td>
+	<td>//button[contains(@title,'${key_tabName}')][contains(@aria-pressed,'true')]</td>
 	<td></td>
 </tr>
 <tr>
 	<td>FRAGMENT_SIDEBAR_TITLE</td>
-	<td>//h1[contains(@class,'fragments-editor-sidebar-section__title') and contains(.,'${key_sidebarButton}')]</td>
+	<td>//div[contains(@class,'content--open')]//h1[contains(@class,'page-editor__sidebar__panel-header') and contains(.,'${key_sidebarButton}')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -223,17 +228,17 @@
 <!--CONTENT_PAGE-->
 <tr>
 	<td>CONTENT_PAGE_DISABLED_HEADER</td>
-	<td>//header[@class='lfr-edit-mode__disabled-area']</td>
+	<td>//header[contains(@class,'disabled-area')]</td>
 	<td></td>
 </tr>
 <tr>
 	<td>CONTENT_PAGE_DISABLED_FOOTER</td>
-	<td>//footer[@class='lfr-edit-mode__disabled-area']</td>
+	<td>//footer[contains(@class,'disabled-area')]</td>
 	<td></td>
 </tr>
 <tr>
 	<td>CONTENT_PAGE_DISABLED_POPOVER</td>
-	<td>//div[contains(@class,'clay-popover')][not(contains(@class,'sr-only'))]//div[@class='popover-body']/p</td>
+	<td>//div[contains(@class,'clay-popover')][not(contains(@class,'sr-only'))]//div[@class='popover-body']</td>
 	<td></td>
 </tr>
 <tr>
@@ -248,7 +253,7 @@
 </tr>
 <tr>
 	<td>CONTENT_PAGE_WEB_CONTENT_CONTENT</td>
-	<td>//div[contains(@class,'journal-content-article ')]</td>
+	<td>//div[contains(@class,'journal-content-article')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -259,12 +264,12 @@
 <!--EXPERIENCE-->
 <tr>
 	<td>EXPERIENCE_BUTTON_NAME</td>
-	<td>//div[contains(@class,'segments-experience-selector')]/button[contains(.,'${key_experienceName}')]</td>
+	<td>//div[contains(@class,'page-editor__toolbar-experience')]/button[contains(.,'${key_experienceName}')]</td>
 	<td></td>
 </tr>
 <tr>
 	<td>EXPERIENCE_DEFAULT_BUTTON_NAME</td>
-	<td>//div[contains(@class,'segments-experience-selector')]/button[contains(.,'Default')]</td>
+	<td>//div[contains(@class,'page-editor__toolbar-experience')]/button[contains(.,'Default')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -274,12 +279,18 @@
 </tr>
 <tr>
 	<td>EXPERIENCE_LABEL</td>
-	<td>//div[contains(@class,'segments-experience-selector')]/label[contains(.,'Experience')]</td>
+	<td>//div[contains(@class,'page-editor__toolbar-experience')]/label[contains(.,'Experience')]</td>
 	<td></td>
 </tr>
 <tr>
 	<td>EXPERIENCE_NAME</td>
 	<td>//input[contains(@id,'segmentsExperienceName')]</td>
+	<td></td>
+</tr>
+<!--LANGUAGE_MENU-->
+<tr>
+	<td>DROPDOWN</td>
+	<td>//button[contains(@class,'dropdown-toggle')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -299,25 +310,76 @@
 	<td>//header[contains(@class,'navbar-${key_type}')]</td>
 	<td></td>
 </tr>
-<!--SECTION-->
+<!--LAYOUT ELEMENTS-->
 <tr>
-	<td>SECTION</td>
-	<td>//section[contains(@class,'fragment-entry-link')][${key_position}]</td>
+	<td>LAYOUT_ELEMENTS_HEADER</td>
+	<td>//div[contains(@class,'page-editor__root page-editor__topper')]/div[contains(.,'${key_elementType}')][${key_position}]//li[contains(@class,'title')]</td>
 	<td></td>
 </tr>
 <tr>
-	<td>SECTION_HEADER_DELETE_BUTTON</td>
-	<td>//section[contains(@class,'fragment-entry-link')][${key_position}]/nav//button</td>
+	<td>LAYOUT_ELEMENTS_HEADER_DELETE_BUTTON</td>
+	<td>//div[contains(@class,'page-editor__root page-editor__topper')]/div[contains(.,'${key_elementType}')][${key_position}]//button[*[name()='svg'][*[contains(@class,'times-circle')]]]</td>
 	<td></td>
 </tr>
 <tr>
-	<td>SECTION_NAME</td>
-	<td>//section[contains(@class,'fragment-entry-link')][contains(.,'${fragment_name}')]</td>
+	<td>ROW_COLUMN</td>
+	<td>//div[contains(@class,'page-editor__topper') and contains(.,'Row')][${key_position}]//div[contains(@class,'page-editor__col')][${key_columnNumber}]</td>
 	<td></td>
 </tr>
 <tr>
-	<td>SECTION_PROPERTIES_BUTTON</td>
-	<td>//button[@data-title='${key_button}']</td>
+	<td>ROW_COLUMN_NESTED_ELEMENT</td>
+	<td>//div[contains(@class,'page-editor__topper') and contains(.,'Row')][${key_position}]//div[contains(@class,'page-editor__col')][${key_columnNumber}]${key_elementHeader}</td>
+	<td></td>
+</tr>
+<tr>
+	<td>SECTION_CONTAINER</td>
+	<td>//div[contains(@class,'page-editor__topper') and contains(.,'Section')][${key_position}]//div[contains(@class,'page-editor__container')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>SECTION_CONTAINER_NESTED_ELEMENT</td>
+	<td>//div[contains(@class,'page-editor__topper')]/div[contains(.,'Section')][${key_position}]//div[@class='container']${key_elementHeader}</td>
+	<td></td>
+</tr>
+<tr>
+	<td></td>
+	<td></td>
+	<td></td>
+</tr>
+<!--LAYOUT_ELEMENTS_CONFIGURATION-->
+<tr>
+	<td>ROW_CONFIGURATION_COLUMNS_NO_GUTTER</td>
+	<td>//div[contains(@class,'page-editor__topper')]/div[contains(.,'Row')][${key_position}]//div[contains(@class,'page-editor__row') and contains(@class,'no-gutters')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>SECTION_CONFIGURATION_BACKGROUND_COLOR</td>
+	<td>//div[contains(@class,'page-editor__topper')]/div[contains(.,'Section')][${key_position}]//div[contains(@class,'page-editor__container')][contains(@class,'bg-${key_paletteItem}')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>SECTION_CONFIGURATION_BACKGROUND_IMAGE</td>
+	<td>//div[contains(@class,'page-editor__topper')]/div[contains(.,'Section')][${key_position}]//div[contains(@class,'page-editor__container')][contains(@style,'${key_imageName}')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>SECTION_CONFIGURATION_CONTAINER</td>
+	<td>//div[contains(@class,'page-editor__topper')]/div[contains(.,'Section')][${key_position}]//div[contains(@class,'page-editor__container')]/div[@class='container-${key_container}']</td>
+	<td></td>
+</tr>
+<tr>
+	<td>SECTION_CONFIGURATION_PADDING_BOTTOM</td>
+	<td>//div[contains(@class,'page-editor__topper')]/div[contains(.,'Section')][${key_position}]//div[contains(@class,'page-editor__container')][contains(@class,'pb-${key_paddingBottom}')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>SECTION_CONFIGURATION_PADDING_HORIZONTAL</td>
+	<td>//div[contains(@class,'page-editor__topper')]/div[contains(.,'Section')][${key_position}]//div[contains(@class,'page-editor__container')][contains(@class,'px-${key_paddingHorizontal}')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>SECTION_CONFIGURATION_PADDING_TOP</td>
+	<td>//div[contains(@class,'page-editor__topper')]/div[contains(.,'Section')][${key_position}]//div[contains(@class,'page-editor__container')][contains(@class,'pt-${key_paddingTop}')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -327,38 +389,28 @@
 </tr>
 <!--EDITABLE_FIELD_TOOLBAR-->
 <tr>
-	<td>EDITABLE_FIELD_TOOLBAR_DUPLICATE_BUTTON</td>
-	<td>//button[@data-title='Duplicate Fragment']</td>
-	<td></td>
-</tr>
-<tr>
 	<td>EDITABLE_FIELD_TOOLBAR_EDIT_BUTTON</td>
-	<td>//button[@data-title='Edit']</td>
-	<td></td>
-</tr>
-<tr>
-	<td>EDITABLE_FIELD_TOOLBAR_CONFIGURATION_BUTTON</td>
-	<td>//button[@data-title='Fragment Configuration']</td>
+	<td>//button[@*='Edit']</td>
 	<td></td>
 </tr>
 <tr>
 	<td>EDITABLE_FIELD_TOOLBAR_LINK_BUTTON</td>
-	<td>//button[@data-title='Link']</td>
-	<td></td>
-</tr>
-<tr>
-	<td>EDITABLE_FIELD_TOOLBAR_MAP_ASSET_SELECT_POPUP_BUTTON</td>
-	<td>//div[contains(@class,'asset-select')]//button</td>
+	<td>//button[@*='Link']</td>
 	<td></td>
 </tr>
 <tr>
 	<td>EDITABLE_FIELD_TOOLBAR_MAP_BUTTON</td>
-	<td>//button[@data-title='Map']</td>
+	<td>//button[@*='Map']</td>
+	<td></td>
+</tr>
+<tr>
+	<td>EDITABLE_FIELD_TOOLBAR_MAP_ASSET_SELECT_POPUP_BUTTON</td>
+	<td>//div/input[contains(@id,'itemSelectorInput')]/following-sibling::button</td>
 	<td></td>
 </tr>
 <tr>
 	<td>EDITABLE_FIELD_TOOLBAR_IMAGE_PROPERTIES_BUTTON</td>
-	<td>//button[@data-panel-id='image_properties']</td>
+	<td>//button[@*='Image Properties']</td>
 	<td></td>
 </tr>
 <tr>
@@ -371,30 +423,36 @@
 	<td></td>
 	<td></td>
 </tr>
+<!--FRAGMENT_BODY_TOOLBAR-->
+<tr>
+	<td>FRAGMENT_BODY_TOOLBAR_CONFIGURATION_BUTTON</td>
+	<td>//button[@*='${key_elementType} Configuration']</td>
+	<td></td>
+</tr>
+<tr>
+	<td>FRAGMENT_BODY_TOOLBAR_DUPLICATE_BUTTON</td>
+	<td>//button[@*='Duplicate']</td>
+	<td></td>
+</tr>
+<tr>
+	<td>FRAGMENT_BODY_FLOATING_TOOLBAR_PLUS_BUTTON</td>
+	<td>//div[contains(@class,'floating-toolbar')]//div[contains(@class,'form-group')]//button[*[name()='svg'][contains(@class,'plus')]]</td>
+	<td></td>
+</tr>
+<tr>
+	<td></td>
+	<td></td>
+	<td></td>
+</tr>
 <!--SECTION_BUILDER-->
 <tr>
 	<td>SECTION_BUILDER_FRAGMENTS</td>
-	<td>//div[contains(@data-item-name,'${fragmentName}')]</td>
+	<td>//div[contains(@class,'page-editor')]//div[contains(@class,'card') and contains(.,'${key_fragmentName}')]</td>
 	<td></td>
 </tr>
 <tr>
-	<td>SECTION_BUILDER_LAYOUTS_1_COLUMN</td>
-	<td>//div[contains(@class,'sidebar-layouts-section')]//div[1]/div[contains(@class,'drag-handler')]</td>
-	<td></td>
-</tr>
-<tr>
-	<td>SECTION_BUILDER_LAYOUTS_2_COLUMN</td>
-	<td>//div[contains(@class,'sidebar-layouts-section')]//div[2]/div[contains(@class,'drag-handler')]</td>
-	<td></td>
-</tr>
-<tr>
-	<td>SECTION_BUILDER_LAYOUTS_3_COLUMN</td>
-	<td>//div[contains(@class,'sidebar-layouts-section')]//div[3]/div[contains(@class,'drag-handler')]</td>
-	<td></td>
-</tr>
-<tr>
-	<td>SECTION_BUILDER_LAYOUTS_4_COLUMN</td>
-	<td>//div[contains(@class,'sidebar-layouts-section')]//div[4]/div[contains(@class,'drag-handler')]</td>
+	<td>SECTION_BUILDER_LAYOUT_ELEMENTS</td>
+	<td>//div[contains(@class,'page-editor')]//button[@aria-label='${key_elementType}']</td>
 	<td></td>
 </tr>
 <tr>
@@ -405,23 +463,18 @@
 <!--WIDGETS-->
 <tr>
 	<td>WIDGETS_APPLICATION_SEARCH_FIELD</td>
-	<td>//form[@role='search']//input[contains(@placeholder,'Search')]</td>
+	<td>//div[contains(@class,'page-editor')]//div[@role='search']//input[contains(@placeholder,'Search')]</td>
 	<td></td>
 </tr>
 <tr>
-	<td>WIDGETS_ADD_PORTLET_DRAG_LINK</td>
-	<td>//button[contains(@data-drag-source-label,'${key_portletName}') and contains(@class,'drag-source')]</td>
-	<td></td>
-</tr>
-<tr>
-	<td>WIDGETS_OPTIONS_ICON</td>
-	<td>//span[contains(@class,'portlet-name') and contains(.,'${key_portletName}')]/../..//a[span//*[name()='path'][contains(@class,'lexicon-icon-body')]]</td>
+	<td>WIDGETS_ADD_PORTLET_DRAG_BUTTON</td>
+	<td>//button[contains(.,'${key_portletName}') and contains(@draggable,'true')]</td>
 	<td></td>
 </tr>
 <!--BASED_ON_CUSTOM_MASTERS-->
 <tr>
 	<td>FRAGMENT_INHERITED_FROM_CUSTOM_MASTERS</td>
-	<td>//div[@data-onclick='null']//*[contains(@class,'component-${key_fragmentName}')]</td>
+	<td>//div[contains(@class,'fragment-content--master')]//*[contains(@class,'component-${key_fragmentName}')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -431,12 +484,7 @@
 </tr>
 <tr>
 	<td>PORTLET_INHERITED_FROM_CUSTOM_MASTERS</td>
-	<td>//div[@data-onclick='null'and contains(.,'${key_portletName}')]</td>
-	<td></td>
-</tr>
-<tr>
-	<td>SECTION_CONTAINER</td>
-	<td>//section[@tabindex='0'][${key_position}]/div[contains(@class,'container py-3')]</td>
+	<td>//div[contains(@class,'fragment-content--master')]//section[contains(.,'${key_portletName}')]</td>
 	<td></td>
 </tr>
 </tbody>

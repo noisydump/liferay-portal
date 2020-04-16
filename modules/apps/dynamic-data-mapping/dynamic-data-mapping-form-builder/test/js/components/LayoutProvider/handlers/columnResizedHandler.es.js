@@ -12,18 +12,21 @@
  * details.
  */
 
-import * as columnResizedHandler from '../../../src/main/resources/META-INF/resources/js/components/LayoutProvider/handlers/columnResizedHandler.es';
+import * as columnResizedHandler from '../../../../../src/main/resources/META-INF/resources/js/components/LayoutProvider/handlers/columnResizedHandler.es';
 
-describe('LayoutProvider/handlers/columnResized', () => {
-	describe('handleColumnResized(state, source, column, direction)', () => {
-		it('resizes columns when pulling with the left handle', () => {
-			const source = {
-				dataset: {
-					ddmFieldColumn: 1,
-					ddmFieldPage: 0,
-					ddmFieldRow: 0
-				}
-			};
+const props = {};
+const source = {};
+
+describe('LayoutProvider/handlers/columnResizedHandler', () => {
+	describe('handleResizeRight(props, state, source, index, columnTarget)', () => {
+		it('resizes first field to the left', () => {
+			const indexes = [
+				{
+					columnIndex: 0,
+					pageIndex: 0,
+					rowIndex: 0,
+				},
+			];
 			const state = {
 				pages: [
 					{
@@ -32,38 +35,39 @@ describe('LayoutProvider/handlers/columnResized', () => {
 								columns: [
 									{
 										fields: [{}],
-										size: 4
+										size: 4,
 									},
 									{
 										fields: [{}],
-										size: 8
-									}
-								]
-							}
-						]
-					}
-				]
+										size: 8,
+									},
+								],
+							},
+						],
+					},
+				],
 			};
 
-			const result = columnResizedHandler.handleColumnResized(
+			const result = columnResizedHandler.handleResizeRight(
+				props,
 				state,
 				source,
-				6,
-				'left'
+				indexes,
+				2
 			);
 
-			expect(result.pages[0].rows[0].columns[0].size).toEqual(6);
-			expect(result.pages[0].rows[0].columns[1].size).toEqual(6);
+			expect(result[0].rows[0].columns[0].size).toEqual(2);
+			expect(result[0].rows[0].columns[1].size).toEqual(10);
 		});
 
-		it("removes column to the left if it's empty and cornered", () => {
-			const source = {
-				dataset: {
-					ddmFieldColumn: 1,
-					ddmFieldPage: 0,
-					ddmFieldRow: 0
-				}
-			};
+		it('resizes first field to the right', () => {
+			const indexes = [
+				{
+					columnIndex: 0,
+					pageIndex: 0,
+					rowIndex: 0,
+				},
+			];
 			const state = {
 				pages: [
 					{
@@ -71,38 +75,40 @@ describe('LayoutProvider/handlers/columnResized', () => {
 							{
 								columns: [
 									{
-										fields: [],
-										size: 1
+										fields: [{}],
+										size: 4,
 									},
 									{
 										fields: [{}],
-										size: 11
-									}
-								]
-							}
-						]
-					}
-				]
+										size: 8,
+									},
+								],
+							},
+						],
+					},
+				],
 			};
 
-			const result = columnResizedHandler.handleColumnResized(
+			const result = columnResizedHandler.handleResizeRight(
+				props,
 				state,
 				source,
-				0,
-				'left'
+				indexes,
+				6
 			);
 
-			expect(result.pages[0].rows[0].columns.length).toEqual(1);
+			expect(result[0].rows[0].columns[0].size).toEqual(6);
+			expect(result[0].rows[0].columns[1].size).toEqual(6);
 		});
 
-		it('adds a column when pulling to the right with the left handle', () => {
-			const source = {
-				dataset: {
-					ddmFieldColumn: 0,
-					ddmFieldPage: 0,
-					ddmFieldRow: 0
-				}
-			};
+		it('resizes second field to the left', () => {
+			const indexes = [
+				{
+					columnIndex: 1,
+					pageIndex: 0,
+					rowIndex: 0,
+				},
+			];
 			const state = {
 				pages: [
 					{
@@ -110,38 +116,41 @@ describe('LayoutProvider/handlers/columnResized', () => {
 							{
 								columns: [
 									{
-										fields: [],
-										size: 4
+										fields: [{}],
+										size: 4,
 									},
 									{
 										fields: [{}],
-										size: 8
-									}
-								]
-							}
-						]
-					}
-				]
+										size: 8,
+									},
+								],
+							},
+						],
+					},
+				],
 			};
 
-			const result = columnResizedHandler.handleColumnResized(
+			const result = columnResizedHandler.handleResizeRight(
+				props,
 				state,
 				source,
-				1,
-				'left'
+				indexes,
+				6
 			);
 
-			expect(result.pages[0].rows[0].columns.length).toEqual(3);
+			expect(result[0].rows[0].columns[0].size).toEqual(4);
+			expect(result[0].rows[0].columns[1].size).toEqual(2);
+			expect(result[0].rows[0].columns.length).toEqual(3);
 		});
 
-		it('removes column when pulling to the right edge with the right handle', () => {
-			const source = {
-				dataset: {
-					ddmFieldColumn: 0,
-					ddmFieldPage: 0,
-					ddmFieldRow: 0
-				}
-			};
+		it('resizes second field to the right', () => {
+			const indexes = [
+				{
+					columnIndex: 1,
+					pageIndex: 0,
+					rowIndex: 0,
+				},
+			];
 			const state = {
 				pages: [
 					{
@@ -150,27 +159,34 @@ describe('LayoutProvider/handlers/columnResized', () => {
 								columns: [
 									{
 										fields: [{}],
-										size: 11
+										size: 4,
 									},
 									{
-										fields: [],
-										size: 1
-									}
-								]
-							}
-						]
-					}
-				]
+										fields: [{}],
+										size: 4,
+									},
+									{
+										fields: [{}],
+										size: 4,
+									},
+								],
+							},
+						],
+					},
+				],
 			};
 
-			const result = columnResizedHandler.handleColumnResized(
+			const result = columnResizedHandler.handleResizeRight(
+				props,
 				state,
 				source,
-				12,
-				'right'
+				indexes,
+				11
 			);
 
-			expect(result.pages[0].rows[0].columns.length).toEqual(1);
+			expect(result[0].rows[0].columns[0].size).toEqual(4);
+			expect(result[0].rows[0].columns[1].size).toEqual(7);
+			expect(result[0].rows[0].columns[2].size).toEqual(1);
 		});
 	});
 });

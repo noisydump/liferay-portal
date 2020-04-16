@@ -349,9 +349,11 @@ public abstract class BaseAccountResourceTestCase {
 				}
 				else {
 					BeanUtils.setProperty(
-						account1, entityField.getName(), "Aaa");
+						account1, entityField.getName(),
+						"Aaa" + RandomTestUtil.randomString());
 					BeanUtils.setProperty(
-						account2, entityField.getName(), "Bbb");
+						account2, entityField.getName(),
+						"Bbb" + RandomTestUtil.randomString());
 				}
 			});
 	}
@@ -458,7 +460,25 @@ public abstract class BaseAccountResourceTestCase {
 	}
 
 	@Test
+	public void testPostAccount() throws Exception {
+		Account randomAccount = randomAccount();
+
+		Account postAccount = testPostAccount_addAccount(randomAccount);
+
+		assertEquals(randomAccount, postAccount);
+		assertValid(postAccount);
+	}
+
+	protected Account testPostAccount_addAccount(Account account)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
 	public void testDeleteAccount() throws Exception {
+		@SuppressWarnings("PMD.UnusedLocalVariable")
 		Account account = testDeleteAccount_addAccount();
 
 		assertHttpResponseStatusCode(
@@ -563,6 +583,53 @@ public abstract class BaseAccountResourceTestCase {
 			equalsJSONObject(account, dataJSONObject.getJSONObject("account")));
 	}
 
+	@Test
+	public void testPatchAccount() throws Exception {
+		Account postAccount = testPatchAccount_addAccount();
+
+		Account randomPatchAccount = randomPatchAccount();
+
+		Account patchAccount = accountResource.patchAccount(
+			postAccount.getId(), randomPatchAccount);
+
+		Account expectedPatchAccount = postAccount.clone();
+
+		_beanUtilsBean.copyProperties(expectedPatchAccount, randomPatchAccount);
+
+		Account getAccount = accountResource.getAccount(patchAccount.getId());
+
+		assertEquals(expectedPatchAccount, getAccount);
+		assertValid(getAccount);
+	}
+
+	protected Account testPatchAccount_addAccount() throws Exception {
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testPutAccount() throws Exception {
+		Account postAccount = testPutAccount_addAccount();
+
+		Account randomAccount = randomAccount();
+
+		Account putAccount = accountResource.putAccount(
+			postAccount.getId(), randomAccount);
+
+		assertEquals(randomAccount, putAccount);
+		assertValid(putAccount);
+
+		Account getAccount = accountResource.getAccount(putAccount.getId());
+
+		assertEquals(randomAccount, getAccount);
+		assertValid(getAccount);
+	}
+
+	protected Account testPutAccount_addAccount() throws Exception {
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
 	protected Account testGraphQLAccount_addAccount() throws Exception {
 		throw new UnsupportedOperationException(
 			"This method needs to be implemented");
@@ -663,6 +730,14 @@ public abstract class BaseAccountResourceTestCase {
 
 			if (Objects.equals("name", additionalAssertFieldName)) {
 				if (account.getName() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals("organizationIds", additionalAssertFieldName)) {
+				if (account.getOrganizationIds() == null) {
 					valid = false;
 				}
 
@@ -776,6 +851,17 @@ public abstract class BaseAccountResourceTestCase {
 				continue;
 			}
 
+			if (Objects.equals("organizationIds", additionalAssertFieldName)) {
+				if (!Objects.deepEquals(
+						account1.getOrganizationIds(),
+						account2.getOrganizationIds())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
 			if (Objects.equals("parentAccountId", additionalAssertFieldName)) {
 				if (!Objects.deepEquals(
 						account1.getParentAccountId(),
@@ -800,6 +886,30 @@ public abstract class BaseAccountResourceTestCase {
 			throw new IllegalArgumentException(
 				"Invalid additional assert field name " +
 					additionalAssertFieldName);
+		}
+
+		return true;
+	}
+
+	protected boolean equals(
+		Map<String, Object> map1, Map<String, Object> map2) {
+
+		if (Objects.equals(map1.keySet(), map2.keySet())) {
+			for (Map.Entry<String, Object> entry : map1.entrySet()) {
+				if (entry.getValue() instanceof Map) {
+					if (!equals(
+							(Map)entry.getValue(),
+							(Map)map2.get(entry.getKey()))) {
+
+						return false;
+					}
+				}
+				else if (!Objects.deepEquals(
+							entry.getValue(), map2.get(entry.getKey()))) {
+
+					return false;
+				}
+			}
 		}
 
 		return true;
@@ -940,6 +1050,11 @@ public abstract class BaseAccountResourceTestCase {
 			sb.append("'");
 
 			return sb.toString();
+		}
+
+		if (entityFieldName.equals("organizationIds")) {
+			throw new IllegalArgumentException(
+				"Invalid entity field " + entityFieldName);
 		}
 
 		if (entityFieldName.equals("parentAccountId")) {

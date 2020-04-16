@@ -211,6 +211,7 @@ public abstract class BaseBlogPostingResourceTestCase {
 
 	@Test
 	public void testDeleteBlogPosting() throws Exception {
+		@SuppressWarnings("PMD.UnusedLocalVariable")
 		BlogPosting blogPosting = testDeleteBlogPosting_addBlogPosting();
 
 		assertHttpResponseStatusCode(
@@ -332,8 +333,7 @@ public abstract class BaseBlogPostingResourceTestCase {
 		BlogPosting patchBlogPosting = blogPostingResource.patchBlogPosting(
 			postBlogPosting.getId(), randomPatchBlogPosting);
 
-		BlogPosting expectedPatchBlogPosting = (BlogPosting)BeanUtils.cloneBean(
-			postBlogPosting);
+		BlogPosting expectedPatchBlogPosting = postBlogPosting.clone();
 
 		_beanUtilsBean.copyProperties(
 			expectedPatchBlogPosting, randomPatchBlogPosting);
@@ -378,6 +378,7 @@ public abstract class BaseBlogPostingResourceTestCase {
 
 	@Test
 	public void testDeleteBlogPostingMyRating() throws Exception {
+		@SuppressWarnings("PMD.UnusedLocalVariable")
 		BlogPosting blogPosting =
 			testDeleteBlogPostingMyRating_addBlogPosting();
 
@@ -596,9 +597,11 @@ public abstract class BaseBlogPostingResourceTestCase {
 				}
 				else {
 					BeanUtils.setProperty(
-						blogPosting1, entityField.getName(), "Aaa");
+						blogPosting1, entityField.getName(),
+						"Aaa" + RandomTestUtil.randomString());
 					BeanUtils.setProperty(
-						blogPosting2, entityField.getName(), "Bbb");
+						blogPosting2, entityField.getName(),
+						"Bbb" + RandomTestUtil.randomString());
 				}
 			});
 	}
@@ -763,12 +766,12 @@ public abstract class BaseBlogPostingResourceTestCase {
 		assertHttpResponseStatusCode(
 			204,
 			blogPostingResource.putSiteBlogPostingSubscribeHttpResponse(
-				testGroup.getGroupId()));
+				blogPosting.getSiteId()));
 
 		assertHttpResponseStatusCode(
 			404,
 			blogPostingResource.putSiteBlogPostingSubscribeHttpResponse(
-				testGroup.getGroupId()));
+				blogPosting.getSiteId()));
 	}
 
 	protected BlogPosting testPutSiteBlogPostingSubscribe_addBlogPosting()
@@ -787,12 +790,12 @@ public abstract class BaseBlogPostingResourceTestCase {
 		assertHttpResponseStatusCode(
 			204,
 			blogPostingResource.putSiteBlogPostingUnsubscribeHttpResponse(
-				testGroup.getGroupId()));
+				blogPosting.getSiteId()));
 
 		assertHttpResponseStatusCode(
 			404,
 			blogPostingResource.putSiteBlogPostingUnsubscribeHttpResponse(
-				testGroup.getGroupId()));
+				blogPosting.getSiteId()));
 	}
 
 	protected BlogPosting testPutSiteBlogPostingUnsubscribe_addBlogPosting()
@@ -1285,9 +1288,9 @@ public abstract class BaseBlogPostingResourceTestCase {
 			}
 
 			if (Objects.equals(
-					"taxonomyCategories", additionalAssertFieldName)) {
+					"taxonomyCategoryBriefs", additionalAssertFieldName)) {
 
-				if (blogPosting.getTaxonomyCategories() == null) {
+				if (blogPosting.getTaxonomyCategoryBriefs() == null) {
 					valid = false;
 				}
 
@@ -1444,8 +1447,9 @@ public abstract class BaseBlogPostingResourceTestCase {
 				getAdditionalAssertFieldNames()) {
 
 			if (Objects.equals("actions", additionalAssertFieldName)) {
-				if (!Objects.deepEquals(
-						blogPosting1.getActions(), blogPosting2.getActions())) {
+				if (!equals(
+						(Map)blogPosting1.getActions(),
+						(Map)blogPosting2.getActions())) {
 
 					return false;
 				}
@@ -1640,11 +1644,11 @@ public abstract class BaseBlogPostingResourceTestCase {
 			}
 
 			if (Objects.equals(
-					"taxonomyCategories", additionalAssertFieldName)) {
+					"taxonomyCategoryBriefs", additionalAssertFieldName)) {
 
 				if (!Objects.deepEquals(
-						blogPosting1.getTaxonomyCategories(),
-						blogPosting2.getTaxonomyCategories())) {
+						blogPosting1.getTaxonomyCategoryBriefs(),
+						blogPosting2.getTaxonomyCategoryBriefs())) {
 
 					return false;
 				}
@@ -1679,6 +1683,30 @@ public abstract class BaseBlogPostingResourceTestCase {
 			throw new IllegalArgumentException(
 				"Invalid additional assert field name " +
 					additionalAssertFieldName);
+		}
+
+		return true;
+	}
+
+	protected boolean equals(
+		Map<String, Object> map1, Map<String, Object> map2) {
+
+		if (Objects.equals(map1.keySet(), map2.keySet())) {
+			for (Map.Entry<String, Object> entry : map1.entrySet()) {
+				if (entry.getValue() instanceof Map) {
+					if (!equals(
+							(Map)entry.getValue(),
+							(Map)map2.get(entry.getKey()))) {
+
+						return false;
+					}
+				}
+				else if (!Objects.deepEquals(
+							entry.getValue(), map2.get(entry.getKey()))) {
+
+					return false;
+				}
+			}
 		}
 
 		return true;
@@ -2122,7 +2150,7 @@ public abstract class BaseBlogPostingResourceTestCase {
 				"Invalid entity field " + entityFieldName);
 		}
 
-		if (entityFieldName.equals("taxonomyCategories")) {
+		if (entityFieldName.equals("taxonomyCategoryBriefs")) {
 			throw new IllegalArgumentException(
 				"Invalid entity field " + entityFieldName);
 		}

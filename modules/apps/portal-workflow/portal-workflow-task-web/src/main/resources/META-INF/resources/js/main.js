@@ -41,8 +41,8 @@ AUI.add(
 											}
 
 											dialog.destroy();
-										}
-									}
+										},
+									},
 								},
 								{
 									cssClass:
@@ -75,9 +75,9 @@ AUI.add(
 													dialog.hide();
 												}
 											}
-										}
-									}
-								}
+										},
+									},
+								},
 							],
 							header: [
 								{
@@ -92,66 +92,15 @@ AUI.add(
 											}
 
 											dialog.destroy();
-										}
-									}
-								}
-							]
+										},
+									},
+								},
+							],
 						},
-						width: 896
+						width: 896,
 					},
-					title: A.Lang.String.escapeHTML(title)
+					title: A.Lang.String.escapeHTML(title),
 				});
-			},
-
-			onDueDateClick(event, randomId, portletNamespace) {
-				var instance = this;
-
-				event.preventDefault();
-
-				var comments = A.one('#' + randomId + 'updateComments');
-
-				if (comments && !instance._comments[randomId]) {
-					instance._comments[randomId] = comments;
-				} else if (!comments && instance._comments[randomId]) {
-					comments = instance._comments[randomId];
-				}
-
-				if (comments) {
-					comments.show();
-				}
-
-				var content = A.one('#' + randomId + 'updateDueDate');
-
-				if (content && !instance._content[randomId]) {
-					instance._content[randomId] = content;
-				} else if (!content && instance._content[randomId]) {
-					content = instance._content[randomId];
-				}
-
-				if (content) {
-					content.show();
-				}
-
-				var form = A.one('#' + portletNamespace + randomId + 'form');
-
-				if (form && !instance._forms[randomId]) {
-					instance._forms[randomId] = form;
-				} else if (!form && instance._forms[randomId]) {
-					form = instance._forms[randomId];
-				}
-
-				var icon = event.currentTarget;
-
-				if (form) {
-					form.setAttribute('action', icon.attr('href'));
-					form.setAttribute('method', 'POST');
-
-					if (!form.contains(comments)) {
-						form.append(comments);
-					}
-				}
-
-				WorkflowTasks._showPopup(form, 480, icon.text());
 			},
 
 			onTaskClick(event, randomId) {
@@ -170,7 +119,8 @@ AUI.add(
 
 				if (comments && !instance._comments[randomId]) {
 					instance._comments[randomId] = comments;
-				} else if (!comments && instance._comments[randomId]) {
+				}
+				else if (!comments && instance._comments[randomId]) {
 					comments = instance._comments[randomId];
 				}
 
@@ -180,12 +130,12 @@ AUI.add(
 				}
 
 				WorkflowTasks._showPopup(form, 400, icon.text());
-			}
+			},
 		};
 		Liferay.WorkflowTasks = WorkflowTasks;
 	},
 	'',
 	{
-		requires: ['liferay-util-window']
+		requires: ['liferay-util-window'],
 	}
 );

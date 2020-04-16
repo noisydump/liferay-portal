@@ -9,7 +9,7 @@
  * distribution rights of the Software.
  */
 
-import {cleanup, render, findByTestId} from '@testing-library/react';
+import {cleanup, findByTestId, render} from '@testing-library/react';
 import React from 'react';
 
 import SLAStatusFilter from '../../../src/main/resources/META-INF/resources/js/components/filter/SLAStatusFilter.es';
@@ -27,10 +27,9 @@ describe('The sla status filter component should', () => {
 	afterEach(cleanup);
 
 	beforeEach(() => {
-		const renderResult = render(
-			<SLAStatusFilter dispatch={() => {}} processId={12345} />,
-			{wrapper}
-		);
+		const renderResult = render(<SLAStatusFilter processId={12345} />, {
+			wrapper,
+		});
 
 		getAllByTestId = renderResult.getAllByTestId;
 	});

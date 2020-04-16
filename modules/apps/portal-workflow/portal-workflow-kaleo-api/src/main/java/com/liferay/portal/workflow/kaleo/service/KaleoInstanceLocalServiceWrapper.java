@@ -51,14 +51,14 @@ public class KaleoInstanceLocalServiceWrapper
 	@Override
 	public com.liferay.portal.workflow.kaleo.model.KaleoInstance
 			addKaleoInstance(
-				long kaleoDefinitionVersionId, String kaleoDefinitionName,
-				int kaleoDefinitionVersion,
+				long kaleoDefinitionId, long kaleoDefinitionVersionId,
+				String kaleoDefinitionName, int kaleoDefinitionVersion,
 				java.util.Map<String, java.io.Serializable> workflowContext,
 				com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _kaleoInstanceLocalService.addKaleoInstance(
-			kaleoDefinitionVersionId, kaleoDefinitionName,
+			kaleoDefinitionId, kaleoDefinitionVersionId, kaleoDefinitionName,
 			kaleoDefinitionVersion, workflowContext, serviceContext);
 	}
 
@@ -82,6 +82,17 @@ public class KaleoInstanceLocalServiceWrapper
 		createKaleoInstance(long kaleoInstanceId) {
 
 		return _kaleoInstanceLocalService.createKaleoInstance(kaleoInstanceId);
+	}
+
+	/**
+	 * @throws PortalException
+	 */
+	@Override
+	public com.liferay.portal.kernel.model.PersistedModel createPersistedModel(
+			java.io.Serializable primaryKeyObj)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _kaleoInstanceLocalService.createPersistedModel(primaryKeyObj);
 	}
 
 	@Override
@@ -386,6 +397,9 @@ public class KaleoInstanceLocalServiceWrapper
 		return _kaleoInstanceLocalService.getOSGiServiceIdentifier();
 	}
 
+	/**
+	 * @throws PortalException
+	 */
 	@Override
 	public com.liferay.portal.kernel.model.PersistedModel getPersistedModel(
 			java.io.Serializable primaryKeyObj)

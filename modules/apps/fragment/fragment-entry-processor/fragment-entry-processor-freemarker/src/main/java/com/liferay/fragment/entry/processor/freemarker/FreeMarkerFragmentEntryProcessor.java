@@ -36,7 +36,6 @@ import com.liferay.portal.kernel.template.StringTemplateResource;
 import com.liferay.portal.kernel.template.Template;
 import com.liferay.portal.kernel.template.TemplateConstants;
 import com.liferay.portal.kernel.template.TemplateException;
-import com.liferay.portal.kernel.template.TemplateManager;
 import com.liferay.portal.kernel.template.TemplateManagerUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.ResourceBundleUtil;
@@ -113,10 +112,6 @@ public class FreeMarkerFragmentEntryProcessor
 
 		template.put(TemplateConstants.WRITER, unsyncStringWriter);
 
-		TemplateManager templateManager =
-			TemplateManagerUtil.getTemplateManager(
-				TemplateConstants.LANG_TYPE_FTL);
-
 		JSONObject configurationValuesJSONObject =
 			_fragmentEntryConfigurationParser.getConfigurationJSONObject(
 				fragmentEntryLink.getConfiguration(),
@@ -127,17 +122,16 @@ public class FreeMarkerFragmentEntryProcessor
 			"configuration", configurationValuesJSONObject
 		).put(
 			"fragmentEntryLinkNamespace", fragmentEntryLink.getNamespace()
-		).build();
-
-		contextObjects.putAll(
+		).putAll(
 			_fragmentEntryConfigurationParser.getContextObjects(
 				configurationValuesJSONObject,
-				fragmentEntryLink.getConfiguration()));
+				fragmentEntryLink.getConfiguration())
+		).build();
 
-		templateManager.addContextObjects(template, contextObjects);
+		template.putAll(contextObjects);
 
-		templateManager.addTaglibSupport(
-			template, fragmentEntryProcessorContext.getHttpServletRequest(),
+		template.prepareTaglib(
+			fragmentEntryProcessorContext.getHttpServletRequest(),
 			fragmentEntryProcessorContext.getHttpServletResponse());
 
 		template.prepare(fragmentEntryProcessorContext.getHttpServletRequest());
@@ -187,10 +181,6 @@ public class FreeMarkerFragmentEntryProcessor
 				(httpServletRequest.getAttribute(WebKeys.THEME_DISPLAY) !=
 					null)) {
 
-				TemplateManager templateManager =
-					TemplateManagerUtil.getTemplateManager(
-						TemplateConstants.LANG_TYPE_FTL);
-
 				JSONObject configurationDefaultValuesJSONObject =
 					_fragmentEntryConfigurationParser.
 						getConfigurationDefaultValuesJSONObject(configuration);
@@ -200,16 +190,14 @@ public class FreeMarkerFragmentEntryProcessor
 						"configuration", configurationDefaultValuesJSONObject
 					).put(
 						"fragmentEntryLinkNamespace", StringPool.BLANK
+					).putAll(
+						_fragmentEntryConfigurationParser.getContextObjects(
+							configurationDefaultValuesJSONObject, configuration)
 					).build();
 
-				contextObjects.putAll(
-					_fragmentEntryConfigurationParser.getContextObjects(
-						configurationDefaultValuesJSONObject, configuration));
+				template.putAll(contextObjects);
 
-				templateManager.addContextObjects(template, contextObjects);
-
-				templateManager.addTaglibSupport(
-					template, httpServletRequest, httpServletResponse);
+				template.prepareTaglib(httpServletRequest, httpServletResponse);
 
 				template.prepare(httpServletRequest);
 

@@ -181,8 +181,8 @@ public abstract class BaseWorkflowInstanceResourceTestCase {
 
 		WorkflowInstance workflowInstance = randomWorkflowInstance();
 
-		workflowInstance.setDefinitionName(regex);
-		workflowInstance.setDefinitionVersion(regex);
+		workflowInstance.setWorkflowDefinitionName(regex);
+		workflowInstance.setWorkflowDefinitionVersion(regex);
 
 		String json = WorkflowInstanceSerDes.toJSON(workflowInstance);
 
@@ -190,8 +190,10 @@ public abstract class BaseWorkflowInstanceResourceTestCase {
 
 		workflowInstance = WorkflowInstanceSerDes.toDTO(json);
 
-		Assert.assertEquals(regex, workflowInstance.getDefinitionName());
-		Assert.assertEquals(regex, workflowInstance.getDefinitionVersion());
+		Assert.assertEquals(
+			regex, workflowInstance.getWorkflowDefinitionName());
+		Assert.assertEquals(
+			regex, workflowInstance.getWorkflowDefinitionVersion());
 	}
 
 	@Test
@@ -359,6 +361,7 @@ public abstract class BaseWorkflowInstanceResourceTestCase {
 
 	@Test
 	public void testDeleteWorkflowInstance() throws Exception {
+		@SuppressWarnings("PMD.UnusedLocalVariable")
 		WorkflowInstance workflowInstance =
 			testDeleteWorkflowInstance_addWorkflowInstance();
 
@@ -612,8 +615,8 @@ public abstract class BaseWorkflowInstanceResourceTestCase {
 				continue;
 			}
 
-			if (Objects.equals("definitionName", additionalAssertFieldName)) {
-				if (workflowInstance.getDefinitionName() == null) {
+			if (Objects.equals("objectReviewed", additionalAssertFieldName)) {
+				if (workflowInstance.getObjectReviewed() == null) {
 					valid = false;
 				}
 
@@ -621,17 +624,19 @@ public abstract class BaseWorkflowInstanceResourceTestCase {
 			}
 
 			if (Objects.equals(
-					"definitionVersion", additionalAssertFieldName)) {
+					"workflowDefinitionName", additionalAssertFieldName)) {
 
-				if (workflowInstance.getDefinitionVersion() == null) {
+				if (workflowInstance.getWorkflowDefinitionName() == null) {
 					valid = false;
 				}
 
 				continue;
 			}
 
-			if (Objects.equals("objectReviewed", additionalAssertFieldName)) {
-				if (workflowInstance.getObjectReviewed() == null) {
+			if (Objects.equals(
+					"workflowDefinitionVersion", additionalAssertFieldName)) {
+
+				if (workflowInstance.getWorkflowDefinitionVersion() == null) {
 					valid = false;
 				}
 
@@ -728,30 +733,6 @@ public abstract class BaseWorkflowInstanceResourceTestCase {
 				continue;
 			}
 
-			if (Objects.equals("definitionName", additionalAssertFieldName)) {
-				if (!Objects.deepEquals(
-						workflowInstance1.getDefinitionName(),
-						workflowInstance2.getDefinitionName())) {
-
-					return false;
-				}
-
-				continue;
-			}
-
-			if (Objects.equals(
-					"definitionVersion", additionalAssertFieldName)) {
-
-				if (!Objects.deepEquals(
-						workflowInstance1.getDefinitionVersion(),
-						workflowInstance2.getDefinitionVersion())) {
-
-					return false;
-				}
-
-				continue;
-			}
-
 			if (Objects.equals("id", additionalAssertFieldName)) {
 				if (!Objects.deepEquals(
 						workflowInstance1.getId(), workflowInstance2.getId())) {
@@ -773,9 +754,59 @@ public abstract class BaseWorkflowInstanceResourceTestCase {
 				continue;
 			}
 
+			if (Objects.equals(
+					"workflowDefinitionName", additionalAssertFieldName)) {
+
+				if (!Objects.deepEquals(
+						workflowInstance1.getWorkflowDefinitionName(),
+						workflowInstance2.getWorkflowDefinitionName())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals(
+					"workflowDefinitionVersion", additionalAssertFieldName)) {
+
+				if (!Objects.deepEquals(
+						workflowInstance1.getWorkflowDefinitionVersion(),
+						workflowInstance2.getWorkflowDefinitionVersion())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
 			throw new IllegalArgumentException(
 				"Invalid additional assert field name " +
 					additionalAssertFieldName);
+		}
+
+		return true;
+	}
+
+	protected boolean equals(
+		Map<String, Object> map1, Map<String, Object> map2) {
+
+		if (Objects.equals(map1.keySet(), map2.keySet())) {
+			for (Map.Entry<String, Object> entry : map1.entrySet()) {
+				if (entry.getValue() instanceof Map) {
+					if (!equals(
+							(Map)entry.getValue(),
+							(Map)map2.get(entry.getKey()))) {
+
+						return false;
+					}
+				}
+				else if (!Objects.deepEquals(
+							entry.getValue(), map2.get(entry.getKey()))) {
+
+					return false;
+				}
+			}
 		}
 
 		return true;
@@ -796,31 +827,31 @@ public abstract class BaseWorkflowInstanceResourceTestCase {
 				continue;
 			}
 
-			if (Objects.equals("definitionName", fieldName)) {
-				if (!Objects.deepEquals(
-						workflowInstance.getDefinitionName(),
-						jsonObject.getString("definitionName"))) {
-
-					return false;
-				}
-
-				continue;
-			}
-
-			if (Objects.equals("definitionVersion", fieldName)) {
-				if (!Objects.deepEquals(
-						workflowInstance.getDefinitionVersion(),
-						jsonObject.getString("definitionVersion"))) {
-
-					return false;
-				}
-
-				continue;
-			}
-
 			if (Objects.equals("id", fieldName)) {
 				if (!Objects.deepEquals(
 						workflowInstance.getId(), jsonObject.getLong("id"))) {
+
+					return false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals("workflowDefinitionName", fieldName)) {
+				if (!Objects.deepEquals(
+						workflowInstance.getWorkflowDefinitionName(),
+						jsonObject.getString("workflowDefinitionName"))) {
+
+					return false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals("workflowDefinitionVersion", fieldName)) {
+				if (!Objects.deepEquals(
+						workflowInstance.getWorkflowDefinitionVersion(),
+						jsonObject.getString("workflowDefinitionVersion"))) {
 
 					return false;
 				}
@@ -959,22 +990,6 @@ public abstract class BaseWorkflowInstanceResourceTestCase {
 			return sb.toString();
 		}
 
-		if (entityFieldName.equals("definitionName")) {
-			sb.append("'");
-			sb.append(String.valueOf(workflowInstance.getDefinitionName()));
-			sb.append("'");
-
-			return sb.toString();
-		}
-
-		if (entityFieldName.equals("definitionVersion")) {
-			sb.append("'");
-			sb.append(String.valueOf(workflowInstance.getDefinitionVersion()));
-			sb.append("'");
-
-			return sb.toString();
-		}
-
 		if (entityFieldName.equals("id")) {
 			throw new IllegalArgumentException(
 				"Invalid entity field " + entityFieldName);
@@ -983,6 +998,25 @@ public abstract class BaseWorkflowInstanceResourceTestCase {
 		if (entityFieldName.equals("objectReviewed")) {
 			throw new IllegalArgumentException(
 				"Invalid entity field " + entityFieldName);
+		}
+
+		if (entityFieldName.equals("workflowDefinitionName")) {
+			sb.append("'");
+			sb.append(
+				String.valueOf(workflowInstance.getWorkflowDefinitionName()));
+			sb.append("'");
+
+			return sb.toString();
+		}
+
+		if (entityFieldName.equals("workflowDefinitionVersion")) {
+			sb.append("'");
+			sb.append(
+				String.valueOf(
+					workflowInstance.getWorkflowDefinitionVersion()));
+			sb.append("'");
+
+			return sb.toString();
 		}
 
 		throw new IllegalArgumentException(
@@ -1012,9 +1046,9 @@ public abstract class BaseWorkflowInstanceResourceTestCase {
 				completed = RandomTestUtil.randomBoolean();
 				dateCompletion = RandomTestUtil.nextDate();
 				dateCreated = RandomTestUtil.nextDate();
-				definitionName = RandomTestUtil.randomString();
-				definitionVersion = RandomTestUtil.randomString();
 				id = RandomTestUtil.randomLong();
+				workflowDefinitionName = RandomTestUtil.randomString();
+				workflowDefinitionVersion = RandomTestUtil.randomString();
 			}
 		};
 	}

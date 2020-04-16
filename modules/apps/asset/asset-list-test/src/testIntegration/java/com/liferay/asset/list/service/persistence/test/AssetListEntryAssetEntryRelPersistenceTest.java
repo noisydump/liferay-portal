@@ -132,6 +132,9 @@ public class AssetListEntryAssetEntryRelPersistenceTest {
 		newAssetListEntryAssetEntryRel.setMvccVersion(
 			RandomTestUtil.nextLong());
 
+		newAssetListEntryAssetEntryRel.setCtCollectionId(
+			RandomTestUtil.nextLong());
+
 		newAssetListEntryAssetEntryRel.setUuid(RandomTestUtil.randomString());
 
 		newAssetListEntryAssetEntryRel.setGroupId(RandomTestUtil.nextLong());
@@ -172,6 +175,9 @@ public class AssetListEntryAssetEntryRelPersistenceTest {
 		Assert.assertEquals(
 			existingAssetListEntryAssetEntryRel.getMvccVersion(),
 			newAssetListEntryAssetEntryRel.getMvccVersion());
+		Assert.assertEquals(
+			existingAssetListEntryAssetEntryRel.getCtCollectionId(),
+			newAssetListEntryAssetEntryRel.getCtCollectionId());
 		Assert.assertEquals(
 			existingAssetListEntryAssetEntryRel.getUuid(),
 			newAssetListEntryAssetEntryRel.getUuid());
@@ -263,6 +269,13 @@ public class AssetListEntryAssetEntryRelPersistenceTest {
 	}
 
 	@Test
+	public void testCountByA_SArrayable() throws Exception {
+		_persistence.countByA_S(
+			RandomTestUtil.nextLong(),
+			new long[] {RandomTestUtil.nextLong(), 0L});
+	}
+
+	@Test
 	public void testCountByA_S_P() throws Exception {
 		_persistence.countByA_S_P(
 			RandomTestUtil.nextLong(), RandomTestUtil.nextLong(),
@@ -311,7 +324,8 @@ public class AssetListEntryAssetEntryRelPersistenceTest {
 		getOrderByComparator() {
 
 		return OrderByComparatorFactoryUtil.create(
-			"AssetListEntryAssetEntryRel", "mvccVersion", true, "uuid", true,
+			"AssetListEntryAssetEntryRel", "mvccVersion", true,
+			"ctCollectionId", true, "uuid", true,
 			"assetListEntryAssetEntryRelId", true, "groupId", true, "companyId",
 			true, "userId", true, "userName", true, "createDate", true,
 			"modifiedDate", true, "assetListEntryId", true, "assetEntryId",
@@ -617,6 +631,9 @@ public class AssetListEntryAssetEntryRelPersistenceTest {
 			_persistence.create(pk);
 
 		assetListEntryAssetEntryRel.setMvccVersion(RandomTestUtil.nextLong());
+
+		assetListEntryAssetEntryRel.setCtCollectionId(
+			RandomTestUtil.nextLong());
 
 		assetListEntryAssetEntryRel.setUuid(RandomTestUtil.randomString());
 

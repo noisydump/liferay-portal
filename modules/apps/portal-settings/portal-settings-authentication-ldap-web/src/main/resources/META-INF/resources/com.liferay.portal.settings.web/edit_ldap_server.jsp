@@ -21,7 +21,7 @@ String redirect = ParamUtil.getString(request, "redirect");
 
 String backURL = ParamUtil.getString(request, "backURL", redirect);
 
-long ldapServerId = ParamUtil.getLong(request, "ldapServerId", 0);
+long ldapServerId = ParamUtil.getLong(request, "ldapServerId");
 
 LDAPServerConfiguration ldapServerConfiguration = ldapServerConfigurationProvider.getConfiguration(themeDisplay.getCompanyId(), ldapServerId);
 
@@ -315,7 +315,7 @@ renderResponse.setTitle((ldapServerId == 0) ? LanguageUtil.get(resourceBundle, "
 			'portrait',
 			'screenName',
 			'status',
-			'uuid'
+			'uuid',
 		];
 		var userMappingFieldValues = [
 			'userMappingEmailAddress',
@@ -329,7 +329,7 @@ renderResponse.setTitle((ldapServerId == 0) ? LanguageUtil.get(resourceBundle, "
 			'userMappingPortrait',
 			'userMappingScreenName',
 			'userMappingStatus',
-			'userMappingUuid'
+			'userMappingUuid',
 		];
 
 		var form = document.<portlet:namespace />fm;
@@ -343,7 +343,7 @@ renderResponse.setTitle((ldapServerId == 0) ? LanguageUtil.get(resourceBundle, "
 		var groupMappingFieldValues = [
 			'groupMappingDescription',
 			'groupMappingGroupName',
-			'groupMappingUser'
+			'groupMappingUser',
 		];
 
 		var groupMapping = <portlet:namespace />mapValues(
@@ -356,8 +356,8 @@ renderResponse.setTitle((ldapServerId == 0) ? LanguageUtil.get(resourceBundle, "
 				<%= Constants.CMD %>:
 					'<%= (ldapServerId <= 0) ? Constants.ADD : Constants.UPDATE %>',
 				'ldap--<%= LDAPConstants.USER_MAPPINGS %>--': userMapping,
-				'ldap--<%= LDAPConstants.GROUP_MAPPINGS %>--': groupMapping
-			}
+				'ldap--<%= LDAPConstants.GROUP_MAPPINGS %>--': groupMapping,
+			},
 		});
 	}
 
@@ -407,7 +407,8 @@ renderResponse.setTitle((ldapServerId == 0) ? LanguageUtil.get(resourceBundle, "
 			userMappingLastName = 'sn';
 			userMappingPassword = 'userPassword';
 			userMappingScreenName = 'cn';
-		} else if (ldapType === 'fedora') {
+		}
+		else if (ldapType === 'fedora') {
 			baseDN = 'dc=localdomain';
 			baseProviderURL = 'ldap://localhost:19389';
 			importUserSearchFilter = '(objectClass=inetOrgPerson)';
@@ -420,7 +421,8 @@ renderResponse.setTitle((ldapServerId == 0) ? LanguageUtil.get(resourceBundle, "
 			userMappingLastName = 'sn';
 			userMappingPassword = 'userPassword';
 			userMappingScreenName = 'uid';
-		} else if (ldapType === 'microsoft') {
+		}
+		else if (ldapType === 'microsoft') {
 			baseDN = 'dc=example,dc=com';
 			baseProviderURL = 'ldap://localhost:389';
 			credentials = 'secret';
@@ -439,7 +441,8 @@ renderResponse.setTitle((ldapServerId == 0) ? LanguageUtil.get(resourceBundle, "
 			userMappingMiddleName = 'middleName';
 			userMappingPassword = 'unicodePwd';
 			userMappingScreenName = 'sAMAccountName';
-		} else if (ldapType === 'novell') {
+		}
+		else if (ldapType === 'novell') {
 			baseProviderURL = 'ldap://localhost:389';
 			credentials = 'secret';
 			principal = 'cn=admin,ou=test';
@@ -450,7 +453,8 @@ renderResponse.setTitle((ldapServerId == 0) ? LanguageUtil.get(resourceBundle, "
 			userMappingLastName = 'sn';
 			userMappingPassword = 'userPassword';
 			userMappingScreenName = 'cn';
-		} else if (ldapType === 'open') {
+		}
+		else if (ldapType === 'open') {
 			baseDN = 'dc=example,dc=com';
 			baseProviderURL = 'ldap://localhost:389';
 			credentials = 'secret';
@@ -495,7 +499,7 @@ renderResponse.setTitle((ldapServerId == 0) ? LanguageUtil.get(resourceBundle, "
 			'ldap--<%= LDAPConstants.USERS_DN %>--': baseDN,
 			'ldap--<%= LDAPConstants.USER_DEFAULT_OBJECT_CLASSES %>--': exportMappingUserDefaultObjectClass,
 			'ldap--<%= LDAPConstants.GROUPS_DN %>--': baseDN,
-			'ldap--<%= LDAPConstants.GROUP_DEFAULT_OBJECT_CLASSES %>--': exportMappingGroupDefaultObjectClass
+			'ldap--<%= LDAPConstants.GROUP_DEFAULT_OBJECT_CLASSES %>--': exportMappingGroupDefaultObjectClass,
 		});
 	}
 
@@ -508,13 +512,14 @@ renderResponse.setTitle((ldapServerId == 0) ? LanguageUtil.get(resourceBundle, "
 			var url = null;
 
 			var data = {
-				p_auth: '<%= AuthTokenUtil.getToken(request) %>'
+				p_auth: '<%= AuthTokenUtil.getToken(request) %>',
 			};
 
 			if (type === 'ldapConnection') {
 				url =
 					'<portlet:renderURL copyCurrentRenderParameters="<%= false %>" windowState="<%= LiferayWindowState.EXCLUSIVE.toString() %>"><portlet:param name="mvcRenderCommandName" value="/portal_settings/test_ldap_connection" /></portlet:renderURL>';
-			} else if (type === 'ldapGroups') {
+			}
+			else if (type === 'ldapGroups') {
 				url =
 					'<portlet:renderURL copyCurrentRenderParameters="<%= false %>" windowState="<%= LiferayWindowState.EXCLUSIVE.toString() %>"><portlet:param name="mvcRenderCommandName" value="/portal_settings/test_ldap_groups" /></portlet:renderURL>';
 
@@ -534,7 +539,8 @@ renderResponse.setTitle((ldapServerId == 0) ? LanguageUtil.get(resourceBundle, "
 					document.<portlet:namespace />fm[
 						'<portlet:namespace />groupMappingUser'
 					].value;
-			} else if (type === 'ldapUsers') {
+			}
+			else if (type === 'ldapUsers') {
 				url =
 					'<portlet:renderURL copyCurrentRenderParameters="<%= false %>" windowState="<%= LiferayWindowState.EXCLUSIVE.toString() %>"><portlet:param name="mvcRenderCommandName" value="/portal_settings/test_ldap_users" /></portlet:renderURL>';
 
@@ -616,14 +622,14 @@ renderResponse.setTitle((ldapServerId == 0) ? LanguageUtil.get(resourceBundle, "
 
 				var dialog = Liferay.Util.Window.getWindow({
 					dialog: {
-						destroyOnHide: true
+						destroyOnHide: true,
 					},
-					title: '<%= UnicodeLanguageUtil.get(request, "ldap") %>'
+					title: '<%= UnicodeLanguageUtil.get(request, "ldap") %>',
 				});
 
 				dialog.plug(A.Plugin.IO, {
 					data: data,
-					uri: url
+					uri: url,
 				});
 			}
 		},

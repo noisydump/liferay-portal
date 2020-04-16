@@ -46,7 +46,7 @@ public class TrashEntryLocalServiceWrapper
 	 * @param statusOVPs the primary keys and statuses of any of the entry's
 	 versions (e.g., {@link
 	 com.liferay.portlet.documentlibrary.model.DLFileVersion})
-	 * @param typeSettingsProperties the type settings properties
+	 * @param typeSettingsUnicodeProperties the type settings properties
 	 * @return the trashEntry
 	 */
 	@Override
@@ -57,12 +57,12 @@ public class TrashEntryLocalServiceWrapper
 				<com.liferay.portal.kernel.util.ObjectValuePair<Long, Integer>>
 					statusOVPs,
 			com.liferay.portal.kernel.util.UnicodeProperties
-				typeSettingsProperties)
+				typeSettingsUnicodeProperties)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _trashEntryLocalService.addTrashEntry(
 			userId, groupId, className, classPK, classUuid, referrerClassName,
-			status, statusOVPs, typeSettingsProperties);
+			status, statusOVPs, typeSettingsUnicodeProperties);
 	}
 
 	/**
@@ -83,6 +83,17 @@ public class TrashEntryLocalServiceWrapper
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		_trashEntryLocalService.checkEntries();
+	}
+
+	/**
+	 * @throws PortalException
+	 */
+	@Override
+	public com.liferay.portal.kernel.model.PersistedModel createPersistedModel(
+			java.io.Serializable primaryKeyObj)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _trashEntryLocalService.createPersistedModel(primaryKeyObj);
 	}
 
 	/**
@@ -416,6 +427,9 @@ public class TrashEntryLocalServiceWrapper
 		return _trashEntryLocalService.getOSGiServiceIdentifier();
 	}
 
+	/**
+	 * @throws PortalException
+	 */
 	@Override
 	public com.liferay.portal.kernel.model.PersistedModel getPersistedModel(
 			java.io.Serializable primaryKeyObj)

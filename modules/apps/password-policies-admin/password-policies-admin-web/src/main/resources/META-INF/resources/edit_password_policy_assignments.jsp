@@ -132,7 +132,7 @@ SearchContainer searchContainer = editPasswordPolicyAssignmentsManagementToolbar
 			eventName: '<portlet:namespace />selectMember',
 			title:
 				'<liferay-ui:message arguments="<%= HtmlUtil.escape(passwordPolicy.getName()) %>" key="add-assignees-to-x" />',
-			url: '<%= selectMembersURL %>'
+			url: '<%= selectMembersURL %>',
 		});
 
 		itemSelectorDialog.on('selectedItemChange', function(event) {
@@ -150,7 +150,8 @@ SearchContainer searchContainer = editPasswordPolicyAssignmentsManagementToolbar
 						if (addUserIdsInput) {
 							addUserIdsInput.setAttribute('value', result.item);
 						}
-					} else if (result.memberType == 'organizations') {
+					}
+					else if (result.memberType == 'organizations') {
 						var addOrganizationIdsInput = form.querySelector(
 							'#<portlet:namespace />addOrganizationIds'
 						);

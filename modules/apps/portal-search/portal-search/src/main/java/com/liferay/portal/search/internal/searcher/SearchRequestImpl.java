@@ -36,6 +36,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 /**
@@ -56,6 +57,7 @@ public class SearchRequestImpl implements SearchRequest, Serializable {
 	public SearchRequestImpl(SearchRequestImpl searchRequestImpl) {
 		_aggregationsMap.putAll(searchRequestImpl._aggregationsMap);
 		_basicFacetSelection = searchRequestImpl._basicFacetSelection;
+		_connectionId = searchRequestImpl._connectionId;
 		_complexQueryParts.addAll(searchRequestImpl._complexQueryParts);
 		_emptySearchEnabled = searchRequestImpl._emptySearchEnabled;
 		_excludeContributors.addAll(searchRequestImpl._excludeContributors);
@@ -132,6 +134,11 @@ public class SearchRequestImpl implements SearchRequest, Serializable {
 	@Override
 	public List<ComplexQueryPart> getComplexQueryParts() {
 		return Collections.unmodifiableList(_complexQueryParts);
+	}
+
+	@Override
+	public String getConnectionId() {
+		return _connectionId;
 	}
 
 	@Override
@@ -284,6 +291,14 @@ public class SearchRequestImpl implements SearchRequest, Serializable {
 			Boolean.valueOf(basicFacetSelection));
 	}
 
+	public void setCompanyId(Long companyId) {
+		_searchContext.setCompanyId(GetterUtil.getLong(companyId));
+	}
+
+	public void setConnectionId(String connectionId) {
+		_connectionId = connectionId;
+	}
+
 	public void setEmptySearchEnabled(boolean emptySearchEnabled) {
 		_emptySearchEnabled = emptySearchEnabled;
 
@@ -322,6 +337,10 @@ public class SearchRequestImpl implements SearchRequest, Serializable {
 		Collections.addAll(_groupByRequests, groupByRequests);
 	}
 
+	public void setGroupIds(long... groupIds) {
+		_searchContext.setGroupIds(groupIds);
+	}
+
 	public void setHighlightEnabled(boolean highlightEnabled) {
 		QueryConfig queryConfig = _searchContext.getQueryConfig();
 
@@ -344,10 +363,18 @@ public class SearchRequestImpl implements SearchRequest, Serializable {
 		queryConfig.setSelectedIndexNames(indexes);
 	}
 
+	public void setLocale(Locale locale) {
+		_searchContext.setLocale(locale);
+	}
+
 	public void setModelIndexerClasses(Class<?>... classes) {
 		_modelIndexerClasses.clear();
 
 		Collections.addAll(_modelIndexerClasses, classes);
+	}
+
+	public void setOwnerUserId(Long userId) {
+		_searchContext.setOwnerUserId(GetterUtil.getLong(userId));
 	}
 
 	public void setPaginationStartParameterName(
@@ -398,6 +425,7 @@ public class SearchRequestImpl implements SearchRequest, Serializable {
 		new LinkedHashMap<>();
 	private boolean _basicFacetSelection;
 	private final List<ComplexQueryPart> _complexQueryParts = new ArrayList<>();
+	private String _connectionId;
 	private boolean _emptySearchEnabled;
 	private final List<String> _excludeContributors = new ArrayList<>();
 	private boolean _explain;

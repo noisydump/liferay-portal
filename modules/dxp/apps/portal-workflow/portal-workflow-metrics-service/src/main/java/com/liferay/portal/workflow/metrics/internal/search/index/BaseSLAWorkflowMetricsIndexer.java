@@ -14,10 +14,8 @@
 
 package com.liferay.portal.workflow.metrics.internal.search.index;
 
-import com.liferay.portal.kernel.search.DocumentImpl;
-import com.liferay.portal.kernel.search.Field;
+import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.search.query.BooleanQuery;
-import com.liferay.portal.workflow.metrics.sla.processor.WorkflowMetricsSLAStatus;
 
 /**
  * @author Rafael Praxedes
@@ -29,6 +27,7 @@ public abstract class BaseSLAWorkflowMetricsIndexer
 		BooleanQuery booleanQuery = queries.booleanQuery();
 
 		_deleteDocuments(
+			companyId,
 			booleanQuery.addMustQueryClauses(
 				queries.term("companyId", companyId),
 				queries.term("instanceId", instanceId)));
@@ -40,24 +39,22 @@ public abstract class BaseSLAWorkflowMetricsIndexer
 		BooleanQuery booleanQuery = queries.booleanQuery();
 
 		booleanQuery.addMustNotQueryClauses(
-			queries.term("status", WorkflowMetricsSLAStatus.COMPLETED.name()),
-			queries.term("status", WorkflowMetricsSLAStatus.STOPPED.name()));
+			queries.term("instanceCompleted", Boolean.TRUE));
 
 		_deleteDocuments(
+			companyId,
 			booleanQuery.addMustQueryClauses(
 				queries.term("companyId", companyId),
 				queries.term("processId", processId),
 				queries.term("slaDefinitionId", slaDefinitionId)));
 	}
 
-	private void _deleteDocuments(BooleanQuery booleanQuery) {
+	private void _deleteDocuments(long companyId, BooleanQuery booleanQuery) {
 		updateDocuments(
-			document -> new DocumentImpl() {
-				{
-					addKeyword("deleted", true);
-					addKeyword(Field.UID, document.getString(Field.UID));
-				}
-			},
+			companyId,
+			HashMapBuilder.<String, Object>put(
+				"deleted", Boolean.TRUE
+			).build(),
 			booleanQuery);
 	}
 

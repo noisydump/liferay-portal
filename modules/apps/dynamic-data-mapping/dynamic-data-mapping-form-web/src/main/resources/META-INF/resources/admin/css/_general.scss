@@ -137,12 +137,21 @@ td.lfr-name-column {
 	}
 }
 
+.ddm-share-url-popover {
+	max-width: 500px;
+	width: 100%;
+}
+
 .dynamic-data-mapping-data-providers-modal {
 	max-width: 720px;
 
 	.modal-content {
 		z-index: 1;
 	}
+}
+
+.editing-form-entry {
+	background-color: white;
 }
 
 .form-builder-page-manager-popover-header {

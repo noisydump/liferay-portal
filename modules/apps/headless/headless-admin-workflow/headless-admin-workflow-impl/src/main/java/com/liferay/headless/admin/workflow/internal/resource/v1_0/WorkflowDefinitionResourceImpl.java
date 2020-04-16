@@ -132,12 +132,12 @@ public class WorkflowDefinitionResourceImpl
 				description = workflowDefinition.getDescription();
 				name = workflowDefinition.getName();
 				title = workflowDefinition.getTitle();
-				version = GetterUtil.getString(workflowDefinition.getVersion());
+				version = String.valueOf(workflowDefinition.getVersion());
 			}
 		};
 	}
 
-	@Reference
+	@Reference(target = "(proxy.bean=false)")
 	private WorkflowDefinitionManager _workflowDefinitionManager;
 
 }

@@ -93,7 +93,7 @@ if (message.isAnonymous() || thread.isInTrash()) {
 				String[] ranks = {StringPool.BLANK, StringPool.BLANK};
 
 				if (!message.isAnonymous()) {
-					ranks = MBUserRankUtil.getUserRank(mbGroupServiceSettings, themeDisplay.getLanguageId(), statsUser);
+					ranks = MBStatsUserLocalServiceUtil.getUserRank(themeDisplay.getSiteGroupId(), themeDisplay.getLanguageId(), message.getUserId());
 				}
 
 				User messageUser = UserLocalServiceUtil.fetchUser(message.getUserId());
@@ -159,7 +159,7 @@ if (message.isAnonymous() || thread.isInTrash()) {
 					<div class="social-interaction">
 						<c:if test="<%= enableRatings %>">
 							<div id="<portlet:namespace />mbRatings">
-								<liferay-ui:ratings
+								<liferay-ratings:ratings
 									className="<%= MBMessage.class.getName() %>"
 									classPK="<%= message.getMessageId() %>"
 									inTrash="<%= message.isInTrash() %>"
@@ -460,7 +460,7 @@ if (message.isAnonymous() || thread.isInTrash()) {
 								sb.append(fileEntry.getTitle());
 								sb.append(StringPool.SPACE);
 								sb.append(StringPool.OPEN_PARENTHESIS);
-								sb.append(TextFormatter.formatStorageSize(fileEntry.getSize(), locale));
+								sb.append(LanguageUtil.formatStorageSize(fileEntry.getSize(), locale));
 								sb.append(StringPool.CLOSE_PARENTHESIS);
 
 								AssetRendererFactory<?> assetRendererFactory = AssetRendererFactoryRegistryUtil.getAssetRendererFactoryByClassName(DLFileEntry.class.getName());

@@ -59,9 +59,9 @@ KBTemplatesManagementToolbarDisplayContext kbTemplatesManagementToolbarDisplayCo
 				>
 
 					<%
-					Map<String, Object> rowData = new HashMap<String, Object>();
-
-					rowData.put("actions", StringUtil.merge(kbTemplatesManagementToolbarDisplayContext.getAvailableActions(kbTemplate)));
+					Map<String, Object> rowData = HashMapBuilder.<String, Object>put(
+						"actions", StringUtil.merge(kbTemplatesManagementToolbarDisplayContext.getAvailableActions(kbTemplate))
+					).build();
 
 					row.setData(rowData);
 					%>
@@ -140,7 +140,7 @@ KBTemplatesManagementToolbarDisplayContext kbTemplatesManagementToolbarDisplayCo
 	};
 
 	var ACTIONS = {
-		deleteKBTemplates: deleteKBTemplates
+		deleteKBTemplates: deleteKBTemplates,
 	};
 
 	Liferay.componentReady('kbTemplatesManagementToolbar').then(function(

@@ -16,6 +16,7 @@ package com.liferay.account.service.impl;
 
 import com.liferay.account.constants.AccountConstants;
 import com.liferay.account.exception.AccountEntryDomainsException;
+import com.liferay.account.exception.AccountEntryNameException;
 import com.liferay.account.model.AccountEntry;
 import com.liferay.account.service.base.AccountEntryLocalServiceBaseImpl;
 import com.liferay.petra.string.StringPool;
@@ -30,7 +31,10 @@ import com.liferay.portal.kernel.model.ResourceConstants;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.search.BaseModelSearchResult;
 import com.liferay.portal.kernel.search.Field;
+import com.liferay.portal.kernel.search.Indexer;
+import com.liferay.portal.kernel.search.IndexerRegistryUtil;
 import com.liferay.portal.kernel.search.SearchContext;
+import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.MapUtil;
@@ -114,7 +118,11 @@ public class AccountEntryLocalServiceImpl
 		int nameMaxLength = ModelHintsUtil.getMaxLength(
 			AccountEntry.class.getName(), "name");
 
-		accountEntry.setName(StringUtil.shorten(name, nameMaxLength));
+		name = StringUtil.shorten(name, nameMaxLength);
+
+		_validateName(name);
+
+		accountEntry.setName(name);
 
 		accountEntry.setDescription(description);
 
@@ -179,6 +187,21 @@ public class AccountEntryLocalServiceImpl
 	}
 
 	@Override
+	public void deleteAccountEntriesByCompanyId(long companyId) {
+		if (!CompanyThreadLocal.isDeleteInProcess()) {
+			throw new UnsupportedOperationException(
+				"Deleting account entries by company must be called when " +
+					"deleting a company");
+		}
+
+		for (AccountEntry accountRole :
+				accountEntryPersistence.findByCompanyId(companyId)) {
+
+			accountEntryPersistence.remove(accountRole);
+		}
+	}
+
+	@Override
 	public AccountEntry deleteAccountEntry(AccountEntry accountEntry)
 		throws PortalException {
 
@@ -240,7 +263,18 @@ public class AccountEntryLocalServiceImpl
 
 				long accountEntryId = document.getLong(Field.ENTRY_CLASS_PK);
 
-				return getAccountEntry(accountEntryId);
+				AccountEntry accountEntry = fetchAccountEntry(accountEntryId);
+
+				if (accountEntry == null) {
+					Indexer<AccountEntry> indexer =
+						IndexerRegistryUtil.getIndexer(AccountEntry.class);
+
+					indexer.delete(
+						document.getLong(Field.COMPANY_ID),
+						document.getString(Field.UID));
+				}
+
+				return accountEntry;
 			});
 
 		return new BaseModelSearchResult<>(
@@ -258,7 +292,11 @@ public class AccountEntryLocalServiceImpl
 			accountEntryId);
 
 		accountEntry.setParentAccountEntryId(parentAccountEntryId);
+
+		_validateName(name);
+
 		accountEntry.setName(name);
+
 		accountEntry.setDescription(description);
 
 		domains = _validateDomains(domains);
@@ -352,33 +390,35 @@ public class AccountEntryLocalServiceImpl
 			searchContext.setKeywords(keywords);
 		}
 
-		if (MapUtil.isNotEmpty(params)) {
-			long[] accountUserIds = (long[])params.get("accountUserIds");
-
-			if (ArrayUtil.isNotEmpty(accountUserIds)) {
-				searchContext.setAttribute("accountUserIds", accountUserIds);
-			}
-
-			String[] domains = (String[])params.get("domains");
-
-			if (ArrayUtil.isNotEmpty(domains)) {
-				searchContext.setAttribute("domains", domains);
-			}
-
-			long parentAccountEntryId = GetterUtil.getLong(
-				params.get("parentAccountEntryId"),
-				AccountConstants.ACCOUNT_ENTRY_ID_ANY);
-
-			if (parentAccountEntryId != AccountConstants.ACCOUNT_ENTRY_ID_ANY) {
-				searchContext.setAttribute(
-					"parentAccountEntryId", parentAccountEntryId);
-			}
-
-			int status = GetterUtil.getInteger(
-				params.get("status"), WorkflowConstants.STATUS_APPROVED);
-
-			searchContext.setAttribute("status", status);
+		if (MapUtil.isEmpty(params)) {
+			return;
 		}
+
+		long[] accountUserIds = (long[])params.get("accountUserIds");
+
+		if (ArrayUtil.isNotEmpty(accountUserIds)) {
+			searchContext.setAttribute("accountUserIds", accountUserIds);
+		}
+
+		String[] domains = (String[])params.get("domains");
+
+		if (ArrayUtil.isNotEmpty(domains)) {
+			searchContext.setAttribute("domains", domains);
+		}
+
+		long parentAccountEntryId = GetterUtil.getLong(
+			params.get("parentAccountEntryId"),
+			AccountConstants.ACCOUNT_ENTRY_ID_ANY);
+
+		if (parentAccountEntryId != AccountConstants.ACCOUNT_ENTRY_ID_ANY) {
+			searchContext.setAttribute(
+				"parentAccountEntryId", parentAccountEntryId);
+		}
+
+		int status = GetterUtil.getInteger(
+			params.get("status"), WorkflowConstants.STATUS_APPROVED);
+
+		searchContext.setAttribute("status", status);
 	}
 
 	private String[] _validateDomains(String[] domains) throws PortalException {
@@ -395,6 +435,12 @@ public class AccountEntryLocalServiceImpl
 		}
 
 		return ArrayUtil.distinct(domains);
+	}
+
+	private void _validateName(String name) throws PortalException {
+		if (Validator.isNull(name)) {
+			throw new AccountEntryNameException();
+		}
 	}
 
 	@Reference

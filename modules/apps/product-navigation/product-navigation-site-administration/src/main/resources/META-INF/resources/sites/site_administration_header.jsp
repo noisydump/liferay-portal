@@ -93,7 +93,7 @@ portletURL.setWindowState(LiferayWindowState.EXCLUSIVE);
 			label="<%= false %>"
 			linkCssClass="icon-monospaced"
 			markupView="lexicon"
-			message="go-to-other-site"
+			message="go-to-other-site-or-library"
 			url="javascript:;"
 		/>
 	</div>
@@ -103,11 +103,12 @@ portletURL.setWindowState(LiferayWindowState.EXCLUSIVE);
 
 	ItemSelector itemSelector = (ItemSelector)request.getAttribute(SiteAdministrationWebKeys.ITEM_SELECTOR);
 
-	ItemSelectorCriterion itemSelectorCriterion = new GroupItemSelectorCriterion();
+	GroupItemSelectorCriterion groupItemSelectorCriterion = new GroupItemSelectorCriterion();
 
-	itemSelectorCriterion.setDesiredItemSelectorReturnTypes(new URLItemSelectorReturnType());
+	groupItemSelectorCriterion.setDesiredItemSelectorReturnTypes(new URLItemSelectorReturnType());
+	groupItemSelectorCriterion.setIncludeAllVisibleGroups(true);
 
-	PortletURL itemSelectorURL = itemSelector.getItemSelectorURL(RequestBackedPortletURLFactoryUtil.create(liferayPortletRequest), eventName, itemSelectorCriterion);
+	PortletURL itemSelectorURL = itemSelector.getItemSelectorURL(RequestBackedPortletURLFactoryUtil.create(liferayPortletRequest), eventName, groupItemSelectorCriterion);
 	%>
 
 	<script>
@@ -123,12 +124,13 @@ portletURL.setWindowState(LiferayWindowState.EXCLUSIVE);
 							dialog: {
 								constrain: true,
 								destroyOnHide: true,
-								modal: true
+								modal: true,
 							},
 							eventName: '<%= eventName %>',
 							id: '<portlet:namespace />selectSite',
-							title: '<liferay-ui:message key="select-site" />',
-							uri: '<%= itemSelectorURL.toString() %>'
+							title:
+								'<liferay-ui:message key="select-site-or-asset-library" />',
+							uri: '<%= itemSelectorURL.toString() %>',
 						},
 						function(event) {
 							location.href = event.url;
@@ -159,7 +161,7 @@ portletURL.setWindowState(LiferayWindowState.EXCLUSIVE);
 
 				<div class="autofit-col autofit-col-expand">
 					<div class="depot-type">
-						<liferay-ui:message key='<%= (group.getType() == GroupConstants.TYPE_DEPOT) ? "repository" : "site" %>' />
+						<liferay-ui:message key='<%= (group.getType() == GroupConstants.TYPE_DEPOT) ? "asset-library" : "site" %>' />
 					</div>
 
 					<div class="site-name text-truncate">

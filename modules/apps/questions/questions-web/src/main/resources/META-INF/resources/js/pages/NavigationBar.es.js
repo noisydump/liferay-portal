@@ -12,56 +12,80 @@
  * details.
  */
 
-import ClayButton from '@clayui/button';
 import ClayLink from '@clayui/link';
 import ClayNavigationBar from '@clayui/navigation-bar';
-import React, {useContext, useState} from 'react';
+import React, {useContext, useEffect} from 'react';
 import {withRouter} from 'react-router-dom';
 
 import {AppContext} from '../AppContext.es';
+import {historyPushWithSlug} from '../utils/utils.es';
 
-export default withRouter(({history}) => {
-	const navigate = href => {
-		history.push('/' + href);
-		setActive(href);
-	};
+export default withRouter(
+	({
+		history,
+		location,
+		match: {
+			params: {sectionTitle},
+		},
+	}) => {
+		const isActive = value => location.pathname.includes(value);
 
-	const context = useContext(AppContext);
+		const context = useContext(AppContext);
 
-	const [active, setActive] = useState('questions');
+		useEffect(() => {
+			if (sectionTitle) {
+				context.setSection(sectionTitle);
+			}
+		}, [context, sectionTitle]);
 
-	return (
-		<div className="autofit-padded autofit-row navigation-bar">
-			<div className="autofit-col autofit-col-expand">
-				<ClayNavigationBar triggerLabel="Questions">
-					<ClayNavigationBar.Item
-						active={active === 'questions'}
-						onClick={() => navigate('questions')}
-					>
-						<ClayLink className="nav-link" displayType="unstyled">
-							{Liferay.Language.get('questions')}
-						</ClayLink>
-					</ClayNavigationBar.Item>
-					<ClayNavigationBar.Item
-						active={active === 'keywords'}
-						onClick={() => navigate('keywords')}
-					>
-						<ClayLink className="nav-link" displayType="unstyled">
-							{Liferay.Language.get('keywords')}
-						</ClayLink>
-					</ClayNavigationBar.Item>
-				</ClayNavigationBar>
-			</div>
-			<div className="autofit-col">
-				{context.canCreateThread && (
-					<ClayButton
-						displayType="primary"
-						onClick={() => navigate('questions/new')}
-					>
-						{Liferay.Language.get('ask-question')}
-					</ClayButton>
-				)}
-			</div>
-		</div>
-	);
-});
+		const historyPushParser = historyPushWithSlug(history.push);
+
+		return (
+			<section className="border-bottom questions-section questions-section-nav">
+				<div className="questions-container">
+					<div className="row">
+						{location.pathname !== '/' && (
+							<div className="align-items-center col d-flex justify-content-between">
+								<ClayNavigationBar triggerLabel="Questions">
+									<ClayNavigationBar.Item
+										active={!isActive('activity')}
+										onClick={() =>
+											historyPushParser(
+												`/questions/${context.section}`
+											)
+										}
+									>
+										<ClayLink
+											className="nav-link"
+											displayType="unstyled"
+										>
+											{Liferay.Language.get('questions')}
+										</ClayLink>
+									</ClayNavigationBar.Item>
+
+									<ClayNavigationBar.Item
+										active={isActive('activity')}
+										onClick={() =>
+											historyPushParser(
+												`/activity/${context.userId}`
+											)
+										}
+									>
+										<ClayLink
+											className="nav-link"
+											displayType="unstyled"
+										>
+											{Liferay.Language.get(
+												'my-activity'
+											)}
+										</ClayLink>
+									</ClayNavigationBar.Item>
+								</ClayNavigationBar>
+							</div>
+						)}
+					</div>
+				</div>
+			</section>
+		);
+	}
+);

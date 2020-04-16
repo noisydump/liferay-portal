@@ -32,6 +32,7 @@ import org.gradle.api.Action;
 import org.gradle.api.GradleException;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
+import org.gradle.api.Task;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.invocation.Gradle;
 import org.gradle.api.logging.Logger;
@@ -41,6 +42,7 @@ import org.gradle.api.plugins.JavaPlugin;
 import org.gradle.api.plugins.PluginContainer;
 import org.gradle.api.specs.Spec;
 import org.gradle.api.tasks.TaskContainer;
+import org.gradle.api.tasks.TaskOutputs;
 import org.gradle.util.VersionNumber;
 
 /**
@@ -87,6 +89,11 @@ public class TargetPlatformPlugin implements Plugin<Project> {
 
 		final Configuration targetPlatformDistroConfiguration =
 			_addConfigurationTargetPlatformDistro(project);
+
+		DependencyManagementTask dependencyManagementTask =
+			_addTaskDependencyManagement(project);
+
+		_configureTaskDependencyManagement(dependencyManagementTask);
 
 		PluginContainer pluginContainer = project.getPlugins();
 
@@ -219,8 +226,22 @@ public class TargetPlatformPlugin implements Plugin<Project> {
 			logger.info(
 				"Explicitly excluding {} from resolution", afterProject);
 		}
+	}
 
-		_addTaskDependencyManagement(afterProject);
+	private void _configureTaskDependencyManagement(
+		DependencyManagementTask dependencyManagementTask) {
+
+		TaskOutputs taskOutputs = dependencyManagementTask.getOutputs();
+
+		taskOutputs.upToDateWhen(
+			new Spec<Task>() {
+
+				@Override
+				public boolean isSatisfiedBy(Task task) {
+					return false;
+				}
+
+			});
 	}
 
 	private void _configureTaskResolve(

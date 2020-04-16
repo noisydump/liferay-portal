@@ -55,7 +55,7 @@ DLOpenerGoogleDriveFileReference dlOpenerGoogleDriveFileReference = (DLOpenerGoo
 
 			function polling() {
 				Liferay.Util.fetch('<%= googleDriveBackgroundTaskStatusURL %>', {
-					method: 'POST'
+					method: 'POST',
 				})
 					.then(function(response) {
 						if (!response.ok) {
@@ -69,9 +69,11 @@ DLOpenerGoogleDriveFileReference dlOpenerGoogleDriveFileReference = (DLOpenerGoo
 							url = response.googleDocsEditURL;
 
 							navigate();
-						} else if (response.error) {
+						}
+						else if (response.error) {
 							throw defaultError;
-						} else {
+						}
+						else {
 							setTimeout(polling, TIME_POLLING);
 						}
 					})
@@ -86,7 +88,7 @@ DLOpenerGoogleDriveFileReference dlOpenerGoogleDriveFileReference = (DLOpenerGoo
 				showStatusMessage({
 					message: message,
 					title: '<liferay-ui:message key="error" />:',
-					type: 'danger'
+					type: 'danger',
 				});
 			}
 
@@ -111,8 +113,8 @@ DLOpenerGoogleDriveFileReference dlOpenerGoogleDriveFileReference = (DLOpenerGoo
 						modal: true,
 						resizable: false,
 						title: '',
-						width: 320
-					}
+						width: 320,
+					},
 				},
 				function() {
 					setTimeout(polling, TIME_POLLING);

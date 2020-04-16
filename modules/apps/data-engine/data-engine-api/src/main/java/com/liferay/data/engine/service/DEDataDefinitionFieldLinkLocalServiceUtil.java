@@ -54,12 +54,25 @@ public class DEDataDefinitionFieldLinkLocalServiceUtil {
 	}
 
 	public static com.liferay.data.engine.model.DEDataDefinitionFieldLink
-		addDEDataDefinitionFieldLink(
-			long groupId, long classNameId, long classPK, long ddmStructureId,
-			String fieldName) {
+			addDEDataDefinitionFieldLink(
+				long groupId, long classNameId, long classPK,
+				long ddmStructureId, String fieldName)
+		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return getService().addDEDataDefinitionFieldLink(
 			groupId, classNameId, classPK, ddmStructureId, fieldName);
+	}
+
+	public static com.liferay.data.engine.model.DEDataDefinitionFieldLink
+			addDEDataDefinitionFieldLink(
+				long groupId, long classNameId, long classPK,
+				long ddmStructureId, String fieldName,
+				com.liferay.portal.kernel.service.ServiceContext serviceContext)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return getService().addDEDataDefinitionFieldLink(
+			groupId, classNameId, classPK, ddmStructureId, fieldName,
+			serviceContext);
 	}
 
 	/**
@@ -73,6 +86,16 @@ public class DEDataDefinitionFieldLinkLocalServiceUtil {
 
 		return getService().createDEDataDefinitionFieldLink(
 			deDataDefinitionFieldLinkId);
+	}
+
+	/**
+	 * @throws PortalException
+	 */
+	public static com.liferay.portal.kernel.model.PersistedModel
+			createPersistedModel(java.io.Serializable primaryKeyObj)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return getService().createPersistedModel(primaryKeyObj);
 	}
 
 	/**
@@ -298,6 +321,13 @@ public class DEDataDefinitionFieldLinkLocalServiceUtil {
 
 	public static java.util.List
 		<com.liferay.data.engine.model.DEDataDefinitionFieldLink>
+			getDEDataDefinitionFieldLinks(long ddmStructureId) {
+
+		return getService().getDEDataDefinitionFieldLinks(ddmStructureId);
+	}
+
+	public static java.util.List
+		<com.liferay.data.engine.model.DEDataDefinitionFieldLink>
 			getDEDataDefinitionFieldLinks(
 				long classNameId, long ddmStructureId, String fieldName) {
 
@@ -352,6 +382,14 @@ public class DEDataDefinitionFieldLinkLocalServiceUtil {
 		return getService().getDEDataDefinitionFieldLinksCount();
 	}
 
+	public static com.liferay.portal.kernel.dao.orm.ExportActionableDynamicQuery
+		getExportActionableDynamicQuery(
+			com.liferay.exportimport.kernel.lar.PortletDataContext
+				portletDataContext) {
+
+		return getService().getExportActionableDynamicQuery(portletDataContext);
+	}
+
 	public static
 		com.liferay.portal.kernel.dao.orm.IndexableActionableDynamicQuery
 			getIndexableActionableDynamicQuery() {
@@ -368,6 +406,9 @@ public class DEDataDefinitionFieldLinkLocalServiceUtil {
 		return getService().getOSGiServiceIdentifier();
 	}
 
+	/**
+	 * @throws PortalException
+	 */
 	public static com.liferay.portal.kernel.model.PersistedModel
 			getPersistedModel(java.io.Serializable primaryKeyObj)
 		throws com.liferay.portal.kernel.exception.PortalException {

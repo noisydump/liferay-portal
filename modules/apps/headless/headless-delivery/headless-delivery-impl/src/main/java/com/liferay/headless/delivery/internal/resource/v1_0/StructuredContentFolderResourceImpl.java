@@ -33,6 +33,7 @@ import com.liferay.portal.kernel.search.filter.BooleanFilter;
 import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.search.filter.TermFilter;
 import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.odata.entity.EntityModel;
 import com.liferay.portal.vulcan.dto.converter.DTOConverterRegistry;
@@ -94,7 +95,18 @@ public class StructuredContentFolderResourceImpl
 		}
 
 		return _getFoldersPage(
-			siteId, parentStructuredContentFolderId, search, filter, pagination,
+			HashMapBuilder.<String, Map<String, String>>put(
+				"create",
+				addAction(
+					"UPDATE", "postSiteStructuredContentFolder",
+					"com.liferay.journal", siteId)
+			).put(
+				"get",
+				addAction(
+					"VIEW", "getSiteStructuredContentFoldersPage",
+					"com.liferay.journal", siteId)
+			).build(),
+			parentStructuredContentFolderId, siteId, filter, search, pagination,
 			sorts);
 	}
 
@@ -118,8 +130,29 @@ public class StructuredContentFolderResourceImpl
 			parentStructuredContentFolderId);
 
 		return _getFoldersPage(
-			journalFolder.getGroupId(), parentStructuredContentFolderId, search,
-			filter, pagination, sorts);
+			HashMapBuilder.<String, Map<String, String>>put(
+				"add-subfolder",
+				addAction(
+					"UPDATE", journalFolder,
+					"postStructuredContentFolderStructuredContentFolder")
+			).put(
+				"get",
+				addAction(
+					"VIEW", journalFolder,
+					"getStructuredContentFolderStructuredContentFoldersPage")
+			).put(
+				"subscribe",
+				addAction(
+					"SUBSCRIBE", journalFolder,
+					"putStructuredContentFolderSubscribe")
+			).put(
+				"unsubscribe",
+				addAction(
+					"SUBSCRIBE", journalFolder,
+					"putStructuredContentFolderUnsubscribe")
+			).build(),
+			parentStructuredContentFolderId, journalFolder.getGroupId(), filter,
+			search, pagination, sorts);
 	}
 
 	@Override
@@ -216,11 +249,13 @@ public class StructuredContentFolderResourceImpl
 	}
 
 	private Page<StructuredContentFolder> _getFoldersPage(
-			Long siteId, Long parentStructuredContentFolderId, String search,
-			Filter filter, Pagination pagination, Sort[] sorts)
+			Map<String, Map<String, String>> actions,
+			Long parentStructuredContentFolderId, Long siteId, Filter filter,
+			String keywords, Pagination pagination, Sort[] sorts)
 		throws Exception {
 
 		return SearchUtil.search(
+			actions,
 			booleanQuery -> {
 				if (parentStructuredContentFolderId != null) {
 					BooleanFilter booleanFilter =
@@ -233,17 +268,17 @@ public class StructuredContentFolderResourceImpl
 						BooleanClauseOccur.MUST);
 				}
 			},
-			filter, JournalFolder.class, search, pagination,
+			filter, JournalFolder.class, keywords, pagination,
 			queryConfig -> queryConfig.setSelectedFieldNames(
 				Field.ENTRY_CLASS_PK),
 			searchContext -> {
 				searchContext.setCompanyId(contextCompany.getCompanyId());
 				searchContext.setGroupIds(new long[] {siteId});
 			},
+			sorts,
 			document -> _toStructuredContentFolder(
 				_journalFolderService.getFolder(
-					GetterUtil.getLong(document.get(Field.ENTRY_CLASS_PK)))),
-			sorts);
+					GetterUtil.getLong(document.get(Field.ENTRY_CLASS_PK)))));
 	}
 
 	private StructuredContentFolder _toStructuredContentFolder(
@@ -252,6 +287,36 @@ public class StructuredContentFolderResourceImpl
 
 		return _structuredContentFolderDTOConverter.toDTO(
 			new DefaultDTOConverterContext(
+				contextAcceptLanguage.isAcceptAllLanguages(),
+				HashMapBuilder.<String, Map<String, String>>put(
+					"add-subfolder",
+					addAction(
+						"UPDATE", journalFolder,
+						"postStructuredContentFolderStructuredContentFolder")
+				).put(
+					"delete",
+					addAction(
+						"DELETE", journalFolder,
+						"deleteStructuredContentFolder")
+				).put(
+					"get",
+					addAction(
+						"VIEW", journalFolder, "getStructuredContentFolder")
+				).put(
+					"replace",
+					addAction(
+						"UPDATE", journalFolder, "putStructuredContentFolder")
+				).put(
+					"subscribe",
+					addAction(
+						"SUBSCRIBE", journalFolder,
+						"putStructuredContentFolderSubscribe")
+				).put(
+					"unsubscribe",
+					addAction(
+						"SUBSCRIBE", journalFolder,
+						"putStructuredContentFolderUnsubscribe")
+				).build(),
 				_dtoConverterRegistry, journalFolder.getFolderId(),
 				contextAcceptLanguage.getPreferredLocale(), contextUriInfo,
 				contextUser));

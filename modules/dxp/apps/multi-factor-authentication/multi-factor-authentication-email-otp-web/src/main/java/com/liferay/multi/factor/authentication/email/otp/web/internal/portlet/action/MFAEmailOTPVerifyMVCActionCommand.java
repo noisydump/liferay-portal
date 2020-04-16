@@ -63,13 +63,24 @@ public class MFAEmailOTPVerifyMVCActionCommand extends BaseMVCActionCommand {
 			return;
 		}
 
-		if (_mfaEmailOTPChecker.verifyBrowserRequest(
-				_portal.getHttpServletRequest(actionRequest),
-				_portal.getHttpServletResponse(actionResponse),
-				mfaEmailOTPUserId)) {
+		try {
+			if (!_mfaEmailOTPChecker.verifyBrowserRequest(
+					_portal.getHttpServletRequest(actionRequest),
+					_portal.getHttpServletResponse(actionResponse),
+					mfaEmailOTPUserId)) {
 
-			sendRedirect(actionRequest, actionResponse);
+				SessionErrors.add(actionRequest, "mfaEmailOTPFailed");
+
+				return;
+			}
 		}
+		catch (Exception exception) {
+			SessionErrors.add(actionRequest, exception.getClass(), exception);
+
+			return;
+		}
+
+		sendRedirect(actionRequest, actionResponse);
 	}
 
 	private long _getMFAEmailOTPUserId(PortletRequest portletRequest) {

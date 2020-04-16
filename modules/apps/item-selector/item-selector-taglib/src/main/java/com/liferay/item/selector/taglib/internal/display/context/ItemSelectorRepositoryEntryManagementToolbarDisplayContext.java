@@ -16,8 +16,10 @@ package com.liferay.item.selector.taglib.internal.display.context;
 
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemList;
+import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemListBuilder;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.ViewTypeItemList;
 import com.liferay.item.selector.taglib.servlet.taglib.RepositoryEntryBrowserTag;
+import com.liferay.item.selector.taglib.servlet.taglib.util.RepositoryEntryBrowserTagUtil;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.portlet.LiferayPortletRequest;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
@@ -27,8 +29,6 @@ import com.liferay.portal.kernel.portlet.PortletURLUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
-import com.liferay.portal.kernel.util.ParamUtil;
-import com.liferay.portal.kernel.util.Validator;
 
 import java.util.List;
 import java.util.Map;
@@ -62,17 +62,13 @@ public class ItemSelectorRepositoryEntryManagementToolbarDisplayContext {
 	}
 
 	public List<DropdownItem> getFilterDropdownItems() {
-		return new DropdownItemList() {
-			{
-				addGroup(
-					dropdownGroupItem -> {
-						dropdownGroupItem.setDropdownItems(
-							_getOrderByDropdownItems());
-						dropdownGroupItem.setLabel(
-							LanguageUtil.get(_httpServletRequest, "order-by"));
-					});
+		return DropdownItemListBuilder.addGroup(
+			dropdownGroupItem -> {
+				dropdownGroupItem.setDropdownItems(_getOrderByDropdownItems());
+				dropdownGroupItem.setLabel(
+					LanguageUtil.get(_httpServletRequest, "order-by"));
 			}
-		};
+		).build();
 	}
 
 	public String getOrderByType() {
@@ -80,19 +76,8 @@ public class ItemSelectorRepositoryEntryManagementToolbarDisplayContext {
 			return _orderByType;
 		}
 
-		String orderByType = ParamUtil.getString(
-			_httpServletRequest, "orderByType");
-
-		if (Validator.isNotNull(orderByType)) {
-			_portalPreferences.setValue(
-				_NAMESPACE, "order-by-type", orderByType);
-		}
-		else {
-			orderByType = _portalPreferences.getValue(
-				_NAMESPACE, "order-by-type", "asc");
-		}
-
-		_orderByType = orderByType;
+		_orderByType = RepositoryEntryBrowserTagUtil.getOrderByType(
+			_httpServletRequest, _portalPreferences);
 
 		return _orderByType;
 	}
@@ -167,18 +152,8 @@ public class ItemSelectorRepositoryEntryManagementToolbarDisplayContext {
 			return _orderByCol;
 		}
 
-		String orderByCol = ParamUtil.getString(
-			_httpServletRequest, "orderByCol");
-
-		if (Validator.isNotNull(orderByCol)) {
-			_portalPreferences.setValue(_NAMESPACE, "order-by-col", orderByCol);
-		}
-		else {
-			orderByCol = _portalPreferences.getValue(
-				_NAMESPACE, "order-by-col", "title");
-		}
-
-		_orderByCol = orderByCol;
+		_orderByCol = RepositoryEntryBrowserTagUtil.getOrderByCol(
+			_httpServletRequest, _portalPreferences);
 
 		return _orderByCol;
 	}
@@ -221,9 +196,6 @@ public class ItemSelectorRepositoryEntryManagementToolbarDisplayContext {
 		return (PortletURL)_httpServletRequest.getAttribute(
 			"liferay-item-selector:repository-entry-browser:portletURL");
 	}
-
-	private static final String _NAMESPACE =
-		"taglib_ui_repository_entry_browse_page";
 
 	private final PortletURL _currentURLObj;
 	private final HttpServletRequest _httpServletRequest;

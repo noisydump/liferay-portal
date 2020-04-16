@@ -1,7 +1,7 @@
 @component-name = "portal-document-management"
 definition {
 
-	property portal.release = "false";
+	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.main.component.name = "Depot";
 
@@ -56,6 +56,8 @@ definition {
 	@description = "This ensures that a user can set the depot site connection via settings."
 	@priority = "4"
 	test SearchForDocument {
+		property portal.upstream = "quarantine";
+
 		JSONGroup.addGroup(groupName = "Site Name");
 
 		JSONLayout.addPublicLayout(
@@ -76,16 +78,10 @@ definition {
 			depotDescription = "This is the description of a depot",
 			depotName = "Test Depot Name");
 
-		DepotNavigator.openDepotAdmin();
-
-		DepotNavigator.gotoDepot(
-			depotName = "Test Depot Name",
-			portlet = "Documents and Media");
-
-		DMDocument.addCP(
+		JSONDocument.addFile(
 			dmDocumentDescription = "DM Document Description",
-			dmDocumentFile = "Document_1.jpg",
-			dmDocumentTitle = "DM Document Title");
+			dmDocumentTitle = "DM Document Title",
+			groupName = "Test Depot Name");
 
 		DepotNavigator.openDepotAdmin();
 
@@ -128,13 +124,13 @@ definition {
 
 		DepotNavigator.gotoLanguages(depotName = "Test Depot Name");
 
-		Click(
-			key_languagesOption = "Define a custom default language and additional available languages for this repository.",
+		Click.clickNoMouseOverNoWaitForVisible(
+			key_languagesOption = "Define a custom default language and additional active languages for this asset library.",
 			locator1 = "Radio#DEPOT_LANGUAGES_OPTION");
 
-		PortalSettings.configureCurrentLanguagesCP(
-			currentPortalLanguages = "Spanish (Spain)",
-			defaultPortalLanguage = "Spanish (Spain)");
+		Depot.configureDefaultLanguage(
+			defaultDepotLanguage = "Spanish (Spain)",
+			locale = "es_ES");
 
 		DepotNavigator.openDepotAdmin();
 

@@ -19,8 +19,8 @@ import {withRouter} from 'react-router-dom';
 
 import {AppContext} from '../../AppContext.es';
 import Button from '../../components/button/Button.es';
-import {ToastContext} from '../../components/toast/ToastContext.es';
-import {updateItem, addItem} from '../../utils/client.es';
+import {addItem, updateItem} from '../../utils/client.es';
+import {errorToast, successToast} from '../../utils/toast.es';
 import EditAppContext from './EditAppContext.es';
 
 export default withRouter(
@@ -28,16 +28,15 @@ export default withRouter(
 		currentStep,
 		history,
 		match: {
-			params: {dataDefinitionId}
+			params: {dataDefinitionId},
 		},
-		onCurrentStepChange
+		onCurrentStepChange,
 	}) => {
 		const {
-			state: {app}
+			state: {app},
 		} = useContext(EditAppContext);
 
 		const {getStandaloneURL} = useContext(AppContext);
-		const {addToast} = useContext(ToastContext);
 
 		const [isDeploying, setDeploying] = useState(false);
 
@@ -46,7 +45,7 @@ export default withRouter(
 			dataLayoutId,
 			dataListViewId,
 			id: appId,
-			name: {en_US: appName}
+			name: {en_US: appName},
 		} = app;
 
 		const getStandaloneLink = appId => {
@@ -62,42 +61,26 @@ export default withRouter(
 
 			return (
 				<ClayLink href={url} target="_blank">
-					{url} <ClayIcon symbol="shortcut" />
+					{`${Liferay.Language.get('open-standalone-app')}.`}{' '}
+					<ClayIcon symbol="shortcut" />
 				</ClayLink>
 			);
 		};
 
 		const onSuccess = appId => {
-			addToast({
-				displayType: 'success',
-				message: (
-					<>
-						{Liferay.Language.get(
-							'the-app-was-deployed-successfully'
-						)}{' '}
-						{getStandaloneLink(appId)}
-					</>
-				),
-				title: `${Liferay.Language.get('success')}:`
-			});
+			successToast(
+				<>
+					{Liferay.Language.get('the-app-was-deployed-successfully')}{' '}
+					{getStandaloneLink(appId)}
+				</>
+			);
 
 			setDeploying(false);
 		};
 
 		const onError = error => {
-			const {title: message = ''} = error;
-
-			addToast({
-				displayType: 'danger',
-				message: (
-					<>
-						{message}
-						{'.'}
-					</>
-				),
-				title: `${Liferay.Language.get('error')}:`
-			});
-
+			const {title = ''} = error;
+			errorToast(`${title}.`);
 			setDeploying(false);
 		};
 
@@ -113,7 +96,8 @@ export default withRouter(
 					.then(() => onSuccess(appId))
 					.then(onCancel)
 					.catch(onError);
-			} else {
+			}
+			else {
 				addItem(
 					`/o/app-builder/v1.0/data-definitions/${dataDefinitionId}/apps`,
 					app

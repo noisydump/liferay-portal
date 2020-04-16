@@ -15,26 +15,26 @@
 import ExperienceService from '../../../app/services/ExperienceService';
 import updateExperienceAction from '../actions/updateExperience';
 
-export default function updateExperience(
-	{name, segmentsEntryId, segmentsExperienceId},
-	config
-) {
+export default function updateExperience({
+	name,
+	segmentsEntryId,
+	segmentsExperienceId,
+}) {
 	return dispatch => {
 		return ExperienceService.updateExperience({
 			body: {
 				active: true,
 				name,
 				segmentsEntryId,
-				segmentsExperienceId
+				segmentsExperienceId,
 			},
-			config,
-			dispatch
+			dispatch,
 		}).then(() => {
 			return dispatch(
 				updateExperienceAction({
 					name,
 					segmentsEntryId,
-					segmentsExperienceId
+					segmentsExperienceId,
 				})
 			);
 		});

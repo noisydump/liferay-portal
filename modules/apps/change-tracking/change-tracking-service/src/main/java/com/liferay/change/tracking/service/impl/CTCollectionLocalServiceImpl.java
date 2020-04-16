@@ -22,19 +22,27 @@ import com.liferay.change.tracking.internal.CTServiceCopier;
 import com.liferay.change.tracking.internal.CTServiceRegistry;
 import com.liferay.change.tracking.internal.CTTableMapperHelper;
 import com.liferay.change.tracking.internal.conflict.CTConflictChecker;
+import com.liferay.change.tracking.internal.conflict.ConstraintResolverConflictInfo;
+import com.liferay.change.tracking.internal.conflict.ModificationConflictInfo;
 import com.liferay.change.tracking.internal.resolver.ConstraintResolverKey;
+import com.liferay.change.tracking.model.CTAutoResolutionInfo;
 import com.liferay.change.tracking.model.CTCollection;
 import com.liferay.change.tracking.model.CTEntry;
 import com.liferay.change.tracking.model.CTPreferences;
 import com.liferay.change.tracking.model.CTProcess;
 import com.liferay.change.tracking.resolver.ConstraintResolver;
+import com.liferay.change.tracking.service.CTEntryLocalService;
 import com.liferay.change.tracking.service.CTPreferencesLocalService;
 import com.liferay.change.tracking.service.CTProcessLocalService;
 import com.liferay.change.tracking.service.base.CTCollectionLocalServiceBaseImpl;
+import com.liferay.change.tracking.service.persistence.CTAutoResolutionInfoPersistence;
 import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMap;
 import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMapFactory;
 import com.liferay.petra.lang.SafeClosable;
+import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringBundler;
+import com.liferay.petra.string.StringPool;
+import com.liferay.petra.string.StringUtil;
 import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.change.tracking.CTCollectionThreadLocal;
 import com.liferay.portal.kernel.dao.jdbc.CurrentConnectionUtil;
@@ -42,7 +50,9 @@ import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.model.ClassName;
 import com.liferay.portal.kernel.model.ModelHintsUtil;
+import com.liferay.portal.kernel.service.ClassNameLocalService;
 import com.liferay.portal.kernel.service.change.tracking.CTService;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.Validator;
@@ -51,11 +61,13 @@ import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 import org.osgi.framework.BundleContext;
@@ -111,25 +123,29 @@ public class CTCollectionLocalServiceImpl
 		Map<Long, CTConflictChecker<?>> ctConflictCheckers = new HashMap<>();
 
 		for (CTEntry ctEntry : ctEntries) {
-			ctConflictCheckers.computeIfAbsent(
-				ctEntry.getModelClassNameId(),
-				modelClassNameId -> {
-					CTService<?> ctService = _ctServiceRegistry.getCTService(
-						modelClassNameId);
+			CTConflictChecker<?> ctConflictChecker =
+				ctConflictCheckers.computeIfAbsent(
+					ctEntry.getModelClassNameId(),
+					modelClassNameId -> {
+						CTService<?> ctService =
+							_ctServiceRegistry.getCTService(modelClassNameId);
 
-					if (ctService == null) {
-						throw new SystemException(
-							StringBundler.concat(
-								"Unable to check conflicts for ", ctCollection,
-								" because service for ", modelClassNameId,
-								" is missing"));
-					}
+						if (ctService == null) {
+							throw new SystemException(
+								StringBundler.concat(
+									"Unable to check conflicts for ",
+									ctCollection, " because service for ",
+									modelClassNameId, " is missing"));
+						}
 
-					return new CTConflictChecker<>(
-						ctService, _serviceTrackerMap,
-						ctCollection.getCtCollectionId(),
-						CTConstants.CT_COLLECTION_ID_PRODUCTION);
-				});
+						return new CTConflictChecker<>(
+							_ctEntryLocalService, ctService, modelClassNameId,
+							_serviceTrackerMap,
+							ctCollection.getCtCollectionId(),
+							CTConstants.CT_COLLECTION_ID_PRODUCTION);
+					});
+
+			ctConflictChecker.addCTEntry(ctEntry);
 		}
 
 		try (SafeClosable safeClosable =
@@ -149,6 +165,117 @@ public class CTCollectionLocalServiceImpl
 			}
 		}
 
+		// Exclude created CTAutoResolutionInfos
+
+		List<CTAutoResolutionInfo> ctAutoResolutionInfos =
+			_ctAutoResolutionInfoPersistence.findByCTCollectionId(
+				ctCollection.getCtCollectionId());
+
+		for (Map.Entry<Long, List<ConflictInfo>> entry :
+				conflictInfoMap.entrySet()) {
+
+			for (ConflictInfo conflictInfo : entry.getValue()) {
+				if (!conflictInfo.isResolved()) {
+					continue;
+				}
+
+				CTAutoResolutionInfo ctAutoResolutionInfo =
+					_ctAutoResolutionInfoPersistence.create(
+						counterLocalService.increment(
+							CTAutoResolutionInfo.class.getName()));
+
+				ctAutoResolutionInfo.setCompanyId(ctCollection.getCompanyId());
+				ctAutoResolutionInfo.setCreateDate(new Date());
+				ctAutoResolutionInfo.setCtCollectionId(
+					ctCollection.getCtCollectionId());
+				ctAutoResolutionInfo.setModelClassNameId(entry.getKey());
+				ctAutoResolutionInfo.setSourceModelClassPK(
+					conflictInfo.getSourcePrimaryKey());
+				ctAutoResolutionInfo.setTargetModelClassPK(
+					conflictInfo.getTargetPrimaryKey());
+
+				if (conflictInfo instanceof ConstraintResolverConflictInfo) {
+					ConstraintResolverConflictInfo
+						constraintResolverConflictInfo =
+							(ConstraintResolverConflictInfo)conflictInfo;
+
+					ConstraintResolver<?> constraintResolver =
+						constraintResolverConflictInfo.getConstraintResolver();
+
+					ctAutoResolutionInfo.setConflictIdentifier(
+						StringUtil.merge(
+							constraintResolver.getUniqueIndexColumnNames(),
+							StringPool.COMMA));
+
+					constraintResolverConflictInfo.setCtAutoResolutionInfoId(
+						ctAutoResolutionInfo.getCtAutoResolutionInfoId());
+				}
+				else if (conflictInfo instanceof ModificationConflictInfo) {
+					ModificationConflictInfo resolvedModificationConflictInfo =
+						(ModificationConflictInfo)conflictInfo;
+
+					resolvedModificationConflictInfo.setCtAutoResolutionInfoId(
+						ctAutoResolutionInfo.getCtAutoResolutionInfoId());
+
+					ctAutoResolutionInfo.setConflictIdentifier(
+						ModificationConflictInfo.class.getName());
+				}
+
+				_ctAutoResolutionInfoPersistence.update(ctAutoResolutionInfo);
+			}
+		}
+
+		for (CTAutoResolutionInfo ctAutoResolutionInfo :
+				ctAutoResolutionInfos) {
+
+			List<ConflictInfo> conflictInfos = conflictInfoMap.computeIfAbsent(
+				ctAutoResolutionInfo.getModelClassNameId(),
+				key -> new ArrayList<>());
+
+			ClassName className = _classNameLocalService.getClassName(
+				ctAutoResolutionInfo.getModelClassNameId());
+
+			if (Objects.equals(
+					ctAutoResolutionInfo.getConflictIdentifier(),
+					ModificationConflictInfo.class.getName())) {
+
+				ModificationConflictInfo resolvedModificationConflictInfo =
+					new ModificationConflictInfo(
+						ctAutoResolutionInfo.getSourceModelClassPK(), true);
+
+				resolvedModificationConflictInfo.setCtAutoResolutionInfoId(
+					ctAutoResolutionInfo.getCtAutoResolutionInfoId());
+
+				conflictInfos.add(resolvedModificationConflictInfo);
+			}
+			else {
+				List<String> uniqueIndexes = StringUtil.split(
+					ctAutoResolutionInfo.getConflictIdentifier(),
+					CharPool.COMMA);
+
+				ConstraintResolver<?> constraintResolver =
+					_serviceTrackerMap.getService(
+						new ConstraintResolverKey(
+							className.getValue(),
+							uniqueIndexes.toArray(new String[0])));
+
+				if (constraintResolver != null) {
+					ConstraintResolverConflictInfo
+						constraintResolverConflictInfo =
+							new ConstraintResolverConflictInfo(
+								constraintResolver,
+								ctAutoResolutionInfo.getSourceModelClassPK(),
+								ctAutoResolutionInfo.getTargetModelClassPK(),
+								true);
+
+					constraintResolverConflictInfo.setCtAutoResolutionInfoId(
+						ctAutoResolutionInfo.getCtAutoResolutionInfoId());
+
+					conflictInfos.add(constraintResolverConflictInfo);
+				}
+			}
+		}
+
 		return conflictInfoMap;
 	}
 
@@ -159,6 +286,17 @@ public class CTCollectionLocalServiceImpl
 
 		for (CTCollection ctCollection : ctCollections) {
 			deleteCTCollection(ctCollection);
+		}
+	}
+
+	@Override
+	public void deleteCTAutoResolutionInfo(long ctAutoResolutionInfoId) {
+		CTAutoResolutionInfo ctAutoResolutionInfo =
+			_ctAutoResolutionInfoPersistence.fetchByPrimaryKey(
+				ctAutoResolutionInfoId);
+
+		if (ctAutoResolutionInfo != null) {
+			_ctAutoResolutionInfoPersistence.remove(ctAutoResolutionInfo);
 		}
 	}
 
@@ -221,6 +359,9 @@ public class CTCollectionLocalServiceImpl
 				});
 		}
 
+		_ctAutoResolutionInfoPersistence.removeByCTCollectionId(
+			ctCollection.getCtCollectionId());
+
 		for (CTEntry ctEntry : ctEntries) {
 			ctEntryPersistence.remove(ctEntry);
 		}
@@ -233,6 +374,16 @@ public class CTCollectionLocalServiceImpl
 					ctCollection.getCtCollectionId())) {
 
 			ctPreferences.setCtCollectionId(
+				CTConstants.CT_COLLECTION_ID_PRODUCTION);
+
+			ctPreferencesPersistence.update(ctPreferences);
+		}
+
+		for (CTPreferences ctPreferences :
+				ctPreferencesPersistence.findByPreviousCollectionId(
+					ctCollection.getCtCollectionId())) {
+
+			ctPreferences.setPreviousCtCollectionId(
 				CTConstants.CT_COLLECTION_ID_PRODUCTION);
 
 			ctPreferencesPersistence.update(ctPreferences);
@@ -284,6 +435,8 @@ public class CTCollectionLocalServiceImpl
 				undoCTCollection.getCompanyId(), userId);
 
 		ctPreferences.setCtCollectionId(newCTCollection.getCtCollectionId());
+		ctPreferences.setPreviousCtCollectionId(
+			CTConstants.CT_COLLECTION_ID_PRODUCTION);
 
 		ctPreferencesPersistence.update(ctPreferences);
 
@@ -432,6 +585,15 @@ public class CTCollectionLocalServiceImpl
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		CTCollectionLocalServiceImpl.class);
+
+	@Reference
+	private ClassNameLocalService _classNameLocalService;
+
+	@Reference
+	private CTAutoResolutionInfoPersistence _ctAutoResolutionInfoPersistence;
+
+	@Reference
+	private CTEntryLocalService _ctEntryLocalService;
 
 	@Reference
 	private CTPreferencesLocalService _ctPreferencesLocalService;

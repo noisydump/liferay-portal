@@ -18,8 +18,10 @@ import com.liferay.expando.kernel.model.ExpandoColumn;
 import com.liferay.expando.kernel.model.ExpandoTable;
 import com.liferay.petra.encryptor.Encryptor;
 import com.liferay.petra.encryptor.EncryptorException;
+import com.liferay.petra.lang.SafeClosable;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.db.partition.DBPartitionUtil;
 import com.liferay.portal.kernel.dao.orm.ActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.EntityCacheUtil;
 import com.liferay.portal.kernel.dao.orm.Property;
@@ -168,7 +170,6 @@ public class CompanyLocalServiceImpl extends CompanyLocalServiceBaseImpl {
 			StringUtil.trim(virtualHostname));
 
 		if (Validator.isNull(webId) ||
-			webId.equals(PropsValues.COMPANY_DEFAULT_WEB_ID) ||
 			(companyPersistence.fetchByWebId(webId) != null)) {
 
 			throw new CompanyWebIdException();
@@ -177,10 +178,14 @@ public class CompanyLocalServiceImpl extends CompanyLocalServiceBaseImpl {
 		validateVirtualHost(webId, virtualHostname);
 		validateMx(-1, mx);
 
-		Company company = checkCompany(webId, mx);
+		Company company = companyPersistence.create(
+			counterLocalService.increment());
 
-		company = companyPersistence.fetchByPrimaryKey(company.getCompanyId());
+		if (webId.equals(PropsValues.COMPANY_DEFAULT_WEB_ID)) {
+			DBPartitionUtil.setDefaultCompanyId(company.getCompanyId());
+		}
 
+		company.setWebId(webId);
 		company.setMx(mx);
 		company.setSystem(system);
 		company.setMaxUsers(maxUsers);
@@ -190,10 +195,53 @@ public class CompanyLocalServiceImpl extends CompanyLocalServiceBaseImpl {
 
 		// Virtual host
 
-		company = updateVirtualHostname(
-			company.getCompanyId(), virtualHostname);
+		updateVirtualHostname(company.getCompanyId(), virtualHostname);
 
-		return company;
+		try (SafeClosable safeClosable =
+				CompanyThreadLocal.setInitializingCompanyId(
+					company.getCompanyId())) {
+
+			if (DBPartitionUtil.addDBPartition(company.getCompanyId())) {
+				dlFileEntryTypeLocalService.
+					createBasicDocumentDLFileEntryType();
+			}
+
+			// Account
+
+			String name = webId;
+
+			if (webId.equals(PropsValues.COMPANY_DEFAULT_WEB_ID)) {
+				name = PropsValues.COMPANY_DEFAULT_NAME;
+			}
+
+			updateAccount(
+				company, name, null, null, null, null, null, null, null, null);
+
+			// Company info
+
+			try {
+				company.setKey(Encryptor.serializeKey(Encryptor.generateKey()));
+			}
+			catch (EncryptorException encryptorException) {
+				throw new SystemException(encryptorException);
+			}
+
+			companyInfoPersistence.update(company.getCompanyInfo());
+
+			// Demo settings
+
+			if (webId.equals("liferay.net")) {
+				_addDemoSettings(company);
+			}
+
+			_addDefaultUser(company);
+
+			if (webId.equals(PropsValues.COMPANY_DEFAULT_WEB_ID)) {
+				return company;
+			}
+
+			return _checkCompany(company, mx);
+		}
 	}
 
 	/**
@@ -213,8 +261,7 @@ public class CompanyLocalServiceImpl extends CompanyLocalServiceBaseImpl {
 	}
 
 	/**
-	 * Returns the company with the web domain and mail domain. If no such
-	 * company exits, the method will create a new company.
+	 * Returns the company with the web domain and mail domain.
 	 *
 	 * The method goes through a series of checks to ensure that the company
 	 * contains default users, groups, etc.
@@ -231,250 +278,9 @@ public class CompanyLocalServiceImpl extends CompanyLocalServiceBaseImpl {
 	public Company checkCompany(String webId, String mx)
 		throws PortalException {
 
-		// Company
+		Company company = getCompanyByWebId(webId);
 
-		Date now = new Date();
-
-		Company company = companyPersistence.fetchByWebId(webId);
-
-		if (company == null) {
-			long companyId = counterLocalService.increment();
-
-			company = companyPersistence.create(companyId);
-
-			try {
-				company.setKey(Encryptor.serializeKey(Encryptor.generateKey()));
-			}
-			catch (EncryptorException encryptorException) {
-				throw new SystemException(encryptorException);
-			}
-
-			company.setWebId(webId);
-			company.setMx(mx);
-			company.setActive(true);
-
-			company = companyPersistence.update(company);
-
-			// Account
-
-			String name = webId;
-
-			if (webId.equals(PropsValues.COMPANY_DEFAULT_WEB_ID)) {
-				name = PropsValues.COMPANY_DEFAULT_NAME;
-			}
-
-			String legalName = null;
-			String legalId = null;
-			String legalType = null;
-			String sicCode = null;
-			String tickerSymbol = null;
-			String industry = null;
-			String type = null;
-			String size = null;
-
-			updateAccount(
-				company, name, legalName, legalId, legalType, sicCode,
-				tickerSymbol, industry, type, size);
-
-			// Company info
-
-			companyInfoPersistence.update(company.getCompanyInfo());
-
-			// Virtual host
-
-			if (webId.equals(PropsValues.COMPANY_DEFAULT_WEB_ID)) {
-				company = updateVirtualHostname(
-					companyId, _DEFAULT_VIRTUAL_HOST);
-			}
-
-			// Demo settings
-
-			if (webId.equals("liferay.net")) {
-				company = companyPersistence.findByWebId(webId);
-
-				updateVirtualHostname(companyId, "demo.liferay.net");
-
-				updateSecurity(
-					companyId, CompanyConstants.AUTH_TYPE_EA, true, true, true,
-					true, false, true);
-
-				PortletPreferences preferences = PrefsPropsUtil.getPreferences(
-					companyId);
-
-				try {
-					preferences.setValue(
-						PropsKeys.ADMIN_EMAIL_FROM_NAME, "Liferay Demo");
-					preferences.setValue(
-						PropsKeys.ADMIN_EMAIL_FROM_ADDRESS, "test@liferay.net");
-
-					preferences.store();
-				}
-				catch (IOException ioException) {
-					throw new SystemException(ioException);
-				}
-				catch (PortletException portletException) {
-					throw new SystemException(portletException);
-				}
-			}
-		}
-
-		preregisterCompany(company.getCompanyId());
-
-		Locale localeThreadLocalDefaultLocale =
-			LocaleThreadLocal.getDefaultLocale();
-		Locale localeThreadSiteDefaultLocale =
-			LocaleThreadLocal.getSiteDefaultLocale();
-
-		try {
-			Locale companyDefaultLocale = LocaleUtil.fromLanguageId(
-				PropsValues.COMPANY_DEFAULT_LOCALE);
-
-			LocaleThreadLocal.setDefaultLocale(companyDefaultLocale);
-
-			LocaleThreadLocal.setSiteDefaultLocale(null);
-
-			final long companyId = company.getCompanyId();
-
-			// Key
-
-			checkCompanyKey(companyId);
-
-			// Default user
-
-			User defaultUser = userPersistence.fetchByC_DU(companyId, true);
-
-			if (defaultUser != null) {
-				if (!defaultUser.isAgreedToTermsOfUse()) {
-					defaultUser.setAgreedToTermsOfUse(true);
-
-					defaultUser = userPersistence.update(defaultUser);
-				}
-			}
-			else {
-				long userId = counterLocalService.increment();
-
-				defaultUser = userPersistence.create(userId);
-
-				defaultUser.setCompanyId(companyId);
-				defaultUser.setDefaultUser(true);
-				defaultUser.setContactId(counterLocalService.increment());
-				defaultUser.setPassword("password");
-				defaultUser.setScreenName(
-					String.valueOf(defaultUser.getUserId()));
-				defaultUser.setEmailAddress("default@" + company.getMx());
-				defaultUser.setLanguageId(
-					LocaleUtil.toLanguageId(companyDefaultLocale));
-
-				if (Validator.isNotNull(
-						PropsValues.COMPANY_DEFAULT_TIME_ZONE)) {
-
-					defaultUser.setTimeZoneId(
-						PropsValues.COMPANY_DEFAULT_TIME_ZONE);
-				}
-				else {
-					TimeZone timeZone = TimeZoneUtil.getDefault();
-
-					defaultUser.setTimeZoneId(timeZone.getID());
-				}
-
-				String greeting = LanguageUtil.format(
-					defaultUser.getLocale(), "welcome", null, false);
-
-				defaultUser.setGreeting(greeting + StringPool.EXCLAMATION);
-
-				defaultUser.setLoginDate(now);
-				defaultUser.setFailedLoginAttempts(0);
-				defaultUser.setAgreedToTermsOfUse(true);
-				defaultUser.setStatus(WorkflowConstants.STATUS_APPROVED);
-
-				defaultUser = userPersistence.update(defaultUser);
-
-				// Contact
-
-				Contact defaultContact = contactPersistence.create(
-					defaultUser.getContactId());
-
-				defaultContact.setCompanyId(defaultUser.getCompanyId());
-				defaultContact.setUserId(defaultUser.getUserId());
-				defaultContact.setUserName(StringPool.BLANK);
-				defaultContact.setClassName(User.class.getName());
-				defaultContact.setClassPK(defaultUser.getUserId());
-				defaultContact.setAccountId(company.getAccountId());
-				defaultContact.setParentContactId(
-					ContactConstants.DEFAULT_PARENT_CONTACT_ID);
-				defaultContact.setEmailAddress(defaultUser.getEmailAddress());
-				defaultContact.setFirstName(StringPool.BLANK);
-				defaultContact.setMiddleName(StringPool.BLANK);
-				defaultContact.setLastName(StringPool.BLANK);
-				defaultContact.setMale(true);
-				defaultContact.setBirthday(now);
-
-				contactPersistence.update(defaultContact);
-			}
-
-			// System roles
-
-			roleLocalService.checkSystemRoles(companyId);
-
-			// System groups
-
-			groupLocalService.checkSystemGroups(companyId);
-
-			// Company group
-
-			groupLocalService.checkCompanyGroup(companyId);
-
-			// Default password policy
-
-			passwordPolicyLocalService.checkDefaultPasswordPolicy(companyId);
-
-			// Default user must have the Guest role
-
-			Role guestRole = roleLocalService.getRole(
-				companyId, RoleConstants.GUEST);
-
-			roleLocalService.setUserRoles(
-				defaultUser.getUserId(), new long[] {guestRole.getRoleId()});
-
-			// Default admin
-
-			if (userPersistence.countByCompanyId(companyId) == 0) {
-				String emailAddress =
-					PropsValues.DEFAULT_ADMIN_EMAIL_ADDRESS_PREFIX + "@" + mx;
-
-				userLocalService.addDefaultAdminUser(
-					companyId, PropsValues.DEFAULT_ADMIN_SCREEN_NAME,
-					emailAddress, defaultUser.getLocale(),
-					PropsValues.DEFAULT_ADMIN_FIRST_NAME,
-					PropsValues.DEFAULT_ADMIN_MIDDLE_NAME,
-					PropsValues.DEFAULT_ADMIN_LAST_NAME);
-			}
-
-			// Portlets
-
-			portletLocalService.checkPortlets(companyId);
-
-			final Company finalCompany = company;
-
-			TransactionCommitCallbackUtil.registerCallback(
-				new Callable<Void>() {
-
-					@Override
-					public Void call() throws Exception {
-						registerCompany(finalCompany);
-
-						return null;
-					}
-
-				});
-		}
-		finally {
-			LocaleThreadLocal.setDefaultLocale(localeThreadLocalDefaultLocale);
-			LocaleThreadLocal.setSiteDefaultLocale(
-				localeThreadSiteDefaultLocale);
-		}
-
-		return company;
+		return _checkCompany(company, mx);
 	}
 
 	/**
@@ -877,13 +683,11 @@ public class CompanyLocalServiceImpl extends CompanyLocalServiceBaseImpl {
 		company.setMaxUsers(maxUsers);
 		company.setActive(active);
 
-		company = companyPersistence.update(company);
+		companyPersistence.update(company);
 
 		// Virtual host
 
-		company = updateVirtualHostname(companyId, virtualHostname);
-
-		return company;
+		return updateVirtualHostname(companyId, virtualHostname);
 	}
 
 	/**
@@ -954,9 +758,7 @@ public class CompanyLocalServiceImpl extends CompanyLocalServiceBaseImpl {
 
 		// Virtual host
 
-		company = updateVirtualHostname(companyId, virtualHostname);
-
-		return company;
+		return updateVirtualHostname(companyId, virtualHostname);
 	}
 
 	/**
@@ -1109,17 +911,19 @@ public class CompanyLocalServiceImpl extends CompanyLocalServiceBaseImpl {
 	 * found in portal.properties.
 	 *
 	 * @param companyId the primary key of the company
-	 * @param properties the company's properties. See {@link UnicodeProperties}
+	 * @param unicodeProperties the company's properties. See {@link UnicodeProperties}
 	 */
 	@Override
-	public void updatePreferences(long companyId, UnicodeProperties properties)
+	public void updatePreferences(
+			long companyId, UnicodeProperties unicodeProperties)
 		throws PortalException {
 
 		PortletPreferences portletPreferences = PrefsPropsUtil.getPreferences(
 			companyId);
 
 		try {
-			String newLanguageIds = properties.getProperty(PropsKeys.LOCALES);
+			String newLanguageIds = unicodeProperties.getProperty(
+				PropsKeys.LOCALES);
 
 			if (Validator.isNotNull(newLanguageIds)) {
 				String oldLanguageIds = portletPreferences.getValue(
@@ -1149,7 +953,9 @@ public class CompanyLocalServiceImpl extends CompanyLocalServiceBaseImpl {
 
 			List<String> resetKeys = new ArrayList<>();
 
-			for (Map.Entry<String, String> entry : properties.entrySet()) {
+			for (Map.Entry<String, String> entry :
+					unicodeProperties.entrySet()) {
+
 				String value = entry.getValue();
 
 				if (value.equals(Portal.TEMP_OBFUSCATION_VALUE)) {
@@ -1296,6 +1102,10 @@ public class CompanyLocalServiceImpl extends CompanyLocalServiceBaseImpl {
 
 		final Company company = companyPersistence.findByPrimaryKey(companyId);
 
+		if (DBPartitionUtil.removeDBPartition(companyId)) {
+			return company;
+		}
+
 		preunregisterCompany(company);
 
 		companyPersistence.remove(company);
@@ -1380,17 +1190,6 @@ public class CompanyLocalServiceImpl extends CompanyLocalServiceBaseImpl {
 
 		deleteOrganizationActionableDynamicQuery.performActions();
 
-		// Role
-
-		ActionableDynamicQuery roleActionableDynamicQuery =
-			roleLocalService.getActionableDynamicQuery();
-
-		roleActionableDynamicQuery.setCompanyId(companyId);
-		roleActionableDynamicQuery.setPerformActionMethod(
-			(Role role) -> roleLocalService.deleteRole(role));
-
-		roleActionableDynamicQuery.performActions();
-
 		// User group
 
 		DeleteUserGroupActionableDynamicQuery
@@ -1447,6 +1246,17 @@ public class CompanyLocalServiceImpl extends CompanyLocalServiceBaseImpl {
 		userActionableDynamicQuery.performActions();
 
 		userLocalService.deleteUser(userLocalService.getDefaultUser(companyId));
+
+		// Role
+
+		ActionableDynamicQuery roleActionableDynamicQuery =
+			roleLocalService.getActionableDynamicQuery();
+
+		roleActionableDynamicQuery.setCompanyId(companyId);
+		roleActionableDynamicQuery.setPerformActionMethod(
+			(Role role) -> roleLocalService.deleteRole(role));
+
+		roleActionableDynamicQuery.performActions();
 
 		// Virtual host
 
@@ -1875,6 +1685,202 @@ public class CompanyLocalServiceImpl extends CompanyLocalServiceBaseImpl {
 
 		private ActionableDynamicQuery _actionableDynamicQuery;
 
+	}
+
+	private User _addDefaultUser(Company company) {
+		Date now = new Date();
+
+		User defaultUser = userPersistence.create(
+			counterLocalService.increment());
+
+		defaultUser.setCompanyId(company.getCompanyId());
+		defaultUser.setDefaultUser(true);
+		defaultUser.setContactId(counterLocalService.increment());
+		defaultUser.setPassword("password");
+		defaultUser.setScreenName(String.valueOf(defaultUser.getUserId()));
+		defaultUser.setEmailAddress("default@" + company.getMx());
+		defaultUser.setLanguageId(
+			LocaleUtil.toLanguageId(
+				LocaleUtil.fromLanguageId(PropsValues.COMPANY_DEFAULT_LOCALE)));
+
+		if (Validator.isNotNull(PropsValues.COMPANY_DEFAULT_TIME_ZONE)) {
+			defaultUser.setTimeZoneId(PropsValues.COMPANY_DEFAULT_TIME_ZONE);
+		}
+		else {
+			TimeZone timeZone = TimeZoneUtil.getDefault();
+
+			defaultUser.setTimeZoneId(timeZone.getID());
+		}
+
+		String greeting = LanguageUtil.format(
+			defaultUser.getLocale(), "welcome", null, false);
+
+		defaultUser.setGreeting(greeting + StringPool.EXCLAMATION);
+
+		defaultUser.setLoginDate(now);
+		defaultUser.setFailedLoginAttempts(0);
+		defaultUser.setAgreedToTermsOfUse(true);
+		defaultUser.setStatus(WorkflowConstants.STATUS_APPROVED);
+
+		// Invoke updateImpl so that we do not trigger model listeners. See
+		// LPS-108239.
+
+		defaultUser = userPersistence.updateImpl(defaultUser);
+
+		// Contact
+
+		Contact defaultContact = contactPersistence.create(
+			defaultUser.getContactId());
+
+		defaultContact.setCompanyId(defaultUser.getCompanyId());
+		defaultContact.setUserId(defaultUser.getUserId());
+		defaultContact.setUserName(StringPool.BLANK);
+		defaultContact.setClassName(User.class.getName());
+		defaultContact.setClassPK(defaultUser.getUserId());
+		defaultContact.setAccountId(company.getAccountId());
+		defaultContact.setParentContactId(
+			ContactConstants.DEFAULT_PARENT_CONTACT_ID);
+		defaultContact.setEmailAddress(defaultUser.getEmailAddress());
+		defaultContact.setFirstName(StringPool.BLANK);
+		defaultContact.setMiddleName(StringPool.BLANK);
+		defaultContact.setLastName(StringPool.BLANK);
+		defaultContact.setMale(true);
+		defaultContact.setBirthday(now);
+
+		contactPersistence.update(defaultContact);
+
+		return defaultUser;
+	}
+
+	private void _addDemoSettings(Company company) throws PortalException {
+		updateVirtualHostname(company.getCompanyId(), "demo.liferay.net");
+
+		updateSecurity(
+			company.getCompanyId(), CompanyConstants.AUTH_TYPE_EA, true, true,
+			true, true, false, true);
+
+		PortletPreferences preferences = PrefsPropsUtil.getPreferences(
+			company.getCompanyId());
+
+		try {
+			preferences.setValue(
+				PropsKeys.ADMIN_EMAIL_FROM_NAME, "Liferay Demo");
+			preferences.setValue(
+				PropsKeys.ADMIN_EMAIL_FROM_ADDRESS, "test@liferay.net");
+
+			preferences.store();
+		}
+		catch (IOException ioException) {
+			throw new SystemException(ioException);
+		}
+		catch (PortletException portletException) {
+			throw new SystemException(portletException);
+		}
+	}
+
+	private Company _checkCompany(Company company, String mx)
+		throws PortalException {
+
+		Locale localeThreadLocalDefaultLocale =
+			LocaleThreadLocal.getDefaultLocale();
+		Locale localeThreadSiteDefaultLocale =
+			LocaleThreadLocal.getSiteDefaultLocale();
+
+		try {
+			preregisterCompany(company.getCompanyId());
+
+			Locale companyDefaultLocale = LocaleUtil.fromLanguageId(
+				PropsValues.COMPANY_DEFAULT_LOCALE);
+
+			LocaleThreadLocal.setDefaultLocale(companyDefaultLocale);
+
+			LocaleThreadLocal.setSiteDefaultLocale(null);
+
+			// Key
+
+			checkCompanyKey(company.getCompanyId());
+
+			// Default user
+
+			User defaultUser = userPersistence.fetchByC_DU(
+				company.getCompanyId(), true);
+
+			if (defaultUser != null) {
+				if (!defaultUser.isAgreedToTermsOfUse()) {
+					defaultUser.setAgreedToTermsOfUse(true);
+
+					defaultUser = userPersistence.update(defaultUser);
+				}
+			}
+			else {
+				defaultUser = _addDefaultUser(company);
+			}
+
+			// System roles
+
+			roleLocalService.checkSystemRoles(company.getCompanyId());
+
+			// System groups
+
+			groupLocalService.checkSystemGroups(company.getCompanyId());
+
+			// Company group
+
+			groupLocalService.checkCompanyGroup(company.getCompanyId());
+
+			// Default password policy
+
+			passwordPolicyLocalService.checkDefaultPasswordPolicy(
+				company.getCompanyId());
+
+			// Default user must have the Guest role
+
+			Role guestRole = roleLocalService.getRole(
+				company.getCompanyId(), RoleConstants.GUEST);
+
+			roleLocalService.setUserRoles(
+				defaultUser.getUserId(), new long[] {guestRole.getRoleId()});
+
+			// Default admin
+
+			if (userPersistence.countByCompanyId(company.getCompanyId()) == 0) {
+				String emailAddress =
+					PropsValues.DEFAULT_ADMIN_EMAIL_ADDRESS_PREFIX + "@" + mx;
+
+				userLocalService.addDefaultAdminUser(
+					company.getCompanyId(),
+					PropsValues.DEFAULT_ADMIN_SCREEN_NAME, emailAddress,
+					defaultUser.getLocale(),
+					PropsValues.DEFAULT_ADMIN_FIRST_NAME,
+					PropsValues.DEFAULT_ADMIN_MIDDLE_NAME,
+					PropsValues.DEFAULT_ADMIN_LAST_NAME);
+			}
+
+			// Portlets
+
+			portletLocalService.checkPortlets(company.getCompanyId());
+
+			final Company finalCompany = company;
+
+			TransactionCommitCallbackUtil.registerCallback(
+				new Callable<Void>() {
+
+					@Override
+					public Void call() throws Exception {
+						registerCompany(finalCompany);
+
+						return null;
+					}
+
+				});
+		}
+		finally {
+			LocaleThreadLocal.setDefaultLocale(localeThreadLocalDefaultLocale);
+			LocaleThreadLocal.setSiteDefaultLocale(
+				localeThreadSiteDefaultLocale);
+		}
+
+		return company;
 	}
 
 	private void _clearCompanyCache(long companyId) {

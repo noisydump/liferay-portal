@@ -75,7 +75,7 @@ class AOP {
 	 */
 	createHandle(fn, before) {
 		return {
-			detach: this.detach_.bind(this, fn, before)
+			detach: this.detach_.bind(this, fn, before),
 		};
 	}
 
@@ -106,7 +106,8 @@ class AOP {
 			if (listenerRetVal && listenerRetVal.type) {
 				if (listenerRetVal.type === HALT) {
 					return listenerRetVal.value;
-				} else if (listenerRetVal.type === PREVENT) {
+				}
+				else if (listenerRetVal.type === PREVENT) {
 					prevented = true;
 				}
 			}
@@ -125,7 +126,8 @@ class AOP {
 			if (listenerRetVal && listenerRetVal.type) {
 				if (listenerRetVal.type === HALT) {
 					return listenerRetVal.value;
-				} else if (listenerRetVal.type === ALTER_RETURN) {
+				}
+				else if (listenerRetVal.type === ALTER_RETURN) {
 					retVal = listenerRetVal.value;
 
 					AOP.currentRetVal = retVal;
@@ -146,7 +148,8 @@ class AOP {
 	register(fn, before) {
 		if (before) {
 			this.before_.push(fn);
-		} else {
+		}
+		else {
 			this.after_.push(fn);
 		}
 
@@ -241,7 +244,7 @@ class AOP {
 	static modify_(type, value) {
 		return {
 			type,
-			value
+			value,
 		};
 	}
 

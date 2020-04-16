@@ -19,8 +19,6 @@
 <%
 String tabs2 = ParamUtil.getString(request, "tabs2", "users");
 
-String redirect = ParamUtil.getString(request, "redirect");
-
 long roleId = ParamUtil.getLong(request, "roleId");
 
 Role role = RoleServiceUtil.fetchRole(roleId);
@@ -113,8 +111,8 @@ PortletURL portletURL = editRoleAssignmentsManagementToolbarDisplayContext.getPo
 			result = {
 				data: {
 					type: '<%= HtmlUtil.escapeJS(tabs2) %>',
-					value: <portlet:namespace />assigneeIds.join(',')
-				}
+					value: <portlet:namespace />assigneeIds.join(','),
+				},
 			};
 		}
 

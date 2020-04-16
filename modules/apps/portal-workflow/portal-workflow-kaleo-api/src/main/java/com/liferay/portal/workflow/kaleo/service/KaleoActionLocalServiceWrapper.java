@@ -48,15 +48,15 @@ public class KaleoActionLocalServiceWrapper
 
 	@Override
 	public com.liferay.portal.workflow.kaleo.model.KaleoAction addKaleoAction(
-			String kaleoClassName, long kaleoClassPK,
+			String kaleoClassName, long kaleoClassPK, long kaleoDefinitionId,
 			long kaleoDefinitionVersionId, String kaleoNodeName,
 			com.liferay.portal.workflow.kaleo.definition.Action action,
 			com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _kaleoActionLocalService.addKaleoAction(
-			kaleoClassName, kaleoClassPK, kaleoDefinitionVersionId,
-			kaleoNodeName, action, serviceContext);
+			kaleoClassName, kaleoClassPK, kaleoDefinitionId,
+			kaleoDefinitionVersionId, kaleoNodeName, action, serviceContext);
 	}
 
 	/**
@@ -70,6 +70,17 @@ public class KaleoActionLocalServiceWrapper
 		createKaleoAction(long kaleoActionId) {
 
 		return _kaleoActionLocalService.createKaleoAction(kaleoActionId);
+	}
+
+	/**
+	 * @throws PortalException
+	 */
+	@Override
+	public com.liferay.portal.kernel.model.PersistedModel createPersistedModel(
+			java.io.Serializable primaryKeyObj)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _kaleoActionLocalService.createPersistedModel(primaryKeyObj);
 	}
 
 	@Override
@@ -335,6 +346,9 @@ public class KaleoActionLocalServiceWrapper
 		return _kaleoActionLocalService.getOSGiServiceIdentifier();
 	}
 
+	/**
+	 * @throws PortalException
+	 */
 	@Override
 	public com.liferay.portal.kernel.model.PersistedModel getPersistedModel(
 			java.io.Serializable primaryKeyObj)

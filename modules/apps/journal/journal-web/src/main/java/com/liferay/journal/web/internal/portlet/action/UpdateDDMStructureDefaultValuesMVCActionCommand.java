@@ -16,33 +16,32 @@ package com.liferay.journal.web.internal.portlet.action;
 
 import com.liferay.asset.display.page.constants.AssetDisplayPageConstants;
 import com.liferay.asset.display.page.portlet.AssetDisplayPageEntryFormProcessor;
+import com.liferay.dynamic.data.mapping.form.values.factory.DDMFormValuesFactory;
 import com.liferay.dynamic.data.mapping.model.DDMStructure;
 import com.liferay.dynamic.data.mapping.service.DDMStructureLocalService;
+import com.liferay.dynamic.data.mapping.storage.DDMFormValues;
 import com.liferay.dynamic.data.mapping.storage.Fields;
+import com.liferay.dynamic.data.mapping.util.DDMFormValuesToFieldsConverter;
 import com.liferay.dynamic.data.mapping.util.DDMUtil;
 import com.liferay.journal.constants.JournalPortletKeys;
 import com.liferay.journal.exception.ArticleContentSizeException;
 import com.liferay.journal.model.JournalArticle;
-import com.liferay.journal.model.JournalArticleConstants;
 import com.liferay.journal.service.JournalArticleService;
 import com.liferay.journal.util.JournalConverter;
 import com.liferay.journal.util.JournalHelper;
+import com.liferay.journal.web.internal.configuration.JournalDDMEditorConfiguration;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.portlet.bridges.mvc.BaseMVCActionCommand;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextFactory;
-import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.upload.LiferayFileItemException;
 import com.liferay.portal.kernel.upload.UploadException;
 import com.liferay.portal.kernel.upload.UploadPortletRequest;
-import com.liferay.portal.kernel.util.HtmlUtil;
-import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.LocalizationUtil;
-import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.Validator;
@@ -57,14 +56,18 @@ import java.util.Objects;
 import javax.portlet.ActionRequest;
 import javax.portlet.ActionResponse;
 
+import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.ConfigurationPolicy;
+import org.osgi.service.component.annotations.Modified;
 import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Eudaldo Alonso
  */
 @Component(
-	immediate = true,
+	configurationPid = "com.liferay.journal.web.internal.configuration.JournalDDMEditorConfiguration",
+	configurationPolicy = ConfigurationPolicy.OPTIONAL, immediate = true,
 	property = {
 		"javax.portlet.name=" + JournalPortletKeys.JOURNAL,
 		"mvc.command.name=/journal/add_ddm_structure_default_values",
@@ -75,13 +78,17 @@ import org.osgi.service.component.annotations.Reference;
 public class UpdateDDMStructureDefaultValuesMVCActionCommand
 	extends BaseMVCActionCommand {
 
+	@Activate
+	@Modified
+	protected void activate(Map<String, Object> properties) {
+		_journalDDMEditorConfiguration = ConfigurableUtil.createConfigurable(
+			JournalDDMEditorConfiguration.class, properties);
+	}
+
 	@Override
 	protected void doProcessAction(
 			ActionRequest actionRequest, ActionResponse actionResponse)
 		throws Exception {
-
-		ThemeDisplay themeDisplay = (ThemeDisplay)actionRequest.getAttribute(
-			WebKeys.THEME_DISPLAY);
 
 		UploadException uploadException =
 			(UploadException)actionRequest.getAttribute(
@@ -129,24 +136,21 @@ public class UpdateDDMStructureDefaultValuesMVCActionCommand
 		ServiceContext serviceContext = ServiceContextFactory.getInstance(
 			JournalArticle.class.getName(), uploadPortletRequest);
 
-		Fields fields = DDMUtil.getFields(
-			ddmStructure.getStructureId(), serviceContext);
+		Fields fields = null;
+
+		if (_journalDDMEditorConfiguration.useDataEngineEditor()) {
+			DDMFormValues ddmFormValues = _ddmFormValuesFactory.create(
+				actionRequest, ddmStructure.getDDMForm());
+
+			fields = _ddmFormValuesToFieldsConverter.convert(
+				ddmStructure, ddmFormValues);
+		}
+		else {
+			fields = DDMUtil.getFields(
+				ddmStructure.getStructureId(), serviceContext);
+		}
 
 		String content = _journalConverter.getContent(ddmStructure, fields);
-
-		Locale articleDefaultLocale = LocaleUtil.fromLanguageId(
-			LocalizationUtil.getDefaultLanguageId(content));
-
-		if ((classNameId == JournalArticleConstants.CLASSNAME_ID_DEFAULT) &&
-			!_hasDefaultLocale(titleMap, articleDefaultLocale)) {
-
-			titleMap.put(
-				articleDefaultLocale,
-				LanguageUtil.format(
-					_portal.getHttpServletRequest(actionRequest), "untitled-x",
-					HtmlUtil.escape(
-						ddmStructure.getName(themeDisplay.getLocale()))));
-		}
 
 		Map<Locale, String> descriptionMap =
 			LocalizationUtil.getLocalizationMap(
@@ -236,21 +240,15 @@ public class UpdateDDMStructureDefaultValuesMVCActionCommand
 			actionRequest);
 	}
 
-	private boolean _hasDefaultLocale(Map<Locale, String> map, Locale locale) {
-		if (MapUtil.isEmpty(map)) {
-			return false;
-		}
-
-		if (Validator.isNull(map.get(locale))) {
-			return false;
-		}
-
-		return true;
-	}
-
 	@Reference
 	private AssetDisplayPageEntryFormProcessor
 		_assetDisplayPageEntryFormProcessor;
+
+	@Reference
+	private DDMFormValuesFactory _ddmFormValuesFactory;
+
+	@Reference
+	private DDMFormValuesToFieldsConverter _ddmFormValuesToFieldsConverter;
 
 	@Reference
 	private DDMStructureLocalService _ddmStructureLocalService;
@@ -260,6 +258,9 @@ public class UpdateDDMStructureDefaultValuesMVCActionCommand
 
 	@Reference
 	private JournalConverter _journalConverter;
+
+	private volatile JournalDDMEditorConfiguration
+		_journalDDMEditorConfiguration;
 
 	@Reference
 	private JournalHelper _journalHelper;

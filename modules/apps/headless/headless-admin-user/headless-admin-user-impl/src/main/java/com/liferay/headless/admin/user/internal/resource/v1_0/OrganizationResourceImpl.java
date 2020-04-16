@@ -23,7 +23,7 @@ import com.liferay.headless.admin.user.dto.v1_0.Phone;
 import com.liferay.headless.admin.user.dto.v1_0.PostalAddress;
 import com.liferay.headless.admin.user.dto.v1_0.Service;
 import com.liferay.headless.admin.user.dto.v1_0.WebUrl;
-import com.liferay.headless.admin.user.internal.dto.v1_0.helper.OrganizationResourceDTOConverter;
+import com.liferay.headless.admin.user.internal.dto.v1_0.converter.OrganizationResourceDTOConverter;
 import com.liferay.headless.admin.user.internal.odata.entity.v1_0.OrganizationEntityModel;
 import com.liferay.headless.admin.user.resource.v1_0.OrganizationResource;
 import com.liferay.portal.kernel.log.Log;
@@ -45,7 +45,6 @@ import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.search.filter.QueryFilter;
 import com.liferay.portal.kernel.search.filter.TermFilter;
 import com.liferay.portal.kernel.search.generic.WildcardQueryImpl;
-import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.service.AddressLocalService;
 import com.liferay.portal.kernel.service.CountryService;
 import com.liferay.portal.kernel.service.EmailAddressLocalService;
@@ -61,6 +60,7 @@ import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.DateFormatFactoryUtil;
 import com.liferay.portal.kernel.util.FastDateFormatFactoryUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
@@ -78,6 +78,7 @@ import java.text.ParseException;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -99,9 +100,10 @@ public class OrganizationResourceImpl
 
 	@Override
 	public void deleteOrganization(String organizationId) throws Exception {
-		long id = _getOrganizationId(organizationId);
+		long serviceBuilderOrganizationId = _getServiceBuilderOrganizationId(
+			organizationId);
 
-		_organizationService.deleteOrganization(id);
+		_organizationService.deleteOrganization(serviceBuilderOrganizationId);
 	}
 
 	@Override
@@ -123,7 +125,15 @@ public class OrganizationResourceImpl
 		throws Exception {
 
 		return _getOrganizationsPage(
-			parentOrganizationId, flatten, search, filter, pagination, sorts);
+			HashMapBuilder.<String, Map<String, String>>put(
+				"get",
+				addAction(
+					"VIEW", "getOrganizationOrganizationsPage",
+					com.liferay.portal.kernel.model.Organization.class.
+						getName(),
+					_getServiceBuilderOrganizationId(parentOrganizationId))
+			).build(),
+			parentOrganizationId, flatten, filter, search, pagination, sorts);
 	}
 
 	@Override
@@ -133,7 +143,22 @@ public class OrganizationResourceImpl
 		throws Exception {
 
 		return _getOrganizationsPage(
-			null, flatten, search, filter, pagination, sorts);
+			HashMapBuilder.<String, Map<String, String>>put(
+				"create",
+				addAction(
+					"ADD_ORGANIZATION", "postOrganization",
+					com.liferay.portal.kernel.model.Organization.class.
+						getName(),
+					0L)
+			).put(
+				"get",
+				addAction(
+					"VIEW", "getOrganizationsPage",
+					com.liferay.portal.kernel.model.Organization.class.
+						getName(),
+					0L)
+			).build(),
+			null, flatten, filter, search, pagination, sorts);
 	}
 
 	@Override
@@ -261,12 +286,45 @@ public class OrganizationResourceImpl
 	}
 
 	private DefaultDTOConverterContext _getDTOConverterContext(
-		String organizationId) {
+			String organizationId)
+		throws Exception {
+
+		Long serviceBuilderOrganizationId = _getServiceBuilderOrganizationId(
+			organizationId);
 
 		return new DefaultDTOConverterContext(
-			contextAcceptLanguage.isAcceptAllLanguages(), null, organizationId,
-			contextAcceptLanguage.getPreferredLocale(), contextUriInfo,
-			contextUser);
+			contextAcceptLanguage.isAcceptAllLanguages(),
+			HashMapBuilder.<String, Map<String, String>>put(
+				"delete",
+				addAction(
+					"DELETE", "deleteOrganization",
+					com.liferay.portal.kernel.model.Organization.class.
+						getName(),
+					serviceBuilderOrganizationId)
+			).put(
+				"get",
+				addAction(
+					"VIEW", "getOrganization",
+					com.liferay.portal.kernel.model.Organization.class.
+						getName(),
+					serviceBuilderOrganizationId)
+			).put(
+				"replace",
+				addAction(
+					"UPDATE", "putOrganization",
+					com.liferay.portal.kernel.model.Organization.class.
+						getName(),
+					serviceBuilderOrganizationId)
+			).put(
+				"update",
+				addAction(
+					"UPDATE", "patchOrganization",
+					com.liferay.portal.kernel.model.Organization.class.
+						getName(),
+					serviceBuilderOrganizationId)
+			).build(),
+			null, organizationId, contextAcceptLanguage.getPreferredLocale(),
+			contextUriInfo, contextUser);
 	}
 
 	private List<com.liferay.portal.kernel.model.EmailAddress>
@@ -286,65 +344,52 @@ public class OrganizationResourceImpl
 		);
 	}
 
-	private long _getOrganizationId(String organizationId) {
-		if (organizationId == null) {
-			return 0;
-		}
-
-		com.liferay.portal.kernel.model.Organization
-			serviceBuilderOrganization =
-				_organizationLocalService.fetchOrganizationByReferenceCode(
-					CompanyThreadLocal.getCompanyId(), organizationId);
-
-		if (serviceBuilderOrganization == null) {
-			return GetterUtil.getLong(organizationId);
-		}
-
-		return GetterUtil.getLong(
-			serviceBuilderOrganization.getOrganizationId());
-	}
-
 	private Page<Organization> _getOrganizationsPage(
-			String organizationId, Boolean flatten, String search,
-			Filter filter, Pagination pagination, Sort[] sorts)
+			Map<String, Map<String, String>> actions,
+			String parentOrganizationId, Boolean flatten, Filter filter,
+			String keywords, Pagination pagination, Sort[] sorts)
 		throws Exception {
 
-		long id = _getOrganizationId(organizationId);
+		long serviceBuilderOrganizationId = _getServiceBuilderOrganizationId(
+			parentOrganizationId);
 
 		return SearchUtil.search(
+			actions,
 			booleanQuery -> {
 				BooleanFilter booleanFilter =
 					booleanQuery.getPreBooleanFilter();
 
 				if (GetterUtil.getBoolean(flatten)) {
-					if (id != 0L) {
+					if (serviceBuilderOrganizationId != 0L) {
 						booleanFilter.add(
 							new QueryFilter(
 								new WildcardQueryImpl(
-									"treePath", "*" + organizationId + "*")));
+									"treePath",
+									"*" + parentOrganizationId + "*")));
 						booleanFilter.add(
 							new TermFilter(
 								"organizationId",
-								String.valueOf(organizationId)),
+								String.valueOf(parentOrganizationId)),
 							BooleanClauseOccur.MUST_NOT);
 					}
 				}
 				else {
 					booleanFilter.add(
 						new TermFilter(
-							"parentOrganizationId", String.valueOf(id)),
+							"parentOrganizationId",
+							String.valueOf(serviceBuilderOrganizationId)),
 						BooleanClauseOccur.MUST);
 				}
 			},
-			filter, com.liferay.portal.kernel.model.Organization.class, search,
-			pagination,
+			filter, com.liferay.portal.kernel.model.Organization.class,
+			keywords, pagination,
 			queryConfig -> queryConfig.setSelectedFieldNames(
 				Field.ENTRY_CLASS_PK),
 			searchContext -> searchContext.setCompanyId(
 				contextCompany.getCompanyId()),
+			sorts,
 			document -> _toOrganization(
-				GetterUtil.getString(document.get(Field.ENTRY_CLASS_PK))),
-			sorts);
+				GetterUtil.getString(document.get(Field.ENTRY_CLASS_PK))));
 	}
 
 	private List<OrgLabor> _getOrgLabors(Organization organization) {
@@ -408,6 +453,24 @@ public class OrganizationResourceImpl
 		}
 
 		return 0;
+	}
+
+	private long _getServiceBuilderOrganizationId(String organizationId)
+		throws Exception {
+
+		if (organizationId == null) {
+			return 0;
+		}
+
+		com.liferay.portal.kernel.model.Organization
+			serviceBuilderOrganization =
+				_organizationResourceDTOConverter.getObject(organizationId);
+
+		if (serviceBuilderOrganization == null) {
+			return GetterUtil.getLong(organizationId);
+		}
+
+		return serviceBuilderOrganization.getOrganizationId();
 	}
 
 	private List<Website> _getWebsites(Organization organization) {

@@ -197,12 +197,20 @@ public abstract class BaseExperimentResourceTestCase {
 
 	@Test
 	public void testDeleteExperiment() throws Exception {
+		@SuppressWarnings("PMD.UnusedLocalVariable")
 		Experiment experiment = testDeleteExperiment_addExperiment();
 
 		assertHttpResponseStatusCode(
 			204,
 			experimentResource.deleteExperimentHttpResponse(
 				experiment.getId()));
+
+		assertHttpResponseStatusCode(
+			404,
+			experimentResource.getExperimentHttpResponse(experiment.getId()));
+
+		assertHttpResponseStatusCode(
+			404, experimentResource.getExperimentHttpResponse("-"));
 	}
 
 	protected Experiment testDeleteExperiment_addExperiment() throws Exception {
@@ -256,6 +264,49 @@ public abstract class BaseExperimentResourceTestCase {
 
 			Assert.assertTrue(errorsJSONArray.length() > 0);
 		}
+	}
+
+	@Test
+	public void testGetExperiment() throws Exception {
+		Experiment postExperiment = testGetExperiment_addExperiment();
+
+		Experiment getExperiment = experimentResource.getExperiment(
+			postExperiment.getId());
+
+		assertEquals(postExperiment, getExperiment);
+		assertValid(getExperiment);
+	}
+
+	protected Experiment testGetExperiment_addExperiment() throws Exception {
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testGraphQLGetExperiment() throws Exception {
+		Experiment experiment = testGraphQLExperiment_addExperiment();
+
+		List<GraphQLField> graphQLFields = getGraphQLFields();
+
+		GraphQLField graphQLField = new GraphQLField(
+			"query",
+			new GraphQLField(
+				"experiment",
+				new HashMap<String, Object>() {
+					{
+						put("experimentId", "\"" + experiment.getId() + "\"");
+					}
+				},
+				graphQLFields.toArray(new GraphQLField[0])));
+
+		JSONObject jsonObject = JSONFactoryUtil.createJSONObject(
+			invoke(graphQLField.toString()));
+
+		JSONObject dataJSONObject = jsonObject.getJSONObject("data");
+
+		Assert.assertTrue(
+			equalsJSONObject(
+				experiment, dataJSONObject.getJSONObject("experiment")));
 	}
 
 	protected Experiment testGraphQLExperiment_addExperiment()
@@ -522,6 +573,30 @@ public abstract class BaseExperimentResourceTestCase {
 			throw new IllegalArgumentException(
 				"Invalid additional assert field name " +
 					additionalAssertFieldName);
+		}
+
+		return true;
+	}
+
+	protected boolean equals(
+		Map<String, Object> map1, Map<String, Object> map2) {
+
+		if (Objects.equals(map1.keySet(), map2.keySet())) {
+			for (Map.Entry<String, Object> entry : map1.entrySet()) {
+				if (entry.getValue() instanceof Map) {
+					if (!equals(
+							(Map)entry.getValue(),
+							(Map)map2.get(entry.getKey()))) {
+
+						return false;
+					}
+				}
+				else if (!Objects.deepEquals(
+							entry.getValue(), map2.get(entry.getKey()))) {
+
+					return false;
+				}
+			}
 		}
 
 		return true;

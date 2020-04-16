@@ -12,7 +12,9 @@
  * details.
  */
 
-import {debounce} from 'frontend-js-web';
+import {ItemSelectorDialog, debounce} from 'frontend-js-web';
+
+import {config} from '../config/index';
 
 const KEY_ENTER = 13;
 
@@ -46,8 +48,15 @@ export default function getAlloyEditorProcessor(
 	let _element;
 
 	return {
-		createEditor: (element, changeCallback, destroyCallback, config) => {
-			const {portletNamespace} = config;
+		createEditor: (
+			element,
+			changeCallback,
+			destroyCallback,
+			clickPosition
+		) => {
+			if (_editor) {
+				return;
+			}
 
 			const {editorConfig} = config.defaultEditorConfigurations[
 				editorConfigurationName
@@ -55,9 +64,43 @@ export default function getAlloyEditorProcessor(
 
 			_element = element;
 
-			const editorName = `${portletNamespace}FragmentEntryLinkEditable_${element.id}`;
-			_editor = AlloyEditor.editable(getEditorWrapper(element), {
+			const editorName = `${config.portletNamespace}FragmentEntryLinkEditable_${element.id}`;
+
+			const editorWrapper = getEditorWrapper(element);
+
+			editorWrapper.setAttribute('id', editorName);
+			editorWrapper.setAttribute('name', editorName);
+
+			_editor = AlloyEditor.editable(editorWrapper, {
 				...editorConfig,
+
+				documentBrowseLinkCallback: (
+					editor,
+					url,
+					changeLinkCallback
+				) => {
+					const itemSelectorDialog = new ItemSelectorDialog({
+						eventName: editor.title + 'selectItem',
+						singleSelect: true,
+						title: Liferay.Language.get('select-item'),
+						url,
+					});
+
+					itemSelectorDialog.open();
+
+					itemSelectorDialog.on('selectedItemChange', event => {
+						const selectedItem = event.selectedItem;
+
+						if (selectedItem) {
+							changeLinkCallback(selectedItem);
+						}
+					});
+				},
+
+				documentBrowseLinkUrl: editorConfig.documentBrowseLinkUrl.replace(
+					'_EDITOR_NAME_',
+					editorName
+				),
 
 				filebrowserImageBrowseLinkUrl: editorConfig.filebrowserImageBrowseLinkUrl.replace(
 					'_EDITOR_NAME_',
@@ -67,7 +110,9 @@ export default function getAlloyEditorProcessor(
 				filebrowserImageBrowseUrl: editorConfig.filebrowserImageBrowseUrl.replace(
 					'_EDITOR_NAME_',
 					editorName
-				)
+				),
+
+				title: editorName,
 			});
 
 			const nativeEditor = _editor.get('nativeEditor');
@@ -102,12 +147,18 @@ export default function getAlloyEditorProcessor(
 
 				nativeEditor.on('instanceReady', () => {
 					nativeEditor.focus();
-					nativeEditor.execCommand('selectAll');
+
+					if (clickPosition) {
+						_selectRange(clickPosition, nativeEditor);
+					}
+					else {
+						nativeEditor.execCommand('selectAll');
+					}
 				}),
 
 				_stopEventPropagation(element, 'keydown'),
 				_stopEventPropagation(element, 'keyup'),
-				_stopEventPropagation(element, 'keypress')
+				_stopEventPropagation(element, 'keypress'),
 			];
 		},
 
@@ -141,7 +192,7 @@ export default function getAlloyEditorProcessor(
 			if (element !== _element) {
 				render(element, value, editableConfig);
 			}
-		}
+		},
 	};
 }
 
@@ -158,6 +209,51 @@ function _stopEventPropagation(element, eventName) {
 	return {
 		removeListener: () => {
 			element.removeEventListener(eventName, handler);
-		}
+		},
 	};
+}
+
+/**
+ * Place the caret in the click position
+ * @param {Event} event
+ * @param {CKEditor} nativeEditor
+ */
+function _selectRange(clickPosition, nativeEditor) {
+	const ckRange = nativeEditor.getSelection().getRanges()[0];
+
+	if (document.caretPositionFromPoint) {
+		const range = document.caretPositionFromPoint(
+			clickPosition.clientX,
+			clickPosition.clientY
+		);
+
+		const node = range.offsetNode;
+
+		if (isTextNode(node)) {
+			ckRange.setStart(CKEDITOR.dom.node(node), range.offset);
+			ckRange.setEnd(CKEDITOR.dom.node(node), range.offset);
+		}
+	}
+	else if (document.caretRangeFromPoint) {
+		const range = document.caretRangeFromPoint(
+			clickPosition.clientX,
+			clickPosition.clientY
+		);
+
+		const offset = range.startOffset || 0;
+
+		if (
+			isTextNode(range.startContainer) &&
+			isTextNode(range.endContainer)
+		) {
+			ckRange.setStart(CKEDITOR.dom.node(range.startContainer), offset);
+			ckRange.setEnd(CKEDITOR.dom.node(range.endContainer), offset);
+		}
+	}
+
+	nativeEditor.getSelection().selectRanges([ckRange]);
+}
+
+function isTextNode(node) {
+	return node.nodeType === Node.TEXT_NODE;
 }

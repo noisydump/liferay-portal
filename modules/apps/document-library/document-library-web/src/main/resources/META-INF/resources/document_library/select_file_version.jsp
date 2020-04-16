@@ -52,17 +52,18 @@ if ((user.getUserId() == fileEntry.getUserId()) || permissionChecker.isContentRe
 				modelVar="curFileVersion"
 			>
 				<liferay-ui:search-container-column-text
-					name="title"
+					name="name"
 					truncate="<%= true %>"
 				>
 					<c:choose>
 						<c:when test="<%= fileVersion.getFileVersionId() != curFileVersion.getFileVersionId() %>">
 
 							<%
-							Map<String, Object> data = new HashMap<String, Object>();
-
-							data.put("sourceversion", curFileVersion.getFileVersionId());
-							data.put("targetversion", fileVersion.getFileVersionId());
+							Map<String, Object> data = HashMapBuilder.<String, Object>put(
+								"sourceversion", curFileVersion.getFileVersionId()
+							).put(
+								"targetversion", fileVersion.getFileVersionId()
+							).build();
 							%>
 
 							<aui:a cssClass="selector-button" data="<%= data %>" href="javascript:;">

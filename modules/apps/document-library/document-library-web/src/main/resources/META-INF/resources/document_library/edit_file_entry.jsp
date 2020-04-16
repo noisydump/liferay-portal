@@ -203,7 +203,7 @@ renderResponse.setTitle(headerTitle);
 			<liferay-ui:error exception="<%= DuplicateFolderNameException.class %>" message="please-enter-a-unique-document-name" />
 
 			<liferay-ui:error exception="<%= LiferayFileItemException.class %>">
-				<liferay-ui:message arguments="<%= TextFormatter.formatStorageSize(LiferayFileItem.THRESHOLD_SIZE, locale) %>" key="please-enter-valid-content-with-valid-content-size-no-larger-than-x" translateArguments="<%= false %>" />
+				<liferay-ui:message arguments="<%= LanguageUtil.formatStorageSize(LiferayFileItem.THRESHOLD_SIZE, locale) %>" key="please-enter-valid-content-with-valid-content-size-no-larger-than-x" translateArguments="<%= false %>" />
 			</liferay-ui:error>
 
 			<liferay-ui:error exception="<%= FileExtensionException.class %>">
@@ -226,11 +226,11 @@ renderResponse.setTitle(headerTitle);
 			%>
 
 			<liferay-ui:error exception="<%= FileSizeException.class %>">
-				<liferay-ui:message arguments="<%= TextFormatter.formatStorageSize(fileMaxSize, locale) %>" key="please-enter-a-file-with-a-valid-file-size-no-larger-than-x" translateArguments="<%= false %>" />
+				<liferay-ui:message arguments="<%= LanguageUtil.formatStorageSize(fileMaxSize, locale) %>" key="please-enter-a-file-with-a-valid-file-size-no-larger-than-x" translateArguments="<%= false %>" />
 			</liferay-ui:error>
 
 			<liferay-ui:error exception="<%= UploadRequestSizeException.class %>">
-				<liferay-ui:message arguments="<%= TextFormatter.formatStorageSize(dlEditFileEntryDisplayContext.getMaximumUploadRequestSize(), locale) %>" key="request-is-larger-than-x-and-could-not-be-processed" translateArguments="<%= false %>" />
+				<liferay-ui:message arguments="<%= LanguageUtil.formatStorageSize(dlEditFileEntryDisplayContext.getMaximumUploadRequestSize(), locale) %>" key="request-is-larger-than-x-and-could-not-be-processed" translateArguments="<%= false %>" />
 			</liferay-ui:error>
 
 			<liferay-asset:asset-categories-error />
@@ -243,7 +243,7 @@ renderResponse.setTitle(headerTitle);
 				<aui:fieldset>
 					<c:if test="<%= fileMaxSize != 0 %>">
 						<div class="alert alert-info">
-							<liferay-ui:message arguments="<%= TextFormatter.formatStorageSize(fileMaxSize, locale) %>" key="upload-documents-no-larger-than-x" translateArguments="<%= false %>" />
+							<liferay-ui:message arguments="<%= LanguageUtil.formatStorageSize(fileMaxSize, locale) %>" key="upload-documents-no-larger-than-x" translateArguments="<%= false %>" />
 						</div>
 					</c:if>
 
@@ -288,7 +288,7 @@ renderResponse.setTitle(headerTitle);
 													constrain: true,
 													destroyOnHide: true,
 													modal: true,
-													width: 680
+													width: 680,
 												},
 												id: '<portlet:namespace />selectFolder',
 												title:
@@ -298,14 +298,14 @@ renderResponse.setTitle(headerTitle);
 													<portlet:param name="mvcRenderCommandName" value="/document_library/select_folder" />
 												</liferay-portlet:renderURL>
 
-												uri: '<%= selectFolderURL.toString() %>'
+												uri: '<%= selectFolderURL.toString() %>',
 											},
 											function(event) {
 												var folderData = {
 													idString: 'folderId',
 													idValue: event.folderid,
 													nameString: 'folderName',
-													nameValue: event.foldername
+													nameValue: event.foldername,
 												};
 
 												Liferay.Util.selectFolder(folderData, '<portlet:namespace />');
@@ -319,7 +319,7 @@ renderResponse.setTitle(headerTitle);
 
 					<%@ include file="/document_library/edit_file_entry_picker.jspf" %>
 
-					<aui:input name="title" />
+					<aui:input label="name" name="title" />
 
 					<c:if test="<%= (folder == null) || folder.isSupportsMetadata() %>">
 						<aui:input name="description" />
@@ -370,9 +370,7 @@ renderResponse.setTitle(headerTitle);
 								try {
 									boolean localizable = true;
 
-									List<DDMStructure> ddmStructures = dlFileEntryType.getDDMStructures();
-
-									for (DDMStructure ddmStructure : ddmStructures) {
+									for (DDMStructure ddmStructure : dlFileEntryType.getDDMStructures()) {
 										com.liferay.dynamic.data.mapping.storage.DDMFormValues ddmFormValues = null;
 
 										try {
@@ -388,15 +386,33 @@ renderResponse.setTitle(headerTitle);
 											<div class="hide">
 										</c:if>
 
-										<liferay-ddm:html
-											classNameId="<%= PortalUtil.getClassNameId(com.liferay.dynamic.data.mapping.model.DDMStructure.class) %>"
-											classPK="<%= ddmStructure.getPrimaryKey() %>"
-											ddmFormValues="<%= ddmFormValues %>"
-											fieldsNamespace="<%= String.valueOf(ddmStructure.getPrimaryKey()) %>"
-											groupId="<%= (fileEntry != null) ? fileEntry.getGroupId() : 0 %>"
-											localizable="<%= localizable %>"
-											requestedLocale="<%= locale %>"
-										/>
+										<c:choose>
+											<c:when test="<%= FFDocumentLibraryDDMEditorConfigurationUtil.useDataEngineEditor() %>">
+
+												<%
+												DDMFormValuesToMapConverter ddmFormValuesToMapConverter = (DDMFormValuesToMapConverter)request.getAttribute(DDMFormValuesToMapConverter.class.getName());
+												%>
+
+												<liferay-data-engine:data-layout-renderer
+													containerId='<%= "reportId_" + ddmStructure.getStructureId() %>'
+													dataDefinitionId="<%= ddmStructure.getStructureId() %>"
+													dataRecordValues="<%= ddmFormValuesToMapConverter.convert(ddmFormValues, DDMStructureLocalServiceUtil.getStructure(ddmStructure.getStructureId())) %>"
+													namespace="<%= renderResponse.getNamespace() %>"
+												/>
+											</c:when>
+											<c:otherwise>
+												<liferay-ddm:html
+													classNameId="<%= PortalUtil.getClassNameId(com.liferay.dynamic.data.mapping.model.DDMStructure.class) %>"
+													classPK="<%= ddmStructure.getPrimaryKey() %>"
+													ddmFormValues="<%= ddmFormValues %>"
+													defaultEditLocale="<%= LocaleUtil.fromLanguageId(defaultLanguageId) %>"
+													fieldsNamespace="<%= String.valueOf(ddmStructure.getPrimaryKey()) %>"
+													groupId="<%= (fileEntry != null) ? fileEntry.getGroupId() : 0 %>"
+													localizable="<%= localizable %>"
+													requestedLocale="<%= locale %>"
+												/>
+											</c:otherwise>
+										</c:choose>
 
 										<c:if test="<%= !dlEditFileEntryDisplayContext.isDDMStructureVisible(ddmStructure) %>">
 											</div>
@@ -556,27 +572,28 @@ renderResponse.setTitle(headerTitle);
 	function <portlet:namespace />changeFileEntryType() {
 		Liferay.Util.postForm(form, {
 			data: {
-				<%= Constants.CMD %>: '<%= Constants.PREVIEW %>'
-			}
+				<%= Constants.CMD %>: '<%= Constants.PREVIEW %>',
+			},
 		});
 	}
 
 	function <portlet:namespace />cancelCheckOut() {
 		Liferay.Util.postForm(form, {
 			data: {
-				<%= Constants.CMD %>: '<%= Constants.CANCEL_CHECKOUT %>'
-			}
+				<%= Constants.CMD %>: '<%= Constants.CANCEL_CHECKOUT %>',
+			},
 		});
 	}
 
 	function <portlet:namespace />checkIn() {
 		Liferay.Util.setFormValues(form, {
-			<%= Constants.CMD %>: '<%= Constants.UPDATE_AND_CHECKIN %>'
+			<%= Constants.CMD %>: '<%= Constants.UPDATE_AND_CHECKIN %>',
 		});
 
 		if (<%= dlAdminDisplayContext.isVersioningStrategyOverridable() %>) {
 			<portlet:namespace />showVersionDetailsDialog(form);
-		} else {
+		}
+		else {
 			submitForm(form);
 		}
 	}
@@ -584,8 +601,8 @@ renderResponse.setTitle(headerTitle);
 	function <portlet:namespace />checkOut() {
 		Liferay.Util.postForm(form, {
 			data: {
-				<%= Constants.CMD %>: '<%= Constants.CHECKOUT %>'
-			}
+				<%= Constants.CMD %>: '<%= Constants.CHECKOUT %>',
+			},
 		});
 	}
 
@@ -598,7 +615,7 @@ renderResponse.setTitle(headerTitle);
 
 		var data = {
 			<%= Constants.CMD %>:
-				'<%= (fileEntry == null) ? Constants.ADD : Constants.UPDATE %>'
+				'<%= (fileEntry == null) ? Constants.ADD : Constants.UPDATE %>',
 		};
 
 		if (draft) {
@@ -606,7 +623,7 @@ renderResponse.setTitle(headerTitle);
 		}
 
 		Liferay.Util.postForm(form, {
-			data: data
+			data: data,
 		});
 	}
 
@@ -619,8 +636,8 @@ renderResponse.setTitle(headerTitle);
 					data: {
 						changeLog: changeLog,
 						updateVersionDetails: true,
-						versionIncrease: versionIncrease
-					}
+						versionIncrease: versionIncrease,
+					},
 				});
 			});
 		});

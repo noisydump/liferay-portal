@@ -42,7 +42,7 @@ describe('WebContent Plugin', () => {
 		// Force attaching DOM Content Loaded event
 		Object.defineProperty(document, 'readyState', {
 			value: 'loading',
-			writable: false
+			writable: false,
 		});
 
 		fetchMock.mock('*', () => 200);
@@ -65,7 +65,7 @@ describe('WebContent Plugin', () => {
 
 			document.dispatchEvent(domContentLoaded);
 
-			const events = Analytics.events.filter(
+			const events = Analytics.getEvents().filter(
 				({eventId}) => eventId === 'webContentViewed'
 			);
 
@@ -76,8 +76,8 @@ describe('WebContent Plugin', () => {
 					applicationId,
 					eventId: 'webContentViewed',
 					properties: expect.objectContaining({
-						articleId: 'assetId'
-					})
+						articleId: 'assetId',
+					}),
 				})
 			);
 
@@ -97,16 +97,16 @@ describe('WebContent Plugin', () => {
 
 			dom.triggerEvent(imageInsideWebContent, 'click');
 
-			expect(Analytics.events).toEqual([
+			expect(Analytics.getEvents()).toEqual([
 				expect.objectContaining({
 					applicationId,
 					eventId: 'webContentClicked',
 					properties: expect.objectContaining({
 						articleId: 'assetId',
 						src: googleUrl,
-						tagName: 'img'
-					})
-				})
+						tagName: 'img',
+					}),
+				}),
 			]);
 
 			document.body.removeChild(webContentElement);
@@ -127,7 +127,7 @@ describe('WebContent Plugin', () => {
 
 			dom.triggerEvent(linkInsideWebContent, 'click');
 
-			expect(Analytics.events).toEqual([
+			expect(Analytics.getEvents()).toEqual([
 				expect.objectContaining({
 					applicationId,
 					eventId: 'webContentClicked',
@@ -135,9 +135,9 @@ describe('WebContent Plugin', () => {
 						articleId: 'assetId',
 						href: googleUrl,
 						tagName: 'a',
-						text
-					})
-				})
+						text,
+					}),
+				}),
 			]);
 
 			document.body.removeChild(webContentElement);
@@ -159,15 +159,15 @@ describe('WebContent Plugin', () => {
 
 			dom.triggerEvent(paragraphInsideWebContent, 'click');
 
-			expect(Analytics.events).toEqual([
+			expect(Analytics.getEvents()).toEqual([
 				expect.objectContaining({
 					applicationId,
 					eventId: 'webContentClicked',
 					properties: expect.objectContaining({
 						articleId: 'assetId',
-						tagName: 'p'
-					})
-				})
+						tagName: 'p',
+					}),
+				}),
 			]);
 
 			document.body.removeChild(webContentElement);

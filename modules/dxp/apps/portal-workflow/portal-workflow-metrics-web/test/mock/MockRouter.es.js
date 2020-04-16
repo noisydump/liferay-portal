@@ -10,25 +10,27 @@
  */
 
 import {createMemoryHistory} from 'history';
-import React, {cloneElement, useState, useMemo} from 'react';
-import {Router, Route} from 'react-router-dom';
+import React, {cloneElement, useMemo, useState} from 'react';
+import {Route, Router} from 'react-router-dom';
 
 import {AppContext} from '../../src/main/resources/META-INF/resources/js/components/AppContext.es';
+import {FilterContextProvider} from '../../src/main/resources/META-INF/resources/js/shared/components/filter/FilterContext.es';
 
 const withParamsMock = (...components) => ({
 	history,
 	location: {search: query},
-	match: {params: routeParams}
+	match: {params: routeParams},
 }) => {
 	return components.map(component => {
-		if (routeParams.sort)
+		if (routeParams.sort) {
 			routeParams.sort = decodeURIComponent(routeParams.sort);
+		}
 
 		return cloneElement(component, {
 			...routeParams,
 			history,
 			query,
-			routeParams
+			routeParams,
 		});
 	});
 };
@@ -37,12 +39,14 @@ const MockRouter = ({
 	children,
 	client,
 	initialPath = '/1/20/title%3Aasc',
+	isAmPm,
 	path = '/:page/:pageSize/:sort',
 	query = '?backPath=%2F',
-	withRouterProps = true
+	userId = '1',
+	userName = 'Test Test',
+	withoutRouterProps,
 }) => {
 	const [title, setTitle] = useState(null);
-	const [status, setStatus] = useState(null);
 
 	const contextState = useMemo(
 		() => ({
@@ -50,12 +54,13 @@ const MockRouter = ({
 			defaultDelta: 20,
 			deltaValues: [5, 10, 20, 30, 50, 75],
 			getClient: () => client,
+			isAmPm,
 			maxPages: 3,
 			namespace: 'workflow_',
-			setStatus,
 			setTitle,
-			status,
-			title
+			title,
+			userId,
+			userName,
 		}),
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 		[]
@@ -71,14 +76,16 @@ const MockRouter = ({
 		[initialEntries]
 	);
 
-	const component = withRouterProps
-		? withParamsMock(children)
-		: () => cloneElement(children);
+	const component = withoutRouterProps
+		? () => cloneElement(children)
+		: withParamsMock(children);
 
 	return (
 		<Router history={history}>
 			<AppContext.Provider value={contextState}>
-				<Route path={path} render={component} />
+				<FilterContextProvider>
+					<Route path={path} render={component} />
+				</FilterContextProvider>
 			</AppContext.Provider>
 		</Router>
 	);

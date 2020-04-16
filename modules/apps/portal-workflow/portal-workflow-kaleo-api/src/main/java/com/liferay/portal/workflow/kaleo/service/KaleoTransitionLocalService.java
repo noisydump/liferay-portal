@@ -74,8 +74,8 @@ public interface KaleoTransitionLocalService
 	public KaleoTransition addKaleoTransition(KaleoTransition kaleoTransition);
 
 	public KaleoTransition addKaleoTransition(
-			long kaleoDefinitionVersionId, long kaleoNodeId,
-			Transition transition, KaleoNode sourceKaleoNode,
+			long kaleoDefinitionId, long kaleoDefinitionVersionId,
+			long kaleoNodeId, Transition transition, KaleoNode sourceKaleoNode,
 			KaleoNode targetKaleoNode, ServiceContext serviceContext)
 		throws PortalException;
 
@@ -87,6 +87,12 @@ public interface KaleoTransitionLocalService
 	 */
 	@Transactional(enabled = false)
 	public KaleoTransition createKaleoTransition(long kaleoTransitionId);
+
+	/**
+	 * @throws PortalException
+	 */
+	public PersistedModel createPersistedModel(Serializable primaryKeyObj)
+		throws PortalException;
 
 	public void deleteCompanyKaleoTransitions(long companyId);
 
@@ -254,6 +260,9 @@ public interface KaleoTransitionLocalService
 	 */
 	public String getOSGiServiceIdentifier();
 
+	/**
+	 * @throws PortalException
+	 */
 	@Override
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public PersistedModel getPersistedModel(Serializable primaryKeyObj)

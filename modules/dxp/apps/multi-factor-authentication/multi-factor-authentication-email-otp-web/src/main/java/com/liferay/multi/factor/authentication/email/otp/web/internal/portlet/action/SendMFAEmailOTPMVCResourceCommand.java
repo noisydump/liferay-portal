@@ -160,18 +160,20 @@ public class SendMFAEmailOTPMVCResourceCommand implements MVCResourceCommand {
 				MFAEmailOTPWebKeys.MFA_EMAIL_OTP_SET_AT_TIME),
 			Long.MIN_VALUE);
 
-		long time =
-			mfaEmailOTPSetAtTime +
-				mfaEmailOTPConfiguration.resendEmailTimeout() * 1000;
+		long resendEmailTimeout = mfaEmailOTPConfiguration.resendEmailTimeout();
 
-		if (System.currentTimeMillis() <= time) {
-			if (_log.isInfoEnabled()) {
-				_log.info(
-					"Refusing to send email before resend timeout for user " +
-						user.getUserId());
+		if (resendEmailTimeout > 0) {
+			long time = mfaEmailOTPSetAtTime + resendEmailTimeout * 1000;
+
+			if (System.currentTimeMillis() <= time) {
+				if (_log.isInfoEnabled()) {
+					_log.info(
+						"Refusing to send email before resend timeout for " +
+							"user " + user.getUserId());
+				}
+
+				return false;
 			}
-
-			return false;
 		}
 
 		String generatedMFAEmailOTP = PwdGenerator.getPassword(

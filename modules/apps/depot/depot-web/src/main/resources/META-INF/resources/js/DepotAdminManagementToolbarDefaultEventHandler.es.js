@@ -20,12 +20,12 @@ import confirmDepotEntryDeletion from './confirmDepotEntryDeletion.es';
 class DepotAdminManagementToolbarDefaultEventHandler extends DefaultEventHandler {
 	addDepotEntry(itemData) {
 		openSimpleInputModal({
-			dialogTitle: Liferay.Language.get('add-repository'),
+			dialogTitle: Liferay.Language.get('add-asset-library'),
 			formSubmitURL: itemData.addDepotEntryURL,
 			mainFieldLabel: Liferay.Language.get('name'),
 			mainFieldName: 'name',
 			namespace: this.namespace,
-			spritemap: this.spritemap
+			spritemap: this.spritemap,
 		});
 	}
 
@@ -38,9 +38,9 @@ class DepotAdminManagementToolbarDefaultEventHandler extends DefaultEventHandler
 					deleteEntryIds: Liferay.Util.listCheckedExcept(
 						form,
 						this.ns('allRowIds')
-					)
+					),
 				},
-				url: this.deleteDepotEntriesURL
+				url: this.deleteDepotEntriesURL,
 			});
 		}
 	}
@@ -48,7 +48,7 @@ class DepotAdminManagementToolbarDefaultEventHandler extends DefaultEventHandler
 
 DepotAdminManagementToolbarDefaultEventHandler.STATE = {
 	deleteDepotEntriesURL: Config.string(),
-	spritemap: Config.string()
+	spritemap: Config.string(),
 };
 
 export default DepotAdminManagementToolbarDefaultEventHandler;

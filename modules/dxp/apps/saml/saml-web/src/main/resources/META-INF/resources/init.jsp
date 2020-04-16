@@ -32,9 +32,11 @@ page import="com.liferay.portal.kernel.util.HtmlUtil" %><%@
 page import="com.liferay.portal.kernel.util.ParamUtil" %><%@
 page import="com.liferay.portal.kernel.util.PortalUtil" %><%@
 page import="com.liferay.portal.kernel.util.PropertiesParamUtil" %><%@
+page import="com.liferay.portal.kernel.util.StringUtil" %><%@
 page import="com.liferay.portal.kernel.util.UnicodeProperties" %><%@
 page import="com.liferay.portal.kernel.util.Validator" %><%@
 page import="com.liferay.portal.kernel.util.WebKeys" %><%@
+page import="com.liferay.saml.constants.SamlProviderConfigurationKeys" %><%@
 page import="com.liferay.saml.constants.SamlWebKeys" %><%@
 page import="com.liferay.saml.persistence.exception.DuplicateSamlIdpSpConnectionSamlSpEntityIdException" %><%@
 page import="com.liferay.saml.persistence.exception.DuplicateSamlSpIdpConnectionSamlIdpEntityIdException" %><%@
@@ -55,7 +57,7 @@ page import="com.liferay.saml.runtime.metadata.LocalEntityManager" %><%@
 page import="com.liferay.saml.util.NameIdTypeValues" %><%@
 page import="com.liferay.saml.util.PortletPropsKeys" %><%@
 page import="com.liferay.saml.web.internal.display.context.GeneralTabDefaultViewDisplayContext" %><%@
-page import="com.liferay.saml.web.internal.util.NameIdTypeValuesUtilHelper" %><%@
+page import="com.liferay.saml.web.internal.util.NameIdTypeValuesUtil" %><%@
 page import="com.liferay.taglib.search.ResultRow" %>
 
 <%@ page import="java.security.InvalidParameterException" %><%@
@@ -75,7 +77,7 @@ page import="java.util.List" %>
 String currentURL = PortalUtil.getCurrentURL(request);
 
 LocalEntityManager localEntityManager = (LocalEntityManager)request.getAttribute(LocalEntityManager.class.getName());
-NameIdTypeValues nameIdTypeValues = NameIdTypeValuesUtilHelper.getNameIdTypeValues();
+NameIdTypeValues nameIdTypeValues = NameIdTypeValuesUtil.getNameIdTypeValues();
 GeneralTabDefaultViewDisplayContext generalTabDefaultViewDisplayContext = (GeneralTabDefaultViewDisplayContext)renderRequest.getAttribute(GeneralTabDefaultViewDisplayContext.class.getName());
 SamlProviderConfigurationHelper samlProviderConfigurationHelper = (SamlProviderConfigurationHelper)request.getAttribute(SamlProviderConfigurationHelper.class.getName());
 

@@ -15,24 +15,22 @@
 import ClayButton from '@clayui/button/lib/Button';
 import {Context as ClayModalContext} from '@clayui/modal';
 import ClayPanel from '@clayui/panel';
+import {DataDefinitionUtils} from 'data-engine-taglib';
 import React, {useContext} from 'react';
 
 import {getItem} from '../../utils/client.es';
 import FormViewContext from './FormViewContext.es';
 
 export default callback => {
-	const [
-		{
-			dataDefinition: {dataDefinitionFields},
-			dataDefinitionId,
-			fieldTypes
-		}
-	] = useContext(FormViewContext);
+	const [{dataDefinition, dataDefinitionId, fieldTypes}] = useContext(
+		FormViewContext
+	);
 	const [{onClose}, dispatchModal] = useContext(ClayModalContext);
 
 	return fieldName => {
-		const {fieldType, label} = dataDefinitionFields.find(
-			({name}) => name === fieldName
+		const {fieldType, label} = DataDefinitionUtils.getDataDefinitionField(
+			dataDefinition,
+			fieldName
 		);
 		const {label: fieldTypeLabel} = fieldTypes.find(({name}) => {
 			return name === fieldType;
@@ -155,13 +153,13 @@ export default callback => {
 							>
 								{Liferay.Language.get('delete')}
 							</ClayButton>
-						</ClayButton.Group>
+						</ClayButton.Group>,
 					],
 					header: Liferay.Language.get('delete-from-object'),
 					size: 'md',
-					status: 'warning'
+					status: 'warning',
 				},
-				type: 1
+				type: 1,
 			});
 		});
 	};

@@ -21,6 +21,8 @@ import com.liferay.portal.vulcan.accept.language.AcceptLanguage;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 
+import java.util.Locale;
+
 import javax.annotation.Generated;
 
 import javax.servlet.http.HttpServletRequest;
@@ -43,11 +45,21 @@ import org.osgi.annotation.versioning.ProviderType;
 @ProviderType
 public interface AppResource {
 
+	public static Builder builder() {
+		return FactoryHolder.factory.create();
+	}
+
 	public void deleteApp(Long appId) throws Exception;
+
+	public Response deleteAppBatch(String callbackURL, Object object)
+		throws Exception;
 
 	public App getApp(Long appId) throws Exception;
 
 	public App putApp(Long appId, App app) throws Exception;
+
+	public Response putAppBatch(String callbackURL, Object object)
+		throws Exception;
 
 	public Response putAppDeployment(
 			Long appId, DeploymentAction deploymentAction)
@@ -85,5 +97,34 @@ public interface AppResource {
 
 	public void setContextUser(
 		com.liferay.portal.kernel.model.User contextUser);
+
+	public static class FactoryHolder {
+
+		public static volatile Factory factory;
+
+	}
+
+	@ProviderType
+	public interface Builder {
+
+		public AppResource build();
+
+		public Builder checkPermissions(boolean checkPermissions);
+
+		public Builder httpServletRequest(
+			HttpServletRequest httpServletRequest);
+
+		public Builder preferredLocale(Locale preferredLocale);
+
+		public Builder user(com.liferay.portal.kernel.model.User user);
+
+	}
+
+	@ProviderType
+	public interface Factory {
+
+		public Builder create();
+
+	}
 
 }

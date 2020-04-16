@@ -81,7 +81,7 @@ AUI.add(
 
 				return {
 					close: BUFFER_CLOSE_NODE.join(STR_BLANK),
-					open: BUFFER_OPEN_NODE.join(STR_BLANK)
+					open: BUFFER_OPEN_NODE.join(STR_BLANK),
 				};
 			},
 
@@ -105,11 +105,13 @@ AUI.add(
 					if (!inCDATA) {
 						if (item.match(instance.REGEX_TOKEN_2)) {
 							indent = 0;
-						} else if (item.match(instance.REGEX_TOKEN_3)) {
+						}
+						else if (item.match(instance.REGEX_TOKEN_3)) {
 							if (pad !== 0) {
 								pad -= 1;
 							}
-						} else if (item.match(instance.REGEX_TOKEN_4)) {
+						}
+						else if (item.match(instance.REGEX_TOKEN_4)) {
 							indent = 1;
 						}
 
@@ -120,7 +122,8 @@ AUI.add(
 
 					if (item.indexOf(STR_CDATA_OPEN) > -1) {
 						inCDATA = true;
-					} else if (item.indexOf(STR_CDATA_CLOSE) > -1) {
+					}
+					else if (item.indexOf(STR_CDATA_CLOSE) > -1) {
 						inCDATA = false;
 					}
 
@@ -144,13 +147,13 @@ AUI.add(
 				}
 
 				return valid;
-			}
+			},
 		};
 
 		Liferay.XMLUtil = XMLUtil;
 	},
 	'',
 	{
-		requires: ['aui-base']
+		requires: ['aui-base'],
 	}
 );

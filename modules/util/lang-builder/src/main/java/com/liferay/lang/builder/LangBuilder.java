@@ -16,6 +16,7 @@ package com.liferay.lang.builder;
 
 import com.liferay.lang.builder.comparator.LangBuilderCategoryComparator;
 import com.liferay.petra.string.CharPool;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.io.unsync.UnsyncBufferedReader;
 import com.liferay.portal.kernel.io.unsync.UnsyncStringReader;
@@ -25,7 +26,6 @@ import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.NaturalOrderStringComparator;
 import com.liferay.portal.kernel.util.PropertiesUtil;
-import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.tools.ArgumentsUtil;
@@ -374,9 +374,12 @@ public class LangBuilder {
 				if ((translatedText == null) || translatedText.equals("")) {
 					String value = array[1];
 
-					if (line.contains("{") || line.contains("<") ||
-						ArrayUtil.contains(
-							_AUTOMATIC_COPY_LANGUAGE_IDS, languageId)) {
+					if (LanguageValidator.isSpecialPropertyKey(key)) {
+						translatedText = _getSpecialPropertyValue(key);
+					}
+					else if (line.contains("{") || line.contains("<") ||
+							 ArrayUtil.contains(
+								 _AUTOMATIC_COPY_LANGUAGE_IDS, languageId)) {
 
 						translatedText = value + AUTOMATIC_COPY;
 					}
@@ -394,9 +397,6 @@ public class LangBuilder {
 						else {
 							translatedText = value + AUTOMATIC_COPY;
 						}
-					}
-					else if (LanguageValidator.isSpecialPropertyKey(key)) {
-						translatedText = _getSpecialPropertyValue(key);
 					}
 					else if (languageId.equals("el") &&
 							 (key.equals("enabled") || key.equals("on") ||

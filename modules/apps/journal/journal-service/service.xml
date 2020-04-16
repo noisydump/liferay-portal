@@ -256,6 +256,17 @@
 			<finder-column name="articlePK" />
 			<finder-column name="languageId" />
 		</finder>
+		<finder name="C_A_L" return-type="JournalArticleLocalization" unique="true">
+			<finder-column name="companyId" />
+			<finder-column name="articlePK" />
+			<finder-column name="languageId" />
+		</finder>
+		<finder name="C_A_T_L" return-type="JournalArticleLocalization" unique="true">
+			<finder-column name="companyId" />
+			<finder-column name="articlePK" />
+			<finder-column name="title" />
+			<finder-column name="languageId" />
+		</finder>
 	</entity>
 	<entity change-tracking-enabled="true" local-service="true" name="JournalArticleResource" remote-service="false" uuid="true">
 
@@ -285,7 +296,7 @@
 			<finder-column name="articleId" />
 		</finder>
 	</entity>
-	<entity local-service="true" name="JournalContentSearch" remote-service="false">
+	<entity local-service="true" name="JournalContentSearch" plural-name="JournalContentSearchs" remote-service="false">
 
 		<!-- PK fields -->
 

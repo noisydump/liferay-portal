@@ -50,7 +50,6 @@ portletURL.setParameter("kaleoProcessId", String.valueOf(kaleoProcess.getKaleoPr
 	clearResultsURL="<%= kaleoFormsViewRecordsDisplayContext.getClearResultsURL() %>"
 	componentId="kaleoFormsRecordsManagementToolbar"
 	creationMenu="<%= kaleoFormsViewRecordsDisplayContext.getCreationMenu() %>"
-	disabled="<%= kaleoFormsViewRecordsDisplayContext.isDisabledManagementBar() %>"
 	filterDropdownItems="<%= kaleoFormsViewRecordsDisplayContext.getFilterItemsDropdownItems() %>"
 	itemsTotal="<%= kaleoFormsViewRecordsDisplayContext.getTotalItems() %>"
 	namespace="<%= renderResponse.getNamespace() %>"
@@ -171,12 +170,13 @@ portletURL.setParameter("kaleoProcessId", String.valueOf(kaleoProcess.getKaleoPr
 			if (!dialog) {
 				dialog = Util.Window.getWindow({
 					dialog: {
-						bodyContent: content
+						bodyContent: content,
 					},
 					id: '<portlet:namespace />previewDialog',
-					title: Liferay.Language.get('preview')
+					title: Liferay.Language.get('preview'),
 				});
-			} else {
+			}
+			else {
 				dialog.show();
 
 				dialog.set('bodyContent', content);
@@ -205,7 +205,7 @@ portletURL.setParameter("kaleoProcessId", String.valueOf(kaleoProcess.getKaleoPr
 							ddlRecordIds: Liferay.Util.listCheckedExcept(
 								searchContainer,
 								'<portlet:namespace />allRowIds'
-							)
+							),
 						},
 
 						<portlet:actionURL name="deleteDDLRecord" var="deleteDDLRecordURL">
@@ -213,7 +213,7 @@ portletURL.setParameter("kaleoProcessId", String.valueOf(kaleoProcess.getKaleoPr
 							<portlet:param name="redirect" value="<%= currentURL %>" />
 						</portlet:actionURL>
 
-						url: '<%= deleteDDLRecordURL %>'
+						url: '<%= deleteDDLRecordURL %>',
 					}
 				);
 			}
@@ -221,7 +221,7 @@ portletURL.setParameter("kaleoProcessId", String.valueOf(kaleoProcess.getKaleoPr
 	};
 
 	var ACTIONS = {
-		deleteRecords: deleteRecords
+		deleteRecords: deleteRecords,
 	};
 
 	Liferay.componentReady('kaleoFormsRecordsManagementToolbar').then(function(

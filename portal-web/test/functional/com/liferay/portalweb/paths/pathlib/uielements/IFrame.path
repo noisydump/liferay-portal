@@ -9,6 +9,21 @@
 </thead>
 <tbody>
 <tr>
+	<td>ADD_ASSIGNEE_TO_ACCOUNT</td>
+	<td>//iframe[@title='Assign ${key_assigneeType} to ${key_accountName}']</td>
+	<td></td>
+</tr>
+<tr>
+	<td>ADD_USERS_TO_ASSET_LIBRARY</td>
+	<td>//iframe[@title='Assign Users to This Asset Library']</td>
+	<td></td>
+</tr>
+<tr>
+	<td>ADD_USERS_TO_SITE</td>
+	<td>//iframe[@title='Assign Users to This Site']</td>
+	<td></td>
+</tr>
+<tr>
 	<td>CONFIGURATION</td>
 	<td>//div[contains(@class,'dialog-iframe-bd')]/iframe[contains(@src,'portlet_configuration')]</td>
 	<td></td>
@@ -16,6 +31,11 @@
 <tr>
 	<td>CONFIGURATION_DIALOG</td>
 	<td>//iframe[contains(@id,'configurationIframeDialog')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>ASSET_LIST_DIALOG</td>
+	<td>//iframe[contains(@id,'selectAssetList_iframe')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -49,6 +69,11 @@
 	<td></td>
 </tr>
 <tr>
+	<td>IFRAME</td>
+	<td>//iframe</td>
+	<td></td>
+</tr>
+<tr>
 	<td>IFRAME_TITLE</td>
 	<td>//div[contains(@class,'modal-header')]/h3[@class='modal-title' and contains(.,'${key_iframeTitle}')]</td>
 	<td></td>
@@ -76,11 +101,6 @@
 <tr>
 	<td>PAGE_VARIATION_IFRAME</td>
 	<td>//iframe[contains(@id,'pagesVariationsDialog_iframe_')]</td>
-	<td></td>
-</tr>
-<tr>
-	<td>PROFILE_DETAILS</td>
-	<td>//iframe[@title='Details']</td>
 	<td></td>
 </tr>
 <tr>

@@ -65,7 +65,7 @@ definition {
 			entryContent = "Blogs Entry Content",
 			entryTitle = "Blogs Entry Title");
 
-		BlogsEntry.viewEntry(
+		BlogsEntry.viewEntryPG(
 			entryContent = "Blogs Entry Content",
 			entryTitle = "Blogs Entry Title");
 	}
@@ -142,7 +142,7 @@ definition {
 			entryContent = "Blogs Entry Content",
 			entryTitle = "|||||||||1|||||||||2|||||||||3|||||||||4|||||||||5|||||||||6|||||||||7|||||||||8|||||||||9||||||||10||||||||11||||||||12||||||||13||||||||14||||||||15");
 
-		BlogsEntry.viewEntry(
+		BlogsEntry.viewEntryPG(
 			entryContent = "Blogs Entry Content",
 			entryTitle = "|||||||||1|||||||||2|||||||||3|||||||||4|||||||||5|||||||||6|||||||||7|||||||||8|||||||||9||||||||10||||||||11||||||||12||||||||13||||||||14||||||||15");
 	}
@@ -174,7 +174,7 @@ definition {
 			entryContent = "Blogs Entry Content",
 			entryTitle = "&amp; &lt; &gt; &quot; Escape Characters Entry");
 
-		BlogsEntry.viewEntry(
+		BlogsEntry.viewEntryPG(
 			entryContent = "Blogs Entry Content",
 			entryTitle = "&amp; &lt; &gt; &quot; Escape Characters Entry");
 	}
@@ -192,6 +192,8 @@ definition {
 
 	@priority = "4"
 	test AddBlogsEntryWithSamePageScope {
+		property portal.upstream = "quarantine";
+
 		var siteName = TestCase.getSiteName(siteName = "${siteName}");
 
 		JSONLayout.addPublicLayout(
@@ -206,15 +208,9 @@ definition {
 
 		Navigator.gotoPage(pageName = "Blogs Page2");
 
-		Portlet.gotoPortletOptions(
+		Portlet.selectScopePG(
 			portletName = "Blogs",
-			portletOption = "Configuration");
-
-		BlogsConfiguration.selectConfigurationIFrame();
-
-		BlogsNavigator.gotoConfigurationScopePG();
-
-		BlogsConfiguration.selectScopePG(scopeSelection = "Blogs Page2");
+			scope = "Blogs Page2");
 
 		Navigator.gotoPage(pageName = "Blogs Page2");
 
@@ -236,7 +232,7 @@ definition {
 			entryContent = "Blogs Entry1 Content",
 			entryTitle = "Blogs Entry1 Title");
 
-		BlogsEntry.viewEntry(
+		BlogsEntry.viewEntryPG(
 			entryContent = "Blogs Entry1 Content",
 			entryTitle = "Blogs Entry1 Title");
 
@@ -252,7 +248,7 @@ definition {
 			entryContent = "Blogs Entry2 Content",
 			entryTitle = "Blogs Entry2 Title");
 
-		BlogsEntry.viewEntry(
+		BlogsEntry.viewEntryPG(
 			entryContent = "Blogs Entry2 Content",
 			entryTitle = "Blogs Entry2 Title");
 
@@ -260,15 +256,9 @@ definition {
 
 		Navigator.gotoPage(pageName = "Blogs Page2");
 
-		Portlet.gotoPortletOptions(
+		Portlet.selectScopePG(
 			portletName = "Blogs",
-			portletOption = "Configuration");
-
-		BlogsConfiguration.selectConfigurationIFrame();
-
-		BlogsNavigator.gotoConfigurationScopePG();
-
-		BlogsConfiguration.selectScopePG(scopeSelection = "${siteName}");
+			scope = "${siteName}");
 
 		Navigator.gotoPage(pageName = "Blogs Page2");
 
@@ -278,7 +268,7 @@ definition {
 			entryContent = "Blogs Entry1 Content",
 			entryTitle = "Blogs Entry1 Title");
 
-		BlogsEntry.viewEntry(
+		BlogsEntry.viewEntryPG(
 			entryContent = "Blogs Entry1 Content",
 			entryTitle = "Blogs Entry1 Title");
 
@@ -296,7 +286,7 @@ definition {
 			entryContent = "Blogs Entry Content",
 			entryTitle = "Blogs Entry Title");
 
-		BlogsEntry.viewEntry(
+		BlogsEntry.viewEntryPG(
 			entryContent = "Blogs Entry Content",
 			entrySubtitle = "Blogs Entry Subtitle",
 			entryTitle = "Blogs Entry Title");
@@ -358,7 +348,7 @@ definition {
 
 		Navigator.openSpecificURL(url = "${portalURL}/web/guest/blogs-page/-/blogs/custom-url-here");
 
-		BlogsEntry.viewEntry(
+		BlogsEntry.viewEntryPG(
 			entryContent = "Blogs Entry Content",
 			entryTitle = "Blogs Entry Title");
 	}
@@ -587,7 +577,7 @@ definition {
 
 	@priority = "5"
 	test DeleteBlogsEntries {
-		property portal.acceptance = "true";
+		property portal.upstream = "quarantine";
 
 		for (var entryCount : list "1,2,3") {
 			Navigator.gotoPage(pageName = "Blogs Page");
@@ -604,7 +594,7 @@ definition {
 				entryContent = "Blogs Entry${entryCount} Content",
 				entryTitle = "Blogs Entry${entryCount} Title");
 
-			BlogsEntry.viewEntry(
+			BlogsEntry.viewEntryPG(
 				entryContent = "Blogs Entry${entryCount} Content",
 				entryTitle = "Blogs Entry${entryCount} Title");
 		}
@@ -674,7 +664,7 @@ definition {
 			entryContent = "Blogs Entry Content Edit",
 			entryTitle = "Blogs Entry Title Edit");
 
-		BlogsEntry.viewEntry(
+		BlogsEntry.viewEntryPG(
 			entryContent = "Blogs Entry Content Edit",
 			entryTitle = "Blogs Entry Title Edit");
 	}
@@ -771,6 +761,7 @@ definition {
 	@description = "This is a usecase for LPS-75241"
 	@priority = "5"
 	test EmbedVideo {
+		property portal.acceptance = "true";
 		property testray.component.names = "WYSIWYG";
 
 		Blogs.addEntry(
@@ -785,7 +776,7 @@ definition {
 			entryContent = "video",
 			entryTitle = "Blogs Entry Title");
 
-		BlogsEntry.viewEntry(
+		BlogsEntry.viewEntryPG(
 			embedVideo = "true",
 			entryContent = "video",
 			entryTitle = "Blogs Entry Title");
@@ -803,7 +794,7 @@ definition {
 			entryContent = "Blogs Entry Content",
 			entryTitle = "Blogs Entry Title");
 
-		BlogsEntry.viewEntry(
+		BlogsEntry.viewEntryPG(
 			entryContent = "Blogs Entry Content",
 			entryTitle = "Blogs Entry Title");
 
@@ -815,42 +806,10 @@ definition {
 			entryTitle = "Blogs Entry Title");
 	}
 
-	@priority = "4"
-	test RateBlogsEntry {
-		JSONBlog.addEntry(
-			entryContent = "Blogs Entry Content",
-			entryTitle = "Blogs Entry Title");
-
-		Navigator.gotoPage(pageName = "Blogs Page");
-
-		BlogsNavigator.gotoEntryPG(
-			entryContent = "Blogs Entry Content",
-			entryTitle = "Blogs Entry Title");
-
-		Ratings.rate(ratingResult = "Thumb Up");
-
-		Ratings.viewRating(
-			ratingResult = "Thumb Up",
-			voteCount = "1");
-
-		Ratings.viewRating(
-			ratingResult = "Thumb Down",
-			voteCount = "0");
-
-		Ratings.rate(ratingResult = "Thumb Down");
-
-		Ratings.viewRating(
-			ratingResult = "Thumb Up",
-			voteCount = "0");
-
-		Ratings.viewRating(
-			ratingResult = "Thumb Down",
-			voteCount = "1");
-	}
-
 	@description = "This is a usecase for LPS-83229. This is the only small image test for blogs."
 	@priority = "5"
 	test RemoveSmallImage {
+		property portal.acceptance = "true";
 		property testray.component.names = "WYSIWYG";
 
 		BlogsNavigator.gotoAddEntry();
@@ -871,7 +830,7 @@ definition {
 
 		Navigator.gotoPage(pageName = "Blogs Page");
 
-		BlogsEntry.viewEntry(
+		BlogsEntry.viewEntryPG(
 			entryContent = "Blogs Entry Content",
 			entryTitle = "Blogs Entry with Small Image");
 
@@ -916,7 +875,7 @@ definition {
 			entryStatus = "Draft",
 			entryTitle = "Blogs Entry Title");
 
-		BlogsEntry.viewEntry(
+		BlogsEntry.viewEntryCP(
 			entryContent = "Blogs Entry Content",
 			entrySubtitle = "Blogs Entry Subtitle",
 			entryTitle = "Blogs Entry Title");
@@ -940,7 +899,7 @@ definition {
 			entryStatus = "Draft",
 			entryTitle = "Blogs Entry Title");
 
-		BlogsEntry.viewEntry(
+		BlogsEntry.viewEntryCP(
 			entryContent = "Blogs Entry Content",
 			entrySubtitle = "Blogs Entry Subtitle",
 			entryTitle = "Blogs Entry Title");
@@ -1077,6 +1036,7 @@ definition {
 
 	@priority = "4"
 	test UserFlagsEntryAndAdminViewsNotificationInMockMock {
+		property portal.upstream = "quarantine";
 		property test.smtp.server.enabled = "true";
 
 		var siteName = TestCase.getSiteName(siteName = "${siteName}");
@@ -1092,9 +1052,9 @@ definition {
 			panel = "Control Panel",
 			portlet = "Roles");
 
-		Role.assignRegRoleCP(
+		JSONRole.assignRoleToUser(
 			roleTitle = "Administrator",
-			userScreenName = "usersn");
+			userEmailAddress = "userea@liferay.com");
 
 		JSONBlog.addEntry(
 			entryContent = "Blogs Entry Content",
@@ -1192,6 +1152,28 @@ definition {
 			subject = "Blogs Entry Title Edit");
 	}
 
+	@description = "This test covers LPS-106613. It ensures that the custom abstract field cannot be reset to empty after typing in the content field."
+	@priority = "3"
+	test ViewAbstractDescriptionWithEntryContent {
+		BlogsNavigator.gotoAddEntry();
+
+		BlogsEntry.addTitle(entryTitle = "Blogs Entry Title");
+
+		Panel.expandPanel(panel = "Configuration");
+
+		BlogsEntry.addCustomAbstract(entryAbstractDescription = "Blogs Entry Abstract Description");
+
+		Click.pauseClickAt(
+			key_editor = "content",
+			locator1 = "AlloyEditor#EDITOR");
+
+		BlogsEntry.addContent(entryContent = "Blogs Entry Content");
+
+		AssertTextEquals(
+			locator1 = "TextInput#DESCRIPTION",
+			value1 = "Blogs Entry Abstract Description");
+	}
+
 	@description = "This is a usecase for LPS-66970"
 	test ViewBlogEntryViaEditedCustomURL {
 		Blogs.addEntry(
@@ -1200,7 +1182,7 @@ definition {
 
 		Navigator.openSpecificURL(url = "/web/guest/blogs-page/-/blogs/blogs-entry-title");
 
-		BlogsEntry.viewEntry(
+		BlogsEntry.viewEntryPG(
 			entryContent = "Blogs Entry Content",
 			entryTitle = "Blogs Entry Title");
 
@@ -1220,7 +1202,7 @@ definition {
 
 		Navigator.openSpecificURL(url = "/web/guest/blogs-page/-/blogs/this-should-redirect-to-the-previous-entry");
 
-		BlogsEntry.viewEntry(
+		BlogsEntry.viewEntryPG(
 			entryContent = "Blogs Entry Content",
 			entryTitle = "Blogs Entry Title");
 
@@ -1228,7 +1210,7 @@ definition {
 
 		Navigator.openSpecificURL(url = "/web/guest/blogs-page/-/blogs/blogs-entry-title");
 
-		BlogsEntry.viewEntry(
+		BlogsEntry.viewEntryPG(
 			entryContent = "Blogs Entry Content",
 			entryTitle = "Blogs Entry Title");
 	}
@@ -1348,6 +1330,7 @@ definition {
 	@description = "Basic test that ensures reading time displays when enabled."
 	@priority = "5"
 	test ViewBlogsEntryReadingTime {
+		property portal.acceptance = "true";
 		property test.name.skip.portal.instance = "PGBlogs#ViewBlogsEntryReadingTime";
 
 		BlogsConfiguration.enableReadingTime();
@@ -1374,6 +1357,8 @@ definition {
 	@ignore = "true"
 	@priority = "4"
 	test ViewBlogsEntryRSS {
+		property portal.upstream = "quarantine";
+
 		var siteName = TestCase.getSiteName(siteName = "${siteName}");
 
 		JSONBlog.addEntry(
@@ -1453,15 +1438,9 @@ definition {
 
 	@priority = "3"
 	test ViewBlogsEntryWithDefaultScope {
-		Portlet.gotoPortletOptions(
+		Portlet.selectScopePG(
 			portletName = "Blogs",
-			portletOption = "Configuration");
-
-		BlogsConfiguration.selectConfigurationIFrame();
-
-		BlogsNavigator.gotoConfigurationScopePG();
-
-		BlogsConfiguration.selectScopePG(scopeSelection = "Blogs Page");
+			scope = "Blogs Page");
 
 		Navigator.gotoPage(pageName = "Blogs Page");
 
@@ -1475,7 +1454,7 @@ definition {
 			entryContent = "Blogs Entry Content",
 			entryTitle = "Blogs Entry Title");
 
-		BlogsEntry.viewEntry(
+		BlogsEntry.viewEntryPG(
 			entryContent = "Blogs Entry Content",
 			entryTitle = "Blogs Entry Title");
 
@@ -1483,26 +1462,17 @@ definition {
 
 		Navigator.gotoPage(pageName = "Blogs Page");
 
-		Portlet.gotoPortletOptions(
+		Portlet.selectScopePG(
 			portletName = "Blogs",
-			portletOption = "Configuration");
-
-		BlogsConfiguration.selectConfigurationIFrame();
-
-		BlogsNavigator.gotoConfigurationScopePG();
-
-		BlogsConfiguration.selectScopePG(scopeSelection = "Blogs Page");
+			scope = "Blogs Page");
 
 		Navigator.openURL();
 
-		ProductMenu.gotoPortlet(
+		ProductMenu.gotoScopedPortlet(
 			category = "Content &amp; Data",
 			panel = "Site Administration",
-			portlet = "Blogs");
-
-		BlogsConfiguration.selectScopeCP(
-			scopeDefault = "Default Scope",
-			scopeSelection = "Blogs Page");
+			portlet = "Blogs",
+			scope = "Blogs Page");
 
 		LexiconEntry.changeDisplayStyle(displayStyle = "table");
 
@@ -1518,7 +1488,7 @@ definition {
 			locator1 = "Blogs#ENTRY_TABLE_TITLE",
 			value1 = "Blogs Entry Title");
 
-		BlogsEntry.viewEntry(
+		BlogsEntry.viewEntryCP(
 			entryContent = "Blogs Entry Content",
 			entryTitle = "Blogs Entry Title");
 	}
@@ -1545,13 +1515,15 @@ definition {
 			entryContent = "Blogs Entry Content",
 			entryTitle = "Blogs Entry Title");
 
-		BlogsEntry.viewEntry(
+		BlogsEntry.viewEntryPG(
 			entryContent = "${entryContent}",
 			entryTitle = "Blogs Entry Title");
 	}
 
 	@priority = "4"
 	test ViewBlogsEntryWithGuestPermissionsRemoved {
+		property portal.upstream = "quarantine";
+
 		Blogs.addEntry(
 			entryContent = "Blogs Entry1 Content",
 			entryTitle = "Blogs Entry1 Title");
@@ -1578,7 +1550,7 @@ definition {
 			entryContent = "Blogs Entry1 Content",
 			entryTitle = "Blogs Entry1 Title");
 
-		BlogsEntry.viewEntry(
+		BlogsEntry.viewEntryPG(
 			entryContent = "Blogs Entry1 Content",
 			entryTitle = "Blogs Entry1 Title");
 
@@ -1610,6 +1582,8 @@ definition {
 
 	@priority = "3"
 	test ViewBlogsEntryWithUploadedCoverImage {
+		property portal.upstream = "quarantine";
+
 		Blogs.addEntryWithUploadedCoverImage(
 			coverImageName = "Document_1",
 			entryContent = "Blogs Entry Content",
@@ -1628,7 +1602,7 @@ definition {
 			entryContent = "Blogs Entry Content",
 			entryTitle = "Blogs Entry Title");
 
-		BlogsEntry.viewEntry(
+		BlogsEntry.viewEntryPG(
 			entryContent = "Blogs Entry Content",
 			entryTitle = "Blogs Entry Title");
 	}
@@ -1742,13 +1716,13 @@ definition {
 
 		Navigator.openSpecificURL(url = "${portalURL}/web/guest/blogs-page/-/blogs/custom-url-1");
 
-		BlogsEntry.viewEntry(
+		BlogsEntry.viewEntryPG(
 			entryContent = "Blogs Entry Content",
 			entryTitle = "Blogs Entry Title");
 
 		Navigator.openSpecificURL(url = "${portalURL}/web/guest/blogs-page/-/blogs/custom-url-2");
 
-		BlogsEntry.viewEntry(
+		BlogsEntry.viewEntryPG(
 			entryContent = "Blogs Entry Content",
 			entryTitle = "Blogs Entry Title");
 	}

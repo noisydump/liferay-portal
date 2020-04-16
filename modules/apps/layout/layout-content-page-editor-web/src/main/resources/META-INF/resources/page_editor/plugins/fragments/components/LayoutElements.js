@@ -13,66 +13,46 @@
  */
 
 import classNames from 'classnames';
-import React, {useContext, useEffect} from 'react';
-import {useDrag} from 'react-dnd';
-import {getEmptyImage} from 'react-dnd-html5-backend';
+import React from 'react';
 
-import {LAYOUT_DATA_ITEM_DEFAULT_CONFIGURATIONS} from '../../../app/config/constants/layoutDataItemDefaultConfigurations';
-import {ConfigContext} from '../../../app/config/index';
+import {useSelectItem} from '../../../app/components/Controls';
 import {useDispatch, useSelector} from '../../../app/store/index';
 import addItem from '../../../app/thunks/addItem';
+import {useItemDrag} from '../../../app/utils/useItemDrag';
 import Collapse from '../../../common/components/Collapse';
 
 const layoutElements = [
 	{
 		columns: ['12'],
 		label: Liferay.Language.get('section'),
-		type: 'container'
+		type: 'container',
 	},
 	{
 		columns: ['4', '4', '4'],
-		label: Liferay.Language.get('columns'),
-		type: 'row'
-	}
+		label: Liferay.Language.get('row'),
+		type: 'row',
+	},
 ];
 
 const LayoutElementCard = ({label, layoutColumns, type}) => {
-	const config = useContext(ConfigContext);
 	const dispatch = useDispatch();
 	const store = useSelector(state => state);
+	const selectItem = useSelectItem();
 
-	const [, drag, preview] = useDrag({
-		end(item, monitor) {
-			const itemConfig = LAYOUT_DATA_ITEM_DEFAULT_CONFIGURATIONS[type];
-
-			const result = monitor.getDropResult();
-
-			if (!result) {
-				return;
-			}
-
-			const {parentId, position} = result;
-
+	const dragRef = useItemDrag({
+		name: label,
+		onDragEnd: (parentId, position) =>
 			dispatch(
 				addItem({
-					config,
-					itemConfig,
-					itemType: item.type,
+					itemType: type,
 					parentItemId: parentId,
 					position,
-					store
+					selectItem,
+					store,
 				})
-			);
-		},
-		item: {
-			name: label,
-			type
-		}
+			),
+		type,
 	});
-
-	useEffect(() => {
-		preview(getEmptyImage(), {captureDraggingState: true});
-	}, [preview]);
 
 	return (
 		<button
@@ -84,7 +64,7 @@ const LayoutElementCard = ({label, layoutColumns, type}) => {
 				'card-interactive-secondary',
 				'selector-button'
 			)}
-			ref={drag}
+			ref={dragRef}
 			type="button"
 		>
 			<div className="card-body px-2 py-3" role="image">
@@ -98,9 +78,7 @@ const LayoutElementCard = ({label, layoutColumns, type}) => {
 						))}
 					</div>
 				</div>
-				<div className="card-title pt-3 text-truncate" title={label}>
-					{label}
-				</div>
+				<div className="card-title pt-3 text-truncate">{label}</div>
 			</div>
 		</button>
 	);

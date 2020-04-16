@@ -14,17 +14,22 @@
 
 package com.liferay.mule.internal.connection;
 
-import com.liferay.mule.internal.config.LiferayProxyConfig;
+import com.liferay.mule.internal.connection.config.LiferayProxyConfig;
 
 import java.io.IOException;
 
 import java.util.concurrent.TimeoutException;
 
+import javax.inject.Inject;
+
 import org.mule.runtime.api.connection.CachedConnectionProvider;
 import org.mule.runtime.api.connection.ConnectionException;
 import org.mule.runtime.api.connection.ConnectionValidationResult;
 import org.mule.runtime.extension.api.annotation.param.ParameterGroup;
+import org.mule.runtime.http.api.HttpService;
 import org.mule.runtime.http.api.domain.message.response.HttpResponse;
+
+import org.slf4j.Logger;
 
 /**
  * @author Matija Petanjek
@@ -34,6 +39,8 @@ public abstract class BaseCachedConnectionProvider
 
 	@Override
 	public void disconnect(LiferayConnection liferayConnection) {
+		getLogger().debug("Closing connection to Liferay Portal instance");
+
 		liferayConnection.invalidate();
 	}
 
@@ -62,6 +69,11 @@ public abstract class BaseCachedConnectionProvider
 				exception.getMessage(), exception);
 		}
 	}
+
+	protected abstract Logger getLogger();
+
+	@Inject
+	protected HttpService httpService;
 
 	@ParameterGroup(name = "Proxy config")
 	protected LiferayProxyConfig liferayProxyConfig;

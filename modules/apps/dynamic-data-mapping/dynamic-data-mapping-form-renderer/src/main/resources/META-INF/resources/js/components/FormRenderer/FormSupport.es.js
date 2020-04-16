@@ -17,13 +17,13 @@ import {PagesVisitor} from '../../util/visitors.es';
 export const implAddColumn = (size, fields = []) => {
 	return {
 		fields,
-		size
+		size,
 	};
 };
 
 export const implAddRow = (size, fields) => {
 	return {
-		columns: [implAddColumn(size, fields)]
+		columns: [implAddColumn(size, fields)],
 	};
 };
 
@@ -44,8 +44,8 @@ export const addRow = (
 				rows: [
 					...page.rows.slice(0, indexToAddRow),
 					newRow,
-					...page.rows.slice(indexToAddRow)
-				]
+					...page.rows.slice(indexToAddRow),
+				],
 			};
 		}
 
@@ -71,8 +71,8 @@ export const addColumn = (
 				columns: [
 					...row.columns.slice(0, indexToAddColumn),
 					newColumn,
-					...row.columns.slice(indexToAddColumn)
-				]
+					...row.columns.slice(indexToAddColumn),
+				],
 			};
 		}
 
@@ -90,8 +90,12 @@ export const addFieldToColumn = (
 	const numberOfRows = pages[pageIndex].rows.length;
 
 	if (rowIndex >= numberOfRows) {
-		pages = addRow(pages, numberOfRows, pageIndex);
-	} else if (!isEmptyColumn(pages, pageIndex, rowIndex, columnIndex)) {
+		const newRow = implAddRow(12, [field]);
+
+		return addRow(pages, numberOfRows, pageIndex, newRow);
+	}
+
+	if (!isEmptyColumn(pages, pageIndex, rowIndex, columnIndex)) {
 		pages = addRow(pages, rowIndex, pageIndex);
 	}
 
@@ -106,13 +110,58 @@ export const addFieldToColumn = (
 			) {
 				return {
 					...column,
-					fields: [...column.fields, field]
+					fields: [...column.fields, field],
 				};
 			}
 
 			return column;
 		}
 	);
+};
+
+export const getFieldIndexes = (pages, fieldName) => {
+	let indexes = {};
+	const visitor = new PagesVisitor(pages);
+
+	visitor.mapFields((field, fieldIndex, columnIndex, rowIndex, pageIndex) => {
+		if (
+			(typeof field === 'string' && field === fieldName) ||
+			(typeof field === 'object' && field.fieldName === fieldName)
+		) {
+			indexes = {
+				columnIndex,
+				fieldIndex,
+				pageIndex,
+				rowIndex,
+			};
+		}
+	});
+
+	return indexes;
+};
+
+export const getParentField = (pages, fieldName) => {
+	let parentField;
+	const visitor = new PagesVisitor(pages);
+
+	visitor.mapFields(
+		(
+			field,
+			fieldIndex,
+			columnIndex,
+			rowIndex,
+			pageIndex,
+			currentParentField
+		) => {
+			if (field.fieldName === fieldName) {
+				parentField = currentParentField;
+			}
+		},
+		true,
+		true
+	);
+
+	return parentField;
 };
 
 export const isEmptyColumn = (pages, pageIndex, rowIndex, columnIndex) => {
@@ -157,7 +206,8 @@ export const setColumnFields = (
 			columnIndex,
 			fields
 		);
-	} else {
+	}
+	else {
 		pages[Number(pageIndex)].rows[Number(rowIndex)].columns[
 			Number(columnIndex)
 		].fields = fields;
@@ -177,7 +227,7 @@ export const removeColumn = (pages, pageIndex, rowIndex, columnIndex) => {
 				...row,
 				columns: row.columns.filter((col, currentColumnIndex) => {
 					return currentColumnIndex !== columnIndex;
-				})
+				}),
 			};
 		}
 
@@ -199,6 +249,7 @@ export const removeFields = (pages, pageIndex, rowIndex, columnIndex) => {
 			) {
 				newColumn.fields = [];
 			}
+
 			return newColumn;
 		}
 	);
@@ -220,17 +271,28 @@ export const removeRow = (pages, pageIndex, rowIndex) => {
 	return pages;
 };
 
-export const findFieldByName = (pages, name) => {
-	let field = null;
+export const visitNestedFields = ({nestedFields}, fn) => {
+	if (Array.isArray(nestedFields)) {
+		nestedFields.forEach(nestedField => {
+			fn(nestedField);
+
+			visitNestedFields(nestedField, fn);
+		});
+	}
+};
+
+export const findField = (pages, predicate) => {
 	const visitor = new PagesVisitor(pages);
 
-	visitor.mapFields(currentField => {
-		if (currentField.fieldName === name) {
-			field = currentField;
-		}
-	});
+	return visitor.findField(predicate);
+};
 
-	return field;
+export const findFieldByFieldName = (pages, fieldName) => {
+	return findField(pages, field => field.fieldName === fieldName);
+};
+
+export const findFieldByName = (pages, name) => {
+	return findField(pages, field => field.name === name);
 };
 
 export const getColumn = (pages, pageIndex, rowIndex, columnIndex) => {
@@ -240,33 +302,49 @@ export const getColumn = (pages, pageIndex, rowIndex, columnIndex) => {
 };
 
 export const getColumnPosition = (pages, pageIndex, rowIndex, columnIndex) => {
-	return columnIndex != -1
-		? pages[pageIndex].rows[rowIndex].columns.reduce(
-				(result, next, index) => {
-					if (index <= columnIndex) {
-						const column = getColumn(
-							pages,
-							pageIndex,
-							rowIndex,
-							index
-						);
+	const currentPage = pages[pageIndex];
 
-						result += column.size;
-					}
+	let currentRow = null;
 
-					return result;
-				},
-				0
-		  )
+	currentRow = currentPage.rows[rowIndex];
+
+	if (!currentPage) {
+		console.error(
+			`Row Index ${rowIndex} cannot be retrieved from ${currentPage}`
+		);
+
+		return;
+	}
+
+	return columnIndex != -1 && currentRow.columns
+		? currentRow.columns.reduce((result, _, index) => {
+				if (index <= columnIndex) {
+					const column = getColumn(pages, pageIndex, rowIndex, index);
+
+					result += column.size;
+				}
+
+				return result;
+		  }, 0)
 		: 0;
 };
 
-export const getField = (pages, pageIndex, rowIndex, columnIndex) => {
-	return getColumn(pages, pageIndex, rowIndex, columnIndex).fields[0];
+export const getField = (context, pageIndex, rowIndex, columnIndex) => {
+	let field = getColumn(context, pageIndex, rowIndex, columnIndex).fields[0];
+
+	if (context[pageIndex].nestedFields) {
+		field = context[pageIndex].nestedFields.find(
+			nestedField => nestedField.fieldName === field
+		);
+	}
+
+	return field;
 };
 
 export const getRow = (pages, pageIndex, rowIndex) => {
-	return pages[Number(pageIndex)].rows[Number(rowIndex)];
+	const currentPage = pages[Number(pageIndex)];
+
+	return currentPage.rows[Number(rowIndex)];
 };
 
 export const rowHasFields = (pages, pageIndex, rowIndex) => {
@@ -280,6 +358,7 @@ export const rowHasFields = (pages, pageIndex, rowIndex) => {
 			hasFields = row.columns.some(column => column.fields.length);
 		}
 	}
+
 	return hasFields;
 };
 
@@ -289,23 +368,41 @@ export const getIndexes = node => {
 	return {
 		columnIndex: Number(ddmFieldColumn) || 0,
 		pageIndex: Number(ddmFieldPage) || 0,
-		rowIndex: Number(ddmFieldRow) || 0
+		rowIndex: Number(ddmFieldRow) || 0,
 	};
+};
+
+export const getNestedIndexes = node => {
+	let indexes = [];
+
+	if (node.dataset.ddmFieldRow) {
+		indexes = [getIndexes(node)];
+	}
+
+	if (!node.parentElement.classList.contains('ddm-form-page')) {
+		indexes = [...getNestedIndexes(node.parentElement), ...indexes];
+	}
+
+	return indexes;
 };
 
 export const updateField = (pages, fieldName, properties) => {
 	const visitor = new PagesVisitor(pages);
 
-	return visitor.mapFields(field => {
-		if (fieldName === field.fieldName) {
-			field = {
-				...field,
-				...properties
-			};
-		}
+	return visitor.mapFields(
+		field => {
+			if (fieldName === field.fieldName) {
+				return {
+					...field,
+					...properties,
+				};
+			}
 
-		return field;
-	});
+			return field;
+		},
+		true,
+		true
+	);
 };
 
 export const updateColumn = (
@@ -328,7 +425,7 @@ export const updateColumn = (
 			) {
 				newColumn = {
 					...column,
-					...properties
+					...properties,
 				};
 			}
 

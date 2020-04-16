@@ -23,14 +23,14 @@ taglib uri="http://liferay.com/tld/ddm" prefix="liferay-ddm" %><%@
 taglib uri="http://liferay.com/tld/ui" prefix="liferay-ui" %>
 
 <%@ page import="com.liferay.petra.string.StringPool" %><%@
+page import="com.liferay.portal.kernel.util.HashMapBuilder" %><%@
 page import="com.liferay.portal.kernel.util.HtmlUtil" %><%@
 page import="com.liferay.portal.kernel.util.WebKeys" %><%@
 page import="com.liferay.portal.search.web.internal.custom.facet.configuration.CustomFacetPortletInstanceConfiguration" %><%@
 page import="com.liferay.portal.search.web.internal.custom.facet.display.context.CustomFacetDisplayContext" %><%@
 page import="com.liferay.portal.search.web.internal.custom.facet.display.context.CustomFacetTermDisplayContext" %>
 
-<%@ page import="java.util.HashMap" %><%@
-page import="java.util.List" %><%@
+<%@ page import="java.util.List" %><%@
 page import="java.util.Map" %>
 
 <portlet:defineObjects />
@@ -40,10 +40,11 @@ CustomFacetDisplayContext customFacetDisplayContext = (CustomFacetDisplayContext
 
 CustomFacetPortletInstanceConfiguration customFacetPortletInstanceConfiguration = customFacetDisplayContext.getCustomFacetPortletInstanceConfiguration();
 
-Map<String, Object> contextObjects = new HashMap<String, Object>();
-
-contextObjects.put("customFacetDisplayContext", customFacetDisplayContext);
-contextObjects.put("namespace", renderResponse.getNamespace());
+Map<String, Object> contextObjects = HashMapBuilder.<String, Object>put(
+	"customFacetDisplayContext", customFacetDisplayContext
+).put(
+	"namespace", renderResponse.getNamespace()
+).build();
 
 List<CustomFacetTermDisplayContext> customFacetTermDisplayContexts = customFacetDisplayContext.getTermDisplayContexts();
 %>
@@ -53,7 +54,7 @@ List<CustomFacetTermDisplayContext> customFacetTermDisplayContexts = customFacet
 		<aui:input autocomplete="off" name="<%= HtmlUtil.escapeAttribute(customFacetDisplayContext.getParameterName()) %>" type="hidden" value="<%= customFacetDisplayContext.getParameterValue() %>" />
 	</c:when>
 	<c:otherwise>
-		<aui:form method="post" name="customFacetForm">
+		<aui:form method="post" name="fm">
 			<aui:input autocomplete="off" name="<%= HtmlUtil.escapeAttribute(customFacetDisplayContext.getParameterName()) %>" type="hidden" value="<%= customFacetDisplayContext.getParameterValue() %>" />
 			<aui:input cssClass="facet-parameter-name" name="facet-parameter-name" type="hidden" value="<%= customFacetDisplayContext.getParameterName() %>" />
 
@@ -125,7 +126,7 @@ List<CustomFacetTermDisplayContext> customFacetTermDisplayContexts = customFacet
 
 <aui:script use="liferay-search-facet-util">
 	var facetTerms = document.querySelectorAll(
-		'#<portlet:namespace />customFacetForm .facet-term'
+		'#<portlet:namespace />fm .facet-term'
 	);
 
 	facetTerms.forEach(function(term) {

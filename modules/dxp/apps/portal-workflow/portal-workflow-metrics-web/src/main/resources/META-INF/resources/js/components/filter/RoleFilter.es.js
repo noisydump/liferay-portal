@@ -19,26 +19,27 @@ import filterConstants from '../../shared/components/filter/util/filterConstants
 const RoleFilter = ({
 	completed = false,
 	className,
-	dispatch,
 	filterKey = filterConstants.roles.key,
 	options = {},
 	prefixKey = '',
-	processId
+	processId,
 }) => {
 	const defaultOptions = {
 		hideControl: false,
 		multiple: true,
 		position: 'left',
-		withSelectionTitle: false
+		withSelectionTitle: false,
+		withoutRouteParams: false,
 	};
 	// eslint-disable-next-line react-hooks/exhaustive-deps
 	options = useMemo(() => ({...defaultOptions, ...options}), [options]);
 
 	const {items, selectedItems} = useFilterFetch({
-		dispatch,
 		filterKey,
 		prefixKey,
-		requestUrl: `/processes/${processId}/roles?completed=${completed}`
+		propertyKey: 'id',
+		requestUrl: `/processes/${processId}/roles?completed=${completed}`,
+		withoutRouteParams: options.withoutRouteParams,
 	});
 
 	const filterName = useFilterName(
@@ -50,7 +51,7 @@ const RoleFilter = ({
 
 	return (
 		<Filter
-			dataTestId="RoleFilter"
+			data-testid="RoleFilter"
 			elementClasses={className}
 			filterKey={filterKey}
 			items={items}

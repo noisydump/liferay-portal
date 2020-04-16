@@ -19,11 +19,11 @@ import com.liferay.account.service.AccountEntryLocalServiceUtil;
 import com.liferay.account.service.AccountEntryUserRelLocalServiceUtil;
 import com.liferay.frontend.taglib.clay.servlet.taglib.display.context.SearchContainerManagementToolbarDisplayContext;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.CreationMenu;
-import com.liferay.frontend.taglib.clay.servlet.taglib.util.CreationMenuUtil;
+import com.liferay.frontend.taglib.clay.servlet.taglib.util.CreationMenuBuilder;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemList;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.LabelItem;
-import com.liferay.frontend.taglib.clay.servlet.taglib.util.LabelItemList;
+import com.liferay.frontend.taglib.clay.servlet.taglib.util.LabelItemListBuilder;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.search.SearchContainer;
 import com.liferay.portal.kernel.language.LanguageUtil;
@@ -83,7 +83,7 @@ public class ViewAccountUsersManagementToolbarDisplayContext
 				dropdownItem.putData(
 					"removeUsersURL", removeUsersURL.toString());
 
-				dropdownItem.setIcon("minus-circle");
+				dropdownItem.setIcon("times-circle");
 				dropdownItem.setLabel(LanguageUtil.get(request, "remove"));
 				dropdownItem.setQuickAction(true);
 
@@ -102,7 +102,7 @@ public class ViewAccountUsersManagementToolbarDisplayContext
 	}
 
 	public CreationMenu getCreationMenu() {
-		return CreationMenuUtil.addPrimaryDropdownItem(
+		return CreationMenuBuilder.addPrimaryDropdownItem(
 			dropdownItem -> {
 				dropdownItem.putData("action", "selectAccountUsers");
 
@@ -145,7 +145,8 @@ public class ViewAccountUsersManagementToolbarDisplayContext
 
 				dropdownItem.setLabel(
 					LanguageUtil.get(request, "assign-users"));
-			});
+			}
+		).build();
 	}
 
 	@Override
@@ -154,30 +155,24 @@ public class ViewAccountUsersManagementToolbarDisplayContext
 	}
 
 	public List<LabelItem> getFilterLabelItems() {
-		return new LabelItemList() {
-			{
-				if (!Objects.equals(getNavigation(), "active")) {
-					add(
-						labelItem -> {
-							PortletURL removeLabelURL = getPortletURL();
+		return LabelItemListBuilder.add(
+			() -> !Objects.equals(getNavigation(), "active"),
+			labelItem -> {
+				PortletURL removeLabelURL = getPortletURL();
 
-							removeLabelURL.setParameter(
-								"navigation", (String)null);
+				removeLabelURL.setParameter("navigation", (String)null);
 
-							labelItem.putData(
-								"removeLabelURL", removeLabelURL.toString());
+				labelItem.putData("removeLabelURL", removeLabelURL.toString());
 
-							labelItem.setCloseable(true);
+				labelItem.setCloseable(true);
 
-							String label = String.format(
-								"%s: %s", LanguageUtil.get(request, "status"),
-								LanguageUtil.get(request, getNavigation()));
+				String label = String.format(
+					"%s: %s", LanguageUtil.get(request, "status"),
+					LanguageUtil.get(request, getNavigation()));
 
-							labelItem.setLabel(label);
-						});
-				}
+				labelItem.setLabel(label);
 			}
-		};
+		).build();
 	}
 
 	@Override

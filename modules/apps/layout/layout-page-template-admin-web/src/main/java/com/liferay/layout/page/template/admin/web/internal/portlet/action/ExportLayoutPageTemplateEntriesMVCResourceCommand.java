@@ -15,9 +15,9 @@
 package com.liferay.layout.page.template.admin.web.internal.portlet.action;
 
 import com.liferay.layout.page.template.admin.constants.LayoutPageTemplateAdminPortletKeys;
-import com.liferay.layout.page.template.admin.web.internal.portlet.util.ExportUtil;
+import com.liferay.layout.page.template.admin.web.internal.portlet.helper.ExportHelper;
 import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
-import com.liferay.layout.page.template.service.LayoutPageTemplateEntryService;
+import com.liferay.layout.page.template.service.LayoutPageTemplateEntryLocalService;
 import com.liferay.portal.kernel.portlet.PortletResponseUtil;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCResourceCommand;
 import com.liferay.portal.kernel.util.ContentTypes;
@@ -51,48 +51,84 @@ import org.osgi.service.component.annotations.Reference;
 public class ExportLayoutPageTemplateEntriesMVCResourceCommand
 	implements MVCResourceCommand {
 
-	@Override
-	public boolean serveResource(
-			ResourceRequest resourceRequest, ResourceResponse resourceResponse)
+	public File getFile(long[] layoutPageTemplateEntryIds)
 		throws PortletException {
-
-		long[] exportLayoutPageTemplateEntryIds = null;
-
-		long layoutPageTemplateEntryEntryId = ParamUtil.getLong(
-			resourceRequest, "layoutPageTemplateEntryId");
-
-		if (layoutPageTemplateEntryEntryId > 0) {
-			exportLayoutPageTemplateEntryIds = new long[] {
-				layoutPageTemplateEntryEntryId
-			};
-		}
-		else {
-			exportLayoutPageTemplateEntryIds = ParamUtil.getLongValues(
-				resourceRequest, "rowIds");
-		}
 
 		try {
 			List<LayoutPageTemplateEntry> layoutPageTemplateEntries =
 				new ArrayList<>();
 
-			for (long exportLayoutPageTemplateEntryId :
-					exportLayoutPageTemplateEntryIds) {
+			for (long layoutPageTemplateEntryId : layoutPageTemplateEntryIds) {
+				LayoutPageTemplateEntry layoutPageTemplateEntry =
+					_layoutPageTemplateEntryLocalService.
+						fetchLayoutPageTemplateEntry(layoutPageTemplateEntryId);
 
-				LayoutPageTemplateEntry layoutPageTemplateEntryEntry =
-					_layoutPageTemplateEntryEntryService.
-						fetchLayoutPageTemplateEntry(
-							exportLayoutPageTemplateEntryId);
-
-				layoutPageTemplateEntries.add(layoutPageTemplateEntryEntry);
+				layoutPageTemplateEntries.add(layoutPageTemplateEntry);
 			}
 
-			File file = _exportUtil.exportLayoutPageTemplateEntries(
-				layoutPageTemplateEntries);
+			return _exportHelper.exportPageTemplates(layoutPageTemplateEntries);
+		}
+		catch (Exception exception) {
+			throw new PortletException(exception);
+		}
+	}
 
+	public String getFileName(long[] layoutPageTemplateEntryIds) {
+		String fileNamePrefix = "page-templates-";
+
+		if (layoutPageTemplateEntryIds.length == 1) {
+			LayoutPageTemplateEntry layoutPageTemplateEntry =
+				_layoutPageTemplateEntryLocalService.
+					fetchLayoutPageTemplateEntry(layoutPageTemplateEntryIds[0]);
+
+			fileNamePrefix =
+				"page-template-" +
+					layoutPageTemplateEntry.getLayoutPageTemplateEntryKey() +
+						"-";
+		}
+
+		return fileNamePrefix + Time.getShortTimestamp() + ".zip";
+	}
+
+	public long[] getLayoutPageTemplateEntryIds(
+		ResourceRequest resourceRequest) {
+
+		long[] layoutPageTemplateEntryIds = null;
+
+		long layoutPageTemplateEntryEntryId = ParamUtil.getLong(
+			resourceRequest, "layoutPageTemplateEntryId");
+
+		if (layoutPageTemplateEntryEntryId > 0) {
+			layoutPageTemplateEntryIds = new long[] {
+				layoutPageTemplateEntryEntryId
+			};
+		}
+		else {
+			layoutPageTemplateEntryIds = ParamUtil.getLongValues(
+				resourceRequest, "rowIds");
+		}
+
+		return layoutPageTemplateEntryIds;
+	}
+
+	@Override
+	public boolean serveResource(
+			ResourceRequest resourceRequest, ResourceResponse resourceResponse)
+		throws PortletException {
+
+		long[] layoutPageTemplateEntryIds = getLayoutPageTemplateEntryIds(
+			resourceRequest);
+
+		if (layoutPageTemplateEntryIds.length == 0) {
+			return false;
+		}
+
+		try {
 			PortletResponseUtil.sendFile(
 				resourceRequest, resourceResponse,
-				"layout-page-template-entries-" + Time.getTimestamp() + ".zip",
-				new FileInputStream(file), ContentTypes.APPLICATION_ZIP);
+				getFileName(layoutPageTemplateEntryIds),
+				new FileInputStream(getFile(layoutPageTemplateEntryIds)),
+				ContentTypes.APPLICATION_ZIP);
 		}
 		catch (Exception exception) {
 			throw new PortletException(exception);
@@ -102,9 +138,10 @@ public class ExportLayoutPageTemplateEntriesMVCResourceCommand
 	}
 
 	@Reference
-	private ExportUtil _exportUtil;
+	private ExportHelper _exportHelper;
 
 	@Reference
-	private LayoutPageTemplateEntryService _layoutPageTemplateEntryEntryService;
+	private LayoutPageTemplateEntryLocalService
+		_layoutPageTemplateEntryLocalService;
 
 }

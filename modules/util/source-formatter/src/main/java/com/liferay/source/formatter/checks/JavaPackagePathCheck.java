@@ -66,12 +66,6 @@ public class JavaPackagePathCheck extends BaseJavaTermCheck {
 			_checkModulePackageName(fileName, packageName);
 		}
 
-		String className = javaClass.getName();
-
-		if (className.startsWith("Base")) {
-			return javaTerm.getContent();
-		}
-
 		List<String> expectedInternalImplementsDataEntries = getAttributeValues(
 			_EXPECTED_INTERNAL_IMPLEMENTS_DATA_KEY, absolutePath);
 
@@ -83,8 +77,9 @@ public class JavaPackagePathCheck extends BaseJavaTermCheck {
 
 			if (array.length == 2) {
 				_checkPackageName(
-					fileName, javaClass.getImplementedClassNames(), array[0],
-					packageName, array[1], true);
+					fileName, javaClass.getName(),
+					javaClass.getImplementedClassNames(), array[0], packageName,
+					array[1]);
 			}
 		}
 
@@ -130,23 +125,26 @@ public class JavaPackagePathCheck extends BaseJavaTermCheck {
 			addMessage(
 				fileName,
 				"Package should follow Bundle-SymbolicName specified in " +
-					bndSettings.getFileName(),
-				"package.markdown");
+					bndSettings.getFileName());
 		}
 	}
 
 	private void _checkPackageName(
-			String fileName, List<String> implementedClassNames,
-			String implementedClassName, String packageName,
-			String expectedPackageName, boolean internal)
+			String fileName, String className,
+			List<String> implementedClassNames, String implementedClassName,
+			String packageName, String expectedPackageName)
 		throws IOException {
 
 		if (!implementedClassNames.contains(implementedClassName)) {
 			return;
 		}
 
-		if (internal && !packageName.contains(".internal.") &&
+		if (!packageName.contains(".internal.") &&
 			!packageName.endsWith(".internal")) {
+
+			if (className.startsWith("Base")) {
+				return;
+			}
 
 			addMessage(
 				fileName,
@@ -217,8 +215,7 @@ public class JavaPackagePathCheck extends BaseJavaTermCheck {
 			addMessage(
 				fileName,
 				"The declared package '" + packageName +
-					"' does not match the expected package",
-				"package.markdown");
+					"' does not match the expected package");
 
 			return;
 		}
@@ -228,8 +225,7 @@ public class JavaPackagePathCheck extends BaseJavaTermCheck {
 
 			addMessage(
 				fileName,
-				"Do not use both 'impl' and 'internal' in the package",
-				"package.markdown");
+				"Do not use both 'impl' and 'internal' in the package");
 		}
 
 		List<String> allowedInternalPackageDirNames = getAttributeValues(
@@ -250,8 +246,7 @@ public class JavaPackagePathCheck extends BaseJavaTermCheck {
 				addMessage(
 					fileName,
 					"Do not use '" + matcher.group(1) +
-						"' package in API module",
-					"package.markdown");
+						"' package in API module");
 			}
 
 			if (packageName.contains(".api.") || packageName.endsWith(".api")) {

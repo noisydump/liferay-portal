@@ -64,7 +64,7 @@ class PortletBase extends Component {
 		return fetch(url, {
 			body: requestBody,
 			credentials: 'include',
-			method: 'POST'
+			method: 'POST',
 		});
 	}
 
@@ -79,11 +79,14 @@ class PortletBase extends Component {
 
 		if (body instanceof FormData) {
 			requestBody = body;
-		} else if (body instanceof HTMLFormElement) {
+		}
+		else if (body instanceof HTMLFormElement) {
 			requestBody = new FormData(body);
-		} else if (typeof body === 'object') {
+		}
+		else if (typeof body === 'object') {
 			requestBody = objectToFormData(this.ns(body));
-		} else {
+		}
+		else {
 			requestBody = body;
 		}
 
@@ -170,7 +173,7 @@ PortletBase.STATE = {
 	 * @type {string}
 	 */
 	namespace: {
-		validator: core.isString
+		validator: core.isString,
 	},
 
 	/**
@@ -181,7 +184,7 @@ PortletBase.STATE = {
 	 * @type {string}
 	 */
 	portletNamespace: {
-		validator: core.isString
+		validator: core.isString,
 	},
 
 	/**
@@ -193,8 +196,8 @@ PortletBase.STATE = {
 	 */
 	rootNode: {
 		setter: dom.toElement,
-		valueFn: 'rootNodeValueFn_'
-	}
+		valueFn: 'rootNodeValueFn_',
+	},
 };
 
 export default PortletBase;

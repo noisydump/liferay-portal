@@ -21,9 +21,11 @@ import com.liferay.message.boards.service.MBCategoryLocalServiceUtil;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.UserLocalServiceUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
+import com.liferay.portal.search.test.util.SearchTestRule;
 
 import org.junit.Before;
 import org.junit.Ignore;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -88,8 +90,23 @@ public class MessageBoardThreadResourceTest
 	@Ignore
 	@Override
 	@Test
+	public void testGetSiteMessageBoardThreadByFriendlyUrlPath() {
+	}
+
+	@Ignore
+	@Override
+	@Test
 	public void testGetSiteMessageBoardThreadsPageWithSortInteger() {
 	}
+
+	@Ignore
+	@Override
+	@Test
+	public void testGraphQLGetSiteMessageBoardThreadByFriendlyUrlPath() {
+	}
+
+	@Rule
+	public SearchTestRule searchTestRule = new SearchTestRule();
 
 	@Override
 	protected String[] getAdditionalAssertFieldNames() {
@@ -106,6 +123,7 @@ public class MessageBoardThreadResourceTest
 		MessageBoardThread messageBoardThread =
 			super.randomMessageBoardThread();
 
+		messageBoardThread.setMessageBoardSectionId((Long)null);
 		messageBoardThread.setThreadType("Urgent");
 
 		return messageBoardThread;

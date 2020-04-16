@@ -20,15 +20,15 @@ import classNames from 'classnames';
 import {
 	DataLayoutBuilderActions,
 	SearchInput,
-	Sidebar
+	Sidebar,
 } from 'data-engine-taglib';
 import React, {
+	useCallback,
+	useContext,
+	useEffect,
+	useLayoutEffect,
 	useRef,
 	useState,
-	useEffect,
-	useContext,
-	useCallback,
-	useLayoutEffect
 } from 'react';
 
 import {useKeyDown} from '../../hooks/index.es';
@@ -39,18 +39,12 @@ import FormViewContext from './FormViewContext.es';
 const DropDown = () => {
 	const [{fieldTypes}, dispatch] = useContext(FormViewContext);
 	const [active, setActive] = useState(false);
-	const [showFieldTypes, setShowFieldTypes] = useState(false);
-
-	const onActiveChange = newVal => {
-		setActive(newVal);
-		setShowFieldTypes(false);
-	};
 
 	const onClickFieldType = fieldTypeName => {
 		setActive(false);
 		dispatch({
 			payload: {fieldTypeName},
-			type: DataLayoutBuilderActions.ADD_CUSTOM_OBJECT_FIELD
+			type: DataLayoutBuilderActions.ADD_CUSTOM_OBJECT_FIELD,
 		});
 	};
 
@@ -64,8 +58,8 @@ const DropDown = () => {
 		}
 	}, [active]);
 
-	const filteredFieldTypes = fieldTypes.filter(
-		({group}) => group === 'basic'
+	const filteredFieldTypes = fieldTypes.filter(({scope}) =>
+		scope.includes('app-builder')
 	);
 
 	filteredFieldTypes.sort(({displayOrder: a}, {displayOrder: b}) => a - b);
@@ -75,37 +69,21 @@ const DropDown = () => {
 			active={active}
 			alignmentPosition={Align.BottomRight}
 			className="custom-object-dropdown"
-			onActiveChange={onActiveChange}
+			onActiveChange={newVal => setActive(newVal)}
 			trigger={
 				<ClayButtonWithIcon displayType="unstyled" symbol="plus" />
 			}
 		>
 			<ClayDropDown.ItemList className="custom-object-dropdown-list">
-				{showFieldTypes ? (
-					filteredFieldTypes.map(({icon, label, name}) => (
-						<ClayDropDown.Item
-							key={name}
-							onClick={() => onClickFieldType(name)}
-							symbolLeft={icon}
-						>
-							{label}
-						</ClayDropDown.Item>
-					))
-				) : (
-					<>
-						<ClayDropDown.Item
-							key={'add'}
-							onClick={() => setShowFieldTypes(true)}
-						>
-							{Liferay.Language.get('add-field-to-object')}
-						</ClayDropDown.Item>
-						<ClayDropDown.Item key={'import'}>
-							{Liferay.Language.get(
-								'import-fields-from-spreadsheet'
-							)}
-						</ClayDropDown.Item>
-					</>
-				)}
+				{filteredFieldTypes.map(({icon, label, name}) => (
+					<ClayDropDown.Item
+						key={name}
+						onClick={() => onClickFieldType(name)}
+						symbolLeft={icon}
+					>
+						{label}
+					</ClayDropDown.Item>
+				))}
 			</ClayDropDown.ItemList>
 		</ClayDropDown>
 	);
@@ -138,7 +116,7 @@ const Header = ({onCloseSearch, onSearch, searchText}) => {
 
 	const [{dataDefinition}] = useContext(FormViewContext);
 	const {
-		name: {en_US: dataDefinitionName = ''}
+		name: {en_US: dataDefinitionName = ''},
 	} = dataDefinition;
 
 	return (
@@ -149,7 +127,7 @@ const Header = ({onCloseSearch, onSearch, searchText}) => {
 					'mt-4',
 					'p-2',
 					{
-						'ml-4': !searchMode
+						'ml-4': !searchMode,
 					}
 				)}
 			>
@@ -203,9 +181,9 @@ export default () => {
 	const [
 		{
 			dataDefinition: {dataDefinitionFields},
-			focusedCustomObjectField
+			focusedCustomObjectField,
 		},
-		dispatch
+		dispatch,
 	] = useContext(FormViewContext);
 	const [searchText, setSearchText] = useState('');
 	const sidebarRef = useRef();
@@ -215,7 +193,7 @@ export default () => {
 			dispatch({
 				payload: {dataDefinitionField: {}},
 				type:
-					DataLayoutBuilderActions.UPDATE_FOCUSED_CUSTOM_OBJECT_FIELD
+					DataLayoutBuilderActions.UPDATE_FOCUSED_CUSTOM_OBJECT_FIELD,
 			});
 		}
 	}, 27);
@@ -232,7 +210,7 @@ export default () => {
 				dispatch({
 					payload: {dataDefinitionField: {}},
 					type:
-						DataLayoutBuilderActions.UPDATE_FOCUSED_CUSTOM_OBJECT_FIELD
+						DataLayoutBuilderActions.UPDATE_FOCUSED_CUSTOM_OBJECT_FIELD,
 				});
 			}
 		};

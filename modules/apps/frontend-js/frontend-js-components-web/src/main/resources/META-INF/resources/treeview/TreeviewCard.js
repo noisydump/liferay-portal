@@ -41,24 +41,25 @@ export default function TreeviewCard({node}) {
 				'form-check': true,
 				'form-check-card': true,
 				'form-check-middle-left': true,
-				selected: node.selected
+				selected: node.selected,
 			})}
 		>
 			<div className="card card-horizontal">
 				<div className="card-body">
-					<ClayCard.Row>
+					<ClayCard.Row className="autofit-row-center">
 						<div className="autofit-col">
 							<ClaySticker displayType="secondary" inline>
 								<ClayIcon symbol={node.icon} />
 							</ClaySticker>
 						</div>
+
+						<div className="autofit-col autofit-col-expand autofit-col-gutters">
+							<ClayCard.Description displayType="title">
+								{node.name}
+							</ClayCard.Description>
+						</div>
 					</ClayCard.Row>
 
-					<div className="autofit-col autofit-col-expand autofit-col-gutters">
-						<ClayCard.Description displayType="title">
-							{node.name}
-						</ClayCard.Description>
-					</div>
 					{path}
 				</div>
 			</div>
@@ -70,6 +71,6 @@ TreeviewCard.propTypes = {
 	node: PropTypes.shape({
 		icon: PropTypes.string,
 		name: PropTypes.string.isRequired,
-		nodePath: PropTypes.string
-	}).isRequired
+		nodePath: PropTypes.string,
+	}).isRequired,
 };

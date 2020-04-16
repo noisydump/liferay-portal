@@ -34,7 +34,7 @@ public class GroupUtil {
 		String groupTypeLabel = "site";
 
 		if (group.getType() == GroupConstants.TYPE_DEPOT) {
-			groupTypeLabel = "repository";
+			groupTypeLabel = "asset-library";
 		}
 
 		return LanguageUtil.get(_getResourceBundle(locale), groupTypeLabel);
@@ -49,10 +49,8 @@ public class GroupUtil {
 		ResourceBundle resourceBundle = ResourceBundleUtil.getBundle(
 			"content.Language", locale, GroupUtil.class);
 
-		resourceBundle = new AggregateResourceBundle(
+		return new AggregateResourceBundle(
 			resourceBundle, PortalUtil.getResourceBundle(locale));
-
-		return resourceBundle;
 	}
 
 }

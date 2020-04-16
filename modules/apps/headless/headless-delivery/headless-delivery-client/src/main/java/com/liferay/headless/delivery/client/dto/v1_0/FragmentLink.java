@@ -26,11 +26,11 @@ import javax.annotation.Generated;
  * @generated
  */
 @Generated("")
-public class FragmentLink {
+public class FragmentLink implements Cloneable {
 
 	public static enum Target {
 
-		BLANK("Blank"), SELF("Self");
+		BLANK("Blank"), PARENT("Parent"), SELF("Self"), TOP("Top");
 
 		public static Target create(String value) {
 			for (Target target : values()) {
@@ -58,6 +58,25 @@ public class FragmentLink {
 		private final String _value;
 
 	}
+
+	public Object getHref() {
+		return href;
+	}
+
+	public void setHref(Object href) {
+		this.href = href;
+	}
+
+	public void setHref(UnsafeSupplier<Object, Exception> hrefUnsafeSupplier) {
+		try {
+			href = hrefUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected Object href;
 
 	public Target getTarget() {
 		return target;
@@ -88,26 +107,10 @@ public class FragmentLink {
 
 	protected Target target;
 
-	public Object getValue() {
-		return value;
+	@Override
+	public FragmentLink clone() throws CloneNotSupportedException {
+		return (FragmentLink)super.clone();
 	}
-
-	public void setValue(Object value) {
-		this.value = value;
-	}
-
-	public void setValue(
-		UnsafeSupplier<Object, Exception> valueUnsafeSupplier) {
-
-		try {
-			value = valueUnsafeSupplier.get();
-		}
-		catch (Exception e) {
-			throw new RuntimeException(e);
-		}
-	}
-
-	protected Object value;
 
 	@Override
 	public boolean equals(Object object) {

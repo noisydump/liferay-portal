@@ -73,7 +73,10 @@ definition {
 
 		WebContent.addCP(webContentTitle = "Basic S.P.A.C.E. Banner (Japanese Translation)");
 
-		AlloyEditor.addDescription(description = "A Japanese translation of the basic front page banner");
+		Type.typeCKEditorWaitForCKEditor(
+			key_fieldLabel = "Summary",
+			locator1 = "CKEditor#BODY_FIELD_WEB_CONTENT_ARTICLE",
+			value1 = "A Japanese translation of the basic front page banner");
 
 		AlloyEditor.addSourceContent(content = '''
 <h2 class="text-center">Space Program 大学生涯教育</h2>
@@ -124,7 +127,7 @@ definition {
 
 	@priority = "5"
 	test AddWCWithTranslation {
-		property portal.acceptance = "true";
+		property portal.acceptance = "quarantine";
 		property test.name.skip.portal.instance = "LocalizationWithWebContent#AddWCWithTranslation";
 		property testray.component.names = "Localization,Web Content Administration";
 
@@ -144,13 +147,17 @@ definition {
 
 		PortletEntry.publish();
 
+		JSONLayout.addWidgetToPublicLayout(
+			column = "1",
+			groupName = "Test Site Name",
+			layoutName = "Test Page Name",
+			widgetName = "Language Selector");
+
 		Navigator.gotoSitePage(
 			pageName = "Test Page Name",
 			siteName = "Test Site Name");
 
 		Content.addPG(assetTitle = "WC Title");
-
-		Portlet.addPG(portletName = "Language Selector");
 
 		LanguagePortlet.selectLanguagePG(
 			locale = "es_ES",

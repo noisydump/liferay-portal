@@ -15,8 +15,10 @@
 package com.liferay.data.engine.service;
 
 import com.liferay.data.engine.model.DEDataDefinitionFieldLink;
+import com.liferay.exportimport.kernel.lar.PortletDataContext;
 import com.liferay.portal.kernel.dao.orm.ActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.DynamicQuery;
+import com.liferay.portal.kernel.dao.orm.ExportActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.IndexableActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.Projection;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -26,6 +28,7 @@ import com.liferay.portal.kernel.search.Indexable;
 import com.liferay.portal.kernel.search.IndexableType;
 import com.liferay.portal.kernel.service.BaseLocalService;
 import com.liferay.portal.kernel.service.PersistedModelLocalService;
+import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.transaction.Isolation;
 import com.liferay.portal.kernel.transaction.Propagation;
 import com.liferay.portal.kernel.transaction.Transactional;
@@ -72,8 +75,14 @@ public interface DEDataDefinitionFieldLinkLocalService
 		DEDataDefinitionFieldLink deDataDefinitionFieldLink);
 
 	public DEDataDefinitionFieldLink addDEDataDefinitionFieldLink(
-		long groupId, long classNameId, long classPK, long ddmStructureId,
-		String fieldName);
+			long groupId, long classNameId, long classPK, long ddmStructureId,
+			String fieldName)
+		throws PortalException;
+
+	public DEDataDefinitionFieldLink addDEDataDefinitionFieldLink(
+			long groupId, long classNameId, long classPK, long ddmStructureId,
+			String fieldName, ServiceContext serviceContext)
+		throws PortalException;
 
 	/**
 	 * Creates a new de data definition field link with the primary key. Does not add the de data definition field link to the database.
@@ -84,6 +93,12 @@ public interface DEDataDefinitionFieldLinkLocalService
 	@Transactional(enabled = false)
 	public DEDataDefinitionFieldLink createDEDataDefinitionFieldLink(
 		long deDataDefinitionFieldLinkId);
+
+	/**
+	 * @throws PortalException
+	 */
+	public PersistedModel createPersistedModel(Serializable primaryKeyObj)
+		throws PortalException;
 
 	/**
 	 * Deletes the de data definition field link from the database. Also notifies the appropriate model listeners.
@@ -250,6 +265,10 @@ public interface DEDataDefinitionFieldLinkLocalService
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<DEDataDefinitionFieldLink> getDEDataDefinitionFieldLinks(
+		long ddmStructureId);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public List<DEDataDefinitionFieldLink> getDEDataDefinitionFieldLinks(
 		long classNameId, long ddmStructureId, String fieldName);
 
 	/**
@@ -289,6 +308,10 @@ public interface DEDataDefinitionFieldLinkLocalService
 	public int getDEDataDefinitionFieldLinksCount();
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public ExportActionableDynamicQuery getExportActionableDynamicQuery(
+		PortletDataContext portletDataContext);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public IndexableActionableDynamicQuery getIndexableActionableDynamicQuery();
 
 	/**
@@ -298,6 +321,9 @@ public interface DEDataDefinitionFieldLinkLocalService
 	 */
 	public String getOSGiServiceIdentifier();
 
+	/**
+	 * @throws PortalException
+	 */
 	@Override
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public PersistedModel getPersistedModel(Serializable primaryKeyObj)

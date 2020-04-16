@@ -14,10 +14,12 @@
 
 import {fetch} from 'frontend-js-web';
 
+import {errorToast, successToast} from '../utils/toast.es';
+
 const HEADERS = {
 	Accept: 'application/json',
 	'Accept-Language': Liferay.ThemeDisplay.getBCP47LanguageId(),
-	'Content-Type': 'application/json'
+	'Content-Type': 'application/json',
 };
 
 const parseJSON = (response, resolve, reject) =>
@@ -30,7 +32,8 @@ const parseResponse = response =>
 	new Promise((resolve, reject) => {
 		if (response.ok) {
 			parseJSON(response, resolve, reject);
-		} else {
+		}
+		else {
 			parseJSON(response, reject, reject);
 		}
 	});
@@ -39,7 +42,7 @@ export const addItem = (endpoint, item) =>
 	fetch(getURL(endpoint), {
 		body: JSON.stringify(item),
 		headers: HEADERS,
-		method: 'POST'
+		method: 'POST',
 	}).then(response => parseResponse(response));
 
 export const confirmDelete = endpoint => item =>
@@ -51,34 +54,42 @@ export const confirmDelete = endpoint => item =>
 		if (confirmed) {
 			deleteItem(endpoint + item.id)
 				.then(() => resolve(true))
-				.catch(error => reject(error));
-		} else {
+				.then(() =>
+					successToast(
+						Liferay.Language.get(
+							'the-item-was-deleted-successfully'
+						)
+					)
+				)
+				.catch(error => {
+					errorToast(
+						Liferay.Language.get('the-item-could-not-be-deleted')
+					);
+					reject(error);
+				});
+		}
+		else {
 			resolve(false);
 		}
 	});
 
 export const deleteItem = endpoint =>
 	fetch(getURL(endpoint), {
-		method: 'DELETE'
-	});
-
-export const request = (endpoint, method = 'GET') =>
-	fetch(getURL(endpoint), {
 		headers: HEADERS,
-		method
-	});
+		method: 'DELETE',
+	}).then(response => parseResponse(response));
 
 export const getItem = (endpoint, params) =>
 	fetch(getURL(endpoint, params), {
 		headers: HEADERS,
-		method: 'GET'
-	}).then(response => response.json());
+		method: 'GET',
+	}).then(response => parseResponse(response));
 
 export const getURL = (path, params) => {
 	params = {
 		['p_auth']: Liferay.authToken,
 		t: Date.now(),
-		...params
+		...params,
 	};
 
 	const uri = new URL(`${window.location.origin}${path}`);
@@ -89,9 +100,15 @@ export const getURL = (path, params) => {
 	return uri.toString();
 };
 
+export const request = (endpoint, method = 'GET') =>
+	fetch(getURL(endpoint), {
+		headers: HEADERS,
+		method,
+	}).then(response => parseResponse(response));
+
 export const updateItem = (endpoint, item, params) =>
 	fetch(getURL(endpoint, params), {
 		body: JSON.stringify(item),
 		headers: HEADERS,
-		method: 'PUT'
+		method: 'PUT',
 	}).then(response => parseResponse(response));

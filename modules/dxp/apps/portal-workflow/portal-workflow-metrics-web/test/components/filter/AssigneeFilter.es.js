@@ -9,21 +9,23 @@
  * distribution rights of the Software.
  */
 
-import {cleanup, render, findByTestId} from '@testing-library/react';
+import {cleanup, findByTestId, render} from '@testing-library/react';
 import React from 'react';
 
 import AssigneeFilter from '../../../src/main/resources/META-INF/resources/js/components/filter/AssigneeFilter.es';
 import {MockRouter} from '../../mock/MockRouter.es';
 
-const query = '?filters.assigneeUserIds%5B0%5D=1';
+const query = '?filters.assigneeIds%5B0%5D=1';
 
 const items = [
 	{id: 1, name: 'User 1'},
-	{id: 2, name: 'User 2'}
+	{id: 2, name: 'User 2'},
 ];
 
 const clientMock = {
-	get: jest.fn().mockResolvedValue({data: {items, totalCount: items.length}})
+	request: jest
+		.fn()
+		.mockResolvedValue({data: {items, totalCount: items.length}}),
 };
 
 const wrapper = ({children}) => (
@@ -38,10 +40,9 @@ describe('The assignee filter component should', () => {
 	afterEach(cleanup);
 
 	beforeEach(() => {
-		const renderResult = render(
-			<AssigneeFilter dispatch={() => {}} processId={12345} />,
-			{wrapper}
-		);
+		const renderResult = render(<AssigneeFilter processId={12345} />, {
+			wrapper,
+		});
 
 		getAllByTestId = renderResult.getAllByTestId;
 	});

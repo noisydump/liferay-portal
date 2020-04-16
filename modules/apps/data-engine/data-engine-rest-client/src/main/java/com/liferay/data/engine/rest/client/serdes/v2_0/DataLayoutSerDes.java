@@ -16,6 +16,7 @@ package com.liferay.data.engine.rest.client.serdes.v2_0;
 
 import com.liferay.data.engine.rest.client.dto.v2_0.DataLayout;
 import com.liferay.data.engine.rest.client.dto.v2_0.DataLayoutPage;
+import com.liferay.data.engine.rest.client.dto.v2_0.DataRule;
 import com.liferay.data.engine.rest.client.json.BaseJSONParser;
 
 import java.text.DateFormat;
@@ -112,6 +113,26 @@ public class DataLayoutSerDes {
 				sb.append(String.valueOf(dataLayout.getDataLayoutPages()[i]));
 
 				if ((i + 1) < dataLayout.getDataLayoutPages().length) {
+					sb.append(", ");
+				}
+			}
+
+			sb.append("]");
+		}
+
+		if (dataLayout.getDataRules() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"dataRules\": ");
+
+			sb.append("[");
+
+			for (int i = 0; i < dataLayout.getDataRules().length; i++) {
+				sb.append(String.valueOf(dataLayout.getDataRules()[i]));
+
+				if ((i + 1) < dataLayout.getDataRules().length) {
 					sb.append(", ");
 				}
 			}
@@ -267,6 +288,13 @@ public class DataLayoutSerDes {
 				String.valueOf(dataLayout.getDataLayoutPages()));
 		}
 
+		if (dataLayout.getDataRules() == null) {
+			map.put("dataRules", null);
+		}
+		else {
+			map.put("dataRules", String.valueOf(dataLayout.getDataRules()));
+		}
+
 		map.put(
 			"dateCreated",
 			liferayToJSONDateFormat.format(dataLayout.getDateCreated()));
@@ -365,6 +393,18 @@ public class DataLayoutSerDes {
 							object -> DataLayoutPageSerDes.toDTO((String)object)
 						).toArray(
 							size -> new DataLayoutPage[size]
+						));
+				}
+			}
+			else if (Objects.equals(jsonParserFieldName, "dataRules")) {
+				if (jsonParserFieldValue != null) {
+					dataLayout.setDataRules(
+						Stream.of(
+							toStrings((Object[])jsonParserFieldValue)
+						).map(
+							object -> DataRuleSerDes.toDTO((String)object)
+						).toArray(
+							size -> new DataRule[size]
 						));
 				}
 			}
@@ -475,10 +515,13 @@ public class DataLayoutSerDes {
 
 				sb.append("]");
 			}
-			else {
+			else if (value instanceof String) {
 				sb.append("\"");
 				sb.append(_escape(entry.getValue()));
 				sb.append("\"");
+			}
+			else {
+				sb.append(String.valueOf(entry.getValue()));
 			}
 
 			if (iterator.hasNext()) {

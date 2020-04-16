@@ -87,7 +87,8 @@
 						'endNavigate',
 						<portlet:namespace />monitorIframe
 					);
-				} catch (e) {
+				}
+				catch (e) {
 					return true;
 				}
 
@@ -101,7 +102,8 @@
 					url = url.substring(baseSrc.length);
 
 					<portlet:namespace />updateHash(url);
-				} else if (
+				}
+				else if (
 					!(url == iframeSrc || url == iframeSrc + '/') &&
 					!hasBaseSrc
 				) {
@@ -166,7 +168,7 @@
 		);
 
 		iframe.plug(A.Plugin.AutosizeIframe, {
-			monitorHeight: <%= iFramePortletInstanceConfiguration.resizeAutomatically() %>
+			monitorHeight: <%= iFramePortletInstanceConfiguration.resizeAutomatically() %>,
 		});
 
 		iframe.on('load', function() {
@@ -205,7 +207,7 @@
 			'<%= HtmlUtil.escapeHREF(iFrameDisplayContext.getIframeSrc()) %>',
 			{
 				headers: headers,
-				mode: 'no-cors'
+				mode: 'no-cors',
 			}
 		);
 	</aui:script>

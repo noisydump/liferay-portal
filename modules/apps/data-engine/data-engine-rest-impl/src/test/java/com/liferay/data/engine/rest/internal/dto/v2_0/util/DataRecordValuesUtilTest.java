@@ -59,8 +59,8 @@ public class DataRecordValuesUtilTest extends PowerMockito {
 	public void testCreateDDMFormFieldValueInvalidName() {
 		DDMFormField ddmFormField = _createDDMFormField("field1", "text", true);
 
-		DDMFormFieldValue ddmFormFieldValue =
-			DataRecordValuesUtil.createDDMFormFieldValue(
+		List<DDMFormFieldValue> ddmFormFieldValues =
+			DataRecordValuesUtil.createDDMFormFieldValues(
 				HashMapBuilder.<String, Object>put(
 					"field2",
 					HashMapBuilder.put(
@@ -71,11 +71,13 @@ public class DataRecordValuesUtilTest extends PowerMockito {
 				).build(),
 				ddmFormField, null);
 
+		DDMFormFieldValue ddmFormFieldValue = ddmFormFieldValues.get(0);
+
 		Assert.assertEquals("field1", ddmFormFieldValue.getName());
 
 		Value value = ddmFormFieldValue.getValue();
 
-		Assert.assertNull(value);
+		Assert.assertEquals(ddmFormField.getPredefinedValue(), value);
 	}
 
 	@Test
@@ -85,8 +87,8 @@ public class DataRecordValuesUtilTest extends PowerMockito {
 		ddmFormField.addNestedDDMFormField(
 			_createDDMFormField("child", "text", true));
 
-		DDMFormFieldValue ddmFormFieldValue =
-			DataRecordValuesUtil.createDDMFormFieldValue(
+		List<DDMFormFieldValue> ddmFormFieldValues =
+			DataRecordValuesUtil.createDDMFormFieldValues(
 				HashMapBuilder.<String, Object>put(
 					"child",
 					HashMapBuilder.put(
@@ -103,6 +105,8 @@ public class DataRecordValuesUtilTest extends PowerMockito {
 					).build()
 				).build(),
 				ddmFormField, null);
+
+		DDMFormFieldValue ddmFormFieldValue = ddmFormFieldValues.get(0);
 
 		Assert.assertEquals("parent", ddmFormFieldValue.getName());
 
@@ -144,8 +148,8 @@ public class DataRecordValuesUtilTest extends PowerMockito {
 	public void testCreateDDMFormFieldValueNoLocale() {
 		DDMFormField ddmFormField = _createDDMFormField("field1", "text", true);
 
-		DDMFormFieldValue ddmFormFieldValue =
-			DataRecordValuesUtil.createDDMFormFieldValue(
+		List<DDMFormFieldValue> ddmFormFieldValues =
+			DataRecordValuesUtil.createDDMFormFieldValues(
 				HashMapBuilder.<String, Object>put(
 					"field1",
 					HashMapBuilder.put(
@@ -155,6 +159,8 @@ public class DataRecordValuesUtilTest extends PowerMockito {
 					).build()
 				).build(),
 				ddmFormField, null);
+
+		DDMFormFieldValue ddmFormFieldValue = ddmFormFieldValues.get(0);
 
 		Assert.assertEquals("field1", ddmFormFieldValue.getName());
 

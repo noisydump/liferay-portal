@@ -12,10 +12,15 @@
  * details.
  */
 
+import {fireEvent} from '@testing-library/react';
+
 import Grid from '../../../src/main/resources/META-INF/resources/Grid/Grid.es';
+import withContextMock from '../__mocks__/withContextMock.es';
 
 let component;
 const spritemap = 'icons.svg';
+
+const GridWithContextMock = withContextMock(Grid);
 
 describe('Grid', () => {
 	afterEach(() => {
@@ -29,14 +34,14 @@ describe('Grid', () => {
 			columns: [
 				{
 					label: 'col1',
-					value: 'fieldId'
+					value: 'fieldId',
 				},
 				{
 					label: 'col2',
-					value: 'fieldId'
-				}
+					value: 'fieldId',
+				},
 			],
-			spritemap
+			spritemap,
 		});
 
 		expect(component).toMatchSnapshot();
@@ -45,7 +50,7 @@ describe('Grid', () => {
 	it('renders no columns when columns comes empty', () => {
 		component = new Grid({
 			columns: [],
-			spritemap
+			spritemap,
 		});
 
 		expect(component).toMatchSnapshot();
@@ -54,7 +59,7 @@ describe('Grid', () => {
 	it('is not edidable', () => {
 		component = new Grid({
 			readOnly: false,
-			spritemap
+			spritemap,
 		});
 
 		expect(component).toMatchSnapshot();
@@ -63,7 +68,7 @@ describe('Grid', () => {
 	it('has a tip', () => {
 		component = new Grid({
 			spritemap,
-			tip: 'Type something'
+			tip: 'Type something',
 		});
 
 		expect(component).toMatchSnapshot();
@@ -72,7 +77,7 @@ describe('Grid', () => {
 	it('has an id', () => {
 		component = new Grid({
 			id: 'ID',
-			spritemap
+			spritemap,
 		});
 
 		expect(component).toMatchSnapshot();
@@ -81,7 +86,7 @@ describe('Grid', () => {
 	it('has a label', () => {
 		component = new Grid({
 			label: 'label',
-			spritemap
+			spritemap,
 		});
 
 		expect(component).toMatchSnapshot();
@@ -90,7 +95,7 @@ describe('Grid', () => {
 	it('is not required', () => {
 		component = new Grid({
 			required: false,
-			spritemap
+			spritemap,
 		});
 
 		expect(component).toMatchSnapshot();
@@ -101,14 +106,14 @@ describe('Grid', () => {
 			rows: [
 				{
 					label: 'row1',
-					value: 'fieldId'
+					value: 'fieldId',
 				},
 				{
 					label: 'row2',
-					value: 'fieldId'
-				}
+					value: 'fieldId',
+				},
 			],
-			spritemap
+			spritemap,
 		});
 
 		expect(component).toMatchSnapshot();
@@ -117,7 +122,7 @@ describe('Grid', () => {
 	it('renders no rows when row comes empty', () => {
 		component = new Grid({
 			rows: [],
-			spritemap
+			spritemap,
 		});
 
 		expect(component).toMatchSnapshot();
@@ -127,17 +132,153 @@ describe('Grid', () => {
 		component = new Grid({
 			label: 'text',
 			showLabel: true,
-			spritemap
+			spritemap,
 		});
 
 		expect(component).toMatchSnapshot();
 	});
 
-	it('has a spritemap', () => {
-		component = new Grid({
-			spritemap
+	it('emits a fieldBlurred event when blurring the radio input', done => {
+		const handleFieldBlurred = data => {
+			expect(data).toEqual(
+				expect.objectContaining({
+					value: 'colFieldId1',
+				})
+			);
+			done();
+		};
+
+		const events = {fieldBlurred: handleFieldBlurred};
+
+		component = new GridWithContextMock({
+			columns: [
+				{
+					label: 'col1',
+					value: 'colFieldId1',
+				},
+				{
+					label: 'col2',
+					value: 'colFieldId2',
+				},
+			],
+			events,
+			readOnly: false,
+			rows: [
+				{
+					label: 'row1',
+					value: 'rowFieldId1',
+				},
+				{
+					label: 'row2',
+					value: 'rowFieldId2',
+				},
+			],
+			spritemap,
 		});
 
-		expect(component).toMatchSnapshot();
+		const radioInputElement = component.element.querySelector(
+			'input[value][type="radio"][name="rowFieldId1"]:not([value="colFieldId2"])'
+		);
+
+		fireEvent.blur(radioInputElement);
+	});
+
+	// This test needs to be investigated further, it is failing at metal-events because it
+	// has no events adding, strange that we are adding but only this one is failing.
+	// This is not reproducible in manual tests.
+	it.skip('emits a fieldEdited event when changing the state of radio input', done => {
+		const handleFieldEdited = data => {
+			expect(data).toEqual(
+				expect.objectContaining({
+					fieldInstance: expect.any(Object),
+					originalEvent: expect.any(Object),
+					value: {
+						rowFieldId1: 'colFieldId1',
+					},
+				})
+			);
+			done();
+		};
+
+		const events = {fieldEdited: handleFieldEdited};
+
+		component = new GridWithContextMock({
+			columns: [
+				{
+					label: 'col1',
+					value: 'colFieldId1',
+				},
+				{
+					label: 'col2',
+					value: 'colFieldId2',
+				},
+			],
+			events,
+			readOnly: false,
+			rows: [
+				{
+					label: 'row1',
+					value: 'rowFieldId1',
+				},
+				{
+					label: 'row2',
+					value: 'rowFieldId2',
+				},
+			],
+			spritemap,
+		});
+
+		const radioInputElement = component.element.querySelector(
+			'input[value][type="radio"][name="rowFieldId1"]:not([value="colFieldId2"])'
+		);
+
+		fireEvent.click(radioInputElement);
+	});
+
+	it('emits a fieldFocused event when focusing a radio input', done => {
+		const handleFieldFocused = data => {
+			expect(data).toEqual(
+				expect.objectContaining({
+					fieldInstance: expect.any(Object),
+					originalEvent: expect.any(Object),
+					value: 'colFieldId1',
+				})
+			);
+			done();
+		};
+
+		const events = {fieldFocused: handleFieldFocused};
+
+		component = new GridWithContextMock({
+			columns: [
+				{
+					label: 'col1',
+					value: 'colFieldId1',
+				},
+				{
+					label: 'col2',
+					value: 'colFieldId2',
+				},
+			],
+			events,
+			readOnly: false,
+			rows: [
+				{
+					label: 'row1',
+					value: 'rowFieldId1',
+				},
+				{
+					label: 'row2',
+					value: 'rowFieldId2',
+				},
+			],
+			spritemap,
+		});
+
+		const radioInputElement = component.element.querySelector(
+			'input[value][type="radio"][name="rowFieldId1"]:not([value="colFieldId2"])'
+		);
+
+		fireEvent.focus(radioInputElement);
 	});
 });

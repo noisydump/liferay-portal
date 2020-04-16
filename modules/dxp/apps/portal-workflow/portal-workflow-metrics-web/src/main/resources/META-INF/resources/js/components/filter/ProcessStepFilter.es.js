@@ -13,29 +13,30 @@ import React, {useMemo} from 'react';
 
 import Filter from '../../shared/components/filter/Filter.es';
 import {useFilterFetch} from '../../shared/components/filter/hooks/useFilterFetch.es';
-import {useFilterName} from '../../shared/components/filter/hooks/useFilterName.es';
+import {useFilterNameWithLabel} from '../../shared/components/filter/hooks/useFilterName.es';
 import filterConstants from '../../shared/components/filter/util/filterConstants.es';
 
 const allStepsItem = {
 	dividerAfter: true,
-	key: 'allSteps',
-	name: Liferay.Language.get('all-steps')
+	label: Liferay.Language.get('all-steps'),
+	name: 'allSteps',
 };
 
 const ProcessStepFilter = ({
 	className,
-	dispatch,
+	disabled,
 	filterKey = filterConstants.processStep.key,
 	options = {},
 	prefixKey = '',
-	processId
+	processId,
 }) => {
 	const defaultOptions = {
 		hideControl: false,
 		multiple: true,
 		position: 'left',
 		withAllSteps: false,
-		withSelectionTitle: false
+		withSelectionTitle: false,
+		withoutRouteParams: false,
 	};
 	// eslint-disable-next-line react-hooks/exhaustive-deps
 	options = useMemo(() => ({...defaultOptions, ...options}), [options]);
@@ -46,33 +47,37 @@ const ProcessStepFilter = ({
 	);
 
 	const {items, selectedItems} = useFilterFetch({
-		dispatch,
 		filterKey,
 		prefixKey,
+		propertyKey: 'name',
 		requestUrl: `/processes/${processId}/tasks?page=0&pageSize=0`,
-		staticItems
+		staticItems,
+		withoutRouteParams: options.withoutRouteParams,
 	});
 
 	const defaultItem = useMemo(() => items[0], [items]);
 
-	if (defaultItem && !selectedItems.length) {
+	if (defaultItem && options.withSelectionTitle && !selectedItems.length) {
 		selectedItems[0] = defaultItem;
 	}
 
-	const filterName = useFilterName(
-		options.multiple,
+	const filterName = useFilterNameWithLabel({
+		labelPropertyName: 'label',
+		multiple: options.multiple,
 		selectedItems,
-		Liferay.Language.get('process-step'),
-		options.withSelectionTitle
-	);
+		title: Liferay.Language.get('process-step'),
+		withSelectionTitle: options.withSelectionTitle,
+	});
 
 	return (
 		<Filter
-			dataTestId="processStepFilter"
+			data-testid="processStepFilter"
 			defaultItem={defaultItem}
+			disabled={disabled}
 			elementClasses={className}
 			filterKey={filterKey}
 			items={items}
+			labelPropertyName="label"
 			name={filterName}
 			prefixKey={prefixKey}
 			{...options}

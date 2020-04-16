@@ -25,7 +25,7 @@ const CustomObjectPopover = ({
 	forwardRef,
 	onCancel,
 	onSubmit,
-	visible
+	visible,
 }) => {
 	const nameInputRef = useRef();
 	const [isAddFormView, setAddFormView] = useState(true);
@@ -36,7 +36,8 @@ const CustomObjectPopover = ({
 
 		if (validate(name)) {
 			onSubmit({isAddFormView, name});
-		} else {
+		}
+		else {
 			nameInputRef.current.focus();
 		}
 	};
@@ -58,7 +59,8 @@ const CustomObjectPopover = ({
 	useEffect(() => {
 		if (visible) {
 			nameInputRef.current.focus();
-		} else {
+		}
+		else {
 			resetForm();
 		}
 	}, [alignElement, nameInputRef, visible]);
@@ -91,7 +93,7 @@ const CustomObjectPopover = ({
 						<ClayInput
 							className="form-control"
 							id="customObjectNameInput"
-							onInput={({currentTarget}) =>
+							onChange={({currentTarget}) =>
 								validate(currentTarget.value)
 							}
 							ref={nameInputRef}

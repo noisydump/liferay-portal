@@ -14,10 +14,11 @@
 
 /**
  * Available page types
+ * @type {import('../../../types/PageTypes').PageTypes}
  */
 export const PAGE_TYPES = {
 	content: '0',
 	conversion: '4',
 	display: '1',
-	master: '3'
+	master: '3',
 };

@@ -28,7 +28,7 @@ import javax.annotation.Generated;
  * @generated
  */
 @Generated("")
-public class DataLayout {
+public class DataLayout implements Cloneable {
 
 	public String getContentType() {
 		return contentType;
@@ -114,6 +114,27 @@ public class DataLayout {
 	}
 
 	protected DataLayoutPage[] dataLayoutPages;
+
+	public DataRule[] getDataRules() {
+		return dataRules;
+	}
+
+	public void setDataRules(DataRule[] dataRules) {
+		this.dataRules = dataRules;
+	}
+
+	public void setDataRules(
+		UnsafeSupplier<DataRule[], Exception> dataRulesUnsafeSupplier) {
+
+		try {
+			dataRules = dataRulesUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected DataRule[] dataRules;
 
 	public Date getDateCreated() {
 		return dateCreated;
@@ -281,6 +302,11 @@ public class DataLayout {
 	}
 
 	protected Long userId;
+
+	@Override
+	public DataLayout clone() throws CloneNotSupportedException {
+		return (DataLayout)super.clone();
+	}
 
 	@Override
 	public boolean equals(Object object) {

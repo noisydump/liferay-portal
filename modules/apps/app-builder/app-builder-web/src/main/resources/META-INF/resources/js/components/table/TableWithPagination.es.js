@@ -16,7 +16,7 @@ import {ClayPaginationBarWithBasicItems} from '@clayui/pagination-bar';
 import React, {useContext} from 'react';
 
 import {withLoading} from '../loading/Loading.es';
-import SearchContext from '../management-toolbar/search/SearchContext.es';
+import SearchContext from '../management-toolbar/SearchContext.es';
 import {withEmpty} from './EmptyState.es';
 import Table from './Table.es';
 
@@ -35,7 +35,6 @@ const TableWithPagination = ({actions, columns, items, totalCount}) => {
 						activePage={page}
 						deltas={deltas}
 						ellipsisBuffer={3}
-						initialSelectedDelta={{label: pageSize}}
 						onDeltaChange={pageSize =>
 							dispatch({pageSize, type: 'CHANGE_PAGE_SIZE'})
 						}

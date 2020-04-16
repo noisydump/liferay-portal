@@ -28,7 +28,7 @@ import javax.annotation.Generated;
  * @generated
  */
 @Generated("")
-public class DataDefinition {
+public class DataDefinition implements Cloneable {
 
 	public String[] getAvailableLanguageIds() {
 		return availableLanguageIds;
@@ -117,6 +117,27 @@ public class DataDefinition {
 	}
 
 	protected String dataDefinitionKey;
+
+	public DataRule[] getDataRules() {
+		return dataRules;
+	}
+
+	public void setDataRules(DataRule[] dataRules) {
+		this.dataRules = dataRules;
+	}
+
+	public void setDataRules(
+		UnsafeSupplier<DataRule[], Exception> dataRulesUnsafeSupplier) {
+
+		try {
+			dataRules = dataRulesUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected DataRule[] dataRules;
 
 	public Date getDateCreated() {
 		return dateCreated;
@@ -326,6 +347,11 @@ public class DataDefinition {
 	}
 
 	protected Long userId;
+
+	@Override
+	public DataDefinition clone() throws CloneNotSupportedException {
+		return (DataDefinition)super.clone();
+	}
 
 	@Override
 	public boolean equals(Object object) {

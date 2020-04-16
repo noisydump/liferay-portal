@@ -14,97 +14,124 @@
 
 package com.liferay.portal.workflow.metrics.internal.search.index;
 
-import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.json.JSONFactory;
-import com.liferay.portal.kernel.json.JSONObject;
-import com.liferay.portal.kernel.messaging.Message;
-import com.liferay.portal.kernel.search.Document;
-import com.liferay.portal.kernel.search.DocumentImpl;
-import com.liferay.portal.workflow.metrics.internal.messaging.WorkflowMetricsSLAProcessMessageListener;
+import com.liferay.portal.search.document.Document;
+import com.liferay.portal.search.document.DocumentBuilder;
 import com.liferay.portal.workflow.metrics.internal.sla.processor.WorkflowMetricsSLAInstanceResult;
+import com.liferay.portal.workflow.metrics.search.index.name.WorkflowMetricsIndexNameBuilder;
 import com.liferay.portal.workflow.metrics.sla.processor.WorkflowMetricsSLAStatus;
-
-import java.sql.Timestamp;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
-import org.osgi.service.component.annotations.ReferenceCardinality;
-import org.osgi.service.component.annotations.ReferencePolicy;
-import org.osgi.service.component.annotations.ReferencePolicyOption;
 
 /**
  * @author Rafael Praxedes
  */
 @Component(
-	immediate = true, service = SLAInstanceResultWorkflowMetricsIndexer.class
+	immediate = true,
+	property = "workflow.metrics.index.entity.name=sla-instance-result",
+	service = {
+		SLAInstanceResultWorkflowMetricsIndexer.class,
+		WorkflowMetricsIndex.class
+	}
 )
 public class SLAInstanceResultWorkflowMetricsIndexer
 	extends BaseSLAWorkflowMetricsIndexer {
 
+	public Document creatDefaultDocument(long companyId, long processId) {
+		WorkflowMetricsSLAInstanceResult workflowMetricsSLAInstanceResult =
+			new WorkflowMetricsSLAInstanceResult();
+
+		workflowMetricsSLAInstanceResult.setCompanyId(companyId);
+		workflowMetricsSLAInstanceResult.setProcessId(processId);
+
+		return createDocument(workflowMetricsSLAInstanceResult);
+	}
+
 	public Document createDocument(
 		WorkflowMetricsSLAInstanceResult workflowMetricsSLAInstanceResult) {
 
-		Document document = new DocumentImpl();
+		DocumentBuilder documentBuilder = documentBuilderFactory.builder();
 
-		document.addUID(
-			"WorkflowMetricsSLAInstanceResult",
-			digest(
-				workflowMetricsSLAInstanceResult.getCompanyId(),
-				workflowMetricsSLAInstanceResult.getInstanceId(),
-				workflowMetricsSLAInstanceResult.getProcessId(),
-				workflowMetricsSLAInstanceResult.getSLADefinitionId()));
-		document.addKeyword(
+		documentBuilder.setLong(
 			"companyId", workflowMetricsSLAInstanceResult.getCompanyId());
 
 		if (workflowMetricsSLAInstanceResult.getCompletionLocalDateTime() !=
 				null) {
 
-			document.addDateSortable(
+			documentBuilder.setDate(
 				"completionDate",
-				Timestamp.valueOf(
+				formatLocalDateTime(
 					workflowMetricsSLAInstanceResult.
 						getCompletionLocalDateTime()));
 		}
 
-		document.addKeyword("deleted", false);
-		document.addKeyword(
-			"elapsedTime", workflowMetricsSLAInstanceResult.getElapsedTime());
-		document.addKeyword(
+		documentBuilder.setValue(
+			"deleted", false
+		).setLong(
+			"elapsedTime", workflowMetricsSLAInstanceResult.getElapsedTime()
+		).setValue(
 			"instanceCompleted",
 			workflowMetricsSLAInstanceResult.getCompletionLocalDateTime() !=
-				null);
-		document.addKeyword(
-			"instanceId", workflowMetricsSLAInstanceResult.getInstanceId());
-		document.addDateSortable(
-			"lastCheckDate",
-			Timestamp.valueOf(
-				workflowMetricsSLAInstanceResult.getLastCheckLocalDateTime()));
-		document.addKeyword(
+				null
+		).setLong(
+			"instanceId", workflowMetricsSLAInstanceResult.getInstanceId()
+		);
+
+		if (workflowMetricsSLAInstanceResult.getLastCheckLocalDateTime() !=
+				null) {
+
+			documentBuilder.setDate(
+				"lastCheckDate",
+				formatLocalDateTime(
+					workflowMetricsSLAInstanceResult.
+						getLastCheckLocalDateTime()));
+		}
+
+		documentBuilder.setValue(
 			"onTime", workflowMetricsSLAInstanceResult.isOnTime());
-		document.addDateSortable(
-			"overdueDate",
-			Timestamp.valueOf(
-				workflowMetricsSLAInstanceResult.getOverdueLocalDateTime()));
-		document.addKeyword(
-			"processId", workflowMetricsSLAInstanceResult.getProcessId());
-		document.addKeyword(
-			"remainingTime",
-			workflowMetricsSLAInstanceResult.getRemainingTime());
-		document.addKeyword(
+
+		if (workflowMetricsSLAInstanceResult.getOverdueLocalDateTime() !=
+				null) {
+
+			documentBuilder.setDate(
+				"overdueDate",
+				formatLocalDateTime(
+					workflowMetricsSLAInstanceResult.
+						getOverdueLocalDateTime()));
+		}
+
+		documentBuilder.setLong(
+			"processId", workflowMetricsSLAInstanceResult.getProcessId()
+		).setLong(
+			"remainingTime", workflowMetricsSLAInstanceResult.getRemainingTime()
+		).setLong(
 			"slaDefinitionId",
-			workflowMetricsSLAInstanceResult.getSLADefinitionId());
+			workflowMetricsSLAInstanceResult.getSLADefinitionId()
+		);
 
 		WorkflowMetricsSLAStatus workflowMetricsSLAStatus =
 			workflowMetricsSLAInstanceResult.getWorkflowMetricsSLAStatus();
 
-		document.addKeyword("status", workflowMetricsSLAStatus.name());
+		if (workflowMetricsSLAStatus != null) {
+			documentBuilder.setString(
+				"status", workflowMetricsSLAStatus.name());
+		}
 
-		return document;
+		documentBuilder.setString(
+			"uid",
+			digest(
+				workflowMetricsSLAInstanceResult.getCompanyId(),
+				workflowMetricsSLAInstanceResult.getInstanceId(),
+				workflowMetricsSLAInstanceResult.getProcessId(),
+				workflowMetricsSLAInstanceResult.getSLADefinitionId()));
+
+		return documentBuilder.build();
 	}
 
 	@Override
-	public String getIndexName() {
-		return "workflow-metrics-sla-instance-results";
+	public String getIndexName(long companyId) {
+		return _slaInstanceResultWorkflowMetricsIndexNameBuilder.getIndexName(
+			companyId);
 	}
 
 	@Override
@@ -112,32 +139,10 @@ public class SLAInstanceResultWorkflowMetricsIndexer
 		return "WorkflowMetricsSLAInstanceResultType";
 	}
 
-	@Override
-	public void reindex(long companyId) throws PortalException {
-		if (workflowMetricsSLAProcessMessageListener == null) {
-			return;
-		}
-
-		Message message = new Message();
-
-		JSONObject payloadJSONObject = _jsonFactory.createJSONObject();
-
-		payloadJSONObject.put("reindex", Boolean.TRUE);
-
-		message.setPayload(payloadJSONObject);
-
-		workflowMetricsSLAProcessMessageListener.receive(message);
-	}
-
 	@Reference(
-		cardinality = ReferenceCardinality.OPTIONAL,
-		policy = ReferencePolicy.DYNAMIC,
-		policyOption = ReferencePolicyOption.GREEDY
+		target = "(workflow.metrics.index.entity.name=sla-instance-result)"
 	)
-	protected volatile WorkflowMetricsSLAProcessMessageListener
-		workflowMetricsSLAProcessMessageListener;
-
-	@Reference
-	private JSONFactory _jsonFactory;
+	private WorkflowMetricsIndexNameBuilder
+		_slaInstanceResultWorkflowMetricsIndexNameBuilder;
 
 }

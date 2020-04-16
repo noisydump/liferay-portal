@@ -16,6 +16,7 @@ package com.liferay.data.engine.rest.client.serdes.v2_0;
 
 import com.liferay.data.engine.rest.client.dto.v2_0.DataDefinition;
 import com.liferay.data.engine.rest.client.dto.v2_0.DataDefinitionField;
+import com.liferay.data.engine.rest.client.dto.v2_0.DataRule;
 import com.liferay.data.engine.rest.client.json.BaseJSONParser;
 
 import java.text.DateFormat;
@@ -139,6 +140,26 @@ public class DataDefinitionSerDes {
 			sb.append(_escape(dataDefinition.getDataDefinitionKey()));
 
 			sb.append("\"");
+		}
+
+		if (dataDefinition.getDataRules() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"dataRules\": ");
+
+			sb.append("[");
+
+			for (int i = 0; i < dataDefinition.getDataRules().length; i++) {
+				sb.append(String.valueOf(dataDefinition.getDataRules()[i]));
+
+				if ((i + 1) < dataDefinition.getDataRules().length) {
+					sb.append(", ");
+				}
+			}
+
+			sb.append("]");
 		}
 
 		if (dataDefinition.getDateCreated() != null) {
@@ -318,6 +339,13 @@ public class DataDefinitionSerDes {
 				String.valueOf(dataDefinition.getDataDefinitionKey()));
 		}
 
+		if (dataDefinition.getDataRules() == null) {
+			map.put("dataRules", null);
+		}
+		else {
+			map.put("dataRules", String.valueOf(dataDefinition.getDataRules()));
+		}
+
 		map.put(
 			"dateCreated",
 			liferayToJSONDateFormat.format(dataDefinition.getDateCreated()));
@@ -441,6 +469,18 @@ public class DataDefinitionSerDes {
 						(String)jsonParserFieldValue);
 				}
 			}
+			else if (Objects.equals(jsonParserFieldName, "dataRules")) {
+				if (jsonParserFieldValue != null) {
+					dataDefinition.setDataRules(
+						Stream.of(
+							toStrings((Object[])jsonParserFieldValue)
+						).map(
+							object -> DataRuleSerDes.toDTO((String)object)
+						).toArray(
+							size -> new DataRule[size]
+						));
+				}
+			}
 			else if (Objects.equals(jsonParserFieldName, "dateCreated")) {
 				if (jsonParserFieldValue != null) {
 					dataDefinition.setDateCreated(
@@ -560,10 +600,13 @@ public class DataDefinitionSerDes {
 
 				sb.append("]");
 			}
-			else {
+			else if (value instanceof String) {
 				sb.append("\"");
 				sb.append(_escape(entry.getValue()));
 				sb.append("\"");
+			}
+			else {
+				sb.append(String.valueOf(entry.getValue()));
 			}
 
 			if (iterator.hasNext()) {

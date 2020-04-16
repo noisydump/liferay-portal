@@ -12,7 +12,7 @@
  * details.
  */
 
-import {createPortletURL, PortletBase} from 'frontend-js-web';
+import {PortletBase, createPortletURL} from 'frontend-js-web';
 import dom from 'metal-dom';
 import {EventHandler} from 'metal-events';
 import {Config} from 'metal-state';
@@ -82,6 +82,10 @@ class UserNameFields extends PortletBase {
 	_cacheData() {
 		const formData = new FormData(this.formNode);
 
+		if (!formData.forEach) {
+			return;
+		}
+
 		formData.forEach((value, name) => {
 			const field = this.userNameFieldsNode.querySelector('#' + name);
 
@@ -129,7 +133,7 @@ class UserNameFields extends PortletBase {
 	_getURL(languageId) {
 		return new Promise(resolve => {
 			const url = createPortletURL(this.baseURL, {
-				languageId
+				languageId,
 			});
 
 			resolve(url);
@@ -166,7 +170,7 @@ class UserNameFields extends PortletBase {
 	 * @protected
 	 */
 	_insertUserNameFields(markupText) {
-		const temp = document.implementation.createHTMLDocument();
+		const temp = document.implementation.createHTMLDocument('');
 
 		temp.body.innerHTML = markupText;
 
@@ -268,7 +272,7 @@ UserNameFields.STATE = {
 	 */
 	userNameFieldsNode: Config.required()
 		.setter(dom.toElement)
-		.writeOnce()
+		.writeOnce(),
 };
 
 export default UserNameFields;

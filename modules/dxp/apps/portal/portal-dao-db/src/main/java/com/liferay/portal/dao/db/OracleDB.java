@@ -14,16 +14,17 @@
 
 package com.liferay.portal.dao.db;
 
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.dao.db.DBInspector;
 import com.liferay.portal.kernel.dao.db.DBType;
 import com.liferay.portal.kernel.dao.db.Index;
 import com.liferay.portal.kernel.dao.jdbc.DataAccess;
 import com.liferay.portal.kernel.io.unsync.UnsyncBufferedReader;
 import com.liferay.portal.kernel.io.unsync.UnsyncStringReader;
-import com.liferay.portal.kernel.util.FileUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
-import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.kernel.util.Validator;
 
 import java.io.IOException;
 
@@ -50,81 +51,30 @@ public class OracleDB extends BaseDB {
 	}
 
 	@Override
-	public String buildSQL(String template) throws IOException {
-		template = _preBuildSQL(template);
-		template = _postBuildSQL(template);
+	public String buildSQL(String template) throws IOException, SQLException {
+		template = replaceTemplate(template);
+		template = reword(template);
+		template = StringUtil.replace(
+			template, new String[] {"\\\\", "\\'", "\\\""},
+			new String[] {"\\", "''", "\""});
 
-		return template;
-	}
-
-	@Override
-	public void buildSQLFile(String sqlDir, String fileName)
-		throws IOException {
-
-		String oracle = buildTemplate(sqlDir, fileName);
-
-		oracle = _preBuildSQL(oracle);
-
-		StringBundler imageSB = new StringBundler();
-		StringBundler journalArticleSB = new StringBundler();
-
-		try (UnsyncBufferedReader unsyncBufferedReader =
-				new UnsyncBufferedReader(new UnsyncStringReader(oracle))) {
-
-			String line = null;
-
-			while ((line = unsyncBufferedReader.readLine()) != null) {
-				if (line.startsWith("insert into Image")) {
-					_convertToOracleCSV(line, imageSB);
-				}
-				else if (line.startsWith("insert into JournalArticle (")) {
-					_convertToOracleCSV(line, journalArticleSB);
-				}
-			}
-		}
-
-		if (imageSB.length() > 0) {
-			FileUtil.write(
-				StringBundler.concat(
-					sqlDir, "/", fileName, "/", fileName, "-oracle-image.csv"),
-				imageSB.toString());
-		}
-
-		if (journalArticleSB.length() > 0) {
-			FileUtil.write(
-				StringBundler.concat(
-					sqlDir, "/", fileName, "/", fileName,
-					"-oracle-journalarticle.csv"),
-				journalArticleSB.toString());
-		}
-
-		oracle = _postBuildSQL(oracle);
-
-		FileUtil.write(
-			StringBundler.concat(
-				sqlDir, "/", fileName, "/", fileName, "-oracle.sql"),
-			oracle);
+		return StringUtil.replace(template, "\\n", "'||CHR(10)||'");
 	}
 
 	@Override
 	public List<Index> getIndexes(Connection con) throws SQLException {
 		List<Index> indexes = new ArrayList<>();
 
-		PreparedStatement ps = null;
-		ResultSet rs = null;
+		StringBundler sb = new StringBundler(3);
 
-		try {
-			StringBundler sb = new StringBundler(3);
+		sb.append("select index_name, table_name, uniqueness from ");
+		sb.append("user_indexes where index_name like 'LIFERAY_%' or ");
+		sb.append("index_name like 'IX_%'");
 
-			sb.append("select index_name, table_name, uniqueness from ");
-			sb.append("user_indexes where index_name like 'LIFERAY_%' or ");
-			sb.append("index_name like 'IX_%'");
+		String sql = sb.toString();
 
-			String sql = sb.toString();
-
-			ps = con.prepareStatement(sql);
-
-			rs = ps.executeQuery();
+		try (PreparedStatement ps = con.prepareStatement(sql);
+			ResultSet rs = ps.executeQuery()) {
 
 			while (rs.next()) {
 				String indexName = rs.getString("index_name");
@@ -140,11 +90,27 @@ public class OracleDB extends BaseDB {
 				indexes.add(new Index(indexName, tableName, unique));
 			}
 		}
-		finally {
-			DataAccess.cleanUp(ps, rs);
-		}
 
 		return indexes;
+	}
+
+	@Override
+	public String getPopulateSQL(String databaseName, String sqlContent) {
+		StringBundler sb = new StringBundler(5);
+
+		sb.append("connect &1/&2;\n");
+		sb.append("set define off;\n");
+		sb.append("\n");
+		sb.append(sqlContent);
+		sb.append("quit");
+
+		return sb.toString();
+	}
+
+	@Override
+	public String getRecreateSQL(String databaseName) {
+		return "drop user &1 cascade;\ncreate user &1 identified by &2;\n" +
+			"grant connect,resource to &1;\nquit";
 	}
 
 	@Override
@@ -173,41 +139,6 @@ public class OracleDB extends BaseDB {
 	}
 
 	@Override
-	protected String buildCreateFileContent(
-			String sqlDir, String databaseName, int population)
-		throws IOException {
-
-		String suffix = getSuffix(population);
-
-		StringBundler sb = new StringBundler(13);
-
-		sb.append("drop user &1 cascade;\n");
-		sb.append("create user &1 identified by &2;\n");
-		sb.append("grant connect,resource to &1;\n");
-
-		if (population != BARE) {
-			sb.append("connect &1/&2;\n");
-			sb.append("set define off;\n");
-			sb.append("\n");
-			sb.append(getCreateTablesContent(sqlDir, suffix));
-			sb.append("\n\n");
-			sb.append(readFile(sqlDir + "/indexes/indexes-oracle.sql"));
-			sb.append("\n\n");
-			sb.append(readFile(sqlDir + "/sequences/sequences-oracle.sql"));
-			sb.append("\n");
-		}
-
-		sb.append("quit");
-
-		return sb.toString();
-	}
-
-	@Override
-	protected String getServerName() {
-		return "oracle";
-	}
-
-	@Override
 	protected int[] getSQLTypes() {
 		return _SQL_TYPES;
 	}
@@ -217,8 +148,18 @@ public class OracleDB extends BaseDB {
 		return _ORACLE;
 	}
 
+	protected boolean isNullable(String tableName, String columnName)
+		throws SQLException {
+
+		try (Connection con = DataAccess.getConnection()) {
+			DBInspector dbInspector = new DBInspector(con);
+
+			return dbInspector.isNullable(tableName, columnName);
+		}
+	}
+
 	@Override
-	protected String replaceTemplate(String template, String[] actual) {
+	protected String replaceTemplate(String template) {
 
 		// LPS-12048
 
@@ -240,11 +181,11 @@ public class OracleDB extends BaseDB {
 
 		template = sb.toString();
 
-		return super.replaceTemplate(template, actual);
+		return super.replaceTemplate(template);
 	}
 
 	@Override
-	protected String reword(String data) throws IOException {
+	protected String reword(String data) throws IOException, SQLException {
 		try (UnsyncBufferedReader unsyncBufferedReader =
 				new UnsyncBufferedReader(new UnsyncStringReader(data))) {
 
@@ -264,9 +205,25 @@ public class OracleDB extends BaseDB {
 				else if (line.startsWith(ALTER_COLUMN_TYPE)) {
 					String[] template = buildColumnTypeTokens(line);
 
+					String nullable = template[template.length - 1];
+
+					if (!Validator.isBlank(nullable)) {
+						boolean currentNullable = isNullable(
+							template[0], template[1]);
+
+						if ((nullable.equals("null") && currentNullable) ||
+							(nullable.equals("not null") && !currentNullable)) {
+
+							nullable = StringPool.BLANK;
+						}
+					}
+
 					line = StringUtil.replace(
-						"alter table @table@ modify @old-column@ @type@;",
+						"alter table @table@ modify @old-column@ @type@ " +
+							nullable + ";",
 						REWORD_TEMPLATE, template);
+
+					line = StringUtil.replace(line, " ;", ";");
 				}
 				else if (line.startsWith(ALTER_TABLE_NAME)) {
 					String[] template = buildTableNameTokens(line);
@@ -288,38 +245,6 @@ public class OracleDB extends BaseDB {
 
 			return sb.toString();
 		}
-	}
-
-	private void _convertToOracleCSV(String line, StringBundler sb) {
-		int x = line.indexOf("values (");
-		int y = line.lastIndexOf(");");
-
-		line = line.substring(x + 8, y);
-
-		line = StringUtil.replace(line, "sysdate, ", "20050101, ");
-
-		sb.append(line);
-
-		sb.append("\n");
-	}
-
-	private String _postBuildSQL(String template) throws IOException {
-		template = removeLongInserts(template);
-		template = StringUtil.replace(template, "\\n", "'||CHR(10)||'");
-
-		return template;
-	}
-
-	private String _preBuildSQL(String template) throws IOException {
-		template = convertTimestamp(template);
-		template = replaceTemplate(template, getTemplate());
-
-		template = reword(template);
-		template = StringUtil.replace(
-			template, new String[] {"\\\\", "\\'", "\\\""},
-			new String[] {"\\", "''", "\""});
-
-		return template;
 	}
 
 	private static final String[] _ORACLE = {

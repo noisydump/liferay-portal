@@ -55,6 +55,10 @@ public class ConfigYAML {
 		return _testDir;
 	}
 
+	public boolean isForceClientVersionDescription() {
+		return _forceClientVersionDescription;
+	}
+
 	public boolean isForcePredictableContentApplicationXML() {
 		return _forcePredictableContentApplicationXML;
 	}
@@ -65,6 +69,10 @@ public class ConfigYAML {
 
 	public boolean isForcePredictableSchemaPropertyName() {
 		return _forcePredictableSchemaPropertyName;
+	}
+
+	public boolean isGenerateBatch() {
+		return _generateBatch;
 	}
 
 	public boolean isGenerateGraphQL() {
@@ -99,6 +107,12 @@ public class ConfigYAML {
 		_clientDir = clientDir;
 	}
 
+	public void setForceClientVersionDescription(
+		boolean forceClientVersionDescription) {
+
+		_forceClientVersionDescription = forceClientVersionDescription;
+	}
+
 	public void setForcePredictableContentApplicationXML(
 		boolean forcePredictableContentApplicationXML) {
 
@@ -117,6 +131,10 @@ public class ConfigYAML {
 
 		_forcePredictableSchemaPropertyName =
 			forcePredictableSchemaPropertyName;
+	}
+
+	public void setGenerateBatch(boolean generateBatch) {
+		_generateBatch = generateBatch;
 	}
 
 	public void setGenerateGraphQL(boolean generateGraphQL) {
@@ -152,9 +170,11 @@ public class ConfigYAML {
 	private Application _application;
 	private String _author;
 	private String _clientDir;
+	private boolean _forceClientVersionDescription = true;
 	private boolean _forcePredictableContentApplicationXML = true;
 	private boolean _forcePredictableOperationId = true;
 	private boolean _forcePredictableSchemaPropertyName = true;
+	private boolean _generateBatch = true;
 	private boolean _generateGraphQL = true;
 	private boolean _generateREST = true;
 	private String _implDir = "src/main/java";

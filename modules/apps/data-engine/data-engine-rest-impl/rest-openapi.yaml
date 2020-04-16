@@ -16,6 +16,11 @@ components:
                     type: array
                 dataDefinitionKey:
                     type: string
+                dataRules:
+                    items:
+                        $ref: "#/components/schemas/DataRule"
+                    type:
+                        array
                 dateCreated:
                     format: date-time
                     type: string
@@ -108,6 +113,11 @@ components:
                 dataLayoutPages:
                     items:
                         $ref: "#/components/schemas/DataLayoutPage"
+                    type:
+                        array
+                dataRules:
+                    items:
+                        $ref: "#/components/schemas/DataRule"
                     type:
                         array
                 dateCreated:
@@ -244,9 +254,28 @@ components:
                     format: int64
                     type: integer
             type: object
+        DataRule:
+            properties:
+                actions:
+                    items:
+                        type: object
+                    type:
+                        array
+                conditions:
+                    items:
+                        type: object
+                    type:
+                        array
+                logicalOperator:
+                    type: string
+                name:
+                    additionalProperties:
+                        type: object
+                    type: object
+            type: object
 info:
     description:
-        ""
+        "A Java client JAR is available for use with the group ID 'com.liferay', artifact ID 'com.liferay.data.engine.rest.client', and version '2.0.10'."
     license:
         name: "Apache 2.0"
         url: "http://www.apache.org/licenses/LICENSE-2.0.html"
@@ -435,6 +464,23 @@ paths:
                         ""
             tags: ["DataDefinition"]
     "/data-definitions/{dataDefinitionId}/data-layouts":
+        delete:
+            operationId: deleteDataLayoutsDataDefinition
+            parameters:
+                - in: path
+                  name: dataDefinitionId
+                  required: true
+                  schema:
+                      format: int64
+                      type: integer
+            responses:
+                204:
+                    content:
+                        application/json: {}
+                        application/xml: {}
+                    description:
+                        ""
+            tags: ["DataLayout"]
         get:
             operationId: getDataDefinitionDataLayoutsPage
             parameters:

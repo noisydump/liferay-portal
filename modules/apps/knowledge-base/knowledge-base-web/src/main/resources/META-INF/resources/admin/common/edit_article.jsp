@@ -120,7 +120,7 @@ if (portletTitleBasedNavigation) {
 			<liferay-ui:error exception="<%= NoSuchFileException.class %>" message="the-document-could-not-be-found" />
 
 			<liferay-ui:error exception="<%= UploadRequestSizeException.class %>">
-				<liferay-ui:message arguments="<%= TextFormatter.formatStorageSize(UploadServletRequestConfigurationHelperUtil.getMaxSize(), locale) %>" key="request-is-larger-than-x-and-could-not-be-processed" translateArguments="<%= false %>" />
+				<liferay-ui:message arguments="<%= LanguageUtil.formatStorageSize(UploadServletRequestConfigurationHelperUtil.getMaxSize(), locale) %>" key="request-is-larger-than-x-and-could-not-be-processed" translateArguments="<%= false %>" />
 			</liferay-ui:error>
 
 			<liferay-asset:asset-categories-error />
@@ -145,17 +145,8 @@ if (portletTitleBasedNavigation) {
 			<aui:fieldset-group markupView="lexicon">
 				<aui:fieldset>
 					<h1 class="kb-title">
-						<liferay-ui:input-editor
-							contents="<%= HtmlUtil.escape(title) %>"
-							editorName="alloyeditor"
-							name="titleEditor"
-							onChangeMethod='<%= (kbArticle == null) ? "onChangeEditor" : StringPool.BLANK %>'
-							placeholder="title"
-							showSource="<%= false %>"
-						/>
+						<aui:input autocomplete="off" label='<%= LanguageUtil.get(request, "title") %>' name="title" required="<%= true %>" type="text" value="<%= HtmlUtil.escape(title) %>" />
 					</h1>
-
-					<aui:input name="title" type="hidden" />
 
 					<div class="kb-entity-body">
 
@@ -167,7 +158,7 @@ if (portletTitleBasedNavigation) {
 						}
 						%>
 
-						<liferay-ui:input-editor
+						<liferay-editor:editor
 							contents="<%= content %>"
 							editorName="<%= kbGroupServiceConfiguration.getEditorName() %>"
 							fileBrowserParams="<%= fileBrowserParams %>"
@@ -298,15 +289,18 @@ if (portletTitleBasedNavigation) {
 
 <aui:script>
 	<c:if test="<%= kbArticle == null %>">
+		var titleInput = document.getElementById('<portlet:namespace />title');
 		var urlTitleInput = document.getElementById('<portlet:namespace />urlTitle');
 
-		function <portlet:namespace />onChangeEditor(html) {
+		titleInput.addEventListener('input', function(event) {
 			var customUrl = urlTitleInput.dataset.customUrl;
 
 			if (customUrl === 'false') {
-				urlTitleInput.value = Liferay.Util.normalizeFriendlyURL(html);
+				var title = event.target.value;
+
+				urlTitleInput.value = Liferay.Util.normalizeFriendlyURL(title);
 			}
-		}
+		});
 
 		urlTitleInput.addEventListener('input', function(event) {
 			event.currentTarget.dataset.customUrl = urlTitleInput.value !== '';
@@ -362,9 +356,6 @@ if (portletTitleBasedNavigation) {
 		document.getElementById(
 			'<portlet:namespace />content'
 		).value = window.<portlet:namespace />contentEditor.getHTML();
-		document.getElementById(
-			'<portlet:namespace />title'
-		).value = window.<portlet:namespace />titleEditor.getText();
 		updateMultipleKBArticleAttachments();
 	});
 </aui:script>

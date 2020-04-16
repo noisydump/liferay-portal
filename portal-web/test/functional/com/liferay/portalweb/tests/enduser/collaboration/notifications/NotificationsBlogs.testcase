@@ -69,6 +69,8 @@ definition {
 
 	@priority = "4"
 	test DeleteNotifications {
+		property portal.upstream = "quarantine";
+
 		Navigator.gotoPage(pageName = "Blogs Page");
 
 		Blogs.subscribePG();
@@ -120,6 +122,8 @@ definition {
 
 	@priority = "4"
 	test MarkAllNotificationsAsRead {
+		property portal.upstream = "quarantine";
+
 		Navigator.gotoPage(pageName = "Blogs Page");
 
 		Blogs.subscribePG();
@@ -161,6 +165,8 @@ definition {
 
 	@priority = "4"
 	test ViewMultipleNotifications {
+		property portal.upstream = "quarantine";
+
 		Navigator.gotoPage(pageName = "Blogs Page");
 
 		Blogs.subscribePG();
@@ -325,7 +331,7 @@ definition {
 
 		Navigator.gotoPage(pageName = "Blogs Page");
 
-		BlogsEntry.viewEntry(
+		BlogsEntry.viewEntryPG(
 			entryContent = "Blogs Entry Content Edit",
 			entryTitle = "Blogs Entry Title Edit");
 	}
@@ -445,7 +451,7 @@ definition {
 
 		Notifications.navigateToContent(contentBody = "Blogs Entry Title");
 
-		BlogsEntry.viewEntry(
+		BlogsEntry.viewEntryPG(
 			entryContent = "Blogs Entry Content",
 			entryTitle = "Blogs Entry Title");
 
@@ -454,6 +460,8 @@ definition {
 
 	@priority = "4"
 	test ViewWebsiteNotificationForNewCommentViaBlogs {
+		property portal.upstream = "quarantine";
+
 		Navigator.gotoPage(pageName = "Blogs Page");
 
 		Blogs.addEntry(
@@ -463,8 +471,6 @@ definition {
 		BlogsNavigator.gotoEntryPG(
 			entryContent = "Blogs Entry Content",
 			entryTitle = "Blogs Entry Title");
-
-		AssertElementPresent.pauseAssertVisible(locator1 = "Comments#COMMENT_FIELD");
 
 		Comments.subscribePG();
 

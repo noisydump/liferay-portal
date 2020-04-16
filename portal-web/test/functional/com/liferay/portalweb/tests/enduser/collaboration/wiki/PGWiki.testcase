@@ -290,6 +290,8 @@ definition {
 
 	@priority = "4"
 	test AddFrontPageWithAttachments {
+		property portal.upstream = "quarantine";
+
 		Navigator.gotoPage(pageName = "Wiki Test Page");
 
 		WikiPage.addFrontPagePG(wikiPageContent = "Wiki FrontPage Content");
@@ -414,6 +416,8 @@ definition {
 
 	@priority = "5"
 	test AddPageWithChildPage {
+		property portal.acceptance = "true";
+
 		Navigator.gotoPage(pageName = "Wiki Test Page");
 
 		WikiNavigator.gotoAllPagesPG();
@@ -444,6 +448,7 @@ definition {
 
 	@priority = "5"
 	test AddPageWithHTMLFormat {
+		property portal.acceptance = "true";
 
 		var welcomeToLiferay = '''
 				<p><a href="http://www.liferay.com">Welcome to LIFERAY</a></p>
@@ -734,6 +739,8 @@ definition {
 
 	@priority = "5"
 	test DeletePage {
+		property portal.acceptance = "true";
+
 		Navigator.gotoPage(pageName = "Wiki Test Page");
 
 		WikiNavigator.gotoAllPagesPG();

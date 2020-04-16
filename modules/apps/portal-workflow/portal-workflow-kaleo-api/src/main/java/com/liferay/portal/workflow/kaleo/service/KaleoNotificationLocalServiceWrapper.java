@@ -53,15 +53,17 @@ public class KaleoNotificationLocalServiceWrapper
 	public com.liferay.portal.workflow.kaleo.model.KaleoNotification
 			addKaleoNotification(
 				String kaleoClassName, long kaleoClassPK,
-				long kaleoDefinitionVersionId, String kaleoNodeName,
+				long kaleoDefinitionId, long kaleoDefinitionVersionId,
+				String kaleoNodeName,
 				com.liferay.portal.workflow.kaleo.definition.Notification
 					notification,
 				com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _kaleoNotificationLocalService.addKaleoNotification(
-			kaleoClassName, kaleoClassPK, kaleoDefinitionVersionId,
-			kaleoNodeName, notification, serviceContext);
+			kaleoClassName, kaleoClassPK, kaleoDefinitionId,
+			kaleoDefinitionVersionId, kaleoNodeName, notification,
+			serviceContext);
 	}
 
 	/**
@@ -76,6 +78,18 @@ public class KaleoNotificationLocalServiceWrapper
 
 		return _kaleoNotificationLocalService.createKaleoNotification(
 			kaleoNotificationId);
+	}
+
+	/**
+	 * @throws PortalException
+	 */
+	@Override
+	public com.liferay.portal.kernel.model.PersistedModel createPersistedModel(
+			java.io.Serializable primaryKeyObj)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _kaleoNotificationLocalService.createPersistedModel(
+			primaryKeyObj);
 	}
 
 	@Override
@@ -326,6 +340,9 @@ public class KaleoNotificationLocalServiceWrapper
 		return _kaleoNotificationLocalService.getOSGiServiceIdentifier();
 	}
 
+	/**
+	 * @throws PortalException
+	 */
 	@Override
 	public com.liferay.portal.kernel.model.PersistedModel getPersistedModel(
 			java.io.Serializable primaryKeyObj)

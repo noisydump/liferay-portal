@@ -19,6 +19,7 @@ definition {
 			layoutName = "Web Content Display Page");
 
 		JSONLayout.addWidgetToPublicLayout(
+			column = "1",
 			groupName = "Test Site Name",
 			layoutName = "Web Content Display Page",
 			widgetName = "Web Content Display");
@@ -39,10 +40,8 @@ definition {
 	test AddAudioViaWebContent {
 		property custom.properties = "editor.wysiwyg.portal-impl.portlet.ddm.text_html.ftl=ckeditor${line.separator}xuggler.enabled=true";
 		property dummy.socket.proxy.disabled = "true";
-
-		// Ignore test from acceptance until LRQA-53524 resolved
-
-		property portal.acceptance = "false";
+		property portal.acceptance = "true";
+		property portal.upstream = "quarantine";
 		property test.name.skip.portal.instance = "WebContentDisplay#AddAudioViaWebContent";
 		property testray.component.names = "Training,Web Content Administration";
 
@@ -425,6 +424,7 @@ definition {
 
 	@priority = "5"
 	test AddWebContentViaAddContentPanel {
+		property portal.upstream = "quarantine";
 		property testray.component.names = "Web Content Display,Training";
 
 		JSONWebcontent.addWebContent(
@@ -573,7 +573,15 @@ definition {
 
 	@priority = "4"
 	test ChangeTemplate {
+		property test.name.skip.portal.instance = "WebContentDisplay#ChangeTemplate";
 		property testray.component.names = "Web Content Display";
+
+		ProductMenu.gotoPortlet(
+			category = "Configuration",
+			panel = "Control Panel",
+			portlet = "Search");
+
+		SearchAdministration.executeSearchActions(actionsDescription = "Reindex all search indexes.");
 
 		WebContentTemplates.openWebContentTemplatesAdmin(siteURLKey = "test-site-name");
 
@@ -854,6 +862,7 @@ definition {
 
 	@priority = "4"
 	test ViewAllSettingsEnabledWCDConfiguration {
+		property portal.upstream = "quarantine";
 		property test.name.skip.portal.instance = "WebContentDisplay#ViewAllSettingsEnabledWCDConfiguration";
 		property testray.component.names = "Web Content Display";
 
@@ -1112,9 +1121,13 @@ definition {
 		WebContent.viewPGViaWCD(webContentContent = "WC WebContent Content");
 	}
 
+	@ignore = "true"
 	@priority = "4"
 	test ViewWebContentDisplayPortletMessages {
+		property portal.upstream = "quarantine";
 		property testray.component.names = "Web Content Display";
+
+		// Quarantine for LRQA-57162
 
 		JSONWebcontent.addWebContent(
 			content = "WC WebContent Content",

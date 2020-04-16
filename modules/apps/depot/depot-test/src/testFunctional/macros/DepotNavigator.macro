@@ -27,7 +27,7 @@ definition {
 
 		AssertTextNotEquals(
 			locator1 = "ControlMenu#HEADING",
-			value1 = "Repositories");
+			value1 = "Asset Libraries");
 
 		if (IsElementPresent(locator1 = "ProductMenu#PRODUCT_MENU_CLOSED")) {
 			Click.clickNoSPARefresh(locator1 = "ProductMenu#TOGGLE");
@@ -80,7 +80,7 @@ definition {
 
 		Pause(locator1 = "3000");
 
-		Navigator.gotoNavItem(navItem = "Repositories");
+		Navigator.gotoNavItem(navItem = "Asset Libraries");
 
 		SiteSelector.selectSite(site = "${depotName}");
 	}
@@ -115,12 +115,26 @@ definition {
 			value1 = "Languages");
 	}
 
+	macro gotoShare {
+		LexiconEntry.changeDisplayStyle(displayStyle = "list");
+
+		AssertElementPresent.pauseAssertVisible(
+			key_dmDocumentTitle = "${dmDocumentTitle}",
+			locator1 = "DocumentsAndMedia#DESCRIPTIVE_LIST_DOCUMENT_VERTICAL_ELLIPSIS");
+
+		Click(
+			key_dmDocumentTitle = "${dmDocumentTitle}",
+			locator1 = "DocumentsAndMedia#DESCRIPTIVE_LIST_DOCUMENT_VERTICAL_ELLIPSIS");
+
+		MenuItem.click(menuItem = "Share");
+	}
+
 	macro gotoSites {
 		Click(
 			key_tab = "Sites",
 			locator1 = "NavTab#TAB_LINK");
 
-		AssertElementPresent(
+		AssertElementPresent.assertVisible(
 			key_title = "Connected Sites",
 			locator1 = "Header#H3_TITLE");
 	}

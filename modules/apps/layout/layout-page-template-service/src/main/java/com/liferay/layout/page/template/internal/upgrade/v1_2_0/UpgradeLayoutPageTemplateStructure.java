@@ -18,16 +18,12 @@ import com.liferay.fragment.model.FragmentEntryLink;
 import com.liferay.fragment.service.FragmentEntryLinkLocalService;
 import com.liferay.layout.page.template.constants.LayoutPageTemplateEntryTypeConstants;
 import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
+import com.liferay.layout.page.template.util.LayoutPageTemplateStructureHelperUtil;
 import com.liferay.petra.string.StringBundler;
-import com.liferay.petra.string.StringPool;
-import com.liferay.portal.kernel.dao.jdbc.DataAccess;
 import com.liferay.portal.kernel.dao.orm.ActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.RestrictionsFactoryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.json.JSONArray;
-import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
-import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Layout;
@@ -130,51 +126,7 @@ public class UpgradeLayoutPageTemplateStructure extends UpgradeProcess {
 			UpgradeLayoutPageTemplateStructure.class.getResourceAsStream(
 				"dependencies/update.sql"));
 
-		runSQLTemplateString(template, false, false);
-	}
-
-	private JSONObject _generateContentLayoutStructure(
-		List<FragmentEntryLink> fragmentEntryLinks) {
-
-		JSONArray structureJSONArray = JSONFactoryUtil.createJSONArray();
-
-		for (int i = 0; i < fragmentEntryLinks.size(); i++) {
-			FragmentEntryLink fragmentEntryLink = fragmentEntryLinks.get(i);
-
-			JSONObject columnJSONObject = JSONUtil.put(
-				"columnId", String.valueOf(i)
-			).put(
-				"fragmentEntryLinkIds",
-				JSONUtil.put(
-					String.valueOf(fragmentEntryLink.getFragmentEntryLinkId()))
-			).put(
-				"size", StringPool.BLANK
-			);
-
-			JSONObject structureJSONObject = JSONUtil.put(
-				"columns", JSONUtil.put(columnJSONObject)
-			).put(
-				"config", JSONFactoryUtil.createJSONObject()
-			).put(
-				"rowId", String.valueOf(i)
-			).put(
-				"type", "1"
-			);
-
-			structureJSONArray.put(structureJSONObject);
-		}
-
-		JSONObject jsonObject = JSONUtil.put(
-			"config", JSONFactoryUtil.createJSONObject()
-		).put(
-			"nextColumnId", fragmentEntryLinks.size()
-		).put(
-			"nextRowId", fragmentEntryLinks.size()
-		);
-
-		jsonObject.put("structure", structureJSONArray);
-
-		return jsonObject;
+		runSQLTemplateString(template, false);
 	}
 
 	private JSONObject _generateLayoutPageTemplateStructureData(
@@ -184,7 +136,8 @@ public class UpgradeLayoutPageTemplateStructure extends UpgradeProcess {
 			_fragmentEntryLinkLocalService.getFragmentEntryLinks(
 				groupId, classNameId, classPK);
 
-		return _generateContentLayoutStructure(fragmentEntryLinks);
+		return LayoutPageTemplateStructureHelperUtil.
+			generateContentLayoutStructure(fragmentEntryLinks);
 	}
 
 	private void _updateLayoutPageTemplateStructure(
@@ -203,11 +156,7 @@ public class UpgradeLayoutPageTemplateStructure extends UpgradeProcess {
 
 		String sql = sb.toString();
 
-		PreparedStatement ps = null;
-
-		try {
-			ps = connection.prepareStatement(sql);
-
+		try (PreparedStatement ps = connection.prepareStatement(sql)) {
 			ps.setString(1, PortalUUIDUtil.generate());
 			ps.setLong(2, increment());
 			ps.setLong(3, groupId);
@@ -226,9 +175,6 @@ public class UpgradeLayoutPageTemplateStructure extends UpgradeProcess {
 			if (_log.isDebugEnabled()) {
 				_log.debug(exception, exception);
 			}
-		}
-		finally {
-			DataAccess.cleanUp(ps);
 		}
 	}
 

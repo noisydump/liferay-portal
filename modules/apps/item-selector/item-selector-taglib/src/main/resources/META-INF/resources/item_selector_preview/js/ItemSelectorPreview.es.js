@@ -24,7 +24,7 @@ import Header from './Header.es';
 const KEY_CODE = {
 	ESC: 27,
 	LEFT: 37,
-	RIGTH: 39
+	RIGTH: 39,
 };
 
 const ItemSelectorPreview = ({
@@ -35,10 +35,11 @@ const ItemSelectorPreview = ({
 	headerTitle,
 	items,
 	uploadItemReturnType,
-	uploadItemURL
+	uploadItemURL,
 }) => {
 	const [currentItemIndex, setCurrentItemIndex] = useState(currentIndex);
 	const [itemList, setItemList] = useState(items);
+	const [reloadOnHide, setReloadOnHide] = useState(false);
 
 	const infoButtonRef = React.createRef();
 
@@ -73,7 +74,7 @@ const ItemSelectorPreview = ({
 				container: '.sidenav-container',
 				position: 'right',
 				typeMobile: 'fixed',
-				width: '320px'
+				width: '320px',
 			});
 		}
 	}, [infoButtonRef]);
@@ -81,6 +82,18 @@ const ItemSelectorPreview = ({
 	const close = useCallback(() => {
 		ReactDOM.unmountComponentAtNode(container);
 	}, [container]);
+
+	const handleClickBack = () => {
+		if (reloadOnHide) {
+			const frame = window.frameElement;
+
+			if (frame) {
+				frame.contentWindow.location.reload();
+			}
+		}
+
+		close();
+	};
 
 	const handleClickDone = () => {
 		handleSelectedItem(currentItem);
@@ -109,7 +122,7 @@ const ItemSelectorPreview = ({
 			{
 				dialog: {
 					destroyOnHide: true,
-					zIndex: editEntityBaseZIndex + 100
+					zIndex: editEntityBaseZIndex + 100,
 				},
 				id: 'Edit_' + itemTitle,
 				stack: false,
@@ -117,10 +130,11 @@ const ItemSelectorPreview = ({
 				uri: editItemURL,
 				urlParams: {
 					entityURL: currentItem.url,
+					saveFileEntryId: currentItem.fileentryid,
 					saveFileName: itemTitle,
 					saveParamName: 'imageSelectorFileName',
-					saveURL: uploadItemURL
-				}
+					saveURL: uploadItemURL,
+				},
 			},
 			handleSaveEdit
 		);
@@ -131,6 +145,7 @@ const ItemSelectorPreview = ({
 			setCurrentItemIndex(index => {
 				const lastIndex = itemList.length - 1;
 				const shouldResetIndex = index === lastIndex;
+
 				return shouldResetIndex ? 0 : index + 1;
 			});
 		}
@@ -141,6 +156,7 @@ const ItemSelectorPreview = ({
 			setCurrentItemIndex(index => {
 				const lastIndex = itemList.length - 1;
 				const shouldResetIndex = index === 0;
+
 				return shouldResetIndex ? lastIndex : index - 1;
 			});
 		}
@@ -148,7 +164,9 @@ const ItemSelectorPreview = ({
 
 	const handleOnKeyDown = useCallback(
 		e => {
-			if (!isMounted()) return;
+			if (!isMounted()) {
+				return;
+			}
 
 			switch (e.which || e.keyCode) {
 				case KEY_CODE.LEFT:
@@ -169,6 +187,11 @@ const ItemSelectorPreview = ({
 		[close, handleClickNext, handleClickPrevious, isMounted]
 	);
 
+	const updateItemList = newItemList => {
+		setItemList(newItemList);
+		setReloadOnHide(true);
+	};
+
 	const handleSaveEdit = e => {
 		const itemData = e.data.file;
 
@@ -178,28 +201,29 @@ const ItemSelectorPreview = ({
 					data: [
 						{
 							key: Liferay.Language.get('format'),
-							value: itemData.type
+							value: itemData.type,
 						},
 						{
 							key: Liferay.Language.get('name'),
-							value: itemData.title
-						}
+							value: itemData.title,
+						},
 					],
-					title: Liferay.Language.get('file-info')
-				}
-			]
+					title: Liferay.Language.get('file-info'),
+				},
+			],
 		};
 
 		const editedItem = {
+			fileentryid: currentItem.fileentryid,
 			metadata: JSON.stringify(editedItemMetadata),
 			returntype: uploadItemReturnType,
 			title: itemData.title,
 			url: itemData.url,
-			value: itemData.resolvedValue
+			value: itemData.resolvedValue,
 		};
 
 		const updatedItemList = [...itemList, editedItem];
-		setItemList(updatedItemList);
+		updateItemList(updatedItemList);
 		setCurrentItemIndex(updatedItemList.length - 1);
 	};
 
@@ -210,7 +234,7 @@ const ItemSelectorPreview = ({
 
 				newItemList[currentItemIndex] = {...currentItem, url, value};
 
-				setItemList(newItemList);
+				updateItemList(newItemList);
 			}
 		},
 		[currentItem, currentItemIndex, isMounted, itemList]
@@ -223,7 +247,7 @@ const ItemSelectorPreview = ({
 			<Header
 				disabledAddButton={!currentItem.url}
 				handleClickAdd={handleClickDone}
-				handleClickClose={close}
+				handleClickBack={handleClickBack}
 				handleClickEdit={handleClickEdit}
 				headerTitle={headerTitle}
 				infoButtonRef={infoButtonRef}
@@ -260,11 +284,11 @@ ItemSelectorPreview.propTypes = {
 			returntype: PropTypes.string.isRequired,
 			title: PropTypes.string.isRequired,
 			url: PropTypes.string,
-			value: PropTypes.oneOfType([PropTypes.string, PropTypes.object])
+			value: PropTypes.oneOfType([PropTypes.string, PropTypes.object]),
 		})
 	).isRequired,
 	uploadItemReturnType: PropTypes.string,
-	uploadItemURL: PropTypes.string
+	uploadItemURL: PropTypes.string,
 };
 
 export default ItemSelectorPreview;

@@ -221,44 +221,44 @@ public class OAuth2ScopeGrantPersistenceImpl
 		}
 
 		if (list == null) {
-			StringBundler query = null;
+			StringBundler sb = null;
 
 			if (orderByComparator != null) {
-				query = new StringBundler(
+				sb = new StringBundler(
 					3 + (orderByComparator.getOrderByFields().length * 2));
 			}
 			else {
-				query = new StringBundler(3);
+				sb = new StringBundler(3);
 			}
 
-			query.append(_SQL_SELECT_OAUTH2SCOPEGRANT_WHERE);
+			sb.append(_SQL_SELECT_OAUTH2SCOPEGRANT_WHERE);
 
-			query.append(
+			sb.append(
 				_FINDER_COLUMN_OAUTH2APPLICATIONSCOPEALIASESID_OAUTH2APPLICATIONSCOPEALIASESID_2);
 
 			if (orderByComparator != null) {
 				appendOrderByComparator(
-					query, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
+					sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
 			}
 			else {
-				query.append(OAuth2ScopeGrantModelImpl.ORDER_BY_JPQL);
+				sb.append(OAuth2ScopeGrantModelImpl.ORDER_BY_JPQL);
 			}
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
-				qPos.add(oAuth2ApplicationScopeAliasesId);
+				queryPos.add(oAuth2ApplicationScopeAliasesId);
 
 				list = (List<OAuth2ScopeGrant>)QueryUtil.list(
-					q, getDialect(), start, end);
+					query, getDialect(), start, end);
 
 				cacheResult(list);
 
@@ -303,16 +303,16 @@ public class OAuth2ScopeGrantPersistenceImpl
 			return oAuth2ScopeGrant;
 		}
 
-		StringBundler msg = new StringBundler(4);
+		StringBundler sb = new StringBundler(4);
 
-		msg.append(_NO_SUCH_ENTITY_WITH_KEY);
+		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
 
-		msg.append("oAuth2ApplicationScopeAliasesId=");
-		msg.append(oAuth2ApplicationScopeAliasesId);
+		sb.append("oAuth2ApplicationScopeAliasesId=");
+		sb.append(oAuth2ApplicationScopeAliasesId);
 
-		msg.append("}");
+		sb.append("}");
 
-		throw new NoSuchOAuth2ScopeGrantException(msg.toString());
+		throw new NoSuchOAuth2ScopeGrantException(sb.toString());
 	}
 
 	/**
@@ -359,16 +359,16 @@ public class OAuth2ScopeGrantPersistenceImpl
 			return oAuth2ScopeGrant;
 		}
 
-		StringBundler msg = new StringBundler(4);
+		StringBundler sb = new StringBundler(4);
 
-		msg.append(_NO_SUCH_ENTITY_WITH_KEY);
+		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
 
-		msg.append("oAuth2ApplicationScopeAliasesId=");
-		msg.append(oAuth2ApplicationScopeAliasesId);
+		sb.append("oAuth2ApplicationScopeAliasesId=");
+		sb.append(oAuth2ApplicationScopeAliasesId);
 
-		msg.append("}");
+		sb.append("}");
 
-		throw new NoSuchOAuth2ScopeGrantException(msg.toString());
+		throw new NoSuchOAuth2ScopeGrantException(sb.toString());
 	}
 
 	/**
@@ -452,20 +452,20 @@ public class OAuth2ScopeGrantPersistenceImpl
 		OrderByComparator<OAuth2ScopeGrant> orderByComparator,
 		boolean previous) {
 
-		StringBundler query = null;
+		StringBundler sb = null;
 
 		if (orderByComparator != null) {
-			query = new StringBundler(
+			sb = new StringBundler(
 				4 + (orderByComparator.getOrderByConditionFields().length * 3) +
 					(orderByComparator.getOrderByFields().length * 3));
 		}
 		else {
-			query = new StringBundler(3);
+			sb = new StringBundler(3);
 		}
 
-		query.append(_SQL_SELECT_OAUTH2SCOPEGRANT_WHERE);
+		sb.append(_SQL_SELECT_OAUTH2SCOPEGRANT_WHERE);
 
-		query.append(
+		sb.append(
 			_FINDER_COLUMN_OAUTH2APPLICATIONSCOPEALIASESID_OAUTH2APPLICATIONSCOPEALIASESID_2);
 
 		if (orderByComparator != null) {
@@ -473,82 +473,82 @@ public class OAuth2ScopeGrantPersistenceImpl
 				orderByComparator.getOrderByConditionFields();
 
 			if (orderByConditionFields.length > 0) {
-				query.append(WHERE_AND);
+				sb.append(WHERE_AND);
 			}
 
 			for (int i = 0; i < orderByConditionFields.length; i++) {
-				query.append(_ORDER_BY_ENTITY_ALIAS);
-				query.append(orderByConditionFields[i]);
+				sb.append(_ORDER_BY_ENTITY_ALIAS);
+				sb.append(orderByConditionFields[i]);
 
 				if ((i + 1) < orderByConditionFields.length) {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(WHERE_GREATER_THAN_HAS_NEXT);
+						sb.append(WHERE_GREATER_THAN_HAS_NEXT);
 					}
 					else {
-						query.append(WHERE_LESSER_THAN_HAS_NEXT);
+						sb.append(WHERE_LESSER_THAN_HAS_NEXT);
 					}
 				}
 				else {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(WHERE_GREATER_THAN);
+						sb.append(WHERE_GREATER_THAN);
 					}
 					else {
-						query.append(WHERE_LESSER_THAN);
+						sb.append(WHERE_LESSER_THAN);
 					}
 				}
 			}
 
-			query.append(ORDER_BY_CLAUSE);
+			sb.append(ORDER_BY_CLAUSE);
 
 			String[] orderByFields = orderByComparator.getOrderByFields();
 
 			for (int i = 0; i < orderByFields.length; i++) {
-				query.append(_ORDER_BY_ENTITY_ALIAS);
-				query.append(orderByFields[i]);
+				sb.append(_ORDER_BY_ENTITY_ALIAS);
+				sb.append(orderByFields[i]);
 
 				if ((i + 1) < orderByFields.length) {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(ORDER_BY_ASC_HAS_NEXT);
+						sb.append(ORDER_BY_ASC_HAS_NEXT);
 					}
 					else {
-						query.append(ORDER_BY_DESC_HAS_NEXT);
+						sb.append(ORDER_BY_DESC_HAS_NEXT);
 					}
 				}
 				else {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(ORDER_BY_ASC);
+						sb.append(ORDER_BY_ASC);
 					}
 					else {
-						query.append(ORDER_BY_DESC);
+						sb.append(ORDER_BY_DESC);
 					}
 				}
 			}
 		}
 		else {
-			query.append(OAuth2ScopeGrantModelImpl.ORDER_BY_JPQL);
+			sb.append(OAuth2ScopeGrantModelImpl.ORDER_BY_JPQL);
 		}
 
-		String sql = query.toString();
+		String sql = sb.toString();
 
-		Query q = session.createQuery(sql);
+		Query query = session.createQuery(sql);
 
-		q.setFirstResult(0);
-		q.setMaxResults(2);
+		query.setFirstResult(0);
+		query.setMaxResults(2);
 
-		QueryPos qPos = QueryPos.getInstance(q);
+		QueryPos queryPos = QueryPos.getInstance(query);
 
-		qPos.add(oAuth2ApplicationScopeAliasesId);
+		queryPos.add(oAuth2ApplicationScopeAliasesId);
 
 		if (orderByComparator != null) {
 			for (Object orderByConditionValue :
 					orderByComparator.getOrderByConditionValues(
 						oAuth2ScopeGrant)) {
 
-				qPos.add(orderByConditionValue);
+				queryPos.add(orderByConditionValue);
 			}
 		}
 
-		List<OAuth2ScopeGrant> list = q.list();
+		List<OAuth2ScopeGrant> list = query.list();
 
 		if (list.size() == 2) {
 			return list.get(1);
@@ -594,27 +594,27 @@ public class OAuth2ScopeGrantPersistenceImpl
 		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
 
 		if (count == null) {
-			StringBundler query = new StringBundler(2);
+			StringBundler sb = new StringBundler(2);
 
-			query.append(_SQL_COUNT_OAUTH2SCOPEGRANT_WHERE);
+			sb.append(_SQL_COUNT_OAUTH2SCOPEGRANT_WHERE);
 
-			query.append(
+			sb.append(
 				_FINDER_COLUMN_OAUTH2APPLICATIONSCOPEALIASESID_OAUTH2APPLICATIONSCOPEALIASESID_2);
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
-				qPos.add(oAuth2ApplicationScopeAliasesId);
+				queryPos.add(oAuth2ApplicationScopeAliasesId);
 
-				count = (Long)q.uniqueResult();
+				count = (Long)query.uniqueResult();
 
 				finderCache.putResult(finderPath, finderArgs, count);
 			}
@@ -660,32 +660,32 @@ public class OAuth2ScopeGrantPersistenceImpl
 			bundleSymbolicName, scope);
 
 		if (oAuth2ScopeGrant == null) {
-			StringBundler msg = new StringBundler(12);
+			StringBundler sb = new StringBundler(12);
 
-			msg.append(_NO_SUCH_ENTITY_WITH_KEY);
+			sb.append(_NO_SUCH_ENTITY_WITH_KEY);
 
-			msg.append("companyId=");
-			msg.append(companyId);
+			sb.append("companyId=");
+			sb.append(companyId);
 
-			msg.append(", oAuth2ApplicationScopeAliasesId=");
-			msg.append(oAuth2ApplicationScopeAliasesId);
+			sb.append(", oAuth2ApplicationScopeAliasesId=");
+			sb.append(oAuth2ApplicationScopeAliasesId);
 
-			msg.append(", applicationName=");
-			msg.append(applicationName);
+			sb.append(", applicationName=");
+			sb.append(applicationName);
 
-			msg.append(", bundleSymbolicName=");
-			msg.append(bundleSymbolicName);
+			sb.append(", bundleSymbolicName=");
+			sb.append(bundleSymbolicName);
 
-			msg.append(", scope=");
-			msg.append(scope);
+			sb.append(", scope=");
+			sb.append(scope);
 
-			msg.append("}");
+			sb.append("}");
 
 			if (_log.isDebugEnabled()) {
-				_log.debug(msg.toString());
+				_log.debug(sb.toString());
 			}
 
-			throw new NoSuchOAuth2ScopeGrantException(msg.toString());
+			throw new NoSuchOAuth2ScopeGrantException(sb.toString());
 		}
 
 		return oAuth2ScopeGrant;
@@ -766,76 +766,76 @@ public class OAuth2ScopeGrantPersistenceImpl
 		}
 
 		if (result == null) {
-			StringBundler query = new StringBundler(7);
+			StringBundler sb = new StringBundler(7);
 
-			query.append(_SQL_SELECT_OAUTH2SCOPEGRANT_WHERE);
+			sb.append(_SQL_SELECT_OAUTH2SCOPEGRANT_WHERE);
 
-			query.append(_FINDER_COLUMN_C_O_A_B_S_COMPANYID_2);
+			sb.append(_FINDER_COLUMN_C_O_A_B_S_COMPANYID_2);
 
-			query.append(
+			sb.append(
 				_FINDER_COLUMN_C_O_A_B_S_OAUTH2APPLICATIONSCOPEALIASESID_2);
 
 			boolean bindApplicationName = false;
 
 			if (applicationName.isEmpty()) {
-				query.append(_FINDER_COLUMN_C_O_A_B_S_APPLICATIONNAME_3);
+				sb.append(_FINDER_COLUMN_C_O_A_B_S_APPLICATIONNAME_3);
 			}
 			else {
 				bindApplicationName = true;
 
-				query.append(_FINDER_COLUMN_C_O_A_B_S_APPLICATIONNAME_2);
+				sb.append(_FINDER_COLUMN_C_O_A_B_S_APPLICATIONNAME_2);
 			}
 
 			boolean bindBundleSymbolicName = false;
 
 			if (bundleSymbolicName.isEmpty()) {
-				query.append(_FINDER_COLUMN_C_O_A_B_S_BUNDLESYMBOLICNAME_3);
+				sb.append(_FINDER_COLUMN_C_O_A_B_S_BUNDLESYMBOLICNAME_3);
 			}
 			else {
 				bindBundleSymbolicName = true;
 
-				query.append(_FINDER_COLUMN_C_O_A_B_S_BUNDLESYMBOLICNAME_2);
+				sb.append(_FINDER_COLUMN_C_O_A_B_S_BUNDLESYMBOLICNAME_2);
 			}
 
 			boolean bindScope = false;
 
 			if (scope.isEmpty()) {
-				query.append(_FINDER_COLUMN_C_O_A_B_S_SCOPE_3);
+				sb.append(_FINDER_COLUMN_C_O_A_B_S_SCOPE_3);
 			}
 			else {
 				bindScope = true;
 
-				query.append(_FINDER_COLUMN_C_O_A_B_S_SCOPE_2);
+				sb.append(_FINDER_COLUMN_C_O_A_B_S_SCOPE_2);
 			}
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
-				qPos.add(companyId);
+				queryPos.add(companyId);
 
-				qPos.add(oAuth2ApplicationScopeAliasesId);
+				queryPos.add(oAuth2ApplicationScopeAliasesId);
 
 				if (bindApplicationName) {
-					qPos.add(applicationName);
+					queryPos.add(applicationName);
 				}
 
 				if (bindBundleSymbolicName) {
-					qPos.add(bundleSymbolicName);
+					queryPos.add(bundleSymbolicName);
 				}
 
 				if (bindScope) {
-					qPos.add(scope);
+					queryPos.add(scope);
 				}
 
-				List<OAuth2ScopeGrant> list = q.list();
+				List<OAuth2ScopeGrant> list = query.list();
 
 				if (list.isEmpty()) {
 					if (useFinderCache) {
@@ -942,76 +942,76 @@ public class OAuth2ScopeGrantPersistenceImpl
 		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
 
 		if (count == null) {
-			StringBundler query = new StringBundler(6);
+			StringBundler sb = new StringBundler(6);
 
-			query.append(_SQL_COUNT_OAUTH2SCOPEGRANT_WHERE);
+			sb.append(_SQL_COUNT_OAUTH2SCOPEGRANT_WHERE);
 
-			query.append(_FINDER_COLUMN_C_O_A_B_S_COMPANYID_2);
+			sb.append(_FINDER_COLUMN_C_O_A_B_S_COMPANYID_2);
 
-			query.append(
+			sb.append(
 				_FINDER_COLUMN_C_O_A_B_S_OAUTH2APPLICATIONSCOPEALIASESID_2);
 
 			boolean bindApplicationName = false;
 
 			if (applicationName.isEmpty()) {
-				query.append(_FINDER_COLUMN_C_O_A_B_S_APPLICATIONNAME_3);
+				sb.append(_FINDER_COLUMN_C_O_A_B_S_APPLICATIONNAME_3);
 			}
 			else {
 				bindApplicationName = true;
 
-				query.append(_FINDER_COLUMN_C_O_A_B_S_APPLICATIONNAME_2);
+				sb.append(_FINDER_COLUMN_C_O_A_B_S_APPLICATIONNAME_2);
 			}
 
 			boolean bindBundleSymbolicName = false;
 
 			if (bundleSymbolicName.isEmpty()) {
-				query.append(_FINDER_COLUMN_C_O_A_B_S_BUNDLESYMBOLICNAME_3);
+				sb.append(_FINDER_COLUMN_C_O_A_B_S_BUNDLESYMBOLICNAME_3);
 			}
 			else {
 				bindBundleSymbolicName = true;
 
-				query.append(_FINDER_COLUMN_C_O_A_B_S_BUNDLESYMBOLICNAME_2);
+				sb.append(_FINDER_COLUMN_C_O_A_B_S_BUNDLESYMBOLICNAME_2);
 			}
 
 			boolean bindScope = false;
 
 			if (scope.isEmpty()) {
-				query.append(_FINDER_COLUMN_C_O_A_B_S_SCOPE_3);
+				sb.append(_FINDER_COLUMN_C_O_A_B_S_SCOPE_3);
 			}
 			else {
 				bindScope = true;
 
-				query.append(_FINDER_COLUMN_C_O_A_B_S_SCOPE_2);
+				sb.append(_FINDER_COLUMN_C_O_A_B_S_SCOPE_2);
 			}
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
-				qPos.add(companyId);
+				queryPos.add(companyId);
 
-				qPos.add(oAuth2ApplicationScopeAliasesId);
+				queryPos.add(oAuth2ApplicationScopeAliasesId);
 
 				if (bindApplicationName) {
-					qPos.add(applicationName);
+					queryPos.add(applicationName);
 				}
 
 				if (bindBundleSymbolicName) {
-					qPos.add(bundleSymbolicName);
+					queryPos.add(bundleSymbolicName);
 				}
 
 				if (bindScope) {
-					qPos.add(scope);
+					queryPos.add(scope);
 				}
 
-				count = (Long)q.uniqueResult();
+				count = (Long)query.uniqueResult();
 
 				finderCache.putResult(finderPath, finderArgs, count);
 			}
@@ -1580,19 +1580,19 @@ public class OAuth2ScopeGrantPersistenceImpl
 		}
 
 		if (list == null) {
-			StringBundler query = null;
+			StringBundler sb = null;
 			String sql = null;
 
 			if (orderByComparator != null) {
-				query = new StringBundler(
+				sb = new StringBundler(
 					2 + (orderByComparator.getOrderByFields().length * 2));
 
-				query.append(_SQL_SELECT_OAUTH2SCOPEGRANT);
+				sb.append(_SQL_SELECT_OAUTH2SCOPEGRANT);
 
 				appendOrderByComparator(
-					query, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
+					sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
 
-				sql = query.toString();
+				sql = sb.toString();
 			}
 			else {
 				sql = _SQL_SELECT_OAUTH2SCOPEGRANT;
@@ -1605,10 +1605,10 @@ public class OAuth2ScopeGrantPersistenceImpl
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
 				list = (List<OAuth2ScopeGrant>)QueryUtil.list(
-					q, getDialect(), start, end);
+					query, getDialect(), start, end);
 
 				cacheResult(list);
 
@@ -1658,9 +1658,9 @@ public class OAuth2ScopeGrantPersistenceImpl
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(_SQL_COUNT_OAUTH2SCOPEGRANT);
+				Query query = session.createQuery(_SQL_COUNT_OAUTH2SCOPEGRANT);
 
-				count = (Long)q.uniqueResult();
+				count = (Long)query.uniqueResult();
 
 				finderCache.putResult(
 					_finderPathCountAll, FINDER_ARGS_EMPTY, count);

@@ -19,13 +19,13 @@ import {
 	conjunctionShape,
 	criteriaShape,
 	propertyShape,
-	propertyTypesShape
+	propertyTypesShape,
 } from '../../utils/types.es';
 import {
 	insertAtIndex,
 	removeAtIndex,
 	replaceAtIndex,
-	sub
+	sub,
 } from '../../utils/utils.es';
 import CriteriaGroup from './CriteriaGroup.es';
 
@@ -55,7 +55,7 @@ class CriteriaBuilder extends Component {
 		supportedConjunctions: PropTypes.arrayOf(conjunctionShape),
 		supportedOperators: PropTypes.array,
 		supportedProperties: PropTypes.arrayOf(propertyShape).isRequired,
-		supportedPropertyTypes: propertyTypesShape
+		supportedPropertyTypes: propertyTypesShape,
 	};
 
 	/**
@@ -86,15 +86,17 @@ class CriteriaBuilder extends Component {
 								groupId: soloItem.groupId,
 								items: this._cleanCriteriaMapItems(
 									soloItem.items
-								)
+								),
 							};
-						} else {
+						}
+						else {
 							cleanedItem = root ? item : soloItem;
 						}
-					} else {
+					}
+					else {
 						cleanedItem = {
 							...item,
-							items: this._cleanCriteriaMapItems(item.items)
+							items: this._cleanCriteriaMapItems(item.items),
 						};
 					}
 				}
@@ -205,7 +207,7 @@ class CriteriaBuilder extends Component {
 							replace
 					  )
 					: item;
-			})
+			}),
 		};
 	};
 
@@ -220,7 +222,7 @@ class CriteriaBuilder extends Component {
 			supportedConjunctions,
 			supportedOperators,
 			supportedProperties,
-			supportedPropertyTypes
+			supportedPropertyTypes,
 		} = this.props;
 
 		return (

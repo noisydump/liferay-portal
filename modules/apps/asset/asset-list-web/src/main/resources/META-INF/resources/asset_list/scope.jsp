@@ -86,7 +86,7 @@ PortletURL portletURL = editAssetListDisplayContext.getPortletURL();
 			continue;
 		}
 
-		String onClick = "addRow('" + group.getGroupId() + "', '" + HtmlUtil.escapeJS(HtmlUtil.escape(group.getDescriptiveName(themeDisplay.getLocale()))) + "', '" + group.getScopeLabel(themeDisplay) + "');";
+		String onClick = "addRow('" + group.getGroupId() + "', '" + HtmlUtil.escapeJS(HtmlUtil.escape(group.getDescriptiveName(themeDisplay.getLocale()))) + "', '" + LanguageUtil.get(request, group.getScopeLabel(themeDisplay)) + "');";
 	%>
 
 		<liferay-ui:icon
@@ -102,7 +102,7 @@ PortletURL portletURL = editAssetListDisplayContext.getPortletURL();
 	<liferay-ui:icon
 		cssClass="highlited scope-selector"
 		id="selectManageableGroup"
-		message='<%= LanguageUtil.get(request, "other-site") + StringPool.TRIPLE_PERIOD %>'
+		message='<%= LanguageUtil.get(request, "other-site-or-asset-library") + StringPool.TRIPLE_PERIOD %>'
 		method="get"
 		url="javascript:;"
 	/>
@@ -140,7 +140,7 @@ PortletURL portletURL = editAssetListDisplayContext.getPortletURL();
 			Liferay.Util.selectEntity(
 				{
 					dialog: {
-						destroyOnHide: true
+						destroyOnHide: true,
 					},
 					eventName:
 						'<%= editAssetListDisplayContext.getSelectGroupEventName() %>',
@@ -148,7 +148,7 @@ PortletURL portletURL = editAssetListDisplayContext.getPortletURL();
 						'<%= editAssetListDisplayContext.getSelectGroupEventName() %>',
 					title: '<liferay-ui:message key="scopes" />',
 					uri:
-						'<%= editAssetListDisplayContext.getGroupItemSelectorURL() %>'
+						'<%= editAssetListDisplayContext.getGroupItemSelectorURL() %>',
 				},
 				function(event) {
 					var entityId = event.groupid;

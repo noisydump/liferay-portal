@@ -72,6 +72,13 @@ components:
                 Represents a keyword that describes content. Properties follow the
                 [keywords](https://schema.org/keywords) specification.
             properties:
+                actions:
+                    additionalProperties:
+                        additionalProperties:
+                            type: string
+                        type: object
+                    readOnly: true
+                    type: object
                 creator:
                     allOf:
                         - $ref: "#/components/schemas/Creator"
@@ -119,6 +126,13 @@ components:
                 Represents a category, which is a hierarchical classification that can be associated with particular
                 asset types. Properties follow the [category](https://schema.org/category) specification.
             properties:
+                actions:
+                    additionalProperties:
+                        additionalProperties:
+                            type: string
+                        type: object
+                    readOnly: true
+                    type: object
                 availableLanguages:
                     description:
                         A list of languages the category has a translation for.
@@ -194,6 +208,9 @@ components:
                             type: string
                     readOnly: true
                     type: object
+                taxonomyCategoryUsageCount:
+                    readOnly: true
+                    type: integer
                 viewableBy:
                     description:
                         A write-only property that specifies the category's default permissions.
@@ -208,6 +225,13 @@ components:
                 Represents a vocabulary, which is a grouping of categories for a specific purpose (e.g., classification,
                 sorting, etc.).
             properties:
+                actions:
+                    additionalProperties:
+                        additionalProperties:
+                            type: string
+                        type: object
+                    readOnly: true
+                    type: object
                 assetTypes:
                     description:
                         A list of asset types that can be associated with this vocabulary.
@@ -283,7 +307,7 @@ components:
             type: object
 info:
     description:
-        ""
+        "A Java client JAR is available for use with the group ID 'com.liferay', artifact ID 'com.liferay.headless.admin.taxonomy.client', and version '2.0.1'."
     license:
         name: "Apache 2.0"
         url: "http://www.apache.org/licenses/LICENSE-2.0.html"
@@ -291,6 +315,39 @@ info:
     version: v1.0
 openapi: 3.0.1
 paths:
+    "/keywords/ranked":
+        get:
+            operationId: getKeywordsRankedPage
+            parameters:
+                - in: query
+                  name: siteId
+                  schema:
+                      format: int64
+                      type: integer
+                - in: query
+                  name: page
+                  schema:
+                      type: integer
+                - in: query
+                  name: pageSize
+                  schema:
+                      type: integer
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/Keyword"
+                                type: array
+                        application/xml:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/Keyword"
+                                type: array
+                    description:
+                        ""
+            tags: ["Keyword"]
     "/keywords/{keywordId}":
         delete:
             description:
@@ -524,6 +581,39 @@ paths:
                     description:
                         ""
             tags: ["TaxonomyVocabulary"]
+    "/taxonomy-categories/ranked":
+        get:
+            operationId: getTaxonomyCategoryRankedPage
+            parameters:
+                - in: query
+                  name: siteId
+                  schema:
+                      format: int64
+                      type: integer
+                - in: query
+                  name: page
+                  schema:
+                      type: integer
+                - in: query
+                  name: pageSize
+                  schema:
+                      type: integer
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/TaxonomyCategory"
+                                type: array
+                        application/xml:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/TaxonomyCategory"
+                                type: array
+                    description:
+                        ""
+            tags: ["TaxonomyCategory"]
     "/taxonomy-categories/{parentTaxonomyCategoryId}/taxonomy-categories":
         get:
             description:

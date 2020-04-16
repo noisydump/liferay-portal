@@ -18,7 +18,7 @@ import ClayLoadingIndicator from '@clayui/loading-indicator';
 import classNames from 'classnames';
 import {useIsMounted} from 'frontend-js-react-web';
 import PropTypes from 'prop-types';
-import React, {useState, useRef} from 'react';
+import React, {useRef, useState} from 'react';
 
 import {sub} from './utils.es';
 
@@ -58,8 +58,8 @@ const ItemSelectorUrl = ({eventName}) => {
 		const eventData = {
 			data: {
 				returnType: 'URL',
-				value: url
-			}
+				value: url,
+			},
 		};
 
 		Liferay.Util.getOpener().Liferay.fire(eventName, eventData);
@@ -101,7 +101,7 @@ const ItemSelectorUrl = ({eventName}) => {
 					/>
 					<p className="form-text">
 						{sub(Liferay.Language.get('for-example-x'), [
-							'http://www.liferay.com/liferay.png'
+							'http://www.liferay.com/liferay.png',
 						])}
 					</p>
 				</ClayForm.Group>
@@ -115,7 +115,7 @@ const ItemSelectorUrl = ({eventName}) => {
 						className={classNames(
 							'aspect-ratio-item aspect-ratio-item-center-middle aspect-ratio-item-fluid aspect-ratio-item-vertical-fluid',
 							{
-								invisible: !loaded
+								invisible: !loaded,
 							}
 						)}
 						onError={handleImgPreviewError}
@@ -141,9 +141,7 @@ const ItemSelectorUrl = ({eventName}) => {
 };
 
 ItemSelectorUrl.propTypes = {
-	eventName: PropTypes.string.isRequired
+	eventName: PropTypes.string.isRequired,
 };
 
-export default function(props) {
-	return <ItemSelectorUrl {...props} />;
-}
+export default ItemSelectorUrl;

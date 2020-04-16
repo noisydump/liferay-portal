@@ -12,7 +12,7 @@
  * details.
  */
 
-import RuleList from '../../../src/main/resources/META-INF/resources/js/components/RuleList/RuleList.es';
+import RuleList from '../../../../src/main/resources/META-INF/resources/js/components/RuleList/RuleList.es';
 
 let component;
 
@@ -27,18 +27,18 @@ const pages = [
 						fields: [
 							{
 								fieldName: 'text1',
-								label: 'label text 1'
+								label: 'label text 1',
 							},
 							{
 								fieldName: 'text2',
-								label: 'label text 2'
-							}
-						]
-					}
-				]
-			}
-		]
-	}
+								label: 'label text 2',
+							},
+						],
+					},
+				],
+			},
+		],
+	},
 ];
 
 const configDefault = {
@@ -48,30 +48,67 @@ const configDefault = {
 			actions: [
 				{
 					action: 'require',
-					expression: '[x+2]',
 					label: 'label text 1',
-					target: 'text1'
-				}
+					target: 'text1',
+				},
 			],
 			conditions: [
 				{
 					operands: [
 						{
 							type: 'field',
-							value: 'text1'
+							value: 'text1',
 						},
 						{
 							type: 'value',
-							value: 'value 2'
-						}
+							value: 'value 2',
+						},
 					],
-					operator: 'equals-to'
-				}
+					operator: 'contains',
+				},
+				{
+					operands: [
+						{
+							type: 'field',
+							value: 'text1',
+						},
+						{
+							type: 'field',
+							value: 'text2',
+						},
+					],
+					operator: 'equals-to',
+				},
 			],
-			['logical-operator']: 'OR'
-		}
+			['logical-operator']: 'OR',
+		},
+		{
+			actions: [
+				{
+					action: 'show',
+					label: 'label text 2',
+					target: 'text2',
+				},
+			],
+			conditions: [
+				{
+					operands: [
+						{
+							type: 'field',
+							value: 'text1',
+						},
+						{
+							type: 'value',
+							value: 'value 3',
+						},
+					],
+					operator: 'not-equals-to',
+				},
+			],
+			['logical-operator']: 'AND',
+		},
 	],
-	spritemap
+	spritemap,
 };
 
 describe('RuleList', () => {
@@ -105,9 +142,15 @@ describe('RuleList', () => {
 			spritemap,
 			strings: {
 				emptyListText:
-					'there-are-no-rules-yet-click-on-plus-icon-below-to-add-the-first'
-			}
+					'there-are-no-rules-yet-click-on-plus-icon-below-to-add-the-first',
+			},
 		});
+
+		expect(component).toMatchSnapshot();
+	});
+
+	it('shows rule list', () => {
+		component = new RuleList(configDefault);
 
 		expect(component).toMatchSnapshot();
 	});

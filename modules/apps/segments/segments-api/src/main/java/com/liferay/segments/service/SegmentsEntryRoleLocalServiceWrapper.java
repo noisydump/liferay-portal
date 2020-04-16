@@ -58,6 +58,18 @@ public class SegmentsEntryRoleLocalServiceWrapper
 	}
 
 	/**
+	 * @throws PortalException
+	 */
+	@Override
+	public com.liferay.portal.kernel.model.PersistedModel createPersistedModel(
+			java.io.Serializable primaryKeyObj)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _segmentsEntryRoleLocalService.createPersistedModel(
+			primaryKeyObj);
+	}
+
+	/**
 	 * Creates a new segments entry role with the primary key. Does not add the segments entry role to the database.
 	 *
 	 * @param segmentsEntryRoleId the primary key for the new segments entry role
@@ -261,6 +273,9 @@ public class SegmentsEntryRoleLocalServiceWrapper
 		return _segmentsEntryRoleLocalService.getOSGiServiceIdentifier();
 	}
 
+	/**
+	 * @throws PortalException
+	 */
 	@Override
 	public com.liferay.portal.kernel.model.PersistedModel getPersistedModel(
 			java.io.Serializable primaryKeyObj)
@@ -345,6 +360,16 @@ public class SegmentsEntryRoleLocalServiceWrapper
 	public boolean hasSegmentEntryRole(long segmentsEntryId, long roleId) {
 		return _segmentsEntryRoleLocalService.hasSegmentEntryRole(
 			segmentsEntryId, roleId);
+	}
+
+	@Override
+	public void setSegmentsEntrySiteRoles(
+			long segmentsEntryId, long[] siteRoleIds,
+			com.liferay.portal.kernel.service.ServiceContext serviceContext)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		_segmentsEntryRoleLocalService.setSegmentsEntrySiteRoles(
+			segmentsEntryId, siteRoleIds, serviceContext);
 	}
 
 	/**

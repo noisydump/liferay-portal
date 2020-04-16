@@ -13,7 +13,7 @@
  */
 
 import {useModal} from '@clayui/modal';
-import React, {useState, useContext} from 'react';
+import React, {useContext, useState} from 'react';
 
 import EditCategoriesContext from './EditCategoriesContext.es';
 import EditCategoriesModal from './EditCategoriesModal.es';
@@ -31,7 +31,7 @@ function EditCategories(props) {
 	};
 
 	const {observer, onClose} = useModal({
-		onClose: handleOnClose
+		onClose: handleOnClose,
 	});
 
 	if (!Liferay.component(bridgeComponentId)) {
@@ -43,10 +43,10 @@ function EditCategories(props) {
 					setSelectAll(selectAll);
 					setFolderId(folderId);
 					setShowModal(true);
-				}
+				},
 			},
 			{
-				destroyOnNavigate: true
+				destroyOnNavigate: true,
 			}
 		);
 	}

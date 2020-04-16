@@ -19,6 +19,7 @@ definition {
 
 	@priority = "5"
 	test AddUserInheritedRolesAsSAMLAttributeStatements {
+		property portal.upstream = "quarantine";
 		property test.name.skip.portal.instance = "SAML#AddUserInheritedRolesAsSAMLAttributeStatements";
 
 		SAML.configureLiferaySAMLAsIdP(samlEntityID = "samlidp");
@@ -129,6 +130,7 @@ definition {
 		AssertConsoleTextPresent(value1 = "TestSiteRole");
 	}
 
+	@ignore = "true"
 	@priority = "4"
 	test AssertKeepAliveToKeepMySAMLSessionAlive {
 		property app.server.bundles.size = "2";
@@ -693,6 +695,7 @@ definition {
 	@priority = "4"
 	test ConfigureSAMLToImportUsersFromLDAP {
 		property apacheds.enabled = "true";
+		property portal.upstream = "quarantine";
 		property test.name.skip.portal.instance = "SAML#ConfigureSAMLToImportUsersFromLDAP";
 
 		SAML.configureLiferaySAMLAsIdP(samlEntityID = "samlidp");
@@ -1006,6 +1009,7 @@ definition {
 		User.viewLoggedOutPG();
 	}
 
+	@ignore = "true"
 	@priority = "4"
 	test ViewSingleLogoutAndForceAuthWithMultipleSPs {
 		property app.server.bundles.size = "2";
@@ -1201,6 +1205,7 @@ definition {
 	test ViewSPInitiatedSSOWithMultipleIdPsAndAssertRenderLoginPortletWithoutIdpsMatched {
 		property app.server.bundles.size = "2";
 		property databases.size = "2";
+		property portal.upstream = "quarantine";
 		property test.name.skip.portal.instance = "SAML#ViewSPInitiatedSSOWithMultipleIdPsAndAssertRenderLoginPortletWithoutIdpsMatched";
 
 		SAML.configureLiferaySAMLAsIdP(samlEntityID = "samlidp");

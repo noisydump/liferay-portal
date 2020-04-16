@@ -27,20 +27,36 @@ if (assetPublisherDisplayContext.isEnableTagBasedNavigation() && !assetPublisher
 <liferay-ui:success key='<%= AssetPublisherPortletKeys.ASSET_PUBLISHER + "requestProcessed" %>' message="your-request-completed-successfully" />
 
 <c:if test="<%= assetPublisherDisplayContext.isEnableSubscriptions() %>">
-	<div class="subscribe-action">
+	<div class="mb-4 subscribe-action">
+		<c:if test="<%= PortalUtil.isRSSFeedsEnabled() && assetPublisherDisplayContext.isEnableRSS() %>">
+			<liferay-portlet:resourceURL id="getRSS" varImpl="rssURL" />
+
+			<div class="btn-group-item">
+				<clay:link
+					elementClasses="btn btn-outline-borderless btn-outline-secondary btn-sm"
+					href="<%= rssURL.toString() %>"
+					icon="rss-full"
+					label='<%= LanguageUtil.get(request, "rss") %>'
+				/>
+			</div>
+
+			<liferay-util:html-top>
+				<link href="<%= HtmlUtil.escapeAttribute(rssURL.toString()) %>" rel="alternate" title="RSS" type="application/rss+xml" />
+			</liferay-util:html-top>
+		</c:if>
+
 		<c:if test="<%= assetPublisherDisplayContext.isSubscriptionEnabled() %>">
 			<c:choose>
-				<c:when test="<%= assetPublisherWebUtil.isSubscribed(themeDisplay.getCompanyId(), user.getUserId(), themeDisplay.getPlid(), portletDisplay.getId()) %>">
+				<c:when test="<%= assetPublisherWebHelper.isSubscribed(themeDisplay.getCompanyId(), user.getUserId(), themeDisplay.getPlid(), portletDisplay.getId()) %>">
 					<portlet:actionURL name="unsubscribe" var="unsubscribeURL">
 						<portlet:param name="redirect" value="<%= currentURL %>" />
 					</portlet:actionURL>
 
-					<liferay-ui:icon
-						label="<%= true %>"
-						linkCssClass="btn btn-secondary btn-sm mb-4"
-						markupView="lexicon"
-						message="unsubscribe"
-						url="<%= unsubscribeURL %>"
+					<clay:link
+						buttonStyle="secondary"
+						elementClasses="btn-sm"
+						href="<%= unsubscribeURL %>"
+						label='<%= LanguageUtil.get(request, "unsubscribe") %>'
 					/>
 				</c:when>
 				<c:otherwise>
@@ -48,23 +64,14 @@ if (assetPublisherDisplayContext.isEnableTagBasedNavigation() && !assetPublisher
 						<portlet:param name="redirect" value="<%= currentURL %>" />
 					</portlet:actionURL>
 
-					<liferay-ui:icon
-						label="<%= true %>"
-						linkCssClass="btn btn-secondary btn-sm mb-4"
-						markupView="lexicon"
-						message="subscribe"
-						url="<%= subscribeURL %>"
+					<clay:link
+						buttonStyle="secondary"
+						elementClasses="btn-sm"
+						href="<%= subscribeURL %>"
+						label='<%= LanguageUtil.get(request, "subscribe") %>'
 					/>
 				</c:otherwise>
 			</c:choose>
-		</c:if>
-
-		<c:if test="<%= PortalUtil.isRSSFeedsEnabled() && assetPublisherDisplayContext.isEnableRSS() %>">
-			<liferay-portlet:resourceURL id="getRSS" varImpl="rssURL" />
-
-			<liferay-rss:rss
-				resourceURL="<%= rssURL %>"
-			/>
 		</c:if>
 	</div>
 </c:if>
@@ -99,7 +106,7 @@ if (assetPublisherDisplayContext.isEnableTagBasedNavigation() && !assetPublisher
 			Map<Long, List<AssetPublisherAddItemHolder>> scopeAssetPublisherAddItemHolders = assetPublisherDisplayContext.getScopeAssetPublisherAddItemHolders(1);
 			%>
 
-			<c:if test="<%= MapUtil.isEmpty(scopeAssetPublisherAddItemHolders) && !((assetPublisherDisplayContext.getAssetCategoryId() > 0) || Validator.isNotNull(assetPublisherDisplayContext.getAssetTagName())) %>">
+			<c:if test="<%= portletName.equals(AssetPublisherPortletKeys.RELATED_ASSETS) || (MapUtil.isEmpty(scopeAssetPublisherAddItemHolders) && !((assetPublisherDisplayContext.getAssetCategoryId() > 0) || Validator.isNotNull(assetPublisherDisplayContext.getAssetTagName()))) %>">
 
 				<%
 				renderRequest.setAttribute(WebKeys.PORTLET_CONFIGURATOR_VISIBILITY, Boolean.TRUE);
@@ -115,7 +122,7 @@ if (assetPublisherDisplayContext.isEnableTagBasedNavigation() && !assetPublisher
 						</div>
 
 						<div>
-							<aui:a href="javascript:;" onClick="<%= portletDisplay.getURLConfigurationJS() %>"><liferay-ui:message key="select-a-content-set-to-make-it-visible" /></aui:a>
+							<aui:a href="javascript:;" onClick="<%= portletDisplay.getURLConfigurationJS() %>"><liferay-ui:message key="select-a-collection-to-make-it-visible" /></aui:a>
 						</div>
 					</c:when>
 					<c:when test="<%= !portletName.equals(AssetPublisherPortletKeys.RELATED_ASSETS) %>">

@@ -17,17 +17,24 @@ import {createContext} from 'react';
 
 import {
 	ADD_CUSTOM_OBJECT_FIELD,
+	ADD_DATA_LAYOUT_RULE,
 	DELETE_DATA_DEFINITION_FIELD,
 	DELETE_DATA_LAYOUT_FIELD,
+	DELETE_DATA_LAYOUT_RULE,
 	EDIT_CUSTOM_OBJECT_FIELD,
+	SWITCH_SIDEBAR_PANEL,
+	UPDATE_CONFIG,
 	UPDATE_DATA_DEFINITION,
-	UPDATE_DATA_LAYOUT_NAME,
 	UPDATE_DATA_LAYOUT,
+	UPDATE_DATA_LAYOUT_NAME,
+	UPDATE_DATA_LAYOUT_RULE,
+	UPDATE_EDITING_LANGUAGE_ID,
+	UPDATE_FIELDSETS,
 	UPDATE_FIELD_TYPES,
 	UPDATE_FOCUSED_CUSTOM_OBJECT_FIELD,
 	UPDATE_FOCUSED_FIELD,
 	UPDATE_IDS,
-	UPDATE_PAGES
+	UPDATE_PAGES,
 } from './actions.es';
 import * as DataLayoutVisitor from './utils/dataLayoutVisitor.es';
 import generateDataDefinitionFieldName from './utils/generateDataDefinitionFieldName.es';
@@ -35,37 +42,54 @@ import generateDataDefinitionFieldName from './utils/generateDataDefinitionField
 const AppContext = createContext();
 
 const initialState = {
+	config: {
+		allowFieldSets: false,
+		allowRules: false,
+		disabledProperties: [],
+		disabledTabs: [],
+		multiPage: true,
+		ruleSettings: {},
+		unimplementedProperties: [],
+	},
 	dataDefinition: {
 		dataDefinitionFields: [],
-		name: {}
+		name: {},
 	},
 	dataDefinitionId: 0,
 	dataLayout: {
 		dataLayoutPages: [],
+		dataRules: [],
 		name: {},
-		paginationMode: 'wizard'
+		paginationMode: 'wizard',
 	},
 	dataLayoutId: 0,
+	editingLanguageId: themeDisplay.getLanguageId(),
+	fieldSets: [],
 	fieldTypes: [],
 	focusedCustomObjectField: {},
-	focusedField: {}
+	focusedField: {},
+	sidebarOpen: true,
+	sidebarPanelId: 'fields',
+	spritemap: `${Liferay.ThemeDisplay.getPathThemeImages()}/lexicon/icons.svg`,
 };
 
 const addCustomObjectField = ({
 	dataDefinition,
 	dataLayoutBuilder,
 	fieldTypeName,
-	fieldTypes
+	fieldTypes,
 }) => {
 	const fieldType = fieldTypes.find(({name}) => name === fieldTypeName);
-	const dataDefinitionField = dataLayoutBuilder.getDefinitionField(fieldType);
+	const dataDefinitionField = dataLayoutBuilder.getDataDefinitionField(
+		fieldType
+	);
 
 	return {
 		...dataDefinitionField,
 		label: {
-			[themeDisplay.getLanguageId()]: fieldType.label
+			[themeDisplay.getLanguageId()]: fieldType.label,
 		},
-		name: generateDataDefinitionFieldName(dataDefinition, fieldType.label)
+		name: generateDataDefinitionFieldName(dataDefinition, fieldType.label),
 	};
 };
 
@@ -74,7 +98,7 @@ const deleteDataDefinitionField = (dataDefinition, fieldName) => {
 		...dataDefinition,
 		dataDefinitionFields: dataDefinition.dataDefinitionFields.filter(
 			field => field.name !== fieldName
-		)
+		),
 	};
 };
 
@@ -84,14 +108,14 @@ const deleteDataLayoutField = (dataLayout, fieldName) => {
 		dataLayoutPages: DataLayoutVisitor.deleteField(
 			dataLayout.dataLayoutPages,
 			fieldName
-		)
+		),
 	};
 };
 
 const editFocusedCustomObjectField = ({
 	focusedCustomObjectField,
 	propertyName,
-	propertyValue
+	propertyValue,
 }) => {
 	let localizableProperty = false;
 	const {settingsContext} = focusedCustomObjectField;
@@ -108,26 +132,26 @@ const editFocusedCustomObjectField = ({
 					...field,
 					localizedValue: {
 						...field.localizedValue,
-						[themeDisplay.getLanguageId()]: propertyValue
+						[themeDisplay.getLanguageId()]: propertyValue,
 					},
-					value: propertyValue
+					value: propertyValue,
 				};
 			}
 
 			return field;
-		})
+		}),
 	};
 
 	if (localizableProperty) {
 		propertyValue = {
-			[themeDisplay.getLanguageId()]: propertyValue
+			[themeDisplay.getLanguageId()]: propertyValue,
 		};
 	}
 
 	return {
 		...focusedCustomObjectField,
 		[propertyName]: propertyValue,
-		settingsContext: newSettingsContext
+		settingsContext: newSettingsContext,
 	};
 };
 
@@ -145,7 +169,7 @@ const setDataDefinitionFields = (
 	const newFields = [];
 
 	visitor.mapFields(field => {
-		const definitionField = dataLayoutBuilder.getDefinitionField(field);
+		const definitionField = dataLayoutBuilder.getDataDefinitionField(field);
 
 		newFields.push(definitionField);
 	});
@@ -161,7 +185,7 @@ const setDataDefinitionFields = (
 
 const setDataLayout = dataLayoutBuilder => {
 	const {pages} = dataLayoutBuilder.getStore();
-	const {layout} = dataLayoutBuilder.getDefinitionAndLayout(pages);
+	const {layout} = dataLayoutBuilder.getDataDefinitionAndDataLayout(pages);
 
 	return layout;
 };
@@ -176,7 +200,7 @@ const createReducer = dataLayoutBuilder => {
 					dataDefinition,
 					dataLayoutBuilder,
 					fieldTypeName,
-					fieldTypes
+					fieldTypes,
 				});
 
 				return {
@@ -185,15 +209,31 @@ const createReducer = dataLayoutBuilder => {
 						...dataDefinition,
 						dataDefinitionFields: [
 							...dataDefinition.dataDefinitionFields,
-							newCustomObjectField
-						]
+							newCustomObjectField,
+						],
 					},
 					focusedCustomObjectField: {
 						...newCustomObjectField,
-						settingsContext: dataLayoutBuilder.getFieldSettingsContext(
+						settingsContext: dataLayoutBuilder.getDDMFormFieldSettingsContext(
 							newCustomObjectField
-						)
-					}
+						),
+					},
+				};
+			}
+			case ADD_DATA_LAYOUT_RULE: {
+				let {dataRule} = action.payload;
+				const {
+					dataLayout: {dataRules},
+				} = state;
+
+				dataRule = DataLayoutVisitor.normalizeLogicalOperator(dataRule);
+
+				return {
+					...state,
+					dataLayout: {
+						...state.dataLayout,
+						dataRules: dataRules.concat(dataRule),
+					},
 				};
 			}
 			case DELETE_DATA_DEFINITION_FIELD: {
@@ -205,7 +245,7 @@ const createReducer = dataLayoutBuilder => {
 					dataDefinition: deleteDataDefinitionField(
 						dataDefinition,
 						fieldName
-					)
+					),
 				};
 			}
 			case DELETE_DATA_LAYOUT_FIELD: {
@@ -214,7 +254,24 @@ const createReducer = dataLayoutBuilder => {
 
 				return {
 					...state,
-					dataLayout: deleteDataLayoutField(dataLayout, fieldName)
+					dataLayout: deleteDataLayoutField(dataLayout, fieldName),
+				};
+			}
+			case DELETE_DATA_LAYOUT_RULE: {
+				const {ruleEditedIndex} = action.payload;
+
+				const {
+					dataLayout: {dataRules},
+				} = state;
+
+				return {
+					...state,
+					dataLayout: {
+						...state.dataLayout,
+						dataRules: dataRules.filter(
+							rule => rule.ruleEditedIndex !== ruleEditedIndex
+						),
+					},
 				};
 			}
 			case EDIT_CUSTOM_OBJECT_FIELD: {
@@ -222,7 +279,7 @@ const createReducer = dataLayoutBuilder => {
 				const editedFocusedCustomObjectField = editFocusedCustomObjectField(
 					{
 						...action.payload,
-						focusedCustomObjectField
+						focusedCustomObjectField,
 					}
 				);
 				const {settingsContext} = editedFocusedCustomObjectField;
@@ -237,19 +294,28 @@ const createReducer = dataLayoutBuilder => {
 									dataDefinitionField.name ===
 									focusedCustomObjectField.name
 								) {
-									return dataLayoutBuilder.getDefinitionField(
+									return dataLayoutBuilder.getDataDefinitionField(
 										editedFocusedCustomObjectField
 									);
 								}
 
 								return dataDefinitionField;
 							}
-						)
+						),
 					},
 					focusedCustomObjectField: {
 						...editedFocusedCustomObjectField,
-						settingsContext
-					}
+						settingsContext,
+					},
+				};
+			}
+			case SWITCH_SIDEBAR_PANEL: {
+				const {sidebarOpen, sidebarPanelId} = action.payload;
+
+				return {
+					...state,
+					sidebarOpen,
+					sidebarPanelId,
 				};
 			}
 			case UPDATE_DATA_DEFINITION: {
@@ -259,8 +325,8 @@ const createReducer = dataLayoutBuilder => {
 					...state,
 					dataDefinition: {
 						...state.dataDefinition,
-						...dataDefinition
-					}
+						...dataDefinition,
+					},
 				};
 			}
 			case UPDATE_DATA_LAYOUT: {
@@ -270,8 +336,8 @@ const createReducer = dataLayoutBuilder => {
 					...state,
 					dataLayout: {
 						...state.dataLayout,
-						...dataLayout
-					}
+						...dataLayout,
+					},
 				};
 			}
 			case UPDATE_DATA_LAYOUT_NAME: {
@@ -281,8 +347,39 @@ const createReducer = dataLayoutBuilder => {
 					...state,
 					dataLayout: {
 						...state.dataLayout,
-						name
-					}
+						name,
+					},
+				};
+			}
+			case UPDATE_DATA_LAYOUT_RULE: {
+				let {dataRule} = action.payload;
+				const {
+					dataLayout: {dataRules},
+				} = state;
+
+				dataRule = DataLayoutVisitor.normalizeLogicalOperator(dataRule);
+
+				return {
+					...state,
+					dataLayout: {
+						...state.dataLayout,
+						dataRules: dataRules.map(rule => {
+							if (
+								rule.ruleEditedIndex ===
+								dataRule.ruleEditedIndex
+							) {
+								return dataRule;
+							}
+
+							return rule;
+						}),
+					},
+				};
+			}
+			case UPDATE_EDITING_LANGUAGE_ID: {
+				return {
+					...state,
+					editingLanguageId: action.payload,
 				};
 			}
 			case UPDATE_FIELD_TYPES: {
@@ -290,7 +387,15 @@ const createReducer = dataLayoutBuilder => {
 
 				return {
 					...state,
-					fieldTypes: fieldTypes.filter(({system}) => !system)
+					fieldTypes,
+				};
+			}
+			case UPDATE_FIELDSETS: {
+				const {fieldSets} = action.payload;
+
+				return {
+					...state,
+					fieldSets,
 				};
 			}
 			case UPDATE_FOCUSED_CUSTOM_OBJECT_FIELD: {
@@ -300,21 +405,21 @@ const createReducer = dataLayoutBuilder => {
 				if (Object.keys(dataDefinitionField).length > 0) {
 					focusedCustomObjectField = {
 						...dataDefinitionField,
-						settingsContext: dataLayoutBuilder.getFieldSettingsContext(
+						settingsContext: dataLayoutBuilder.getDDMFormFieldSettingsContext(
 							dataDefinitionField
-						)
+						),
 					};
 
 					return {
 						...state,
 						focusedCustomObjectField,
-						focusedField: {}
+						focusedField: {},
 					};
 				}
 
 				return {
 					...state,
-					focusedCustomObjectField: {}
+					focusedCustomObjectField: {},
 				};
 			}
 			case UPDATE_FOCUSED_FIELD: {
@@ -324,13 +429,27 @@ const createReducer = dataLayoutBuilder => {
 					return {
 						...state,
 						focusedCustomObjectField: {},
-						focusedField
+						focusedField: {
+							...focusedField,
+							settingsContext: {
+								...focusedField.settingsContext,
+								editingLanguageId: state.editingLanguageId,
+							},
+						},
 					};
 				}
 
 				return {
 					...state,
-					focusedField: {}
+					focusedField: {},
+				};
+			}
+			case UPDATE_CONFIG: {
+				const {config} = action.payload;
+
+				return {
+					...state,
+					config: config || state.config,
 				};
 			}
 			case UPDATE_IDS: {
@@ -339,7 +458,7 @@ const createReducer = dataLayoutBuilder => {
 				return {
 					...state,
 					dataDefinitionId,
-					dataLayoutId
+					dataLayoutId,
 				};
 			}
 			case UPDATE_PAGES: {
@@ -353,12 +472,12 @@ const createReducer = dataLayoutBuilder => {
 							dataLayoutBuilder,
 							dataDefinition,
 							dataLayout
-						)
+						),
 					},
 					dataLayout: {
 						...dataLayout,
-						...setDataLayout(dataLayoutBuilder)
-					}
+						...setDataLayout(dataLayoutBuilder),
+					},
 				};
 			}
 			default:

@@ -30,24 +30,24 @@ AUI.add(
 		var Blogs = A.Component.create({
 			ATTRS: {
 				constants: {
-					validator: Lang.isObject
+					validator: Lang.isObject,
 				},
 
 				descriptionLength: {
 					validator: Lang.isNumber,
-					value: 400
+					value: 400,
 				},
 
 				editEntryURL: {
-					validator: Lang.isString
+					validator: Lang.isString,
 				},
 
 				entry: {
-					validator: Lang.isObject
+					validator: Lang.isObject,
 				},
 
 				saveInterval: {
-					value: 30000
+					value: 30000,
 				},
 
 				strings: {
@@ -68,9 +68,9 @@ AUI.add(
 						),
 						titleRequiredAtPublish: Liferay.Language.get(
 							'this-field-is-required-to-publish-the-entry'
-						)
-					}
-				}
+						),
+					},
+				},
 			},
 
 			AUGMENTS: [Liferay.PortletBase],
@@ -98,7 +98,7 @@ AUI.add(
 					var strings = instance.get('strings');
 
 					form.addRule(
-						instance.ns('titleEditor'),
+						instance.one('#title'),
 						'required',
 						strings.titleRequiredAtPublish
 					);
@@ -109,7 +109,7 @@ AUI.add(
 
 					var form = Liferay.Form.get(instance.ns('fm'));
 
-					form.removeRule(instance.ns('titleEditor'), 'required');
+					form.removeRule(instance.one('#title'), 'required');
 				},
 
 				_bindUI() {
@@ -129,7 +129,7 @@ AUI.add(
 							['coverImageUploaded', 'coverImageSelected'],
 							instance._showCaption,
 							instance
-						)
+						),
 					];
 
 					var publishButton = instance.one('#publishButton');
@@ -216,7 +216,8 @@ AUI.add(
 
 							instance._saveEntry(draft, ajax);
 						}
-					} else {
+					}
+					else {
 						instance._saveEntry(draft, ajax);
 					}
 				},
@@ -260,7 +261,8 @@ AUI.add(
 							'picture'
 						) {
 							finalImages.push(currentImage.parentElement);
-						} else {
+						}
+						else {
 							finalImages.push(currentImage);
 						}
 					}
@@ -321,15 +323,14 @@ AUI.add(
 					if (instance._automaticURL()) {
 						instance._lastCustomURL = urlTitleInput.val();
 
-						var title = window[
-							instance.ns('titleEditor')
-						].getText();
+						var title = instance.one('#title').val();
 
 						instance.updateFriendlyURL(title);
 
 						Liferay.Util.toggleDisabled(urlTitleInput, true);
 						Liferay.Util.toggleDisabled(urlTitleInputLabel, true);
-					} else {
+					}
+					else {
 						urlTitleInput.val(
 							instance._lastCustomURL || urlTitleInput.val()
 						);
@@ -364,10 +365,8 @@ AUI.add(
 					var coverImageCaption = window[
 						instance.ns('coverImageCaptionEditor')
 					].getHTML();
-					var subtitle = window[
-						instance.ns('subtitleEditor')
-					].getHTML();
-					var title = window[instance.ns('titleEditor')].getText();
+					var subtitle = instance.one('#subtitle').val();
+					var title = instance.one('#title').val();
 
 					var automaticURL = instance
 						.one(
@@ -449,7 +448,7 @@ AUI.add(
 								subtitle,
 								title,
 								urlTitle,
-								workflowAction: constants.ACTION_SAVE_DRAFT
+								workflowAction: constants.ACTION_SAVE_DRAFT,
 							});
 
 							var customAttributes = form.all(
@@ -471,7 +470,7 @@ AUI.add(
 
 							Liferay.Util.fetch(instance.get('editEntryURL'), {
 								body,
-								method: 'POST'
+								method: 'POST',
 							})
 								.then(response => {
 									return response.json();
@@ -514,7 +513,8 @@ AUI.add(
 
 											instance._updateStatus(now);
 										}
-									} else {
+									}
+									else {
 										saveStatus.hide();
 									}
 
@@ -529,7 +529,8 @@ AUI.add(
 									);
 								});
 						}
-					} else {
+					}
+					else {
 						instance
 							.one('#' + constants.CMD)
 							.val(
@@ -542,8 +543,6 @@ AUI.add(
 						instance
 							.one('#coverImageCaption')
 							.val(coverImageCaption);
-						instance.one('#subtitle').val(subtitle);
-						instance.one('#title').val(title);
 						instance
 							.one('#workflowAction')
 							.val(
@@ -644,7 +643,8 @@ AUI.add(
 									}
 
 									el.removeAttribute(attributeDataImageId);
-								} else {
+								}
+								else {
 									el.replace(finalContentImages[i]);
 								}
 							}
@@ -741,7 +741,8 @@ AUI.add(
 						);
 
 						form.addRule(instance.ns('description'), 'required');
-					} else {
+					}
+					else {
 						Liferay.Util.toggleDisabled(descriptionNode, true);
 						Liferay.Util.toggleDisabled(descriptionLabelNode, true);
 
@@ -767,14 +768,14 @@ AUI.add(
 					}
 
 					instance._originalFriendlyURLChanged = true;
-				}
-			}
+				},
+			},
 		});
 
 		Liferay.Blogs = Blogs;
 	},
 	'',
 	{
-		requires: ['aui-base', 'liferay-form']
+		requires: ['aui-base', 'liferay-form'],
 	}
 );

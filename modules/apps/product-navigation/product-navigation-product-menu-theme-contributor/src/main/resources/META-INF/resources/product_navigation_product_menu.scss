@@ -2,29 +2,20 @@
 
 @import 'variables';
 
-body {
-	&.open #wrapper {
-		@include media-breakpoint-up(sm) {
+#wrapper,
+.control-menu-container {
+	@include media-breakpoint-up(sm) {
+		body.sidenav-transition & {
+			@include transition(padding 0.5s ease);
+		}
+
+		body.open & {
 			padding-left: $product-menu-width;
 		}
-	}
 
-	&.open .control-menu,
-	&.open .affix {
-		@include media-breakpoint-up(sm) {
-			left: $product-menu-width;
+		#wrapper & {
+			padding-left: 0;
 		}
-	}
-
-	&.open,
-	&.sidenav-transition {
-		@include media-breakpoint-up(sm) {
-			overflow-x: hidden;
-		}
-	}
-
-	&.sidenav-transition #wrapper {
-		@include transition(padding 0.5s ease);
 	}
 }
 
@@ -344,7 +335,6 @@ body {
 	.panel-header,
 	.panel-heading {
 		border-bottom-width: 1px;
-		font-size: inherit;
 		line-height: 1.5;
 		position: relative;
 

@@ -120,12 +120,6 @@
 			<property name="description" value="Checks that string literals are not used with == or !=." />
 			<property name="documentationLocation" value="config_coding.html#StringLiteralEquality" />
 		</module>
-		<module name="TypeNameCheck">
-			<property name="description" value="Checks that type names conform to a specified pattern." />
-			<property name="documentationLocation" value="config_naming.html#TypeName" />
-			<property name="format" value="^[A-Z][_a-zA-Z0-9]*" />
-			<message key="name.invalidPattern" value="Class, interface, enum or annotation ''{0}'' must match pattern ''{1}''" />
-		</module>
 		<module name="UnnecessaryParenthesesCheck">
 			<property name="description" value="Checks if unnecessary parentheses are used in a statement or expression." />
 			<property name="documentationLocation" value="config_coding.html#UnnecessaryParentheses" />
@@ -173,13 +167,10 @@
 			<message key="contraction.avoid" value="Avoid using contraction ''{0}''" />
 		</module>
 		<module name="com.liferay.source.formatter.checkstyle.checks.ExceptionMessageCheck">
-			<message key="message.incorrect" value="Incorrect exception message. See https://github.com/liferay/liferay-portal/blob/master/modules/util/source-formatter/documentation/phrase_vs_sentence.markdown" />
+			<message key="message.incorrect" value="Incorrect exception message" />
 		</module>
 		<module name="com.liferay.source.formatter.checkstyle.checks.FactoryCheck">
 			<message key="factory.use" value="Use ''{0}'' to create new instance of ''{1}''" />
-		</module>
-		<module name="com.liferay.source.formatter.checkstyle.checks.IfStatementCheck">
-			<message key="if.statements.combine" value="Combine if-statements" />
 		</module>
 		<module name="com.liferay.source.formatter.checkstyle.checks.InstanceofOrderCheck">
 			<message key="instanceof.order" value="''{0}'' should come before ''{1}''" />
@@ -190,10 +181,10 @@
 		</module>
 		<module name="com.liferay.source.formatter.checkstyle.checks.JSONUtilCheck">
 			<message key="json.util.put.all.use" value="Use ''JSONUtil.putAll'' instead of chaining on ''JSONUtil.put''" />
-			<message key="json.util.put.use" value="Combine calls ''{0}'' ({1}) and ''{2}'' ({3}) into single call ''{4}''. See https://github.com/liferay/liferay-portal/blob/master/modules/util/source-formatter/documentation/json_util.markdown" />
+			<message key="json.util.put.use" value="Combine calls ''{0}'' ({1}) and ''{2}'' ({3}) into single call ''{4}''" />
 		</module>
 		<module name="com.liferay.source.formatter.checkstyle.checks.LambdaCheck">
-			<message key="lambda.simplify" value="Simplify lambda statement with single statement. See https://github.com/liferay/liferay-portal/blob/master/modules/util/source-formatter/documentation/lambda.markdown" />
+			<message key="lambda.simplify" value="Simplify lambda statement with single statement" />
 		</module>
 		<module name="com.liferay.source.formatter.checkstyle.checks.LineBreakAfterCommaCheck">
 			<message key="line.break.incorrect" value="There should be a line break after ''{0}''" />
@@ -205,15 +196,15 @@
 			<message key="end.line.character.incorrect" value="Line should not end with ''{0}''" />
 		</module>
 		<module name="com.liferay.source.formatter.checkstyle.checks.ListUtilCheck">
-			<message key="array.unneeded" value="Pass arguments directly to ''ListUtil.fromArray'' instead of passing new array. See https://github.com/liferay/liferay-portal/blob/master/modules/util/source-formatter/documentation/list_util.markdown" />
-			<message key="list.util.use" value="Use ''ListUtil.fromArray'' to simplify code. See https://github.com/liferay/liferay-portal/blob/master/modules/util/source-formatter/documentation/list_util.markdown" />
+			<message key="array.unneeded" value="Pass arguments directly to ''ListUtil.fromArray'' instead of passing new array" />
+			<message key="list.util.use" value="Use ''ListUtil.fromArray'' to simplify code" />
 		</module>
 		<module name="com.liferay.source.formatter.checkstyle.checks.LiteralStringEqualsCheck">
 			<message key="objects.equals.use.1" value="Use ''Objects.equals'' instead of calling ''equals'' on a literal String" />
 			<message key="objects.equals.use.2" value="Either use ''{0}'' or use ''Objects.equals'' if ''{1}'' can have a ''null'' value, instead of calling ''equals'' on a literal String" />
 		</module>
 		<module name="com.liferay.source.formatter.checkstyle.checks.MapIterationCheck">
-			<message key="entry.set.use" value="Use Map.entrySet() to retrieve values. See https://github.com/liferay/liferay-portal/blob/master/modules/util/source-formatter/documentation/map_iteration.markdown" />
+			<message key="entry.set.use" value="Use Map.entrySet() to retrieve values" />
 		</module>
 		<module name="com.liferay.source.formatter.checkstyle.checks.MethodNamingCheck">
 			<message key="method.rename" value="Rename method ''{0}'' to ''{1}''" />
@@ -226,6 +217,9 @@
 		<module name="com.liferay.source.formatter.checkstyle.checks.MissingParenthesesCheck">
 			<message key="parentheses.missing.1" value="Missing parentheses between the ''{0}'' operator and the ''{1}'' operator" />
 			<message key="parentheses.missing.2" value="Missing parentheses around the {0} hand side argument of the ''{1}'' operator" />
+		</module>
+		<module name="com.liferay.source.formatter.checkstyle.checks.NestedIfStatementCheck">
+			<message key="if.statements.combine" value="Combine nested if-statements" />
 		</module>
 		<module name="com.liferay.source.formatter.checkstyle.checks.NumberSuffixCheck">
 			<message key="suffix.incorrect" value="Use uppercase ''{0}'' as suffix for the type ''{1}''" />
@@ -257,6 +251,10 @@
 		</module>
 		<module name="com.liferay.source.formatter.checkstyle.checks.TernaryOperatorCheck">
 			<message key="ternary.operator.avoid" value="Use if-else-statement instead of ternary conditional operator for better readability" />
+		</module>
+		<module name="com.liferay.source.formatter.checkstyle.checks.ValidatorIsNullCheck">
+			<message key="method.invalidName" value="Avoid using method ''{0}''" />
+			<message key="method.reserved" value="Method ''{0}'' should only be used for type ''Long'', ''Serializable'' or ''String''" />
 		</module>
 	</module>
 </module>

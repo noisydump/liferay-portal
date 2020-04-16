@@ -56,9 +56,9 @@ LayoutClassedModelUsagesDisplayContext layoutClassedModelUsagesDisplayContext = 
 					<c:if test="<%= curLayout != null %>">
 
 						<%
-						Map<String, String> data = new HashMap<>();
-
-						data.put("href", layoutClassedModelUsagesDisplayContext.getPreviewURL(layoutClassedModelUsage));
+						Map<String, String> data = HashMapBuilder.put(
+							"href", layoutClassedModelUsagesDisplayContext.getPreviewURL(layoutClassedModelUsage)
+						).build();
 						%>
 
 						<clay:button
@@ -97,13 +97,13 @@ LayoutClassedModelUsagesDisplayContext layoutClassedModelUsagesDisplayContext = 
 				Liferay.Util.openWindow({
 					dialog: {
 						destroyOnHide: true,
-						modal: true
+						modal: true,
 					},
 					dialogIframe: {
-						bodyCssClass: 'dialog-with-footer article-preview'
+						bodyCssClass: 'dialog-with-footer article-preview',
 					},
 					title: '<liferay-ui:message key="preview" />',
-					uri: delegateTarget.getAttribute('data-href')
+					uri: delegateTarget.getAttribute('data-href'),
 				});
 			}
 		);

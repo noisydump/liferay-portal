@@ -323,23 +323,23 @@ if (privateVirtualHostnames.isEmpty()) {
 <aui:script use="liferay-auto-fields">
 	new Liferay.AutoFields({
 		contentBox: '#<portlet:namespace />publicVirtualHostFields',
-		namespace: '<portlet:namespace />'
+		namespace: '<portlet:namespace />',
 	}).render();
 
 	new Liferay.AutoFields({
 		contentBox: '#<portlet:namespace />privateVirtualHostFields',
-		namespace: '<portlet:namespace />'
+		namespace: '<portlet:namespace />',
 	}).render();
 
 	<c:if test="<%= liveGroup.hasStagingGroup() %>">
 		new Liferay.AutoFields({
 			contentBox: '#<portlet:namespace />stagingPublicVirtualHostFields',
-			namespace: '<portlet:namespace />'
+			namespace: '<portlet:namespace />',
 		}).render();
 
 		new Liferay.AutoFields({
 			contentBox: '#<portlet:namespace />stagingPrivateVirtualHostFields',
-			namespace: '<portlet:namespace />'
+			namespace: '<portlet:namespace />',
 		}).render();
 	</c:if>
 </aui:script>
@@ -355,7 +355,8 @@ if (privateVirtualHostnames.isEmpty()) {
 
 			if (value == '/') {
 				value = '';
-			} else {
+			}
+			else {
 				value = value.replace(/^[^\/]|\/$/g, function(match, index) {
 					var str = '';
 

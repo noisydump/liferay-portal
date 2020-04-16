@@ -12,10 +12,10 @@
  * details.
  */
 
-import {cleanup, render, fireEvent} from '@testing-library/react';
+import {cleanup, fireEvent, render} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import React from 'react';
-import {DragDropContextProvider} from 'react-dnd';
+import {DndProvider} from 'react-dnd';
 import HTML5Backend from 'react-dnd-html5-backend';
 
 import {StoreAPIContextProvider} from '../../../../../../src/main/resources/META-INF/resources/page_editor/app/store/index';
@@ -30,22 +30,22 @@ const widgets = [
 				instanceable: true,
 				portletId: 'assetPublisher',
 				title: 'Asset Publisher',
-				used: false
+				used: false,
 			},
 			{
 				instanceable: true,
 				portletId: 'DocumentsAndMedia',
 				title: 'Documents and Media',
-				used: false
+				used: false,
 			},
 			{
 				instanceable: true,
 				portletId: 'NavigationMenu',
 				title: 'Navigation Menu',
-				used: false
-			}
+				used: false,
+			},
 		],
-		title: 'Highlighted'
+		title: 'Highlighted',
 	},
 	{
 		portlets: [
@@ -53,26 +53,26 @@ const widgets = [
 				instanceable: false,
 				portletId: 'Blogs',
 				title: 'Blogs',
-				used: false
+				used: false,
 			},
 			{
 				instanceable: false,
 				portletId: 'BlogsAggregator',
 				title: 'Blogs Aggregator',
-				used: false
-			}
+				used: false,
+			},
 		],
-		title: 'Collaboration'
-	}
+		title: 'Collaboration',
+	},
 ];
 
 const RenderWidgetsSidebar = () => {
 	return (
-		<DragDropContextProvider backend={HTML5Backend}>
+		<DndProvider backend={HTML5Backend}>
 			<StoreAPIContextProvider getState={() => ({widgets})}>
 				<WidgetsSidebar />
 			</StoreAPIContextProvider>
-		</DragDropContextProvider>
+		</DndProvider>
 	);
 };
 

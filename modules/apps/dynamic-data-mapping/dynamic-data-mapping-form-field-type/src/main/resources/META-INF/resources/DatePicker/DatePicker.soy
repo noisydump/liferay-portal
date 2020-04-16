@@ -30,6 +30,7 @@
 	{@param? formattedValue: string}
 	{@param? id: string}
 	{@param? label: string}
+	{@param? localizedValue: ?}
 	{@param? months: list<?>}
 	{@param? placeholder: string}
 	{@param? predefinedValue: string}
@@ -83,6 +84,7 @@
 		{param errorMessage: $errorMessage /}
 		{param id: $id /}
 		{param label: $label /}
+		{param localizedValue: $localizedValue /}
 		{param name: $name /}
 		{param readOnly: $readOnly /}
 		{param ref: 'base' /}
@@ -144,6 +146,8 @@
 			{let $visibleInputAttributes kind="attributes"}
 				{if $ariaLabel}
 					aria-label="{$ariaLabel}"
+				{else}
+					aria-label="date_picker"
 				{/if}
 
 				class="form-control input-group-inset input-group-inset-after"
@@ -174,6 +178,7 @@
 			<input {$visibleInputAttributes} />
 
 			{let $hiddenInputAttributes kind="attributes"}
+				aria-label="date_picker_hidden"
 				name="{$name}"
 				type="hidden"
 

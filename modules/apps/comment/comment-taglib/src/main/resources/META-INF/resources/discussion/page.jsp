@@ -49,9 +49,9 @@ StagingGroupHelper stagingGroupHelper = StagingGroupHelperUtil.getStagingGroupHe
 
 	<c:if test="<%= commentSectionDisplayContext.isDiscussionVisible() %>">
 		<div class="taglib-discussion" id="<%= namespace %>discussionContainer">
-			<aui:form action="<%= discussionTaglibHelper.getFormAction() %>" method="post" name="<%= discussionTaglibHelper.getFormName() %>">
+			<aui:form action="<%= discussionTaglibHelper.getFormAction() %>" method="post" name="<%= discussionTaglibHelper.getFormName() %>" portletNamespace="<%= namespace + randomNamespace %>">
 				<input name="p_auth" type="hidden" value="<%= AuthTokenUtil.getToken(request) %>" />
-				<input name="namespace" type="hidden" value="<%= namespace %>" />
+				<input name="namespace" type="hidden" value="<%= namespace + randomNamespace %>" />
 
 				<%
 				String contentURL = PortalUtil.getCanonicalURL(discussionTaglibHelper.getRedirect(), themeDisplay, layout);
@@ -62,7 +62,7 @@ StagingGroupHelper stagingGroupHelper = StagingGroupHelperUtil.getStagingGroupHe
 				<input name="contentURL" type="hidden" value="<%= contentURL %>" />
 
 				<aui:input name="randomNamespace" type="hidden" value="<%= randomNamespace %>" />
-				<aui:input id="<%= randomNamespace + Constants.CMD %>" name="<%= Constants.CMD %>" type="hidden" />
+				<aui:input id="<%= Constants.CMD %>" name="<%= Constants.CMD %>" type="hidden" />
 				<aui:input name="redirect" type="hidden" value="<%= discussionTaglibHelper.getRedirect() %>" />
 				<aui:input name="assetEntryVisible" type="hidden" value="<%= discussionTaglibHelper.isAssetEntryVisible() %>" />
 				<aui:input name="className" type="hidden" value="<%= discussionTaglibHelper.getClassName() %>" />
@@ -128,12 +128,12 @@ StagingGroupHelper stagingGroupHelper = StagingGroupHelperUtil.getStagingGroupHe
 											</div>
 
 											<div class="autofit-col autofit-col-expand lfr-discussion-editor">
-												<liferay-ui:input-editor
+												<liferay-editor:editor
 													configKey="commentEditor"
 													contents=""
 													editorName='<%= PropsUtil.get("editor.wysiwyg.portal-web.docroot.html.taglib.ui.discussion.jsp") %>'
-													name='<%= randomNamespace + "postReplyBody0" %>'
-													onChangeMethod='<%= randomNamespace + "0ReplyOnChange" %>'
+													name="postReplyBody0"
+													onChangeMethod="0ReplyOnChange"
 													placeholder="type-your-comment-here"
 													showSource="<%= false %>"
 													skipEditorLoading="<%= skipEditorLoading %>"
@@ -142,7 +142,7 @@ StagingGroupHelper stagingGroupHelper = StagingGroupHelperUtil.getStagingGroupHe
 												<aui:input name="postReplyBody0" type="hidden" />
 
 												<aui:button-row>
-													<aui:button cssClass="btn-comment btn-primary btn-sm" disabled="<%= true %>" id='<%= randomNamespace + "postReplyButton0" %>' onClick='<%= randomNamespace + "postReply(0);" %>' value='<%= themeDisplay.isSignedIn() ? "reply" : "reply-as" %>' />
+													<aui:button cssClass="btn-comment btn-primary btn-sm" disabled="<%= true %>" id="postReplyButton0" onClick='<%= randomNamespace + "postReply(0);" %>' value='<%= themeDisplay.isSignedIn() ? "reply" : "reply-as" %>' />
 												</aui:button-row>
 											</div>
 										</div>
@@ -250,7 +250,7 @@ StagingGroupHelper stagingGroupHelper = StagingGroupHelperUtil.getStagingGroupHe
 
 			var form =
 				document[
-					'<%= namespace + HtmlUtil.escapeJS(discussionTaglibHelper.getFormName()) %>'
+					'<%= namespace + randomNamespace + HtmlUtil.escapeJS(discussionTaglibHelper.getFormName()) %>'
 				];
 
 			Liferay.provide(window, '<%= randomNamespace %>afterLogin', function(
@@ -258,10 +258,10 @@ StagingGroupHelper stagingGroupHelper = StagingGroupHelperUtil.getStagingGroupHe
 				anonymousAccount
 			) {
 				Util.setFormValues(form, {
-					emailAddress: emailAddress
+					emailAddress: emailAddress,
 				});
 
-				<%= namespace %>sendMessage(form, !anonymousAccount);
+				<%= namespace + randomNamespace %>sendMessage(form, !anonymousAccount);
 			});
 
 			Liferay.provide(window, '<%= randomNamespace %>deleteMessage', function(i) {
@@ -270,10 +270,10 @@ StagingGroupHelper stagingGroupHelper = StagingGroupHelperUtil.getStagingGroupHe
 				if (commentIdElement) {
 					Util.setFormValues(form, {
 						commentId: commentIdElement.value,
-						<%= randomNamespace + Constants.CMD %>: '<%= Constants.DELETE %>'
+						<%= Constants.CMD %>: '<%= Constants.DELETE %>',
 					});
 
-					<%= namespace %>sendMessage(form);
+					<%= namespace + randomNamespace %>sendMessage(form);
 				}
 			});
 
@@ -311,7 +311,7 @@ StagingGroupHelper stagingGroupHelper = StagingGroupHelperUtil.getStagingGroupHe
 					Util.setFormValues(form, {
 						body: editorInstance.getHTML(),
 						parentCommentId: parentCommentIdElement.value,
-						<%= randomNamespace + Constants.CMD %>: '<%= Constants.ADD %>'
+						<%= Constants.CMD %>: '<%= Constants.ADD %>',
 					});
 				}
 
@@ -322,14 +322,15 @@ StagingGroupHelper stagingGroupHelper = StagingGroupHelperUtil.getStagingGroupHe
 					Util.openWindow({
 						dialog: {
 							height: 450,
-							width: 560
+							width: 560,
 						},
 						id: '<%= namespace %>signInDialog',
 						title: '<%= UnicodeLanguageUtil.get(resourceBundle, "sign-in") %>',
-						uri: '<%= loginURL.toString() %>'
+						uri: '<%= loginURL.toString() %>',
 					});
-				} else {
-					<%= namespace %>sendMessage(form);
+				}
+				else {
+					<%= namespace + randomNamespace %>sendMessage(form);
 
 					editorInstance.dispose();
 				}
@@ -343,98 +344,114 @@ StagingGroupHelper stagingGroupHelper = StagingGroupHelperUtil.getStagingGroupHe
 					.scrollIntoView();
 			});
 
-			Liferay.provide(window, '<%= namespace %>sendMessage', function(
-				form,
-				refreshPage
-			) {
-				var commentButtons = form.querySelectorAll('.btn-comment');
+			Liferay.provide(
+				window,
+				'<%= namespace + randomNamespace %>sendMessage',
+				function(form, refreshPage) {
+					var commentButtons = form.querySelectorAll('.btn-comment');
 
-				Util.toggleDisabled(commentButtons, true);
+					Util.toggleDisabled(commentButtons, true);
 
-				var formData = new FormData(form);
+					var formData = new FormData(form);
 
-				formData.append('doAsUserId', themeDisplay.getDoAsUserIdEncoded());
+					formData.append('doAsUserId', themeDisplay.getDoAsUserIdEncoded());
 
-				Liferay.Util.fetch(form.action, {
-					body: formData,
-					method: 'POST'
-				})
-					.then(function(response) {
-						var promise;
-
-						var contentType = response.headers.get('content-type');
-
-						if (contentType && contentType.indexOf('application/json') !== -1) {
-							promise = response.json();
-						} else {
-							promise = response.text();
-						}
-
-						return promise;
+					Liferay.Util.fetch(form.action, {
+						body: formData,
+						method: 'POST',
 					})
-					.then(function(response) {
-						var exception = response.exception;
+						.then(function(response) {
+							var promise;
 
-						if (!exception) {
-							Liferay.onceAfter(
-								'<%= portletDisplay.getId() %>:messagePosted',
-								function(event) {
-									<%= randomNamespace %>onMessagePosted(
-										response,
-										refreshPage
-									);
-								}
-							);
+							var contentType = response.headers.get('content-type');
 
-							Liferay.fire(
-								'<%= portletDisplay.getId() %>:messagePosted',
-								response
-							);
-						} else {
-							var errorKey =
-								'<%= UnicodeLanguageUtil.get(resourceBundle, "your-request-failed-to-complete") %>';
-
-							if (exception.indexOf('DiscussionMaxCommentsException') > -1) {
-								errorKey =
-									'<%= UnicodeLanguageUtil.get(resourceBundle, "maximum-number-of-comments-has-been-reached") %>';
-							} else if (exception.indexOf('MessageBodyException') > -1) {
-								errorKey =
-									'<%= UnicodeLanguageUtil.get(resourceBundle, "please-enter-a-valid-message") %>';
-							} else if (exception.indexOf('NoSuchMessageException') > -1) {
-								errorKey =
-									'<%= UnicodeLanguageUtil.get(resourceBundle, "the-message-could-not-be-found") %>';
-							} else if (exception.indexOf('PrincipalException') > -1) {
-								errorKey =
-									'<%= UnicodeLanguageUtil.get(resourceBundle, "you-do-not-have-the-required-permissions") %>';
-							} else if (exception.indexOf('RequiredMessageException') > -1) {
-								errorKey =
-									'<%= UnicodeLanguageUtil.get(resourceBundle, "you-cannot-delete-a-root-message-that-has-more-than-one-immediate-reply") %>';
+							if (
+								contentType &&
+								contentType.indexOf('application/json') !== -1
+							) {
+								promise = response.json();
+							}
+							else {
+								promise = response.text();
 							}
 
+							return promise;
+						})
+						.then(function(response) {
+							var exception = response.exception;
+
+							if (!exception) {
+								Liferay.onceAfter(
+									'<%= portletDisplay.getId() %>:messagePosted',
+									function(event) {
+										<%= randomNamespace %>onMessagePosted(
+											response,
+											refreshPage
+										);
+									}
+								);
+
+								Liferay.fire(
+									'<%= portletDisplay.getId() %>:messagePosted',
+									response
+								);
+							}
+							else {
+								var errorKey =
+									'<%= UnicodeLanguageUtil.get(resourceBundle, "your-request-failed-to-complete") %>';
+
+								if (
+									exception.indexOf('DiscussionMaxCommentsException') > -1
+								) {
+									errorKey =
+										'<%= UnicodeLanguageUtil.get(resourceBundle, "maximum-number-of-comments-has-been-reached") %>';
+								}
+								else if (exception.indexOf('MessageBodyException') > -1) {
+									errorKey =
+										'<%= UnicodeLanguageUtil.get(resourceBundle, "please-enter-a-valid-message") %>';
+								}
+								else if (
+									exception.indexOf('NoSuchMessageException') > -1
+								) {
+									errorKey =
+										'<%= UnicodeLanguageUtil.get(resourceBundle, "the-message-could-not-be-found") %>';
+								}
+								else if (exception.indexOf('PrincipalException') > -1) {
+									errorKey =
+										'<%= UnicodeLanguageUtil.get(resourceBundle, "you-do-not-have-the-required-permissions") %>';
+								}
+								else if (
+									exception.indexOf('RequiredMessageException') > -1
+								) {
+									errorKey =
+										'<%= UnicodeLanguageUtil.get(resourceBundle, "you-cannot-delete-a-root-message-that-has-more-than-one-immediate-reply") %>';
+								}
+
+								<%= randomNamespace %>showStatusMessage({
+									id: '<%= randomNamespace %>',
+									message: errorKey,
+									title:
+										'<%= UnicodeLanguageUtil.get(resourceBundle, "error") %>',
+									type: 'danger',
+								});
+							}
+
+							Util.toggleDisabled(commentButtons, false);
+						})
+						.catch(function() {
 							<%= randomNamespace %>showStatusMessage({
 								id: '<%= randomNamespace %>',
-								message: errorKey,
+								message:
+									'<%= UnicodeLanguageUtil.get(resourceBundle, "your-request-failed-to-complete") %>',
 								title:
 									'<%= UnicodeLanguageUtil.get(resourceBundle, "error") %>',
-								type: 'danger'
+								type: 'danger',
 							});
-						}
 
-						Util.toggleDisabled(commentButtons, false);
-					})
-					.catch(function() {
-						<%= randomNamespace %>showStatusMessage({
-							id: '<%= randomNamespace %>',
-							message:
-								'<%= UnicodeLanguageUtil.get(resourceBundle, "your-request-failed-to-complete") %>',
-							title:
-								'<%= UnicodeLanguageUtil.get(resourceBundle, "error") %>',
-							type: 'danger'
+							Util.toggleDisabled(commentButtons, false);
 						});
-
-						Util.toggleDisabled(commentButtons, false);
-					});
-			});
+				}
+			);
 
 			Liferay.provide(window, '<%= randomNamespace %>showEl', function(elementId) {
 				var element = document.getElementById(elementId);
@@ -448,7 +465,11 @@ StagingGroupHelper stagingGroupHelper = StagingGroupHelperUtil.getStagingGroupHe
 				formId,
 				options
 			) {
-				if (!window['<%= namespace %>' + options.name]) {
+				var element = window['<%= namespace %>' + options.name];
+				var editorWrapper =
+					element && element.querySelector('#' + formId + ' .editor-wrapper');
+
+				if (!editorWrapper || editorWrapper.childNodes.length === 0) {
 
 					<%
 					String editorURL = GetterUtil.getString(request.getAttribute("liferay-comment:discussion:editorURL"));
@@ -458,7 +479,7 @@ StagingGroupHelper stagingGroupHelper = StagingGroupHelperUtil.getStagingGroupHe
 
 					Liferay.Util.fetch('<%= editorURL %>', {
 						body: Util.objectToFormData(Util.ns('<%= namespace %>', options)),
-						method: 'POST'
+						method: 'POST',
 					})
 						.then(function(response) {
 							return response.text();
@@ -486,7 +507,7 @@ StagingGroupHelper stagingGroupHelper = StagingGroupHelperUtil.getStagingGroupHe
 								id: '<%= randomNamespace %>',
 								message:
 									'<%= UnicodeLanguageUtil.get(resourceBundle, "your-request-failed-to-complete") %>',
-								type: 'danger'
+								type: 'danger',
 							});
 						});
 				}
@@ -500,7 +521,7 @@ StagingGroupHelper stagingGroupHelper = StagingGroupHelperUtil.getStagingGroupHe
 					{
 						name: '<%= randomNamespace %>' + 'postReplyBody' + index,
 						onChangeMethod: '<%= randomNamespace %>' + index + 'ReplyOnChange',
-						placeholder: 'type-your-comment-here'
+						placeholder: 'type-your-comment-here',
 					}
 				);
 
@@ -536,7 +557,7 @@ StagingGroupHelper stagingGroupHelper = StagingGroupHelperUtil.getStagingGroupHe
 							contents: discussionIdElement.innerHTML,
 							name: '<%= randomNamespace %>' + 'editReplyBody' + index,
 							onChangeMethod:
-								'<%= randomNamespace %>' + index + 'EditOnChange'
+								'<%= randomNamespace %>' + index + 'EditOnChange',
 						}
 					);
 
@@ -555,12 +576,12 @@ StagingGroupHelper stagingGroupHelper = StagingGroupHelperUtil.getStagingGroupHe
 				Util.setFormValues(form, {
 					<%= randomNamespace %>className:
 						'<%= discussionTaglibHelper.getSubscriptionClassName() %>',
-					<%= randomNamespace + Constants.CMD %>: subscribe
+					<%= Constants.CMD %>: subscribe
 						? '<%= Constants.SUBSCRIBE_TO_COMMENTS %>'
-						: '<%= Constants.UNSUBSCRIBE_FROM_COMMENTS %>'
+						: '<%= Constants.UNSUBSCRIBE_FROM_COMMENTS %>',
 				});
 
-				<%= namespace %>sendMessage(form);
+				<%= namespace + randomNamespace %>sendMessage(form);
 			});
 
 			Liferay.provide(window, '<%= randomNamespace %>updateMessage', function(
@@ -575,17 +596,17 @@ StagingGroupHelper stagingGroupHelper = StagingGroupHelperUtil.getStagingGroupHe
 				if (commentIdElement) {
 					if (pending) {
 						Util.setFormValues(form, {
-							workflowAction: '<%= WorkflowConstants.ACTION_SAVE_DRAFT %>'
+							workflowAction: '<%= WorkflowConstants.ACTION_SAVE_DRAFT %>',
 						});
 					}
 
 					Util.setFormValues(form, {
 						body: editorInstance.getHTML(),
 						commentId: commentIdElement.value,
-						<%= randomNamespace + Constants.CMD %>: '<%= Constants.UPDATE %>'
+						<%= Constants.CMD %>: '<%= Constants.UPDATE %>',
 					});
 
-					<%= namespace %>sendMessage(form);
+					<%= namespace + randomNamespace %>sendMessage(form);
 				}
 
 				editorInstance.dispose();
@@ -616,7 +637,7 @@ StagingGroupHelper stagingGroupHelper = StagingGroupHelperUtil.getStagingGroupHe
 						randomNamespace: '<%= randomNamespace %>',
 						ratingsEnabled: '<%= discussionTaglibHelper.isRatingsEnabled() %>',
 						rootIndexPage: rootIndexPageElement.value,
-						userId: '<%= discussionTaglibHelper.getUserId() %>'
+						userId: '<%= discussionTaglibHelper.getUserId() %>',
 					});
 
 					<%
@@ -627,7 +648,7 @@ StagingGroupHelper stagingGroupHelper = StagingGroupHelperUtil.getStagingGroupHe
 
 					Liferay.Util.fetch('<%= paginationURL %>', {
 						body: Util.objectToFormData(data),
-						method: 'POST'
+						method: 'POST',
 					})
 						.then(function(response) {
 							return response.text();
@@ -655,7 +676,7 @@ StagingGroupHelper stagingGroupHelper = StagingGroupHelperUtil.getStagingGroupHe
 									'<%= UnicodeLanguageUtil.get(resourceBundle, "your-request-failed-to-complete") %>',
 								title:
 									'<%= UnicodeLanguageUtil.get(resourceBundle, "error") %>',
-								type: 'danger'
+								type: 'danger',
 							});
 						});
 				});
@@ -671,7 +692,7 @@ StagingGroupHelper stagingGroupHelper = StagingGroupHelperUtil.getStagingGroupHe
 					'<%= portletDisplay.getId() %>:portletRefreshed',
 					function(event) {
 						var randomNamespaceNodes = document.querySelectorAll(
-							'input[id^="<%= namespace %>randomNamespace"]'
+							'input[id^="<%= namespace %>"][id$="randomNamespace"]'
 						);
 
 						Array.prototype.forEach.call(randomNamespaceNodes, function(
@@ -687,7 +708,7 @@ StagingGroupHelper stagingGroupHelper = StagingGroupHelperUtil.getStagingGroupHe
 										'<%= UnicodeLanguageUtil.get(resourceBundle, "your-request-completed-successfully") %>',
 									title:
 										'<%= UnicodeLanguageUtil.get(resourceBundle, "success") %>',
-									type: 'success'
+									type: 'success',
 								});
 							}
 
@@ -707,7 +728,7 @@ StagingGroupHelper stagingGroupHelper = StagingGroupHelperUtil.getStagingGroupHe
 
 				if (response.commentId) {
 					var messageTextNode = document.querySelector(
-						'input[name^="<%= namespace %>body"]'
+						'input[name^="<%= namespace + randomNamespace %>body"]'
 					);
 
 					if (messageTextNode) {
@@ -715,14 +736,15 @@ StagingGroupHelper stagingGroupHelper = StagingGroupHelperUtil.getStagingGroupHe
 							className: '<%= discussionTaglibHelper.getClassName() %>',
 							classPK: '<%= discussionTaglibHelper.getClassPK() %>',
 							commentId: response.commentId,
-							text: messageTextNode.value
+							text: messageTextNode.value,
 						});
 					}
 				}
 
 				if (refreshPage) {
 					window.location.reload();
-				} else {
+				}
+				else {
 					var portletNodeId = '#p_p_id_<%= portletDisplay.getId() %>_';
 
 					var portletNode = A.one(portletNodeId);
@@ -733,7 +755,7 @@ StagingGroupHelper stagingGroupHelper = StagingGroupHelperUtil.getStagingGroupHe
 							Liferay.Util.ns('<%= namespace %>', {
 								className: '<%= discussionTaglibHelper.getClassName() %>',
 								classPK: '<%= discussionTaglibHelper.getClassPK() %>',
-								skipEditorLoading: true
+								skipEditorLoading: true,
 							}),
 							portletNode.refreshURLData || {}
 						)
@@ -749,7 +771,7 @@ StagingGroupHelper stagingGroupHelper = StagingGroupHelperUtil.getStagingGroupHe
 				position: 'top',
 				visible: false,
 				width: 400,
-				zIndex: Liferay.zIndex.OVERLAY
+				zIndex: Liferay.zIndex.OVERLAY,
 			}).render(discussionContainer);
 
 			var handle;

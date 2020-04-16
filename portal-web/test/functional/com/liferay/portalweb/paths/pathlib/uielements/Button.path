@@ -184,6 +184,11 @@
 	<td></td>
 </tr>
 <tr>
+	<td>CONFIGURE_ALLOWED_FRAGMENTS</td>
+	<td>//button[contains(.,'Configure Allowed Fragments')]</td>
+	<td></td>
+</tr>
+<tr>
 	<td>CONFIRM</td>
 	<td>//a[contains(@class,'btn') and contains(.,'Confirm')] | //button[contains(.,'Confirm')]</td>
 	<td></td>
@@ -225,7 +230,7 @@
 </tr>
 <tr>
 	<td>DELETE_FRAGMENT_COMMENT</td>
-	<td>//button[contains(@class,'fragments-editor')]/span[contains(.,'Delete')]</td>
+	<td>//button[contains(@class,'page-editor')]/span[contains(.,'Delete')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -236,6 +241,11 @@
 <tr>
 	<td>DELETE_ROW_N</td>
 	<td>xpath=(//button[contains(@class,'delete-row')])[${key_rowIndexNumber}]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>DEPOT_LANGUAGES_MANAGEMENT_PANEL_SAVE</td>
+	<td>//div[contains(@class,'modal-content')]//button[contains(.,'Save')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -374,6 +384,11 @@
 	<td></td>
 </tr>
 <tr>
+	<td>MAKE_DEFAULT</td>
+	<td>//button[contains(.,'Make Default') and contains(@data-value,'${key_language}')]</td>
+	<td></td>
+</tr>
+<tr>
 	<td>MERGE</td>
 	<td>//button[contains(.,'Merge')]</td>
 	<td></td>
@@ -450,7 +465,7 @@
 </tr>
 <tr>
 	<td>POST</td>
-	<td>//div[@class='button-holder']/button[contains(@id,'MicroblogsPortlet')]/span[contains(.,'Post')]</td>
+	<td>//div[@class='button-holder']/button[contains(@id,'MicroblogsPortlet') and not (contains(@class,'disabled'))]/span[contains(.,'Post')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -546,6 +561,11 @@
 <tr>
 	<td>RESOLVE</td>
 	<td>//button/span[*[name()='svg'][contains(@class,'lexicon-icon-check-circle')]]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>RESTORE_VALUES</td>
+	<td>//button/span[contains(.,'Restore Values')]</td>
 	<td></td>
 </tr>
 <tr>

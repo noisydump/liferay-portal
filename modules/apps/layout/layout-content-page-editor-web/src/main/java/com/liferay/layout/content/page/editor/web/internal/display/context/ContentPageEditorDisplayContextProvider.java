@@ -14,7 +14,12 @@
 
 package com.liferay.layout.content.page.editor.web.internal.display.context;
 
+import com.liferay.fragment.contributor.FragmentCollectionContributorTracker;
 import com.liferay.fragment.renderer.FragmentRendererController;
+import com.liferay.fragment.renderer.FragmentRendererTracker;
+import com.liferay.fragment.util.configuration.FragmentEntryConfigurationParser;
+import com.liferay.info.display.contributor.InfoDisplayContributorTracker;
+import com.liferay.item.selector.ItemSelector;
 import com.liferay.layout.content.page.editor.constants.ContentPageEditorWebKeys;
 import com.liferay.layout.content.page.editor.sidebar.panel.ContentPageEditorSidebarPanel;
 import com.liferay.layout.page.template.constants.LayoutPageTemplateEntryTypeConstants;
@@ -29,6 +34,7 @@ import com.liferay.staging.StagingGroupHelper;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 import javax.portlet.PortletRequest;
@@ -40,6 +46,7 @@ import org.osgi.framework.BundleContext;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
+import org.osgi.service.component.annotations.Modified;
 import org.osgi.service.component.annotations.Reference;
 
 /**
@@ -59,10 +66,12 @@ public class ContentPageEditorDisplayContextProvider {
 
 		if (Objects.equals(className, Layout.class.getName())) {
 			return new ContentPageLayoutEditorDisplayContext(
-				httpServletRequest, renderResponse, _commentManager,
-				_getContentPageEditorSidebarPanels(),
-				_fragmentRendererController, portletRequest,
-				_stagingGroupHelper);
+				_commentManager, _getContentPageEditorSidebarPanels(),
+				_fragmentCollectionContributorTracker,
+				_fragmentEntryConfigurationParser, _fragmentRendererController,
+				_fragmentRendererTracker, httpServletRequest,
+				_infoDisplayContributorTracker, _itemSelector, portletRequest,
+				renderResponse, _stagingGroupHelper);
 		}
 
 		long classPK = GetterUtil.getLong(
@@ -82,13 +91,19 @@ public class ContentPageEditorDisplayContextProvider {
 		}
 
 		return new ContentPageEditorLayoutPageTemplateDisplayContext(
-			httpServletRequest, renderResponse, pageIsDisplayPage,
 			_commentManager, _getContentPageEditorSidebarPanels(),
-			_fragmentRendererController, portletRequest);
+			_fragmentCollectionContributorTracker,
+			_fragmentEntryConfigurationParser, _fragmentRendererController,
+			_fragmentRendererTracker, httpServletRequest,
+			_infoDisplayContributorTracker, _itemSelector, pageIsDisplayPage,
+			portletRequest, renderResponse);
 	}
 
 	@Activate
-	protected void activate(BundleContext bundleContext) {
+	@Modified
+	protected void activate(
+		BundleContext bundleContext, Map<String, Object> properties) {
+
 		_serviceTrackerList = ServiceTrackerListFactory.open(
 			bundleContext, ContentPageEditorSidebarPanel.class);
 	}
@@ -117,7 +132,23 @@ public class ContentPageEditorDisplayContextProvider {
 	private CommentManager _commentManager;
 
 	@Reference
+	private FragmentCollectionContributorTracker
+		_fragmentCollectionContributorTracker;
+
+	@Reference
+	private FragmentEntryConfigurationParser _fragmentEntryConfigurationParser;
+
+	@Reference
 	private FragmentRendererController _fragmentRendererController;
+
+	@Reference
+	private FragmentRendererTracker _fragmentRendererTracker;
+
+	@Reference
+	private InfoDisplayContributorTracker _infoDisplayContributorTracker;
+
+	@Reference
+	private ItemSelector _itemSelector;
 
 	@Reference
 	private LayoutPageTemplateEntryLocalService

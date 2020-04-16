@@ -236,12 +236,12 @@
 			<contains>IX_14E638B0</contains>
 			<matches></matches>
 		</ignore-error>
-		<ignore-error description="LRQA-24859">
-			<contains>No binary licenses found</contains>
+		<ignore-error description="LPS-111433 - temporarily ignore until fixed">
+			<contains>IX_EE41CBEB</contains>
 			<matches></matches>
 		</ignore-error>
-		<ignore-error description="LRQA-34199, temporarily ignore SAMLBootstrap error">
-			<contains>The activate method has thrown an exception</contains>
+		<ignore-error description="LRQA-24859">
+			<contains>No binary licenses found</contains>
 			<matches></matches>
 		</ignore-error>
 		<ignore-error description="LRQA-46637, temporarily ignore metadata errors">

@@ -533,6 +533,17 @@ public class LayoutLocalServiceWrapper
 	}
 
 	/**
+	 * @throws PortalException
+	 */
+	@Override
+	public com.liferay.portal.kernel.model.PersistedModel createPersistedModel(
+			java.io.Serializable primaryKeyObj)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _layoutLocalService.createPersistedModel(primaryKeyObj);
+	}
+
+	/**
 	 * Deletes the layout from the database. Also notifies the appropriate model listeners.
 	 *
 	 * @param layout the layout
@@ -830,6 +841,25 @@ public class LayoutLocalServiceWrapper
 		getActionableDynamicQuery() {
 
 		return _layoutLocalService.getActionableDynamicQuery();
+	}
+
+	/**
+	 * Returns all the layouts that match the type and belong to the group,
+	 * including the ones marked as System.
+	 *
+	 * @param groupId the primary key of the group
+	 * @param privateLayout whether the layout is private to the group
+	 * @param type the type of the layouts (optiona.lly {@link
+	 LayoutConstants#TYPE_PORTLET})
+	 * @return the matching layouts, or an empty list if no matches were
+	 found
+	 */
+	@Override
+	public java.util.List<Layout> getAllLayouts(
+			long groupId, boolean privateLayout, String type)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _layoutLocalService.getAllLayouts(groupId, privateLayout, type);
 	}
 
 	/**
@@ -1199,11 +1229,41 @@ public class LayoutLocalServiceWrapper
 		return _layoutLocalService.getLayouts(groupId, start, end, obc);
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 #getMasterLayouts(long, long)}
+	 */
+	@Deprecated
 	@Override
 	public java.util.List<Layout> getLayouts(
 		long groupId, long masterLayoutPlid) {
 
 		return _layoutLocalService.getLayouts(groupId, masterLayoutPlid);
+	}
+
+	/**
+	 * Returns a range of all the layouts belonging to the group.
+	 *
+	 * @param groupId the primary key of the group
+	 * @param userId the primary key of the user
+	 * @param privateLayout whether the layout is private to the group
+	 * @param keywords keywords
+	 * @param types layout types
+	 * @param start the lower bound of the range of layouts
+	 * @param end the upper bound of the range of layouts (not inclusive)
+	 * @param obc the comparator to order the layouts
+	 * @return the matching layouts, or <code>null</code> if no matches were
+	 found
+	 */
+	@Override
+	public java.util.List<Layout> getLayouts(
+			long groupId, long userId, boolean privateLayout, String keywords,
+			String[] types, int start, int end,
+			com.liferay.portal.kernel.util.OrderByComparator<Layout> obc)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _layoutLocalService.getLayouts(
+			groupId, userId, privateLayout, keywords, types, start, end, obc);
 	}
 
 	/**
@@ -1360,8 +1420,28 @@ public class LayoutLocalServiceWrapper
 	}
 
 	@Override
+	public int getLayoutsCount(long groupId, boolean privateLayout) {
+		return _layoutLocalService.getLayoutsCount(groupId, privateLayout);
+	}
+
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 #getMasterLayoutsCount(long, long)}
+	 */
+	@Deprecated
+	@Override
 	public int getLayoutsCount(long groupId, long masterLayoutPlid) {
 		return _layoutLocalService.getLayoutsCount(groupId, masterLayoutPlid);
+	}
+
+	@Override
+	public int getLayoutsCount(
+			long groupId, long userId, boolean privateLayout, String keywords,
+			String[] types)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _layoutLocalService.getLayoutsCount(
+			groupId, userId, privateLayout, keywords, types);
 	}
 
 	@Override
@@ -1387,6 +1467,19 @@ public class LayoutLocalServiceWrapper
 
 		return _layoutLocalService.getLayoutsCount(
 			user, privateLayout, includeUserGroups);
+	}
+
+	@Override
+	public java.util.List<Layout> getMasterLayouts(
+		long groupId, long masterLayoutPlid) {
+
+		return _layoutLocalService.getMasterLayouts(groupId, masterLayoutPlid);
+	}
+
+	@Override
+	public int getMasterLayoutsCount(long groupId, long masterLayoutPlid) {
+		return _layoutLocalService.getMasterLayoutsCount(
+			groupId, masterLayoutPlid);
 	}
 
 	/**
@@ -1418,6 +1511,9 @@ public class LayoutLocalServiceWrapper
 		return _layoutLocalService.getParentLayout(layout);
 	}
 
+	/**
+	 * @throws PortalException
+	 */
 	@Override
 	public com.liferay.portal.kernel.model.PersistedModel getPersistedModel(
 			java.io.Serializable primaryKeyObj)

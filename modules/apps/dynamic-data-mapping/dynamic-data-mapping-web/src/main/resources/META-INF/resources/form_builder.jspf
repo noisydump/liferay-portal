@@ -119,12 +119,12 @@ for (Locale availableLocale : LanguageUtil.getAvailableLocales(themeDisplay.getS
 			closeable: true,
 			delay: {
 				hide: 5000,
-				show: 0
+				show: 0,
 			},
 			duration: 500,
 			message: message,
 			title: Liferay.Language.get('warning'),
-			type: 'warning'
+			type: 'warning',
 		}).render('body');
 	};
 
@@ -135,7 +135,8 @@ for (Locale availableLocale : LanguageUtil.getAvailableLocales(themeDisplay.getS
 
 		if (formEditor && !isViewTabActive()) {
 			content = formEditor.get(STR_VALUE);
-		} else {
+		}
+		else {
 			content = formBuilder.getContent();
 		}
 
@@ -149,7 +150,7 @@ for (Locale availableLocale : LanguageUtil.getAvailableLocales(themeDisplay.getS
 				height: 600,
 				mode: 'xml',
 				tabSize: 4,
-				width: 600
+				width: 600,
 			}).render();
 		}
 
@@ -183,10 +184,12 @@ for (Locale availableLocale : LanguageUtil.getAvailableLocales(themeDisplay.getS
 			displayWarning(
 				'<%= UnicodeLanguageUtil.get(resourceBundle, "you-cannot-remove-default-attributes") %>'
 			);
-		} else {
+		}
+		else {
 			try {
 				content = JSON.parse(content);
-			} catch (e) {
+			}
+			catch (e) {
 				displayWarning(
 					'<%= UnicodeLanguageUtil.get(resourceBundle, "you-have-entered-invalid-json") %>'
 				);
@@ -227,7 +230,8 @@ for (Locale availableLocale : LanguageUtil.getAvailableLocales(themeDisplay.getS
 	var switchToView = function() {
 		if (formEditor) {
 			reloadFormBuilderData(formEditor.get(STR_VALUE));
-		} else if (formBuilder) {
+		}
+		else if (formBuilder) {
 			reloadFormBuilderData(formBuilder.getContent());
 		}
 	};
@@ -269,8 +273,8 @@ for (Locale availableLocale : LanguageUtil.getAvailableLocales(themeDisplay.getS
 			defaultLocale: '<%= HtmlUtil.escapeJS(defaultLanguageId) %>',
 			localesMap: <%= localesMapJSONObject.toString() %>,
 			srcNode:
-				'#<portlet:namespace />translationManager .lfr-translation-manager-content'
-		}
+				'#<portlet:namespace />translationManager .lfr-translation-manager-content',
+		},
 	}).render();
 
 	var dialog = Liferay.Util.getWindow();
@@ -282,7 +286,8 @@ for (Locale availableLocale : LanguageUtil.getAvailableLocales(themeDisplay.getS
 	var afterShowTab = function(event) {
 		if (isViewTabActive()) {
 			switchToView();
-		} else {
+		}
+		else {
 			switchToSource();
 		}
 	};
@@ -326,6 +331,6 @@ for (Locale availableLocale : LanguageUtil.getAvailableLocales(themeDisplay.getS
 	});
 
 	Liferay.fire('<portlet:namespace />formBuilderLoaded', {
-		formBuilder: formBuilder
+		formBuilder: formBuilder,
 	});
 </aui:script>

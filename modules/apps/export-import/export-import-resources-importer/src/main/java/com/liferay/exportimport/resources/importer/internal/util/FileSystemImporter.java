@@ -156,6 +156,8 @@ public class FileSystemImporter extends BaseImporter {
 		RepositoryLocalService repositoryLocalService, SAXReader saxReader,
 		ThemeLocalService themeLocalService, DLURLHelper dlURLHelper) {
 
+		_dlURLHelper = dlURLHelper;
+
 		this.assetTagLocalService = assetTagLocalService;
 		this.ddmFormJSONDeserializer = ddmFormJSONDeserializer;
 		this.ddmFormXSDDeserializer = ddmFormXSDDeserializer;
@@ -183,7 +185,6 @@ public class FileSystemImporter extends BaseImporter {
 		this.repositoryLocalService = repositoryLocalService;
 		this.saxReader = saxReader;
 		this.themeLocalService = themeLocalService;
-		_dlURLHelper = dlURLHelper;
 	}
 
 	@Override
@@ -458,19 +459,11 @@ public class FileSystemImporter extends BaseImporter {
 		File[] files = listFiles(dir);
 
 		for (File file : files) {
-			InputStream inputStream = null;
-
-			try {
-				inputStream = new BufferedInputStream(
-					new FileInputStream(file));
+			try (InputStream inputStream = new BufferedInputStream(
+					new FileInputStream(file))) {
 
 				addDDMStructures(
 					parentDDMStructureKey, file.getName(), inputStream);
-			}
-			finally {
-				if (inputStream != null) {
-					inputStream.close();
-				}
 			}
 		}
 	}
@@ -657,18 +650,10 @@ public class FileSystemImporter extends BaseImporter {
 		File[] files = listFiles(dir);
 
 		for (File file : files) {
-			InputStream inputStream = null;
-
-			try {
-				inputStream = new BufferedInputStream(
-					new FileInputStream(file));
+			try (InputStream inputStream = new BufferedInputStream(
+					new FileInputStream(file))) {
 
 				addDDMTemplates(ddmStructureKey, file.getName(), inputStream);
-			}
-			finally {
-				if (inputStream != null) {
-					inputStream.close();
-				}
 			}
 		}
 	}
@@ -775,18 +760,11 @@ public class FileSystemImporter extends BaseImporter {
 	protected void addDLFileEntry(long parentFolderId, File file)
 		throws Exception {
 
-		InputStream inputStream = null;
-
-		try {
-			inputStream = new BufferedInputStream(new FileInputStream(file));
+		try (InputStream inputStream = new BufferedInputStream(
+				new FileInputStream(file))) {
 
 			addDLFileEntry(
 				parentFolderId, file.getName(), inputStream, file.length());
-		}
-		finally {
-			if (inputStream != null) {
-				inputStream.close();
-			}
 		}
 	}
 
@@ -903,20 +881,12 @@ public class FileSystemImporter extends BaseImporter {
 		File[] files = listFiles(dir);
 
 		for (File file : files) {
-			InputStream inputStream = null;
-
-			try {
-				inputStream = new BufferedInputStream(
-					new FileInputStream(file));
+			try (InputStream inputStream = new BufferedInputStream(
+					new FileInputStream(file))) {
 
 				addJournalArticles(
 					ddmStructureKey, ddmTemplateKey, file.getName(), folderId,
 					inputStream);
-			}
-			finally {
-				if (inputStream != null) {
-					inputStream.close();
-				}
 			}
 		}
 	}
@@ -1571,19 +1541,14 @@ public class FileSystemImporter extends BaseImporter {
 	}
 
 	protected JSONObject getJSONObject(String fileName) throws Exception {
-		InputStream inputStream = getInputStream(fileName);
-
-		if (inputStream == null) {
-			return null;
-		}
-
 		String json = null;
 
-		try {
+		try (InputStream inputStream = getInputStream(fileName)) {
+			if (inputStream == null) {
+				return null;
+			}
+
 			json = StringUtil.read(inputStream);
-		}
-		finally {
-			inputStream.close();
 		}
 
 		json = StringUtil.replace(
@@ -1794,9 +1759,10 @@ public class FileSystemImporter extends BaseImporter {
 	}
 
 	protected void resetLayoutColumns(Layout layout) throws PortalException {
-		UnicodeProperties typeSettings = layout.getTypeSettingsProperties();
+		UnicodeProperties unicodeProperties =
+			layout.getTypeSettingsProperties();
 
-		Set<Map.Entry<String, String>> set = typeSettings.entrySet();
+		Set<Map.Entry<String, String>> set = unicodeProperties.entrySet();
 
 		Iterator<Map.Entry<String, String>> iterator = set.iterator();
 
@@ -1831,7 +1797,7 @@ public class FileSystemImporter extends BaseImporter {
 			iterator.remove();
 		}
 
-		layout.setTypeSettingsProperties(typeSettings);
+		layout.setTypeSettingsProperties(unicodeProperties);
 
 		layoutLocalService.updateLayout(layout);
 	}

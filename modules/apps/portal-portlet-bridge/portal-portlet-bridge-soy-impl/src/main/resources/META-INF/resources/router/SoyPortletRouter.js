@@ -195,14 +195,15 @@ class SoyPortletRouter extends State {
 				pathFn ||
 				this.matchPath_.bind(this, route.mvcRenderCommandName),
 			portletNamespace: this.portletNamespace,
-			route
+			route,
 		};
 
 		try {
 			if (config.path(utils.getCurrentBrowserPath())) {
 				config.data = this.context;
 			}
-		} catch (e) {}
+		}
+		catch (e) {}
 
 		return new Router(config, this.portletWrapper);
 	}
@@ -352,7 +353,7 @@ class SoyPortletRouter extends State {
 
 		this.createRouter_(
 			{
-				mvcRenderCommandName: '/'
+				mvcRenderCommandName: '/',
 			},
 			pathFn
 		);
@@ -507,7 +508,7 @@ class SoyPortletRouter extends State {
 			openToast({
 				message,
 				title,
-				type
+				type,
 			});
 		}
 	}
@@ -523,7 +524,8 @@ class SoyPortletRouter extends State {
 			(event.error.requestError || event.error.invalidStatus)
 		) {
 			window.location.href = event.path;
-		} else {
+		}
+		else {
 			const activeState = Router.getActiveState();
 
 			if (activeState) {
@@ -571,7 +573,7 @@ SoyPortletRouter.STATE = {
 	 * @type {string}
 	 */
 	element: {
-		setter: dom.toElement
+		setter: dom.toElement,
 	},
 
 	/**
@@ -622,8 +624,8 @@ SoyPortletRouter.STATE = {
 	 * @type {string}
 	 */
 	portletWrapper: {
-		setter: dom.toElement
-	}
+		setter: dom.toElement,
+	},
 };
 
 export default SoyPortletRouter;

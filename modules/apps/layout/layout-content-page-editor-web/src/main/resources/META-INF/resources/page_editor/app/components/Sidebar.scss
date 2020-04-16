@@ -1,3 +1,5 @@
+@import 'atlas-variables';
+
 @import './variables';
 
 $sidebarButtonHeight: $sidebarButtonWidth;
@@ -7,7 +9,7 @@ $sidebarButtonHeight: $sidebarButtonWidth;
 $zIndexButtons: 1;
 $zIndexContent: 0;
 
-.page-editor-sidebar {
+.page-editor__sidebar {
 	display: flex;
 	height: calc(100vh - #{$toolbarHeight});
 	position: fixed;
@@ -15,33 +17,55 @@ $zIndexContent: 0;
 	top: $toolbarHeight;
 	z-index: $zIndexSidebar;
 
-	&-buttons {
-		background-color: $sidebarButtonBackgroundColor;
+	&__buttons {
+		background-color: $secondary-d1;
 		flex-direction: column;
 		padding-top: 16px;
 		width: $sidebarButtonWidth;
 		z-index: $zIndexButtons;
 
-		button {
-			color: $sidebarButtonColor;
+		a {
+			align-items: center;
+			border-radius: 0.25rem;
+			color: $secondary-l1;
+			display: flex;
+			height: 2.5em;
+			justify-content: center;
 
 			&.active,
 			&:active,
 			&:focus,
 			&:hover {
-				color: $sidebarButtonHoverColor;
+				color: $white;
+			}
+
+			&:focus {
+				box-shadow: 0 0 0 0.125rem $white, 0 0 0 0.25rem $primary-l1,
+					inset 0 0 rgba(0, 0, 0, 0);
+				outline: none;
+			}
+		}
+
+		button {
+			color: $secondary-l1;
+
+			&.active,
+			&:active,
+			&:focus,
+			&:hover {
+				color: $white;
 			}
 		}
 
 		hr {
-			border-color: $sidebarButtonSeparatorColor;
+			border-color: $secondary;
 			margin: 12px 8px;
 		}
 	}
 
-	&-content {
-		background-color: $sidebarContentBackgroundColor;
-		border-left: 1px solid $sidebarBorderColor;
+	&__content {
+		background-color: $white;
+		border-left: 1px solid $secondary-l2;
 		height: calc(100vh - #{$controlMenuHeight + $toolbarHeight});
 		overflow-x: hidden;
 		position: fixed;
@@ -50,22 +74,19 @@ $zIndexContent: 0;
 		transition: transform ease $defaultTransitionDuration;
 		width: $sidebarContentWidth;
 		z-index: $zIndexContent;
-	}
 
-	&-content-open {
-		transform: translateX(0);
+		&--open {
+			transform: translateX(0);
+		}
 	}
 
 	body.has-control-menu & {
-		height: calc(100vh - #{$controlMenuHeight + $toolbarHeight});
-		top: $controlMenuHeight + $toolbarHeight;
+		height: calc(100vh - #{$controlMenuHeight + $managementBarHeight});
+		top: $controlMenuHeight + $managementBarHeight;
+
+		@include media-breakpoint-up(lg) {
+			height: calc(100vh - #{$desktopControlMenuHeight + $toolbarHeight});
+			top: $desktopControlMenuHeight + $toolbarHeight;
+		}
 	}
-}
-
-#wrapper.page-editor-sidebar-padding {
-	padding-right: $sidebarButtonWidth;
-}
-
-#wrapper.page-editor-sidebar-padding-open {
-	padding-right: $sidebarButtonWidth + $sidebarContentWidth;
 }

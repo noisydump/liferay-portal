@@ -21,11 +21,11 @@ class StringInput extends React.Component {
 		disabled: propTypes.bool,
 		onChange: propTypes.func.isRequired,
 		options: propTypes.array,
-		value: propTypes.oneOfType([propTypes.string, propTypes.number])
+		value: propTypes.oneOfType([propTypes.string, propTypes.number]),
 	};
 
 	static defaultProps = {
-		options: []
+		options: [],
 	};
 
 	_handleChange = event => {
@@ -51,8 +51,9 @@ class StringInput extends React.Component {
 				disabled={disabled}
 				onChange={this._handleChange}
 				options={options.map(o => ({
+					disabled: o.disabled,
 					label: o.label,
-					value: o.value
+					value: o.value,
 				}))}
 				value={value}
 			/>

@@ -25,13 +25,17 @@
  * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
  * details.
  */
-import {useState, useEffect, useRef} from 'react';
+import {useEffect, useRef, useState} from 'react';
 
 export const toQuery = (string, defaultQuery = {}) => {
 	const query = {...defaultQuery};
 	const params = new URLSearchParams(string);
 
 	params.forEach((value, key) => {
+		if (!isNaN(value)) {
+			value = parseInt(value, 10);
+		}
+
 		query[key] = value;
 	});
 
@@ -44,7 +48,8 @@ export const toQueryString = (object, queryString = '') => {
 	Object.keys(object).forEach(key => {
 		if (object[key]) {
 			params.set(key, object[key]);
-		} else {
+		}
+		else {
 			params.delete(key);
 		}
 	});
@@ -66,6 +71,6 @@ export default (history, defaultQuery = {}) => {
 
 	return [
 		query,
-		query => history.push(`${pathname}?${toQueryString(query, search)}`)
+		query => history.push(`${pathname}?${toQueryString(query, search)}`),
 	];
 };

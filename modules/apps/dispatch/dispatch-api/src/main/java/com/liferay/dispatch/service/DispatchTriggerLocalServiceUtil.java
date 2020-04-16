@@ -53,11 +53,11 @@ public class DispatchTriggerLocalServiceUtil {
 	public static com.liferay.dispatch.model.DispatchTrigger addDispatchTrigger(
 			long userId, String name, boolean system, String type,
 			com.liferay.portal.kernel.util.UnicodeProperties
-				typeSettingsProperties)
+				typeSettingsUnicodeProperties)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return getService().addDispatchTrigger(
-			userId, name, system, type, typeSettingsProperties);
+			userId, name, system, type, typeSettingsUnicodeProperties);
 	}
 
 	/**
@@ -70,6 +70,16 @@ public class DispatchTriggerLocalServiceUtil {
 		createDispatchTrigger(long dispatchTriggerId) {
 
 		return getService().createDispatchTrigger(dispatchTriggerId);
+	}
+
+	/**
+	 * @throws PortalException
+	 */
+	public static com.liferay.portal.kernel.model.PersistedModel
+			createPersistedModel(java.io.Serializable primaryKeyObj)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return getService().createPersistedModel(primaryKeyObj);
 	}
 
 	/**
@@ -285,6 +295,9 @@ public class DispatchTriggerLocalServiceUtil {
 		return getService().getOSGiServiceIdentifier();
 	}
 
+	/**
+	 * @throws PortalException
+	 */
 	public static com.liferay.portal.kernel.model.PersistedModel
 			getPersistedModel(java.io.Serializable primaryKeyObj)
 		throws com.liferay.portal.kernel.exception.PortalException {
@@ -328,11 +341,11 @@ public class DispatchTriggerLocalServiceUtil {
 			updateDispatchTrigger(
 				long dispatchTriggerId, String name,
 				com.liferay.portal.kernel.util.UnicodeProperties
-					typeSettingsProperties)
+					typeSettingsUnicodeProperties)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return getService().updateDispatchTrigger(
-			dispatchTriggerId, name, typeSettingsProperties);
+			dispatchTriggerId, name, typeSettingsUnicodeProperties);
 	}
 
 	public static DispatchTriggerLocalService getService() {

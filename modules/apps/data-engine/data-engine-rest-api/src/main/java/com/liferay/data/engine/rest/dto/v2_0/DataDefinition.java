@@ -168,6 +168,35 @@ public class DataDefinition {
 	protected String dataDefinitionKey;
 
 	@Schema
+	@Valid
+	public DataRule[] getDataRules() {
+		return dataRules;
+	}
+
+	public void setDataRules(DataRule[] dataRules) {
+		this.dataRules = dataRules;
+	}
+
+	@JsonIgnore
+	public void setDataRules(
+		UnsafeSupplier<DataRule[], Exception> dataRulesUnsafeSupplier) {
+
+		try {
+			dataRules = dataRulesUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected DataRule[] dataRules;
+
+	@Schema
 	public Date getDateCreated() {
 		return dateCreated;
 	}
@@ -549,6 +578,26 @@ public class DataDefinition {
 			sb.append(_escape(dataDefinitionKey));
 
 			sb.append("\"");
+		}
+
+		if (dataRules != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"dataRules\": ");
+
+			sb.append("[");
+
+			for (int i = 0; i < dataRules.length; i++) {
+				sb.append(String.valueOf(dataRules[i]));
+
+				if ((i + 1) < dataRules.length) {
+					sb.append(", ");
+				}
+			}
+
+			sb.append("]");
 		}
 
 		if (dateCreated != null) {

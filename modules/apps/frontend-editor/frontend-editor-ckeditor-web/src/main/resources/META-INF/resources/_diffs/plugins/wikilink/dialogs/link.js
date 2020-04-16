@@ -23,7 +23,7 @@ CKEDITOR.dialog.add('link', editor => {
 		var instance = this;
 
 		var data = {
-			address: ''
+			address: '',
 		};
 
 		if (element) {
@@ -31,10 +31,12 @@ CKEDITOR.dialog.add('link', editor => {
 
 			if (editor.config.decodeLinks) {
 				data.address = decodeURIComponent(href);
-			} else {
+			}
+			else {
 				data.address = href;
 			}
-		} else {
+		}
+		else {
 			var selection = editor.getSelection();
 
 			data.address = selection.getSelectedText();
@@ -91,7 +93,7 @@ CKEDITOR.dialog.add('link', editor => {
 									);
 
 									return func.apply(instance);
-								}
+								},
 							},
 							{
 								id: 'linkBrowse',
@@ -116,7 +118,8 @@ CKEDITOR.dialog.add('link', editor => {
 												urlField.setValue(
 													selectedItem.title
 												);
-											} else {
+											}
+											else {
 												urlField.setValue(
 													location.origin + newVal
 												);
@@ -125,18 +128,18 @@ CKEDITOR.dialog.add('link', editor => {
 									);
 								},
 								required: true,
-								type: 'button'
-							}
+								type: 'button',
+							},
 						],
 						id: 'linkOptions',
 						padding: 1,
-						type: 'vbox'
-					}
+						type: 'vbox',
+					},
 				],
 				id: 'info',
 				label: LANG_LINK.info,
-				title: LANG_LINK.info
-			}
+				title: LANG_LINK.info,
+			},
 		],
 
 		minHeight: 100,
@@ -185,13 +188,14 @@ CKEDITOR.dialog.add('link', editor => {
 
 				var style = new CKEDITOR.style({
 					attributes,
-					element: 'a'
+					element: 'a',
 				});
 
 				style.type = CKEDITOR.STYLE_INLINE;
 
 				editor.applyStyle(style);
-			} else {
+			}
+			else {
 				var selectedElement = instance._.selectedElement;
 
 				var currentText = selectedElement.getText(data.text);
@@ -222,6 +226,6 @@ CKEDITOR.dialog.add('link', editor => {
 			instance.setupContent(parseLink.apply(instance, [editor, element]));
 		},
 
-		title: LANG_LINK.title
+		title: LANG_LINK.title,
 	};
 });

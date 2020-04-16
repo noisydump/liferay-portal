@@ -67,7 +67,8 @@
 					fileEntryAttributeName,
 					itemValue.fileEntryId
 				);
-			} else {
+			}
+			else {
 				imgEl.setAttribute('src', imageSrc);
 			}
 
@@ -105,7 +106,7 @@
 
 					sources += Lang.sub(TPL_SOURCE_TAG, {
 						media: mediaText,
-						srcset: source.src
+						srcset: source.src,
 					});
 				});
 
@@ -113,11 +114,12 @@
 					defaultSrc: itemValue.defaultSource,
 					fileEntryAttributeName,
 					fileEntryId: itemValue.fileEntryId,
-					sources
+					sources,
 				});
 
 				pictureEl = CKEDITOR.dom.element.createFromHtml(pictureHtml);
-			} catch (e) {}
+			}
+			catch (e) {}
 
 			return pictureEl;
 		},
@@ -148,7 +150,8 @@
 					selectedItem,
 					fileEntryAttributeName
 				);
-			} else {
+			}
+			else {
 				el = instance._getImgElement(
 					imageSrc,
 					selectedItem,
@@ -183,10 +186,11 @@
 						nativeEvent: {},
 						selectionData: {
 							element,
-							region: element.getClientRect()
-						}
+							region: element.getClientRect(),
+						},
 					});
-				} else {
+				}
+				else {
 					editor.execCommand('enter');
 				}
 			}
@@ -196,6 +200,6 @@
 			var instance = this;
 
 			instance._bindEvent(editor);
-		}
+		},
 	});
 })();

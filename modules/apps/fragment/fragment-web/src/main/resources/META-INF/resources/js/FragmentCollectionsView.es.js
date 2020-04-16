@@ -48,7 +48,7 @@ class FragmentCollectionsView extends PortletBase {
 		const ACTIONS = {
 			deleteCollections: this._deleteCollections,
 			exportCollections: this._exportCollections,
-			openImportView: this._openImportView
+			openImportView: this._openImportView,
 		};
 
 		component.on(['click', 'itemClicked'], (event, facade) => {
@@ -56,7 +56,8 @@ class FragmentCollectionsView extends PortletBase {
 
 			if (event.data && event.data.item) {
 				itemData = event.data.item.data;
-			} else if (!event.data && facade && facade.target) {
+			}
+			else if (!event.data && facade && facade.target) {
 				itemData = facade.target.data;
 			}
 
@@ -140,7 +141,7 @@ class FragmentCollectionsView extends PortletBase {
 			buttonAddLabel: dialogButtonLabel,
 			eventName: this.ns('selectCollections'),
 			title: dialogTitle,
-			url: dialogURL
+			url: dialogURL,
 		});
 
 		itemSelectorDialog.on('selectedItemChange', event => {
@@ -163,16 +164,16 @@ class FragmentCollectionsView extends PortletBase {
 				after: {
 					destroy: () => {
 						window.location.reload();
-					}
+					},
 				},
-				destroyOnHide: true
+				destroyOnHide: true,
 			},
 			dialogIframe: {
-				bodyCssClass: 'dialog-with-footer'
+				bodyCssClass: 'dialog-with-footer',
 			},
 			id: this.ns('openImportView'),
 			title: Liferay.Language.get('import'),
-			uri: this.viewImportURL
+			uri: this.viewImportURL,
 		});
 	}
 }
@@ -231,7 +232,7 @@ FragmentCollectionsView.STATE = {
 	 * @review
 	 * @type {string}
 	 */
-	viewImportURL: Config.string().required()
+	viewImportURL: Config.string().required(),
 };
 
 export default FragmentCollectionsView;

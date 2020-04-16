@@ -257,21 +257,21 @@ public class UserFinderImpl extends UserFinderBaseImpl implements UserFinder {
 				sql = StringUtil.removeSubstring(sql, _STATUS_SQL);
 			}
 
-			SQLQuery q = session.createSynchronizedSQLQuery(sql);
+			SQLQuery sqlQuery = session.createSynchronizedSQLQuery(sql);
 
-			QueryPos qPos = QueryPos.getInstance(q);
+			QueryPos queryPos = QueryPos.getInstance(sqlQuery);
 
 			for (int i = 0; i < 4; i++) {
-				qPos.add(companyId);
-				qPos.add(false);
+				queryPos.add(companyId);
+				queryPos.add(false);
 
 				if (status != WorkflowConstants.STATUS_ANY) {
-					qPos.add(status);
+					queryPos.add(status);
 				}
 			}
 
 			List<Object[]> list = (List<Object[]>)QueryUtil.list(
-				q, getDialect(), QueryUtil.ALL_POS, QueryUtil.ALL_POS);
+				sqlQuery, getDialect(), QueryUtil.ALL_POS, QueryUtil.ALL_POS);
 
 			for (Object[] objects : list) {
 				Number groupId = (Number)objects[0];
@@ -394,19 +394,19 @@ public class UserFinderImpl extends UserFinderBaseImpl implements UserFinder {
 					StringPool.NOT_EQUAL);
 			}
 
-			SQLQuery q = session.createSynchronizedSQLQuery(sql);
+			SQLQuery sqlQuery = session.createSynchronizedSQLQuery(sql);
 
-			q.addScalar(COUNT_COLUMN_NAME, Type.LONG);
+			sqlQuery.addScalar(COUNT_COLUMN_NAME, Type.LONG);
 
-			QueryPos qPos = QueryPos.getInstance(q);
+			QueryPos queryPos = QueryPos.getInstance(sqlQuery);
 
-			qPos.add(userId);
-			qPos.add(socialRelationType);
-			qPos.add(companyId);
-			qPos.add(Boolean.FALSE);
-			qPos.add(status);
+			queryPos.add(userId);
+			queryPos.add(socialRelationType);
+			queryPos.add(companyId);
+			queryPos.add(Boolean.FALSE);
+			queryPos.add(status);
 
-			Iterator<Long> itr = q.iterate();
+			Iterator<Long> itr = sqlQuery.iterate();
 
 			if (itr.hasNext()) {
 				Long count = itr.next();
@@ -437,17 +437,17 @@ public class UserFinderImpl extends UserFinderBaseImpl implements UserFinder {
 
 			sql = replaceJoinAndWhere(sql, params);
 
-			SQLQuery q = session.createSynchronizedSQLQuery(sql);
+			SQLQuery sqlQuery = session.createSynchronizedSQLQuery(sql);
 
-			q.addScalar(COUNT_COLUMN_NAME, Type.LONG);
+			sqlQuery.addScalar(COUNT_COLUMN_NAME, Type.LONG);
 
-			QueryPos qPos = QueryPos.getInstance(q);
+			QueryPos queryPos = QueryPos.getInstance(sqlQuery);
 
-			setJoin(qPos, params);
+			setJoin(queryPos, params);
 
-			qPos.add(userId);
+			queryPos.add(userId);
 
-			Iterator<Long> itr = q.iterate();
+			Iterator<Long> itr = sqlQuery.iterate();
 
 			if (itr.hasNext()) {
 				Long count = itr.next();
@@ -572,29 +572,29 @@ public class UserFinderImpl extends UserFinderBaseImpl implements UserFinder {
 
 			sql = CustomSQLUtil.replaceAndOperator(sql, andOperator);
 
-			SQLQuery q = session.createSynchronizedSQLQuery(sql);
+			SQLQuery sqlQuery = session.createSynchronizedSQLQuery(sql);
 
-			q.addScalar(COUNT_COLUMN_NAME, Type.LONG);
+			sqlQuery.addScalar(COUNT_COLUMN_NAME, Type.LONG);
 
-			QueryPos qPos = QueryPos.getInstance(q);
+			QueryPos queryPos = QueryPos.getInstance(sqlQuery);
 
 			for (LinkedHashMap<String, Object> paramsMap : paramsList) {
-				setJoin(qPos, paramsMap);
+				setJoin(queryPos, paramsMap);
 
-				qPos.add(companyId);
-				qPos.add(false);
-				qPos.add(firstNames, 2);
-				qPos.add(middleNames, 2);
-				qPos.add(lastNames, 2);
-				qPos.add(screenNames, 2);
-				qPos.add(emailAddresses, 2);
+				queryPos.add(companyId);
+				queryPos.add(false);
+				queryPos.add(firstNames, 2);
+				queryPos.add(middleNames, 2);
+				queryPos.add(lastNames, 2);
+				queryPos.add(screenNames, 2);
+				queryPos.add(emailAddresses, 2);
 
 				if (status != WorkflowConstants.STATUS_ANY) {
-					qPos.add(status);
+					queryPos.add(status);
 				}
 			}
 
-			Iterator<Long> itr = q.iterate();
+			Iterator<Long> itr = sqlQuery.iterate();
 
 			if (itr.hasNext()) {
 				Long count = itr.next();
@@ -659,15 +659,15 @@ public class UserFinderImpl extends UserFinderBaseImpl implements UserFinder {
 
 			String sql = CustomSQLUtil.get(FIND_BY_NO_ANNOUNCEMENTS_DELIVERIES);
 
-			SQLQuery q = session.createSynchronizedSQLQuery(sql);
+			SQLQuery sqlQuery = session.createSynchronizedSQLQuery(sql);
 
-			q.addEntity("User_", UserImpl.class);
+			sqlQuery.addEntity("User_", UserImpl.class);
 
-			QueryPos qPos = QueryPos.getInstance(q);
+			QueryPos queryPos = QueryPos.getInstance(sqlQuery);
 
-			qPos.add(type);
+			queryPos.add(type);
 
-			return q.list(true);
+			return sqlQuery.list(true);
 		}
 		catch (Exception exception) {
 			throw new SystemException(exception);
@@ -686,11 +686,11 @@ public class UserFinderImpl extends UserFinderBaseImpl implements UserFinder {
 
 			String sql = CustomSQLUtil.get(FIND_BY_NO_GROUPS);
 
-			SQLQuery q = session.createSynchronizedSQLQuery(sql);
+			SQLQuery sqlQuery = session.createSynchronizedSQLQuery(sql);
 
-			q.addEntity("User_", UserImpl.class);
+			sqlQuery.addEntity("User_", UserImpl.class);
 
-			return q.list(true);
+			return sqlQuery.list(true);
 		}
 		catch (Exception exception) {
 			throw new SystemException(exception);
@@ -729,19 +729,20 @@ public class UserFinderImpl extends UserFinderBaseImpl implements UserFinder {
 					sql, new TableNameOrderByComparator<>(obc, "User_"));
 			}
 
-			SQLQuery q = session.createSynchronizedSQLQuery(sql);
+			SQLQuery sqlQuery = session.createSynchronizedSQLQuery(sql);
 
-			q.addEntity("User_", UserImpl.class);
+			sqlQuery.addEntity("User_", UserImpl.class);
 
-			QueryPos qPos = QueryPos.getInstance(q);
+			QueryPos queryPos = QueryPos.getInstance(sqlQuery);
 
-			qPos.add(userId);
-			qPos.add(socialRelationType);
-			qPos.add(companyId);
-			qPos.add(Boolean.FALSE);
-			qPos.add(status);
+			queryPos.add(userId);
+			queryPos.add(socialRelationType);
+			queryPos.add(companyId);
+			queryPos.add(Boolean.FALSE);
+			queryPos.add(status);
 
-			return (List<User>)QueryUtil.list(q, getDialect(), start, end);
+			return (List<User>)QueryUtil.list(
+				sqlQuery, getDialect(), start, end);
 		}
 		catch (Exception exception) {
 			throw new SystemException(exception);
@@ -762,18 +763,18 @@ public class UserFinderImpl extends UserFinderBaseImpl implements UserFinder {
 
 			String sql = CustomSQLUtil.get(FIND_BY_USERS_ORGS_GT_USER_ID);
 
-			SQLQuery q = session.createSynchronizedSQLQuery(sql);
+			SQLQuery sqlQuery = session.createSynchronizedSQLQuery(sql);
 
-			q.addEntity("User_", UserImpl.class);
+			sqlQuery.addEntity("User_", UserImpl.class);
 
-			QueryPos qPos = QueryPos.getInstance(q);
+			QueryPos queryPos = QueryPos.getInstance(sqlQuery);
 
-			qPos.add(organizationId);
-			qPos.add(companyId);
-			qPos.add(Boolean.FALSE);
-			qPos.add(gtUserId);
+			queryPos.add(organizationId);
+			queryPos.add(companyId);
+			queryPos.add(Boolean.FALSE);
+			queryPos.add(gtUserId);
 
-			return (List<User>)QueryUtil.list(q, getDialect(), 0, size);
+			return (List<User>)QueryUtil.list(sqlQuery, getDialect(), 0, size);
 		}
 		finally {
 			session.close();
@@ -792,18 +793,18 @@ public class UserFinderImpl extends UserFinderBaseImpl implements UserFinder {
 			String sql = CustomSQLUtil.get(
 				FIND_BY_USERS_USER_GROUPS_GT_USER_ID);
 
-			SQLQuery q = session.createSynchronizedSQLQuery(sql);
+			SQLQuery sqlQuery = session.createSynchronizedSQLQuery(sql);
 
-			q.addEntity("User_", UserImpl.class);
+			sqlQuery.addEntity("User_", UserImpl.class);
 
-			QueryPos qPos = QueryPos.getInstance(q);
+			QueryPos queryPos = QueryPos.getInstance(sqlQuery);
 
-			qPos.add(userGroupId);
-			qPos.add(companyId);
-			qPos.add(Boolean.FALSE);
-			qPos.add(gtUserId);
+			queryPos.add(userGroupId);
+			queryPos.add(companyId);
+			queryPos.add(Boolean.FALSE);
+			queryPos.add(gtUserId);
 
-			return (List<User>)QueryUtil.list(q, getDialect(), 0, size);
+			return (List<User>)QueryUtil.list(sqlQuery, getDialect(), 0, size);
 		}
 		finally {
 			session.close();
@@ -924,29 +925,30 @@ public class UserFinderImpl extends UserFinderBaseImpl implements UserFinder {
 
 			sql = CustomSQLUtil.replaceAndOperator(sql, andOperator);
 
-			SQLQuery q = session.createSynchronizedSQLQuery(sql);
+			SQLQuery sqlQuery = session.createSynchronizedSQLQuery(sql);
 
-			q.addScalar("userId", Type.LONG);
+			sqlQuery.addScalar("userId", Type.LONG);
 
-			QueryPos qPos = QueryPos.getInstance(q);
+			QueryPos queryPos = QueryPos.getInstance(sqlQuery);
 
 			for (LinkedHashMap<String, Object> paramsMap : paramsList) {
-				setJoin(qPos, paramsMap);
+				setJoin(queryPos, paramsMap);
 
-				qPos.add(companyId);
-				qPos.add(false);
-				qPos.add(firstNames, 2);
-				qPos.add(middleNames, 2);
-				qPos.add(lastNames, 2);
-				qPos.add(screenNames, 2);
-				qPos.add(emailAddresses, 2);
+				queryPos.add(companyId);
+				queryPos.add(false);
+				queryPos.add(firstNames, 2);
+				queryPos.add(middleNames, 2);
+				queryPos.add(lastNames, 2);
+				queryPos.add(screenNames, 2);
+				queryPos.add(emailAddresses, 2);
 
 				if (status != WorkflowConstants.STATUS_ANY) {
-					qPos.add(status);
+					queryPos.add(status);
 				}
 			}
 
-			return (List<Long>)QueryUtil.list(q, getDialect(), start, end);
+			return (List<Long>)QueryUtil.list(
+				sqlQuery, getDialect(), start, end);
 		}
 		catch (Exception exception) {
 			throw new SystemException(exception);
@@ -1628,7 +1630,7 @@ public class UserFinderImpl extends UserFinderBaseImpl implements UserFinder {
 	}
 
 	protected void setJoin(
-		QueryPos qPos, LinkedHashMap<String, Object> params) {
+		QueryPos queryPos, LinkedHashMap<String, Object> params) {
 
 		if (params == null) {
 			return;
@@ -1647,7 +1649,7 @@ public class UserFinderImpl extends UserFinderBaseImpl implements UserFinder {
 				Long valueLong = (Long)value;
 
 				if (Validator.isNotNull(valueLong)) {
-					qPos.add(valueLong);
+					queryPos.add(valueLong);
 				}
 			}
 			else if (value instanceof Long[]) {
@@ -1663,7 +1665,7 @@ public class UserFinderImpl extends UserFinderBaseImpl implements UserFinder {
 
 				for (Long element : valueArray) {
 					if (Validator.isNotNull(element)) {
-						qPos.add(element);
+						queryPos.add(element);
 					}
 				}
 			}
@@ -1672,7 +1674,7 @@ public class UserFinderImpl extends UserFinderBaseImpl implements UserFinder {
 
 				for (Long[] valueArray : valueDoubleArray) {
 					for (Long valueLong : valueArray) {
-						qPos.add(valueLong);
+						queryPos.add(valueLong);
 					}
 				}
 			}
@@ -1680,7 +1682,7 @@ public class UserFinderImpl extends UserFinderBaseImpl implements UserFinder {
 				String valueString = (String)value;
 
 				if (Validator.isNotNull(valueString)) {
-					qPos.add(valueString);
+					queryPos.add(valueString);
 				}
 			}
 			else if (value instanceof String[]) {
@@ -1688,14 +1690,14 @@ public class UserFinderImpl extends UserFinderBaseImpl implements UserFinder {
 
 				for (String element : valueArray) {
 					if (Validator.isNotNull(element)) {
-						qPos.add(element);
+						queryPos.add(element);
 					}
 				}
 			}
 			else if (value instanceof CustomSQLParam) {
 				CustomSQLParam customSQLParam = (CustomSQLParam)value;
 
-				customSQLParam.process(qPos);
+				customSQLParam.process(queryPos);
 			}
 		}
 	}

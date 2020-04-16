@@ -12,29 +12,32 @@
  * details.
  */
 
-import {cleanup, render, fireEvent} from '@testing-library/react';
+import {cleanup, fireEvent, render} from '@testing-library/react';
 import React from 'react';
 
 import '@testing-library/jest-dom/extend-expect';
 
+import {StoreContextProvider} from '../../../../../../src/main/resources/META-INF/resources/page_editor/app/store';
 import PageContent from '../../../../../../src/main/resources/META-INF/resources/page_editor/plugins/contents/components/PageContent';
 
 const renderPageContent = props =>
 	render(
-		<PageContent
-			actions={{
-				editURL: 'editURL',
-				permissionsURL: 'permissionsURL',
-				viewUsagesURL: 'viewUsagesURL'
-			}}
-			name="Web Content Article"
-			status={{
-				hasApprovedVersion: true
-			}}
-			title="Test Web Content"
-			usagesCount={1}
-			{...props}
-		></PageContent>
+		<StoreContextProvider initialState={[{}, {}]}>
+			<PageContent
+				actions={{
+					editURL: 'editURL',
+					permissionsURL: 'permissionsURL',
+					viewUsagesURL: 'viewUsagesURL',
+				}}
+				name="Web Content Article"
+				status={{
+					hasApprovedVersion: true,
+				}}
+				title="Test Web Content"
+				usagesCount={1}
+				{...props}
+			></PageContent>
+		</StoreContextProvider>
 	);
 
 describe('PageContent', () => {
@@ -77,8 +80,8 @@ describe('PageContent', () => {
 	it('shows View Usages action in dropdown menu if receives a View Usages URL', () => {
 		const {getByText} = renderPageContent({
 			status: {
-				hasApprovedVersion: false
-			}
+				hasApprovedVersion: false,
+			},
 		});
 
 		fireEvent.click(getByText('open-actions-menu'));

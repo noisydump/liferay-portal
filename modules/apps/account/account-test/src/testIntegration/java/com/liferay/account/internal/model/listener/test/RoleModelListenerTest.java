@@ -14,6 +14,7 @@
 
 package com.liferay.account.internal.model.listener.test;
 
+import com.liferay.account.constants.AccountConstants;
 import com.liferay.account.constants.AccountRoleConstants;
 import com.liferay.account.model.AccountEntry;
 import com.liferay.account.model.AccountRole;
@@ -25,6 +26,7 @@ import com.liferay.portal.kernel.exception.ModelListenerException;
 import com.liferay.portal.kernel.exception.RequiredRoleException;
 import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.Role;
+import com.liferay.portal.kernel.model.role.RoleConstants;
 import com.liferay.portal.kernel.service.CompanyLocalService;
 import com.liferay.portal.kernel.service.RoleLocalService;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
@@ -41,7 +43,6 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
@@ -58,13 +59,51 @@ public class RoleModelListenerTest {
 	public static final AggregateTestRule aggregateTestRule =
 		new LiferayIntegrationTestRule();
 
-	@Before
-	public void setUp() throws Exception {
-		_company = CompanyTestUtil.addCompany();
+	@Test
+	public void testAddAccountScopedRole() throws Exception {
+		_role = _roleLocalService.addRole(
+			TestPropsValues.getUserId(), AccountRole.class.getName(),
+			AccountConstants.ACCOUNT_ENTRY_ID_DEFAULT,
+			RandomTestUtil.randomString(),
+			RandomTestUtil.randomLocaleStringMap(),
+			RandomTestUtil.randomLocaleStringMap(), RoleConstants.TYPE_ACCOUNT,
+			null, null);
+
+		AccountRole accountRole =
+			_accountRoleLocalService.fetchAccountRoleByRoleId(
+				_role.getRoleId());
+
+		Assert.assertNotNull(accountRole);
+		Assert.assertEquals(_role.getRoleId(), accountRole.getRoleId());
+	}
+
+	@Test
+	public void testDeleteAccountScopedRoleDeletesAccountRole()
+		throws Exception {
+
+		Role role = _roleLocalService.addRole(
+			TestPropsValues.getUserId(), AccountRole.class.getName(),
+			AccountConstants.ACCOUNT_ENTRY_ID_DEFAULT,
+			RandomTestUtil.randomString(),
+			RandomTestUtil.randomLocaleStringMap(),
+			RandomTestUtil.randomLocaleStringMap(), RoleConstants.TYPE_ACCOUNT,
+			null, null);
+
+		Assert.assertNotNull(
+			_accountRoleLocalService.fetchAccountRoleByRoleId(
+				role.getRoleId()));
+
+		_roleLocalService.deleteRole(role);
+
+		Assert.assertNull(
+			_accountRoleLocalService.fetchAccountRoleByRoleId(
+				role.getRoleId()));
 	}
 
 	@Test
 	public void testDeleteCompany() throws Exception {
+		_company = CompanyTestUtil.addCompany();
+
 		List<Long> requiredRoleIds = Stream.of(
 			AccountRoleConstants.REQUIRED_ROLE_NAMES
 		).map(
@@ -87,6 +126,8 @@ public class RoleModelListenerTest {
 
 	@Test
 	public void testDeleteDefaultAccountRole() throws Exception {
+		_company = CompanyTestUtil.addCompany();
+
 		for (String requiredRoleName :
 				AccountRoleConstants.REQUIRED_ROLE_NAMES) {
 
@@ -116,12 +157,12 @@ public class RoleModelListenerTest {
 		_accountEntry = AccountEntryTestUtil.addAccountEntry(
 			_accountEntryLocalService, WorkflowConstants.STATUS_APPROVED);
 
-		_accountRole = _accountRoleLocalService.addAccountRole(
+		AccountRole accountRole = _accountRoleLocalService.addAccountRole(
 			TestPropsValues.getUserId(), _accountEntry.getAccountEntryId(),
 			RandomTestUtil.randomString(), null, null);
 
 		try {
-			_roleLocalService.deleteRole(_accountRole.getRoleId());
+			_roleLocalService.deleteRole(accountRole.getRoleId());
 
 			Assert.fail(
 				"Allowed to delete a role associated with an account role");
@@ -146,9 +187,6 @@ public class RoleModelListenerTest {
 	@Inject
 	private AccountEntryLocalService _accountEntryLocalService;
 
-	@DeleteAfterTestRun
-	private AccountRole _accountRole;
-
 	@Inject
 	private AccountRoleLocalService _accountRoleLocalService;
 
@@ -157,6 +195,9 @@ public class RoleModelListenerTest {
 
 	@Inject
 	private CompanyLocalService _companyLocalService;
+
+	@DeleteAfterTestRun
+	private Role _role;
 
 	@Inject
 	private RoleLocalService _roleLocalService;

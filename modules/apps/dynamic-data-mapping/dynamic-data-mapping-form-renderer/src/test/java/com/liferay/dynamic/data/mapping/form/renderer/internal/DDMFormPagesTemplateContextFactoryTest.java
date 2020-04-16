@@ -222,7 +222,7 @@ public class DDMFormPagesTemplateContextFactoryTest extends PowerMockito {
 		DDMForm ddmForm = DDMFormTestUtil.createDDMForm();
 
 		ddmForm.addDDMFormRule(
-			new DDMFormRule("TRUE", Arrays.asList("jumpPage(0, 2)")));
+			new DDMFormRule(Arrays.asList("jumpPage(0, 2)"), "TRUE"));
 
 		ddmForm.addDDMFormField(
 			DDMFormTestUtil.createDDMFormField(
@@ -780,7 +780,8 @@ public class DDMFormPagesTemplateContextFactoryTest extends PowerMockito {
 
 		Map<String, String> optionField = options.get(0);
 
-		Assert.assertEquals(formFieldOption, optionField.get("label"));
+		Assert.assertEquals(
+			HtmlUtil.escape(formFieldOption), optionField.get("label"));
 
 		Assert.assertEquals(formFieldTip, fieldTemplateContext.get("tip"));
 	}

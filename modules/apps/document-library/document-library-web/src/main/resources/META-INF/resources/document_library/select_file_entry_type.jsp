@@ -61,9 +61,9 @@ portletURL.setParameter("eventName", eventName);
 				row.setCssClass("select-action active");
 			}
 
-			Map<String, Object> rowData = new HashMap<String, Object>();
-
-			rowData.put("fileEntryTypeId", fileEntryType.getFileEntryTypeId());
+			Map<String, Object> rowData = HashMapBuilder.<String, Object>put(
+				"fileEntryTypeId", fileEntryType.getFileEntryTypeId()
+			).build();
 
 			row.setData(rowData);
 			%>
@@ -107,7 +107,7 @@ portletURL.setParameter("eventName", eventName);
 			Liferay.Util.getOpener().Liferay.fire(
 				'<%= HtmlUtil.escapeJS(eventName) %>',
 				{
-					data: currentTarget.attr('data-fileEntryTypeId')
+					data: currentTarget.attr('data-fileEntryTypeId'),
 				}
 			);
 		},

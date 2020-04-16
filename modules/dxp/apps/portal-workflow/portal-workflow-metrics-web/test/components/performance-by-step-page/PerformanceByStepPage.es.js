@@ -26,20 +26,18 @@ describe('The PerformanceByStepPage component having data should', () => {
 			breachedInstanceCount: 4,
 			durationAvg: 10800000,
 			instanceCount: 4,
-			key: 'review',
-			name: 'Review',
+			node: {key: 'review', label: 'Review', name: 'Review'},
 			onTimeInstanceCount: 4,
-			overdueInstanceCount: 4
+			overdueInstanceCount: 4,
 		},
 		{
 			breachedInstanceCount: 2,
 			durationAvg: 475200000,
 			instanceCount: 2,
-			key: 'update',
-			name: 'Update',
+			node: {key: 'update', label: 'Update', name: 'Update'},
 			onTimeInstanceCount: 2,
-			overdueInstanceCount: 2
-		}
+			overdueInstanceCount: 2,
+		},
 	];
 
 	const data = {items, totalCount: items.length};
@@ -51,24 +49,24 @@ describe('The PerformanceByStepPage component having data should', () => {
 				dateStart: '2019-12-03T00:00:00Z',
 				defaultTimeRange: false,
 				id: 7,
-				name: 'Last 7 Days'
+				name: 'Last 7 Days',
 			},
 			{
 				dateEnd: '2019-12-09T00:00:00Z',
 				dateStart: '2019-11-10T00:00:00Z',
 				defaultTimeRange: true,
 				id: 30,
-				name: 'Last 30 Days'
-			}
+				name: 'Last 30 Days',
+			},
 		],
-		totalCount: 2
+		totalCount: 2,
 	};
 
 	const clientMock = {
 		get: jest
 			.fn()
-			.mockResolvedValueOnce({data: timeRangeData})
 			.mockResolvedValue({data})
+			.mockResolvedValueOnce({data}),
 	};
 
 	const wrapper = ({children}) => (

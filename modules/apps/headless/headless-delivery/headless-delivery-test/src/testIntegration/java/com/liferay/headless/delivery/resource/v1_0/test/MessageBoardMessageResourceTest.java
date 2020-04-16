@@ -24,10 +24,10 @@ import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.UserLocalServiceUtil;
 import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
+import com.liferay.portal.search.test.util.SearchTestRule;
 
 import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.Rule;
 import org.junit.runner.RunWith;
 
 /**
@@ -47,41 +47,40 @@ public class MessageBoardMessageResourceTest
 		serviceContext.setScopeGroupId(testGroup.getGroupId());
 	}
 
-	@Ignore
 	@Override
-	@Test
 	public void testGetMessageBoardMessageMessageBoardMessagesPageWithSortInteger() {
 	}
 
-	@Ignore
 	@Override
-	@Test
 	public void testGetMessageBoardThreadMessageBoardMessagesPageWithSortInteger() {
 	}
 
-	@Ignore
 	@Override
-	@Test
+	public void testGetSiteMessageBoardMessageByFriendlyUrlPath() {
+	}
+
+	@Override
 	public void testGetSiteMessageBoardMessagesPageWithSortInteger() {
 	}
 
-	@Ignore
 	@Override
-	@Test
 	public void testGraphQLDeleteMessageBoardMessage() {
 	}
 
-	@Ignore
 	@Override
-	@Test
 	public void testGraphQLGetMessageBoardMessage() {
 	}
 
-	@Ignore
 	@Override
-	@Test
+	public void testGraphQLGetSiteMessageBoardMessageByFriendlyUrlPath() {
+	}
+
+	@Override
 	public void testGraphQLGetSiteMessageBoardMessagesPage() {
 	}
+
+	@Rule
+	public SearchTestRule searchTestRule = new SearchTestRule();
 
 	@Override
 	protected String[] getAdditionalAssertFieldNames() {
@@ -91,6 +90,16 @@ public class MessageBoardMessageResourceTest
 	@Override
 	protected String[] getIgnoredEntityFieldNames() {
 		return new String[] {"creatorId", "messageBoardSectionId"};
+	}
+
+	@Override
+	protected MessageBoardMessage randomMessageBoardMessage() throws Exception {
+		MessageBoardMessage messageBoardMessage =
+			super.randomMessageBoardMessage();
+
+		messageBoardMessage.setMessageBoardSectionId((Long)null);
+
+		return messageBoardMessage;
 	}
 
 	@Override

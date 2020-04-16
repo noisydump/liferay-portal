@@ -14,9 +14,8 @@
 
 import {openToast} from 'frontend-js-web';
 import PropTypes from 'prop-types';
-import React, {useState, useContext} from 'react';
+import React, {useState} from 'react';
 
-import {ConfigContext} from '../../../app/config/index';
 import {useDispatch} from '../../../app/store/index';
 import addFragmentComment from '../../../app/thunks/addFragmentComment';
 import CommentForm from './CommentForm';
@@ -26,8 +25,6 @@ export default function AddCommentForm({fragmentEntryLinkId}) {
 	const [showButtons, setShowButtons] = useState(false);
 	const [textareaContent, setTextareaContent] = useState('');
 	const dispatch = useDispatch();
-
-	const config = useContext(ConfigContext);
 
 	const _handleCancelButtonClick = () => {
 		setShowButtons(false);
@@ -44,8 +41,7 @@ export default function AddCommentForm({fragmentEntryLinkId}) {
 		dispatch(
 			addFragmentComment({
 				body: textareaContent,
-				config,
-				fragmentEntryLinkId
+				fragmentEntryLinkId,
 			})
 		)
 			.then(() => {
@@ -59,7 +55,7 @@ export default function AddCommentForm({fragmentEntryLinkId}) {
 						'the-comment-could-not-be-saved'
 					),
 					title: Liferay.Language.get('error'),
-					type: 'danger'
+					type: 'danger',
 				});
 
 				setAddingComment(false);
@@ -90,5 +86,5 @@ export default function AddCommentForm({fragmentEntryLinkId}) {
 }
 
 AddCommentForm.propTypes = {
-	fragmentEntryLinkId: PropTypes.string.isRequired
+	fragmentEntryLinkId: PropTypes.string.isRequired,
 };

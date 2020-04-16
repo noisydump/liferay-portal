@@ -202,6 +202,25 @@ public abstract class BaseDataLayoutResourceTestCase {
 	}
 
 	@Test
+	public void testDeleteDataLayoutsDataDefinition() throws Exception {
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		DataLayout dataLayout =
+			testDeleteDataLayoutsDataDefinition_addDataLayout();
+
+		assertHttpResponseStatusCode(
+			204,
+			dataLayoutResource.deleteDataLayoutsDataDefinitionHttpResponse(
+				dataLayout.getDataDefinitionId()));
+	}
+
+	protected DataLayout testDeleteDataLayoutsDataDefinition_addDataLayout()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
 	public void testGetDataDefinitionDataLayoutsPage() throws Exception {
 		Page<DataLayout> page =
 			dataLayoutResource.getDataDefinitionDataLayoutsPage(
@@ -350,9 +369,11 @@ public abstract class BaseDataLayoutResourceTestCase {
 				}
 				else {
 					BeanUtils.setProperty(
-						dataLayout1, entityField.getName(), "Aaa");
+						dataLayout1, entityField.getName(),
+						"Aaa" + RandomTestUtil.randomString());
 					BeanUtils.setProperty(
-						dataLayout2, entityField.getName(), "Bbb");
+						dataLayout2, entityField.getName(),
+						"Bbb" + RandomTestUtil.randomString());
 				}
 			});
 	}
@@ -450,6 +471,7 @@ public abstract class BaseDataLayoutResourceTestCase {
 
 	@Test
 	public void testDeleteDataLayout() throws Exception {
+		@SuppressWarnings("PMD.UnusedLocalVariable")
 		DataLayout dataLayout = testDeleteDataLayout_addDataLayout();
 
 		assertHttpResponseStatusCode(
@@ -770,6 +792,14 @@ public abstract class BaseDataLayoutResourceTestCase {
 				continue;
 			}
 
+			if (Objects.equals("dataRules", additionalAssertFieldName)) {
+				if (dataLayout.getDataRules() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
 			if (Objects.equals("description", additionalAssertFieldName)) {
 				if (dataLayout.getDescription() == null) {
 					valid = false;
@@ -903,6 +933,17 @@ public abstract class BaseDataLayoutResourceTestCase {
 				continue;
 			}
 
+			if (Objects.equals("dataRules", additionalAssertFieldName)) {
+				if (!Objects.deepEquals(
+						dataLayout1.getDataRules(),
+						dataLayout2.getDataRules())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
 			if (Objects.equals("dateCreated", additionalAssertFieldName)) {
 				if (!Objects.deepEquals(
 						dataLayout1.getDateCreated(),
@@ -926,9 +967,9 @@ public abstract class BaseDataLayoutResourceTestCase {
 			}
 
 			if (Objects.equals("description", additionalAssertFieldName)) {
-				if (!Objects.deepEquals(
-						dataLayout1.getDescription(),
-						dataLayout2.getDescription())) {
+				if (!equals(
+						(Map)dataLayout1.getDescription(),
+						(Map)dataLayout2.getDescription())) {
 
 					return false;
 				}
@@ -947,8 +988,9 @@ public abstract class BaseDataLayoutResourceTestCase {
 			}
 
 			if (Objects.equals("name", additionalAssertFieldName)) {
-				if (!Objects.deepEquals(
-						dataLayout1.getName(), dataLayout2.getName())) {
+				if (!equals(
+						(Map)dataLayout1.getName(),
+						(Map)dataLayout2.getName())) {
 
 					return false;
 				}
@@ -980,6 +1022,30 @@ public abstract class BaseDataLayoutResourceTestCase {
 			throw new IllegalArgumentException(
 				"Invalid additional assert field name " +
 					additionalAssertFieldName);
+		}
+
+		return true;
+	}
+
+	protected boolean equals(
+		Map<String, Object> map1, Map<String, Object> map2) {
+
+		if (Objects.equals(map1.keySet(), map2.keySet())) {
+			for (Map.Entry<String, Object> entry : map1.entrySet()) {
+				if (entry.getValue() instanceof Map) {
+					if (!equals(
+							(Map)entry.getValue(),
+							(Map)map2.get(entry.getKey()))) {
+
+						return false;
+					}
+				}
+				else if (!Objects.deepEquals(
+							entry.getValue(), map2.get(entry.getKey()))) {
+
+					return false;
+				}
+			}
 		}
 
 		return true;
@@ -1132,6 +1198,11 @@ public abstract class BaseDataLayoutResourceTestCase {
 		}
 
 		if (entityFieldName.equals("dataLayoutPages")) {
+			throw new IllegalArgumentException(
+				"Invalid entity field " + entityFieldName);
+		}
+
+		if (entityFieldName.equals("dataRules")) {
 			throw new IllegalArgumentException(
 				"Invalid entity field " + entityFieldName);
 		}

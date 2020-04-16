@@ -1,44 +1,29 @@
 Simulate = {
-    createEvent: function(eventName, options) {
-        var event = document.createEvent("CustomEvent");
+	dragAndDrop: async function(source, target) {
+		const dataTransfer = new DataTransfer();
 
-        event.initCustomEvent(eventName, true, true, null);
+		const dispatchEvent = async(type, element) => {
+			const rect = element.getBoundingClientRect();
 
-        event.dataTransfer = {
-            data: {
-            },
-            getData: function (format) {
-                return this.data[format];
-            },
-            setData: function (format, data) {
-                this.data[format] = data;
-            }
-        };
+			const event = new DragEvent(
+				type,
+				{
+					bubbles: true,
+					clientX: rect.left + (rect.width / 2),
+					clientY: rect.top + (rect.height / 2),
+					dataTransfer: dataTransfer,
+					relatedTarget: element
+				});
 
-        return event;
-    },
+			element.dispatchEvent(event);
+		};
 
-    dragAndDrop: function(sourceElement, targetElement) {
-        var dragStartEvent = this.createEvent("dragstart");
+		await dispatchEvent('dragstart', source);
 
-        sourceElement.dispatchEvent(dragStartEvent);
+		await dispatchEvent('dragover', target);
 
-        var dropEvent = this.createEvent(
-            "drop",
-            {
-                dataTransfer: dragStartEvent.dataTransfer
-            }
-        );
+		await dispatchEvent('drop', target);
 
-        targetElement.dispatchEvent(dropEvent);
-
-        var dragEndEvent = this.createEvent(
-            "dragend",
-            {
-                dataTransfer: dragStartEvent.dataTransfer
-            }
-        );
-
-        sourceElement.dispatchEvent(dragEndEvent);
-    }
+		await dispatchEvent('dragend', source);
+	}
 };

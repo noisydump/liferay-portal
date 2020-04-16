@@ -4,7 +4,6 @@ definition {
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property custom.properties = "default.layout.template.id=1_column";
-	property test.assert.warning.exceptions = "true";
 	property testray.main.component.name = "Documents Management";
 
 	setUp {
@@ -73,7 +72,6 @@ definition {
 	@description = "This test covers LPS-94657. It ensures that auto complete for edit categories."
 	@priority = "5"
 	test AddAutoAssertionCategoryViaDMDocument {
-
 		property test.name.skip.portal.instance = "DocumentsadministrationUsecase#AddAutoAssertionCategoryViaDMDocument";
 
 		ProductMenu.gotoPortlet(
@@ -146,6 +144,7 @@ definition {
 
 	@priority = "5"
 	test AddDocumentTypeAndMetadata {
+		property portal.acceptance = "true";
 		property testray.component.names = "Training";
 
 		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "guest");
@@ -228,7 +227,7 @@ definition {
 		DMPortlet.configureDisplaySettingsPG(
 			enableDisplaySettingsRelatedAssets = "false",
 			enableDisplaySettingsShowSearch = "false",
-			entriesToDisplayCount = "75");
+			entriesToDisplayCount = "60");
 
 		Navigator.gotoSitePage(
 			pageName = "Site Page 2",
@@ -295,7 +294,7 @@ definition {
 
 		AssertTextEquals(
 			locator1 = "Message#MAX_FILESIZE_ALERT",
-			value1 = "Please enter a file with a valid file size no larger than 300000.");
+			value1 = "Please enter a file with a valid file size no larger than 293 KB.");
 
 		Button.clickCancel();
 
@@ -486,9 +485,9 @@ definition {
 			panel = "Control Panel",
 			portlet = "Roles");
 
-		Role.assignRegRoleCP(
+		JSONRole.assignRoleToUser(
 			roleTitle = "Administrator",
-			userScreenName = "usersn");
+			userEmailAddress = "userea@liferay.com");
 
 		Navigator.openURL();
 
@@ -1206,7 +1205,7 @@ definition {
 			layoutName = "Documents and Media Page - Global",
 			widgetName = "Documents and Media");
 
-		SitePages.openPagesAdmin(siteURLKey = "global");
+		PageTemplatesAdmin.openPageTemplatesAdmin(siteURLKey = "global");
 
 		ProductMenu.gotoPortlet(
 			category = "Content &amp; Data",
@@ -1223,7 +1222,7 @@ definition {
 			dmFolderDescription = "DM SubFolder Description",
 			dmFolderName = "DM SubFolder Name");
 
-		SitePages.openPagesAdmin(siteURLKey = "global");
+		PageTemplatesAdmin.openPageTemplatesAdmin(siteURLKey = "global");
 
 		ProductMenu.gotoPortlet(
 			category = "Content &amp; Data",
@@ -1576,6 +1575,41 @@ definition {
 			dmDocumentTitle = "Document_1.doc");
 	}
 
+	@description = "This test covers LPS-107966. It ensures that the image description can be propagated after creating a new image via image editor in web content."
+	@priority = "3"
+	test ViewImageDescriptionAfterImageEditedViaWebContent {
+		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "guest");
+
+		DMDocument.addCP(
+			dmDocumentDescription = "DM Document Description",
+			dmDocumentFile = "Document_2.jpg",
+			dmDocumentTitle = "Document_2.jpg");
+
+		WebContentNavigator.openWebContentAdmin(siteURLKey = "guest");
+
+		WebContentNavigator.gotoAddCP();
+
+		ImageEditor.gotoImageEditorViaItemSelector(
+			imageFileName = "Document_2.jpg",
+			navTab = "Documents and Media");
+
+		ImageEditor.rotateImage(rotateDirection = "right");
+
+		Pause(locator1 = "3000");
+
+		ImageEditor.applyChangesAndSaveFile();
+
+		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "guest");
+
+		LexiconEntry.gotoEntryMenuItem(
+			menuItem = "Edit",
+			rowEntry = "Document_2 (1).jpg");
+
+		AssertTextEquals(
+			locator1 = "TextArea#DESCRIPTION",
+			value1 = "DM Document Description");
+	}
+
 	@description = "This test covers LPS-93601 and LPS-91661. It ensures that the user can check all files in the current pagination using the DM toolbar and can move documents not on the current pagination to another folder."
 	@priority = "4"
 	test ViewPaginationToolbarCheckboxAndMoveMultiplePaginationDocuments {
@@ -1599,9 +1633,9 @@ definition {
 
 		DMDocument.addMultipleCP(dmDocumentFileList = "Document_1.doc,Document_2.jpg,Document_3.xls,Document_4.txt,Document_1.txt,Document_2.xls,Document_3.jpg,Document_4.jpg,Document_1.xls,Document_2.doc");
 
-		Pagination.changePagination(itemsPerPage = "5");
+		Pagination.changePagination(itemsPerPage = "4");
 
-		Pagination.viewResults(results = "Showing 1 to 5 of 10 entries.");
+		Pagination.viewResults(results = "Showing 1 to 4 of 10 entries.");
 
 		DMDocument.moveToFolderCP(
 			dmFolderName = "Home",
@@ -1609,15 +1643,17 @@ definition {
 
 		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "guest");
 
+		Pagination.changePagination(itemsPerPage = "20");
+
 		Pagination.viewResults(results = "Showing 1 to 11 of 11 entries.");
 
 		Navigator.gotoPage(pageName = "Documents and Media Page");
 
 		LexiconEntry.changeDisplayStyle(displayStyle = "List");
 
-		Pagination.changePagination(itemsPerPage = "5");
+		Pagination.changePagination(itemsPerPage = "4");
 
-		Pagination.viewResults(results = "Showing 1 to 5 of 11 entries.");
+		Pagination.viewResults(results = "Showing 1 to 4 of 11 entries.");
 
 		DMDocument.checkDocumentCheckboxPG(dmDocumentTitle = "Document_2.jpg");
 
@@ -1631,7 +1667,7 @@ definition {
 
 		AssertTextEquals(
 			locator1 = "ManagementBar#NAVBAR_TEXT",
-			value1 = "6 of 11 Selected");
+			value1 = "5 of 11 Selected");
 	}
 
 	@priority = "4"

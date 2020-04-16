@@ -14,13 +14,15 @@
 
 import ClayButton from '@clayui/button';
 import ClayIcon from '@clayui/icon';
+import ClayManagementToolbar from '@clayui/management-toolbar';
 import ClayModal, {useModal} from '@clayui/modal';
 import {SearchInput} from 'data-engine-taglib';
-import React, {useState, useEffect} from 'react';
+import React, {useEffect, useState} from 'react';
 
-import ManagementToolbar from '../../components/management-toolbar/ManagementToolbar.es';
+import {Loading} from '../../components/loading/Loading.es';
 import Table from '../../components/table/Table.es';
 import {getItem, updateItem} from '../../utils/client.es';
+import {errorToast, successToast} from '../../utils/toast.es';
 
 export default ({
 	actions,
@@ -30,26 +32,26 @@ export default ({
 	onClose,
 	onSave = () => Promise.resolve(),
 	rolesFilter = () => true,
-	title
+	title,
 }) => {
 	const {observer} = useModal({
-		onClose
+		onClose,
 	});
 
 	const columns = [
 		{
 			key: 'name',
 			sortable: false,
-			value: Liferay.Language.get('role')
+			value: Liferay.Language.get('role'),
 		},
-		...actions
+		...actions,
 	];
 
 	const [state, setState] = useState({
 		isLoading: true,
 		permissions: [],
 		roles: [],
-		searchText: ''
+		searchText: '',
 	});
 
 	useEffect(() => {
@@ -61,7 +63,7 @@ export default ({
 			isLoading: true,
 			permissions: [],
 			roles: [],
-			searchText: ''
+			searchText: '',
 		});
 
 		getItem('/o/headless-admin-user/v1.0/roles')
@@ -70,30 +72,31 @@ export default ({
 
 				setState(prevState => ({
 					...prevState,
-					roles
+					roles,
 				}));
 
 				const roleNames = roles.map(({name}) => name);
+
 				return getItem(endpoint, {roleNames});
 			})
 			.then(({items: permissions = []}) => {
 				setState(prevState => ({
 					...prevState,
 					isLoading: false,
-					permissions
+					permissions,
 				}));
 			})
 			.catch(_ =>
 				setState(prevState => ({
 					...prevState,
-					isLoading: false
+					isLoading: false,
 				}))
 			);
 	}, [endpoint, isOpen, rolesFilter]);
 
 	const {isLoading, permissions, roles, searchText} = state;
 
-	if (!isOpen || isLoading) {
+	if (!isOpen) {
 		return <></>;
 	}
 
@@ -104,10 +107,10 @@ export default ({
 		);
 
 	const handleOnSave = () =>
-		Promise.all([
-			updateItem(endpoint, permissions),
-			onSave(permissions)
-		]).then(() => onClose());
+		Promise.all([updateItem(endpoint, permissions), onSave(permissions)])
+			.then(() => onClose())
+			.then(() => successToast())
+			.catch(() => errorToast());
 
 	const togglePermission = (roleName, actionId) => {
 		const exists = permissions.some(
@@ -129,25 +132,26 @@ export default ({
 				...permission,
 				actionIds: actionIds.includes(actionId)
 					? actionIds.filter(id => id !== actionId)
-					: actionIds.concat(actionId)
+					: actionIds.concat(actionId),
 			};
 		});
 
 		setState(prevState => ({
 			...prevState,
-			permissions: newPermissions
+			permissions: newPermissions,
 		}));
 	};
 
 	const filteredRoles = roles
 		.filter(({name}) => new RegExp(searchText, 'ig').test(name))
-		.map(({name}) => {
+		.map(({id, name}) => {
 			let item = {
+				id,
 				name: (
 					<>
 						<ClayIcon symbol="user" /> {name}
 					</>
-				)
+				),
 			};
 
 			actions.forEach(({key}) => {
@@ -158,10 +162,10 @@ export default ({
 							checked={isChecked(name, key)}
 							disabled={isDisabled(name, key)}
 							name={key}
-							onClick={() => togglePermission(name, key)}
+							onChange={() => togglePermission(name, key)}
 							type="checkbox"
 						/>
-					)
+					),
 				};
 			});
 
@@ -174,19 +178,24 @@ export default ({
 				{title || Liferay.Language.get('permissions')}
 			</ClayModal.Header>
 			<ClayModal.Body>
-				<ManagementToolbar>
+				<ClayManagementToolbar>
 					<SearchInput
 						onChange={searchText =>
 							setState(prevState => ({
 								...prevState,
-								searchText
+								searchText,
 							}))
 						}
 						searchText={searchText}
 					/>
-				</ManagementToolbar>
-
-				<Table align="center" columns={columns} items={filteredRoles} />
+				</ClayManagementToolbar>
+				<Loading isLoading={isLoading}>
+					<Table
+						align="center"
+						columns={columns}
+						items={filteredRoles}
+					/>
+				</Loading>
 			</ClayModal.Body>
 			<ClayModal.Footer
 				last={

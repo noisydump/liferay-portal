@@ -53,6 +53,8 @@ if (Validator.isNotNull(onInitMethod)) {
 	onInitMethod = namespace + onInitMethod;
 }
 
+String placeholder = GetterUtil.getString((String)request.getAttribute(CKEditorConstants.ATTRIBUTE_NAMESPACE + ":placeholder"));
+
 boolean skipEditorLoading = GetterUtil.getBoolean((String)request.getAttribute(CKEditorConstants.ATTRIBUTE_NAMESPACE + ":skipEditorLoading"));
 String toolbarSet = (String)request.getAttribute(CKEditorConstants.ATTRIBUTE_NAMESPACE + ":toolbarSet");
 
@@ -102,6 +104,12 @@ if (inlineEdit && Validator.isNotNull(inlineEditSaveURL)) {
 <liferay-util:buffer
 	var="editor"
 >
+	<c:if test="<%= Validator.isNotNull(placeholder) %>">
+		<label class="control-label" for="<%= name %>">
+			<liferay-ui:message key="<%= placeholder %>" />
+		</label>
+	</c:if>
+
 	<textarea id="<%= textareaName %>" name="<%= textareaName %>" style="display: none;"></textarea>
 </liferay-util:buffer>
 
@@ -135,7 +143,8 @@ name = HtmlUtil.escapeJS(name);
 
 		if (window['<%= HtmlUtil.escapeJS(namespace + initMethod) %>']) {
 			data = <%= HtmlUtil.escapeJS(namespace + initMethod) %>();
-		} else {
+		}
+		else {
 			data =
 				'<%= (contents != null) ? HtmlUtil.escapeJS(contents) : StringPool.BLANK %>';
 		}
@@ -173,7 +182,7 @@ name = HtmlUtil.escapeJS(name);
 	var eventHandles = [
 		Liferay.on('inputLocalized:localeChanged', onLocaleChangedHandler),
 		preventImageDragoverHandler,
-		preventImageDropHandler
+		preventImageDropHandler,
 	];
 
 	window['<%= name %>'] = {
@@ -218,7 +227,8 @@ name = HtmlUtil.escapeJS(name);
 
 			if (!window['<%= name %>'].instanceReady) {
 				data = getInitialContent();
-			} else {
+			}
+			else {
 				data = CKEDITOR.instances['<%= name %>'].getData();
 
 				if (CKEDITOR.env.gecko && CKEDITOR.tools.trim(data) == '<br />') {
@@ -242,7 +252,8 @@ name = HtmlUtil.escapeJS(name);
 
 			if (!window['<%= name %>'].instanceReady) {
 				data = getInitialContent();
-			} else {
+			}
+			else {
 				var editor = CKEDITOR.instances['<%= name %>'];
 
 				data = editor.editable().getText();
@@ -292,7 +303,8 @@ name = HtmlUtil.escapeJS(name);
 			var setHTML = function(data) {
 				if (instanceDataReady) {
 					ckEditorInstance.setData(data);
-				} else {
+				}
+				else {
 					instancePendingData = data;
 				}
 
@@ -301,10 +313,11 @@ name = HtmlUtil.escapeJS(name);
 
 			if (win.instanceReady) {
 				setHTML(value);
-			} else {
+			}
+			else {
 				instancePendingData = value;
 			}
-		}
+		},
 	};
 
 	var addAUIClass = function(iframe) {
@@ -351,7 +364,7 @@ name = HtmlUtil.escapeJS(name);
 
 	Liferay.fire('editorAPIReady', {
 		editor: window['<%= name %>'],
-		editorName: '<%= name %>'
+		editorName: '<%= name %>',
 	});
 
 	<c:if test="<%= inlineEdit && Validator.isNotNull(inlineEditSaveURL) %>">
@@ -363,7 +376,8 @@ name = HtmlUtil.escapeJS(name);
 
 				if (event.enabled && !ckEditor) {
 					createEditor();
-				} else if (ckEditor) {
+				}
+				else if (ckEditor) {
 					inlineEditor.destroy();
 					ckEditor.destroy();
 
@@ -389,7 +403,8 @@ name = HtmlUtil.escapeJS(name);
 
 		if (Util.isPhone()) {
 			toolbarSet = 'phone';
-		} else if (Util.isTablet()) {
+		}
+		else if (Util.isTablet()) {
 			toolbarSet = 'tablet';
 		}
 
@@ -443,7 +458,7 @@ name = HtmlUtil.escapeJS(name);
 			window['<%= name %>'].instanceReady = true;
 
 			Liferay.component('<%= name %>', window['<%= name %>'], {
-				portletId: '<%= portletId %>'
+				portletId: '<%= portletId %>',
 			});
 		}
 
@@ -455,7 +470,7 @@ name = HtmlUtil.escapeJS(name);
 			filebrowserImageBrowseLinkUrl: '',
 			filebrowserImageBrowseUrl: '',
 			filebrowserUploadUrl: null,
-			toolbar: currentToolbarSet
+			toolbar: currentToolbarSet,
 		};
 
 		var editorConfig = <%= Validator.isNotNull(editorConfigJSONObject) ? editorConfigJSONObject : "{}" %>;
@@ -479,7 +494,7 @@ name = HtmlUtil.escapeJS(name);
 				editor: ckEditor,
 				editorName: '<%= name %>',
 				namespace: '<portlet:namespace />',
-				saveURL: '<%= inlineEditSaveURL %>'
+				saveURL: '<%= inlineEditSaveURL %>',
 			});
 		</c:if>
 
@@ -526,7 +541,8 @@ name = HtmlUtil.escapeJS(name);
 				var contentChangeHandle = setInterval(function() {
 					try {
 						window['<%= name %>'].onChangeCallback();
-					} catch (e) {}
+					}
+					catch (e) {}
 				}, 300);
 
 				var clearContentChangeHandle = function(event) {
@@ -594,7 +610,8 @@ name = HtmlUtil.escapeJS(name);
 				instancePendingData = null;
 
 				ckEditor.setData(pendingData);
-			} else {
+			}
+			else {
 				instanceDataReady = true;
 			}
 

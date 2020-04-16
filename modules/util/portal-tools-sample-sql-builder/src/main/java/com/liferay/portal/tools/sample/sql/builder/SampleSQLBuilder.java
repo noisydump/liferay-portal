@@ -14,6 +14,7 @@
 
 package com.liferay.portal.tools.sample.sql.builder;
 
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.freemarker.FreeMarkerUtil;
 import com.liferay.portal.kernel.dao.db.DB;
@@ -25,7 +26,6 @@ import com.liferay.portal.kernel.io.unsync.UnsyncBufferedWriter;
 import com.liferay.portal.kernel.util.FileUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.SortedProperties;
-import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.tools.ToolDependencies;
 import com.liferay.portal.tools.sample.sql.builder.io.CharPipe;
@@ -41,6 +41,8 @@ import java.io.Reader;
 import java.io.Writer;
 
 import java.nio.channels.FileChannel;
+
+import java.sql.SQLException;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -168,7 +170,7 @@ public class SampleSQLBuilder {
 	protected void compressSQL(
 			DB db, File directory, Map<String, Writer> insertSQLWriters,
 			Map<String, StringBundler> sqls, String insertSQL)
-		throws IOException {
+		throws IOException, SQLException {
 
 		String tableName = insertSQL.substring(0, insertSQL.indexOf(' '));
 

@@ -118,6 +118,7 @@ ItemSelectorRepositoryEntryManagementToolbarDisplayContext itemSelectorRepositor
 
 	<c:if test="<%= (existingFileEntryReturnType != null) || (itemSelectorReturnTypeResolver != null) %>">
 		<liferay-ui:search-container
+			cssClass='<%= displayStyle.equals("list") ? "main-content-body" : StringPool.BLANK %>'
 			searchContainer="<%= searchContainer %>"
 			total="<%= repositoryEntriesCount %>"
 			var="listSearchContainer"
@@ -184,7 +185,7 @@ ItemSelectorRepositoryEntryManagementToolbarDisplayContext itemSelectorRepositor
 
 							<liferay-ui:search-container-column-text
 								name="size"
-								value="<%= TextFormatter.formatStorageSize(fileEntry.getSize(), locale) %>"
+								value="<%= LanguageUtil.formatStorageSize(fileEntry.getSize(), locale) %>"
 							/>
 
 							<liferay-ui:search-container-column-status
@@ -220,7 +221,10 @@ ItemSelectorRepositoryEntryManagementToolbarDisplayContext itemSelectorRepositor
 								name="title"
 							>
 								<a href="<%= HtmlUtil.escapeHREF(viewFolderURL.toString()) %>" title="<%= HtmlUtil.escapeAttribute(folder.getName()) %>">
-									<i class="icon-folder-open"></i>
+									<liferay-ui:icon
+										icon="folder"
+										markupView="lexicon"
+									/>
 
 									<span class="taglib-text">
 										<%= HtmlUtil.escape(folder.getName()) %>
@@ -311,7 +315,11 @@ ItemSelectorRepositoryEntryManagementToolbarDisplayContext itemSelectorRepositor
 
 									JSONObject itemMedatadaJSONObject = ItemSelectorRepositoryEntryBrowserUtil.getItemMetadataJSONObject(fileEntry, locale);
 
-									Map<String, Object> data = new HashMap<String, Object>();
+									Map<String, Object> data = HashMapBuilder.<String, Object>put(
+										"description", fileEntry.getDescription()
+									).put(
+										"fileEntryId", fileEntry.getFileEntryId()
+									).build();
 
 									String thumbnailSrc = DLURLHelperUtil.getThumbnailSrc(fileEntry, themeDisplay);
 
@@ -390,8 +398,8 @@ ItemSelectorRepositoryEntryManagementToolbarDisplayContext itemSelectorRepositor
 									}
 								%>
 
-									<liferay-ui:search-container-column-image
-										src='<%= themeDisplay.getPathThemeImages() + "/file_system/large/" + folderImage + ".png" %>'
+									<liferay-ui:search-container-column-icon
+										icon="folder"
 									/>
 
 									<liferay-ui:search-container-column-text
@@ -415,6 +423,8 @@ ItemSelectorRepositoryEntryManagementToolbarDisplayContext itemSelectorRepositor
 								}
 
 								if (fileEntry != null) {
+									row.setCssClass("item-selector-list-row " + row.getCssClass());
+
 									FileVersion latestFileVersion = fileEntry.getLatestFileVersion();
 
 									String title = DLUtil.getTitleWithExtension(fileEntry);
@@ -535,7 +545,7 @@ ItemSelectorRepositoryEntryManagementToolbarDisplayContext itemSelectorRepositor
 			%>
 
 			uploadItemReturnType: '<%= HtmlUtil.escapeAttribute(returnType) %>',
-			uploadItemURL: '<%= uploadURL.toString() %>'
+			uploadItemURL: '<%= uploadURL.toString() %>',
 		</c:if>
 	});
 

@@ -1,10 +1,10 @@
 {
 	"dependencies": {
-		"@clayui/button": "3.1.0",
-		"@clayui/data-provider": "3.0.5",
-		"@clayui/form": "3.3.0",
-		"@clayui/icon": "3.0.2",
-		"@clayui/multi-select": "3.3.0",
+		"@clayui/button": "3.3.0",
+		"@clayui/data-provider": "3.1.0",
+		"@clayui/form": "3.7.0",
+		"@clayui/icon": "3.0.4",
+		"@clayui/multi-select": "3.5.2",
 		"classnames": "2.2.6",
 		"frontend-js-react-web": "*",
 		"metal-dom": "2.16.8",
@@ -18,5 +18,5 @@
 		"checkFormat": "liferay-npm-scripts check",
 		"format": "liferay-npm-scripts fix"
 	},
-	"version": "5.0.7"
+	"version": "5.0.13"
 }

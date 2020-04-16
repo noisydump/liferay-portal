@@ -259,8 +259,8 @@ public class SegmentsExperimentProductNavigationControlMenuEntry
 			portalPreferences.getValue(
 				SegmentsPortletKeys.SEGMENTS_EXPERIMENT, "hide-panel"));
 
-		if (!SegmentsExperimentUtil.isAnalyticsEnabled(
-				themeDisplay.getCompanyId(), themeDisplay.getScopeGroupId()) &&
+		if (!SegmentsExperimentUtil.isAnalyticsConnected(
+				themeDisplay.getCompanyId()) &&
 			hidePanel) {
 
 			return false;
@@ -310,7 +310,7 @@ public class SegmentsExperimentProductNavigationControlMenuEntry
 
 			jspWriter.write(
 				StringBundler.concat(
-					"hidden-print lfr-admin-panel lfr-product-menu-panel ",
+					"d-print-none lfr-admin-panel lfr-product-menu-panel ",
 					"lfr-segments-experiment-panel sidenav-fixed ",
 					"sidenav-menu-slider sidenav-right\" id=\""));
 

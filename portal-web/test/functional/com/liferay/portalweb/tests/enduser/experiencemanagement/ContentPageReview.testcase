@@ -527,6 +527,8 @@ definition {
 	@description = "This test covers LPS-100024. It ensures that comments from different experiences are independent from one another."
 	@priority = "4"
 	test ViewCommentOnDifferentExperience {
+		property portal.upstream = "quarantine";
+
 		SitePages.openPagesAdmin(siteURLKey = "test-site-name");
 
 		ProductMenu.gotoPortlet(
@@ -570,7 +572,19 @@ definition {
 			locator1 = "PageEditor#FRAGMENT_SIDEBAR_CENTER_TEXT",
 			value1 = "There are no comments yet.");
 
+		Navigator.openWithAppendToBaseURL(urlAppend = "web/test-site-name/test-content-page-name");
+
+		ContentPages.clickPencil();
+
 		PageEditor.changeExperience(newExperience = "New Experience Name");
+
+		PageEditor.gotoCommentViaFragment(
+			content = "Lorem ipsum dolor sit amet",
+			fragmentClass = "header",
+			fragmentName = "Title",
+			position = "1");
+
+		PageEditor.gotoCommentList();
 
 		PageEditor.viewCommentList(
 			commentCount = "1 Comment",
@@ -674,12 +688,6 @@ definition {
 		}
 
 		PageEditor.gotoTab(tabName = "Comments");
-
-		Click(
-			key_content = "This is static text.",
-			key_fragmentClass = "static-text",
-			key_position = "1",
-			locator1 = "Fragment#FRAGMENT");
 
 		PageEditor.gotoCommentList();
 

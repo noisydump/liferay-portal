@@ -14,6 +14,8 @@
 
 package com.liferay.asset.list.internal.upgrade;
 
+import com.liferay.asset.list.internal.upgrade.v1_3_0.UpgradeAssetListEntry;
+import com.liferay.portal.kernel.upgrade.UpgradeCTModel;
 import com.liferay.portal.kernel.upgrade.UpgradeMVCCVersion;
 import com.liferay.portal.upgrade.registry.UpgradeStepRegistrator;
 
@@ -40,6 +42,14 @@ public class AssetListServiceUpgrade implements UpgradeStepRegistrator {
 				}
 
 			});
+
+		registry.register(
+			"1.1.0", "1.2.0",
+			new UpgradeCTModel(
+				"AssetListEntry", "AssetListEntryAssetEntryRel",
+				"AssetListEntrySegmentsEntryRel", "AssetListEntryUsage"));
+
+		registry.register("1.2.0", "1.3.0", new UpgradeAssetListEntry());
 	}
 
 }

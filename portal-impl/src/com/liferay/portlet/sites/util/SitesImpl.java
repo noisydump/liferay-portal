@@ -149,11 +149,12 @@ public class SitesImpl implements Sites {
 		layoutSet = LayoutSetLocalServiceUtil.getLayoutSet(
 			layoutSet.getGroupId(), layoutSet.isPrivateLayout());
 
-		UnicodeProperties settingsProperties =
+		UnicodeProperties settingsUnicodeProperties =
 			layoutSet.getSettingsProperties();
 
-		String oldMergeFailFriendlyURLLayouts = settingsProperties.getProperty(
-			MERGE_FAIL_FRIENDLY_URL_LAYOUTS, StringPool.BLANK);
+		String oldMergeFailFriendlyURLLayouts =
+			settingsUnicodeProperties.getProperty(
+				MERGE_FAIL_FRIENDLY_URL_LAYOUTS, StringPool.BLANK);
 
 		String newMergeFailFriendlyURLLayouts = StringUtil.add(
 			oldMergeFailFriendlyURLLayouts, layout.getUuid());
@@ -161,7 +162,7 @@ public class SitesImpl implements Sites {
 		if (!oldMergeFailFriendlyURLLayouts.equals(
 				newMergeFailFriendlyURLLayouts)) {
 
-			settingsProperties.setProperty(
+			settingsUnicodeProperties.setProperty(
 				MERGE_FAIL_FRIENDLY_URL_LAYOUTS,
 				newMergeFailFriendlyURLLayouts);
 
@@ -298,7 +299,8 @@ public class SitesImpl implements Sites {
 				targetLayout.getDescriptionMap(), targetLayout.getKeywordsMap(),
 				targetLayout.getRobotsMap(), layoutPrototypeLayout.getType(),
 				targetLayout.isHidden(), targetLayout.getFriendlyURLMap(),
-				layoutPrototypeLayout.isIconImage(), iconBytes, serviceContext);
+				layoutPrototypeLayout.isIconImage(), iconBytes,
+				layoutPrototypeLayout.getMasterLayoutPlid(), serviceContext);
 		}
 		finally {
 			if (originalLayoutPrototypeLinkEnabled == null) {
@@ -339,23 +341,25 @@ public class SitesImpl implements Sites {
 
 		targetLayout = LayoutLocalServiceUtil.getLayout(targetLayout.getPlid());
 
-		UnicodeProperties typeSettingsProperties =
+		UnicodeProperties typeSettingsUnicodeProperties =
 			targetLayout.getTypeSettingsProperties();
 
 		Date modifiedDate = targetLayout.getModifiedDate();
 
-		typeSettingsProperties.setProperty(
+		typeSettingsUnicodeProperties.setProperty(
 			LAST_MERGE_TIME, String.valueOf(modifiedDate.getTime()));
 
 		LayoutLocalServiceUtil.updateLayout(
 			targetLayout.getGroupId(), targetLayout.isPrivateLayout(),
 			targetLayout.getLayoutId(), targetLayout.getTypeSettings());
 
-		UnicodeProperties prototypeTypeSettingsProperties =
+		UnicodeProperties prototypeTypeSettingsUnicodeProperties =
 			layoutPrototypeLayout.getTypeSettingsProperties();
 
-		if (prototypeTypeSettingsProperties.containsKey(MERGE_FAIL_COUNT)) {
-			prototypeTypeSettingsProperties.remove(MERGE_FAIL_COUNT);
+		if (prototypeTypeSettingsUnicodeProperties.containsKey(
+				MERGE_FAIL_COUNT)) {
+
+			prototypeTypeSettingsUnicodeProperties.remove(MERGE_FAIL_COUNT);
 
 			LayoutLocalServiceUtil.updateLayout(layoutPrototypeLayout);
 		}
@@ -827,11 +831,12 @@ public class SitesImpl implements Sites {
 
 		Layout layoutPrototypeLayout = layoutPrototype.getLayout();
 
-		UnicodeProperties prototypeTypeSettingsProperties =
+		UnicodeProperties prototypeTypeSettingsUnicodeProperties =
 			layoutPrototypeLayout.getTypeSettingsProperties();
 
 		return GetterUtil.getInteger(
-			prototypeTypeSettingsProperties.getProperty(MERGE_FAIL_COUNT));
+			prototypeTypeSettingsUnicodeProperties.getProperty(
+				MERGE_FAIL_COUNT));
 	}
 
 	/**
@@ -855,11 +860,12 @@ public class SitesImpl implements Sites {
 		LayoutSet layoutSetPrototypeLayoutSet =
 			layoutSetPrototype.getLayoutSet();
 
-		UnicodeProperties layoutSetPrototypeSettingsProperties =
+		UnicodeProperties layoutSetPrototypeSettingsUnicodeProperties =
 			layoutSetPrototypeLayoutSet.getSettingsProperties();
 
 		return GetterUtil.getInteger(
-			layoutSetPrototypeSettingsProperties.getProperty(MERGE_FAIL_COUNT));
+			layoutSetPrototypeSettingsUnicodeProperties.getProperty(
+				MERGE_FAIL_COUNT));
 	}
 
 	@Override
@@ -870,10 +876,10 @@ public class SitesImpl implements Sites {
 			return Collections.emptyList();
 		}
 
-		UnicodeProperties settingsProperties =
+		UnicodeProperties settingsUnicodeProperties =
 			layoutSet.getSettingsProperties();
 
-		String uuids = settingsProperties.getProperty(
+		String uuids = settingsUnicodeProperties.getProperty(
 			MERGE_FAIL_FRIENDLY_URL_LAYOUTS);
 
 		if (Validator.isNotNull(uuids)) {
@@ -981,11 +987,11 @@ public class SitesImpl implements Sites {
 			return false;
 		}
 
-		UnicodeProperties typeSettingsProperties =
+		UnicodeProperties typeSettingsUnicodeProperties =
 			group.getParentLiveGroupTypeSettingsProperties();
 
 		int groupContentSharingEnabled = GetterUtil.getInteger(
-			typeSettingsProperties.getProperty(
+			typeSettingsUnicodeProperties.getProperty(
 				"contentSharingWithChildrenEnabled"),
 			CONTENT_SHARING_WITH_CHILDREN_DEFAULT_VALUE);
 
@@ -1101,11 +1107,13 @@ public class SitesImpl implements Sites {
 			return false;
 		}
 
-		UnicodeProperties settingsProperties =
+		UnicodeProperties settingsUnicodeProperties =
 			layoutSet.getSettingsProperties();
 
 		long lastMergeTime = GetterUtil.getLong(
-			settingsProperties.getProperty(LAST_MERGE_TIME));
+			settingsUnicodeProperties.getProperty(LAST_MERGE_TIME));
+		long lastMergeVersion = GetterUtil.getLong(
+			settingsUnicodeProperties.getProperty(LAST_MERGE_VERSION));
 
 		LayoutSetPrototype layoutSetPrototype =
 			LayoutSetPrototypeLocalServiceUtil.
@@ -1115,18 +1123,22 @@ public class SitesImpl implements Sites {
 
 		Date modifiedDate = layoutSetPrototype.getModifiedDate();
 
-		if (lastMergeTime >= modifiedDate.getTime()) {
+		if ((lastMergeTime >= modifiedDate.getTime()) &&
+			((lastMergeVersion == 0) ||
+			 (lastMergeVersion == layoutSetPrototype.getMvccVersion()))) {
+
 			return false;
 		}
 
 		LayoutSet layoutSetPrototypeLayoutSet =
 			layoutSetPrototype.getLayoutSet();
 
-		UnicodeProperties layoutSetPrototypeSettingsProperties =
+		UnicodeProperties layoutSetPrototypeSettingsUnicodeProperties =
 			layoutSetPrototypeLayoutSet.getSettingsProperties();
 
 		int mergeFailCount = GetterUtil.getInteger(
-			layoutSetPrototypeSettingsProperties.getProperty(MERGE_FAIL_COUNT));
+			layoutSetPrototypeSettingsUnicodeProperties.getProperty(
+				MERGE_FAIL_COUNT));
 
 		if (mergeFailCount >
 				PropsValues.LAYOUT_SET_PROTOTYPE_MERGE_FAIL_THRESHOLD) {
@@ -1340,7 +1352,7 @@ public class SitesImpl implements Sites {
 		layoutSet = LayoutSetLocalServiceUtil.fetchLayoutSet(
 			layoutSet.getLayoutSetId());
 
-		UnicodeProperties settingsProperties =
+		UnicodeProperties settingsUnicodeProperties =
 			layoutSet.getSettingsProperties();
 
 		LayoutSetPrototype layoutSetPrototype =
@@ -1365,9 +1377,9 @@ public class SitesImpl implements Sites {
 			boolean importData = true;
 
 			long lastMergeTime = GetterUtil.getLong(
-				settingsProperties.getProperty(LAST_MERGE_TIME));
+				settingsUnicodeProperties.getProperty(LAST_MERGE_TIME));
 			long lastResetTime = GetterUtil.getLong(
-				settingsProperties.getProperty(LAST_RESET_TIME));
+				settingsUnicodeProperties.getProperty(LAST_RESET_TIME));
 
 			if ((lastMergeTime > 0) || (lastResetTime > 0)) {
 				importData = false;
@@ -1397,11 +1409,11 @@ public class SitesImpl implements Sites {
 			LayoutSet layoutSetPrototypeLayoutSet =
 				layoutSetPrototype.getLayoutSet();
 
-			UnicodeProperties layoutSetPrototypeSettingsProperties =
+			UnicodeProperties layoutSetPrototypeSettingsUnicodeProperties =
 				layoutSetPrototypeLayoutSet.getSettingsProperties();
 
 			int mergeFailCount = GetterUtil.getInteger(
-				layoutSetPrototypeSettingsProperties.getProperty(
+				layoutSetPrototypeSettingsUnicodeProperties.getProperty(
 					MERGE_FAIL_COUNT));
 
 			mergeFailCount++;
@@ -1417,7 +1429,7 @@ public class SitesImpl implements Sites {
 
 			_log.error(sb.toString(), exception);
 
-			layoutSetPrototypeSettingsProperties.setProperty(
+			layoutSetPrototypeSettingsUnicodeProperties.setProperty(
 				MERGE_FAIL_COUNT, String.valueOf(mergeFailCount));
 
 			// Invoke updateImpl so that we do not trigger the listeners
@@ -1436,11 +1448,13 @@ public class SitesImpl implements Sites {
 	public void removeMergeFailFriendlyURLLayouts(LayoutSet layoutSet)
 		throws PortalException {
 
-		UnicodeProperties settingsProperties =
+		UnicodeProperties settingsUnicodeProperties =
 			layoutSet.getSettingsProperties();
 
-		if (settingsProperties.containsKey(MERGE_FAIL_FRIENDLY_URL_LAYOUTS)) {
-			settingsProperties.remove(MERGE_FAIL_FRIENDLY_URL_LAYOUTS);
+		if (settingsUnicodeProperties.containsKey(
+				MERGE_FAIL_FRIENDLY_URL_LAYOUTS)) {
+
+			settingsUnicodeProperties.remove(MERGE_FAIL_FRIENDLY_URL_LAYOUTS);
 
 			LayoutSetLocalServiceUtil.updateLayoutSet(layoutSet);
 		}
@@ -1489,18 +1503,20 @@ public class SitesImpl implements Sites {
 
 		boolean updateLayoutPrototypeLayout = false;
 
-		UnicodeProperties prototypeTypeSettingsProperties =
+		UnicodeProperties prototypeTypeSettingsUnicodeProperties =
 			layoutPrototypeLayout.getTypeSettingsProperties();
 
 		if (newMergeFailCount == 0) {
-			if (prototypeTypeSettingsProperties.containsKey(MERGE_FAIL_COUNT)) {
-				prototypeTypeSettingsProperties.remove(MERGE_FAIL_COUNT);
+			if (prototypeTypeSettingsUnicodeProperties.containsKey(
+					MERGE_FAIL_COUNT)) {
+
+				prototypeTypeSettingsUnicodeProperties.remove(MERGE_FAIL_COUNT);
 
 				updateLayoutPrototypeLayout = true;
 			}
 		}
 		else {
-			prototypeTypeSettingsProperties.setProperty(
+			prototypeTypeSettingsUnicodeProperties.setProperty(
 				MERGE_FAIL_COUNT, String.valueOf(newMergeFailCount));
 
 			updateLayoutPrototypeLayout = true;
@@ -1532,20 +1548,21 @@ public class SitesImpl implements Sites {
 
 		boolean updateLayoutSetPrototypeLayoutSet = false;
 
-		UnicodeProperties layoutSetPrototypeSettingsProperties =
+		UnicodeProperties layoutSetPrototypeSettingsUnicodeProperties =
 			layoutSetPrototypeLayoutSet.getSettingsProperties();
 
 		if (newMergeFailCount == 0) {
-			if (layoutSetPrototypeSettingsProperties.containsKey(
+			if (layoutSetPrototypeSettingsUnicodeProperties.containsKey(
 					MERGE_FAIL_COUNT)) {
 
-				layoutSetPrototypeSettingsProperties.remove(MERGE_FAIL_COUNT);
+				layoutSetPrototypeSettingsUnicodeProperties.remove(
+					MERGE_FAIL_COUNT);
 
 				updateLayoutSetPrototypeLayoutSet = true;
 			}
 		}
 		else {
-			layoutSetPrototypeSettingsProperties.setProperty(
+			layoutSetPrototypeSettingsUnicodeProperties.setProperty(
 				MERGE_FAIL_COUNT, String.valueOf(newMergeFailCount));
 
 			updateLayoutSetPrototypeLayoutSet = true;
@@ -1719,11 +1736,12 @@ public class SitesImpl implements Sites {
 			return;
 		}
 
-		UnicodeProperties prototypeTypeSettingsProperties =
+		UnicodeProperties prototypeTypeSettingsUnicodeProperties =
 			layoutPrototypeLayout.getTypeSettingsProperties();
 
 		int mergeFailCount = GetterUtil.getInteger(
-			prototypeTypeSettingsProperties.getProperty(MERGE_FAIL_COUNT));
+			prototypeTypeSettingsUnicodeProperties.getProperty(
+				MERGE_FAIL_COUNT));
 
 		if (mergeFailCount >
 				PropsValues.LAYOUT_PROTOTYPE_MERGE_FAIL_THRESHOLD) {
@@ -1773,7 +1791,7 @@ public class SitesImpl implements Sites {
 		catch (Exception exception) {
 			_log.error(exception, exception);
 
-			prototypeTypeSettingsProperties.setProperty(
+			prototypeTypeSettingsUnicodeProperties.setProperty(
 				MERGE_FAIL_COUNT, String.valueOf(++mergeFailCount));
 
 			// Invoke updateImpl so that we do not trigger the listeners
@@ -1821,12 +1839,12 @@ public class SitesImpl implements Sites {
 	protected void doResetPrototype(LayoutSet layoutSet)
 		throws PortalException {
 
-		UnicodeProperties settingsProperties =
+		UnicodeProperties settingsUnicodeProperties =
 			layoutSet.getSettingsProperties();
 
-		settingsProperties.remove(LAST_MERGE_TIME);
+		settingsUnicodeProperties.remove(LAST_MERGE_TIME);
 
-		settingsProperties.setProperty(
+		settingsUnicodeProperties.setProperty(
 			LAST_RESET_TIME, String.valueOf(System.currentTimeMillis()));
 
 		LayoutSetLocalServiceUtil.updateLayoutSet(layoutSet);
@@ -1866,10 +1884,8 @@ public class SitesImpl implements Sites {
 			return null;
 		}
 
-		List<Layout> layoutSetPrototypeLayouts = null;
-
-		layoutSetPrototypeLayouts = LayoutLocalServiceUtil.getLayouts(
-			layoutSetPrototypeGroupId, true);
+		List<Layout> layoutSetPrototypeLayouts =
+			LayoutLocalServiceUtil.getLayouts(layoutSetPrototypeGroupId, true);
 
 		Map<String, Serializable> exportLayoutSettingsMap =
 			ExportImportConfigurationSettingsMapFactoryUtil.
@@ -2041,14 +2057,20 @@ public class SitesImpl implements Sites {
 		User user = UserLocalServiceUtil.getDefaultUser(
 			layoutSetPrototype.getCompanyId());
 
+		long lastMergeVersion = layoutSetPrototype.getMvccVersion();
+
+		parameterMap.put(
+			"lastMergeVersion",
+			new String[] {String.valueOf(lastMergeVersion)});
+
 		if (importData) {
 			file = exportLayoutSetPrototype(
 				user, layoutSetPrototype, parameterMap, null);
 		}
 		else {
 			String cacheFileName = StringBundler.concat(
-				_TEMP_DIR, layoutSetPrototype.getUuid(), ".v",
-				layoutSetPrototype.getMvccVersion(), ".lar");
+				_TEMP_DIR, layoutSetPrototype.getUuid(), ".v", lastMergeVersion,
+				".lar");
 
 			file = _exportInProgressMap.computeIfAbsent(
 				cacheFileName,

@@ -5,10 +5,8 @@ import com.liferay.gradle.util.tasks.ConcatenateTask
 task buildCKEditor(type: Copy)
 task buildCKEditorBBCode(type: ConcatenateTask)
 task buildCKEditorPlugins(type: Copy)
-task buildCKEditorScayt(type: Copy)
-task buildCKEditorWsc(type: Copy)
 
-String ckEditorVersion = "4.11.3"
+String ckEditorVersion = "4.13.1"
 
 String ckEditorScaytUrl = "https://ckeditor.com/cke4/sites/default/files/scayt/releases/scayt_${ckEditorVersion}.zip"
 String ckEditorWscUrl = "https://ckeditor.com/cke4/sites/default/files/wsc/releases/wsc_${ckEditorVersion}.zip"
@@ -57,32 +55,8 @@ buildCKEditorPlugins {
 	into ckEditorDestinationDir
 }
 
-buildCKEditorScayt {
-	dependsOn buildCKEditor
-
-	from {
-		File ckEditorScaytFile = FileUtil.get(project, ckEditorScaytUrl)
-
-		zipTree(ckEditorScaytFile)
-	}
-
-	into new File(editorDestinationDir, "ckeditor/plugins")
-}
-
-buildCKEditorWsc {
-	dependsOn buildCKEditor
-
-	from {
-		File ckEditorWscFile = FileUtil.get(project, ckEditorWscUrl)
-
-		zipTree(ckEditorWscFile)
-	}
-
-	into new File(editorDestinationDir, "ckeditor/plugins")
-}
-
 classes {
-	dependsOn buildCKEditor, buildCKEditorPlugins, buildCKEditorScayt, buildCKEditorWsc
+	dependsOn buildCKEditor, buildCKEditorPlugins
 }
 
 clean {
@@ -102,5 +76,6 @@ dependencies {
 	compileOnly project(":apps:frontend-taglib:frontend-taglib")
 	compileOnly project(":apps:message-boards:message-boards-api")
 	compileOnly project(":core:petra:petra-lang")
+	compileOnly project(":core:petra:petra-sql-dsl-api")
 	compileOnly project(":core:petra:petra-string")
 }

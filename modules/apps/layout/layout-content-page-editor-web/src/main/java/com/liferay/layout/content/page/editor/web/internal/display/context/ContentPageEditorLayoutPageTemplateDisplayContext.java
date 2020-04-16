@@ -18,23 +18,26 @@ import com.liferay.asset.kernel.AssetRendererFactoryRegistryUtil;
 import com.liferay.asset.kernel.model.AssetRendererFactory;
 import com.liferay.asset.kernel.model.ClassType;
 import com.liferay.asset.kernel.model.ClassTypeReader;
+import com.liferay.fragment.contributor.FragmentCollectionContributorTracker;
 import com.liferay.fragment.renderer.FragmentRendererController;
+import com.liferay.fragment.renderer.FragmentRendererTracker;
+import com.liferay.fragment.util.configuration.FragmentEntryConfigurationParser;
 import com.liferay.info.display.contributor.InfoDisplayContributor;
+import com.liferay.info.display.contributor.InfoDisplayContributorTracker;
+import com.liferay.item.selector.ItemSelector;
 import com.liferay.layout.content.page.editor.sidebar.panel.ContentPageEditorSidebarPanel;
 import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
 import com.liferay.layout.page.template.service.LayoutPageTemplateEntryLocalServiceUtil;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.comment.CommentManager;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.model.Layout;
-import com.liferay.portal.kernel.service.LayoutLocalServiceUtil;
+import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.Validator;
-import com.liferay.portal.kernel.workflow.WorkflowConstants;
-import com.liferay.portal.template.soy.util.SoyContext;
-import com.liferay.portal.template.soy.util.SoyContextFactoryUtil;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import javax.portlet.PortletRequest;
 import javax.portlet.RenderResponse;
@@ -48,103 +51,74 @@ public class ContentPageEditorLayoutPageTemplateDisplayContext
 	extends ContentPageEditorDisplayContext {
 
 	public ContentPageEditorLayoutPageTemplateDisplayContext(
-		HttpServletRequest httpServletRequest, RenderResponse renderResponse,
-		boolean pageIsDisplayPage, CommentManager commentManager,
+		CommentManager commentManager,
 		List<ContentPageEditorSidebarPanel> contentPageEditorSidebarPanels,
+		FragmentCollectionContributorTracker
+			fragmentCollectionContributorTracker,
+		FragmentEntryConfigurationParser fragmentEntryConfigurationParser,
 		FragmentRendererController fragmentRendererController,
-		PortletRequest portletRequest) {
+		FragmentRendererTracker fragmentRendererTracker,
+		HttpServletRequest httpServletRequest,
+		InfoDisplayContributorTracker infoDisplayContributorTracker,
+		ItemSelector itemSelector, boolean pageIsDisplayPage,
+		PortletRequest portletRequest, RenderResponse renderResponse) {
 
 		super(
-			httpServletRequest, renderResponse, commentManager,
-			contentPageEditorSidebarPanels, fragmentRendererController,
-			portletRequest);
+			commentManager, contentPageEditorSidebarPanels,
+			fragmentCollectionContributorTracker,
+			fragmentEntryConfigurationParser, fragmentRendererController,
+			fragmentRendererTracker, httpServletRequest,
+			infoDisplayContributorTracker, itemSelector, portletRequest,
+			renderResponse);
 
 		_pageIsDisplayPage = pageIsDisplayPage;
 	}
 
 	@Override
-	public SoyContext getEditorSoyContext() throws Exception {
-		if (_editorSoyContext != null) {
-			return _editorSoyContext;
+	public Map<String, Object> getEditorContext(String npmResolvedPackageName)
+		throws Exception {
+
+		Map<String, Object> editorContext = super.getEditorContext(
+			npmResolvedPackageName);
+
+		if (!_pageIsDisplayPage) {
+			return editorContext;
 		}
 
-		SoyContext soyContext = super.getEditorSoyContext();
+		Map<String, Object> configContext =
+			(Map<String, Object>)editorContext.get("config");
 
-		soyContext.put("lastSaveDate", StringPool.BLANK);
+		configContext.put("selectedMappingTypes", _getSelectedMappingTypes());
 
-		if (_pageIsDisplayPage) {
-			soyContext.put(
-				"mappingFieldsURL",
-				getFragmentEntryActionURL(
-					"/content_layout/get_mapping_fields"));
-		}
-
-		soyContext.put(
-			"publishURL",
-			getFragmentEntryActionURL(
-				"/content_layout/publish_layout_page_template_entry"));
-
-		if (_pageIsDisplayPage) {
-			soyContext.put("selectedMappingTypes", _getSelectedMappingTypes());
-		}
-
-		soyContext.put(
-			"sidebarPanels", getSidebarPanelSoyContexts(_pageIsDisplayPage));
-
-		LayoutPageTemplateEntry layoutPageTemplateEntry =
-			_getLayoutPageTemplateEntry();
-
-		if ((layoutPageTemplateEntry != null) &&
-			(layoutPageTemplateEntry.getStatus() !=
-				WorkflowConstants.STATUS_APPROVED)) {
-
-			String statusLabel = WorkflowConstants.getStatusLabel(
-				layoutPageTemplateEntry.getStatus());
-
-			soyContext.put(
-				"status", LanguageUtil.get(httpServletRequest, statusLabel));
-		}
-
-		soyContext.put("workflowEnabled", false);
-
-		_editorSoyContext = soyContext;
-
-		return _editorSoyContext;
+		return editorContext;
 	}
 
 	@Override
-	public SoyContext getFragmentsEditorToolbarSoyContext()
-		throws PortalException {
-
-		if (_fragmentsEditorToolbarSoyContext != null) {
-			return _fragmentsEditorToolbarSoyContext;
-		}
-
-		_fragmentsEditorToolbarSoyContext =
-			super.getFragmentsEditorToolbarSoyContext();
-
-		return _fragmentsEditorToolbarSoyContext;
+	public String getPublishURL() {
+		return getFragmentEntryActionURL(
+			"/content_layout/publish_layout_page_template_entry");
 	}
 
-	private LayoutPageTemplateEntry _getLayoutPageTemplateEntry()
-		throws PortalException {
+	@Override
+	public List<Map<String, Object>> getSidebarPanels() {
+		return getSidebarPanels(_pageIsDisplayPage);
+	}
 
+	@Override
+	public boolean isWorkflowEnabled() {
+		return false;
+	}
+
+	private LayoutPageTemplateEntry _getLayoutPageTemplateEntry() {
 		if (_layoutPageTemplateEntry != null) {
 			return _layoutPageTemplateEntry;
 		}
 
 		Layout draftLayout = themeDisplay.getLayout();
 
-		Layout layout = LayoutLocalServiceUtil.fetchLayout(
-			draftLayout.getClassPK());
-
-		if (layout == null) {
-			return null;
-		}
-
 		_layoutPageTemplateEntry =
 			LayoutPageTemplateEntryLocalServiceUtil.
-				fetchLayoutPageTemplateEntryByPlid(layout.getPlid());
+				fetchLayoutPageTemplateEntryByPlid(draftLayout.getClassPK());
 
 		return _layoutPageTemplateEntry;
 	}
@@ -172,7 +146,7 @@ public class ContentPageEditorLayoutPageTemplateDisplayContext
 		return classType.getName();
 	}
 
-	private String _getMappingTypeLabel() throws PortalException {
+	private String _getMappingTypeLabel() {
 		LayoutPageTemplateEntry layoutPageTemplateEntry =
 			_getLayoutPageTemplateEntry();
 
@@ -187,48 +161,41 @@ public class ContentPageEditorLayoutPageTemplateDisplayContext
 		return infoDisplayContributor.getLabel(themeDisplay.getLocale());
 	}
 
-	private SoyContext _getSelectedMappingTypes() throws PortalException {
+	private Map<String, Object> _getSelectedMappingTypes() {
 		LayoutPageTemplateEntry layoutPageTemplateEntry =
 			_getLayoutPageTemplateEntry();
 
 		if ((layoutPageTemplateEntry == null) ||
 			(layoutPageTemplateEntry.getClassNameId() <= 0)) {
 
-			return SoyContextFactoryUtil.createSoyContext();
+			return Collections.emptyMap();
 		}
 
-		SoyContext soyContext = SoyContextFactoryUtil.createSoyContext();
-
-		SoyContext typeSoyContext = SoyContextFactoryUtil.createSoyContext();
-
-		typeSoyContext.put(
-			"id", layoutPageTemplateEntry.getClassNameId()
-		).put(
-			"label", _getMappingTypeLabel()
-		);
-
-		soyContext.put("type", typeSoyContext);
-
-		String subtypeLabel = _getMappingSubtypeLabel();
-
-		if (Validator.isNotNull(subtypeLabel)) {
-			SoyContext subtypeSoyContext =
-				SoyContextFactoryUtil.createSoyContext();
-
-			subtypeSoyContext.put(
-				"id", layoutPageTemplateEntry.getClassTypeId()
+		return HashMapBuilder.<String, Object>put(
+			"type",
+			HashMapBuilder.<String, Object>put(
+				"id", layoutPageTemplateEntry.getClassNameId()
 			).put(
-				"label", subtypeLabel
-			);
+				"label", _getMappingTypeLabel()
+			).build()
+		).put(
+			"subtype",
+			() -> {
+				String subtypeLabel = _getMappingSubtypeLabel();
 
-			soyContext.put("subtype", subtypeSoyContext);
-		}
+				if (Validator.isNull(subtypeLabel)) {
+					return StringPool.BLANK;
+				}
 
-		return soyContext;
+				return HashMapBuilder.<String, Object>put(
+					"id", layoutPageTemplateEntry.getClassTypeId()
+				).put(
+					"label", subtypeLabel
+				).build();
+			}
+		).build();
 	}
 
-	private SoyContext _editorSoyContext;
-	private SoyContext _fragmentsEditorToolbarSoyContext;
 	private LayoutPageTemplateEntry _layoutPageTemplateEntry;
 	private final boolean _pageIsDisplayPage;
 

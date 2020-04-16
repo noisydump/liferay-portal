@@ -147,7 +147,9 @@ public class TemplateNode extends LinkedHashMap<String, Object> {
 	public String getFriendlyUrl() {
 		String type = getType();
 
-		if (type.equals("ddm-journal-article")) {
+		if (type.equals("ddm-journal-article") ||
+			type.equals("journal_article")) {
+
 			return _getDDMJournalArticleFriendlyURL();
 		}
 		else if (type.equals("link_to_layout")) {

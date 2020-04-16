@@ -9,17 +9,23 @@
  * distribution rights of the Software.
  */
 
-import {cleanup, fireEvent, render, findByTestId} from '@testing-library/react';
+import {cleanup, findByTestId, fireEvent, render} from '@testing-library/react';
 import React from 'react';
 
 import TimeRangeFilter from '../../../src/main/resources/META-INF/resources/js/components/filter/TimeRangeFilter.es';
+import {stringify} from '../../../src/main/resources/META-INF/resources/js/shared/components/router/queryString.es';
 import {jsonSessionStorage} from '../../../src/main/resources/META-INF/resources/js/shared/util/storage.es';
 import {MockRouter} from '../../mock/MockRouter.es';
 
 import '@testing-library/jest-dom/extend-expect';
 
-const query =
-	'?filters.testtimeRange%5B0%5D=7&filters.testdateEnd=2019-12-09&filters.testdateStart=2019-12-03';
+const filters = {
+	testDateEnd: '2019-12-09T00:00:00Z',
+	testDateStart: '2019-12-03T00:00:00Z',
+	testTimeRange: ['7'],
+};
+
+const query = stringify({filters});
 
 const data = {
 	items: [
@@ -28,16 +34,16 @@ const data = {
 			dateStart: '2019-12-03T00:00:00Z',
 			defaultTimeRange: false,
 			id: 7,
-			name: 'Last 7 Days'
+			name: 'Last 7 Days',
 		},
 		{
 			dateEnd: '2019-12-09T00:00:00Z',
 			dateStart: '2019-11-10T00:00:00Z',
 			defaultTimeRange: true,
 			id: 30,
-			name: 'Last 30 Days'
-		}
-	]
+			name: 'Last 30 Days',
+		},
+	],
 };
 
 const wrapper = ({children}) => (
@@ -54,11 +60,7 @@ describe('The time range filter component should', () => {
 			jsonSessionStorage.set('timeRanges', data);
 
 			const renderResult = render(
-				<TimeRangeFilter
-					dispatch={() => {}}
-					prefixKey="test"
-					processId={12345}
-				/>,
+				<TimeRangeFilter prefixKey="test" processId={12345} />,
 				{wrapper}
 			);
 
@@ -95,11 +97,7 @@ describe('The time range filter component should', () => {
 			jsonSessionStorage.set('timeRanges', data);
 
 			const renderResult = render(
-				<TimeRangeFilter
-					dispatch={() => {}}
-					prefixKey="test"
-					processId={12345}
-				/>,
+				<TimeRangeFilter prefixKey="test" processId={12345} />,
 				{wrapper}
 			);
 

@@ -21,6 +21,7 @@ import {Config} from 'metal-state';
 
 import {pageStructure} from '../../util/config.es';
 import withActionableFields from './withActionableFields.es';
+import withClickableFields from './withClickableFields.es';
 import withEditablePageHeader from './withEditablePageHeader.es';
 import withMoveableFields from './withMoveableFields.es';
 import withMultiplePages from './withMultiplePages.es';
@@ -44,12 +45,6 @@ class FormBuilderBase extends Component {
 		}
 	}
 
-	getFormRendererEvents() {
-		return {
-			fieldClicked: this._handleFieldClicked.bind(this)
-		};
-	}
-
 	preparePagesForRender(pages) {
 		const visitor = new PagesVisitor(pages);
 
@@ -65,16 +60,16 @@ class FormBuilderBase extends Component {
 							label: Liferay.Language.get(
 								'dynamically-loaded-data'
 							),
-							value: 'dynamic'
-						}
+							value: 'dynamic',
+						},
 					],
-					value: 'dynamic'
+					value: 'dynamic',
 				};
 			}
 
 			return {
 				...field,
-				readOnly: true
+				readOnly: true,
 			};
 		});
 	}
@@ -87,7 +82,7 @@ class FormBuilderBase extends Component {
 			pages,
 			paginationMode,
 			portletNamespace,
-			spritemap
+			spritemap,
 		} = props;
 
 		return (
@@ -98,7 +93,6 @@ class FormBuilderBase extends Component {
 							activePage={activePage}
 							editable={true}
 							editingLanguageId={editingLanguageId}
-							events={this.getFormRendererEvents()}
 							pages={this.preparePagesForRender(pages)}
 							paginationMode={paginationMode}
 							portletNamespace={portletNamespace}
@@ -109,12 +103,6 @@ class FormBuilderBase extends Component {
 				</div>
 			</div>
 		);
-	}
-
-	_handleFieldClicked(event) {
-		const {dispatch} = this.context;
-
-		dispatch('fieldClicked', event);
 	}
 }
 
@@ -189,7 +177,7 @@ FormBuilderBase.PROPS = {
 	successPageSettings: Config.shapeOf({
 		body: Config.object(),
 		enabled: Config.bool(),
-		title: Config.object()
+		title: Config.object(),
 	}).value({}),
 
 	/**
@@ -199,11 +187,12 @@ FormBuilderBase.PROPS = {
 	 * @type {?string}
 	 */
 
-	view: Config.string()
+	view: Config.string(),
 };
 
 export default compose(
 	withActionableFields,
+	withClickableFields,
 	withEditablePageHeader,
 	withMoveableFields,
 	withMultiplePages,

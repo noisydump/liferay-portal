@@ -205,6 +205,96 @@ public abstract class BaseTaxonomyCategoryResourceTestCase {
 	}
 
 	@Test
+	public void testGetTaxonomyCategoryRankedPage() throws Exception {
+		Page<TaxonomyCategory> page =
+			taxonomyCategoryResource.getTaxonomyCategoryRankedPage(
+				null, Pagination.of(1, 2));
+
+		Assert.assertEquals(0, page.getTotalCount());
+
+		TaxonomyCategory taxonomyCategory1 =
+			testGetTaxonomyCategoryRankedPage_addTaxonomyCategory(
+				randomTaxonomyCategory());
+
+		TaxonomyCategory taxonomyCategory2 =
+			testGetTaxonomyCategoryRankedPage_addTaxonomyCategory(
+				randomTaxonomyCategory());
+
+		page = taxonomyCategoryResource.getTaxonomyCategoryRankedPage(
+			null, Pagination.of(1, 2));
+
+		Assert.assertEquals(2, page.getTotalCount());
+
+		assertEqualsIgnoringOrder(
+			Arrays.asList(taxonomyCategory1, taxonomyCategory2),
+			(List<TaxonomyCategory>)page.getItems());
+		assertValid(page);
+
+		taxonomyCategoryResource.deleteTaxonomyCategory(
+			taxonomyCategory1.getId());
+
+		taxonomyCategoryResource.deleteTaxonomyCategory(
+			taxonomyCategory2.getId());
+	}
+
+	@Test
+	public void testGetTaxonomyCategoryRankedPageWithPagination()
+		throws Exception {
+
+		TaxonomyCategory taxonomyCategory1 =
+			testGetTaxonomyCategoryRankedPage_addTaxonomyCategory(
+				randomTaxonomyCategory());
+
+		TaxonomyCategory taxonomyCategory2 =
+			testGetTaxonomyCategoryRankedPage_addTaxonomyCategory(
+				randomTaxonomyCategory());
+
+		TaxonomyCategory taxonomyCategory3 =
+			testGetTaxonomyCategoryRankedPage_addTaxonomyCategory(
+				randomTaxonomyCategory());
+
+		Page<TaxonomyCategory> page1 =
+			taxonomyCategoryResource.getTaxonomyCategoryRankedPage(
+				null, Pagination.of(1, 2));
+
+		List<TaxonomyCategory> taxonomyCategories1 =
+			(List<TaxonomyCategory>)page1.getItems();
+
+		Assert.assertEquals(
+			taxonomyCategories1.toString(), 2, taxonomyCategories1.size());
+
+		Page<TaxonomyCategory> page2 =
+			taxonomyCategoryResource.getTaxonomyCategoryRankedPage(
+				null, Pagination.of(2, 2));
+
+		Assert.assertEquals(3, page2.getTotalCount());
+
+		List<TaxonomyCategory> taxonomyCategories2 =
+			(List<TaxonomyCategory>)page2.getItems();
+
+		Assert.assertEquals(
+			taxonomyCategories2.toString(), 1, taxonomyCategories2.size());
+
+		Page<TaxonomyCategory> page3 =
+			taxonomyCategoryResource.getTaxonomyCategoryRankedPage(
+				null, Pagination.of(1, 3));
+
+		assertEqualsIgnoringOrder(
+			Arrays.asList(
+				taxonomyCategory1, taxonomyCategory2, taxonomyCategory3),
+			(List<TaxonomyCategory>)page3.getItems());
+	}
+
+	protected TaxonomyCategory
+			testGetTaxonomyCategoryRankedPage_addTaxonomyCategory(
+				TaxonomyCategory taxonomyCategory)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
 	public void testGetTaxonomyCategoryTaxonomyCategoriesPage()
 		throws Exception {
 
@@ -445,9 +535,11 @@ public abstract class BaseTaxonomyCategoryResourceTestCase {
 				}
 				else {
 					BeanUtils.setProperty(
-						taxonomyCategory1, entityField.getName(), "Aaa");
+						taxonomyCategory1, entityField.getName(),
+						"Aaa" + RandomTestUtil.randomString());
 					BeanUtils.setProperty(
-						taxonomyCategory2, entityField.getName(), "Bbb");
+						taxonomyCategory2, entityField.getName(),
+						"Bbb" + RandomTestUtil.randomString());
 				}
 			});
 	}
@@ -556,6 +648,7 @@ public abstract class BaseTaxonomyCategoryResourceTestCase {
 
 	@Test
 	public void testDeleteTaxonomyCategory() throws Exception {
+		@SuppressWarnings("PMD.UnusedLocalVariable")
 		TaxonomyCategory taxonomyCategory =
 			testDeleteTaxonomyCategory_addTaxonomyCategory();
 
@@ -695,7 +788,7 @@ public abstract class BaseTaxonomyCategoryResourceTestCase {
 				postTaxonomyCategory.getId(), randomPatchTaxonomyCategory);
 
 		TaxonomyCategory expectedPatchTaxonomyCategory =
-			(TaxonomyCategory)BeanUtils.cloneBean(postTaxonomyCategory);
+			postTaxonomyCategory.clone();
 
 		_beanUtilsBean.copyProperties(
 			expectedPatchTaxonomyCategory, randomPatchTaxonomyCategory);
@@ -991,9 +1084,11 @@ public abstract class BaseTaxonomyCategoryResourceTestCase {
 				}
 				else {
 					BeanUtils.setProperty(
-						taxonomyCategory1, entityField.getName(), "Aaa");
+						taxonomyCategory1, entityField.getName(),
+						"Aaa" + RandomTestUtil.randomString());
 					BeanUtils.setProperty(
-						taxonomyCategory2, entityField.getName(), "Bbb");
+						taxonomyCategory2, entityField.getName(),
+						"Bbb" + RandomTestUtil.randomString());
 				}
 			});
 	}
@@ -1199,6 +1294,14 @@ public abstract class BaseTaxonomyCategoryResourceTestCase {
 		for (String additionalAssertFieldName :
 				getAdditionalAssertFieldNames()) {
 
+			if (Objects.equals("actions", additionalAssertFieldName)) {
+				if (taxonomyCategory.getActions() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
 			if (Objects.equals(
 					"availableLanguages", additionalAssertFieldName)) {
 
@@ -1289,6 +1392,16 @@ public abstract class BaseTaxonomyCategoryResourceTestCase {
 				continue;
 			}
 
+			if (Objects.equals(
+					"taxonomyCategoryUsageCount", additionalAssertFieldName)) {
+
+				if (taxonomyCategory.getTaxonomyCategoryUsageCount() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
 			if (Objects.equals("viewableBy", additionalAssertFieldName)) {
 				if (taxonomyCategory.getViewableBy() == null) {
 					valid = false;
@@ -1354,6 +1467,17 @@ public abstract class BaseTaxonomyCategoryResourceTestCase {
 		for (String additionalAssertFieldName :
 				getAdditionalAssertFieldNames()) {
 
+			if (Objects.equals("actions", additionalAssertFieldName)) {
+				if (!equals(
+						(Map)taxonomyCategory1.getActions(),
+						(Map)taxonomyCategory2.getActions())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
 			if (Objects.equals(
 					"availableLanguages", additionalAssertFieldName)) {
 
@@ -1412,9 +1536,9 @@ public abstract class BaseTaxonomyCategoryResourceTestCase {
 			}
 
 			if (Objects.equals("description_i18n", additionalAssertFieldName)) {
-				if (!Objects.deepEquals(
-						taxonomyCategory1.getDescription_i18n(),
-						taxonomyCategory2.getDescription_i18n())) {
+				if (!equals(
+						(Map)taxonomyCategory1.getDescription_i18n(),
+						(Map)taxonomyCategory2.getDescription_i18n())) {
 
 					return false;
 				}
@@ -1457,9 +1581,9 @@ public abstract class BaseTaxonomyCategoryResourceTestCase {
 			}
 
 			if (Objects.equals("name_i18n", additionalAssertFieldName)) {
-				if (!Objects.deepEquals(
-						taxonomyCategory1.getName_i18n(),
-						taxonomyCategory2.getName_i18n())) {
+				if (!equals(
+						(Map)taxonomyCategory1.getName_i18n(),
+						(Map)taxonomyCategory2.getName_i18n())) {
 
 					return false;
 				}
@@ -1506,6 +1630,19 @@ public abstract class BaseTaxonomyCategoryResourceTestCase {
 				continue;
 			}
 
+			if (Objects.equals(
+					"taxonomyCategoryUsageCount", additionalAssertFieldName)) {
+
+				if (!Objects.deepEquals(
+						taxonomyCategory1.getTaxonomyCategoryUsageCount(),
+						taxonomyCategory2.getTaxonomyCategoryUsageCount())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
 			if (Objects.equals("viewableBy", additionalAssertFieldName)) {
 				if (!Objects.deepEquals(
 						taxonomyCategory1.getViewableBy(),
@@ -1520,6 +1657,30 @@ public abstract class BaseTaxonomyCategoryResourceTestCase {
 			throw new IllegalArgumentException(
 				"Invalid additional assert field name " +
 					additionalAssertFieldName);
+		}
+
+		return true;
+	}
+
+	protected boolean equals(
+		Map<String, Object> map1, Map<String, Object> map2) {
+
+		if (Objects.equals(map1.keySet(), map2.keySet())) {
+			for (Map.Entry<String, Object> entry : map1.entrySet()) {
+				if (entry.getValue() instanceof Map) {
+					if (!equals(
+							(Map)entry.getValue(),
+							(Map)map2.get(entry.getKey()))) {
+
+						return false;
+					}
+				}
+				else if (!Objects.deepEquals(
+							entry.getValue(), map2.get(entry.getKey()))) {
+
+					return false;
+				}
+			}
 		}
 
 		return true;
@@ -1576,6 +1737,17 @@ public abstract class BaseTaxonomyCategoryResourceTestCase {
 				if (!Objects.deepEquals(
 						taxonomyCategory.getNumberOfTaxonomyCategories(),
 						jsonObject.getInt("numberOfTaxonomyCategories"))) {
+
+					return false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals("taxonomyCategoryUsageCount", fieldName)) {
+				if (!Objects.deepEquals(
+						taxonomyCategory.getTaxonomyCategoryUsageCount(),
+						jsonObject.getInt("taxonomyCategoryUsageCount"))) {
 
 					return false;
 				}
@@ -1640,6 +1812,11 @@ public abstract class BaseTaxonomyCategoryResourceTestCase {
 		sb.append(" ");
 		sb.append(operator);
 		sb.append(" ");
+
+		if (entityFieldName.equals("actions")) {
+			throw new IllegalArgumentException(
+				"Invalid entity field " + entityFieldName);
+		}
 
 		if (entityFieldName.equals("availableLanguages")) {
 			throw new IllegalArgumentException(
@@ -1777,6 +1954,11 @@ public abstract class BaseTaxonomyCategoryResourceTestCase {
 				"Invalid entity field " + entityFieldName);
 		}
 
+		if (entityFieldName.equals("taxonomyCategoryUsageCount")) {
+			throw new IllegalArgumentException(
+				"Invalid entity field " + entityFieldName);
+		}
+
 		if (entityFieldName.equals("viewableBy")) {
 			throw new IllegalArgumentException(
 				"Invalid entity field " + entityFieldName);
@@ -1813,6 +1995,7 @@ public abstract class BaseTaxonomyCategoryResourceTestCase {
 				id = RandomTestUtil.randomString();
 				name = RandomTestUtil.randomString();
 				numberOfTaxonomyCategories = RandomTestUtil.randomInt();
+				taxonomyCategoryUsageCount = RandomTestUtil.randomInt();
 			}
 		};
 	}

@@ -12,13 +12,16 @@
  * details.
  */
 
-import React, {useEffect, useContext} from 'react';
+import React, {useContext, useEffect} from 'react';
 
 import AppContext from '../AppContext.es';
 import {
+	ADD_DATA_LAYOUT_RULE,
+	UPDATE_DATA_LAYOUT_RULE,
+	UPDATE_EDITING_LANGUAGE_ID,
 	UPDATE_FIELD_TYPES,
 	UPDATE_FOCUSED_FIELD,
-	UPDATE_PAGES
+	UPDATE_PAGES,
 } from '../actions.es';
 import DataLayoutBuilderContext from './DataLayoutBuilderContext.es';
 
@@ -28,11 +31,29 @@ export default ({children, dataLayoutBuilder}) => {
 	useEffect(() => {
 		const provider = dataLayoutBuilder.getLayoutProvider();
 
+		const eventHandler = provider.on(
+			'editingLanguageIdChanged',
+			({newVal}) => {
+				provider.once('rendered', () => {
+					dispatch({
+						payload: newVal,
+						type: UPDATE_EDITING_LANGUAGE_ID,
+					});
+				});
+			}
+		);
+
+		return () => eventHandler.removeListener();
+	}, [dataLayoutBuilder, dispatch]);
+
+	useEffect(() => {
+		const provider = dataLayoutBuilder.getLayoutProvider();
+
 		const eventHandler = provider.on('focusedFieldChanged', ({newVal}) => {
 			provider.once('rendered', () => {
 				dispatch({
 					payload: {focusedField: newVal},
-					type: UPDATE_FOCUSED_FIELD
+					type: UPDATE_FOCUSED_FIELD,
 				});
 			});
 		});
@@ -50,6 +71,33 @@ export default ({children, dataLayoutBuilder}) => {
 		});
 
 		return () => eventHandler.removeListener();
+	}, [dataLayoutBuilder, dispatch]);
+
+	useEffect(() => {
+		const provider = dataLayoutBuilder.getLayoutProvider();
+
+		const ruleAddedEventHandler = provider.on('ruleAdded', dataRule => {
+			provider.once('rendered', () => {
+				dispatch({
+					payload: {dataRule},
+					type: ADD_DATA_LAYOUT_RULE,
+				});
+			});
+		});
+
+		const ruleEditedEventHandler = provider.on('ruleEdited', dataRule => {
+			provider.once('rendered', () => {
+				dispatch({
+					payload: {dataRule},
+					type: UPDATE_DATA_LAYOUT_RULE,
+				});
+			});
+		});
+
+		return () => {
+			ruleAddedEventHandler.removeListener();
+			ruleEditedEventHandler.removeListener();
+		};
 	}, [dataLayoutBuilder, dispatch]);
 
 	useEffect(() => {

@@ -15,12 +15,17 @@
 package com.liferay.document.library.web.internal.portlet.action;
 
 import com.liferay.document.library.constants.DLPortletKeys;
+import com.liferay.dynamic.data.mapping.util.DDMFormValuesToMapConverter;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCRenderCommand;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
+
+import javax.portlet.PortletException;
+import javax.portlet.RenderRequest;
+import javax.portlet.RenderResponse;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -41,6 +46,18 @@ public class EditFileEntryMVCRenderCommand
 	extends GetFileEntryMVCRenderCommand {
 
 	@Override
+	public String render(
+			RenderRequest renderRequest, RenderResponse renderResponse)
+		throws PortletException {
+
+		renderRequest.setAttribute(
+			DDMFormValuesToMapConverter.class.getName(),
+			_ddmFormValuesToMapConverter);
+
+		return super.render(renderRequest, renderResponse);
+	}
+
+	@Override
 	protected void checkPermissions(
 			PermissionChecker permissionChecker, FileEntry fileEntry)
 		throws PortalException {
@@ -53,6 +70,9 @@ public class EditFileEntryMVCRenderCommand
 	protected String getPath() {
 		return "/document_library/edit_file_entry.jsp";
 	}
+
+	@Reference
+	private DDMFormValuesToMapConverter _ddmFormValuesToMapConverter;
 
 	@Reference(
 		target = "(model.class.name=com.liferay.portal.kernel.repository.model.FileEntry)"

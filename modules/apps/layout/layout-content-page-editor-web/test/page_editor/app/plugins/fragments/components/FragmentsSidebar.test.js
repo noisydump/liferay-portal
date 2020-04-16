@@ -12,61 +12,61 @@
  * details.
  */
 
-import {cleanup, render, fireEvent} from '@testing-library/react';
+import {cleanup, fireEvent, render} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import React from 'react';
-import {DragDropContextProvider} from 'react-dnd';
+import {DndProvider} from 'react-dnd';
 import HTML5Backend from 'react-dnd-html5-backend';
 
-import {ConfigContext} from '../../../../../../src/main/resources/META-INF/resources/page_editor/app/config/index';
 import {StoreAPIContextProvider} from '../../../../../../src/main/resources/META-INF/resources/page_editor/app/store/index';
 import FragmentsSidebar from '../../../../../../src/main/resources/META-INF/resources/page_editor/plugins/fragments/components/FragmentsSidebar';
 
 import '@testing-library/jest-dom/extend-expect';
 
-const fragments = [
-	{
-		fragmentCollectionId: 'basicComponents',
-		fragmentEntries: [
-			{
-				fragmentEntryKey: 'basicComponentButton',
-				imagePreviewURL: 'buttonImageURL',
-				name: 'Button'
-			},
-			{
-				fragmentEntryKey: 'basicComponentCard',
-				imagePreviewURL: 'cardImageURL',
-				name: 'Card'
-			},
-			{
-				fragmentEntryKey: 'basicComponentHeading',
-				imagePreviewURL: 'headingImageURL',
-				name: 'Heading'
-			}
-		],
-		name: 'Basic Components'
-	}
-];
-
-const RenderFragmentsSidebar = () => {
-	return (
-		<DragDropContextProvider backend={HTML5Backend}>
-			<ConfigContext.Provider value={{fragments}}>
-				<StoreAPIContextProvider>
-					<FragmentsSidebar />
-				</StoreAPIContextProvider>
-			</ConfigContext.Provider>
-		</DragDropContextProvider>
+const renderFragmentsSidebar = () =>
+	render(
+		<DndProvider backend={HTML5Backend}>
+			<StoreAPIContextProvider
+				getState={() => ({
+					fragments: [
+						{
+							fragmentCollectionId: 'basicComponents',
+							fragmentEntries: [
+								{
+									fragmentEntryKey: 'basicComponentButton',
+									imagePreviewURL: 'buttonImageURL',
+									name: 'Button',
+								},
+								{
+									fragmentEntryKey: 'basicComponentCard',
+									imagePreviewURL: 'cardImageURL',
+									name: 'Card',
+								},
+								{
+									fragmentEntryKey: 'basicComponentHeading',
+									imagePreviewURL: 'headingImageURL',
+									name: 'Heading',
+								},
+							],
+							name: 'Basic Components',
+						},
+					],
+				})}
+			>
+				<FragmentsSidebar />
+			</StoreAPIContextProvider>
+		</DndProvider>
 	);
-};
 
 describe('FragmentsSidebar', () => {
 	afterEach(cleanup);
 
 	it('renders the categories collapsed', () => {
-		const {getByLabelText, getByText, queryByText} = render(
-			<RenderFragmentsSidebar />
-		);
+		const {
+			getByLabelText,
+			getByText,
+			queryByText,
+		} = renderFragmentsSidebar();
 
 		expect(getByText('Basic Components')).toBeInTheDocument();
 		expect(getByText('layout-elements')).toBeInTheDocument();
@@ -76,7 +76,7 @@ describe('FragmentsSidebar', () => {
 	});
 
 	it('expands a category on click and closes it when clicking it again', () => {
-		const {getByText, queryByText} = render(<RenderFragmentsSidebar />);
+		const {getByText, queryByText} = renderFragmentsSidebar();
 		const basicComponentsCollapse = getByText('Basic Components');
 
 		fireEvent.click(basicComponentsCollapse);
@@ -97,9 +97,11 @@ describe('FragmentsSidebar', () => {
 	});
 
 	it('finds an element when you search it', () => {
-		const {getByLabelText, getByText, queryByText} = render(
-			<RenderFragmentsSidebar />
-		);
+		const {
+			getByLabelText,
+			getByText,
+			queryByText,
+		} = renderFragmentsSidebar();
 		const searchFormInput = getByLabelText('search-form');
 
 		userEvent.type(searchFormInput, 'button');
@@ -110,9 +112,11 @@ describe('FragmentsSidebar', () => {
 	});
 
 	it('expands all categories when you type something in search form and hides layout elements', () => {
-		const {getByLabelText, getByText, queryByText} = render(
-			<RenderFragmentsSidebar />
-		);
+		const {
+			getByLabelText,
+			getByText,
+			queryByText,
+		} = renderFragmentsSidebar();
 
 		userEvent.type(getByLabelText('search-form'), 'a');
 

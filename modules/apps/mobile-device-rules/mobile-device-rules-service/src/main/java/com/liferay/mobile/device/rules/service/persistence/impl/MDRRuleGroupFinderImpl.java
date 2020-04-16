@@ -106,17 +106,17 @@ public class MDRRuleGroupFinderImpl
 				sql, "LOWER(name)", StringPool.LIKE, true, names);
 			sql = _customSQL.replaceAndOperator(sql, true);
 
-			SQLQuery q = session.createSynchronizedSQLQuery(sql);
+			SQLQuery sqlQuery = session.createSynchronizedSQLQuery(sql);
 
-			q.addScalar(COUNT_COLUMN_NAME, Type.LONG);
+			sqlQuery.addScalar(COUNT_COLUMN_NAME, Type.LONG);
 
-			QueryPos qPos = QueryPos.getInstance(q);
+			QueryPos queryPos = QueryPos.getInstance(sqlQuery);
 
-			setGroupIds(qPos, groupId, params);
+			setGroupIds(queryPos, groupId, params);
 
-			qPos.add(names, 2);
+			queryPos.add(names, 2);
 
-			Iterator<Long> itr = q.iterate();
+			Iterator<Long> itr = sqlQuery.iterate();
 
 			if (itr.hasNext()) {
 				Long count = itr.next();
@@ -219,18 +219,18 @@ public class MDRRuleGroupFinderImpl
 			sql = _customSQL.replaceAndOperator(sql, andOperator);
 			sql = _customSQL.replaceOrderBy(sql, obc);
 
-			SQLQuery q = session.createSynchronizedSQLQuery(sql);
+			SQLQuery sqlQuery = session.createSynchronizedSQLQuery(sql);
 
-			q.addEntity("MDRRuleGroup", MDRRuleGroupImpl.class);
+			sqlQuery.addEntity("MDRRuleGroup", MDRRuleGroupImpl.class);
 
-			QueryPos qPos = QueryPos.getInstance(q);
+			QueryPos queryPos = QueryPos.getInstance(sqlQuery);
 
-			setGroupIds(qPos, groupId, params);
+			setGroupIds(queryPos, groupId, params);
 
-			qPos.add(names, 2);
+			queryPos.add(names, 2);
 
 			return (List<MDRRuleGroup>)QueryUtil.list(
-				q, getDialect(), start, end);
+				sqlQuery, getDialect(), start, end);
 		}
 		catch (Exception exception) {
 			throw new SystemException(exception);
@@ -251,23 +251,23 @@ public class MDRRuleGroupFinderImpl
 	}
 
 	protected void setGroupIds(
-			QueryPos qPos, long groupId, Map<String, Object> params)
+			QueryPos queryPos, long groupId, Map<String, Object> params)
 		throws PortalException {
 
 		Boolean includeGlobalScope = (Boolean)params.get("includeGlobalScope");
 
 		if ((includeGlobalScope != null) && includeGlobalScope) {
-			qPos.add(groupId);
+			queryPos.add(groupId);
 
 			Group group = _groupLocalService.getGroup(groupId);
 
 			Group companyGroup = _groupLocalService.getCompanyGroup(
 				group.getCompanyId());
 
-			qPos.add(companyGroup.getGroupId());
+			queryPos.add(companyGroup.getGroupId());
 		}
 		else {
-			qPos.add(groupId);
+			queryPos.add(groupId);
 		}
 	}
 

@@ -89,7 +89,15 @@ public interface CTCollectionLocalService
 	@Transactional(enabled = false)
 	public CTCollection createCTCollection(long ctCollectionId);
 
+	/**
+	 * @throws PortalException
+	 */
+	public PersistedModel createPersistedModel(Serializable primaryKeyObj)
+		throws PortalException;
+
 	public void deleteCompanyCTCollections(long companyId);
+
+	public void deleteCTAutoResolutionInfo(long ctAutoResolutionInfoId);
 
 	/**
 	 * Deletes the ct collection from the database. Also notifies the appropriate model listeners.
@@ -238,6 +246,9 @@ public interface CTCollectionLocalService
 	 */
 	public String getOSGiServiceIdentifier();
 
+	/**
+	 * @throws PortalException
+	 */
 	@Override
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public PersistedModel getPersistedModel(Serializable primaryKeyObj)

@@ -248,7 +248,7 @@ if (comment) {
 		},
 		userName: function(str, match) {
 			return '<span>' + str + '</span>';
-		}
+		},
 	};
 
 	var MAP_USERS = {};
@@ -307,7 +307,7 @@ if (comment) {
 
 			var textarea = new A.Textarea({
 				autoSize: true,
-				id: '<portlet:namespace />contentInput<%= formId %>'
+				id: '<portlet:namespace />contentInput<%= formId %>',
 			}).render(autocompleteContent);
 
 			var contentTextarea = autocompleteContent.one('textarea');
@@ -395,7 +395,8 @@ if (comment) {
 
 			if (query) {
 				event.query = query[0].substr(1);
-			} else {
+			}
+			else {
 				event.preventDefault();
 			}
 
@@ -461,12 +462,12 @@ if (comment) {
 								highlighterContent.html('');
 							},
 							query: updateHighlightDivContent,
-							select: updateContentTextbox
+							select: updateContentTextbox,
 						},
 						resultFilters: 'phraseMatch',
 						resultFormatter: resultFormatter,
 						resultTextLocator: 'fullName',
-						source: response
+						source: response,
 					}).render();
 				});
 		};
@@ -487,7 +488,8 @@ if (comment) {
 						highlighterContent.removeClass('textbox');
 
 						createTextarea('#<portlet:namespace />autocompleteContent');
-					} else {
+					}
+					else {
 						contentInput.focus();
 					}
 				});

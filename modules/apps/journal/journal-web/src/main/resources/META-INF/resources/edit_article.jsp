@@ -61,7 +61,7 @@ JournalEditArticleDisplayContext journalEditArticleDisplayContext = new JournalE
 					DDMStructure ddmStructure = journalEditArticleDisplayContext.getDDMStructure();
 					%>
 
-					<aui:input autoFocus="<%= (article == null) || article.isNew() %>" cssClass="form-control-inline" defaultLanguageId="<%= journalEditArticleDisplayContext.getDefaultArticleLanguageId() %>" label="" localized="<%= true %>" name="titleMapAsXML" placeholder='<%= LanguageUtil.format(request, "untitled-x", HtmlUtil.escape(ddmStructure.getName(locale))) %>' selectedLanguageId="<%= journalEditArticleDisplayContext.getSelectedLanguageId() %>" type="text" wrapperCssClass="article-content-title mb-0" />
+					<aui:input autoFocus="<%= (article == null) || article.isNew() %>" cssClass="form-control-inline" defaultLanguageId="<%= journalEditArticleDisplayContext.getDefaultArticleLanguageId() %>" label="" localized="<%= true %>" name="titleMapAsXML" placeholder='<%= LanguageUtil.format(request, "untitled-x", HtmlUtil.escape(ddmStructure.getName(locale))) %>' required="<%= journalEditArticleDisplayContext.getClassNameId() == JournalArticleConstants.CLASSNAME_ID_DEFAULT %>" selectedLanguageId="<%= journalEditArticleDisplayContext.getSelectedLanguageId() %>" type="text" wrapperCssClass="article-content-title mb-0" />
 				</li>
 				<li class="tbar-item">
 					<div class="journal-article-button-row tbar-section text-right">
@@ -190,13 +190,13 @@ JournalEditArticleDisplayContext journalEditArticleDisplayContext = new JournalE
 				</liferay-ui:error>
 
 				<liferay-ui:error exception="<%= FileSizeException.class %>">
-					<liferay-ui:message arguments="<%= TextFormatter.formatStorageSize(DLValidatorUtil.getMaxAllowableSize(), locale) %>" key="please-enter-a-file-with-a-valid-file-size-no-larger-than-x" translateArguments="<%= false %>" />
+					<liferay-ui:message arguments="<%= LanguageUtil.formatStorageSize(DLValidatorUtil.getMaxAllowableSize(), locale) %>" key="please-enter-a-file-with-a-valid-file-size-no-larger-than-x" translateArguments="<%= false %>" />
 				</liferay-ui:error>
 
 				<liferay-ui:error exception="<%= InvalidDDMStructureException.class %>" message="the-structure-you-selected-is-not-valid-for-this-folder" />
 
 				<liferay-ui:error exception="<%= LiferayFileItemException.class %>">
-					<liferay-ui:message arguments="<%= TextFormatter.formatStorageSize(LiferayFileItem.THRESHOLD_SIZE, locale) %>" key="please-enter-valid-content-with-valid-content-size-no-larger-than-x" translateArguments="<%= false %>" />
+					<liferay-ui:message arguments="<%= LanguageUtil.formatStorageSize(LiferayFileItem.THRESHOLD_SIZE, locale) %>" key="please-enter-valid-content-with-valid-content-size-no-larger-than-x" translateArguments="<%= false %>" />
 				</liferay-ui:error>
 
 				<liferay-ui:error exception="<%= LocaleException.class %>">
@@ -245,10 +245,16 @@ JournalEditArticleDisplayContext journalEditArticleDisplayContext = new JournalE
 					<c:choose>
 						<c:when test="<%= journalDisplayContext.useDataEngineEditor() %>">
 							<liferay-data-engine:data-layout-renderer
-								containerId="reportId"
+								containerId='<%= renderResponse.getNamespace() + "dataEngineLayoutRenderer" %>'
 								dataDefinitionId="<%= ddmStructure.getStructureId() %>"
 								dataRecordValues="<%= journalEditArticleDisplayContext.getValues(ddmStructure) %>"
 								namespace="<%= renderResponse.getNamespace() %>"
+							/>
+
+							<liferay-frontend:component
+								componentId='<%= renderResponse.getNamespace() + "dataEngineLayoutRendererLanguageProxy" %>'
+								module="js/dataEngineLayoutRendererLanguageProxy.es"
+								servletContext="<%= application %>"
 							/>
 						</c:when>
 						<c:otherwise>

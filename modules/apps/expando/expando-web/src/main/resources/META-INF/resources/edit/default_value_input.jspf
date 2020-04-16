@@ -149,7 +149,7 @@
 							'value',
 							JSON.stringify({
 								latitude: location.lat,
-								longitude: location.lng
+								longitude: location.lng,
 							})
 						);
 					}
@@ -159,7 +159,7 @@
 					if (locationNode) {
 						locationNode.innerHTML = event.newVal.address;
 					}
-				}
+				},
 			};
 
 			geolocationField.init();
@@ -249,7 +249,7 @@
 					[
 						'indexTypeSearchableAsKeyword',
 						'indexTypeSearchableAsKeywordToggleSwitch',
-						'precisionTypeSelect'
+						'precisionTypeSelect',
 					],
 					'disable'
 				);
@@ -258,7 +258,7 @@
 					[
 						'indexTypeKeyword',
 						'indexTypeText',
-						'searchableKeyWordOrText'
+						'searchableKeyWordOrText',
 					],
 					'enable'
 				);
@@ -276,7 +276,8 @@
 					['precisionTypeAdvanced', 'searchableAsKeyword'],
 					'hide'
 				);
-			} else if (
+			}
+			else if (
 				currentSelectedDataType ==
 					'<%= ExpandoColumnConstants.DATA_TYPE_DECIMAL %>' ||
 				currentSelectedDataType ==
@@ -286,7 +287,7 @@
 					[
 						'indexTypeKeyword',
 						'indexTypeText',
-						'searchableKeyWordOrText'
+						'searchableKeyWordOrText',
 					],
 					'disable'
 				);
@@ -295,7 +296,7 @@
 					[
 						'indexTypeSearchableAsKeyword',
 						'indexTypeSearchableAsKeywordToggleSwitch',
-						'precisionTypeSelect'
+						'precisionTypeSelect',
 					],
 					'enable'
 				);
@@ -330,11 +331,14 @@
 					formElement.removeAttribute('disabled');
 
 					formElement.classList.remove('disabled');
-				} else if (action == 'disable') {
+				}
+				else if (action == 'disable') {
 					formElement.setAttribute('disabled', 'true');
-				} else if (action == 'hide') {
+				}
+				else if (action == 'hide') {
 					formElement.classList.add('hide');
-				} else if (action == 'unhide') {
+				}
+				else if (action == 'unhide') {
 					formElement.classList.remove('hide');
 				}
 			}

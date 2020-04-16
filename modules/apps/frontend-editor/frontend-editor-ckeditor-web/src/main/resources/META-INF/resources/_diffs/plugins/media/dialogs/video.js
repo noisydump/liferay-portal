@@ -61,7 +61,7 @@ CKEDITOR.dialog.add('video', editor => {
 				ogvUrl: videoOgvUrl,
 				poster: value,
 				url: videoUrl,
-				width: videoWidth
+				width: videoWidth,
 			});
 
 			editor.plugins.media.applyMediaScript(
@@ -74,13 +74,15 @@ CKEDITOR.dialog.add('video', editor => {
 		if (value) {
 			if (id === 'poster') {
 				extraStyles.backgroundImage = 'url(' + value + ')';
-			} else if (id === 'height' || id === 'width') {
+			}
+			else if (id === 'height' || id === 'width') {
 				var height = videoHeight;
 				var width = videoWidth;
 
 				if (id === 'height') {
 					height = value;
-				} else {
+				}
+				else {
 					width = value;
 				}
 
@@ -95,7 +97,7 @@ CKEDITOR.dialog.add('video', editor => {
 					ogvUrl: videoOgvUrl,
 					poster: videoPoster,
 					url: videoUrl,
-					width
+					width,
 				});
 
 				editor.plugins.media.applyMediaScript(
@@ -117,9 +119,11 @@ CKEDITOR.dialog.add('video', editor => {
 
 			if (id === 'poster') {
 				value = videoNode.getAttribute('data-document-url');
-			} else if (id === 'height') {
+			}
+			else if (id === 'height') {
 				value = videoNode.getAttribute('data-height');
-			} else if (id === 'width') {
+			}
+			else if (id === 'width') {
 				value = videoNode.getAttribute('data-width');
 			}
 
@@ -140,23 +144,24 @@ CKEDITOR.dialog.add('video', editor => {
 								id: 'poster',
 								label: Liferay.Language.get('video'),
 								setup: loadValue,
-								type: 'text'
+								type: 'text',
 							},
 							{
 								filebrowser: {
 									action: 'Browse',
 									target: 'info:poster',
-									url: editor.config.filebrowserVideoBrowseUrl
+									url:
+										editor.config.filebrowserVideoBrowseUrl,
 								},
 								hidden: 'true',
 								id: 'browse',
 								label: editor.lang.common.browseServer,
 								style: 'display:inline-block;margin-top:10px;',
-								type: 'button'
-							}
+								type: 'button',
+							},
 						],
 						type: 'hbox',
-						widths: ['', '100px']
+						widths: ['', '100px'],
 					},
 					{
 						children: [
@@ -171,7 +176,7 @@ CKEDITOR.dialog.add('video', editor => {
 									Liferay.Language.get(
 										'width-field-cannot-be-empty'
 									)
-								)
+								),
 							},
 							{
 								commit: commitValue,
@@ -184,15 +189,15 @@ CKEDITOR.dialog.add('video', editor => {
 									Liferay.Language.get(
 										'height-field-cannot-be-empty'
 									)
-								)
-							}
+								),
+							},
 						],
 						type: 'hbox',
-						widths: ['50%', '50%']
-					}
+						widths: ['50%', '50%'],
+					},
 				],
-				id: 'info'
-			}
+				id: 'info',
+			},
 		],
 
 		minHeight: 200,
@@ -210,6 +215,6 @@ CKEDITOR.dialog.add('video', editor => {
 			editor.plugins.media.onShowCallback(instance, editor, 'video');
 		},
 
-		title: Liferay.Language.get('video-properties')
+		title: Liferay.Language.get('video-properties'),
 	};
 });

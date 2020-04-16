@@ -36,7 +36,7 @@ definition {
 		}
 	}
 
-	@description = "Add a content page with fragments."
+	@description = "This is a test for LPS-108339. Add a content page with fragments. Can add fragments directly without Section to page."
 	@priority = "5"
 	test AddContentPage {
 		property portal.acceptance = "true";
@@ -52,6 +52,13 @@ definition {
 			PageEditor.addFragment(
 				collectionName = "Collection Name",
 				fragmentName = "Title");
+		}
+
+		task ("Assert Title fragment is not nested inside Section element") {
+			AssertElementNotPresent(
+				key_elementType = "Section",
+				key_position = "1",
+				locator1 = "PageEditor#LAYOUT_ELEMENTS_HEADER");
 		}
 
 		task ("Add a Rich Text fragment to the content page") {
@@ -190,6 +197,61 @@ definition {
 		}
 	}
 
+	@description = "This is a test for LPS-109590. Assert no Section fragment is outside when add a Row fragment to content page. Can nest a Row fragment or multiple Row inside one column of another one."
+	@priority = "5"
+	test AddRowToColumnOfAnotherRow {
+		task ("Add a content page") {
+			SitePages.openPagesAdmin(siteURLKey = "test-site-name");
+
+			ContentPages.addPage(pageName = "Test Content Page Name");
+		}
+
+		task ("Assert add Row without Section") {
+			PageEditor.addLayoutRow();
+
+			AssertElementNotPresent(
+				key_elementType = "Section",
+				key_position = "1",
+				locator1 = "PageEditor#LAYOUT_ELEMENTS_HEADER");
+		}
+
+		task ("Assert add the second Row in column 1 of the first Row") {
+			DragAndDrop.javaScriptDragAndDropToObject(
+				key_columnNumber = "1",
+				key_elementType = "Row",
+				key_position = "1",
+				locator1 = "PageEditor#SECTION_BUILDER_LAYOUT_ELEMENTS",
+				locator2 = "PageEditor#ROW_COLUMN",
+				value1 = "");
+
+			PageEditor.waitForAutoSave();
+
+			AssertElementPresent(
+				key_columnNumber = "1",
+				key_elementHeader = "/div[contains(@class,'page-editor__topper')][1]/div[contains(.,'Row')]//li[contains(@class,'title')]",
+				key_position = "1",
+				locator1 = "PageEditor#ROW_COLUMN_NESTED_ELEMENT");
+		}
+
+		task ("Assert add the third Row in column 1 of the first Row") {
+			DragAndDrop.javaScriptDragAndDropToObject(
+				key_columnNumber = "1",
+				key_elementType = "Row",
+				key_position = "1",
+				locator1 = "PageEditor#SECTION_BUILDER_LAYOUT_ELEMENTS",
+				locator2 = "PageEditor#ROW_COLUMN",
+				value1 = "");
+
+			PageEditor.waitForAutoSave();
+
+			AssertElementPresent(
+				key_columnNumber = "1",
+				key_elementHeader = "/div[contains(@class,'page-editor__topper')][2]/div[contains(.,'Row')]//li[contains(@class,'title')]",
+				key_position = "1",
+				locator1 = "PageEditor#ROW_COLUMN_NESTED_ELEMENT");
+		}
+	}
+
 	@description = "This is a test for LPS-102887. A user can access content in a web content display widget through content panel"
 	@priority = "5"
 	test CanAccessContentPanel {
@@ -204,17 +266,68 @@ definition {
 
 		PageEditor.addWidget(portletName = "Web Content Display");
 
-		WebContentDisplayPortlet.selectWebContent(
-			contentPage = "true",
-			webContentTitle = "WC WebContent Title");
+		WebContentDisplayPortlet.selectWebContent(webContentTitle = "WC WebContent Title");
 
 		Refresh();
 
 		PageEditor.gotoTab(tabName = "Contents");
 
-		LexiconEntry.gotoFragmentEllipsisMenuItem(menuItem = "Edit");
+		LexiconEntry.gotoFragmentPageContentEllipsisMenuItem(
+			menuItem = "Edit",
+			rowEntry = "WC WebContent Title");
 
 		AssertVisible(locator1 = "WCEditWebContent#SIDEBAR");
+	}
+
+	@description = "This is a test for LPS-107285. Can not duplicate Layout Elements with a widget that only allowed appear once in the page, there should be an error message shown."
+	@priority = "4"
+	test CannotDuplicateSectionWithOnlyAllowedAppearOnceWidget {
+		task ("Add a content page") {
+			SitePages.openPagesAdmin(siteURLKey = "test-site-name");
+
+			ContentPages.addPage(pageName = "Test Content Page Name");
+		}
+
+		task ("Add a Section to page") {
+			PageEditor.addLayoutSection(dropTarget = "//div[contains(@class,'page-editor__root page-editor__topper')]");
+		}
+
+		task ("Add the Language Selector into Section") {
+			Click(
+				key_elementType = "Section",
+				key_position = "1",
+				locator1 = "PageEditor#LAYOUT_ELEMENTS_HEADER");
+
+			PageEditor.gotoTab(tabName = "Widgets");
+
+			Type.sendKeysApplicationSearch(
+				locator1 = "PageEditor#WIDGETS_APPLICATION_SEARCH_FIELD",
+				value1 = "Language Selector");
+
+			DragAndDrop.javaScriptDragAndDropToObject(
+				key_portletName = "Language Selector",
+				key_position = "1",
+				locator1 = "PageEditor#WIDGETS_ADD_PORTLET_DRAG_BUTTON",
+				locator2 = "PageEditor#SECTION_CONTAINER",
+				value1 = "Language Selector");
+
+			Pause(locator1 = "5000");
+
+			AssertElementPresent(
+				key_elementHeader = "//div[contains(@class,'page-editor')]//li[contains(.,'Language Selector')]",
+				key_position = "1",
+				locator1 = "PageEditor#SECTION_CONTAINER_NESTED_ELEMENT");
+		}
+
+		task ("Assert alert message when duplicate Section") {
+			PageEditor.gotoDuplicate(fragmentName = "Section");
+
+			AssertTextEquals.assertPartialText(
+				locator1 = "Message#ERROR",
+				value1 = "The layout could not be duplicated because it contains a widget (Language Selector) that can only appear once in the page.");
+
+			Pause(locator1 = "3000");
+		}
 	}
 
 	@description = "Users can only edit content pages in edit mode."
@@ -253,7 +366,7 @@ definition {
 
 	@description = "This is a test for LPS-91000 and LPS-95002. User can edit number of columns a section has as well as padding options."
 	@priority = "5"
-	test ChangeLayoutSectionProperties {
+	test ChangeLayoutElementProperties {
 		property portal.acceptance = "true";
 
 		task ("Add a content page") {
@@ -262,49 +375,61 @@ definition {
 			ContentPages.addPage(pageName = "Test Content Page Name");
 		}
 
-		task ("Add a 2 column layout") {
-			PageEditor.addLayoutSection(columnCount = "2");
+		task ("Add a 2 column row layout") {
+			PageEditor.addLayoutRow();
+
+			PageEditor.editLayoutRow(
+				columnCount = "2",
+				spaceBetweenColumns = "true");
 		}
 
-		task ("Assert the layout has exactly 2 columns") {
-			AssertVisible(locator1 = "//section[contains(@class,'fragment-entry-link-list')]//div[contains(@class,'col-md-6')][1]");
-			AssertVisible(locator1 = "//section[contains(@class,'fragment-entry-link-list')]//div[contains(@class,'col-md-6')][2]");
-			AssertElementNotPresent(locator1 = "//section[contains(@class,'fragment-entry-link-list')]//div[contains(@class,'col-md-6')][3]");
+		task ("Assert the Row has space between columns and 2 columns") {
+			PageEditor.viewRowStyle(
+				columnCount = "3",
+				position = "1",
+				spaceBetweenColumns = "true");
 		}
 
-		task ("Assert the layout by default has padding x1") {
-			AssertVisible(locator1 = "//section[contains(@class,'fragment-entry-link')]//div[contains(@class,'container py-3')]");
+		task ("Add a section layout") {
+			PageEditor.addLayoutSection(dropTarget = "//div[contains(@class,'page-editor__row')]");
 		}
 
-		task ("Assert the layout by default has space between columns") {
-			AssertVisible(locator1 = "//section[contains(@class,'fragment-entry-link')]//div[contains(@class,'row')][not(contains(@class,'no-gutters'))]");
+		task ("Assert the Section has Fixed Width, padding bottom x1 and padding top x1") {
+			PageEditor.viewSectionStyle(
+				container = "Fixed Width",
+				paddingBottom = "3",
+				paddingTop = "3",
+				position = "1");
 		}
 
-		task ("Edit the layout's spacing properties") {
-			PageEditor.editLayoutSectionSpacing(
-				numberOfColumns = "3",
-				paddingH = "10",
-				paddingV = "4",
+		task ("Edit the row's properties") {
+			PageEditor.editLayoutRow(
+				columnCount = "3",
 				spaceBetweenColumns = "false");
 		}
 
-		task ("Assert the layout now has exactly 2 columns") {
-			AssertVisible(locator1 = "//section[contains(@class,'fragment-entry-link-list')]//div[contains(@class,'col-md-4')][1]");
-			AssertVisible(locator1 = "//section[contains(@class,'fragment-entry-link-list')]//div[contains(@class,'col-md-4')][2]");
-			AssertVisible(locator1 = "//section[contains(@class,'fragment-entry-link-list')]//div[contains(@class,'col-md-4')][3]");
-			AssertElementNotPresent(locator1 = "//section[contains(@class,'fragment-entry-link')]//div[contains(@class,'col-md-4')][4]");
+		task ("Edit the section's properties") {
+			PageEditor.editLayoutSection(
+				container = "Fluid",
+				paddingBottom = "4",
+				paddingHorizontal = "2",
+				paddingTop = "10");
 		}
 
-		task ("Assert the layout now has vertical padding x4") {
-			AssertVisible(locator1 = "//section[contains(@class,'fragment-entry-link')]//div[contains(@class,'py-5')]");
+		task ("Assert the Row has exactly 3 columns and no space between columns") {
+			PageEditor.viewRowStyle(
+				columnCount = "3",
+				position = "1",
+				spaceBetweenColumns = "false");
 		}
 
-		task ("Assert the layout now has horizontal padding x10") {
-			AssertVisible(locator1 = "//section[contains(@class,'fragment-entry-link')]//div[contains(@class,'px-8')]");
-		}
-
-		task ("Assert the layout now has no space between columns") {
-			AssertVisible(locator1 = "//section[contains(@class,'fragment-entry-link')]//div[contains(@class,'row')][contains(@class,'no-gutters')]");
+		task ("Assert the Section has Fluid, padding bottom x4, padding horizontal x2 and padding top x10") {
+			PageEditor.viewSectionStyle(
+				container = "Fluid",
+				paddingBottom = "5",
+				paddingHorizontal = "4",
+				paddingTop = "8",
+				position = "1");
 		}
 	}
 
@@ -397,6 +522,7 @@ definition {
 
 		task ("Edit the Title fragment's editable text") {
 			PageEditor.editFragmentText(
+				contributed = "false",
 				fragmentName = "Title",
 				id = "title",
 				text = "New editable fragment text");
@@ -470,6 +596,198 @@ definition {
 			AssertVisible(
 				key_text = "Publish",
 				locator1 = "Button#ANY_ENABLED");
+		}
+	}
+
+	@description = "This is a test for LPS-107285. Can duplicate the Row fragment in one Section fragment."
+	@priority = "5"
+	test DuplicateRowInSection {
+		task ("Add a content page") {
+			SitePages.openPagesAdmin(siteURLKey = "test-site-name");
+
+			ContentPages.addPage(pageName = "Test Content Page Name");
+		}
+
+		task ("Add a Section to page") {
+			PageEditor.addLayoutSection(dropTarget = "//div[contains(@class,'page-editor__root page-editor__topper')]");
+		}
+
+		task ("Add a Row into Section") {
+			Click(
+				key_elementType = "Section",
+				key_position = "1",
+				locator1 = "PageEditor#LAYOUT_ELEMENTS_HEADER");
+
+			DragAndDrop.javaScriptDragAndDropToObject(
+				key_elementType = "Row",
+				key_position = "1",
+				locator1 = "PageEditor#SECTION_BUILDER_LAYOUT_ELEMENTS",
+				locator2 = "PageEditor#SECTION_CONTAINER",
+				value1 = "");
+
+			AssertElementPresent(
+				key_elementHeader = "/div[contains(@class,'page-editor__topper')][1]/div[contains(.,'Row')]//li[contains(@class,'title')]",
+				key_position = "1",
+				locator1 = "PageEditor#SECTION_CONTAINER_NESTED_ELEMENT");
+		}
+
+		task ("Assert duplicate Row in the Section") {
+			PageEditor.gotoDuplicate(fragmentName = "Row");
+
+			PageEditor.viewDuplicateFragment(fragmentName = "Row");
+
+			AssertElementPresent(
+				key_elementHeader = "/div[contains(@class,'page-editor__topper')][2]/div[contains(.,'Row')]//li[contains(@class,'title')]",
+				key_position = "1",
+				locator1 = "PageEditor#SECTION_CONTAINER_NESTED_ELEMENT");
+		}
+	}
+
+	@description = "This is a test for LPS-107285. When the Row fragment is duplicated, the components in each of columns should also be duplicated."
+	@priority = "4"
+	test DuplicateRowWithElements {
+		task ("Add a content page") {
+			SitePages.openPagesAdmin(siteURLKey = "test-site-name");
+
+			ContentPages.addPage(pageName = "Test Content Page Name");
+		}
+
+		task ("Add a Row to page") {
+			PageEditor.addLayoutRow();
+		}
+
+		task ("Add a Web Content Display widget to column 1") {
+			PageEditor.gotoTab(tabName = "Widgets");
+
+			Type.sendKeysApplicationSearch(
+				locator1 = "PageEditor#WIDGETS_APPLICATION_SEARCH_FIELD",
+				value1 = "Web Content Display");
+
+			DragAndDrop.javaScriptDragAndDropToObject(
+				key_columnNumber = "1",
+				key_portletName = "Web Content Display",
+				key_position = "1",
+				locator1 = "PageEditor#WIDGETS_ADD_PORTLET_DRAG_BUTTON",
+				locator2 = "PageEditor#ROW_COLUMN",
+				value1 = "Web Content Display");
+
+			Pause(locator1 = "5000");
+
+			AssertElementPresent(
+				key_columnNumber = "1",
+				key_elementHeader = "//div[contains(@class,'page-editor')]//li[contains(.,'Web Content Display')]",
+				key_position = "1",
+				locator1 = "PageEditor#ROW_COLUMN_NESTED_ELEMENT");
+		}
+
+		task ("Add a Heading fragment to column 2") {
+			PageEditor.gotoTab(tabName = "Fragments");
+
+			PageEditor.expandFragmentCollection(collectionName = "Basic Components");
+
+			DragAndDrop.javaScriptDragAndDropToObject(
+				key_columnNumber = "2",
+				key_fragmentName = "Heading",
+				key_position = "1",
+				locator1 = "PageEditor#SECTION_BUILDER_FRAGMENTS",
+				locator2 = "PageEditor#ROW_COLUMN",
+				value1 = "");
+
+			PageEditor.waitForAutoSave();
+
+			AssertElementPresent(
+				key_columnNumber = "2",
+				key_elementHeader = "//div[contains(@class,'page-editor')]//li[contains(.,'Heading')]",
+				key_position = "1",
+				locator1 = "PageEditor#ROW_COLUMN_NESTED_ELEMENT");
+		}
+
+		task ("Add a Button fragment to column 3") {
+			PageEditor.expandFragmentCollection(collectionName = "Basic Components");
+
+			DragAndDrop.javaScriptDragAndDropToObject(
+				key_columnNumber = "3",
+				key_fragmentName = "Button",
+				key_position = "1",
+				locator1 = "PageEditor#SECTION_BUILDER_FRAGMENTS",
+				locator2 = "PageEditor#ROW_COLUMN",
+				value1 = "");
+
+			PageEditor.waitForAutoSave();
+
+			AssertElementPresent(
+				key_columnNumber = "3",
+				key_elementHeader = "//div[contains(@class,'page-editor')]//li[contains(.,'Button')]",
+				key_position = "1",
+				locator1 = "PageEditor#ROW_COLUMN_NESTED_ELEMENT");
+		}
+
+		task ("Assert nested elements duplicated with Row") {
+			PageEditor.gotoDuplicate(fragmentName = "Row");
+
+			PageEditor.viewDuplicateFragment(fragmentName = "Row");
+
+			AssertElementPresent(
+				key_columnNumber = "1",
+				key_elementHeader = "//div[contains(@class,'page-editor')]//li[contains(.,'Web Content Display')]",
+				key_position = "2",
+				locator1 = "PageEditor#ROW_COLUMN_NESTED_ELEMENT");
+
+			AssertElementPresent(
+				key_columnNumber = "2",
+				key_elementHeader = "//div[contains(@class,'page-editor')]//li[contains(.,'Heading')]",
+				key_position = "2",
+				locator1 = "PageEditor#ROW_COLUMN_NESTED_ELEMENT");
+
+			AssertElementPresent(
+				key_columnNumber = "3",
+				key_elementHeader = "//div[contains(@class,'page-editor')]//li[contains(.,'Button')]",
+				key_position = "2",
+				locator1 = "PageEditor#ROW_COLUMN_NESTED_ELEMENT");
+		}
+	}
+
+	@description = "This is a test for LPS-107285. When duplicate the Section fragment with the Row fragment, the Row fragment should also be duplicated."
+	@priority = "5"
+	test DuplicateSectionWithRow {
+		task ("Add a content page") {
+			SitePages.openPagesAdmin(siteURLKey = "test-site-name");
+
+			ContentPages.addPage(pageName = "Test Content Page Name");
+		}
+
+		task ("Add a Section to page") {
+			PageEditor.addLayoutSection(dropTarget = "//div[contains(@class,'page-editor__root page-editor__topper')]");
+		}
+
+		task ("Add a Row into Section") {
+			Click(
+				key_elementType = "Section",
+				key_position = "1",
+				locator1 = "PageEditor#LAYOUT_ELEMENTS_HEADER");
+
+			DragAndDrop.javaScriptDragAndDropToObject(
+				key_elementType = "Row",
+				key_position = "1",
+				locator1 = "PageEditor#SECTION_BUILDER_LAYOUT_ELEMENTS",
+				locator2 = "PageEditor#SECTION_CONTAINER",
+				value1 = "");
+
+			AssertElementPresent(
+				key_elementHeader = "/div[contains(@class,'page-editor__topper')][1]/div[contains(.,'Row')]//li[contains(@class,'title')]",
+				key_position = "1",
+				locator1 = "PageEditor#SECTION_CONTAINER_NESTED_ELEMENT");
+		}
+
+		task ("Assert the nested Row is also duplicated with Section") {
+			PageEditor.gotoDuplicate(fragmentName = "Section");
+
+			PageEditor.viewDuplicateFragment(fragmentName = "Section");
+
+			AssertElementPresent(
+				key_elementHeader = "/div[contains(@class,'page-editor__topper')][1]/div[contains(.,'Row')]//li[contains(@class,'title')]",
+				key_position = "2",
+				locator1 = "PageEditor#SECTION_CONTAINER_NESTED_ELEMENT");
 		}
 	}
 
@@ -553,6 +871,7 @@ definition {
 
 		task ("Edit the Rich Text fragment's editable text") {
 			PageEditor.editFragmentText(
+				contributed = "false",
 				fragmentName = "Rich Text",
 				id = "rich-text",
 				text = "New editable fragment text");
@@ -621,7 +940,7 @@ definition {
 
 	@description = "This is a test for LPS-102887. A user can edit content in a web content display widget through content panel"
 	@priority = "4"
-	test EditWecContentInAPViaContentPanel {
+	test EditWebContentInAPViaContentPanel {
 		JSONWebcontent.addWebContent(
 			content = "Web Content Content",
 			groupName = "Test Site Name",
@@ -635,8 +954,7 @@ definition {
 
 		AssetPublisherPortlet.configureManualAssetSelectionPG(
 			assetTitle = "WC WebContent Title",
-			assetType = "Basic Web Content",
-			contentPage = "true");
+			assetType = "Basic Web Content");
 
 		Refresh();
 
@@ -651,9 +969,15 @@ definition {
 			pageName = "Test Content Page Name",
 			siteName = "Test Site Name");
 
-		WebContent.viewPGViaAP(
-			webContentContent = "WC WebContent Content Edit",
-			webContentTitle = "WC WebContent Title Edit");
+		AssertTextEquals(
+			key_assetTitle = "WC WebContent Title Edit",
+			locator1 = "AP#ASSET_ABSTRACT_TITLE",
+			value1 = "WC WebContent Title Edit");
+
+		AssertTextEquals.assertPartialText(
+			key_assetTitle = "WC WebContent Title Edit",
+			locator1 = "AP#ASSET_ABSTRACT_DESCRIPTION",
+			value1 = "WC WebContent Content Edit");
 
 		WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name");
 
@@ -666,7 +990,7 @@ definition {
 
 	@description = "This is a test for LPS-102887. A user can edit content in a web content display widget through content panel"
 	@priority = "4"
-	test EditWecContentInWCDViaContentPanel {
+	test EditWebContentInWCDViaContentPanel {
 		JSONWebcontent.addWebContent(
 			content = "Web Content Content",
 			groupName = "Test Site Name",
@@ -678,9 +1002,7 @@ definition {
 
 		PageEditor.addWidget(portletName = "Web Content Display");
 
-		WebContentDisplayPortlet.selectWebContent(
-			contentPage = "true",
-			webContentTitle = "WC WebContent Title");
+		WebContentDisplayPortlet.selectWebContent(webContentTitle = "WC WebContent Title");
 
 		Refresh();
 
@@ -706,6 +1028,258 @@ definition {
 		WebContent.viewCP(
 			webContentContent = "WC WebContent Content Edit",
 			webContentTitle = "WC WebContent Title Edit");
+	}
+
+	@description = "This is a test for LPS-109169. Topper only visible when the element is selected but not hover."
+	@priority = "5"
+	test HeaderOnlyShownWhenElementSelected {
+		task ("Add a content page") {
+			SitePages.openPagesAdmin(siteURLKey = "test-site-name");
+
+			ContentPages.addPage(pageName = "Test Content Page Name");
+		}
+
+		task ("Add a Heading fragment and an Asset Publisher portlet to page") {
+			PageEditor.addFragment(
+				collectionName = "Basic Components",
+				fragmentName = "Heading");
+
+			PageEditor.addWidget(portletName = "Asset Publisher");
+		}
+
+		task ("Assert only header of Heading shown when Heading selected") {
+			if (IsNotVisible(key_fragmentName = "Heading", locator1 = "Fragment#FRAGMENT_HEADER")) {
+				Click.clickNoWaitForVisible(
+					key_fragmentName = "Heading",
+					locator1 = "Fragment#FRAGMENT_HEADER");
+			}
+
+			AssertVisible(
+				key_fragmentName = "Heading",
+				locator1 = "Fragment#FRAGMENT_HEADER");
+
+			AssertNotVisible(
+				key_fragmentName = "Asset Publisher",
+				locator1 = "Fragment#FRAGMENT_HEADER");
+
+			MouseOver.mouseOverInvisible(
+				key_fragmentName = "Asset Publisher",
+				locator1 = "Fragment#FRAGMENT_HEADER");
+
+			AssertNotVisible(
+				key_fragmentName = "Asset Publisher",
+				locator1 = "Fragment#FRAGMENT_HEADER");
+		}
+
+		task ("Assert only header of Asset Publisher shown when Asset Publisher selected") {
+			Click.clickNoWaitForVisible(
+				key_fragmentName = "Asset Publisher",
+				locator1 = "Fragment#FRAGMENT_HEADER");
+
+			AssertVisible(
+				key_fragmentName = "Asset Publisher",
+				locator1 = "Fragment#FRAGMENT_HEADER");
+
+			AssertNotVisible(
+				key_fragmentName = "Heading",
+				locator1 = "Fragment#FRAGMENT_HEADER");
+
+			MouseOver.mouseOverInvisible(
+				key_fragmentName = "Heading",
+				locator1 = "Fragment#FRAGMENT_HEADER");
+
+			AssertNotVisible(
+				key_fragmentName = "Heading",
+				locator1 = "Fragment#FRAGMENT_HEADER");
+		}
+	}
+
+	@description = "This is a test for LPS-106778. Add a content page with fragments. Can reorganize them."
+	@priority = "5"
+	test ReorganizeFragmentsInContentPage {
+		task ("Add a content page") {
+			SitePages.openPagesAdmin(siteURLKey = "test-site-name");
+
+			ContentPages.addPage(pageName = "Test Content Page Name");
+		}
+
+		task ("Add a Button fragment to the content page") {
+			PageEditor.addFragment(
+				collectionName = "Basic Components",
+				fragmentName = "Heading");
+		}
+
+		task ("Add a Heading fragment to the content page") {
+			PageEditor.addFragment(
+				collectionName = "Basic Components",
+				fragmentName = "Button");
+		}
+
+		task ("Publish the content page") {
+			PageEditor.clickPublish();
+		}
+
+		task ("Navigate to the content page") {
+			Navigator.openWithAppendToBaseURL(urlAppend = "web/test-site-name/test-content-page-name");
+		}
+
+		task ("Navigate to the content page's 'Edit Mode'") {
+			ContentPages.clickPencil();
+		}
+
+		task ("View Heading frgament is on top of Button fragment") {
+			PageEditor.viewFragmentOrder(
+				fragmentName = "Heading",
+				position = "1");
+
+			PageEditor.viewFragmentOrder(
+				fragmentName = "Button",
+				position = "2");
+		}
+
+		task ("Move the fragment") {
+			PageEditor.clickConfigurableField(fragmentName = "Button");
+
+			DragAndDrop.javaScriptDragAndDropToObject(
+				key_dragFragmentName = "Button",
+				key_fragmentName = "Heading",
+				locator1 = "Fragment#FRAGMENT_HEADER_DRAG_HANDLER",
+				locator2 = "Fragment#FRAGMENT_HEADER",
+				value1 = "");
+
+			PageEditor.waitForAutoSave();
+		}
+
+		task ("Assert the Button fragment is on top of Heading frgament") {
+			PageEditor.viewFragmentOrder(
+				fragmentName = "Button",
+				position = "1");
+
+			PageEditor.viewFragmentOrder(
+				fragmentName = "Heading",
+				position = "2");
+		}
+	}
+
+	@description = "This is a test for LPS-107285. When the Section fragment is duplicated, the configuration of it and its components should also be duplicated."
+	@priority = "4"
+	test ViewConfigurationDuplicatedWhenDuplicateSectionWithHeading {
+		task ("Add a content page") {
+			SitePages.openPagesAdmin(siteURLKey = "test-site-name");
+
+			ContentPages.addPage(pageName = "Test Content Page Name");
+		}
+
+		task ("Add a Section to page") {
+			PageEditor.addLayoutSection(dropTarget = "//div[contains(@class,'page-editor__root page-editor__topper')]");
+		}
+
+		task ("Add a Heading fragment into Section") {
+			Click(
+				key_elementType = "Section",
+				key_position = "1",
+				locator1 = "PageEditor#LAYOUT_ELEMENTS_HEADER");
+
+			PageEditor.expandFragmentCollection(collectionName = "Basic Components");
+
+			DragAndDrop.javaScriptDragAndDropToObject(
+				key_fragmentName = "Heading",
+				key_position = "1",
+				locator1 = "PageEditor#SECTION_BUILDER_FRAGMENTS",
+				locator2 = "PageEditor#SECTION_CONTAINER",
+				value1 = "");
+
+			PageEditor.waitForAutoSave();
+
+			AssertElementPresent(
+				key_fragmentName = "Heading",
+				locator1 = "Fragment#FRAGMENT_HEADER");
+		}
+
+		task ("Configure the Section") {
+			PageEditor.editLayoutSection(backgroundColor = "success");
+
+			PageEditor.viewSectionStyle(
+				backgroundColor = "success",
+				position = "1");
+		}
+
+		task ("Configure the Heading") {
+			PageEditor.gotoConfiguration(fragmentName = "Heading");
+
+			PageEditor.configureFragment(textColor = "white");
+
+			PageEditor.viewFragmentStyle(
+				fragmentName = "heading",
+				textColor = "white");
+		}
+
+		task ("Assert configuration duplicated with Section and Heading") {
+			PageEditor.gotoDuplicate(fragmentName = "Section");
+
+			PageEditor.viewSectionStyle(
+				backgroundColor = "success",
+				position = "2");
+
+			AssertElementPresent(
+				key_elementHeader = "//*[contains(@class,'component-heading')][contains(@class,'text-white')]",
+				key_position = "2",
+				locator1 = "PageEditor#SECTION_CONTAINER_NESTED_ELEMENT");
+		}
+	}
+
+	@description = "This is a test for LPS-107285. When the Section fragment with Heading fragment is duplicated, the edited inline content should also be duplicated."
+	@priority = "4"
+	test ViewEditedInlineContentDuplicatedWhenDuplicateSectionWithHeading {
+		task ("Add a content page") {
+			SitePages.openPagesAdmin(siteURLKey = "test-site-name");
+
+			ContentPages.addPage(pageName = "Test Content Page Name");
+		}
+
+		task ("Add a Section to page") {
+			PageEditor.addLayoutSection(dropTarget = "//div[contains(@class,'page-editor__root page-editor__topper')]");
+		}
+
+		task ("Add a Heading fragment into Section") {
+			Click(
+				key_elementType = "Section",
+				key_position = "1",
+				locator1 = "PageEditor#LAYOUT_ELEMENTS_HEADER");
+
+			PageEditor.expandFragmentCollection(collectionName = "Basic Components");
+
+			DragAndDrop.javaScriptDragAndDropToObject(
+				key_fragmentName = "Heading",
+				key_position = "1",
+				locator1 = "PageEditor#SECTION_BUILDER_FRAGMENTS",
+				locator2 = "PageEditor#SECTION_CONTAINER",
+				value1 = "");
+
+			PageEditor.waitForAutoSave();
+
+			AssertElementPresent(
+				key_fragmentName = "Heading",
+				locator1 = "Fragment#FRAGMENT_HEADER");
+		}
+
+		task ("Edit inline content of Heading") {
+			PageEditor.editFragmentText(
+				fragmentName = "Heading",
+				id = "element-text",
+				text = "New editable fragment text");
+		}
+
+		task ("Assert edited inline content duplicated with nested Heading") {
+			PageEditor.gotoDuplicate(fragmentName = "Section");
+
+			PageEditor.viewDuplicateFragment(fragmentName = "Section");
+
+			AssertVisible(
+				key_elementHeader = "//div[contains(.,'New editable fragment text') and contains(@id,'fragment-')]",
+				key_position = "2",
+				locator1 = "PageEditor#SECTION_CONTAINER_NESTED_ELEMENT");
+		}
 	}
 
 	@description = "This is a test for LPS-81870. In edit mode the page should still show the elements of the page that are not from the page itself, like the header, footer, or elements defined by the theme."
@@ -766,7 +1340,7 @@ definition {
 		}
 
 		task ("Assert the popover goes away after clicking away from the header") {
-			Click(locator1 = "PageEditor#EMPTY_MESSAGE");
+			Click(locator1 = "PageEditor#FRAGMENT_DROP_TARGET");
 
 			AssertElementNotPresent(locator1 = "PageEditor#CONTENT_PAGE_DISABLED_POPOVER");
 		}
@@ -782,19 +1356,178 @@ definition {
 		}
 
 		task ("Assert the popover goes away after clicking away from the footer") {
-			Click(locator1 = "PageEditor#EMPTY_MESSAGE");
+			Click(locator1 = "PageEditor#FRAGMENT_DROP_TARGET");
 
 			AssertElementNotPresent(locator1 = "PageEditor#CONTENT_PAGE_DISABLED_POPOVER");
+		}
+	}
+
+	@description = "This is a test for LPS-104629. The header of fragment selected can reach the border of the management toolbar."
+	@priority = "5"
+	test ViewHeaderOfFragmentMoveInsideBodyWhenReachTheManagementToolbar {
+		task ("Add a content page") {
+			SitePages.openPagesAdmin(siteURLKey = "test-site-name");
+
+			ContentPages.addPage(pageName = "Test Content Page Name");
+		}
+
+		task ("Add Image, Slider, Card and HTML fragments to page") {
+			for (var fragmentName : list "HTML,Card,Slider,Image") {
+				PageEditor.addFragment(
+					collectionName = "Basic Components",
+					fragmentName = "${fragmentName}");
+			}
+		}
+
+		task ("Assert Header of Card is shown over body when doesn't reach the management toolbar") {
+			ScrollWebElementIntoView(
+				key_fragmentName = "Card",
+				locator1 = "Fragment#FRAGMENT_HEADER");
+
+			Click.clickNoWaitForVisible(
+				key_fragmentName = "Card",
+				locator1 = "Fragment#FRAGMENT_HEADER");
+
+			AssertElementNotPresent(
+				key_fragmentName = "Card",
+				locator1 = "Fragment#FRAGMENT_HEADER_INSET_STYLE");
+		}
+
+		task ("Assert Header of Card moves inside body when reach the management toolbar") {
+			ScrollWebElementIntoView(
+				key_fragmentName = "Image",
+				locator1 = "Fragment#FRAGMENT_HEADER");
+
+			AssertElementPresent(
+				key_fragmentName = "Card",
+				locator1 = "Fragment#FRAGMENT_HEADER_INSET_STYLE");
+		}
+	}
+
+	@description = "This is a test for LPS-104629. The header of widget selected can reach the border of the management toolbar."
+	@priority = "4"
+	test ViewHeaderOfWidgetMoveInsideBodyWhenReachTheManagementToolbar {
+		task ("Add a content page") {
+			SitePages.openPagesAdmin(siteURLKey = "test-site-name");
+
+			ContentPages.addPage(pageName = "Test Content Page Name");
+		}
+
+		task ("Add My Sites, Documents and Media, Blogs and Asset Publisher widgets to page") {
+			for (var portletName : list "Asset Publisher,Blogs,Documents and Media") {
+				PageEditor.addWidget(portletName = "${portletName}");
+
+				Refresh();
+			}
+
+			PageEditor.addWidget(portletName = "My Sites");
+		}
+
+		task ("Assert Header of Blogs is shown over body when doesn't reach the management toolbar") {
+			ScrollWebElementIntoView(
+				key_fragmentName = "Blogs",
+				locator1 = "Fragment#FRAGMENT_HEADER");
+
+			Click.clickNoWaitForVisible(
+				key_fragmentName = "Blogs",
+				locator1 = "Fragment#FRAGMENT_HEADER");
+
+			AssertElementNotPresent(
+				key_fragmentName = "Blogs",
+				locator1 = "Fragment#FRAGMENT_HEADER_INSET_STYLE");
+		}
+
+		task ("Assert Header of Blogs moves inside body when reach the management toolbar") {
+			ScrollWebElementIntoView(
+				key_fragmentName = "My Sites",
+				locator1 = "Fragment#FRAGMENT_HEADER");
+
+			AssertElementPresent(
+				key_fragmentName = "Blogs",
+				locator1 = "Fragment#FRAGMENT_HEADER_INSET_STYLE");
+		}
+	}
+
+	@description = "This is a test for LPS-107285. When the Section fragment with Heading fragment is duplicated, the mapped content should also be duplicated."
+	@priority = "4"
+	test ViewMappedContentDuplicatedWhenDuplicateSectionWithHeading {
+		task ("Add a Web Content Article") {
+			JSONWebcontent.addWebContent(
+				content = "WC WebContent Content",
+				groupName = "Test Site Name",
+				title = "WC WebContent Title");
+		}
+
+		task ("Add a content page") {
+			SitePages.openPagesAdmin(siteURLKey = "test-site-name");
+
+			ContentPages.addPage(pageName = "Test Content Page Name");
+		}
+
+		task ("Add a Section to page") {
+			PageEditor.addLayoutSection(dropTarget = "//div[contains(@class,'page-editor__root page-editor__topper')]");
+		}
+
+		task ("Add a Heading fragment into Section") {
+			Click(
+				key_elementType = "Section",
+				key_position = "1",
+				locator1 = "PageEditor#LAYOUT_ELEMENTS_HEADER");
+
+			PageEditor.expandFragmentCollection(collectionName = "Basic Components");
+
+			DragAndDrop.javaScriptDragAndDropToObject(
+				key_fragmentName = "Heading",
+				key_position = "1",
+				locator1 = "PageEditor#SECTION_BUILDER_FRAGMENTS",
+				locator2 = "PageEditor#SECTION_CONTAINER",
+				value1 = "");
+
+			PageEditor.waitForAutoSave();
+
+			AssertElementPresent(
+				key_fragmentName = "Heading",
+				locator1 = "Fragment#FRAGMENT_HEADER");
+		}
+
+		task ("Map content of Web Content to Heading") {
+			PageEditorMapping.gotoEditableFieldMapping(
+				fragmentName = "Heading",
+				id = "text");
+
+			PageEditorMapping.mapEditableFieldToAsset(
+				entryTitle = "WC WebContent Title",
+				navItem = "Web Content");
+
+			Select(
+				locator1 = "PageEditorEditableLink#FIELD",
+				value1 = "Basic Web Content *");
+
+			SelectFrame(value1 = "relative=top");
+
+			PageEditor.waitForAutoSave();
+
+			AssertVisible(
+				key_text = "WC WebContent Content",
+				locator1 = "Fragment#EDITABLE_FIELD_CONTENT");
+		}
+
+		task ("Assert mapped content duplicated with nested Heading") {
+			PageEditor.gotoDuplicate(fragmentName = "Section");
+
+			PageEditor.viewDuplicateFragment(fragmentName = "Section");
+
+			AssertVisible(
+				key_elementHeader = "//div[contains(.,'WC WebContent Content') and contains(@id,'fragment-')]",
+				key_position = "2",
+				locator1 = "PageEditor#SECTION_CONTAINER_NESTED_ELEMENT");
 		}
 	}
 
 	@description = "This is a test for LPS-101328. Editable image name should be visible in the floating toolbar."
 	@priority = "5"
 	test ViewSelectedImageName {
-
-		// Ignore test from acceptance until LRQA-52823 resolved
-
-		property portal.acceptance = "false";
+		property portal.acceptance = "true";
 
 		SitePages.openPagesAdmin(siteURLKey = "test-site-name");
 
@@ -810,8 +1543,6 @@ definition {
 			id = "image");
 
 		task ("Assert the image field contains the image name.") {
-			Click(locator1 = "PageEditor#EDITABLE_FIELD_TOOLBAR_IMAGE_PROPERTIES_BUTTON");
-
 			AssertVisible(locator1 = "//input[@value='Document_1.png']");
 		}
 	}

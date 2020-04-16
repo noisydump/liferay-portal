@@ -104,10 +104,20 @@ public interface DDLRecordLocalService
 			DDMFormValues ddmFormValues, ServiceContext serviceContext)
 		throws PortalException;
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x)
+	 */
+	@Deprecated
 	@Indexable(type = IndexableType.REINDEX)
 	public DDLRecord addRecord(
 			long userId, long groupId, long ddmStorageId, long ddlRecordSetId,
 			ServiceContext serviceContext)
+		throws PortalException;
+
+	@Indexable(type = IndexableType.REINDEX)
+	public DDLRecord addRecord(
+			long userId, long groupId, long ddmStorageId, long ddlRecordSetId,
+			String className, long classPK, ServiceContext serviceContext)
 		throws PortalException;
 
 	/**
@@ -118,6 +128,12 @@ public interface DDLRecordLocalService
 	 */
 	@Transactional(enabled = false)
 	public DDLRecord createDDLRecord(long recordId);
+
+	/**
+	 * @throws PortalException
+	 */
+	public PersistedModel createPersistedModel(Serializable primaryKeyObj)
+		throws PortalException;
 
 	/**
 	 * Deletes the ddl record from the database. Also notifies the appropriate model listeners.
@@ -254,6 +270,9 @@ public interface DDLRecordLocalService
 	 */
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public DDLRecord fetchDDLRecordByUuidAndGroupId(String uuid, long groupId);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public DDLRecord fetchFirstRecord(String className, long classPK);
 
 	/**
 	 * Returns the record with the ID.
@@ -420,6 +439,9 @@ public interface DDLRecordLocalService
 	 */
 	public String getOSGiServiceIdentifier();
 
+	/**
+	 * @throws PortalException
+	 */
 	@Override
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public PersistedModel getPersistedModel(Serializable primaryKeyObj)

@@ -16,16 +16,25 @@ package com.liferay.account.internal.retriever;
 
 import com.liferay.account.constants.AccountConstants;
 import com.liferay.account.internal.search.searcher.UserSearchRequestBuilder;
+import com.liferay.account.model.AccountEntry;
+import com.liferay.account.model.AccountRole;
 import com.liferay.account.retriever.AccountUserRetriever;
 import com.liferay.account.service.AccountEntryLocalService;
 import com.liferay.account.service.AccountEntryUserRelLocalService;
+import com.liferay.account.service.AccountRoleLocalService;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.search.BaseModelSearchResult;
+import com.liferay.portal.kernel.search.Field;
+import com.liferay.portal.kernel.search.Indexer;
+import com.liferay.portal.kernel.search.IndexerRegistryUtil;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.util.HashMapBuilder;
+import com.liferay.portal.kernel.util.LinkedHashMapBuilder;
+import com.liferay.portal.kernel.util.OrderByComparator;
+import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.search.document.Document;
 import com.liferay.portal.search.hits.SearchHits;
 import com.liferay.portal.search.searcher.SearchRequest;
@@ -36,6 +45,7 @@ import com.liferay.portal.vulcan.util.TransformUtil;
 import java.io.Serializable;
 
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -61,6 +71,37 @@ public class AccountUserRetrieverImpl implements AccountUserRetriever {
 	public long getAccountUsersCount(long accountEntryId) {
 		return _accountEntryUserRelLocalService.
 			getAccountEntryUserRelsCountByAccountEntryId(accountEntryId);
+	}
+
+	@Override
+	public BaseModelSearchResult<User> searchAccountRoleUsers(
+			long accountEntryId, long accountRoleId, String keywords, int start,
+			int end, OrderByComparator obc)
+		throws PortalException {
+
+		AccountEntry accountEntry = _accountEntryLocalService.getAccountEntry(
+			accountEntryId);
+		AccountRole accountRole = _accountRoleLocalService.getAccountRole(
+			accountRoleId);
+
+		LinkedHashMap<String, Object> params =
+			LinkedHashMapBuilder.<String, Object>put(
+				"userGroupRole",
+				(Object)new Long[] {
+					accountEntry.getAccountEntryGroupId(),
+					accountRole.getRoleId()
+				}
+			).build();
+
+		List<User> users = _userLocalService.search(
+			accountEntry.getCompanyId(), keywords,
+			WorkflowConstants.STATUS_APPROVED, params, start, end, obc);
+
+		int total = _userLocalService.searchCount(
+			accountEntry.getCompanyId(), keywords,
+			WorkflowConstants.STATUS_APPROVED, params);
+
+		return new BaseModelSearchResult<>(users, total);
 	}
 
 	@Override
@@ -160,7 +201,18 @@ public class AccountUserRetrieverImpl implements AccountUserRetriever {
 
 				long userId = document.getLong("userId");
 
-				return _userLocalService.getUser(userId);
+				User user = _userLocalService.fetchUser(userId);
+
+				if (user == null) {
+					Indexer<User> indexer = IndexerRegistryUtil.getIndexer(
+						User.class);
+
+					indexer.delete(
+						document.getLong(Field.COMPANY_ID),
+						document.getString(Field.UID));
+				}
+
+				return user;
 			});
 
 		return new BaseModelSearchResult<>(
@@ -175,6 +227,9 @@ public class AccountUserRetrieverImpl implements AccountUserRetriever {
 
 	@Reference
 	private AccountEntryUserRelLocalService _accountEntryUserRelLocalService;
+
+	@Reference
+	private AccountRoleLocalService _accountRoleLocalService;
 
 	@Reference
 	private Searcher _searcher;

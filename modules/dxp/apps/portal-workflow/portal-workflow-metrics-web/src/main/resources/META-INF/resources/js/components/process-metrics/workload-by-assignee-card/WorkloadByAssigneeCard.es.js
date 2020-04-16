@@ -13,13 +13,13 @@ import React, {useMemo, useState} from 'react';
 
 import Panel from '../../../shared/components/Panel.es';
 import PromisesResolver from '../../../shared/components/promises-resolver/PromisesResolver.es';
-import {useFetch} from '../../../shared/hooks/useFetch.es';
+import Tabs from '../../../shared/components/tabs/Tabs.es';
 import {useFilter} from '../../../shared/hooks/useFilter.es';
+import {usePost} from '../../../shared/hooks/usePost.es';
 import ProcessStepFilter from '../../filter/ProcessStepFilter.es';
 import {Body} from './WorkloadByAssigneeCardBody.es';
-import Tabs from './WorkloadByAssigneeCardTabs.es';
 
-const Header = ({dispatch, processId}) => (
+const Header = ({processId}) => (
 	<>
 		<Panel.HeaderWithOptions
 			description={Liferay.Language.get(
@@ -33,12 +33,11 @@ const Header = ({dispatch, processId}) => (
 		<div className="management-bar management-bar-light ml-3 navbar navbar-expand-md pl-1">
 			<ul className="navbar-nav">
 				<ProcessStepFilter
-					dispatch={dispatch}
 					options={{
 						hideControl: true,
 						multiple: false,
 						withAllSteps: true,
-						withSelectionTitle: true
+						withSelectionTitle: true,
 					}}
 					processId={processId}
 				/>
@@ -50,38 +49,59 @@ const Header = ({dispatch, processId}) => (
 const WorkloadByAssigneeCard = ({routeParams}) => {
 	const {processId} = routeParams;
 	const [currentTab, setCurrentTab] = useState('overdue');
-
 	const filterKeys = ['processStep'];
-	const {
-		dispatch,
-		filterValues: {taskKeys}
-	} = useFilter(filterKeys);
 
-	const params = getParams(currentTab, taskKeys);
-	const {data, fetchData} = useFetch({
-		params,
-		url: `/processes/${processId}/assignee-users`
+	const {
+		filterValues: {taskKeys: [taskKey] = ['allSteps']},
+	} = useFilter({filterKeys});
+
+	const sort = useMemo(() => {
+		const items = {
+			onTime: 'onTimeTaskCount:desc',
+			overdue: 'overdueTaskCount:desc',
+			total: 'taskCount:desc',
+		};
+
+		return items[currentTab];
+	}, [currentTab]);
+
+	const taskKeys = taskKey !== 'allSteps' ? [taskKey] : undefined;
+
+	const {data, postData} = usePost({
+		body: {taskKeys},
+		params: {
+			page: 1,
+			pageSize: 10,
+			sort,
+		},
+		url: `/processes/${processId}/assignees/metrics`,
 	});
 
-	const promises = useMemo(() => [fetchData()], [fetchData]);
+	const promises = useMemo(() => [postData()], [postData]);
+
+	const tabs = [
+		{name: Liferay.Language.get('overdue'), tabKey: 'overdue'},
+		{name: Liferay.Language.get('on-time'), tabKey: 'onTime'},
+		{name: Liferay.Language.get('total'), tabKey: 'total'},
+	];
 
 	return (
 		<PromisesResolver promises={promises}>
 			<Panel elementClasses="workload-by-assignee-card">
-				<WorkloadByAssigneeCard.Header
-					dispatch={dispatch}
-					processId={processId}
-				/>
+				<WorkloadByAssigneeCard.Header processId={processId} />
 
-				<WorkloadByAssigneeCard.Tabs
-					currentTab={currentTab}
-					setCurrentTab={setCurrentTab}
-				/>
+				<div className="border-bottom">
+					<Tabs
+						currentTab={currentTab}
+						setCurrentTab={setCurrentTab}
+						tabs={tabs}
+					/>
+				</div>
 
 				<WorkloadByAssigneeCard.Body
 					currentTab={currentTab}
-					data={data}
-					processStepKey={params.taskKeys}
+					{...data}
+					processStepKey={taskKeys && taskKey}
 					{...routeParams}
 				/>
 			</Panel>
@@ -89,33 +109,7 @@ const WorkloadByAssigneeCard = ({routeParams}) => {
 	);
 };
 
-const getParams = (currentTab, taskKeys) => {
-	const params = {
-		page: 1,
-		pageSize: 10
-	};
-
-	if (taskKeys && taskKeys.length) {
-		const key = taskKeys[0];
-
-		if (key !== 'allSteps') {
-			params.taskKeys = key;
-		}
-	}
-
-	if (currentTab === 'overdue') {
-		params.sort = 'overdueTaskCount:desc';
-	} else if (currentTab === 'onTime') {
-		params.sort = 'onTimeTaskCount:desc';
-	} else {
-		params.sort = 'taskCount:desc';
-	}
-
-	return params;
-};
-
 WorkloadByAssigneeCard.Body = Body;
 WorkloadByAssigneeCard.Header = Header;
-WorkloadByAssigneeCard.Tabs = Tabs;
 
 export default WorkloadByAssigneeCard;

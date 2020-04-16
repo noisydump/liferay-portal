@@ -34,13 +34,13 @@ definition {
 
 		User.logoutPG();
 
-		User.firstLoginPG(
+		User.loginPG(
 			password = "test",
 			userEmailAddress = "userea@liferay.com");
 
 		User.logoutPG();
 
-		User.firstLoginPG();
+		User.loginPG();
 	}
 
 	tearDown {
@@ -62,6 +62,8 @@ definition {
 
 	@priority = "5"
 	test ViewMentionViaDMComment {
+		property portal.upstream = "quarantine";
+
 		ProductMenu.gotoPortlet(
 			category = "Site Builder",
 			panel = "Site Administration",
@@ -113,6 +115,8 @@ definition {
 
 	@priority = "5"
 	test ViewReplyMentionViaDMComment {
+		property portal.upstream = "quarantine";
+
 		ProductMenu.gotoPortlet(
 			category = "Site Builder",
 			panel = "Site Administration",

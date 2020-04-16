@@ -217,7 +217,7 @@ public class GitUtil {
 
 		if (remoteGitBranchName != null) {
 			command = JenkinsResultsParserUtil.combine(
-				"git ls-remote -h ", remoteURL, " ", remoteGitBranchName);
+				"git ls-remote -h -t ", remoteURL, " ", remoteGitBranchName);
 		}
 		else {
 			command = JenkinsResultsParserUtil.combine(
@@ -391,6 +391,8 @@ public class GitUtil {
 
 					if (matcher != null) {
 						while (matcher.find()) {
+							retryDelay = 0;
+
 							modifiedCommand = modifiedCommand.replaceFirst(
 								matcher.group(0),
 								toSlaveGitHubDevNodeRemoteURL(
@@ -405,6 +407,13 @@ public class GitUtil {
 				for (int i = 0; i < modifiedCommands.length; i++) {
 					modifiedCommands[i] = modifiedCommands[i].replace(
 						_HOSTNAME_GITHUB_CACHE_PROXY, gitHubDevNodeHostname);
+
+					if ((retryDelay != 0) &&
+						modifiedCommands[i].contains(
+							_HOSTNAME_GITHUB_CACHE_PROXY)) {
+
+						retryDelay = 0;
+					}
 				}
 			}
 
@@ -413,8 +422,6 @@ public class GitUtil {
 
 				process = JenkinsResultsParserUtil.executeBashCommands(
 					true, workingDirectory, timeout, modifiedCommands);
-
-				break;
 			}
 			catch (IOException | TimeoutException exception) {
 				if (retries == maxRetries) {
@@ -424,18 +431,27 @@ public class GitUtil {
 						exception);
 				}
 
-				usedGitHubDevNodeHostnames.add(gitHubDevNodeHostname);
-
-				System.out.println(
-					"Unable to execute bash commands retrying... ");
-
 				exception.printStackTrace();
-
-				JenkinsResultsParserUtil.sleep(retryDelay);
 			}
 			finally {
-				if (process != null) {
-					_debugDNS(process);
+				try {
+					if ((process != null) && (process.exitValue() == 0)) {
+						break;
+					}
+
+					if (retries < maxRetries) {
+						usedGitHubDevNodeHostnames.add(gitHubDevNodeHostname);
+
+						System.out.println(
+							"Unable to execute bash commands retrying... ");
+
+						JenkinsResultsParserUtil.sleep(retryDelay);
+					}
+				}
+				finally {
+					if (process != null) {
+						_debugDNS(process);
+					}
 				}
 			}
 		}

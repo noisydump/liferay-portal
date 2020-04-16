@@ -13,7 +13,7 @@
 
 <tr>
 	<td>COLUMN_LABEL</td>
-	<td>//div[@class='col' and contains(.,'${columnLabel}')] | //table//div[contains(@class,'col') and contains(.,'${columnLabel}')]</td>
+	<td>//table//div[contains(@class,'col') and contains(.,'${columnLabel}')]</td>
 	<td></td>
 </tr>
 
@@ -23,7 +23,18 @@
 	<td></td>
 </tr>
 
+<tr>
+	<td>FIELD_LABEL</td>
+	<td>//div[@class='autofit-col']//span[contains(text(),'${key_fieldType}')]</td>
+	<td></td>
+</tr>
 <!--SIDEBAR-->
+
+<tr>
+	<td>CLEAR_SEARCH</td>
+	<td>//button[contains(@class,'btn')]//*[contains(@class,'lexicon-icon-times')]</td>
+	<td></td>
+</tr>
 
 <tr>
 	<td>CLOSE_COLUMN_SIDEBAR</td>
@@ -37,6 +48,43 @@
 	<td></td>
 </tr>
 
+<tr>
+	<td>TAB_LABEL</td>
+	<td>//button[contains(@role,'tab') and text()='${key_tabName}']</td>
+	<td></td>
+</tr>
+
+<tr>
+	<td>FILTER_DROPDOWN</td>
+	<td>//label[text()='${key_columnLabel}']/parent::div//span[contains(@class,'filter')]</td>
+	<td></td>
+</tr>
+
+<tr>
+	<td>DISABLED_COLUMN</td>
+	<td>//div[contains(@class,'field-type disabled')]//span[contains(text(),'${fieldType}')]</td>
+	<td></td>
+</tr>
+
+<!--HOMEPAGE_TABLE_VIEW-->
+
+<tr>
+	<td>FILTER_DROPDOWN_ITEM</td>
+	<td>//button[contains(@class,'dropdown') and text()='${key_dropdownItem}']</td>
+	<td></td>
+</tr>
+
+<tr>
+	<td>FILTER_SELECT_ALL</td>
+	<td>//div[contains(@class,'show')]//span[contains(@class,'dropdown')]//button[text()='Select All']</td>
+	<td></td>
+</tr>
+
+<tr>
+	<td>FILTER_CLEAR</td>
+	<td>//div[contains(@class,'show')]//span[contains(@class,'dropdown')]//button[text()='Clear']</td>
+	<td></td>
+</tr>
 
 </tbody>
 </table>

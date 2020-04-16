@@ -24,7 +24,7 @@ class ManagementToolbarDefaultEventHandler extends DefaultEventHandler {
 			mainFieldName: 'name',
 			mainFieldPlaceholder: Liferay.Language.get('name'),
 			namespace: this.namespace,
-			spritemap: this.spritemap
+			spritemap: this.spritemap,
 		});
 	}
 
@@ -55,12 +55,12 @@ class ManagementToolbarDefaultEventHandler extends DefaultEventHandler {
 				dialog: {
 					constrain: true,
 					destroyOnHide: true,
-					modal: true
+					modal: true,
 				},
 				eventName: this.ns('selectFragmentCollection'),
 				id: this.ns('selectFragmentCollection'),
 				title: Liferay.Language.get('select-collection'),
-				uri: this.selectFragmentCollectionURL
+				uri: this.selectFragmentCollectionURL,
 			},
 			selectedItem => {
 				if (selectedItem) {
@@ -76,28 +76,43 @@ class ManagementToolbarDefaultEventHandler extends DefaultEventHandler {
 		);
 	}
 
-	deleteSelectedFragmentEntries() {
+	deleteFragmentCompositionsAndFragmentEntries() {
 		if (
 			confirm(
 				Liferay.Language.get('are-you-sure-you-want-to-delete-this')
 			)
 		) {
-			submitForm(this.one('#fm'), this.deleteFragmentEntriesURL);
+			submitForm(
+				this.one('#fm'),
+				this.deleteFragmentCompositionsAndFragmentEntriesURL
+			);
 		}
 	}
 
-	exportSelectedFragmentEntries() {
-		submitForm(this.one('#fm'), this.exportFragmentEntriesURL);
+	exportFragmentCompositionsAndFragmentEntries() {
+		submitForm(
+			this.one('#fm'),
+			this.exportFragmentCompositionsAndFragmentEntriesURL
+		);
 	}
 
-	moveSelectedFragmentEntries() {
-		this._selectFragmentCollection(this.moveFragmentEntryURL);
+	moveFragmentCompositionsAndFragmentEntries() {
+		this._selectFragmentCollection(
+			this.moveFragmentCompositionsAndFragmentEntriesURL
+		);
 	}
 
 	_selectFragmentCollection(targetFragmentEntryURL) {
+		const fragmentCompositionIds = Liferay.Util.listCheckedExcept(
+			this.one('#fm'),
+			this.ns('allRowIds'),
+			this.ns('rowIdsFragmentComposition')
+		);
+
 		const fragmentEntryIds = Liferay.Util.listCheckedExcept(
 			this.one('#fm'),
-			this.ns('allRowIds')
+			this.ns('allRowIds'),
+			this.ns('rowIdsFragmentEntry')
 		);
 
 		Liferay.Util.selectEntity(
@@ -105,22 +120,28 @@ class ManagementToolbarDefaultEventHandler extends DefaultEventHandler {
 				dialog: {
 					constrain: true,
 					destroyOnHide: true,
-					modal: true
+					modal: true,
 				},
 				eventName: this.ns('selectFragmentCollection'),
 				id: this.ns('selectFragmentCollection'),
 				title: Liferay.Language.get('select-collection'),
-				uri: this.selectFragmentCollectionURL
+				uri: this.selectFragmentCollectionURL,
 			},
 			selectedItem => {
 				if (selectedItem) {
-					this.one('#fragmentCollectionId').value = selectedItem.id;
+					const form = this.one('#fragmentEntryFm');
+
+					form.querySelector(
+						`#${this.ns('fragmentCollectionId')}`
+					).value = selectedItem.id;
+
+					this.one(
+						'#fragmentCompositionIds'
+					).value = fragmentCompositionIds;
+
 					this.one('#fragmentEntryIds').value = fragmentEntryIds;
 
-					submitForm(
-						this.one('#fragmentEntryFm'),
-						targetFragmentEntryURL
-					);
+					submitForm(form, targetFragmentEntryURL);
 				}
 			}
 		);
@@ -130,12 +151,12 @@ class ManagementToolbarDefaultEventHandler extends DefaultEventHandler {
 ManagementToolbarDefaultEventHandler.STATE = {
 	copyContributedFragmentEntryURL: Config.string(),
 	copyFragmentEntryURL: Config.string(),
-	deleteFragmentEntriesURL: Config.string(),
-	exportFragmentEntriesURL: Config.string(),
+	deleteFragmentCompositionsAndFragmentEntriesURL: Config.string(),
+	exportFragmentCompositionsAndFragmentEntriesURL: Config.string(),
 	fragmentCollectionId: Config.string(),
-	moveFragmentEntryURL: Config.string(),
+	moveFragmentCompositionsAndFragmentEntriesURL: Config.string(),
 	selectFragmentCollectionURL: Config.string(),
-	spritemap: Config.string()
+	spritemap: Config.string(),
 };
 
 export default ManagementToolbarDefaultEventHandler;

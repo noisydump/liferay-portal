@@ -20,7 +20,9 @@ const useStorage = (storageType, key) => {
 
 	const listener = useCallback(
 		({detail}) => {
-			if (detail.key === key) setValue(detail.newValue);
+			if (detail.key === key) {
+				setValue(detail.newValue);
+			}
 		},
 		[key]
 	);
@@ -30,7 +32,8 @@ const useStorage = (storageType, key) => {
 	const updater = (newValue, removeItem) => {
 		if (removeItem) {
 			remove(key);
-		} else {
+		}
+		else {
 			set(key, newValue);
 		}
 

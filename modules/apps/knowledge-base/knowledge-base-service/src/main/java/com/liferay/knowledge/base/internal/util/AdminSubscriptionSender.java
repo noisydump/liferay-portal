@@ -32,7 +32,6 @@ import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.util.SubscriptionSender;
-import com.liferay.portal.kernel.util.TextFormatter;
 
 import java.util.List;
 import java.util.Locale;
@@ -46,11 +45,11 @@ public class AdminSubscriptionSender extends SubscriptionSender {
 
 	public AdminSubscriptionSender(
 		KBArticle kbArticle,
-		ModelResourcePermission<KBArticle> modelResourcePermission,
+		ModelResourcePermission<KBArticle> kbArticleModelResourcePermission,
 		ServiceContext serviceContext) {
 
 		_kbArticle = kbArticle;
-		_kbArticleModelResourcePermission = modelResourcePermission;
+		_kbArticleModelResourcePermission = kbArticleModelResourcePermission;
 		_serviceContext = serviceContext;
 	}
 
@@ -143,7 +142,7 @@ public class AdminSubscriptionSender extends SubscriptionSender {
 				sb.append(fileEntry.getTitle());
 				sb.append(" (");
 				sb.append(
-					TextFormatter.formatStorageSize(
+					LanguageUtil.formatStorageSize(
 						fileEntry.getSize(), locale));
 				sb.append(")");
 				sb.append("<br />");

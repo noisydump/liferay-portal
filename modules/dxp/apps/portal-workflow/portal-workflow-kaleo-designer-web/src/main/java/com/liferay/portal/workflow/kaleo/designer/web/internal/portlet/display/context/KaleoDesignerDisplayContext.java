@@ -15,7 +15,7 @@
 package com.liferay.portal.workflow.kaleo.designer.web.internal.portlet.display.context;
 
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem;
-import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemList;
+import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemListBuilder;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.JSPCreationMenu;
 import com.liferay.petra.function.UnsafeConsumer;
 import com.liferay.petra.string.StringPool;
@@ -205,26 +205,21 @@ public class KaleoDesignerDisplayContext {
 		HttpServletRequest httpServletRequest =
 			_kaleoDesignerRequestHelper.getRequest();
 
-		return new DropdownItemList() {
-			{
-				addGroup(
-					dropdownGroupItem -> {
-						dropdownGroupItem.setDropdownItems(
-							getFilterNavigationDropdownItems());
-						dropdownGroupItem.setLabel(
-							LanguageUtil.get(
-								httpServletRequest, "filter-by-navigation"));
-					});
-
-				addGroup(
-					dropdownGroupItem -> {
-						dropdownGroupItem.setDropdownItems(
-							getOrderByDropdownItems());
-						dropdownGroupItem.setLabel(
-							LanguageUtil.get(httpServletRequest, "order-by"));
-					});
+		return DropdownItemListBuilder.addGroup(
+			dropdownGroupItem -> {
+				dropdownGroupItem.setDropdownItems(
+					getFilterNavigationDropdownItems());
+				dropdownGroupItem.setLabel(
+					LanguageUtil.get(
+						httpServletRequest, "filter-by-navigation"));
 			}
-		};
+		).addGroup(
+			dropdownGroupItem -> {
+				dropdownGroupItem.setDropdownItems(getOrderByDropdownItems());
+				dropdownGroupItem.setLabel(
+					LanguageUtil.get(httpServletRequest, "order-by"));
+			}
+		).build();
 	}
 
 	public KaleoDefinition getKaleoDefinition(
@@ -591,18 +586,6 @@ public class KaleoDesignerDisplayContext {
 		return true;
 	}
 
-	public boolean isDisabledManagementBar() {
-		if (hasResults()) {
-			return false;
-		}
-
-		if (isSearch()) {
-			return false;
-		}
-
-		return true;
-	}
-
 	public boolean isPublishKaleoDefinitionVersionButtonVisible(
 		PermissionChecker permissionChecker,
 		KaleoDefinitionVersion kaleoDefinitionVersion) {
@@ -697,13 +680,13 @@ public class KaleoDesignerDisplayContext {
 	}
 
 	protected List<DropdownItem> getFilterNavigationDropdownItems() {
-		return new DropdownItemList() {
-			{
-				add(getFilterNavigationDropdownItem("all"));
-				add(getFilterNavigationDropdownItem("not-published"));
-				add(getFilterNavigationDropdownItem("published"));
-			}
-		};
+		return DropdownItemListBuilder.add(
+			getFilterNavigationDropdownItem("all")
+		).add(
+			getFilterNavigationDropdownItem("not-published")
+		).add(
+			getFilterNavigationDropdownItem("published")
+		).build();
 	}
 
 	protected String getKeywords() {
@@ -733,12 +716,11 @@ public class KaleoDesignerDisplayContext {
 	}
 
 	protected List<DropdownItem> getOrderByDropdownItems() {
-		return new DropdownItemList() {
-			{
-				add(getOrderByDropdownItem("last-modified"));
-				add(getOrderByDropdownItem("title"));
-			}
-		};
+		return DropdownItemListBuilder.add(
+			getOrderByDropdownItem("last-modified")
+		).add(
+			getOrderByDropdownItem("title")
+		).build();
 	}
 
 	protected ResourceBundle getResourceBundle() {

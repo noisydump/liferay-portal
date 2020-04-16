@@ -11,32 +11,35 @@
 
 import {useEffect} from 'react';
 
-import {useRouterParams} from '../../../hooks/useRouterParams.es';
-import {buildFilterItems} from '../util/filterUtil.es';
+import {buildFilterItems, getCapitalizedFilterKey} from '../util/filterUtil.es';
 import {useFilterState} from './useFilterState.es';
 
-const useFilterStatic = (dispatch, filterKey, prefixKey, staticItems) => {
-	const {filters} = useRouterParams();
-
-	const prefixedFilterKey = `${prefixKey}${filterKey}`;
-	const {items, selectedItems, setItems} = useFilterState(
-		dispatch,
-		prefixedFilterKey
+const useFilterStatic = ({
+	filterKey,
+	prefixKey,
+	propertyKey,
+	staticItems,
+	withoutRouteParams,
+}) => {
+	const {items, selectedItems, selectedKeys, setItems} = useFilterState(
+		getCapitalizedFilterKey(prefixKey, filterKey),
+		withoutRouteParams
 	);
 
 	useEffect(() => {
-		const mappedItems = buildFilterItems(
-			staticItems,
-			filters[prefixedFilterKey]
-		);
+		const mappedItems = buildFilterItems({
+			items: staticItems,
+			propertyKey,
+			selectedKeys,
+		});
 
 		setItems(mappedItems);
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [staticItems]);
+	}, [selectedKeys, staticItems]);
 
 	return {
 		items,
-		selectedItems
+		selectedItems,
 	};
 };
 

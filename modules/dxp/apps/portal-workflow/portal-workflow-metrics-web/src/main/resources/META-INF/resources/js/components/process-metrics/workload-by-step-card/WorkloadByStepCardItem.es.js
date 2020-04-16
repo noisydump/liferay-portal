@@ -11,25 +11,26 @@
 
 import React, {useContext} from 'react';
 
-import {filterKeys} from '../../../shared/components/filter/util/filterConstants.es';
-import {ChildLink} from '../../../shared/components/router/routerWrapper.es';
+import filterConstants from '../../../shared/components/filter/util/filterConstants.es';
+import ChildLink from '../../../shared/components/router/ChildLink.es';
 import {AppContext} from '../../AppContext.es';
 import {processStatusConstants} from '../../filter/ProcessStatusFilter.es';
 
 const Item = ({
 	instanceCount,
-	name,
+	node: {label, name},
 	onTimeInstanceCount,
 	overdueInstanceCount,
 	processId,
-	taskKey
 }) => {
 	const {defaultDelta} = useContext(AppContext);
 	const getFiltersQuery = slaStatusFilter => {
 		return {
-			[filterKeys.processStatus]: [processStatusConstants.pending],
-			[filterKeys.processStep]: [taskKey],
-			[filterKeys.slaStatus]: [slaStatusFilter]
+			[filterConstants.processStatus.key]: [
+				processStatusConstants.pending,
+			],
+			[filterConstants.processStep.key]: [name],
+			[filterConstants.slaStatus.key]: [slaStatusFilter],
 		};
 	};
 	const instancesListPath = `/instance/${processId}/${defaultDelta}/1`;
@@ -37,7 +38,7 @@ const Item = ({
 	return (
 		<tr>
 			<td className="lfr-title-column table-cell-expand table-cell-minw-200 table-title">
-				{name}
+				{label}
 			</td>
 
 			<td className="text-right">

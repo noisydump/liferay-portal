@@ -31,7 +31,13 @@ const _handleFieldEdited = function(properties) {
 	const {evaluable} = fieldInstance;
 	const evaluatorContext = this.getEvaluatorContext();
 
-	handleFieldEdited(evaluatorContext, properties)
+	const updateState = editedPages => {
+		this.setState({
+			pages: editedPages,
+		});
+	};
+
+	handleFieldEdited(evaluatorContext, properties, updateState)
 		.then(evaluatedPages => {
 			if (fieldInstance.isDisposed()) {
 				return;
@@ -39,7 +45,7 @@ const _handleFieldEdited = function(properties) {
 
 			this.setState(
 				{
-					pages: evaluatedPages
+					pages: evaluatedPages,
 				},
 				() => {
 					if (evaluable) {
@@ -62,7 +68,7 @@ const _handleFieldBlurred = function(properties) {
 		}
 
 		this.setState({
-			pages: blurredFieldPages
+			pages: blurredFieldPages,
 		});
 	});
 
@@ -70,7 +76,7 @@ const _handleFieldBlurred = function(properties) {
 		fieldName: fieldInstance.fieldName,
 		focusDuration: dateNow - (this.fieldFocusDate || dateNow),
 		formId: this.getFormId(),
-		page: this.activePage
+		page: this.activePage,
 	});
 };
 
@@ -82,14 +88,14 @@ const _handleFieldFocused = function(properties) {
 
 	handleFieldFocused(pages, properties).then(focusedFieldPages => {
 		this.setState({
-			pages: focusedFieldPages
+			pages: focusedFieldPages,
 		});
 	});
 
 	Liferay.fire('ddmFieldFocus', {
 		fieldName: fieldInstance.fieldName,
 		formId: this.getFormId(),
-		page: this.activePage
+		page: this.activePage,
 	});
 };
 
@@ -135,7 +141,7 @@ export default Component => {
 			Liferay.fire('ddmFormPageShow', {
 				formId: this.getFormId(),
 				page: this.activePage,
-				title: this.pages[this.activePage].title
+				title: this.pages[this.activePage].title,
 			});
 		}
 
@@ -145,6 +151,28 @@ export default Component => {
 
 		evaluate() {
 			return evaluate(null, this.getEvaluatorContext());
+		}
+
+		willReceiveState(changes) {
+			const {defaultLanguageId} = this;
+			const {editingLanguageId} = changes;
+
+			if (editingLanguageId) {
+				const visitor = new PagesVisitor(this.pages);
+
+				this.pages = visitor.mapFields(
+					({localizedValue}) => ({
+						value:
+							localizedValue &&
+							localizedValue[editingLanguageId.newVal]
+								? localizedValue[editingLanguageId.newVal]
+								: localizedValue[defaultLanguageId]
+								? localizedValue[defaultLanguageId]
+								: null,
+					}),
+					true
+				);
+			}
 		}
 
 		validate() {
@@ -169,7 +197,7 @@ export default Component => {
 		getChildContext() {
 			return {
 				dispatch: this.dispatch.bind(this),
-				store: this
+				store: this,
 			};
 		}
 
@@ -179,7 +207,7 @@ export default Component => {
 				editingLanguageId,
 				pages,
 				portletNamespace,
-				rules
+				rules,
 			} = this;
 
 			return {
@@ -187,7 +215,7 @@ export default Component => {
 				editingLanguageId,
 				pages,
 				portletNamespace,
-				rules
+				rules,
 			};
 		}
 
@@ -206,7 +234,7 @@ export default Component => {
 				description,
 				name,
 				paginationMode,
-				successPageSettings
+				successPageSettings,
 			} = this;
 
 			return {
@@ -214,7 +242,7 @@ export default Component => {
 				description,
 				name,
 				paginationMode,
-				successPageSettings
+				successPageSettings,
 			};
 		}
 
@@ -224,13 +252,13 @@ export default Component => {
 
 		_handleFieldRemoved(name) {
 			this.setState({
-				pages: handleFieldRemoved(this.pages, name)
+				pages: handleFieldRemoved(this.pages, name),
 			});
 		}
 
 		_handleFieldRepeated(name) {
 			this.setState({
-				pages: handleFieldRepeated(this.pages, name)
+				pages: handleFieldRepeated(this.pages, name),
 			});
 		}
 
@@ -242,7 +270,7 @@ export default Component => {
 					Liferay.Util.submitForm(event.target);
 
 					Liferay.fire('ddmFormSubmit', {
-						formId: this.getFormId()
+						formId: this.getFormId(),
 					});
 				}
 			});
@@ -269,10 +297,10 @@ export default Component => {
 					) => {
 						return {
 							...field,
-							displayErrors: currentPageIndex === pageIndex
+							displayErrors: currentPageIndex === pageIndex,
 						};
 					}
-				)
+				),
 			});
 		}
 
@@ -287,7 +315,7 @@ export default Component => {
 				{
 					activePage,
 					formId: this.getFormId(),
-					...this.getEvaluatorContext()
+					...this.getEvaluatorContext(),
 				},
 				this.dispatch.bind(this)
 			);
@@ -300,7 +328,7 @@ export default Component => {
 				{
 					activePage,
 					formId: this.getFormId(),
-					...this.getEvaluatorContext()
+					...this.getEvaluatorContext(),
 				},
 				this.dispatch.bind(this)
 			);

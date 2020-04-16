@@ -14,14 +14,14 @@ import React from 'react';
 import {formatDuration} from '../../../shared/util/duration.es';
 import {
 	getFormattedPercentage,
-	isValidNumber
+	isValidNumber,
 } from '../../../shared/util/util.es';
 
 const Item = ({
 	breachedInstanceCount,
 	breachedInstancePercentage,
 	durationAvg,
-	name
+	node: {label},
 }) => {
 	const formattedDuration = formatDuration(durationAvg);
 	const formattedPercentage = getFormattedPercentage(
@@ -31,7 +31,9 @@ const Item = ({
 
 	return (
 		<tr>
-			<td data-testid="stepName">{name}</td>
+			<td className="table-cell-expand" data-testid="stepName">
+				{label}
+			</td>
 
 			<td className="text-right" data-testid="slaBreached">
 				{isValidNumber(breachedInstanceCount)

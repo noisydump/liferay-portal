@@ -15,20 +15,19 @@
 import ExperienceService from '../../../app/services/ExperienceService';
 import selectExperienceAction from '../actions/selectExperience';
 
-export default function selectExperience(id, config) {
+export default function selectExperience(id) {
 	return dispatch => {
 		return ExperienceService.selectExperience({
 			body: {
-				segmentsExperienceId: id
+				segmentsExperienceId: id,
 			},
-			config,
-			dispatch
+			dispatch,
 		})
 			.then(portletIds => {
 				return dispatch(
 					selectExperienceAction({
 						portletIds,
-						segmentsExperienceId: id
+						segmentsExperienceId: id,
 					})
 				);
 			})

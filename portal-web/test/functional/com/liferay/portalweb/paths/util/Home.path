@@ -379,6 +379,11 @@
 	<td></td>
 </tr>
 <tr>
+	<td>PAGE_COLUMN_3</td>
+	<td>//div[@id='layout-column_column-3']</td>
+	<td></td>
+</tr>
+<tr>
 	<td>PAGE_COLUMN_1_LAYOUT_1_COLUMN</td>
 	<td>//div[contains(@class,'portlet-layout')]/div[@id='column-1' and contains(@class,'col-md-12')]</td>
 	<td></td>
@@ -411,12 +416,12 @@
 <!--PAGE_COLUMN_PORTLET-->
 <tr>
 	<td>PAGE_COLUMN_1_LAYOUT_WESTROS_2_COLUMNS_PORTLET_TITLE</td>
-	<td>//div[contains(@class,'col-md-10')]//h2[contains(@class,'portlet-title') and contains(.,'${key_portletName}')]</td>
+	<td>//div[contains(@class,'col') and contains(@class,'10')]//h2[contains(@class,'portlet-title') and contains(.,'${key_portletName}')]</td>
 	<td></td>
 </tr>
 <tr>
 	<td>PAGE_COLUMN_2_LAYOUT_WESTROS_2_COLUMNS_PORTLET_TITLE</td>
-	<td>//div[contains(@class,'col-md-2')]//h2[contains(@class,'portlet-title') and contains(.,'${key_portletName}')]</td>
+	<td>//div[contains(@class,'col') and contains(@class,'2')]//h2[contains(@class,'portlet-title') and contains(.,'${key_portletName}')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -430,6 +435,12 @@
 	<td></td>
 </tr>
 <tr>
+	<td>PAGE_COLUMN_PORTLET_COLUMN_3_PORTLET_TITLE</td>
+	<td>//div[@id='column-3']//h2[contains(.,'${key_portletTitleName}')]</td>
+	//div[@id='layout-column_column-3']
+	<td></td>
+</tr>
+<tr>
 	<td>PAGE_COLUMN_PORTLET_COLUMN_1_PORTLET_HEADER</td>
 	<td>//div[@id='column-1']//header[contains(.,'${key_portletTitleName}')]/div/span</td>
 	<td></td>
@@ -437,6 +448,11 @@
 <tr>
 	<td>PAGE_COLUMN_PORTLET_COLUMN_2_PORTLET_HEADER</td>
 	<td>//div[@id='column-2']//header[contains(.,'${key_portletTitleName}')]/div/span</td>
+	<td></td>
+</tr>
+<tr>
+	<td>PAGE_COLUMN_PORTLET_COLUMN_3_PORTLET_HEADER</td>
+	<td>//div[@id='column-3']//header[contains(.,'${key_portletTitleName}')]/div/span</td>
 	<td></td>
 </tr>
 <tr>
@@ -473,12 +489,12 @@
 <!--PORTLET_COLUMN-->
 <tr>
 	<td>PORTLET_COLUMN_1</td>
-	<td>//div[contains(@class,'col-md-6 portlet-column portlet-column-first')]</td>
+	<td>//div[contains(@class,'col-md-6 portlet-column portlet-column-first')]/div</td>
 	<td></td>
 </tr>
 <tr>
 	<td>PORTLET_COLUMN_2</td>
-	<td>//div[contains(@class,'col-md-6 portlet-column portlet-column-last')]//div[contains(@id,'NestedPortletsPortlet') and contains(@class,'portlet-dropzone empty portlet-column-content portlet-column-content-last')]</td>
+	<td>//div[contains(@class,'col-md-6 portlet-column portlet-column-last')]/div</td>
 	<td></td>
 </tr>
 <tr>
@@ -488,7 +504,7 @@
 </tr>
 <tr>
 	<td>PORTLET_COLUMN_2_NESTED_PORTLET_TITLE</td>
-	<td>//section[contains(@id,'NestedPortlets')]//div[contains(@id,'column-2')]//h2[contains(@class.'portlet-title') and contains(.,'${key_portletTitleName}')]</td>
+	<td>//section[contains(@id,'NestedPortlets')]//div[contains(@id,'column-2')]//h2[contains(@class,'portlet-title') and contains(.,'${key_portletTitleName}')]</td>
 	<td></td>
 </tr>
 <tr>

@@ -18,9 +18,6 @@ import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.source.formatter.util.CheckType;
-import com.liferay.source.formatter.util.SourceFormatterUtil;
-
-import java.io.InputStream;
 
 /**
  * @author Hugo Huijser
@@ -29,32 +26,19 @@ public class SourceFormatterMessage
 	implements Comparable<SourceFormatterMessage> {
 
 	public SourceFormatterMessage(String fileName, String message) {
-		this(fileName, message, -1);
+		this(fileName, message, null, null, null, -1);
 	}
 
 	public SourceFormatterMessage(
 		String fileName, String message, CheckType checkType, String checkName,
-		String markdownFileName, int lineNumber) {
+		String documentationURLString, int lineNumber) {
 
 		_fileName = fileName;
 		_message = message;
 		_checkType = checkType;
 		_checkName = checkName;
-		_markdownFileName = markdownFileName;
+		_documentationURLString = documentationURLString;
 		_lineNumber = lineNumber;
-	}
-
-	public SourceFormatterMessage(
-		String fileName, String message, int lineNumber) {
-
-		this(fileName, message, null, lineNumber);
-	}
-
-	public SourceFormatterMessage(
-		String fileName, String message, String markdownFileName,
-		int lineNumber) {
-
-		this(fileName, message, null, null, markdownFileName, lineNumber);
 	}
 
 	@Override
@@ -78,32 +62,16 @@ public class SourceFormatterMessage
 		return _checkType;
 	}
 
+	public String getDocumentationURLString() {
+		return _documentationURLString;
+	}
+
 	public String getFileName() {
 		return _fileName;
 	}
 
 	public int getLineNumber() {
 		return _lineNumber;
-	}
-
-	public String getMarkdownFilePath() {
-		if (_markdownFileName != null) {
-			return _OLD_DOCUMENTATION_URL + _markdownFileName;
-		}
-
-		String markdownFileName = SourceFormatterUtil.getMarkdownFileName(
-			_checkName);
-
-		ClassLoader classLoader = SourceFormatterMessage.class.getClassLoader();
-
-		InputStream inputStream = classLoader.getResourceAsStream(
-			"documentation/checks/" + markdownFileName);
-
-		if (inputStream != null) {
-			return _DOCUMENTATION_URL + markdownFileName;
-		}
-
-		return null;
 	}
 
 	public String getMessage() {
@@ -116,11 +84,9 @@ public class SourceFormatterMessage
 
 		sb.append(_message);
 
-		String markdownFilePath = getMarkdownFilePath();
-
-		if (markdownFilePath != null) {
+		if (_documentationURLString != null) {
 			sb.append(", see ");
-			sb.append(markdownFilePath);
+			sb.append(_documentationURLString);
 		}
 
 		sb.append(": ");
@@ -147,19 +113,11 @@ public class SourceFormatterMessage
 		return sb.toString();
 	}
 
-	private static final String _DOCUMENTATION_URL =
-		"https://github.com/liferay/liferay-portal/blob/master/modules/util" +
-			"/source-formatter/src/main/resources/documentation/checks/";
-
-	private static final String _OLD_DOCUMENTATION_URL =
-		"https://github.com/liferay/liferay-portal/blob/master/modules/util" +
-			"/source-formatter/documentation/";
-
 	private final String _checkName;
 	private final CheckType _checkType;
+	private final String _documentationURLString;
 	private final String _fileName;
 	private final int _lineNumber;
-	private final String _markdownFileName;
 	private final String _message;
 
 }

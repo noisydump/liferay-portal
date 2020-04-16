@@ -13,9 +13,10 @@
  */
 
 import ClayIcon from '@clayui/icon';
+import {ClayTooltipProvider} from '@clayui/tooltip';
 import classNames from 'classnames';
 import {DragTypes} from 'data-engine-taglib';
-import React, {useLayoutEffect, useRef, useState, useContext} from 'react';
+import React, {useContext, useLayoutEffect, useRef, useState} from 'react';
 import {useDrop} from 'react-dnd';
 
 import Table from '../../components/table/Table.es';
@@ -37,7 +38,7 @@ const generateItem = columns =>
 	columns.reduce(
 		(acc, column) => ({
 			...acc,
-			[column]: `-`
+			[column]: `-`,
 		}),
 		{}
 	);
@@ -47,11 +48,11 @@ const DropZone = ({fields, onAddFieldName, onRemoveFieldName}) => {
 		accept: DragTypes.DRAG_FIELD_TYPE,
 		collect: monitor => ({
 			canDrop: monitor.canDrop(),
-			overTarget: monitor.isOver()
+			overTarget: monitor.isOver(),
 		}),
 		drop: ({data: {name}}) => {
 			onAddFieldName(name);
-		}
+		},
 	});
 
 	const [container, setContainer] = useState();
@@ -66,8 +67,8 @@ const DropZone = ({fields, onAddFieldName, onRemoveFieldName}) => {
 
 	const [
 		{
-			dataListView: {appliedFilters}
-		}
+			dataListView: {appliedFilters},
+		},
 	] = useContext(EditTableViewContext);
 
 	if (empty) {
@@ -77,7 +78,7 @@ const DropZone = ({fields, onAddFieldName, onRemoveFieldName}) => {
 				<div
 					className={classNames('empty-drop-zone', {
 						'target-droppable': canDrop,
-						'target-over': overTarget
+						'target-over': overTarget,
 					})}
 					ref={drop}
 				>
@@ -108,13 +109,22 @@ const DropZone = ({fields, onAddFieldName, onRemoveFieldName}) => {
 									appliedFilters,
 									name
 								) && (
-									<div className="col text-right">
-										<ClayIcon symbol="filter" />
-									</div>
+									<ClayTooltipProvider>
+										<div className="col text-right">
+											<ClayIcon
+												data-tooltip-align="top"
+												data-tooltip-delay="200"
+												symbol="filter"
+												title={Liferay.Language.get(
+													'this-column-has-applied-filters'
+												)}
+											/>
+										</div>
+									</ClayTooltipProvider>
 								)}
 							</div>
 						</div>
-					)
+					),
 				}))}
 				items={generateItems(
 					fields.map(({label}) => (label ? label.en_US : ''))

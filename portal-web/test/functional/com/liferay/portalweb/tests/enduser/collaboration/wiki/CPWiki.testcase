@@ -95,6 +95,7 @@ definition {
 	@description = "This test covers LPS-89884. It ensures that a DL image can be added to a wiki page via URL."
 	@priority = "5"
 	test AddPageWithDMImageViaURL {
+		property portal.upstream = "quarantine";
 		property test.name.skip.portal.instance = "CPWiki#AddPageWithDMImageViaURL";
 
 		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "guest");
@@ -133,6 +134,7 @@ definition {
 
 	@priority = "5"
 	test CKEditorSmoke {
+		property portal.acceptance = "true";
 		property test.name.skip.portal.instance = "CPWiki#CKEditorSmoke";
 
 		ProductMenu.gotoPortlet(
@@ -481,6 +483,8 @@ definition {
 	@ignore = "true"
 	@priority = "4"
 	test ViewPageRSS {
+		property portal.upstream = "quarantine";
+
 		Navigator.openURL();
 
 		ProductMenu.gotoPortlet(

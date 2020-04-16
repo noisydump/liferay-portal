@@ -24,6 +24,7 @@ dependencies {
 	compileOnly project(":apps:frontend-editor:frontend-editor-taglib")
 	compileOnly project(":apps:frontend-taglib:frontend-taglib")
 	compileOnly project(":apps:frontend-taglib:frontend-taglib-clay")
+	compileOnly project(":apps:frontend-taglib:frontend-taglib-react")
 	compileOnly project(":apps:frontend-taglib:frontend-taglib-soy")
 	compileOnly project(":apps:html-preview:html-preview-api")
 	compileOnly project(":apps:journal:journal-api")
@@ -38,6 +39,7 @@ dependencies {
 	compileOnly project(":apps:layout:layout-seo-api")
 	compileOnly project(":apps:layout:layout-taglib")
 	compileOnly project(":apps:mobile-device-rules:mobile-device-rules-api")
+	compileOnly project(":apps:petra:petra-content")
 	compileOnly project(":apps:portal-template:portal-template-soy-api")
 	compileOnly project(":apps:portal:portal-aop-api")
 	compileOnly project(":apps:portal:portal-upgrade-api")
@@ -52,5 +54,6 @@ dependencies {
 	compileOnly project(":core:petra:petra-function")
 	compileOnly project(":core:petra:petra-lang")
 	compileOnly project(":core:petra:petra-reflect")
+	compileOnly project(":core:petra:petra-sql-dsl-api")
 	compileOnly project(":core:petra:petra-string")
 }

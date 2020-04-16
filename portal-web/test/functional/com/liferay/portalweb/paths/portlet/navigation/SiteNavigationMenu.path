@@ -55,7 +55,12 @@
 </tr>
 <tr>
 	<td>SIDEBAR_ITEM_NAME</td>
-	<td>//div[contains(@class,'sidebar-header')][contains(.,'${key_itemName}')]</td>
+	<td>//div[contains(@class,'sidebar-header')]//p[contains(.,'${key_itemName}')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>MENU_ADD_NEW_PAGES</td>
+	<td>//*[@data-qa-id='row' and contains(.,'${key_rowEntry}')]/td[contains(@class,'lfr-add-new-pages') and contains(.,'${key_addNewPages}')]</td>
 	<td></td>
 </tr>
 <tr>

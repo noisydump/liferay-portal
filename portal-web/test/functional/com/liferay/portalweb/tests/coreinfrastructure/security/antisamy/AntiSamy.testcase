@@ -26,6 +26,8 @@ definition {
 
 	@priority = "4"
 	test AssertNoWikiJavascript {
+		property portal.upstream = "quarantine";
+
 		ProductMenu.gotoPortlet(
 			category = "Site Builder",
 			panel = "Site Administration",
@@ -56,6 +58,8 @@ definition {
 
 	@priority = "4"
 	test AssertWebContentJavascript {
+		property portal.upstream = "quarantine";
+
 		ProductMenu.gotoPortlet(
 			category = "Site Builder",
 			panel = "Site Administration",

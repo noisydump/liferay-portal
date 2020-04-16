@@ -26,6 +26,9 @@ String navigation = ParamUtil.getString(request, "navigation");
 	<c:when test='<%= navigation.equals("file_entry_types") %>'>
 		<liferay-util:include page="/document_library/view_file_entry_types.jsp" servletContext="<%= application %>" />
 	</c:when>
+	<c:when test='<%= navigation.equals("file_entry_metadata_sets") %>'>
+		<liferay-util:include page="/document_library/view_file_entry_metadata_sets.jsp" servletContext="<%= application %>" />
+	</c:when>
 	<c:otherwise>
 		<liferay-util:dynamic-include key="com.liferay.document.library.web#/document_library/view.jsp#pre" />
 
@@ -70,11 +73,13 @@ String navigation = ParamUtil.getString(request, "navigation");
 		<%
 		BulkSelectionRunner bulkSelectionRunner = BulkSelectionRunnerUtil.getBulkSelectionRunner();
 
-		Map<String, Object> context = new HashMap<>();
-
-		context.put("bulkComponentId", liferayPortletResponse.getNamespace() + "BulkStatus");
-		context.put("bulkInProgress", bulkSelectionRunner.isBusy(user));
-		context.put("pathModule", PortalUtil.getPathModule());
+		Map<String, Object> context = HashMapBuilder.<String, Object>put(
+			"bulkComponentId", liferayPortletResponse.getNamespace() + "BulkStatus"
+		).put(
+			"bulkInProgress", bulkSelectionRunner.isBusy(user)
+		).put(
+			"pathModule", PortalUtil.getPathModule()
+		).build();
 		%>
 
 		<div>
@@ -247,12 +252,12 @@ String navigation = ParamUtil.getString(request, "navigation");
 							height:
 								'<%= PrefsPropsUtil.getLong(PropsKeys.DL_FILE_ENTRY_THUMBNAIL_MAX_HEIGHT) %>',
 							width:
-								'<%= PrefsPropsUtil.getLong(PropsKeys.DL_FILE_ENTRY_THUMBNAIL_MAX_WIDTH) %>'
-						}
+								'<%= PrefsPropsUtil.getLong(PropsKeys.DL_FILE_ENTRY_THUMBNAIL_MAX_WIDTH) %>',
+						},
 					},
 					form: {
 						method: 'POST',
-						node: A.one(document.<portlet:namespace />fm2)
+						node: A.one(document.<portlet:namespace />fm2),
 					},
 					maxFileSize: <%= dlConfiguration.fileMaxSize() %>,
 					namespace: '<portlet:namespace />',
@@ -266,16 +271,16 @@ String navigation = ParamUtil.getString(request, "navigation");
 						'<portlet:renderURL windowState="<%= LiferayWindowState.POP_UP.toString() %>"><portlet:param name="mvcRenderCommandName" value="/document_library/select_folder" /><portlet:param name="folderId" value="<%= String.valueOf(folderId) %>" /></portlet:renderURL>',
 					scopeGroupId: <%= scopeGroupId %>,
 					searchContainerId: 'entries',
-					trashEnabled: <%= (scopeGroupId == repositoryId) && dlTrashUtil.isTrashEnabled(scopeGroupId, repositoryId) %>,
+					trashEnabled: <%= (scopeGroupId == repositoryId) && dlTrashHelper.isTrashEnabled(scopeGroupId, repositoryId) %>,
 					uploadable: <%= uploadable %>,
 					uploadURL: '<%= uploadURL %>',
 					viewFileEntryURL:
 						'<portlet:renderURL><portlet:param name="mvcRenderCommandName" value="/document_library/view_file_entry" /><portlet:param name="redirect" value="<%= currentURL %>" /></portlet:renderURL>',
-					viewFileEntryTypeURL: '<%= viewFileEntryTypeURL %>'
+					viewFileEntryTypeURL: '<%= viewFileEntryTypeURL %>',
 				}),
 				{
 					destroyOnNavigate: true,
-					portletId: '<%= HtmlUtil.escapeJS(portletId) %>'
+					portletId: '<%= HtmlUtil.escapeJS(portletId) %>',
 				}
 			);
 
@@ -309,18 +314,19 @@ String navigation = ParamUtil.getString(request, "navigation");
 		</aui:script>
 
 		<%
-		Map<String, Object> editTagsData = new HashMap<>();
-
-		editTagsData.put("context", Collections.singletonMap("namespace", liferayPortletResponse.getNamespace()));
-
-		Map<String, Object> editTagsProps = new HashMap<>();
+		Map<String, Object> editTagsData = HashMapBuilder.<String, Object>put(
+			"context", Collections.singletonMap("namespace", liferayPortletResponse.getNamespace())
+		).build();
 
 		long[] groupIds = PortalUtil.getCurrentAndAncestorSiteGroupIds(scopeGroupId);
 
-		editTagsProps.put("groupIds", groupIds);
-
-		editTagsProps.put("pathModule", PortalUtil.getPathModule());
-		editTagsProps.put("repositoryId", String.valueOf(repositoryId));
+		Map<String, Object> editTagsProps = HashMapBuilder.<String, Object>put(
+			"groupIds", groupIds
+		).put(
+			"pathModule", PortalUtil.getPathModule()
+		).put(
+			"repositoryId", String.valueOf(repositoryId)
+		).build();
 
 		editTagsData.put("props", editTagsProps);
 		%>
@@ -333,16 +339,19 @@ String navigation = ParamUtil.getString(request, "navigation");
 		</div>
 
 		<%
-		Map<String, Object> editCategoriesData = new HashMap<>();
+		Map<String, Object> editCategoriesData = HashMapBuilder.<String, Object>put(
+			"context", Collections.singletonMap("namespace", liferayPortletResponse.getNamespace())
+		).build();
 
-		editCategoriesData.put("context", Collections.singletonMap("namespace", liferayPortletResponse.getNamespace()));
-
-		Map<String, Object> editCategoriesProps = new HashMap<>();
-
-		editCategoriesProps.put("groupIds", groupIds);
-		editCategoriesProps.put("pathModule", PortalUtil.getPathModule());
-		editCategoriesProps.put("repositoryId", String.valueOf(repositoryId));
-		editCategoriesProps.put("selectCategoriesUrl", selectCategoriesURL.toString());
+		Map<String, Object> editCategoriesProps = HashMapBuilder.<String, Object>put(
+			"groupIds", groupIds
+		).put(
+			"pathModule", PortalUtil.getPathModule()
+		).put(
+			"repositoryId", String.valueOf(repositoryId)
+		).put(
+			"selectCategoriesUrl", selectCategoriesURL.toString()
+		).build();
 
 		editCategoriesData.put("props", editCategoriesProps);
 		%>

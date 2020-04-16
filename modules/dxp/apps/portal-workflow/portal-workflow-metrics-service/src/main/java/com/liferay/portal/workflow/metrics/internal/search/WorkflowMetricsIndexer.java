@@ -14,37 +14,21 @@
 
 package com.liferay.portal.workflow.metrics.internal.search;
 
+import com.liferay.portal.kernel.dao.orm.ActionableDynamicQuery;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.json.JSONFactoryUtil;
-import com.liferay.portal.kernel.json.JSONObject;
-import com.liferay.portal.kernel.json.JSONUtil;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.search.BaseIndexer;
-import com.liferay.portal.kernel.search.BooleanClauseOccur;
-import com.liferay.portal.kernel.search.BooleanQuery;
 import com.liferay.portal.kernel.search.Document;
 import com.liferay.portal.kernel.search.Indexer;
 import com.liferay.portal.kernel.search.Summary;
-import com.liferay.portal.kernel.search.filter.BooleanFilter;
-import com.liferay.portal.kernel.search.filter.TermFilter;
-import com.liferay.portal.kernel.search.generic.BooleanQueryImpl;
-import com.liferay.portal.kernel.search.generic.MatchAllQuery;
 import com.liferay.portal.kernel.service.CompanyLocalService;
 import com.liferay.portal.kernel.util.GetterUtil;
-import com.liferay.portal.kernel.util.PortalRunMode;
 import com.liferay.portal.kernel.util.PropsKeys;
 import com.liferay.portal.kernel.util.PropsUtil;
-import com.liferay.portal.kernel.util.StringUtil;
-import com.liferay.portal.search.engine.adapter.SearchEngineAdapter;
-import com.liferay.portal.search.engine.adapter.document.DeleteByQueryDocumentRequest;
-import com.liferay.portal.search.engine.adapter.index.CreateIndexRequest;
-import com.liferay.portal.search.engine.adapter.index.IndicesExistsIndexRequest;
-import com.liferay.portal.search.engine.adapter.index.IndicesExistsIndexResponse;
-import com.liferay.portal.workflow.metrics.internal.search.index.BaseWorkflowMetricsIndexer;
-import com.liferay.portal.workflow.metrics.internal.search.index.InstanceWorkflowMetricsIndexer;
-import com.liferay.portal.workflow.metrics.internal.search.index.NodeWorkflowMetricsIndexer;
-import com.liferay.portal.workflow.metrics.internal.search.index.ProcessWorkflowMetricsIndexer;
-import com.liferay.portal.workflow.metrics.internal.search.index.TokenWorkflowMetricsIndexer;
+import com.liferay.portal.workflow.metrics.internal.search.index.WorkflowMetricsIndex;
+import com.liferay.portal.workflow.metrics.search.index.reindexer.WorkflowMetricsReindexer;
 
 import java.util.Locale;
 
@@ -54,9 +38,6 @@ import javax.portlet.PortletResponse;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
-import org.osgi.service.component.annotations.ReferenceCardinality;
-import org.osgi.service.component.annotations.ReferencePolicy;
-import org.osgi.service.component.annotations.ReferencePolicyOption;
 
 /**
  * @author Inácio Nery
@@ -73,97 +54,21 @@ public class WorkflowMetricsIndexer extends BaseIndexer<Object> {
 
 	@Activate
 	protected void activate() throws Exception {
-		createIndices(
-			instanceWorkflowMetricsIndexer, nodeWorkflowMetricsIndexer,
-			processWorkflowMetricsIndexer, tokenWorkflowMetricsIndexer);
+		ActionableDynamicQuery actionableDynamicQuery =
+			_companyLocalService.getActionableDynamicQuery();
 
-		if (!_INDEX_ON_STARTUP) {
-			for (Company company : companyLocalService.getCompanies()) {
-				instanceWorkflowMetricsIndexer.reindex(company.getCompanyId());
-				nodeWorkflowMetricsIndexer.reindex(company.getCompanyId());
-				processWorkflowMetricsIndexer.reindex(company.getCompanyId());
-				tokenWorkflowMetricsIndexer.reindex(company.getCompanyId());
-			}
-		}
-	}
+		actionableDynamicQuery.setPerformActionMethod(
+			(Company company) -> {
+				if (_INDEX_ON_STARTUP) {
+					return;
+				}
 
-	protected void createIndices(
-			BaseWorkflowMetricsIndexer... baseWorkflowMetricsIndexers)
-		throws PortalException {
+				doReindex(company.getCompanyId());
 
-		if (searchEngineAdapter == null) {
-			return;
-		}
+				_slaWorkflowMetricsIndexer.doReindex(company.getCompanyId());
+			});
 
-		for (BaseWorkflowMetricsIndexer baseWorkflowMetricsIndexer :
-				baseWorkflowMetricsIndexers) {
-
-			if (_hasIndex(baseWorkflowMetricsIndexer.getIndexName())) {
-				continue;
-			}
-
-			CreateIndexRequest createIndexRequest = new CreateIndexRequest(
-				baseWorkflowMetricsIndexer.getIndexName());
-
-			JSONObject jsonObject = JSONFactoryUtil.createJSONObject(
-				StringUtil.read(getClass(), "/META-INF/search/mappings.json"));
-
-			createIndexRequest.setSource(
-				JSONUtil.put(
-					"mappings",
-					JSONUtil.put(
-						baseWorkflowMetricsIndexer.getIndexType(),
-						jsonObject.get(
-							baseWorkflowMetricsIndexer.getIndexType()))
-				).put(
-					"settings",
-					JSONFactoryUtil.createJSONObject(
-						StringUtil.read(
-							getClass(), "/META-INF/search/settings.json"))
-				).toString());
-
-			searchEngineAdapter.execute(createIndexRequest);
-		}
-	}
-
-	protected void deleteIndices(
-			long companyId,
-			BaseWorkflowMetricsIndexer... baseWorkflowMetricsIndexers)
-		throws PortalException {
-
-		if (searchEngineAdapter == null) {
-			return;
-		}
-
-		for (BaseWorkflowMetricsIndexer baseWorkflowMetricsIndexer :
-				baseWorkflowMetricsIndexers) {
-
-			if (!_hasIndex(baseWorkflowMetricsIndexer.getIndexName())) {
-				continue;
-			}
-
-			BooleanQuery booleanQuery = new BooleanQueryImpl();
-
-			booleanQuery.add(new MatchAllQuery(), BooleanClauseOccur.MUST);
-
-			BooleanFilter booleanFilter = new BooleanFilter();
-
-			booleanFilter.add(
-				new TermFilter("companyId", String.valueOf(companyId)),
-				BooleanClauseOccur.MUST);
-
-			booleanQuery.setPreBooleanFilter(booleanFilter);
-
-			DeleteByQueryDocumentRequest deleteByQueryDocumentRequest =
-				new DeleteByQueryDocumentRequest(
-					booleanQuery, baseWorkflowMetricsIndexer.getIndexName());
-
-			if (PortalRunMode.isTestMode()) {
-				deleteByQueryDocumentRequest.setRefresh(true);
-			}
-
-			searchEngineAdapter.execute(deleteByQueryDocumentRequest);
-		}
+		actionableDynamicQuery.performActions();
 	}
 
 	@Override
@@ -185,6 +90,30 @@ public class WorkflowMetricsIndexer extends BaseIndexer<Object> {
 		throw new UnsupportedOperationException();
 	}
 
+	protected void doReindex(long companyId) {
+		try {
+			_instanceWorkflowMetricsIndex.clearIndex(companyId);
+			_nodeWorkflowMetricsIndex.clearIndex(companyId);
+			_processWorkflowMetricsIndex.clearIndex(companyId);
+			_taskWorkflowMetricsIndex.clearIndex(companyId);
+			_transitionWorkflowMetricsIndex.clearIndex(companyId);
+
+			_instanceWorkflowMetricsIndex.createIndex(companyId);
+			_nodeWorkflowMetricsIndex.createIndex(companyId);
+			_processWorkflowMetricsIndex.createIndex(companyId);
+			_taskWorkflowMetricsIndex.createIndex(companyId);
+			_transitionWorkflowMetricsIndex.createIndex(companyId);
+
+			_instanceWorkflowMetricsReindexer.reindex(companyId);
+			_nodeWorkflowMetricsReindexer.reindex(companyId);
+			_processWorkflowMetricsReindexer.reindex(companyId);
+			_taskWorkflowMetricsReindexer.reindex(companyId);
+		}
+		catch (PortalException portalException) {
+			_log.error(portalException, portalException);
+		}
+	}
+
 	@Override
 	protected final void doReindex(Object object) throws Exception {
 		throw new UnsupportedOperationException();
@@ -199,57 +128,49 @@ public class WorkflowMetricsIndexer extends BaseIndexer<Object> {
 
 	@Override
 	protected void doReindex(String[] ids) throws Exception {
-		long companyId = GetterUtil.getLong(ids[0]);
-
-		deleteIndices(
-			companyId, instanceWorkflowMetricsIndexer,
-			nodeWorkflowMetricsIndexer, processWorkflowMetricsIndexer,
-			tokenWorkflowMetricsIndexer);
-
-		createIndices(
-			instanceWorkflowMetricsIndexer, nodeWorkflowMetricsIndexer,
-			processWorkflowMetricsIndexer, tokenWorkflowMetricsIndexer);
-
-		instanceWorkflowMetricsIndexer.reindex(companyId);
-		nodeWorkflowMetricsIndexer.reindex(companyId);
-		processWorkflowMetricsIndexer.reindex(companyId);
-		tokenWorkflowMetricsIndexer.reindex(companyId);
-	}
-
-	@Reference
-	protected CompanyLocalService companyLocalService;
-
-	@Reference
-	protected InstanceWorkflowMetricsIndexer instanceWorkflowMetricsIndexer;
-
-	@Reference
-	protected NodeWorkflowMetricsIndexer nodeWorkflowMetricsIndexer;
-
-	@Reference
-	protected ProcessWorkflowMetricsIndexer processWorkflowMetricsIndexer;
-
-	@Reference(
-		cardinality = ReferenceCardinality.OPTIONAL,
-		policy = ReferencePolicy.DYNAMIC,
-		policyOption = ReferencePolicyOption.GREEDY,
-		target = "(search.engine.impl=Elasticsearch)"
-	)
-	protected volatile SearchEngineAdapter searchEngineAdapter;
-
-	@Reference
-	protected TokenWorkflowMetricsIndexer tokenWorkflowMetricsIndexer;
-
-	private boolean _hasIndex(String indexName) {
-		IndicesExistsIndexRequest indicesExistsIndexRequest =
-			new IndicesExistsIndexRequest(indexName);
-
-		IndicesExistsIndexResponse indicesExistsIndexResponse =
-			searchEngineAdapter.execute(indicesExistsIndexRequest);
-
-		return indicesExistsIndexResponse.isExists();
+		doReindex(GetterUtil.getLong(ids[0]));
 	}
 
 	private static final boolean _INDEX_ON_STARTUP = GetterUtil.getBoolean(
 		PropsUtil.get(PropsKeys.INDEX_ON_STARTUP));
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		WorkflowMetricsIndexer.class);
+
+	@Reference
+	private CompanyLocalService _companyLocalService;
+
+	@Reference(target = "(workflow.metrics.index.entity.name=instance)")
+	private WorkflowMetricsIndex _instanceWorkflowMetricsIndex;
+
+	@Reference(target = "(workflow.metrics.index.entity.name=instance)")
+	private WorkflowMetricsReindexer _instanceWorkflowMetricsReindexer;
+
+	@Reference(target = "(workflow.metrics.index.entity.name=node)")
+	private WorkflowMetricsIndex _nodeWorkflowMetricsIndex;
+
+	@Reference(target = "(workflow.metrics.index.entity.name=node)")
+	private WorkflowMetricsReindexer _nodeWorkflowMetricsReindexer;
+
+	@Reference(target = "(workflow.metrics.index.entity.name=process)")
+	private WorkflowMetricsIndex _processWorkflowMetricsIndex;
+
+	@Reference(target = "(workflow.metrics.index.entity.name=process)")
+	private WorkflowMetricsReindexer _processWorkflowMetricsReindexer;
+
+	@Reference
+	private SLAWorkflowMetricsIndexer _slaWorkflowMetricsIndexer;
+
+	@Reference(target = "(workflow.metrics.index.entity.name=task)")
+	private WorkflowMetricsIndex _taskWorkflowMetricsIndex;
+
+	@Reference(target = "(workflow.metrics.index.entity.name=task)")
+	private WorkflowMetricsReindexer _taskWorkflowMetricsReindexer;
+
+	@Reference(target = "(workflow.metrics.index.entity.name=transition)")
+	private WorkflowMetricsIndex _transitionWorkflowMetricsIndex;
+
+	@Reference(target = "(workflow.metrics.index.entity.name=transition)")
+	private WorkflowMetricsReindexer _transitionWorkflowMetricsReindexer;
 
 }

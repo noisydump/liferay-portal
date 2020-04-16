@@ -44,7 +44,13 @@ if (mvcPath.startsWith("/edit_entry.jsp")) {
 					</a>
 				</div>
 
-				<div class="col text-right">
+				<div style="display: none;">
+					<liferay-portlet:runtime
+						portletName="<%= PortletKeys.LOGIN %>"
+					/>
+				</div>
+
+				<div class="autofit-col text-right">
 					<liferay-portlet:runtime
 						portletProviderAction="<%= PortletProvider.Action.VIEW %>"
 						portletProviderClassName="com.liferay.admin.kernel.util.PortalUserPersonalBarApplicationType$UserPersonalBar"

@@ -49,10 +49,13 @@ String editorName = (String)request.getAttribute(AlloyEditorConstants.ATTRIBUTE_
 		var cleanupAlloyEditorResources = function() {
 			if (!alloyEditorInstances && alloyEditorDisposeResources) {
 				window.AlloyEditor = undefined;
-				window.CKEDITOR = undefined;
 
 				alloyEditorInstances = 0;
 				alloyEditorDisposeResources = false;
+
+				if (CKEDITOR && Object.keys(CKEDITOR.instances).length === 0) {
+					window.CKEDITOR = undefined;
+				}
 			}
 		};
 
@@ -64,7 +67,7 @@ String editorName = (String)request.getAttribute(AlloyEditorConstants.ATTRIBUTE_
 				alloyEditorInstances--;
 
 				cleanupAlloyEditorResources();
-			}
+			},
 		};
 
 		CKEDITOR.scriptLoader.loadScripts = function(scripts, success, failure) {

@@ -203,6 +203,7 @@ public abstract class BaseDocumentFolderResourceTestCase {
 
 	@Test
 	public void testDeleteDocumentFolder() throws Exception {
+		@SuppressWarnings("PMD.UnusedLocalVariable")
 		DocumentFolder documentFolder =
 			testDeleteDocumentFolder_addDocumentFolder();
 
@@ -334,8 +335,7 @@ public abstract class BaseDocumentFolderResourceTestCase {
 			documentFolderResource.patchDocumentFolder(
 				postDocumentFolder.getId(), randomPatchDocumentFolder);
 
-		DocumentFolder expectedPatchDocumentFolder =
-			(DocumentFolder)BeanUtils.cloneBean(postDocumentFolder);
+		DocumentFolder expectedPatchDocumentFolder = postDocumentFolder.clone();
 
 		_beanUtilsBean.copyProperties(
 			expectedPatchDocumentFolder, randomPatchDocumentFolder);
@@ -662,9 +662,11 @@ public abstract class BaseDocumentFolderResourceTestCase {
 				}
 				else {
 					BeanUtils.setProperty(
-						documentFolder1, entityField.getName(), "Aaa");
+						documentFolder1, entityField.getName(),
+						"Aaa" + RandomTestUtil.randomString());
 					BeanUtils.setProperty(
-						documentFolder2, entityField.getName(), "Bbb");
+						documentFolder2, entityField.getName(),
+						"Bbb" + RandomTestUtil.randomString());
 				}
 			});
 	}
@@ -987,9 +989,11 @@ public abstract class BaseDocumentFolderResourceTestCase {
 				}
 				else {
 					BeanUtils.setProperty(
-						documentFolder1, entityField.getName(), "Aaa");
+						documentFolder1, entityField.getName(),
+						"Aaa" + RandomTestUtil.randomString());
 					BeanUtils.setProperty(
-						documentFolder2, entityField.getName(), "Bbb");
+						documentFolder2, entityField.getName(),
+						"Bbb" + RandomTestUtil.randomString());
 				}
 			});
 	}
@@ -1595,9 +1599,9 @@ public abstract class BaseDocumentFolderResourceTestCase {
 				getAdditionalAssertFieldNames()) {
 
 			if (Objects.equals("actions", additionalAssertFieldName)) {
-				if (!Objects.deepEquals(
-						documentFolder1.getActions(),
-						documentFolder2.getActions())) {
+				if (!equals(
+						(Map)documentFolder1.getActions(),
+						(Map)documentFolder2.getActions())) {
 
 					return false;
 				}
@@ -1744,6 +1748,30 @@ public abstract class BaseDocumentFolderResourceTestCase {
 			throw new IllegalArgumentException(
 				"Invalid additional assert field name " +
 					additionalAssertFieldName);
+		}
+
+		return true;
+	}
+
+	protected boolean equals(
+		Map<String, Object> map1, Map<String, Object> map2) {
+
+		if (Objects.equals(map1.keySet(), map2.keySet())) {
+			for (Map.Entry<String, Object> entry : map1.entrySet()) {
+				if (entry.getValue() instanceof Map) {
+					if (!equals(
+							(Map)entry.getValue(),
+							(Map)map2.get(entry.getKey()))) {
+
+						return false;
+					}
+				}
+				else if (!Objects.deepEquals(
+							entry.getValue(), map2.get(entry.getKey()))) {
+
+					return false;
+				}
+			}
 		}
 
 		return true;

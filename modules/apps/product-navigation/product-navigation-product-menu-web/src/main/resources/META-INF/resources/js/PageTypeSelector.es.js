@@ -115,9 +115,7 @@ PageTypeSelector.propTypes = {
 	addLayoutURL: PropTypes.string,
 	configureLayoutSetURL: PropTypes.string,
 	namespace: PropTypes.string,
-	privateLayout: PropTypes.bool
+	privateLayout: PropTypes.bool,
 };
 
-export default function(props) {
-	return <PageTypeSelector {...props} />;
-}
+export default PageTypeSelector;

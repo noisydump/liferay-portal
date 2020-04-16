@@ -78,7 +78,7 @@ if (fileEntryId != 0) {
 			</c:if>
 
 			<c:if test="<%= maxFileSize != 0 %>">
-				<liferay-ui:message arguments="<%= TextFormatter.formatStorageSize(maxFileSize, locale) %>" key="maximum-size-x" />
+				<liferay-ui:message arguments="<%= LanguageUtil.formatStorageSize(maxFileSize, locale) %>" key="maximum-size-x" />
 			</c:if>
 		</div>
 	</div>
@@ -151,14 +151,14 @@ if (!draggableImage.equals("none")) {
 		paramName: '<portlet:namespace /><%= paramName %>',
 		rootNode: '#<%= randomNamespace %>taglibImageSelector',
 		uploadURL: '<%= uploadURL %>',
-		validExtensions: '<%= validExtensions %>'
+		validExtensions: '<%= validExtensions %>',
 	});
 
 	<c:if test='<%= !draggableImage.equals("none") %>'>
 		imageSelector.plug(Liferay.CoverCropper, {
 			direction: '<%= draggableImage %>',
 			imageContainerSelector: '.image-wrapper',
-			imageSelector: '#<%= randomNamespace %>image'
+			imageSelector: '#<%= randomNamespace %>image',
 		});
 	</c:if>
 

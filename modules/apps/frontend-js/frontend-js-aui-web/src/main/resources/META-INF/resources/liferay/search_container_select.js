@@ -50,14 +50,15 @@ AUI.add(
 			ATTRS: {
 				bulkSelection: {
 					validator: Lang.isBoolean,
-					value: false
+					value: false,
 				},
 
 				keepSelection: {
 					setter(keepSelection) {
 						if (Lang.isString(keepSelection)) {
 							keepSelection = new RegExp(keepSelection);
-						} else if (!Lang.isRegExp(keepSelection)) {
+						}
+						else if (!Lang.isRegExp(keepSelection)) {
 							keepSelection = keepSelection
 								? REGEX_MATCH_EVERYTHING
 								: REGEX_MATCH_NOTHING;
@@ -65,24 +66,24 @@ AUI.add(
 
 						return keepSelection;
 					},
-					value: REGEX_MATCH_EVERYTHING
+					value: REGEX_MATCH_EVERYTHING,
 				},
 
 				rowCheckerSelector: {
 					validator: Lang.isString,
-					value: '.click-selector'
+					value: '.click-selector',
 				},
 
 				rowClassNameActive: {
 					validator: Lang.isString,
-					value: 'active'
+					value: 'active',
 				},
 
 				rowSelector: {
 					validator: Lang.isString,
 					value:
-						'li[data-selectable="true"],tr[data-selectable="true"]'
-				}
+						'li[data-selectable="true"],tr[data-selectable="true"]',
+				},
 			},
 
 			EXTENDS: A.Plugin.Base,
@@ -107,8 +108,8 @@ AUI.add(
 								STR_ROW_CLASS_NAME_ACTIVE
 							),
 							rowSelector: instance.get(STR_ROW_SELECTOR),
-							searchContainerId: host.get('id')
-						}
+							searchContainerId: host.get('id'),
+						},
 					});
 				},
 
@@ -124,7 +125,7 @@ AUI.add(
 					selectedElements.each(item => {
 						elements.push({
 							name: item.attr('name'),
-							value: item.val()
+							value: item.val(),
 						});
 					});
 
@@ -135,9 +136,9 @@ AUI.add(
 							selector:
 								instance.get(STR_ROW_SELECTOR) +
 								' ' +
-								STR_CHECKBOX_SELECTOR
+								STR_CHECKBOX_SELECTOR,
 						},
-						owner: host.get('id')
+						owner: host.get('id'),
 					});
 				},
 
@@ -221,8 +222,8 @@ AUI.add(
 							allElements: instance._getAllElements(),
 							allSelectedElements,
 							currentPageElements: instance._getCurrentPageElements(),
-							currentPageSelectedElements: instance.getCurrentPageSelectedElements()
-						}
+							currentPageSelectedElements: instance.getCurrentPageSelectedElements(),
+						},
 					};
 
 					instance.get(STR_HOST).fire('rowToggled', payload);
@@ -287,7 +288,7 @@ AUI.add(
 					);
 
 					var toggleRowFn = A.bind('_onClickRowSelector', instance, {
-						toggleCheckbox: true
+						toggleCheckbox: true,
 					});
 
 					var toggleRowCSSFn = A.bind(
@@ -321,7 +322,7 @@ AUI.add(
 							'startNavigate',
 							instance._onStartNavigate,
 							instance
-						)
+						),
 					];
 				},
 
@@ -366,7 +367,7 @@ AUI.add(
 					row.toggleClass(instance.get(STR_ROW_CLASS_NAME_ACTIVE));
 
 					instance._notifyRowToggle();
-				}
+				},
 			},
 
 			restoreTask(state, params, node) {
@@ -381,7 +382,8 @@ AUI.add(
 							.ancestor(params.rowSelector)
 							.addClass(params.rowClassNameActive);
 					});
-				} else {
+				}
+				else {
 					var offScreenElementsHtml = '';
 
 					AArray.each(state.data.elements, item => {
@@ -394,7 +396,8 @@ AUI.add(
 							input
 								.ancestor(params.rowSelector)
 								.addClass(params.rowClassNameActive);
-						} else {
+						}
+						else {
 							offScreenElementsHtml += Lang.sub(
 								TPL_HIDDEN_INPUT,
 								item
@@ -411,13 +414,13 @@ AUI.add(
 					state.owner === params.searchContainerId &&
 					A.one(node).one('#' + params.containerId)
 				);
-			}
+			},
 		});
 
 		A.Plugin.SearchContainerSelect = SearchContainerSelect;
 	},
 	'',
 	{
-		requires: ['aui-component', 'aui-url', 'plugin']
+		requires: ['aui-component', 'aui-url', 'plugin'],
 	}
 );

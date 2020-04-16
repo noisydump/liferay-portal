@@ -63,7 +63,7 @@
 					<aui:input checked="<%= !assignedScopeAliases.isEmpty() %>" id='<%= "scopeAlias" + id %>' label="<%= sb.toString() %>" name="scopeAliases" onChange='<%= renderResponse.getNamespace() + "recalculateDependants(this)" %>' type="checkbox" value="<%= scopeAliasesString %>" />
 				</div>
 
-				<a aria-controls="<portlet:namespace />globalAccordion<%= id %>" aria-expanded="false" class="collapsed" data-parent="#<portlet:namespace />globalAccordion" data-toggle="liferay-collapse" href="#<portlet:namespace />globalAccordion<%= id %>" role="tab">
+				<a aria-controls="<portlet:namespace />globalAccordion<%= id %>" aria-expanded="false" class="collapsed" data-toggle="liferay-collapse" href="#<portlet:namespace />globalAccordion<%= id %>" role="tab">
 					<span>(<liferay-ui:message key="details" />)</span>
 
 					<span class="collapse-icon-closed">
@@ -136,7 +136,7 @@
 														<c:if test="<%= !firstLine %>">+ </c:if>
 
 														<%
-														firstLine = firstLine && applicationScopeDescription.length() == 0;
+														firstLine = firstLine && (applicationScopeDescription.length() == 0);
 														%>
 
 														<%= applicationScopeDescription %>

@@ -16,10 +16,11 @@ package com.liferay.layout.page.template.admin.web.internal.display.context;
 
 import com.liferay.frontend.taglib.clay.servlet.taglib.display.context.SearchContainerManagementToolbarDisplayContext;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.CreationMenu;
+import com.liferay.frontend.taglib.clay.servlet.taglib.util.CreationMenuBuilder;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem;
-import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemList;
+import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemListBuilder;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.LabelItem;
-import com.liferay.frontend.taglib.clay.servlet.taglib.util.LabelItemList;
+import com.liferay.frontend.taglib.clay.servlet.taglib.util.LabelItemListBuilder;
 import com.liferay.layout.page.template.admin.web.internal.security.permission.resource.LayoutPageTemplatePermission;
 import com.liferay.layout.page.template.constants.LayoutPageTemplateActionKeys;
 import com.liferay.petra.string.StringPool;
@@ -61,19 +62,15 @@ public class LayoutPrototypeManagementToolbarDisplayContext
 
 	@Override
 	public List<DropdownItem> getActionDropdownItems() {
-		return new DropdownItemList() {
-			{
-				add(
-					dropdownItem -> {
-						dropdownItem.putData(
-							"action", "deleteSelectedLayoutPrototypes");
-						dropdownItem.setIcon("times-circle");
-						dropdownItem.setLabel(
-							LanguageUtil.get(request, "delete"));
-						dropdownItem.setQuickAction(true);
-					});
+		return DropdownItemListBuilder.add(
+			dropdownItem -> {
+				dropdownItem.putData(
+					"action", "deleteSelectedLayoutPrototypes");
+				dropdownItem.setIcon("times-circle");
+				dropdownItem.setLabel(LanguageUtil.get(request, "delete"));
+				dropdownItem.setQuickAction(true);
 			}
-		};
+		).build();
 	}
 
 	public String getAvailableActions(LayoutPrototype layoutPrototype) {
@@ -106,17 +103,14 @@ public class LayoutPrototypeManagementToolbarDisplayContext
 
 	@Override
 	public CreationMenu getCreationMenu() {
-		return new CreationMenu() {
-			{
-				addPrimaryDropdownItem(
-					dropdownItem -> {
-						dropdownItem.setHref(
-							liferayPortletResponse.createRenderURL(), "mvcPath",
-							"/edit_layout_prototype.jsp");
-						dropdownItem.setLabel(LanguageUtil.get(request, "add"));
-					});
+		return CreationMenuBuilder.addPrimaryDropdownItem(
+			dropdownItem -> {
+				dropdownItem.setHref(
+					liferayPortletResponse.createRenderURL(), "mvcPath",
+					"/edit_layout_prototype.jsp");
+				dropdownItem.setLabel(LanguageUtil.get(request, "add"));
 			}
-		};
+		).build();
 	}
 
 	@Override
@@ -128,52 +122,35 @@ public class LayoutPrototypeManagementToolbarDisplayContext
 	public List<LabelItem> getFilterLabelItems() {
 		Boolean active = _layoutPrototypeDisplayContext.getActive();
 
-		return new LabelItemList() {
-			{
-				if (active != null) {
-					if (active) {
-						add(
-							labelItem -> {
-								PortletURL removeLabelURL =
-									PortletURLUtil.clone(
-										currentURLObj, liferayPortletResponse);
+		return LabelItemListBuilder.add(
+			() -> (active != null) && active,
+			labelItem -> {
+				PortletURL removeLabelURL = PortletURLUtil.clone(
+					currentURLObj, liferayPortletResponse);
 
-								removeLabelURL.setParameter(
-									"navigation", (String)null);
+				removeLabelURL.setParameter("navigation", (String)null);
 
-								labelItem.putData(
-									"removeLabelURL",
-									removeLabelURL.toString());
+				labelItem.putData("removeLabelURL", removeLabelURL.toString());
 
-								labelItem.setCloseable(true);
+				labelItem.setCloseable(true);
 
-								labelItem.setLabel(
-									LanguageUtil.get(request, "active"));
-							});
-					}
-					else {
-						add(
-							labelItem -> {
-								PortletURL removeLabelURL =
-									PortletURLUtil.clone(
-										currentURLObj, liferayPortletResponse);
-
-								removeLabelURL.setParameter(
-									"navigation", (String)null);
-
-								labelItem.putData(
-									"removeLabelURL",
-									removeLabelURL.toString());
-
-								labelItem.setCloseable(true);
-
-								labelItem.setLabel(
-									LanguageUtil.get(request, "inactive"));
-							});
-					}
-				}
+				labelItem.setLabel(LanguageUtil.get(request, "active"));
 			}
-		};
+		).add(
+			() -> (active != null) && !active,
+			labelItem -> {
+				PortletURL removeLabelURL = PortletURLUtil.clone(
+					currentURLObj, liferayPortletResponse);
+
+				removeLabelURL.setParameter("navigation", (String)null);
+
+				labelItem.putData("removeLabelURL", removeLabelURL.toString());
+
+				labelItem.setCloseable(true);
+
+				labelItem.setLabel(LanguageUtil.get(request, "inactive"));
+			}
+		).build();
 	}
 
 	@Override

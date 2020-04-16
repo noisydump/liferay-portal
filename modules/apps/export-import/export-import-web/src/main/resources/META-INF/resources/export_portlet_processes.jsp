@@ -97,15 +97,15 @@ OrderByComparator<BackgroundTask> orderByComparator = BackgroundTaskComparatorFa
 				List<FileEntry> attachmentsFileEntries = backgroundTask.getAttachmentsFileEntries();
 
 				for (FileEntry fileEntry : attachmentsFileEntries) {
-					Map<String, Object> data = new HashMap<String, Object>();
-
-					data.put("senna-off", "true");
+					Map<String, Object> data = HashMapBuilder.<String, Object>put(
+						"senna-off", "true"
+					).build();
 
 					StringBundler sb = new StringBundler(4);
 
 					sb.append(fileEntry.getTitle());
 					sb.append(StringPool.OPEN_PARENTHESIS);
-					sb.append(TextFormatter.formatStorageSize(fileEntry.getSize(), locale));
+					sb.append(LanguageUtil.formatStorageSize(fileEntry.getSize(), locale));
 					sb.append(StringPool.CLOSE_PARENTHESIS);
 				%>
 

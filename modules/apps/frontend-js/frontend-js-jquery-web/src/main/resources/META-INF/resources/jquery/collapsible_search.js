@@ -77,7 +77,8 @@
 
 			if (!supportsTransition) {
 				complete.call(instance);
-			} else {
+			}
+			else {
 				basicSearchSubmit.focus();
 			}
 		},
@@ -139,7 +140,7 @@
 					}
 				}
 			}
-		}
+		},
 	};
 
 	var Plugin = function(option) {

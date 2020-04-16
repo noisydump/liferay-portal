@@ -16,9 +16,9 @@ import PropTypes from 'prop-types';
 import React, {
 	useCallback,
 	useContext,
-	useState,
 	useEffect,
-	useRef
+	useRef,
+	useState,
 } from 'react';
 
 import SegmentsExperimentContext from '../context.es';
@@ -30,7 +30,7 @@ import {
 	INITIAL_CONFIDENCE_LEVEL,
 	MAX_CONFIDENCE_LEVEL,
 	MIN_CONFIDENCE_LEVEL,
-	percentageNumberToIndex
+	percentageNumberToIndex,
 } from '../util/percentages.es';
 import BusyButton from './BusyButton/BusyButton.es';
 import {SliderWithLabel} from './SliderWithLabel.es';
@@ -43,7 +43,7 @@ function ReviewExperimentModal({modalObserver, onModalClose, onRun, variants}) {
 	const [success, setSuccess] = useState(false);
 	const [estimation, setEstimation] = useState({
 		days: null,
-		loading: true
+		loading: true,
 	});
 	const [confidenceLevel, setConfidenceLevel] = useState(
 		INITIAL_CONFIDENCE_LEVEL
@@ -57,7 +57,8 @@ function ReviewExperimentModal({modalObserver, onModalClose, onRun, variants}) {
 
 			if (index === 0 && remainingSplit > 0) {
 				split = splitValue + remainingSplit;
-			} else {
+			}
+			else {
 				split = splitValue;
 			}
 
@@ -71,6 +72,7 @@ function ReviewExperimentModal({modalObserver, onModalClose, onRun, variants}) {
 
 	useEffect(() => {
 		mounted.current = true;
+
 		return () => {
 			mounted.current = false;
 		};
@@ -84,14 +86,14 @@ function ReviewExperimentModal({modalObserver, onModalClose, onRun, variants}) {
 				if (mounted.current) {
 					setEstimation({
 						days: segmentsExperimentEstimatedDaysDuration,
-						loading: false
+						loading: false,
 					});
 				}
 			})
 			.catch(_error => {
 				if (mounted.current) {
 					setEstimation({
-						error: true
+						error: true,
 					});
 				}
 			});
@@ -105,13 +107,13 @@ function ReviewExperimentModal({modalObserver, onModalClose, onRun, variants}) {
 			segmentsExperimentId: experiment.segmentsExperimentId,
 			segmentsExperimentRels: JSON.stringify(
 				_variantsToSplitVariantsMap(draftVariants)
-			)
+			),
 		});
 	}, [
 		draftVariants,
 		confidenceLevel,
 		getEstimation,
-		experiment.segmentsExperimentId
+		experiment.segmentsExperimentId,
 	]);
 
 	const [height, setHeight] = useState(0);
@@ -260,7 +262,7 @@ function ReviewExperimentModal({modalObserver, onModalClose, onRun, variants}) {
 
 		onRun({
 			confidenceLevel: percentageNumberToIndex(confidenceLevel),
-			splitVariantsMap
+			splitVariantsMap,
 		}).then(() => {
 			if (mounted.current) {
 				setBusy(false);
@@ -274,22 +276,25 @@ function _variantsToSplitVariantsMap(variants) {
 	return variants.reduce((acc, v) => {
 		return {
 			...acc,
-			[v.segmentsExperimentRelId]: percentageNumberToIndex(v.split)
+			[v.segmentsExperimentRelId]: percentageNumberToIndex(v.split),
 		};
 	}, {});
 }
 
 function _getDaysMessage(days) {
-	if (days === 1)
+	if (days === 1) {
 		return Liferay.Util.sub(Liferay.Language.get('x-day'), days);
-	else return Liferay.Util.sub(Liferay.Language.get('x-days'), days);
+	}
+	else {
+		return Liferay.Util.sub(Liferay.Language.get('x-days'), days);
+	}
 }
 
 ReviewExperimentModal.propTypes = {
 	modalObserver: PropTypes.object.isRequired,
 	onModalClose: PropTypes.func.isRequired,
 	onRun: PropTypes.func.isRequired,
-	variants: PropTypes.arrayOf(SegmentsVariantType)
+	variants: PropTypes.arrayOf(SegmentsVariantType),
 };
 
 export {ReviewExperimentModal};

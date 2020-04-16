@@ -19,12 +19,14 @@ import com.liferay.asset.kernel.model.AssetEntry;
 import com.liferay.asset.kernel.model.AssetRenderer;
 import com.liferay.asset.kernel.model.AssetRendererFactory;
 import com.liferay.asset.kernel.service.AssetEntryLocalService;
+import com.liferay.asset.util.AssetRendererFactoryLookup;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.search.Indexer;
@@ -32,6 +34,7 @@ import com.liferay.portal.kernel.search.IndexerRegistry;
 import com.liferay.portal.kernel.search.IndexerRegistryUtil;
 import com.liferay.portal.kernel.search.SearchException;
 import com.liferay.portal.kernel.security.permission.ResourceActions;
+import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.FastDateFormatConstants;
@@ -159,6 +162,14 @@ public class SearchResultSummaryDisplayBuilder {
 		return this;
 	}
 
+	public SearchResultSummaryDisplayBuilder setGroupLocalService(
+		GroupLocalService groupLocalService) {
+
+		_groupLocalService = groupLocalService;
+
+		return this;
+	}
+
 	public SearchResultSummaryDisplayBuilder setHighlightEnabled(
 		boolean highlightEnabled) {
 
@@ -276,6 +287,26 @@ public class SearchResultSummaryDisplayBuilder {
 		_themeDisplay = themeDisplay;
 
 		return this;
+	}
+
+	protected String appendStagingLabel(
+		String title, AssetRenderer assetRenderer) {
+
+		Group group = _groupLocalService.fetchGroup(assetRenderer.getGroupId());
+
+		if ((group != null) && group.isStagingGroup()) {
+			StringBundler sb = new StringBundler(5);
+
+			sb.append(title);
+			sb.append(StringPool.SPACE);
+			sb.append(StringPool.OPEN_PARENTHESIS);
+			sb.append(_language.get(_httpServletRequest, "staged"));
+			sb.append(StringPool.CLOSE_PARENTHESIS);
+
+			title = sb.toString();
+		}
+
+		return title;
 	}
 
 	protected SearchResultSummaryDisplayContext build(
@@ -812,7 +843,8 @@ public class SearchResultSummaryDisplayBuilder {
 				summaryBuilder.setLocale(summary.getLocale());
 				summaryBuilder.setMaxContentLength(
 					summary.getMaxContentLength());
-				summaryBuilder.setTitle(summary.getTitle());
+				summaryBuilder.setTitle(
+					appendStagingLabel(summary.getTitle(), assetRenderer));
 
 				return summaryBuilder.build();
 			}
@@ -820,7 +852,9 @@ public class SearchResultSummaryDisplayBuilder {
 		else if (assetRenderer != null) {
 			summaryBuilder.setContent(assetRenderer.getSearchSummary(_locale));
 			summaryBuilder.setLocale(_locale);
-			summaryBuilder.setTitle(assetRenderer.getTitle(_locale));
+			summaryBuilder.setTitle(
+				appendStagingLabel(
+					assetRenderer.getTitle(_locale), assetRenderer));
 
 			return summaryBuilder.build();
 		}
@@ -906,6 +940,7 @@ public class SearchResultSummaryDisplayBuilder {
 	private Document _document;
 	private DocumentBuilderFactory _documentBuilderFactory;
 	private FastDateFormatFactory _fastDateFormatFactory;
+	private GroupLocalService _groupLocalService;
 	private boolean _highlightEnabled;
 	private HttpServletRequest _httpServletRequest;
 	private boolean _imageRequested;

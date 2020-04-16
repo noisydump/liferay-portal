@@ -38,13 +38,17 @@
 		>
 
 			<%
-			Map<String, Object> data = new HashMap<String, Object>();
-
-			data.put("entityid", group.getGroupId());
-			data.put("entityname", group.getDescriptiveName(locale));
-			data.put("grouptarget", siteBrowserDisplayContext.getTarget());
-			data.put("grouptype", LanguageUtil.get(request, group.getTypeLabel()));
-			data.put("url", group.getDisplayURL(themeDisplay));
+			Map<String, Object> data = HashMapBuilder.<String, Object>put(
+				"entityid", group.getGroupId()
+			).put(
+				"entityname", group.getDescriptiveName(locale)
+			).put(
+				"grouptarget", siteBrowserDisplayContext.getTarget()
+			).put(
+				"grouptype", LanguageUtil.get(request, group.getTypeLabel())
+			).put(
+				"url", group.getDisplayURL(themeDisplay)
+			).build();
 			%>
 
 			<c:choose>
@@ -124,7 +128,7 @@
 	var openingLiferay = Util.getOpener().Liferay;
 
 	openingLiferay.fire('<portlet:namespace />enableRemovedSites', {
-		selectors: document.querySelectorAll('.selector-button:disabled')
+		selectors: document.querySelectorAll('.selector-button:disabled'),
 	});
 
 	Util.selectEntityHandler(

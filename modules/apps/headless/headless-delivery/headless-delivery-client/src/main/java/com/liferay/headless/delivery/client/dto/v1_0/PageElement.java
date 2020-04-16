@@ -26,11 +26,13 @@ import javax.annotation.Generated;
  * @generated
  */
 @Generated("")
-public class PageElement {
+public class PageElement implements Cloneable {
 
 	public static enum Type {
 
-		COLUMN("Column"), FRAGMENT("Fragment"), ROW("Row"), SECTION("Section");
+		COLLECTION("Collection"), COLLECTION_ITEM("CollectionItem"),
+		COLUMN("Column"), DROP_ZONE("DropZone"), FRAGMENT("Fragment"),
+		ROOT("Root"), ROW("Row"), SECTION("Section"), WIDGET("Widget");
 
 		public static Type create(String value) {
 			for (Type type : values()) {
@@ -127,6 +129,11 @@ public class PageElement {
 	}
 
 	protected Type type;
+
+	@Override
+	public PageElement clone() throws CloneNotSupportedException {
+		return (PageElement)super.clone();
+	}
 
 	@Override
 	public boolean equals(Object object) {

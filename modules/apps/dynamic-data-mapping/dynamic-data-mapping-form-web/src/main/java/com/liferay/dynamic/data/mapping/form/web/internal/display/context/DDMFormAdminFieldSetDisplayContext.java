@@ -46,8 +46,9 @@ import com.liferay.dynamic.data.mapping.util.comparator.StructureModifiedDateCom
 import com.liferay.dynamic.data.mapping.util.comparator.StructureNameComparator;
 import com.liferay.frontend.js.loader.modules.extender.npm.NPMResolver;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.CreationMenu;
+import com.liferay.frontend.taglib.clay.servlet.taglib.util.CreationMenuBuilder;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem;
-import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemList;
+import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemListBuilder;
 import com.liferay.portal.kernel.dao.search.SearchContainer;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONFactory;
@@ -75,6 +76,7 @@ import javax.portlet.RenderRequest;
 import javax.portlet.RenderResponse;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.jsp.PageContext;
 
 /**
  * @author Leonardo Barros
@@ -123,19 +125,16 @@ public class DDMFormAdminFieldSetDisplayContext
 
 	@Override
 	public List<DropdownItem> getActionItemsDropdownItems() {
-		return new DropdownItemList() {
-			{
-				add(
-					dropdownItem -> {
-						dropdownItem.putData("action", "deleteStructures");
-						dropdownItem.setIcon("times-circle");
-						dropdownItem.setLabel(
-							LanguageUtil.get(
-								formAdminRequestHelper.getRequest(), "delete"));
-						dropdownItem.setQuickAction(true);
-					});
+		return DropdownItemListBuilder.add(
+			dropdownItem -> {
+				dropdownItem.putData("action", "deleteStructures");
+				dropdownItem.setIcon("times-circle");
+				dropdownItem.setLabel(
+					LanguageUtil.get(
+						formAdminRequestHelper.getRequest(), "delete"));
+				dropdownItem.setQuickAction(true);
 			}
-		};
+		).build();
 	}
 
 	@Override
@@ -144,8 +143,8 @@ public class DDMFormAdminFieldSetDisplayContext
 			return null;
 		}
 
-		return new CreationMenu() {
-			{
+		return CreationMenuBuilder.addPrimaryDropdownItem(
+			dropdownItem -> {
 				HttpServletRequest httpServletRequest =
 					PortalUtil.getHttpServletRequest(renderRequest);
 
@@ -153,22 +152,16 @@ public class DDMFormAdminFieldSetDisplayContext
 					(ThemeDisplay)httpServletRequest.getAttribute(
 						WebKeys.THEME_DISPLAY);
 
-				addPrimaryDropdownItem(
-					dropdownItem -> {
-						dropdownItem.setHref(
-							renderResponse.createRenderURL(),
-							"mvcRenderCommandName", "/admin/edit_element_set",
-							"redirect",
-							PortalUtil.getCurrentURL(httpServletRequest),
-							"groupId",
-							String.valueOf(themeDisplay.getScopeGroupId()));
+				dropdownItem.setHref(
+					renderResponse.createRenderURL(), "mvcRenderCommandName",
+					"/admin/edit_element_set", "redirect",
+					PortalUtil.getCurrentURL(httpServletRequest), "groupId",
+					String.valueOf(themeDisplay.getScopeGroupId()));
 
-						dropdownItem.setLabel(
-							LanguageUtil.get(
-								httpServletRequest, "new-element-set"));
-					});
+				dropdownItem.setLabel(
+					LanguageUtil.get(httpServletRequest, "new-element-set"));
 			}
-		};
+		).build();
 	}
 
 	@Override
@@ -358,7 +351,9 @@ public class DDMFormAdminFieldSetDisplayContext
 	}
 
 	@Override
-	public String serializeSettingsForm() throws PortalException {
+	public String serializeSettingsForm(PageContext pageContext)
+		throws PortalException {
+
 		ThemeDisplay themeDisplay = (ThemeDisplay)renderRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
 
@@ -369,7 +364,7 @@ public class DDMFormAdminFieldSetDisplayContext
 
 		return ddmFormRenderer.render(
 			createSettingsDDMForm(0L, themeDisplay), ddmFormLayout,
-			createDDMFormRenderingContext(renderRequest, renderResponse));
+			createDDMFormRenderingContext(pageContext, renderRequest));
 	}
 
 	protected OrderByComparator<DDMStructure> getDDMStructureOrderByComparator(

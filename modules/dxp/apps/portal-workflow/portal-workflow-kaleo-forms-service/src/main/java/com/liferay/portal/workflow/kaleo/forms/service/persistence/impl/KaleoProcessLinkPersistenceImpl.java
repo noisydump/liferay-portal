@@ -201,43 +201,43 @@ public class KaleoProcessLinkPersistenceImpl
 		}
 
 		if (list == null) {
-			StringBundler query = null;
+			StringBundler sb = null;
 
 			if (orderByComparator != null) {
-				query = new StringBundler(
+				sb = new StringBundler(
 					3 + (orderByComparator.getOrderByFields().length * 2));
 			}
 			else {
-				query = new StringBundler(3);
+				sb = new StringBundler(3);
 			}
 
-			query.append(_SQL_SELECT_KALEOPROCESSLINK_WHERE);
+			sb.append(_SQL_SELECT_KALEOPROCESSLINK_WHERE);
 
-			query.append(_FINDER_COLUMN_KALEOPROCESSID_KALEOPROCESSID_2);
+			sb.append(_FINDER_COLUMN_KALEOPROCESSID_KALEOPROCESSID_2);
 
 			if (orderByComparator != null) {
 				appendOrderByComparator(
-					query, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
+					sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
 			}
 			else {
-				query.append(KaleoProcessLinkModelImpl.ORDER_BY_JPQL);
+				sb.append(KaleoProcessLinkModelImpl.ORDER_BY_JPQL);
 			}
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
-				qPos.add(kaleoProcessId);
+				queryPos.add(kaleoProcessId);
 
 				list = (List<KaleoProcessLink>)QueryUtil.list(
-					q, getDialect(), start, end);
+					query, getDialect(), start, end);
 
 				cacheResult(list);
 
@@ -281,16 +281,16 @@ public class KaleoProcessLinkPersistenceImpl
 			return kaleoProcessLink;
 		}
 
-		StringBundler msg = new StringBundler(4);
+		StringBundler sb = new StringBundler(4);
 
-		msg.append(_NO_SUCH_ENTITY_WITH_KEY);
+		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
 
-		msg.append("kaleoProcessId=");
-		msg.append(kaleoProcessId);
+		sb.append("kaleoProcessId=");
+		sb.append(kaleoProcessId);
 
-		msg.append("}");
+		sb.append("}");
 
-		throw new NoSuchKaleoProcessLinkException(msg.toString());
+		throw new NoSuchKaleoProcessLinkException(sb.toString());
 	}
 
 	/**
@@ -336,16 +336,16 @@ public class KaleoProcessLinkPersistenceImpl
 			return kaleoProcessLink;
 		}
 
-		StringBundler msg = new StringBundler(4);
+		StringBundler sb = new StringBundler(4);
 
-		msg.append(_NO_SUCH_ENTITY_WITH_KEY);
+		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
 
-		msg.append("kaleoProcessId=");
-		msg.append(kaleoProcessId);
+		sb.append("kaleoProcessId=");
+		sb.append(kaleoProcessId);
 
-		msg.append("}");
+		sb.append("}");
 
-		throw new NoSuchKaleoProcessLinkException(msg.toString());
+		throw new NoSuchKaleoProcessLinkException(sb.toString());
 	}
 
 	/**
@@ -426,102 +426,102 @@ public class KaleoProcessLinkPersistenceImpl
 		OrderByComparator<KaleoProcessLink> orderByComparator,
 		boolean previous) {
 
-		StringBundler query = null;
+		StringBundler sb = null;
 
 		if (orderByComparator != null) {
-			query = new StringBundler(
+			sb = new StringBundler(
 				4 + (orderByComparator.getOrderByConditionFields().length * 3) +
 					(orderByComparator.getOrderByFields().length * 3));
 		}
 		else {
-			query = new StringBundler(3);
+			sb = new StringBundler(3);
 		}
 
-		query.append(_SQL_SELECT_KALEOPROCESSLINK_WHERE);
+		sb.append(_SQL_SELECT_KALEOPROCESSLINK_WHERE);
 
-		query.append(_FINDER_COLUMN_KALEOPROCESSID_KALEOPROCESSID_2);
+		sb.append(_FINDER_COLUMN_KALEOPROCESSID_KALEOPROCESSID_2);
 
 		if (orderByComparator != null) {
 			String[] orderByConditionFields =
 				orderByComparator.getOrderByConditionFields();
 
 			if (orderByConditionFields.length > 0) {
-				query.append(WHERE_AND);
+				sb.append(WHERE_AND);
 			}
 
 			for (int i = 0; i < orderByConditionFields.length; i++) {
-				query.append(_ORDER_BY_ENTITY_ALIAS);
-				query.append(orderByConditionFields[i]);
+				sb.append(_ORDER_BY_ENTITY_ALIAS);
+				sb.append(orderByConditionFields[i]);
 
 				if ((i + 1) < orderByConditionFields.length) {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(WHERE_GREATER_THAN_HAS_NEXT);
+						sb.append(WHERE_GREATER_THAN_HAS_NEXT);
 					}
 					else {
-						query.append(WHERE_LESSER_THAN_HAS_NEXT);
+						sb.append(WHERE_LESSER_THAN_HAS_NEXT);
 					}
 				}
 				else {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(WHERE_GREATER_THAN);
+						sb.append(WHERE_GREATER_THAN);
 					}
 					else {
-						query.append(WHERE_LESSER_THAN);
+						sb.append(WHERE_LESSER_THAN);
 					}
 				}
 			}
 
-			query.append(ORDER_BY_CLAUSE);
+			sb.append(ORDER_BY_CLAUSE);
 
 			String[] orderByFields = orderByComparator.getOrderByFields();
 
 			for (int i = 0; i < orderByFields.length; i++) {
-				query.append(_ORDER_BY_ENTITY_ALIAS);
-				query.append(orderByFields[i]);
+				sb.append(_ORDER_BY_ENTITY_ALIAS);
+				sb.append(orderByFields[i]);
 
 				if ((i + 1) < orderByFields.length) {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(ORDER_BY_ASC_HAS_NEXT);
+						sb.append(ORDER_BY_ASC_HAS_NEXT);
 					}
 					else {
-						query.append(ORDER_BY_DESC_HAS_NEXT);
+						sb.append(ORDER_BY_DESC_HAS_NEXT);
 					}
 				}
 				else {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(ORDER_BY_ASC);
+						sb.append(ORDER_BY_ASC);
 					}
 					else {
-						query.append(ORDER_BY_DESC);
+						sb.append(ORDER_BY_DESC);
 					}
 				}
 			}
 		}
 		else {
-			query.append(KaleoProcessLinkModelImpl.ORDER_BY_JPQL);
+			sb.append(KaleoProcessLinkModelImpl.ORDER_BY_JPQL);
 		}
 
-		String sql = query.toString();
+		String sql = sb.toString();
 
-		Query q = session.createQuery(sql);
+		Query query = session.createQuery(sql);
 
-		q.setFirstResult(0);
-		q.setMaxResults(2);
+		query.setFirstResult(0);
+		query.setMaxResults(2);
 
-		QueryPos qPos = QueryPos.getInstance(q);
+		QueryPos queryPos = QueryPos.getInstance(query);
 
-		qPos.add(kaleoProcessId);
+		queryPos.add(kaleoProcessId);
 
 		if (orderByComparator != null) {
 			for (Object orderByConditionValue :
 					orderByComparator.getOrderByConditionValues(
 						kaleoProcessLink)) {
 
-				qPos.add(orderByConditionValue);
+				queryPos.add(orderByConditionValue);
 			}
 		}
 
-		List<KaleoProcessLink> list = q.list();
+		List<KaleoProcessLink> list = query.list();
 
 		if (list.size() == 2) {
 			return list.get(1);
@@ -562,26 +562,26 @@ public class KaleoProcessLinkPersistenceImpl
 		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
 
 		if (count == null) {
-			StringBundler query = new StringBundler(2);
+			StringBundler sb = new StringBundler(2);
 
-			query.append(_SQL_COUNT_KALEOPROCESSLINK_WHERE);
+			sb.append(_SQL_COUNT_KALEOPROCESSLINK_WHERE);
 
-			query.append(_FINDER_COLUMN_KALEOPROCESSID_KALEOPROCESSID_2);
+			sb.append(_FINDER_COLUMN_KALEOPROCESSID_KALEOPROCESSID_2);
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
-				qPos.add(kaleoProcessId);
+				queryPos.add(kaleoProcessId);
 
-				count = (Long)q.uniqueResult();
+				count = (Long)query.uniqueResult();
 
 				finderCache.putResult(finderPath, finderArgs, count);
 			}
@@ -621,23 +621,23 @@ public class KaleoProcessLinkPersistenceImpl
 			kaleoProcessId, workflowTaskName);
 
 		if (kaleoProcessLink == null) {
-			StringBundler msg = new StringBundler(6);
+			StringBundler sb = new StringBundler(6);
 
-			msg.append(_NO_SUCH_ENTITY_WITH_KEY);
+			sb.append(_NO_SUCH_ENTITY_WITH_KEY);
 
-			msg.append("kaleoProcessId=");
-			msg.append(kaleoProcessId);
+			sb.append("kaleoProcessId=");
+			sb.append(kaleoProcessId);
 
-			msg.append(", workflowTaskName=");
-			msg.append(workflowTaskName);
+			sb.append(", workflowTaskName=");
+			sb.append(workflowTaskName);
 
-			msg.append("}");
+			sb.append("}");
 
 			if (_log.isDebugEnabled()) {
-				_log.debug(msg.toString());
+				_log.debug(sb.toString());
 			}
 
-			throw new NoSuchKaleoProcessLinkException(msg.toString());
+			throw new NoSuchKaleoProcessLinkException(sb.toString());
 		}
 
 		return kaleoProcessLink;
@@ -696,41 +696,41 @@ public class KaleoProcessLinkPersistenceImpl
 		}
 
 		if (result == null) {
-			StringBundler query = new StringBundler(4);
+			StringBundler sb = new StringBundler(4);
 
-			query.append(_SQL_SELECT_KALEOPROCESSLINK_WHERE);
+			sb.append(_SQL_SELECT_KALEOPROCESSLINK_WHERE);
 
-			query.append(_FINDER_COLUMN_KPI_WTN_KALEOPROCESSID_2);
+			sb.append(_FINDER_COLUMN_KPI_WTN_KALEOPROCESSID_2);
 
 			boolean bindWorkflowTaskName = false;
 
 			if (workflowTaskName.isEmpty()) {
-				query.append(_FINDER_COLUMN_KPI_WTN_WORKFLOWTASKNAME_3);
+				sb.append(_FINDER_COLUMN_KPI_WTN_WORKFLOWTASKNAME_3);
 			}
 			else {
 				bindWorkflowTaskName = true;
 
-				query.append(_FINDER_COLUMN_KPI_WTN_WORKFLOWTASKNAME_2);
+				sb.append(_FINDER_COLUMN_KPI_WTN_WORKFLOWTASKNAME_2);
 			}
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
-				qPos.add(kaleoProcessId);
+				queryPos.add(kaleoProcessId);
 
 				if (bindWorkflowTaskName) {
-					qPos.add(workflowTaskName);
+					queryPos.add(workflowTaskName);
 				}
 
-				List<KaleoProcessLink> list = q.list();
+				List<KaleoProcessLink> list = query.list();
 
 				if (list.isEmpty()) {
 					if (useFinderCache) {
@@ -803,41 +803,41 @@ public class KaleoProcessLinkPersistenceImpl
 		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
 
 		if (count == null) {
-			StringBundler query = new StringBundler(3);
+			StringBundler sb = new StringBundler(3);
 
-			query.append(_SQL_COUNT_KALEOPROCESSLINK_WHERE);
+			sb.append(_SQL_COUNT_KALEOPROCESSLINK_WHERE);
 
-			query.append(_FINDER_COLUMN_KPI_WTN_KALEOPROCESSID_2);
+			sb.append(_FINDER_COLUMN_KPI_WTN_KALEOPROCESSID_2);
 
 			boolean bindWorkflowTaskName = false;
 
 			if (workflowTaskName.isEmpty()) {
-				query.append(_FINDER_COLUMN_KPI_WTN_WORKFLOWTASKNAME_3);
+				sb.append(_FINDER_COLUMN_KPI_WTN_WORKFLOWTASKNAME_3);
 			}
 			else {
 				bindWorkflowTaskName = true;
 
-				query.append(_FINDER_COLUMN_KPI_WTN_WORKFLOWTASKNAME_2);
+				sb.append(_FINDER_COLUMN_KPI_WTN_WORKFLOWTASKNAME_2);
 			}
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
-				qPos.add(kaleoProcessId);
+				queryPos.add(kaleoProcessId);
 
 				if (bindWorkflowTaskName) {
-					qPos.add(workflowTaskName);
+					queryPos.add(workflowTaskName);
 				}
 
-				count = (Long)q.uniqueResult();
+				count = (Long)query.uniqueResult();
 
 				finderCache.putResult(finderPath, finderArgs, count);
 			}
@@ -1360,19 +1360,19 @@ public class KaleoProcessLinkPersistenceImpl
 		}
 
 		if (list == null) {
-			StringBundler query = null;
+			StringBundler sb = null;
 			String sql = null;
 
 			if (orderByComparator != null) {
-				query = new StringBundler(
+				sb = new StringBundler(
 					2 + (orderByComparator.getOrderByFields().length * 2));
 
-				query.append(_SQL_SELECT_KALEOPROCESSLINK);
+				sb.append(_SQL_SELECT_KALEOPROCESSLINK);
 
 				appendOrderByComparator(
-					query, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
+					sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
 
-				sql = query.toString();
+				sql = sb.toString();
 			}
 			else {
 				sql = _SQL_SELECT_KALEOPROCESSLINK;
@@ -1385,10 +1385,10 @@ public class KaleoProcessLinkPersistenceImpl
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
 				list = (List<KaleoProcessLink>)QueryUtil.list(
-					q, getDialect(), start, end);
+					query, getDialect(), start, end);
 
 				cacheResult(list);
 
@@ -1438,9 +1438,9 @@ public class KaleoProcessLinkPersistenceImpl
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(_SQL_COUNT_KALEOPROCESSLINK);
+				Query query = session.createQuery(_SQL_COUNT_KALEOPROCESSLINK);
 
-				count = (Long)q.uniqueResult();
+				count = (Long)query.uniqueResult();
 
 				finderCache.putResult(
 					_finderPathCountAll, FINDER_ARGS_EMPTY, count);

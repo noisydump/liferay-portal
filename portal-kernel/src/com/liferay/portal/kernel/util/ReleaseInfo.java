@@ -14,6 +14,7 @@
 
 package com.liferay.portal.kernel.util;
 
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 
 import java.text.DateFormat;
@@ -58,6 +59,10 @@ public class ReleaseInfo {
 	public static final int RELEASE_7_2_10_BUILD_NUMBER = 7210;
 
 	public static final int RELEASE_7_3_0_BUILD_NUMBER = 7300;
+
+	public static final int RELEASE_7_3_1_BUILD_NUMBER = 7301;
+
+	public static final int RELEASE_7_3_2_BUILD_NUMBER = 7302;
 
 	public static final int RELEASE_7_3_10_BUILD_NUMBER = 7310;
 

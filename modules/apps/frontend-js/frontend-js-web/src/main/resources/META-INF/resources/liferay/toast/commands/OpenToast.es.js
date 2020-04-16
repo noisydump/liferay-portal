@@ -20,7 +20,7 @@ import {unmountComponentAtNode} from 'react-dom';
 const DEFAULT_ALERT_CONTAINER_ID = 'alertContainer';
 
 const DEFAULT_RENDER_DATA = {
-	portletId: 'UNKNOWN_PORTLET_ID'
+	portletId: 'UNKNOWN_PORTLET_ID',
 };
 
 const TOAST_AUTO_CLOSE_INTERVAL = 5000;
@@ -35,23 +35,6 @@ const getDefaultAlertContainer = () => {
 	}
 
 	return container;
-};
-
-const Toast = ({displayType, message, onClose, title, toastProps, variant}) => {
-	return (
-		<ClayAlert.ToastContainer>
-			<ClayAlert
-				autoClose={TOAST_AUTO_CLOSE_INTERVAL}
-				displayType={displayType}
-				onClose={onClose}
-				title={title}
-				variant={variant}
-				{...toastProps}
-			>
-				{message}
-			</ClayAlert>
-		</ClayAlert.ToastContainer>
-	);
 };
 
 /**
@@ -73,7 +56,7 @@ function openToast({
 	title = Liferay.Language.get('success'),
 	toastProps = {},
 	type = 'success',
-	variant
+	variant,
 }) {
 	const container =
 		document.getElementById(containerId) || getDefaultAlertContainer();
@@ -82,18 +65,22 @@ function openToast({
 
 	const onClose = () => unmountComponentAtNode(container);
 
-	const ToastComponent = () => (
-		<Toast
-			displayType={type}
-			message={message}
-			onClose={onClose}
-			title={title}
-			toastProps={toastProps}
-			variant={variant}
-		/>
+	render(
+		<ClayAlert.ToastContainer>
+			<ClayAlert
+				autoClose={TOAST_AUTO_CLOSE_INTERVAL}
+				displayType={type}
+				onClose={onClose}
+				title={title}
+				variant={variant}
+				{...toastProps}
+			>
+				{message}
+			</ClayAlert>
+		</ClayAlert.ToastContainer>,
+		renderData,
+		container
 	);
-
-	render(ToastComponent, renderData, container);
 }
 
 export {openToast};

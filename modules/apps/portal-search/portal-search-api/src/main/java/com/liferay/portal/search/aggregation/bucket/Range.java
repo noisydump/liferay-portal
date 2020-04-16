@@ -37,32 +37,36 @@ public class Range {
 
 	public Range(Double from, Double to) {
 		_from = from;
-		_fromAsString = null;
 		_to = to;
+
+		_fromAsString = null;
 		_toAsString = null;
 	}
 
 	public Range(String key, Double from, Double to) {
 		_key = key;
 		_from = from;
-		_fromAsString = null;
 		_to = to;
+
+		_fromAsString = null;
 		_toAsString = null;
 	}
 
-	public Range(String from, String to) {
+	public Range(String fromAsString, String toAsString) {
+		_fromAsString = fromAsString;
+		_toAsString = toAsString;
+
 		_from = null;
-		_fromAsString = from;
 		_to = null;
-		_toAsString = to;
 	}
 
-	public Range(String key, String from, String to) {
+	public Range(String key, String fromAsString, String toAsString) {
 		_key = key;
+		_fromAsString = fromAsString;
+		_toAsString = toAsString;
+
 		_from = null;
-		_fromAsString = from;
 		_to = null;
-		_toAsString = to;
 	}
 
 	public Double getFrom() {

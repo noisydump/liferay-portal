@@ -16,6 +16,7 @@ package com.liferay.portal.workflow.web.internal.display.context;
 
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemList;
+import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemListBuilder;
 import com.liferay.petra.function.UnsafeConsumer;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
@@ -160,34 +161,22 @@ public class WorkflowDefinitionLinkDisplayContext {
 	public DropdownItemList getFilterOptions(
 		HttpServletRequest httpServletRequest) {
 
-		return new DropdownItemList() {
-			{
-				addGroup(
-					dropdownGroupItem -> {
-						dropdownGroupItem.setDropdownItems(
-							new DropdownItemList() {
-								{
-									add(
-										_getOrderByDropdownItem(
-											"resource",
-											_getCurrentOrder(
-												httpServletRequest)));
-
-									add(
-										_getOrderByDropdownItem(
-											"workflow",
-											_getCurrentOrder(
-												httpServletRequest)));
-								}
-							});
-						dropdownGroupItem.setLabel(
-							LanguageUtil.get(
-								_workflowDefinitionLinkRequestHelper.
-									getRequest(),
-								"order-by"));
-					});
+		return DropdownItemListBuilder.addGroup(
+			dropdownGroupItem -> {
+				dropdownGroupItem.setDropdownItems(
+					DropdownItemListBuilder.add(
+						_getOrderByDropdownItem(
+							"resource", _getCurrentOrder(httpServletRequest))
+					).add(
+						_getOrderByDropdownItem(
+							"workflow", _getCurrentOrder(httpServletRequest))
+					).build());
+				dropdownGroupItem.setLabel(
+					LanguageUtil.get(
+						_workflowDefinitionLinkRequestHelper.getRequest(),
+						"order-by"));
 			}
-		};
+		).build();
 	}
 
 	public long getGroupId() {
@@ -452,12 +441,6 @@ public class WorkflowDefinitionLinkDisplayContext {
 		}
 
 		return false;
-	}
-
-	public boolean isDisabledManagementBar() throws PortalException {
-		SearchContainer searchContainer = getSearchContainer();
-
-		return !searchContainer.hasResults();
 	}
 
 	public boolean isWorkflowDefinitionEquals(

@@ -72,13 +72,15 @@ public interface KaleoInstanceLocalService
 	@Indexable(type = IndexableType.REINDEX)
 	public KaleoInstance addKaleoInstance(KaleoInstance kaleoInstance);
 
+	@Indexable(type = IndexableType.REINDEX)
 	public KaleoInstance addKaleoInstance(
-			long kaleoDefinitionVersionId, String kaleoDefinitionName,
-			int kaleoDefinitionVersion,
+			long kaleoDefinitionId, long kaleoDefinitionVersionId,
+			String kaleoDefinitionName, int kaleoDefinitionVersion,
 			Map<String, Serializable> workflowContext,
 			ServiceContext serviceContext)
 		throws PortalException;
 
+	@Indexable(type = IndexableType.REINDEX)
 	public KaleoInstance completeKaleoInstance(long kaleoInstanceId)
 		throws PortalException;
 
@@ -90,6 +92,12 @@ public interface KaleoInstanceLocalService
 	 */
 	@Transactional(enabled = false)
 	public KaleoInstance createKaleoInstance(long kaleoInstanceId);
+
+	/**
+	 * @throws PortalException
+	 */
+	public PersistedModel createPersistedModel(Serializable primaryKeyObj)
+		throws PortalException;
 
 	public void deleteCompanyKaleoInstances(long companyId);
 
@@ -277,6 +285,9 @@ public interface KaleoInstanceLocalService
 	 */
 	public String getOSGiServiceIdentifier();
 
+	/**
+	 * @throws PortalException
+	 */
 	@Override
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public PersistedModel getPersistedModel(Serializable primaryKeyObj)
@@ -330,10 +341,12 @@ public interface KaleoInstanceLocalService
 	@Indexable(type = IndexableType.REINDEX)
 	public KaleoInstance updateKaleoInstance(KaleoInstance kaleoInstance);
 
+	@Indexable(type = IndexableType.REINDEX)
 	public KaleoInstance updateKaleoInstance(
 			long kaleoInstanceId, long rootKaleoInstanceTokenId)
 		throws PortalException;
 
+	@Indexable(type = IndexableType.REINDEX)
 	public KaleoInstance updateKaleoInstance(
 			long kaleoInstanceId, Map<String, Serializable> workflowContext,
 			ServiceContext serviceContext)

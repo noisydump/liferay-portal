@@ -12,6 +12,7 @@
  * details.
  */
 
+import ClayButton from '@clayui/button';
 import ClayIcon from '@clayui/icon';
 import React from 'react';
 
@@ -30,9 +31,12 @@ export default ({onSubscription, question}) => {
 	};
 
 	return (
-		<ClayIcon
+		<ClayButton
+			displayType={question.subscribed ? 'primary' : 'secondary'}
+			monospaced
 			onClick={changeSubscription}
-			symbol={question.subscribed ? 'bell-off' : 'bell-on'}
-		/>
+		>
+			<ClayIcon symbol="bell-on" />
+		</ClayButton>
 	);
 };

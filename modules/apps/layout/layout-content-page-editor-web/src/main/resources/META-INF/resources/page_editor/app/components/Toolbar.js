@@ -14,7 +14,7 @@
 
 import ClayButton from '@clayui/button';
 import {useIsMounted} from 'frontend-js-react-web';
-import React from 'react';
+import React, {useEffect, useState} from 'react';
 import ReactDOM from 'react-dom';
 
 import useLazy from '../../core/hooks/useLazy';
@@ -22,18 +22,17 @@ import useLoad from '../../core/hooks/useLoad';
 import usePlugins from '../../core/hooks/usePlugins';
 import * as Actions from '../actions/index';
 import {PAGE_TYPES} from '../config/constants/pageTypes';
-import {ConfigContext} from '../config/index';
-import {useSelector, useDispatch} from '../store/index';
+import {config} from '../config/index';
+import {useDispatch, useSelector} from '../store/index';
 import {useSelectItem} from './Controls';
 import ExperimentsLabel from './ExperimentsLabel';
 import NetworkStatusBar from './NetworkStatusBar';
 import Translation from './Translation';
 import UnsafeHTML from './UnsafeHTML';
 
-const {Suspense, useCallback, useContext, useRef} = React;
+const {Suspense, useCallback, useRef} = React;
 
 function ToolbarBody() {
-	const config = useContext(ConfigContext);
 	const dispatch = useDispatch();
 	const {getInstance, register} = usePlugins();
 	const isMounted = useIsMounted();
@@ -41,25 +40,24 @@ function ToolbarBody() {
 	const selectItem = useSelectItem();
 	const store = useSelector(state => state);
 
-	const {masterUsed, portletNamespace} = config;
-	const {segmentsExperienceId, segmentsExperimentStatus} = store;
-
-	const {draft} = store;
-
 	const {
-		classPK,
-		discardDraftRedirectURL,
-		discardDraftURL,
-		pageType,
-		publishURL,
-		redirectURL,
-		singleSegmentsExperienceMode,
-		toolbarPlugins
-	} = config;
+		layoutData,
+		network,
+		segmentsExperienceId,
+		segmentsExperimentStatus,
+	} = store;
+
+	const [enableDiscard, setEnableDiscard] = useState(false);
+
+	useEffect(() => {
+		const isConversionPage = config.pageType === PAGE_TYPES.conversion;
+
+		setEnableDiscard(network.lastFetch || config.draft || isConversionPage);
+	}, [layoutData, network.lastFetch]);
 
 	const loading = useRef(() => {
 		Promise.all(
-			toolbarPlugins.map(toolbarPlugin => {
+			config.toolbarPlugins.map(toolbarPlugin => {
 				const {pluginEntryPoint} = toolbarPlugin;
 				const promise = load(pluginEntryPoint, pluginEntryPoint);
 
@@ -67,18 +65,19 @@ function ToolbarBody() {
 					Actions,
 					config,
 					dispatch,
-					store
+					store,
 				};
 
 				return register(pluginEntryPoint, promise, {
 					app,
-					toolbarPlugin
+					toolbarPlugin,
 				}).then(plugin => {
 					if (!plugin) {
 						throw new Error(
 							`Failed to get instance from ${pluginEntryPoint}`
 						);
-					} else if (isMounted()) {
+					}
+					else if (isMounted()) {
 						if (typeof plugin.activate === 'function') {
 							plugin.activate();
 						}
@@ -102,7 +101,8 @@ function ToolbarBody() {
 		useCallback(({instance}) => {
 			if (typeof instance.renderToolbarSection === 'function') {
 				return instance.renderToolbarSection();
-			} else {
+			}
+			else {
 				return null;
 			}
 		}, [])
@@ -122,7 +122,7 @@ function ToolbarBody() {
 
 	const handleSubmit = event => {
 		if (
-			masterUsed &&
+			config.masterUsed &&
 			!confirm(
 				Liferay.Language.get(
 					'changes-made-on-this-master-are-going-to-be-propagated-to-all-page-templates,-display-page-templates,-and-pages-using-it.are-you-sure-you-want-to-proceed'
@@ -139,7 +139,26 @@ function ToolbarBody() {
 		}
 	};
 
-	const isMasterLayout = pageType === PAGE_TYPES.master;
+	let draftButtonLabel = Liferay.Language.get('discard-draft');
+
+	if (config.pageType === PAGE_TYPES.conversion) {
+		draftButtonLabel = Liferay.Language.get('discard-conversion-draft');
+	}
+	else if (config.singleSegmentsExperienceMode) {
+		draftButtonLabel = Liferay.Language.get('discard-variant');
+	}
+
+	let publishButtonLabel = Liferay.Language.get('publish');
+
+	if (config.pageType === PAGE_TYPES.master) {
+		publishButtonLabel = Liferay.Language.get('publish-master');
+	}
+	else if (config.singleSegmentsExperienceMode) {
+		publishButtonLabel = Liferay.Language.get('save-variant');
+	}
+	else if (config.workflowEnabled) {
+		publishButtonLabel = Liferay.Language.get('submit-for-publication');
+	}
 
 	return (
 		<div
@@ -147,7 +166,7 @@ function ToolbarBody() {
 			onClick={deselectItem}
 		>
 			<ul className="navbar-nav" onClick={deselectItem}>
-				{toolbarPlugins.map(
+				{config.toolbarPlugins.map(
 					({loadingPlaceholder, pluginEntryPoint}) => {
 						return (
 							<li className="nav-item" key={pluginEntryPoint}>
@@ -179,71 +198,55 @@ function ToolbarBody() {
 						segmentsExperienceId={segmentsExperienceId}
 					/>
 				</li>
-				{!singleSegmentsExperienceMode && segmentsExperimentStatus && (
-					<li className="nav-item pl-2">
-						<ExperimentsLabel
-							label={segmentsExperimentStatus.label}
-							value={segmentsExperimentStatus.value}
-						/>
-					</li>
-				)}
+				{!config.singleSegmentsExperienceMode &&
+					segmentsExperimentStatus && (
+						<li className="nav-item pl-2">
+							<ExperimentsLabel
+								label={segmentsExperimentStatus.label}
+								value={segmentsExperimentStatus.value}
+							/>
+						</li>
+					)}
 			</ul>
 
 			<ul className="navbar-nav" onClick={deselectItem}>
-				<NetworkStatusBar {...store.network} />
+				<NetworkStatusBar {...network} />
 				<li className="nav-item">
-					<form action={discardDraftURL} method="POST">
+					<form action={config.discardDraftURL} method="POST">
 						<input
-							name={`${portletNamespace}classPK`}
+							name={`${config.portletNamespace}redirect`}
 							type="hidden"
-							value={classPK ? classPK : ''}
-						/>
-
-						<input
-							name={`${portletNamespace}redirect`}
-							type="hidden"
-							value={discardDraftRedirectURL}
+							value={config.discardDraftRedirectURL}
 						/>
 
 						<ClayButton
 							className="btn btn-secondary mr-3"
-							disabled={!draft}
+							disabled={!enableDiscard}
 							displayType="secondary"
 							onClick={handleDiscardDraft}
 							small
 							type="submit"
 						>
-							{singleSegmentsExperienceMode
-								? Liferay.Language.get('discard-variant')
-								: Liferay.Language.get('discard-draft')}
+							{draftButtonLabel}
 						</ClayButton>
 					</form>
 				</li>
 				<li className="nav-item">
-					<form action={publishURL} method="POST">
+					<form action={config.publishURL} method="POST">
 						<input
-							name={`${portletNamespace}classPK`}
+							name={`${config.portletNamespace}redirect`}
 							type="hidden"
-							value={classPK}
-						/>
-
-						<input
-							name={`${portletNamespace}redirect`}
-							type="hidden"
-							value={redirectURL}
+							value={config.redirectURL}
 						/>
 
 						<ClayButton
+							disabled={config.pending}
 							displayType="primary"
 							onClick={handleSubmit}
 							small
 							type="submit"
 						>
-							{isMasterLayout
-								? Liferay.Language.get('publish-master')
-								: singleSegmentsExperienceMode
-								? Liferay.Language.get('save-variant')
-								: Liferay.Language.get('publish')}
+							{publishButtonLabel}
 						</ClayButton>
 					</form>
 				</li>
@@ -272,17 +275,16 @@ class ErrorBoundary extends React.Component {
 	render() {
 		if (this.state.hasError) {
 			return null;
-		} else {
+		}
+		else {
 			return this.props.children;
 		}
 	}
 }
 
 export default function Toolbar() {
+	const container = document.getElementById(config.toolbarId);
 	const isMounted = useIsMounted();
-	const {toolbarId} = useContext(ConfigContext);
-
-	const container = document.getElementById(toolbarId);
 
 	if (!isMounted()) {
 		// First time here, must empty JSP-rendered markup from container.

@@ -14,9 +14,8 @@
 
 import {openToast} from 'frontend-js-web';
 import PropTypes from 'prop-types';
-import React, {useState, useContext} from 'react';
+import React, {useState} from 'react';
 
-import {ConfigContext} from '../../../app/config/index';
 import {useDispatch} from '../../../app/store/index';
 import editFragmentComment from '../../../app/thunks/editFragmentComment';
 import CommentForm from './CommentForm';
@@ -24,11 +23,10 @@ import CommentForm from './CommentForm';
 export default function EditCommentForm({
 	comment,
 	fragmentEntryLinkId,
-	onCloseForm
+	onCloseForm,
 }) {
 	const [editingComment, setEditingComment] = useState(false);
 	const [textareaContent, setTextareaContent] = useState(comment.body);
-	const config = useContext(ConfigContext);
 	const dispatch = useDispatch();
 
 	const _handleCommentButtonClick = () => {
@@ -38,9 +36,8 @@ export default function EditCommentForm({
 			editFragmentComment({
 				body: textareaContent,
 				commentId: comment.commentId,
-				config,
 				fragmentEntryLinkId,
-				parentCommentId: comment.parentCommentId
+				parentCommentId: comment.parentCommentId,
 			})
 		)
 			.then(() => {
@@ -54,7 +51,7 @@ export default function EditCommentForm({
 						'the-comment-could-not-be-edited'
 					),
 					title: Liferay.Language.get('error'),
-					type: 'danger'
+					type: 'danger',
 				});
 
 				setEditingComment(false);
@@ -79,7 +76,7 @@ export default function EditCommentForm({
 EditCommentForm.propTypes = {
 	comment: PropTypes.shape({
 		body: PropTypes.string.isRequired,
-		commentId: PropTypes.string.isRequired
+		commentId: PropTypes.string.isRequired,
 	}),
-	onCloseForm: PropTypes.func.isRequired
+	onCloseForm: PropTypes.func.isRequired,
 };

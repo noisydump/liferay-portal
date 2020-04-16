@@ -22,7 +22,7 @@ import {
 	move,
 	removeIdFromList,
 	resultsDataToMap,
-	updateDataMap
+	updateDataMap,
 } from '../utils/util.es';
 import PageToolbar from './PageToolbar.es';
 import Alias from './alias/Alias.es';
@@ -43,12 +43,13 @@ class ResultRankingsForm extends Component {
 		formName: PropTypes.string.isRequired,
 		initialAliases: PropTypes.arrayOf(String),
 		initialInactive: PropTypes.bool,
+		resultsRankingUid: PropTypes.string,
 		searchQuery: PropTypes.string.isRequired,
-		validateFormUrl: PropTypes.string.isRequired
+		validateFormUrl: PropTypes.string.isRequired,
 	};
 
 	static defaultProps = {
-		initialAliases: []
+		initialAliases: [],
 	};
 
 	state = {
@@ -72,8 +73,8 @@ class ResultRankingsForm extends Component {
 		dataLoadIndex: {
 			pinned: {
 				end: 0,
-				start: 0
-			}
+				start: 0,
+			},
 		},
 
 		/**
@@ -168,7 +169,7 @@ class ResultRankingsForm extends Component {
 		 * Determines if the form submission is save as draft or publish.
 		 * @type {string}
 		 */
-		workflowAction: ''
+		workflowAction: '',
 	};
 
 	constructor(props) {
@@ -220,7 +221,7 @@ class ResultRankingsForm extends Component {
 	 */
 	_handleActive = () => {
 		this.setState(state => ({
-			inactive: !state.inactive
+			inactive: !state.inactive,
 		}));
 	};
 
@@ -234,12 +235,12 @@ class ResultRankingsForm extends Component {
 		this.setState(state => ({
 			dataMap: updateDataMap(state.dataMap, ids, {
 				hidden: false,
-				pinned: pin
+				pinned: pin,
 			}),
 			resultIdsHidden: removeIdFromList(state.resultIdsHidden, ids),
 			resultIdsPinned: pin
 				? [...state.resultIdsPinned, ...ids]
-				: removeIdFromList(state.resultIdsPinned, ids)
+				: removeIdFromList(state.resultIdsPinned, ids),
 		}));
 	};
 
@@ -254,14 +255,14 @@ class ResultRankingsForm extends Component {
 		this.setState(state => ({
 			dataMap: updateDataMap(state.dataMap, ids, {
 				hidden: hide,
-				pinned: false
+				pinned: false,
 			}),
 			resultIdsHidden: hide
 				? [...ids, ...state.resultIdsHidden]
 				: removeIdFromList(state.resultIdsHidden, ids),
 			resultIdsPinned: hide
 				? removeIdFromList(state.resultIdsPinned, ids)
-				: state.resultIdsPinned
+				: state.resultIdsPinned,
 		}));
 	};
 
@@ -272,7 +273,7 @@ class ResultRankingsForm extends Component {
 	_handleFetchResultsDataVisible = () => {
 		this.setState({
 			dataLoadingVisible: true,
-			displayError: false
+			displayError: false,
 		});
 
 		const {companyId, namespace} = this.context;
@@ -281,7 +282,7 @@ class ResultRankingsForm extends Component {
 			[`${namespace}companyId`]: companyId,
 			[`${namespace}from`]: DELTA * this.state.visibleCur,
 			[`${namespace}keywords`]: this.props.searchQuery,
-			[`${namespace}size`]: DELTA
+			[`${namespace}size`]: DELTA,
 		})
 			.then(({items, total}) => {
 				const fetchedItems = items || {};
@@ -306,7 +307,7 @@ class ResultRankingsForm extends Component {
 				// end index of pinned results.
 				this._initialResultIdsPinned = [
 					...this._initialResultIdsPinned,
-					...newPinnedIds
+					...newPinnedIds,
 				];
 
 				this.setState(
@@ -323,18 +324,18 @@ class ResultRankingsForm extends Component {
 								state.dataMap,
 								existingFetchedIds,
 								{
-									addedResult: false
+									addedResult: false,
 								}
 							),
-							...resultsDataToMap(newItems)
+							...resultsDataToMap(newItems),
 						},
 						resultIds: [...state.resultIds, ...newIds],
 						resultIdsPinned: [
 							...state.resultIdsPinned,
-							...newPinnedIds
+							...newPinnedIds,
 						],
 						totalResultsVisibleCount: total,
-						visibleCur: state.visibleCur + 1
+						visibleCur: state.visibleCur + 1,
 					}),
 					() => {
 						this._updateDataLoadIndex(
@@ -355,7 +356,7 @@ class ResultRankingsForm extends Component {
 
 					this.setState({
 						dataLoadingVisible: false,
-						displayError: true
+						displayError: true,
 					});
 				}, 1000);
 			});
@@ -368,7 +369,7 @@ class ResultRankingsForm extends Component {
 	_handleFetchResultsDataHidden = () => {
 		this.setState({
 			dataLoadingHidden: true,
-			displayError: false
+			displayError: false,
 		});
 
 		const {companyId, namespace} = this.context;
@@ -377,7 +378,7 @@ class ResultRankingsForm extends Component {
 			[`${namespace}companyId`]: companyId,
 			[`${namespace}from`]: DELTA * this.state.hiddenCur,
 			[`${namespace}keywords`]: this.props.searchQuery,
-			[`${namespace}size`]: DELTA
+			[`${namespace}size`]: DELTA,
 		})
 			.then(({items, total}) => {
 				const fetchedItems = items || {};
@@ -400,7 +401,7 @@ class ResultRankingsForm extends Component {
 				// for addedResults and for all added/removed hidden/pinned
 				this._initialResultIdsHidden = [
 					...this._initialResultIdsHidden,
-					...newIds
+					...newIds,
 				];
 
 				this.setState(state => ({
@@ -413,14 +414,14 @@ class ResultRankingsForm extends Component {
 						// un-hiding added results removes it from results
 						// list entirely.
 						...updateDataMap(state.dataMap, existingFetchedIds, {
-							addedResult: false
+							addedResult: false,
 						}),
-						...resultsDataToMap(newItems)
+						...resultsDataToMap(newItems),
 					},
 					hiddenCur: state.hiddenCur + 1,
 					resultIds: [...state.resultIds, ...newIds],
 					resultIdsHidden: [...state.resultIdsHidden, ...newIds],
-					totalResultsHiddenCount: total
+					totalResultsHiddenCount: total,
 				}));
 			})
 			.catch(error => {
@@ -434,7 +435,7 @@ class ResultRankingsForm extends Component {
 
 					this.setState({
 						dataLoadingHidden: false,
-						displayError: true
+						displayError: true,
 					});
 				}, 1000);
 			});
@@ -448,7 +449,11 @@ class ResultRankingsForm extends Component {
 	_handleMove = (fromIndex, toIndex) => {
 		if (!isNil(fromIndex) && !isNil(toIndex) && fromIndex !== toIndex) {
 			this.setState(state => ({
-				resultIdsPinned: move(state.resultIdsPinned, fromIndex, toIndex)
+				resultIdsPinned: move(
+					state.resultIdsPinned,
+					fromIndex,
+					toIndex
+				),
 			}));
 		}
 	};
@@ -458,26 +463,28 @@ class ResultRankingsForm extends Component {
 	 * submits the form.
 	 */
 	_handlePublish = () => {
-		const {indexName, namespace, resultsRankingUid} = this.context;
+		const {namespace} = this.context;
 
 		fetchResponse(this.props.validateFormUrl, {
-			[`${namespace}index`]: indexName,
 			[`${namespace}aliases`]: this.state.aliases,
-			[`${namespace}resultsRankingUid`]: resultsRankingUid
+			[`${namespace}inactive`]: this.state.inactive,
+			[`${namespace}keywords`]: this.props.searchQuery,
+			[`${namespace}resultsRankingUid`]: this.props.resultsRankingUid,
 		}).then(response => {
 			if (response.errors.length) {
 				response.errors.forEach(message => {
 					Liferay.Util.openToast({
 						message,
 						title: Liferay.Language.get('error'),
-						type: 'danger'
+						type: 'danger',
 					});
 				});
-			} else {
+			}
+			else {
 				this.setState(
 					{
 						workflowAction: this.context.constants
-							.WORKFLOW_ACTION_PUBLISH
+							.WORKFLOW_ACTION_PUBLISH,
 					},
 					() => {
 						submitForm(document[this.props.formName]);
@@ -515,7 +522,7 @@ class ResultRankingsForm extends Component {
 				.map(({id}) => id),
 			{
 				addedResult: true,
-				pinned: true
+				pinned: true,
 			}
 		);
 
@@ -528,7 +535,7 @@ class ResultRankingsForm extends Component {
 				.filter(({id}) => this.state.resultIds.includes(id))
 				.map(({id}) => id),
 			{
-				pinned: true
+				pinned: true,
 			}
 		);
 
@@ -537,11 +544,11 @@ class ResultRankingsForm extends Component {
 		this.setState(state => ({
 			dataMap: {
 				...state.dataMap,
-				...newMappedData
+				...newMappedData,
 			},
 			resultIds: [
 				...state.resultIds,
-				...addedResultsIds.filter(id => !state.resultIds.includes(id))
+				...addedResultsIds.filter(id => !state.resultIds.includes(id)),
 			],
 
 			// Remove any results from hidden if they are getting pinned
@@ -560,8 +567,8 @@ class ResultRankingsForm extends Component {
 						result => !state.resultIdsPinned.includes(result.id)
 					)
 					.map(({id}) => id),
-				...state.resultIdsPinned
-			]
+				...state.resultIdsPinned,
+			],
 		}));
 	};
 
@@ -605,9 +612,9 @@ class ResultRankingsForm extends Component {
 					...dataLoadIndex,
 					[property]: {
 						...dataLoadIndex[property],
-						end: newValue > maxValue ? maxValue : newValue
-					}
-				}
+						end: newValue > maxValue ? maxValue : newValue,
+					},
+				},
 			};
 		});
 	};
@@ -618,7 +625,7 @@ class ResultRankingsForm extends Component {
 	 */
 	_setActiveTabKeyValue = value => {
 		this.setState({
-			activeTabKeyValue: value
+			activeTabKeyValue: value,
 		});
 	};
 
@@ -644,7 +651,7 @@ class ResultRankingsForm extends Component {
 			totalResultsHiddenCount,
 			totalResultsVisibleCount,
 			visibleCur,
-			workflowAction
+			workflowAction,
 		} = this.state;
 
 		return (
@@ -658,7 +665,7 @@ class ResultRankingsForm extends Component {
 						pinnedIds: resultIdsPinned,
 						pinnedIdsEndIndex: dataLoadIndex.pinned.end,
 						pinnedIdsStartIndex: dataLoadIndex.pinned.start,
-						workflowAction
+						workflowAction,
 					}}
 				/>
 
@@ -789,32 +796,32 @@ class ResultRankingsForm extends Component {
 						values={[
 							{
 								name: `${namespace}aliases`,
-								value: aliases
+								value: aliases,
 							},
 							{
 								name: `${namespace}hiddenIdsAdded`,
-								value: this._getHiddenAdded()
+								value: this._getHiddenAdded(),
 							},
 							{
 								name: `${namespace}hiddenIdsRemoved`,
-								value: this._getHiddenRemoved()
+								value: this._getHiddenRemoved(),
 							},
 							{
 								name: `${namespace}pinnedIds`,
-								value: resultIdsPinned
+								value: resultIdsPinned,
 							},
 							{
 								name: `${namespace}pinnedIdsEndIndex`,
-								value: dataLoadIndex.pinned.end
+								value: dataLoadIndex.pinned.end,
 							},
 							{
 								name: `${namespace}pinnedIdsStartIndex`,
-								value: dataLoadIndex.pinned.start
+								value: dataLoadIndex.pinned.start,
 							},
 							{
 								name: `${namespace}workflowAction`,
-								value: workflowAction
-							}
+								value: workflowAction,
+							},
 						]}
 					/>
 				)}

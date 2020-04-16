@@ -27,7 +27,22 @@ public class AnalyticsReportsUtil {
 	public static final String ANALYTICS_CLOUD_TRIAL_URL =
 		"https://www.liferay.com/products/analytics-cloud/get-started";
 
-	public static boolean isAnalyticsEnabled(long companyId) {
+	public static String getAsahFaroBackendDataSourceId(long companyId) {
+		return PrefsPropsUtil.getString(
+			companyId, "liferayAnalyticsDataSourceId");
+	}
+
+	public static String getAsahFaroBackendSecuritySignature(long companyId) {
+		return PrefsPropsUtil.getString(
+			companyId, "liferayAnalyticsFaroBackendSecuritySignature");
+	}
+
+	public static String getAsahFaroBackendURL(long companyId) {
+		return PrefsPropsUtil.getString(
+			companyId, "liferayAnalyticsFaroBackendURL");
+	}
+
+	public static boolean isAnalyticsConnected(long companyId) {
 		if (Validator.isNull(
 				PrefsPropsUtil.getString(
 					companyId, "liferayAnalyticsDataSourceId")) ||
@@ -45,8 +60,8 @@ public class AnalyticsReportsUtil {
 		return true;
 	}
 
-	public static boolean isAnalyticsEnabled(long companyId, long groupId) {
-		if (!isAnalyticsEnabled(companyId)) {
+	public static boolean isAnalyticsSynced(long companyId, long groupId) {
+		if (!isAnalyticsConnected(companyId)) {
 			return false;
 		}
 

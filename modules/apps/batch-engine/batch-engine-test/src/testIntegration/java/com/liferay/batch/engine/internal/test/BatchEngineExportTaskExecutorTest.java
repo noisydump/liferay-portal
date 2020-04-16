@@ -24,7 +24,6 @@ import com.liferay.batch.engine.BatchEngineTaskExecuteStatus;
 import com.liferay.batch.engine.model.BatchEngineExportTask;
 import com.liferay.batch.engine.service.BatchEngineExportTaskLocalService;
 import com.liferay.blogs.model.BlogsEntry;
-import com.liferay.headless.delivery.dto.v1_0.BlogPosting;
 import com.liferay.petra.io.unsync.UnsyncBufferedReader;
 import com.liferay.petra.string.CharPool;
 import com.liferay.portal.kernel.util.GetterUtil;
@@ -394,7 +393,7 @@ public class BatchEngineExportTaskExecutorTest
 				user.getCompanyId(), user.getUserId(), null,
 				BlogPosting.class.getName(), contentType,
 				BatchEngineTaskExecuteStatus.INITIAL.name(), fieldNames,
-				parameters);
+				parameters, null);
 
 		_batchEngineExportTaskExecutor.execute(_batchEngineExportTask);
 	}

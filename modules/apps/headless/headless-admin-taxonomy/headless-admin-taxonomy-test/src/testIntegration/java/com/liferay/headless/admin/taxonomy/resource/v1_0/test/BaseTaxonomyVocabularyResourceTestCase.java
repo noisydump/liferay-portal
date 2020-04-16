@@ -426,9 +426,11 @@ public abstract class BaseTaxonomyVocabularyResourceTestCase {
 				}
 				else {
 					BeanUtils.setProperty(
-						taxonomyVocabulary1, entityField.getName(), "Aaa");
+						taxonomyVocabulary1, entityField.getName(),
+						"Aaa" + RandomTestUtil.randomString());
 					BeanUtils.setProperty(
-						taxonomyVocabulary2, entityField.getName(), "Bbb");
+						taxonomyVocabulary2, entityField.getName(),
+						"Bbb" + RandomTestUtil.randomString());
 				}
 			});
 	}
@@ -605,6 +607,7 @@ public abstract class BaseTaxonomyVocabularyResourceTestCase {
 
 	@Test
 	public void testDeleteTaxonomyVocabulary() throws Exception {
+		@SuppressWarnings("PMD.UnusedLocalVariable")
 		TaxonomyVocabulary taxonomyVocabulary =
 			testDeleteTaxonomyVocabulary_addTaxonomyVocabulary();
 
@@ -744,7 +747,7 @@ public abstract class BaseTaxonomyVocabularyResourceTestCase {
 				postTaxonomyVocabulary.getId(), randomPatchTaxonomyVocabulary);
 
 		TaxonomyVocabulary expectedPatchTaxonomyVocabulary =
-			(TaxonomyVocabulary)BeanUtils.cloneBean(postTaxonomyVocabulary);
+			postTaxonomyVocabulary.clone();
 
 		_beanUtilsBean.copyProperties(
 			expectedPatchTaxonomyVocabulary, randomPatchTaxonomyVocabulary);
@@ -1046,6 +1049,14 @@ public abstract class BaseTaxonomyVocabularyResourceTestCase {
 		for (String additionalAssertFieldName :
 				getAdditionalAssertFieldNames()) {
 
+			if (Objects.equals("actions", additionalAssertFieldName)) {
+				if (taxonomyVocabulary.getActions() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
 			if (Objects.equals("assetTypes", additionalAssertFieldName)) {
 				if (taxonomyVocabulary.getAssetTypes() == null) {
 					valid = false;
@@ -1188,6 +1199,17 @@ public abstract class BaseTaxonomyVocabularyResourceTestCase {
 		for (String additionalAssertFieldName :
 				getAdditionalAssertFieldNames()) {
 
+			if (Objects.equals("actions", additionalAssertFieldName)) {
+				if (!equals(
+						(Map)taxonomyVocabulary1.getActions(),
+						(Map)taxonomyVocabulary2.getActions())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
 			if (Objects.equals("assetTypes", additionalAssertFieldName)) {
 				if (!Objects.deepEquals(
 						taxonomyVocabulary1.getAssetTypes(),
@@ -1257,9 +1279,9 @@ public abstract class BaseTaxonomyVocabularyResourceTestCase {
 			}
 
 			if (Objects.equals("description_i18n", additionalAssertFieldName)) {
-				if (!Objects.deepEquals(
-						taxonomyVocabulary1.getDescription_i18n(),
-						taxonomyVocabulary2.getDescription_i18n())) {
+				if (!equals(
+						(Map)taxonomyVocabulary1.getDescription_i18n(),
+						(Map)taxonomyVocabulary2.getDescription_i18n())) {
 
 					return false;
 				}
@@ -1290,9 +1312,9 @@ public abstract class BaseTaxonomyVocabularyResourceTestCase {
 			}
 
 			if (Objects.equals("name_i18n", additionalAssertFieldName)) {
-				if (!Objects.deepEquals(
-						taxonomyVocabulary1.getName_i18n(),
-						taxonomyVocabulary2.getName_i18n())) {
+				if (!equals(
+						(Map)taxonomyVocabulary1.getName_i18n(),
+						(Map)taxonomyVocabulary2.getName_i18n())) {
 
 					return false;
 				}
@@ -1327,6 +1349,30 @@ public abstract class BaseTaxonomyVocabularyResourceTestCase {
 			throw new IllegalArgumentException(
 				"Invalid additional assert field name " +
 					additionalAssertFieldName);
+		}
+
+		return true;
+	}
+
+	protected boolean equals(
+		Map<String, Object> map1, Map<String, Object> map2) {
+
+		if (Objects.equals(map1.keySet(), map2.keySet())) {
+			for (Map.Entry<String, Object> entry : map1.entrySet()) {
+				if (entry.getValue() instanceof Map) {
+					if (!equals(
+							(Map)entry.getValue(),
+							(Map)map2.get(entry.getKey()))) {
+
+						return false;
+					}
+				}
+				else if (!Objects.deepEquals(
+							entry.getValue(), map2.get(entry.getKey()))) {
+
+					return false;
+				}
+			}
 		}
 
 		return true;
@@ -1436,6 +1482,11 @@ public abstract class BaseTaxonomyVocabularyResourceTestCase {
 		sb.append(" ");
 		sb.append(operator);
 		sb.append(" ");
+
+		if (entityFieldName.equals("actions")) {
+			throw new IllegalArgumentException(
+				"Invalid entity field " + entityFieldName);
+		}
 
 		if (entityFieldName.equals("assetTypes")) {
 			throw new IllegalArgumentException(

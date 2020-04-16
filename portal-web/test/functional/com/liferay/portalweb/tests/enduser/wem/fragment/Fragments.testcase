@@ -73,6 +73,50 @@ definition {
 		}
 	}
 
+	@description = "This is a test for LPS-108339. Can add a Row fragment to Section. Can add several Row fragments to Section."
+	@priority = "5"
+	test AddRowToSection {
+		task ("Add a content page") {
+			SitePages.openPagesAdmin(siteURLKey = "test-site-name");
+
+			ContentPages.addPage(pageName = "Test Content Page Name");
+		}
+
+		task ("Assert add a Row fragment to Section") {
+			PageEditor.addLayoutSection(dropTarget = "//div[contains(@class,'page-editor__root page-editor__topper')]");
+
+			Click(
+				key_elementType = "Section",
+				key_position = "1",
+				locator1 = "PageEditor#LAYOUT_ELEMENTS_HEADER");
+
+			DragAndDrop.javaScriptDragAndDropToObject(
+				key_elementType = "Row",
+				key_position = "1",
+				locator1 = "PageEditor#SECTION_BUILDER_LAYOUT_ELEMENTS",
+				locator2 = "PageEditor#SECTION_CONTAINER",
+				value1 = "");
+
+			AssertElementPresent(
+				key_elementHeader = "/div[contains(@class,'page-editor__topper')][1]/div[contains(.,'Row')]//li[contains(@class,'title')]",
+				key_position = "1",
+				locator1 = "PageEditor#SECTION_CONTAINER_NESTED_ELEMENT");
+		}
+
+		task ("Assert add second Row fragment to the same Section") {
+			DragAndDrop.javaScriptDragAndDropToObject(
+				key_elementType = "Row",
+				locator1 = "PageEditor#SECTION_BUILDER_LAYOUT_ELEMENTS",
+				locator2 = "//div[contains(@class,'page-editor__row')]",
+				value1 = "");
+
+			AssertElementPresent(
+				key_elementHeader = "/div[contains(@class,'page-editor__topper')][2]/div[contains(.,'Row')]//li[contains(@class,'title')]",
+				key_position = "1",
+				locator1 = "PageEditor#SECTION_CONTAINER_NESTED_ELEMENT");
+		}
+	}
+
 	@description = "This is a test for LPS-98241. Basic Component Button can be configured."
 	@priority = "4"
 	test ConfigureBasicComponentButton {
@@ -146,20 +190,20 @@ definition {
 
 			PageEditor.configureFragment(
 				borderRadius = "None",
-				bottomSpacing = "5",
 				boxShadow = "Large",
 				contentAlign = "Center",
-				imageSize = "Fit");
+				imageSize = "Fit",
+				marginBottom = "5");
 		}
 
 		task ("View the fragment style") {
 			PageEditor.viewFragmentStyle(
 				alignment = "center",
 				borderRadius = "0",
-				bottomSpacing = "5",
 				boxShadow = "lg",
 				fragmentName = "card",
-				imageSize = "100");
+				imageSize = "100",
+				marginBottom = "5");
 		}
 
 		task ("Remove the fragment") {
@@ -256,16 +300,16 @@ definition {
 
 			PageEditor.configureFragment(
 				alignment = "Center",
-				bottomSpacing = "2",
-				imageSize = "Original Size");
+				imageSize = "Original Size",
+				marginBottom = "2");
 		}
 
 		task ("View the fragment style") {
 			PageEditor.viewFragmentStyle(
 				alignment = "center",
-				bottomSpacing = "2",
 				fragmentName = "image",
-				imageSize = "0");
+				imageSize = "0",
+				marginBottom = "2");
 		}
 
 		task ("Remove the fragment") {
@@ -360,14 +404,14 @@ definition {
 
 			PageEditor.configureFragment(
 				borderColor = "lighter",
-				verticalSpace = "3");
+				bottomSpacing = "1");
 		}
 
 		task ("View the fragment style") {
 			PageEditor.viewFragmentStyle(
-				borderColor = "247, 248, 249",
-				fragmentName = "separator",
-				verticalSpace = "3");
+				borderColor = "lighter",
+				bottomSpacing = "1",
+				fragmentName = "separator");
 		}
 
 		task ("Remove the fragment") {
@@ -434,6 +478,48 @@ definition {
 			PageEditor.viewDuplicateFragment(
 				fragmentName = "Spacer",
 				id = "Spacer");
+		}
+	}
+
+	@description = "This is a test for LPS-106776. Can change section background color, duplicate sectiion and row."
+	@priority = "5"
+	test ConfigureLayoutElements {
+		task ("Add a content page") {
+			SitePages.openPagesAdmin(siteURLKey = "test-site-name");
+
+			ContentPages.addPage(pageName = "Test Content Page Name");
+		}
+
+		task ("Add a section") {
+			PageEditor.addLayoutSection(dropTarget = "//div[contains(@class,'page-editor__root page-editor__topper')]");
+		}
+
+		task ("Configure the section") {
+			PageEditor.editLayoutSection(backgroundColor = "warning");
+		}
+
+		task ("View the fragment style") {
+			AssertVisible(locator1 = "//div[contains(@class,'page-editor__topper')]//div[contains(@class,'bg-warning')]");
+		}
+
+		task ("Duplicate the fragment") {
+			PageEditor.gotoDuplicate(fragmentName = "Section");
+		}
+
+		task ("View the duplicate section fragment") {
+			PageEditor.viewDuplicateFragment(fragmentName = "Section");
+		}
+
+		task ("Add a row") {
+			PageEditor.addLayoutRow();
+		}
+
+		task ("Duplicate the fragment") {
+			PageEditor.gotoDuplicate(fragmentName = "Row");
+		}
+
+		task ("View the duplicate section fragment") {
+			PageEditor.viewDuplicateFragment(fragmentName = "Row");
 		}
 	}
 
@@ -525,6 +611,72 @@ definition {
 		}
 	}
 
+	@description = "This is a test for LPS-108376. Can check Cacheable for fragments when create them in portal and they are non-Cachable by default."
+	@priority = "5"
+	test MarkFragmentCreatedInPortalAsCacheable {
+		property portal.upstream = "quarantine";
+
+		FragmentsAdminNavigator.gotoCollection(collectionName = "Collection Name");
+
+		FragmentsAdminNavigator.gotoEntryEllipsisItem(
+			entry = "Fragment Name",
+			item = "Edit");
+
+		AssertElementPresent(
+			checkboxName = "Cacheable",
+			locator1 = "Checkbox#ANY_CHECKBOX");
+
+		AssertNotChecked.assertNotCheckedNotVisible(
+			checkboxName = "Cacheable",
+			locator1 = "Checkbox#ANY_CHECKBOX");
+
+		Check.checkNotVisible(
+			checkboxName = "Cacheable",
+			locator1 = "Checkbox#ANY_CHECKBOX");
+
+		AssertChecked.assertCheckedNotVisible(
+			checkboxName = "Cacheable",
+			locator1 = "Checkbox#ANY_CHECKBOX");
+
+		PortletEntry.publish();
+	}
+
+	@description = "This is a test for LPS-108376. Can check Cacheable for fragments without Read-Only label imported to portal and they are non-Cachable by default."
+	@priority = "4"
+	test MarkFragmentWithoutReadOnlyImportedToPortalAsCacheable {
+		property portal.upstream = "quarantine";
+
+		FragmentsAdmin.importCollectionFromDependenciesFolder(collectionZipFile = "fragment-collection.zip");
+
+		FragmentsAdminNavigator.openFragmentsAdmin(siteURLKey = "test-site-name");
+
+		FragmentsAdminNavigator.gotoCollection(collectionName = "Collection Name");
+
+		FragmentsAdminNavigator.gotoEntryEllipsisItem(
+			entry = "Content",
+			item = "Edit");
+
+		AssertElementNotPresent(locator1 = "FragmentEditor#READ_ONLY_VIEW");
+
+		AssertElementPresent(
+			checkboxName = "Cacheable",
+			locator1 = "Checkbox#ANY_CHECKBOX");
+
+		AssertNotChecked.assertNotCheckedNotVisible(
+			checkboxName = "Cacheable",
+			locator1 = "Checkbox#ANY_CHECKBOX");
+
+		Check.checkNotVisible(
+			checkboxName = "Cacheable",
+			locator1 = "Checkbox#ANY_CHECKBOX");
+
+		AssertChecked.assertCheckedNotVisible(
+			checkboxName = "Cacheable",
+			locator1 = "Checkbox#ANY_CHECKBOX");
+
+		PortletEntry.publish();
+	}
+
 	@description = "This is a test for LPS-100540. Global fragments can be propagated to all pages of a site or sites that use the fragments"
 	@priority = "5"
 	test PropagateGlobalFragmentChanges {
@@ -591,9 +743,7 @@ definition {
 
 		Check(locator1 = "Fragment#FRAGMENT_SITE_USAGE_CHECKBOX");
 
-		MouseOver(locator1 = "Fragment#FRAGMENT_SITE_USAGE_NAV_ITEM");
-
-		Click(locator1 = "Button#PROPAGATE");
+		Click.clickNoMouseOver(locator1 = "Button#PROPAGATE");
 
 		Alert.viewSuccessMessage();
 

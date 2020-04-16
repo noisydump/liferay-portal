@@ -18,7 +18,12 @@ import Token from '../../../expressions/Token.es';
 import Tokenizer from '../../../expressions/Tokenizer.es';
 
 export const isEqualLengthOptions = (options1, options2) => {
-	return options1.length === options2.length;
+	if (!!options1 && !!options2) {
+		return options1.length === options2.length;
+	}
+	else {
+		return false;
+	}
 };
 
 export const isFieldValueOperand = operands => {
@@ -60,7 +65,7 @@ export const updateRulesReferences = (rules, oldProperties, newProperties) => {
 		if (action.target === oldFieldName) {
 			action = {
 				...action,
-				target: newFieldName
+				target: newFieldName,
 			};
 		}
 
@@ -71,7 +76,7 @@ export const updateRulesReferences = (rules, oldProperties, newProperties) => {
 					action.expression,
 					oldFieldName,
 					newFieldName
-				)
+				),
 			};
 		}
 
@@ -93,9 +98,10 @@ export const updateRulesReferences = (rules, oldProperties, newProperties) => {
 				) {
 					return {
 						...operand,
-						value: newFieldName
+						value: newFieldName,
 					};
-				} else if (
+				}
+				else if (
 					index === 1 &&
 					isFieldValueOperand(condition.operands) &&
 					isEqualLengthOptions(oldOptions, newOptions) &&
@@ -110,13 +116,13 @@ export const updateRulesReferences = (rules, oldProperties, newProperties) => {
 					if (changedOption) {
 						return {
 							...operand,
-							value: changedOption.value
+							value: changedOption.value,
 						};
 					}
 				}
 
 				return operand;
-			})
+			}),
 		};
 	});
 };

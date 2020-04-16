@@ -47,7 +47,7 @@ const VALID_KEY_CODES = [
 	54,
 	55,
 	56,
-	57
+	57,
 ];
 
 /**
@@ -68,8 +68,8 @@ const DocumentPreviewer = ({baseImageURL, initialPage, totalPages}) => {
 	const [loadedPages] = useState({
 		[currentPage]: {
 			loaded: true,
-			pagePromise: Promise.resolve()
-		}
+			pagePromise: Promise.resolve(),
+		},
 	});
 	const [nextPageDisabled, setNextPageDisabled] = useState(
 		currentPage === totalPages
@@ -121,9 +121,11 @@ const DocumentPreviewer = ({baseImageURL, initialPage, totalPages}) => {
 			processPageInput(event.currentTarget.value);
 
 			hidePageInput();
-		} else if (code === KEY_CODE_ESC) {
+		}
+		else if (code === KEY_CODE_ESC) {
 			hidePageInput();
-		} else if (VALID_KEY_CODES.indexOf(code) === -1) {
+		}
+		else if (VALID_KEY_CODES.indexOf(code) === -1) {
 			event.preventDefault();
 		}
 	};
@@ -150,7 +152,7 @@ const DocumentPreviewer = ({baseImageURL, initialPage, totalPages}) => {
 
 			loadedPages[page] = {
 				loaded: false,
-				pagePromise
+				pagePromise,
 			};
 		}
 
@@ -296,9 +298,7 @@ const DocumentPreviewer = ({baseImageURL, initialPage, totalPages}) => {
 DocumentPreviewer.propTypes = {
 	baseImageURL: PropTypes.string,
 	initialPage: PropTypes.number,
-	totalPages: PropTypes.number
+	totalPages: PropTypes.number,
 };
 
-export default function(props) {
-	return <DocumentPreviewer {...props} />;
-}
+export default DocumentPreviewer;

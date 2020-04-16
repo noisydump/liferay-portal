@@ -60,25 +60,25 @@ public class WorkflowMetricsSLADefinitionVersionFinderImpl
 					sql, "(WMSLADefinitionVersion.processId = ? ) AND");
 			}
 
-			SQLQuery q = session.createSynchronizedSQLQuery(sql);
+			SQLQuery sqlQuery = session.createSynchronizedSQLQuery(sql);
 
-			q.addEntity(
+			sqlQuery.addEntity(
 				"WorkflowMetricsSLADefinitionVersion",
 				WorkflowMetricsSLADefinitionVersionImpl.class);
 
-			QueryPos qPos = QueryPos.getInstance(q);
+			QueryPos queryPos = QueryPos.getInstance(sqlQuery);
 
-			qPos.add(companyId);
-			qPos.add(createDate);
+			queryPos.add(companyId);
+			queryPos.add(createDate);
 
 			if (processId != null) {
-				qPos.add(processId);
+				queryPos.add(processId);
 			}
 
-			qPos.add(status);
+			queryPos.add(status);
 
 			return (List<WorkflowMetricsSLADefinitionVersion>)QueryUtil.list(
-				q, getDialect(), start, end);
+				sqlQuery, getDialect(), start, end);
 		}
 		catch (Exception exception) {
 			throw new SystemException(exception);

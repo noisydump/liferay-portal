@@ -26,7 +26,7 @@ describe('Forms Plugin', () => {
 		// Force attaching DOM Content Loaded event
 		Object.defineProperty(document, 'readyState', {
 			value: 'loading',
-			writable: false
+			writable: false,
 		});
 
 		if (!global.performance.clearMarks) {
@@ -44,8 +44,8 @@ describe('Forms Plugin', () => {
 		if (!global.performance.getEntriesByName) {
 			global.performance.getEntriesByName = () => [
 				{
-					duration: duration || 1
-				}
+					duration: duration || 1,
+				},
 			];
 		}
 
@@ -81,7 +81,7 @@ describe('Forms Plugin', () => {
 
 			document.dispatchEvent(domContentLoaded);
 
-			const events = Analytics.events.filter(
+			const events = Analytics.getEvents().filter(
 				({eventId}) => eventId === 'formViewed'
 			);
 
@@ -90,16 +90,16 @@ describe('Forms Plugin', () => {
 					applicationId,
 					eventId: 'formViewed',
 					properties: expect.objectContaining({
-						formId: 'assetId'
-					})
+						formId: 'assetId',
+					}),
 				}),
 				expect.objectContaining({
 					applicationId,
 					eventId: 'formViewed',
 					properties: expect.objectContaining({
-						formId: 'formId'
-					})
-				})
+						formId: 'formId',
+					}),
+				}),
 			]);
 
 			document.body.removeChild(formWithAssetId);
@@ -119,12 +119,12 @@ describe('Forms Plugin', () => {
 			form.addEventListener('submit', event => event.preventDefault());
 
 			const event = new Event('submit', {
-				cancelable: true
+				cancelable: true,
 			});
 
 			form.dispatchEvent(event);
 
-			const events = Analytics.events.filter(
+			const events = Analytics.getEvents().filter(
 				({eventId}) => eventId === 'formSubmitted'
 			);
 
@@ -134,9 +134,9 @@ describe('Forms Plugin', () => {
 					eventId: 'formSubmitted',
 					properties: {
 						formId: 'formId',
-						title: 'Form Title'
-					}
-				})
+						title: 'Form Title',
+					},
+				}),
 			]);
 		});
 	});
@@ -159,7 +159,7 @@ describe('Forms Plugin', () => {
 
 			field.dispatchEvent(new Event('focus'));
 
-			const events = Analytics.events.filter(
+			const events = Analytics.getEvents().filter(
 				({eventId}) => eventId === 'fieldFocused'
 			);
 
@@ -169,9 +169,9 @@ describe('Forms Plugin', () => {
 					eventId: 'fieldFocused',
 					properties: {
 						fieldName: 'myField',
-						formId: 'formId'
-					}
-				})
+						formId: 'formId',
+					},
+				}),
 			]);
 		});
 	});
@@ -199,7 +199,7 @@ describe('Forms Plugin', () => {
 
 			field.dispatchEvent(new Event('blur'));
 
-			const events = Analytics.events.filter(
+			const events = Analytics.getEvents().filter(
 				({eventId}) => eventId === 'fieldBlurred'
 			);
 
@@ -210,9 +210,9 @@ describe('Forms Plugin', () => {
 					properties: expect.objectContaining({
 						fieldName: 'myField',
 						focusDuration: expect.any(Number),
-						formId: 'formId'
-					})
-				})
+						formId: 'formId',
+					}),
+				}),
 			]);
 
 			expect(events[0].properties.focusDuration).toBeGreaterThanOrEqual(

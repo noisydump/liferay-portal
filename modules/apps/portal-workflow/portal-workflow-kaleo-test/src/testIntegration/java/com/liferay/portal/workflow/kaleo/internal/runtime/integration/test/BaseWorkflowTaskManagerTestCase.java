@@ -74,7 +74,6 @@ import com.liferay.portal.kernel.service.OrganizationLocalServiceUtil;
 import com.liferay.portal.kernel.service.RoleLocalServiceUtil;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.UserGroupRoleLocalServiceUtil;
-import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.service.UserLocalServiceUtil;
 import com.liferay.portal.kernel.service.UserNotificationEventLocalServiceUtil;
 import com.liferay.portal.kernel.service.WorkflowDefinitionLinkLocalServiceUtil;
@@ -103,7 +102,6 @@ import com.liferay.portal.kernel.workflow.WorkflowInstance;
 import com.liferay.portal.kernel.workflow.WorkflowInstanceManagerUtil;
 import com.liferay.portal.kernel.workflow.WorkflowTask;
 import com.liferay.portal.kernel.workflow.WorkflowTaskManagerUtil;
-import com.liferay.portal.search.test.util.IdempotentRetryAssert;
 import com.liferay.portal.security.permission.SimplePermissionChecker;
 import com.liferay.portal.test.log.CaptureAppender;
 import com.liferay.portal.test.log.Log4JLoggerTestUtil;
@@ -117,7 +115,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
-import java.util.concurrent.TimeUnit;
 
 import org.apache.log4j.Level;
 
@@ -544,6 +541,15 @@ public abstract class BaseWorkflowTaskManagerTestCase {
 		deactivateWorkflow(group.getGroupId(), className, classPK, typePK);
 	}
 
+	protected User deleteUser(User user) throws Exception {
+		try (CaptureAppender captureAppender =
+				Log4JLoggerTestUtil.configureLog4JLogger(
+					_MAIL_ENGINE_CLASS_NAME, Level.OFF)) {
+
+			return UserLocalServiceUtil.deleteUser(user);
+		}
+	}
+
 	protected WorkflowInstanceLink fetchWorkflowInstanceLink(
 			String className, long classPK)
 		throws WorkflowException {
@@ -623,14 +629,14 @@ public abstract class BaseWorkflowTaskManagerTestCase {
 	protected int searchCount(String keywords) throws Exception {
 		return WorkflowTaskManagerUtil.searchCount(
 			adminUser.getCompanyId(), adminUser.getUserId(), keywords,
-			new String[] {keywords}, null, null, null, null, null, false, true,
-			null, false);
+			new String[] {keywords}, null, null, null, null, null, null, false,
+			true, null, null, false);
 	}
 
 	protected int searchCountByUserRoles(User user) throws Exception {
 		return WorkflowTaskManagerUtil.searchCount(
 			user.getCompanyId(), user.getUserId(), null, null, null, null, null,
-			null, null, false, true, null, false);
+			null, null, null, false, true, null, null, false);
 	}
 
 	protected FileVersion updateFileVersion(long fileEntryId) throws Exception {
@@ -717,9 +723,6 @@ public abstract class BaseWorkflowTaskManagerTestCase {
 	protected User siteContentReviewerUser;
 	protected User siteMemberUser;
 
-	@Inject
-	protected UserLocalService userLocalService;
-
 	private DDMFormValues _createDDMFormValues(DDMForm ddmForm) {
 		DDMFormValues ddmFormValues = DDMFormValuesTestUtil.createDDMFormValues(
 			ddmForm);
@@ -792,27 +795,32 @@ public abstract class BaseWorkflowTaskManagerTestCase {
 			String roleName, Group group, boolean addUserToRole)
 		throws Exception {
 
-		User user = UserTestUtil.addUser(
-			company.getCompanyId(), companyAdminUser.getUserId(),
-			RandomTestUtil.randomString(
-				NumericStringRandomizerBumper.INSTANCE,
-				UniqueStringRandomizerBumper.INSTANCE),
-			LocaleUtil.getDefault(), RandomTestUtil.randomString(),
-			RandomTestUtil.randomString(), new long[] {group.getGroupId()},
-			ServiceContextTestUtil.getServiceContext());
+		try (CaptureAppender captureAppender =
+				Log4JLoggerTestUtil.configureLog4JLogger(
+					_MAIL_ENGINE_CLASS_NAME, Level.OFF)) {
 
-		Role role = RoleLocalServiceUtil.getRole(
-			company.getCompanyId(), roleName);
+			User user = UserTestUtil.addUser(
+				company.getCompanyId(), companyAdminUser.getUserId(),
+				RandomTestUtil.randomString(
+					NumericStringRandomizerBumper.INSTANCE,
+					UniqueStringRandomizerBumper.INSTANCE),
+				LocaleUtil.getDefault(), RandomTestUtil.randomString(),
+				RandomTestUtil.randomString(), new long[] {group.getGroupId()},
+				ServiceContextTestUtil.getServiceContext());
 
-		if (addUserToRole) {
-			UserLocalServiceUtil.addRoleUser(role.getRoleId(), user);
+			Role role = RoleLocalServiceUtil.getRole(
+				company.getCompanyId(), roleName);
+
+			if (addUserToRole) {
+				UserLocalServiceUtil.addRoleUser(role.getRoleId(), user);
+			}
+
+			UserGroupRoleLocalServiceUtil.addUserGroupRoles(
+				new long[] {user.getUserId()}, group.getGroupId(),
+				role.getRoleId());
+
+			return user;
 		}
-
-		UserGroupRoleLocalServiceUtil.addUserGroupRoles(
-			new long[] {user.getUserId()}, group.getGroupId(),
-			role.getRoleId());
-
-		return user;
 	}
 
 	private String _getBasePath() {
@@ -837,25 +845,21 @@ public abstract class BaseWorkflowTaskManagerTestCase {
 	private List<WorkflowTask> _getWorkflowTasks(User user, boolean completed)
 		throws Exception {
 
-		return IdempotentRetryAssert.retryAssert(
-			10, TimeUnit.SECONDS,
-			() -> {
-				List<WorkflowTask> workflowTasks = new ArrayList<>();
+		List<WorkflowTask> workflowTasks = new ArrayList<>();
 
-				workflowTasks.addAll(
-					WorkflowTaskManagerUtil.getWorkflowTasksByUserRoles(
-						user.getCompanyId(), user.getUserId(), completed,
-						QueryUtil.ALL_POS, QueryUtil.ALL_POS, null));
+		workflowTasks.addAll(
+			WorkflowTaskManagerUtil.getWorkflowTasksByUserRoles(
+				user.getCompanyId(), user.getUserId(), completed,
+				QueryUtil.ALL_POS, QueryUtil.ALL_POS, null));
 
-				workflowTasks.addAll(
-					WorkflowTaskManagerUtil.getWorkflowTasksByUser(
-						user.getCompanyId(), user.getUserId(), completed,
-						QueryUtil.ALL_POS, QueryUtil.ALL_POS, null));
+		workflowTasks.addAll(
+			WorkflowTaskManagerUtil.getWorkflowTasksByUser(
+				user.getCompanyId(), user.getUserId(), completed,
+				QueryUtil.ALL_POS, QueryUtil.ALL_POS, null));
 
-				Assert.assertFalse(workflowTasks.isEmpty());
+		Assert.assertFalse(workflowTasks.isEmpty());
 
-				return workflowTasks;
-			});
+		return workflowTasks;
 	}
 
 	private String _read(String fileName) throws Exception {
@@ -912,7 +916,7 @@ public abstract class BaseWorkflowTaskManagerTestCase {
 	}
 
 	private static final String _MAIL_ENGINE_CLASS_NAME =
-		"com.liferay.util.mail.MailEngine";
+		"com.liferay.petra.mail.MailEngine";
 
 	private static final String _PROXY_MESSAGE_LISTENER_CLASS_NAME =
 		"com.liferay.portal.kernel.messaging.proxy.ProxyMessageListener";

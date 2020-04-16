@@ -73,7 +73,7 @@ public interface KaleoNodeLocalService
 	public KaleoNode addKaleoNode(KaleoNode kaleoNode);
 
 	public KaleoNode addKaleoNode(
-			long kaleoDefinitionVersionId, Node node,
+			long kaleoDefinitionId, long kaleoDefinitionVersionId, Node node,
 			ServiceContext serviceContext)
 		throws PortalException;
 
@@ -85,6 +85,12 @@ public interface KaleoNodeLocalService
 	 */
 	@Transactional(enabled = false)
 	public KaleoNode createKaleoNode(long kaleoNodeId);
+
+	/**
+	 * @throws PortalException
+	 */
+	public PersistedModel createPersistedModel(Serializable primaryKeyObj)
+		throws PortalException;
 
 	public void deleteCompanyKaleoNodes(long companyId);
 
@@ -235,6 +241,9 @@ public interface KaleoNodeLocalService
 	 */
 	public String getOSGiServiceIdentifier();
 
+	/**
+	 * @throws PortalException
+	 */
 	@Override
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public PersistedModel getPersistedModel(Serializable primaryKeyObj)

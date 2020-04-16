@@ -74,10 +74,36 @@ public interface ItemSelectorView<T extends ItemSelectorCriterion> {
 	 * configuration, etc.
 	 * </p>
 	 *
+	 * @param  itemSelectorCriterion the item selector criterion that was used
+	 *         to render this view
 	 * @param  themeDisplay the current page {@link ThemeDisplay}
 	 * @return <code>true</code> if the view is visible
+	 * @review
 	 */
-	public boolean isVisible(ThemeDisplay themeDisplay);
+	public default boolean isVisible(
+		T itemSelectorCriterion, ThemeDisplay themeDisplay) {
+
+		return isVisible(themeDisplay);
+	}
+
+	/**
+	 * Returns whether the item selector view is visible.
+	 *
+	 * <p>
+	 * Most of the implementations of this method will return <code>true</code>.
+	 * However, there are certain cases where the view should not be displayed:
+	 * the view isn't ready, the view needs some additional third-party
+	 * configuration, etc.
+	 * </p>
+	 *
+	 * @param  themeDisplay the current page {@link ThemeDisplay}
+	 * @return <code>true</code> if the view is visible
+	 * @deprecated As of Athanasius (7.3.x)
+	 */
+	@Deprecated
+	public default boolean isVisible(ThemeDisplay themeDisplay) {
+		return true;
+	}
 
 	/**
 	 * Renders the HTML code for the item selector view.

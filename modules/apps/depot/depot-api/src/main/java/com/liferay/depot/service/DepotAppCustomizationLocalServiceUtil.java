@@ -66,6 +66,16 @@ public class DepotAppCustomizationLocalServiceUtil {
 	}
 
 	/**
+	 * @throws PortalException
+	 */
+	public static com.liferay.portal.kernel.model.PersistedModel
+			createPersistedModel(java.io.Serializable primaryKeyObj)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return getService().createPersistedModel(primaryKeyObj);
+	}
+
+	/**
 	 * Deletes the depot app customization from the database. Also notifies the appropriate model listeners.
 	 *
 	 * @param depotAppCustomization the depot app customization
@@ -248,6 +258,13 @@ public class DepotAppCustomizationLocalServiceUtil {
 		return getService().getDepotAppCustomizationsCount();
 	}
 
+	public static int getDepotAppCustomizationsCount(
+		long depotEntryId, boolean enabled) {
+
+		return getService().getDepotAppCustomizationsCount(
+			depotEntryId, enabled);
+	}
+
 	public static
 		com.liferay.portal.kernel.dao.orm.IndexableActionableDynamicQuery
 			getIndexableActionableDynamicQuery() {
@@ -264,6 +281,9 @@ public class DepotAppCustomizationLocalServiceUtil {
 		return getService().getOSGiServiceIdentifier();
 	}
 
+	/**
+	 * @throws PortalException
+	 */
 	public static com.liferay.portal.kernel.model.PersistedModel
 			getPersistedModel(java.io.Serializable primaryKeyObj)
 		throws com.liferay.portal.kernel.exception.PortalException {

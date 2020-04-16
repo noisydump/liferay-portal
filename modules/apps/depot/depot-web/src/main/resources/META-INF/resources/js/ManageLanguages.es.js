@@ -28,7 +28,7 @@ const ManageLanguages = ({
 	customLocales,
 	observer,
 	onModalClose = noop,
-	onModalSave = noop
+	onModalDone = noop,
 }) => {
 	const [selectedLocales, setSelectedLocales] = useState(customLocales);
 
@@ -41,10 +41,11 @@ const ManageLanguages = ({
 			setSelectedLocales(
 				selectedLocales.concat({
 					displayName,
-					localeId: selectedLocaleId
+					localeId: selectedLocaleId,
 				})
 			);
-		} else {
+		}
+		else {
 			setSelectedLocales(
 				selectedLocales.filter(
 					({localeId}) => localeId != selectedLocaleId
@@ -119,9 +120,9 @@ const ManageLanguages = ({
 
 						<ClayButton
 							displayType="primary"
-							onClick={() => onModalSave(selectedLocales)}
+							onClick={() => onModalDone(selectedLocales)}
 						>
-							{Liferay.Language.get('save')}
+							{Liferay.Language.get('done')}
 						</ClayButton>
 					</ClayButton.Group>
 				}
@@ -134,19 +135,19 @@ ManageLanguages.propTypes = {
 	availableLocales: PropTypes.arrayOf(
 		PropTypes.shape({
 			displayName: PropTypes.string,
-			localeId: PropTypes.string
+			localeId: PropTypes.string,
 		})
 	).isRequired,
 	customDefaultLocaleId: PropTypes.string.isRequired,
 	customLocales: PropTypes.arrayOf(
 		PropTypes.shape({
 			displayName: PropTypes.string,
-			localeId: PropTypes.string
+			localeId: PropTypes.string,
 		})
 	).isRequired,
-	handleSaveBtn: PropTypes.func,
 	observer: PropTypes.object.isRequired,
-	onModalClose: PropTypes.func
+	onModalClose: PropTypes.func,
+	onModalDone: PropTypes.func,
 };
 
 export default function(props) {

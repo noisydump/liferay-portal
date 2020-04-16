@@ -13,7 +13,7 @@ const buildFallbackItems = fallbackKeys => {
 	if (fallbackKeys) {
 		return fallbackKeys.map(key => ({
 			active: true,
-			key
+			key,
 		}));
 	}
 
@@ -24,7 +24,7 @@ const handleClickOutside = (callback, wrapperRef) => event => {
 	const clickOutside = wrapperRef && !wrapperRef.contains(event.target);
 
 	if (clickOutside) {
-		callback();
+		callback(event);
 	}
 };
 
@@ -40,5 +40,5 @@ export {
 	addClickOutsideListener,
 	buildFallbackItems,
 	handleClickOutside,
-	removeClickOutsideListener
+	removeClickOutsideListener,
 };

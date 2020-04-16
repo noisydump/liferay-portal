@@ -12,8 +12,8 @@
  * details.
  */
 
+import handleFieldSetAdded from '../../../../../src/main/resources/META-INF/resources/js/components/LayoutProvider/handlers/fieldSetAddedHandler.es';
 import mockPages from '../../../__mock__/mockPages.es';
-import handleFieldSetAdded from '../../../src/main/resources/META-INF/resources/js/components/LayoutProvider/handlers/fieldSetAddedHandler.es';
 
 describe('LayoutProvider/handlers/fieldSetAddedHandler', () => {
 	describe('handleFieldSetAdded(props, state, event)', () => {
@@ -29,23 +29,23 @@ describe('LayoutProvider/handlers/fieldSetAddedHandler', () => {
 											{
 												fieldName: 'field1',
 												settingsContext: {
-													pages: []
-												}
-											}
-										]
-									}
-								]
-							}
-						]
-					}
+													pages: [],
+												},
+											},
+										],
+									},
+								],
+							},
+						],
+					},
 				],
 				target: {
 					pageIndex: 0,
-					rowIndex: 1
-				}
+					rowIndex: 1,
+				},
 			};
 			const state = {
-				pages: mockPages
+				pages: mockPages,
 			};
 
 			const newState = handleFieldSetAdded({}, state, event);

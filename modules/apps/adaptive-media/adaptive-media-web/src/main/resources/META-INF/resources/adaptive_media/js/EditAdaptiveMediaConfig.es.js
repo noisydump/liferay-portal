@@ -43,7 +43,7 @@ class EditAdaptiveMediaConfig extends PortletBase {
 			54,
 			55,
 			56,
-			57
+			57,
 		];
 	}
 
@@ -162,7 +162,8 @@ class EditAdaptiveMediaConfig extends PortletBase {
 
 			newUuidInput.setAttribute('disabled', true);
 			newUuidLabel.classList.add('disabled');
-		} else {
+		}
+		else {
 			newUuidInput.value = this._lastCustomUuuid || newUuidInput.value;
 
 			newUuidInput.removeAttribute('disabled');
@@ -187,7 +188,8 @@ class EditAdaptiveMediaConfig extends PortletBase {
 
 		if (form.formValidator.hasErrors()) {
 			event.preventDefault();
-		} else {
+		}
+		else {
 			submitForm(form.form);
 		}
 	}
@@ -211,7 +213,8 @@ class EditAdaptiveMediaConfig extends PortletBase {
 		if (this.maxWidthInput.value || this.maxHeightInput.value) {
 			form.removeRule(nsMaxWidth, 'required');
 			form.removeRule(nsMaxHeight, 'required');
-		} else {
+		}
+		else {
 			form.addRule(nsMaxWidth, 'required', inputErrorMessage);
 			form.addRule(nsMaxHeight, 'required', STR_BLANK);
 
@@ -236,8 +239,8 @@ EditAdaptiveMediaConfig.STATE = {
 	 */
 	errorNode: {
 		validator: core.isString,
-		value: '.error-wrapper'
-	}
+		value: '.error-wrapper',
+	},
 };
 
 export default EditAdaptiveMediaConfig;

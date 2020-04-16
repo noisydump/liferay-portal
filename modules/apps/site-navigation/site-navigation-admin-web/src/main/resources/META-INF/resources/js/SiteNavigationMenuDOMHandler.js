@@ -16,12 +16,12 @@ import {contains, hasClass, toElement} from 'metal-dom';
 import position from 'metal-position';
 
 import {
+	MENU_CONTAINER_CLASSNAME,
+	MENU_ITEM_CLASSNAME,
+	MENU_ITEM_DRAGGING_CLASSNAME,
 	getChildren,
 	getId,
 	isMenuItem,
-	MENU_CONTAINER_CLASSNAME,
-	MENU_ITEM_CLASSNAME,
-	MENU_ITEM_DRAGGING_CLASSNAME
 } from './SiteNavigationMenuItemDOMHandler';
 
 /**
@@ -68,7 +68,7 @@ const getNearestMenuItem = function(originMenuItem, placeholder) {
 			return {
 				distance,
 				menuItem,
-				region: menuItemRegion
+				region: menuItemRegion,
 			};
 		})
 		.reduce(
@@ -79,7 +79,7 @@ const getNearestMenuItem = function(originMenuItem, placeholder) {
 			},
 			{
 				distance: Infinity,
-				menuItem: null
+				menuItem: null,
 			}
 		).menuItem;
 };
@@ -98,7 +98,8 @@ const insertAtPosition = function(parentMenuItem, menuItem, position) {
 
 	if (position >= children.length) {
 		parentMenuItem.appendChild(menuItem);
-	} else {
+	}
+	else {
 		parentMenuItem.insertBefore(menuItem, children[position]);
 	}
 };
@@ -115,7 +116,8 @@ const insertAtTop = function(menuItem) {
 
 	if (children.length) {
 		container.insertBefore(menuItem, children[0]);
-	} else {
+	}
+	else {
 		container.appendChild(menuItem);
 	}
 };
@@ -169,5 +171,5 @@ export {
 	insertAtPosition,
 	insertAtTop,
 	isOver,
-	shouldBeNested
+	shouldBeNested,
 };

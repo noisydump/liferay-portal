@@ -1189,35 +1189,36 @@ public class GraphQLServletExtender {
 		GraphQLFieldDefinition graphQLFieldDefinition =
 			graphQLObjectType.getFieldDefinition("contentType");
 
-		if (graphQLFieldDefinition != null) {
-			Field field = _getFieldDefinitionsByNameField(graphQLObjectType);
-
-			Map<String, GraphQLFieldDefinition> graphQLFieldDefinitions =
-				(Map<String, GraphQLFieldDefinition>)field.get(
-					graphQLObjectType);
-
-			GraphQLFieldDefinition.Builder graphQLFieldDefinitionBuilder =
-				GraphQLFieldDefinition.newFieldDefinition();
-
-			graphQLFieldDefinitions.put(
-				"graphQLNode",
-				graphQLFieldDefinitionBuilder.name(
-					"graphQLNode"
-				).type(
-					graphQLInterfaceType
-				).build());
-
-			graphQLSchemaBuilder.codeRegistry(
-				builder.dataFetcher(
-					FieldCoordinates.coordinates(
-						graphQLObjectType.getName(), "graphQLNode"),
-					new GraphQLNodePropertyDataFetcher()
-				).typeResolver(
-					"GraphQLNode", new GraphQLNodeTypeResolver()
-				).build());
-
-			field.set(graphQLObjectType, graphQLFieldDefinitions);
+		if (graphQLFieldDefinition == null) {
+			return;
 		}
+
+		Field field = _getFieldDefinitionsByNameField(graphQLObjectType);
+
+		Map<String, GraphQLFieldDefinition> graphQLFieldDefinitions =
+			(Map<String, GraphQLFieldDefinition>)field.get(graphQLObjectType);
+
+		GraphQLFieldDefinition.Builder graphQLFieldDefinitionBuilder =
+			GraphQLFieldDefinition.newFieldDefinition();
+
+		graphQLFieldDefinitions.put(
+			"graphQLNode",
+			graphQLFieldDefinitionBuilder.name(
+				"graphQLNode"
+			).type(
+				graphQLInterfaceType
+			).build());
+
+		graphQLSchemaBuilder.codeRegistry(
+			builder.dataFetcher(
+				FieldCoordinates.coordinates(
+					graphQLObjectType.getName(), "graphQLNode"),
+				new GraphQLNodePropertyDataFetcher()
+			).typeResolver(
+				"GraphQLNode", new GraphQLNodeTypeResolver()
+			).build());
+
+		field.set(graphQLObjectType, graphQLFieldDefinitions);
 	}
 
 	private void _replaceInterface(
@@ -1707,6 +1708,10 @@ public class GraphQLServletExtender {
 						return _getExtendedGraphQLError(
 							graphQLError, Response.Status.UNAUTHORIZED);
 					}
+					else if (message.contains("NoSuchEntryException")) {
+						return _getExtendedGraphQLError(
+							graphQLError, Response.Status.NOT_FOUND);
+					}
 					else if (!isClientError(graphQLError) &&
 							 !message.contains("ClientErrorException")) {
 
@@ -1934,6 +1939,12 @@ public class GraphQLServletExtender {
 				return _createObject(dataFetchingEnvironment, _method);
 			}
 			catch (InvocationTargetException invocationTargetException) {
+				if (dataFetchingEnvironment.getRoot() !=
+						dataFetchingEnvironment.getSource()) {
+
+					return null;
+				}
+
 				throw new RuntimeException(
 					invocationTargetException.getTargetException());
 			}

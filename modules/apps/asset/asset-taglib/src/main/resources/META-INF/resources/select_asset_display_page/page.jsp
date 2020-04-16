@@ -99,7 +99,7 @@
 			singleSelect: true,
 			title: '<liferay-ui:message key="select-page" />',
 			url:
-				'<%= selectAssetDisplayPageDisplayContext.getAssetDisplayPageItemSelectorURL() %>'
+				'<%= selectAssetDisplayPageDisplayContext.getAssetDisplayPageItemSelectorURL() %>',
 		});
 
 		itemSelectorDialog.open();
@@ -114,7 +114,8 @@
 			if (selectedItem) {
 				if (selectedItem.type === 'asset-display-page') {
 					assetDisplayPageIdInput.value = selectedItem.id;
-				} else {
+				}
+				else {
 					pagesContainerInput.value = selectedItem.id;
 				}
 
@@ -135,14 +136,14 @@
 		previewDefaultDisplayPageButton.addEventListener('click', function(event) {
 			Liferay.Util.openWindow({
 				dialog: {
-					destroyOnHide: true
+					destroyOnHide: true,
 				},
 				dialogIframe: {
-					bodyCssClass: 'dialog-with-footer'
+					bodyCssClass: 'dialog-with-footer',
 				},
 				title: '<liferay-ui:message key="preview" />',
 				uri:
-					'<%= selectAssetDisplayPageDisplayContext.getURLViewInContext() %>'
+					'<%= selectAssetDisplayPageDisplayContext.getURLViewInContext() %>',
 			});
 		});
 	}
@@ -151,14 +152,14 @@
 		previewSpecificDisplayPageButton.addEventListener('click', function(event) {
 			Liferay.Util.openWindow({
 				dialog: {
-					destroyOnHide: true
+					destroyOnHide: true,
 				},
 				dialogIframe: {
-					bodyCssClass: 'dialog-with-footer'
+					bodyCssClass: 'dialog-with-footer',
 				},
 				title: '<liferay-ui:message key="preview" />',
 				uri:
-					'<%= selectAssetDisplayPageDisplayContext.getURLViewInContext() %>'
+					'<%= selectAssetDisplayPageDisplayContext.getURLViewInContext() %>',
 			});
 		});
 	}

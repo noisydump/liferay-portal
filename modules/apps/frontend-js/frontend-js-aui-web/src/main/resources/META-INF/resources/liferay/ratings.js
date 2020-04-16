@@ -52,12 +52,14 @@ AUI.add(
 
 				if (config.type === 'like') {
 					ratings = Liferay.Ratings.LikeRating;
-				} else if (
+				}
+				else if (
 					config.type === 'stars' ||
 					config.type === 'stacked-stars'
 				) {
 					ratings = Liferay.Ratings.StarRating;
-				} else if (config.type === 'thumbs') {
+				}
+				else if (config.type === 'thumbs') {
 					ratings = Liferay.Ratings.ThumbRating;
 				}
 
@@ -96,7 +98,7 @@ AUI.add(
 			_thumbScoreMap: {
 				'-1': -1,
 				down: 0,
-				up: 1
+				up: 1,
 			},
 
 			ATTRS: {
@@ -135,8 +137,8 @@ AUI.add(
 						}
 
 						return yourScore;
-					}
-				}
+					},
+				},
 			},
 
 			EXTENDS: A.Base,
@@ -157,7 +159,8 @@ AUI.add(
 
 					if (score === 1.0) {
 						scoreIndex = 0;
-					} else if (score === 0.0) {
+					}
+					else if (score === 0.0) {
 						scoreIndex = 1;
 					}
 
@@ -181,7 +184,8 @@ AUI.add(
 
 					if (instance.get('type') === 'stacked-stars') {
 						tplLabel = TPL_LABEL_SCORE_STACKED;
-					} else {
+					}
+					else {
 						tplLabel = TPL_LABEL_SCORE;
 					}
 
@@ -189,14 +193,15 @@ AUI.add(
 
 					if (totalEntries === 1) {
 						voteLabel = Liferay.Language.get('vote');
-					} else {
+					}
+					else {
 						voteLabel = Liferay.Language.get('votes');
 					}
 
 					return Lang.sub(tplLabel, {
 						desc,
 						totalEntries,
-						voteLabel
+						voteLabel,
 					});
 				},
 
@@ -211,7 +216,7 @@ AUI.add(
 						className: instance.get('className'),
 						classPK: instance.get('classPK'),
 						ratingType: instance.get('type'),
-						score
+						score,
 					});
 
 					var data = {
@@ -219,12 +224,12 @@ AUI.add(
 						classPK: instance.get('classPK'),
 						p_auth: Liferay.authToken,
 						p_l_id: themeDisplay.getPlid(),
-						score
+						score,
 					};
 
 					Liferay.Util.fetch(url, {
 						body: Liferay.Util.objectToFormData(data),
-						method: 'POST'
+						method: 'POST',
 					})
 						.then(response => response.json())
 						.then(response => callback.call(instance, response));
@@ -241,14 +246,14 @@ AUI.add(
 
 					if (stars === 1) {
 						message = Liferay.Language.get('star');
-					} else {
+					}
+					else {
 						message = Liferay.Language.get('stars');
 					}
 
-					Liferay.Portal.ToolTip.show(
-						event.currentTarget,
-						stars + ' ' + message
-					);
+					var currentTarget = event.currentTarget.getDOM();
+
+					currentTarget.setAttribute('title', stars + ' ' + message);
 				},
 
 				_updateAverageScoreText(averageScore) {
@@ -265,7 +270,8 @@ AUI.add(
 							message = Liferay.Language.get(
 								'the-average-rating-is-x-star-out-of-x'
 							);
-						} else {
+						}
+						else {
 							message = Liferay.Language.get(
 								'the-average-rating-is-x-stars-out-of-x'
 							);
@@ -273,7 +279,7 @@ AUI.add(
 
 						var averageRatingText = Lang.sub(message, [
 							averageScore,
-							instance.get(STR_SIZE)
+							instance.get(STR_SIZE),
 						]);
 
 						firstNode.attr('title', averageRatingText);
@@ -299,7 +305,8 @@ AUI.add(
 											'you-have-rated-this-x-stars-out-of-x'
 									  );
 							ratingScore = score;
-						} else {
+						}
+						else {
 							ratingMessage =
 								i === 0
 									? Liferay.Language.get(
@@ -315,7 +322,7 @@ AUI.add(
 							'title',
 							Lang.sub(ratingMessage, [
 								ratingScore,
-								instance.get(STR_SIZE)
+								instance.get(STR_SIZE),
 							])
 						);
 					});
@@ -325,7 +332,7 @@ AUI.add(
 					var instance = this;
 
 					instance._renderRatings();
-				}
+				},
 			},
 
 			register(config) {
@@ -339,21 +346,22 @@ AUI.add(
 				if (container) {
 					buffer.push({
 						config,
-						container: A.one(container)
+						container: A.one(container),
 					});
 
 					instance._registerTask();
-				} else {
+				}
+				else {
 					instance._registerRating(config);
 				}
-			}
+			},
 		});
 
 		var StarRating = A.Component.create({
 			ATTRS: {
 				initialFocus: {
-					validator: Lang.isBoolean
-				}
+					validator: Lang.isBoolean,
+				},
 			},
 
 			EXTENDS: Ratings,
@@ -398,10 +406,10 @@ AUI.add(
 								element: CSS_ICON_STAR_EMPTY,
 								hover: CSS_ICON_STAR,
 								off: CSS_ICON_STAR_EMPTY,
-								on: CSS_ICON_STAR
+								on: CSS_ICON_STAR,
 							},
 							defaultSelected: yourScore,
-							srcNode: '#' + namespace + 'ratingStarContent'
+							srcNode: '#' + namespace + 'ratingStarContent',
 						}).render();
 
 						if (instance.get(STR_INITIAL_FOCUS)) {
@@ -462,15 +470,15 @@ AUI.add(
 
 					instance._updateAverageScoreText(formattedAverageScore);
 					instance._updateScoreText(score);
-				}
-			}
+				},
+			},
 		});
 
 		var ThumbRating = A.Component.create({
 			ATTRS: {
 				initialFocus: {
-					validator: Lang.isBoolean
-				}
+					validator: Lang.isBoolean,
+				},
 			},
 
 			EXTENDS: Ratings,
@@ -489,9 +497,9 @@ AUI.add(
 							hover: 'rating-on',
 							off: 'rating-off',
 							on: 'rating-on',
-							up: ''
+							up: '',
 						},
-						srcNode: '#' + namespace + 'ratingThumbContent'
+						srcNode: '#' + namespace + 'ratingThumbContent',
 					}).render();
 				},
 
@@ -502,7 +510,7 @@ AUI.add(
 
 					return {
 						negativeVotes,
-						positiveVotes
+						positiveVotes,
 					};
 				},
 
@@ -591,7 +599,8 @@ AUI.add(
 						ratingThumbUp.removeClass(cssClasses.on);
 
 						ratings.set('disabled', true);
-					} else {
+					}
+					else {
 						var cssClassesOn = cssClasses.on;
 
 						var ratingThumbDownCssClassOn = false;
@@ -618,7 +627,8 @@ AUI.add(
 								thumbDownMessage = Liferay.Language.get(
 									'you-have-rated-this-as-bad'
 								);
-							} else {
+							}
+							else {
 								thumbDownMessage = Liferay.Language.get(
 									'rate-this-as-bad'
 								);
@@ -635,21 +645,24 @@ AUI.add(
 							thumbUpMessage = Liferay.Language.get(
 								'you-have-rated-this-as-good'
 							);
-						} else if (
+						}
+						else if (
 							ratingThumbDown &&
 							!ratingThumbUpCssClassOn
 						) {
 							thumbUpMessage = Liferay.Language.get(
 								'rate-this-as-good'
 							);
-						} else if (
+						}
+						else if (
 							!ratingThumbDown &&
 							ratingThumbUpCssClassOn
 						) {
 							thumbUpMessage = Liferay.Language.get(
 								'unlike-this'
 							);
-						} else if (
+						}
+						else if (
 							!ratingThumbDown &&
 							!ratingThumbUpCssClassOn
 						) {
@@ -664,8 +677,8 @@ AUI.add(
 								.html(thumbScore.positiveVotes);
 						}
 					}
-				}
-			}
+				},
+			},
 		});
 
 		var LikeRatingImpl = A.Component.create({
@@ -685,8 +698,8 @@ AUI.add(
 
 					elements.addClass(cssClasses.off);
 					elements.item(0).addClass(cssClasses.up);
-				}
-			}
+				},
+			},
 		});
 
 		var LikeRating = A.Component.create({
@@ -708,18 +721,18 @@ AUI.add(
 							hover: 'rating-on',
 							off: 'rating-off',
 							on: 'rating-on',
-							up: ''
+							up: '',
 						},
-						srcNode: '#' + namespace + 'ratingLikeContent'
+						srcNode: '#' + namespace + 'ratingLikeContent',
 					}).render();
 				},
 
 				_getThumbScores(entries) {
 					return {
-						positiveVotes: entries
+						positiveVotes: entries,
 					};
-				}
-			}
+				},
+			},
 		});
 
 		Ratings.LikeRating = LikeRating;
@@ -730,6 +743,6 @@ AUI.add(
 	},
 	'',
 	{
-		requires: ['aui-rating']
+		requires: ['aui-rating'],
 	}
 );

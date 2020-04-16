@@ -27,7 +27,7 @@ import java.util.regex.Pattern;
 /**
  * @author Hugo Huijser
  */
-public class BNDDefinitionKeysCheck extends DefinitionKeysCheck {
+public class BNDDefinitionKeysCheck extends BaseDefinitionKeysCheck {
 
 	@Override
 	protected String doProcess(
@@ -105,9 +105,7 @@ public class BNDDefinitionKeysCheck extends DefinitionKeysCheck {
 		}
 
 		if (correctKey == null) {
-			addMessage(
-				fileName, "Unknown key \"" + definitionKey + "\"",
-				"bnd_definition_keys.markdown");
+			addMessage(fileName, "Unknown key \"" + definitionKey + "\"");
 
 			return content;
 		}

@@ -99,23 +99,23 @@ public class PortletPreferencesFinderImpl
 				sql = StringUtil.removeSubstring(sql, _PREFERENCES_SQL);
 			}
 
-			SQLQuery q = session.createSynchronizedSQLQuery(sql);
+			SQLQuery sqlQuery = session.createSynchronizedSQLQuery(sql);
 
-			q.addScalar(COUNT_COLUMN_NAME, Type.LONG);
+			sqlQuery.addScalar(COUNT_COLUMN_NAME, Type.LONG);
 
-			QueryPos qPos = QueryPos.getInstance(q);
+			QueryPos queryPos = QueryPos.getInstance(sqlQuery);
 
 			if (ownerId != -1) {
-				qPos.add(ownerId);
+				queryPos.add(ownerId);
 			}
 
-			qPos.add(ownerType);
-			qPos.add(portletId);
-			qPos.add(portletId.concat("%_INSTANCE_%"));
+			queryPos.add(ownerType);
+			queryPos.add(portletId);
+			queryPos.add(portletId.concat("%_INSTANCE_%"));
 
 			int count = 0;
 
-			Iterator<Long> itr = q.iterate();
+			Iterator<Long> itr = sqlQuery.iterate();
 
 			while (itr.hasNext()) {
 				Long l = itr.next();
@@ -167,29 +167,29 @@ public class PortletPreferencesFinderImpl
 				sql = StringUtil.removeSubstring(sql, _PREFERENCES_SQL);
 			}
 
-			SQLQuery q = session.createSynchronizedSQLQuery(sql);
+			SQLQuery sqlQuery = session.createSynchronizedSQLQuery(sql);
 
-			q.addScalar(COUNT_COLUMN_NAME, Type.LONG);
+			sqlQuery.addScalar(COUNT_COLUMN_NAME, Type.LONG);
 
-			QueryPos qPos = QueryPos.getInstance(q);
+			QueryPos queryPos = QueryPos.getInstance(sqlQuery);
 
 			if (ownerId != -1) {
-				qPos.add(ownerId);
+				queryPos.add(ownerId);
 			}
 
-			qPos.add(ownerType);
-			qPos.add(portletId);
+			queryPos.add(ownerType);
+			queryPos.add(portletId);
 
 			if (plid != -1) {
-				qPos.add(plid);
+				queryPos.add(plid);
 			}
 			else {
-				qPos.add(portletId.concat("%_INSTANCE_%"));
+				queryPos.add(portletId.concat("%_INSTANCE_%"));
 			}
 
 			int count = 0;
 
-			Iterator<Long> itr = q.iterate();
+			Iterator<Long> itr = sqlQuery.iterate();
 
 			while (itr.hasNext()) {
 				Long l = itr.next();
@@ -225,15 +225,16 @@ public class PortletPreferencesFinderImpl
 
 			String sql = CustomSQLUtil.get(FIND_BY_PORTLET_ID);
 
-			SQLQuery q = session.createSynchronizedSQLQuery(sql);
+			SQLQuery sqlQuery = session.createSynchronizedSQLQuery(sql);
 
-			q.addEntity("PortletPreferences", PortletPreferencesImpl.class);
+			sqlQuery.addEntity(
+				"PortletPreferences", PortletPreferencesImpl.class);
 
-			QueryPos qPos = QueryPos.getInstance(q);
+			QueryPos queryPos = QueryPos.getInstance(sqlQuery);
 
-			qPos.add(portletId);
+			queryPos.add(portletId);
 
-			return q.list(true);
+			return sqlQuery.list(true);
 		}
 		catch (Exception exception) {
 			throw new SystemException(exception);
@@ -278,21 +279,22 @@ public class PortletPreferencesFinderImpl
 
 				String sql = CustomSQLUtil.get(FIND_BY_C_G_O_O_P_P);
 
-				SQLQuery q = session.createSynchronizedSQLQuery(sql);
+				SQLQuery sqlQuery = session.createSynchronizedSQLQuery(sql);
 
-				q.addEntity("PortletPreferences", PortletPreferencesImpl.class);
+				sqlQuery.addEntity(
+					"PortletPreferences", PortletPreferencesImpl.class);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(sqlQuery);
 
-				qPos.add(companyId);
-				qPos.add(groupId);
-				qPos.add(ownerId);
-				qPos.add(ownerType);
-				qPos.add(portletId);
-				qPos.add(portletId.concat("_INSTANCE_%"));
-				qPos.add(privateLayout);
+				queryPos.add(companyId);
+				queryPos.add(groupId);
+				queryPos.add(ownerId);
+				queryPos.add(ownerType);
+				queryPos.add(portletId);
+				queryPos.add(portletId.concat("_INSTANCE_%"));
+				queryPos.add(privateLayout);
 
-				list = q.list(true);
+				list = sqlQuery.list(true);
 
 				PortletPreferencesUtil.cacheResult(list);
 

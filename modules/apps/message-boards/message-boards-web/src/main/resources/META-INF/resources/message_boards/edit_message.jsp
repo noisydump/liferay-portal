@@ -145,7 +145,7 @@ if (portletTitleBasedNavigation) {
 		<liferay-ui:error exception="<%= DuplicateFileEntryException.class %>" message="please-enter-a-unique-document-name" />
 
 		<liferay-ui:error exception="<%= LiferayFileItemException.class %>">
-			<liferay-ui:message arguments="<%= TextFormatter.formatStorageSize(LiferayFileItem.THRESHOLD_SIZE, locale) %>" key="please-enter-valid-content-with-valid-content-size-no-larger-than-x" translateArguments="<%= false %>" />
+			<liferay-ui:message arguments="<%= LanguageUtil.formatStorageSize(LiferayFileItem.THRESHOLD_SIZE, locale) %>" key="please-enter-valid-content-with-valid-content-size-no-larger-than-x" translateArguments="<%= false %>" />
 		</liferay-ui:error>
 
 		<liferay-ui:error exception="<%= FileExtensionException.class %>">
@@ -160,7 +160,7 @@ if (portletTitleBasedNavigation) {
 		<liferay-ui:error exception="<%= FileNameException.class %>" message="please-enter-a-file-with-a-valid-file-name" />
 
 		<liferay-ui:error exception="<%= FileSizeException.class %>">
-			<liferay-ui:message arguments="<%= TextFormatter.formatStorageSize(DLValidatorUtil.getMaxAllowableSize(), locale) %>" key="please-enter-a-file-with-a-valid-file-size-no-larger-than-x" translateArguments="<%= false %>" />
+			<liferay-ui:message arguments="<%= LanguageUtil.formatStorageSize(DLValidatorUtil.getMaxAllowableSize(), locale) %>" key="please-enter-a-file-with-a-valid-file-size-no-larger-than-x" translateArguments="<%= false %>" />
 		</liferay-ui:error>
 
 		<liferay-ui:error exception="<%= LockedThreadException.class %>" message="thread-is-locked" />
@@ -168,7 +168,7 @@ if (portletTitleBasedNavigation) {
 		<liferay-ui:error exception="<%= MessageSubjectException.class %>" message="please-enter-a-valid-subject" />
 
 		<liferay-ui:error exception="<%= UploadRequestSizeException.class %>">
-			<liferay-ui:message arguments="<%= TextFormatter.formatStorageSize(UploadServletRequestConfigurationHelperUtil.getMaxSize(), locale) %>" key="request-is-larger-than-x-and-could-not-be-processed" translateArguments="<%= false %>" />
+			<liferay-ui:message arguments="<%= LanguageUtil.formatStorageSize(UploadServletRequestConfigurationHelperUtil.getMaxSize(), locale) %>" key="request-is-larger-than-x-and-could-not-be-processed" translateArguments="<%= false %>" />
 		</liferay-ui:error>
 
 		<liferay-asset:asset-categories-error />
@@ -248,20 +248,15 @@ if (portletTitleBasedNavigation) {
 								keyProperty="fileEntryId"
 								modelVar="fileEntry"
 							>
-
-								<%
-								String rowURL = PortletFileRepositoryUtil.getDownloadPortletFileEntryURL(themeDisplay, fileEntry, "status=" + WorkflowConstants.STATUS_APPROVED);
-								%>
-
 								<liferay-ui:search-container-column-text
-									href="<%= rowURL %>"
+									href='<%= PortletFileRepositoryUtil.getDownloadPortletFileEntryURL(themeDisplay, fileEntry, "status=" + WorkflowConstants.STATUS_APPROVED) %>'
 									name="file-name"
 									value="<%= fileEntry.getTitle() %>"
 								/>
 
 								<liferay-ui:search-container-column-text
 									name="size"
-									value="<%= TextFormatter.formatStorageSize(fileEntry.getSize(), locale) %>"
+									value="<%= LanguageUtil.formatStorageSize(fileEntry.getSize(), locale) %>"
 								/>
 
 								<liferay-ui:search-container-column-text
@@ -302,6 +297,11 @@ if (portletTitleBasedNavigation) {
 
 			<c:if test="<%= curParentMessage == null %>">
 				<aui:fieldset collapsed="<%= true %>" collapsible="<%= true %>" label="categorization">
+					<liferay-asset:asset-categories-selector
+						className="<%= MBMessage.class.getName() %>"
+						classPK="<%= (message != null) ? message.getMessageId() : 0 %>"
+					/>
+
 					<liferay-asset:asset-tags-selector
 						className="<%= MBMessage.class.getName() %>"
 						classPK="<%= (message != null) ? message.getMessageId() : 0 %>"
@@ -460,7 +460,7 @@ if (portletTitleBasedNavigation) {
 		constants: {
 			ACTION_PUBLISH: '<%= WorkflowConstants.ACTION_PUBLISH %>',
 			ACTION_SAVE_DRAFT: '<%= WorkflowConstants.ACTION_SAVE_DRAFT %>',
-			CMD: '<%= Constants.CMD %>'
+			CMD: '<%= Constants.CMD %>',
 		},
 		currentAction:
 			'<%= (message == null) ? Constants.ADD : Constants.UPDATE %>',
@@ -483,7 +483,7 @@ if (portletTitleBasedNavigation) {
 				<portlet:param name="messageId" value="<%= String.valueOf(message.getMessageId()) %>" />
 			</portlet:renderURL>
 
-			viewTrashAttachmentsURL: '<%= viewTrashAttachmentsURL %>'
+			viewTrashAttachmentsURL: '<%= viewTrashAttachmentsURL %>',
 		</c:if>
 	});
 </aui:script>

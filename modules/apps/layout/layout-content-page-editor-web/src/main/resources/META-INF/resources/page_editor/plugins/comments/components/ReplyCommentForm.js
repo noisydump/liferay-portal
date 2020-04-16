@@ -15,9 +15,8 @@
 import ClayButton from '@clayui/button';
 import {openToast} from 'frontend-js-web';
 import PropTypes from 'prop-types';
-import React, {useState, useContext} from 'react';
+import React, {useState} from 'react';
 
-import {ConfigContext} from '../../../app/config/index';
 import {useDispatch} from '../../../app/store/index';
 import addFragmentComment from '../../../app/thunks/addFragmentComment';
 import CommentForm from './CommentForm';
@@ -25,12 +24,11 @@ import CommentForm from './CommentForm';
 export default function ReplyCommentForm({
 	disabled,
 	fragmentEntryLinkId,
-	parentCommentId
+	parentCommentId,
 }) {
 	const [addingComment, setAddingComment] = useState(false);
 	const [showForm, setShowForm] = useState(false);
 	const [textareaContent, setTextareaContent] = useState('');
-	const config = useContext(ConfigContext);
 	const dispatch = useDispatch();
 
 	const handleReplyButtonClick = () => {
@@ -39,9 +37,8 @@ export default function ReplyCommentForm({
 		dispatch(
 			addFragmentComment({
 				body: textareaContent,
-				config,
 				fragmentEntryLinkId,
-				parentCommentId
+				parentCommentId,
 			})
 		)
 			.then(() => {
@@ -55,7 +52,7 @@ export default function ReplyCommentForm({
 						'the-reply-could-not-be-saved'
 					),
 					title: Liferay.Language.get('error'),
-					type: 'danger'
+					type: 'danger',
 				});
 
 				setAddingComment(false);
@@ -99,5 +96,5 @@ export default function ReplyCommentForm({
 ReplyCommentForm.propTypes = {
 	disabled: PropTypes.bool,
 	fragmentEntryLinkId: PropTypes.string.isRequired,
-	parentCommentId: PropTypes.string.isRequired
+	parentCommentId: PropTypes.string.isRequired,
 };

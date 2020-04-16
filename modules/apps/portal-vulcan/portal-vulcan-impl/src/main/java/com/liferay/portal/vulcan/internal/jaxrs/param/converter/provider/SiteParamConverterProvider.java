@@ -16,6 +16,7 @@ package com.liferay.portal.vulcan.internal.jaxrs.param.converter.provider;
 
 import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.Group;
+import com.liferay.portal.kernel.model.GroupConstants;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.util.GetterUtil;
 
@@ -54,7 +55,7 @@ public class SiteParamConverterProvider
 		}
 
 		throw new NotFoundException(
-			"Unable to get a valid site with ID " + siteId);
+			"Unable to get a valid site with ID " + parameter);
 	}
 
 	@Override
@@ -69,17 +70,18 @@ public class SiteParamConverterProvider
 	}
 
 	public Long getGroupId(long companyId, String siteId) {
-		if (siteId != null) {
-			Group group = _groupLocalService.fetchGroup(companyId, siteId);
+		if (siteId == null) {
+			return null;
+		}
 
-			if (group == null) {
-				group = _groupLocalService.fetchGroup(
-					GetterUtil.getLong(siteId));
-			}
+		Group group = _fetchGroup(companyId, siteId);
 
-			if ((group != null) && group.isSite()) {
-				return group.getGroupId();
-			}
+		if (group == null) {
+			return null;
+		}
+
+		if (_isDepotOrSite(group) || _isDepotOrSite(group.getLiveGroup())) {
+			return group.getGroupId();
 		}
 
 		return null;
@@ -88,6 +90,16 @@ public class SiteParamConverterProvider
 	@Override
 	public String toString(Long parameter) {
 		return String.valueOf(parameter);
+	}
+
+	private Group _fetchGroup(long companyId, String groupKey) {
+		Group group = _groupLocalService.fetchGroup(companyId, groupKey);
+
+		if (group != null) {
+			return group;
+		}
+
+		return _groupLocalService.fetchGroup(GetterUtil.getLong(groupKey));
 	}
 
 	private boolean _hasSiteIdAnnotation(Annotation[] annotations) {
@@ -99,6 +111,18 @@ public class SiteParamConverterProvider
 
 				return true;
 			}
+		}
+
+		return false;
+	}
+
+	private boolean _isDepotOrSite(Group group) {
+		if (group == null) {
+			return false;
+		}
+
+		if ((group.getType() == GroupConstants.TYPE_DEPOT) || group.isSite()) {
+			return true;
 		}
 
 		return false;

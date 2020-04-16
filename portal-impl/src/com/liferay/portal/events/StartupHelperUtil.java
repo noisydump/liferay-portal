@@ -31,9 +31,9 @@ import com.liferay.portal.kernel.util.PortalClassLoaderUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.version.Version;
+import com.liferay.portal.tools.DBUpgrader;
 import com.liferay.portal.upgrade.PortalUpgradeProcess;
 import com.liferay.portal.verify.VerifyException;
-import com.liferay.portal.verify.VerifyProcessUtil;
 
 import java.sql.Connection;
 
@@ -86,8 +86,12 @@ public class StartupHelperUtil {
 		return _upgrading;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
 	public static boolean isVerified() {
-		return _verified;
+		return true;
 	}
 
 	public static void printPatchLevel() {
@@ -124,20 +128,13 @@ public class StartupHelperUtil {
 	public static void updateIndexes(boolean dropIndexes) {
 		DB db = DBManagerUtil.getDB();
 
-		Connection connection = null;
-
-		try {
-			connection = DataAccess.getConnection();
-
+		try (Connection connection = DataAccess.getConnection()) {
 			updateIndexes(db, connection, dropIndexes);
 		}
 		catch (Exception exception) {
 			if (_log.isWarnEnabled()) {
 				_log.warn(exception, exception);
 			}
-		}
-		finally {
-			DataAccess.cleanUp(connection);
 		}
 	}
 
@@ -183,8 +180,12 @@ public class StartupHelperUtil {
 		}
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
 	public static void verifyProcess(boolean verified) throws VerifyException {
-		_verified = VerifyProcessUtil.verifyProcess(_upgraded, verified);
+		DBUpgrader.verify();
 	}
 
 	public static void verifyRequiredSchemaVersion() throws Exception {
@@ -248,6 +249,5 @@ public class StartupHelperUtil {
 	private static boolean _startupFinished;
 	private static boolean _upgraded;
 	private static boolean _upgrading;
-	private static boolean _verified;
 
 }

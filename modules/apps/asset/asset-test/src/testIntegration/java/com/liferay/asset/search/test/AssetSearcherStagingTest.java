@@ -33,13 +33,13 @@ import com.liferay.portal.kernel.search.SearchContext;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.service.UserGroupRoleLocalService;
 import com.liferay.portal.kernel.service.UserLocalService;
-import com.liferay.portal.kernel.service.persistence.UserGroupRolePK;
 import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RoleTestUtil;
 import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.search.test.util.DocumentsAssert;
+import com.liferay.portal.search.test.util.SearchTestRule;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portlet.asset.util.AssetSearcher;
@@ -128,6 +128,9 @@ public class AssetSearcherStagingTest {
 		assertField(document, Field.STAGING_GROUP, StringPool.TRUE);
 	}
 
+	@Rule
+	public SearchTestRule searchTestRule = new SearchTestRule();
+
 	protected JournalArticle addJournalArticle() throws Exception {
 		return _journalArticleFixture.addJournalArticle();
 	}
@@ -151,10 +154,7 @@ public class AssetSearcherStagingTest {
 	protected UserGroupRole addUserGroupRole(User user, Role role) {
 		UserGroupRole userGroupRole =
 			_userGroupRoleLocalService.addUserGroupRole(
-				_userGroupRoleLocalService.createUserGroupRole(
-					new UserGroupRolePK(
-						user.getUserId(), _group.getGroupId(),
-						role.getRoleId())));
+				user.getUserId(), _group.getGroupId(), role.getRoleId());
 
 		_userGroupRoles.add(userGroupRole);
 

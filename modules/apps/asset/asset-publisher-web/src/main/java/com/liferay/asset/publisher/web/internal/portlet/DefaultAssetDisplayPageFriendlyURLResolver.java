@@ -15,7 +15,7 @@
 package com.liferay.asset.publisher.web.internal.portlet;
 
 import com.liferay.asset.display.page.portlet.BaseAssetDisplayPageFriendlyURLResolver;
-import com.liferay.asset.display.page.util.AssetDisplayPageHelper;
+import com.liferay.asset.display.page.util.AssetDisplayPageUtil;
 import com.liferay.asset.kernel.AssetRendererFactoryRegistryUtil;
 import com.liferay.asset.kernel.model.AssetEntry;
 import com.liferay.asset.kernel.model.AssetRendererFactory;
@@ -94,7 +94,7 @@ public class DefaultAssetDisplayPageFriendlyURLResolver
 
 		if (Validator.isNull(journalArticle.getLayoutUuid()) &&
 			(infoDisplayObjectProvider != null) &&
-			AssetDisplayPageHelper.hasAssetDisplayPage(
+			AssetDisplayPageUtil.hasAssetDisplayPage(
 				groupId, infoDisplayObjectProvider.getClassNameId(),
 				infoDisplayObjectProvider.getClassPK(),
 				infoDisplayObjectProvider.getClassTypeId())) {
@@ -129,7 +129,7 @@ public class DefaultAssetDisplayPageFriendlyURLResolver
 
 		if (Validator.isNull(journalArticle.getLayoutUuid()) &&
 			(infoDisplayObjectProvider != null) &&
-			AssetDisplayPageHelper.hasAssetDisplayPage(
+			AssetDisplayPageUtil.hasAssetDisplayPage(
 				groupId, infoDisplayObjectProvider.getClassNameId(),
 				infoDisplayObjectProvider.getClassPK(),
 				infoDisplayObjectProvider.getClassTypeId())) {
@@ -168,11 +168,12 @@ public class DefaultAssetDisplayPageFriendlyURLResolver
 			actualParams.setParentMap(params);
 		}
 
-		UnicodeProperties typeSettingsProperties =
+		UnicodeProperties typeSettingsUnicodeProperties =
 			layout.getTypeSettingsProperties();
 
-		String defaultAssetPublisherPortletId = typeSettingsProperties.get(
-			LayoutTypePortletConstants.DEFAULT_ASSET_PUBLISHER_PORTLET_ID);
+		String defaultAssetPublisherPortletId =
+			typeSettingsUnicodeProperties.get(
+				LayoutTypePortletConstants.DEFAULT_ASSET_PUBLISHER_PORTLET_ID);
 
 		String currentDefaultAssetPublisherPortletId =
 			defaultAssetPublisherPortletId;
@@ -342,13 +343,11 @@ public class DefaultAssetDisplayPageFriendlyURLResolver
 	private JournalArticle _getJournalArticle(long groupId, String friendlyURL)
 		throws PortalException {
 
-		JournalArticle journalArticle = null;
-
 		String normalizedUrlTitle =
 			FriendlyURLNormalizerUtil.normalizeWithEncoding(
 				_getFullURLTitle(friendlyURL));
 
-		journalArticle =
+		JournalArticle journalArticle =
 			_journalArticleLocalService.fetchLatestArticleByUrlTitle(
 				groupId, normalizedUrlTitle, WorkflowConstants.STATUS_APPROVED);
 

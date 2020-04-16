@@ -17,16 +17,18 @@ package com.liferay.account.internal.model.listener;
 import com.liferay.account.constants.AccountConstants;
 import com.liferay.account.model.AccountEntry;
 import com.liferay.account.model.AccountEntryUserRel;
+import com.liferay.account.service.AccountEntryLocalService;
 import com.liferay.account.service.AccountEntryUserRelLocalService;
-import com.liferay.account.service.persistence.AccountEntryUserRelPersistence;
 import com.liferay.portal.kernel.exception.ModelListenerException;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.BaseModelListener;
 import com.liferay.portal.kernel.model.ModelListener;
 import com.liferay.portal.kernel.model.User;
+import com.liferay.portal.kernel.model.UserConstants;
 import com.liferay.portal.kernel.search.Indexer;
 import com.liferay.portal.kernel.search.IndexerRegistryUtil;
 import com.liferay.portal.kernel.search.SearchException;
+import com.liferay.portal.kernel.service.UserGroupRoleLocalService;
 import com.liferay.portal.kernel.util.ListUtil;
 
 import java.util.List;
@@ -54,6 +56,21 @@ public class AccountEntryUserRelModelListener
 	@Override
 	public void onAfterRemove(AccountEntryUserRel accountEntryUserRel)
 		throws ModelListenerException {
+
+		if (accountEntryUserRel.getAccountUserId() ==
+				UserConstants.USER_ID_DEFAULT) {
+
+			return;
+		}
+
+		AccountEntry accountEntry = _accountEntryLocalService.fetchAccountEntry(
+			accountEntryUserRel.getAccountEntryId());
+
+		if (accountEntry != null) {
+			_userGroupRoleLocalService.deleteUserGroupRoles(
+				accountEntryUserRel.getAccountUserId(),
+				new long[] {accountEntry.getAccountEntryGroupId()});
+		}
 
 		_updateDefaultAccountEntry(accountEntryUserRel.getAccountUserId());
 
@@ -89,7 +106,8 @@ public class AccountEntryUserRelModelListener
 		throws ModelListenerException {
 
 		List<AccountEntryUserRel> accountEntryUserRels =
-			_accountEntryUserRelPersistence.findByAUI(accountUserId);
+			_accountEntryUserRelLocalService.
+				getAccountEntryUserRelsByAccountUserId(accountUserId);
 
 		if (ListUtil.isEmpty(accountEntryUserRels)) {
 			try {
@@ -115,9 +133,12 @@ public class AccountEntryUserRelModelListener
 	}
 
 	@Reference
+	private AccountEntryLocalService _accountEntryLocalService;
+
+	@Reference
 	private AccountEntryUserRelLocalService _accountEntryUserRelLocalService;
 
 	@Reference
-	private AccountEntryUserRelPersistence _accountEntryUserRelPersistence;
+	private UserGroupRoleLocalService _userGroupRoleLocalService;
 
 }

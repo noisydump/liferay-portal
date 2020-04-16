@@ -15,12 +15,22 @@
 </tr>
 <tr>
 	<td>NODE_SELECTED</td>
-	<td>//div[contains(@class,'card-type-directory') and contains(@class,'selected')]/div[contains(@class,'card-horizontal')]/div/div[2]//span[contains(.,'${key_nodeName}')]</td>
+	<td>//div[contains(@class,'card-type-directory') and contains(@class,'selected')]/div[contains(@class,'card-horizontal')]//span[contains(.,'${key_nodeName}')]</td>
 	<td></td>
 </tr>
 <tr>
 	<td>NODE_UNSELECTED</td>
-	<td>//div[contains(@class,'card-type-directory') and not(contains(@class,'selected'))]/div[contains(@class,'card-horizontal')]/div/div[2]//span[contains(.,'${key_nodeName}')]</td>
+	<td>//div[contains(@class,'card-type-directory') and not(contains(@class,'selected'))]/div[contains(@class,'card-horizontal')]//span[contains(.,'${key_nodeName}')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>PAGE_STRUCTURE_TREE_NODE</td>
+	<td>//div[contains(@class,'page-structure') and contains(.,'${key_nodeName}')]/button[contains(@class,'tree-node')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>PAGE_STRUCTURE_TREE_NODE_ACTIVE</td>
+	<td>//div[contains(@class,'page-structure') and contains(.,'${key_nodeName}') and contains(@class,'active')]/button[contains(@class,'tree-node')]</td>
 	<td></td>
 </tr>
 </tbody>

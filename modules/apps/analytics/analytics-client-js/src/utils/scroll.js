@@ -14,7 +14,7 @@
 
 /**
  * Returns the current scroll position of the page
- * @return {number} Scroll position of the page
+ * @returns {number} Scroll position of the page
  */
 function getCurrentScrollPosition() {
 	return window.pageYOffset || document.documentElement.scrollTop;
@@ -22,13 +22,13 @@ function getCurrentScrollPosition() {
 
 /**
  * Returns the entire height of the document
- * @return {number} The normalized document height of the document
+ * @returns {number} The normalized document height of the document
  */
 function getDocumentHeight() {
 	const heights = [
 		document.body.clientHeight,
 		document.documentElement.clientHeight,
-		document.documentElement.scrollHeight
+		document.documentElement.scrollHeight,
 	];
 
 	return Math.max(...heights);
@@ -40,7 +40,7 @@ function getDimensions(element) {
 
 	let positions = {
 		height,
-		top
+		top,
 	};
 
 	if (element) {
@@ -50,7 +50,7 @@ function getDimensions(element) {
 		positions = {
 			bottom,
 			height,
-			top
+			top,
 		};
 	}
 
@@ -76,7 +76,8 @@ class ScrollTracker {
 
 		if (top <= 0 && bottom >= 0) {
 			depthValue = visibleArea / (height + top);
-		} else if (!element) {
+		}
+		else if (!element) {
 			depthValue = (top + visibleArea) / height;
 		}
 
@@ -87,8 +88,8 @@ class ScrollTracker {
 	 * Calculates the depth of the element on the page. If the
 	 * element is not passed as a parameter the calculation must be
 	 * performed to get the page depth
-	 * @param {object} element The Blog DOM element
-	 * @return {number} depth percentage from 0 to 100
+	 * @param {Object} element The Blog DOM element
+	 * @returns {number} depth percentage from 0 to 100
 	 */
 	getDepth(element) {
 		const value = this.getDepthValue(element);

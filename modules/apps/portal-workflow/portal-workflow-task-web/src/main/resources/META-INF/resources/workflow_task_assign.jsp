@@ -17,13 +17,13 @@
 <%@ include file="/init.jsp" %>
 
 <%
-WorkflowTask workflowTask = workflowTaskDisplayContext.getWorkflowTask();
-
-boolean hasAssignableUsers = workflowTaskDisplayContext.hasAssignableUsers(workflowTask);
+String redirect = ParamUtil.getString(request, "redirect");
 
 long assigneeUserId = ParamUtil.getLong(renderRequest, "assigneeUserId");
 
-String redirect = ParamUtil.getString(request, "redirect");
+WorkflowTask workflowTask = workflowTaskDisplayContext.getWorkflowTask();
+
+boolean hasAssignableUsers = workflowTaskDisplayContext.hasAssignableUsers(workflowTask);
 %>
 
 <liferay-portlet:resourceURL copyCurrentRenderParameters="<%= false %>" id="assignWorkflowTask" var="assignURL" />
@@ -44,7 +44,7 @@ String redirect = ParamUtil.getString(request, "redirect");
 						for (User assignableUser : workflowTaskDisplayContext.getAssignableUsers(workflowTask)) {
 						%>
 
-							<aui:option label="<%= assignableUser.getFullName() %>" selected="<%= workflowTask.getAssigneeUserId() == assignableUser.getUserId() %>" value="<%= String.valueOf(assignableUser.getUserId()) %>" />
+							<aui:option label="<%= HtmlUtil.escape(assignableUser.getFullName()) %>" selected="<%= workflowTask.getAssigneeUserId() == assignableUser.getUserId() %>" value="<%= String.valueOf(assignableUser.getUserId()) %>" />
 
 						<%
 						}
@@ -58,13 +58,15 @@ String redirect = ParamUtil.getString(request, "redirect");
 		</div>
 
 		<div class="modal-footer">
-			<div class="btn-group">
-				<div class="btn-group-item">
-					<aui:button name="close" type="cancel" />
-				</div>
+			<div class="modal-item-last">
+				<div class="btn-group">
+					<div class="btn-group-item">
+						<aui:button name="close" type="cancel" />
+					</div>
 
-				<div class="btn-group-item">
-					<aui:button disabled="<%= !hasAssignableUsers && (assigneeUserId <= 0) %>" name="done" primary="<%= true %>" value="done" />
+					<div class="btn-group-item">
+						<aui:button disabled="<%= !hasAssignableUsers && (assigneeUserId <= 0) %>" name="done" primary="<%= true %>" value="done" />
+					</div>
 				</div>
 			</div>
 		</div>
@@ -82,7 +84,7 @@ String redirect = ParamUtil.getString(request, "redirect");
 
 			Liferay.Util.fetch('<%= assignURL.toString() %>', {
 				body: data,
-				method: 'POST'
+				method: 'POST',
 			}).then(function() {
 				Liferay.Util.getOpener().<portlet:namespace />refreshPortlet(
 					'<%= redirect.toString() %>'

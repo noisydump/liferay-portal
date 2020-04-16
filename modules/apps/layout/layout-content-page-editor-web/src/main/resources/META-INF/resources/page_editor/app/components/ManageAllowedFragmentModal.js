@@ -15,15 +15,14 @@
 import ClayButton from '@clayui/button';
 import ClayModal from '@clayui/modal';
 import PropTypes from 'prop-types';
-import React, {useState, useCallback, useContext} from 'react';
+import React, {useCallback, useState} from 'react';
 
-import {ConfigContext} from '../config/index';
+import {config} from '../config/index';
 import {useDispatch} from '../store/index';
 import updateItemConfig from '../thunks/updateItemConfig';
 import AllowedFragmentSelector from './AllowedFragmentSelector';
 
 const ManageAllowedFragmentModal = ({item, observer, onClose}) => {
-	const config = useContext(ConfigContext);
 	const dispatch = useDispatch();
 
 	const [allowNewFragmentEntries, setAllowNewFragmentEntries] = useState(
@@ -37,13 +36,12 @@ const ManageAllowedFragmentModal = ({item, observer, onClose}) => {
 
 		dispatch(
 			updateItemConfig({
-				config,
 				itemConfig: {
 					allowNewFragmentEntries,
-					fragmentEntryKeys: [...selectedFragments]
+					fragmentEntryKeys: [...selectedFragments],
 				},
 				itemId: item.itemId,
-				segmentsExperienceId: 0
+				segmentsExperienceId: config.defaultSegmentsExperienceId,
 			})
 		).then(() => {
 			setLoading(false);
@@ -61,7 +59,7 @@ const ManageAllowedFragmentModal = ({item, observer, onClose}) => {
 
 	return (
 		<ClayModal
-			className="fragments-editor__allowed-fragment__modal"
+			className="page-editor__allowed-fragment__modal"
 			observer={observer}
 			size="md"
 		>
@@ -76,6 +74,7 @@ const ManageAllowedFragmentModal = ({item, observer, onClose}) => {
 					)}
 				</p>
 				<AllowedFragmentSelector
+					dropZoneConfig={item.config}
 					onSelectedFragment={onSelectedFragment}
 				/>
 			</ClayModal.Body>
@@ -109,8 +108,12 @@ const ManageAllowedFragmentModal = ({item, observer, onClose}) => {
 };
 
 ManageAllowedFragmentModal.propTypes = {
+	item: PropTypes.shape({
+		config: PropTypes.object.isRequired,
+		itemId: PropTypes.string.isRequired,
+	}).isRequired,
 	observer: PropTypes.object.isRequired,
-	onClose: PropTypes.func.isRequired
+	onClose: PropTypes.func.isRequired,
 };
 
 export default ManageAllowedFragmentModal;

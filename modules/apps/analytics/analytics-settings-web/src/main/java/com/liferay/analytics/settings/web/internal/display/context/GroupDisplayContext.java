@@ -18,42 +18,72 @@ import com.liferay.analytics.settings.configuration.AnalyticsConfiguration;
 import com.liferay.analytics.settings.web.internal.constants.AnalyticsSettingsWebKeys;
 import com.liferay.analytics.settings.web.internal.search.GroupChecker;
 import com.liferay.analytics.settings.web.internal.search.GroupSearch;
+import com.liferay.analytics.settings.web.internal.util.AnalyticsSettingsUtil;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.json.JSONFactoryUtil;
+import com.liferay.portal.kernel.json.JSONObject;
+import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.service.GroupServiceUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.LinkedHashMapBuilder;
+import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.SetUtil;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.util.comparator.GroupNameComparator;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.portlet.PortletURL;
 import javax.portlet.RenderRequest;
 import javax.portlet.RenderResponse;
 
+import org.apache.http.HttpResponse;
+import org.apache.http.HttpStatus;
+import org.apache.http.StatusLine;
+import org.apache.http.util.EntityUtils;
+
 /**
  * @author Marcellus Tavares
+ * @author André Miranda
  */
 public class GroupDisplayContext {
 
 	public GroupDisplayContext(
-		RenderRequest renderRequest, RenderResponse renderResponse) {
+		String mvcRenderCommandName, RenderRequest renderRequest,
+		RenderResponse renderResponse) {
+
+		_mvcRenderCommandName = mvcRenderCommandName;
+		_renderRequest = renderRequest;
+		_renderResponse = renderResponse;
 
 		_analyticsConfiguration =
 			(AnalyticsConfiguration)renderRequest.getAttribute(
 				AnalyticsSettingsWebKeys.ANALYTICS_CONFIGURATION);
-		_renderRequest = renderRequest;
-		_renderResponse = renderResponse;
+	}
+
+	public String getChannelName(Long groupId) {
+		if (_channelNames == null) {
+			return StringPool.BLANK;
+		}
+
+		return _channelNames.getOrDefault(
+			String.valueOf(groupId), StringPool.BLANK);
 	}
 
 	public GroupSearch getGroupSearch() {
@@ -77,11 +107,24 @@ public class GroupDisplayContext {
 
 		groupSearch.setResults(groups);
 
-		groupSearch.setRowChecker(
-			new GroupChecker(
-				_renderResponse,
-				Validator.isBlank(_analyticsConfiguration.token()),
-				SetUtil.fromArray(_analyticsConfiguration.syncedGroupIds())));
+		if (StringUtil.equalsIgnoreCase(
+				_mvcRenderCommandName, "/analytics/edit_synced_sites")) {
+
+			groupSearch.setRowChecker(
+				new GroupChecker(
+					_renderResponse, null,
+					SetUtil.fromArray(_analyticsConfiguration.syncedGroupIds()),
+					_mvcRenderCommandName));
+		}
+		else {
+			_fetchChannelNames(groups);
+
+			groupSearch.setRowChecker(
+				new GroupChecker(
+					_renderResponse,
+					ParamUtil.getString(_renderRequest, "channelId"),
+					_getDisabledGroupIds(), _mvcRenderCommandName));
+		}
 
 		int total = GroupServiceUtil.searchCount(
 			_getCompanyId(), _getClassNameIds(), _getKeywords(),
@@ -106,11 +149,64 @@ public class GroupDisplayContext {
 	public PortletURL getPortletURL() {
 		PortletURL portletURL = _renderResponse.createRenderURL();
 
-		portletURL.setParameter(
-			"mvcRenderCommandName", "/view_configuration_screen");
-		portletURL.setParameter("configurationScreenKey", "synced-sites");
+		portletURL.setParameter("mvcRenderCommandName", _mvcRenderCommandName);
 
 		return portletURL;
+	}
+
+	private void _fetchChannelNames(List<Group> groups) {
+		_channelNames = new HashMap<>();
+
+		ThemeDisplay themeDisplay = (ThemeDisplay)_renderRequest.getAttribute(
+			WebKeys.THEME_DISPLAY);
+
+		if (groups.isEmpty() ||
+			!AnalyticsSettingsUtil.isAnalyticsEnabled(
+				themeDisplay.getCompanyId())) {
+
+			return;
+		}
+
+		Stream<Group> stream = groups.stream();
+
+		List<String> groupIds = stream.map(
+			Group::getGroupId
+		).map(
+			String::valueOf
+		).collect(
+			Collectors.toList()
+		);
+
+		try {
+			HttpResponse httpResponse = AnalyticsSettingsUtil.doPost(
+				JSONUtil.put(
+					"dataSourceId",
+					AnalyticsSettingsUtil.getAsahFaroBackendDataSourceId(
+						themeDisplay.getCompanyId())
+				).put(
+					"groupIds", groupIds
+				),
+				themeDisplay.getCompanyId(),
+				"api/1.0/channels/query_channel_names");
+
+			StatusLine statusLine = httpResponse.getStatusLine();
+
+			if (statusLine.getStatusCode() != HttpStatus.SC_OK) {
+				_log.error("Failed to fetch channels");
+
+				return;
+			}
+
+			JSONObject channelsJSONObject = JSONFactoryUtil.createJSONObject(
+				EntityUtils.toString(httpResponse.getEntity()));
+
+			for (String key : channelsJSONObject.keySet()) {
+				_channelNames.put(key, channelsJSONObject.getString(key));
+			}
+		}
+		catch (Exception exception) {
+			_log.error(exception, exception);
+		}
 	}
 
 	private long[] _getClassNameIds() {
@@ -128,6 +224,14 @@ public class GroupDisplayContext {
 			WebKeys.THEME_DISPLAY);
 
 		return themeDisplay.getCompanyId();
+	}
+
+	private Set<String> _getDisabledGroupIds() {
+		if (MapUtil.isEmpty(_channelNames)) {
+			return Collections.emptySet();
+		}
+
+		return _channelNames.keySet();
 	}
 
 	private LinkedHashMap<String, Object> _getGroupParams() {
@@ -171,8 +275,10 @@ public class GroupDisplayContext {
 		GroupDisplayContext.class);
 
 	private final AnalyticsConfiguration _analyticsConfiguration;
+	private Map<String, String> _channelNames;
 	private long[] _classNameIds;
 	private String _keywords;
+	private final String _mvcRenderCommandName;
 	private String _orderByCol;
 	private String _orderByType;
 	private final RenderRequest _renderRequest;

@@ -3,17 +3,19 @@
 	margin-left: 0;
 }
 
+.controls-hidden .portlet-topper-toolbar {
+	display: none !important;
+}
+
 .lfr-button {
 	padding: 2px 0 2px 20px;
 }
 
 .js {
-	@include media-breakpoint-down(sm) {
-		.controls-hidden {
-			.lfr-meta-actions,
-			.lfr-configurator-visibility {
-				display: none;
-			}
+	.controls-hidden {
+		.lfr-meta-actions,
+		.lfr-configurator-visibility {
+			display: none;
 		}
 	}
 

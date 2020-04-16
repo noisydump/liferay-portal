@@ -32,6 +32,7 @@ public class AssetListEntrySoap implements Serializable {
 		AssetListEntrySoap soapModel = new AssetListEntrySoap();
 
 		soapModel.setMvccVersion(model.getMvccVersion());
+		soapModel.setCtCollectionId(model.getCtCollectionId());
 		soapModel.setUuid(model.getUuid());
 		soapModel.setAssetListEntryId(model.getAssetListEntryId());
 		soapModel.setGroupId(model.getGroupId());
@@ -43,6 +44,8 @@ public class AssetListEntrySoap implements Serializable {
 		soapModel.setAssetListEntryKey(model.getAssetListEntryKey());
 		soapModel.setTitle(model.getTitle());
 		soapModel.setType(model.getType());
+		soapModel.setAssetEntrySubtype(model.getAssetEntrySubtype());
+		soapModel.setAssetEntryType(model.getAssetEntryType());
 		soapModel.setLastPublishDate(model.getLastPublishDate());
 
 		return soapModel;
@@ -108,6 +111,14 @@ public class AssetListEntrySoap implements Serializable {
 
 	public void setMvccVersion(long mvccVersion) {
 		_mvccVersion = mvccVersion;
+	}
+
+	public long getCtCollectionId() {
+		return _ctCollectionId;
+	}
+
+	public void setCtCollectionId(long ctCollectionId) {
+		_ctCollectionId = ctCollectionId;
 	}
 
 	public String getUuid() {
@@ -198,6 +209,22 @@ public class AssetListEntrySoap implements Serializable {
 		_type = type;
 	}
 
+	public String getAssetEntrySubtype() {
+		return _assetEntrySubtype;
+	}
+
+	public void setAssetEntrySubtype(String assetEntrySubtype) {
+		_assetEntrySubtype = assetEntrySubtype;
+	}
+
+	public String getAssetEntryType() {
+		return _assetEntryType;
+	}
+
+	public void setAssetEntryType(String assetEntryType) {
+		_assetEntryType = assetEntryType;
+	}
+
 	public Date getLastPublishDate() {
 		return _lastPublishDate;
 	}
@@ -207,6 +234,7 @@ public class AssetListEntrySoap implements Serializable {
 	}
 
 	private long _mvccVersion;
+	private long _ctCollectionId;
 	private String _uuid;
 	private long _assetListEntryId;
 	private long _groupId;
@@ -218,6 +246,8 @@ public class AssetListEntrySoap implements Serializable {
 	private String _assetListEntryKey;
 	private String _title;
 	private int _type;
+	private String _assetEntrySubtype;
+	private String _assetEntryType;
 	private Date _lastPublishDate;
 
 }

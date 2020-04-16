@@ -638,6 +638,8 @@ public class GitWorkingDirectory {
 		GitUtil.ExecutionResult executionResult = executeBashCommands(
 			3, GitUtil.MILLIS_RETRY_DELAY, 1000 * 60 * 15, sb.toString());
 
+		long duration = System.currentTimeMillis() - start;
+
 		if (executionResult.getExitValue() != 0) {
 			System.out.println(executionResult.getStandardOut());
 
@@ -647,11 +649,11 @@ public class GitWorkingDirectory {
 
 			throw new RuntimeException(
 				JenkinsResultsParserUtil.combine(
-					"Unable to fetch remote branch ", remoteGitRefName, "\n",
+					"Unable to fetch remote git ref ", remoteGitRefName,
+					" after ",
+					JenkinsResultsParserUtil.toDurationString(duration), "\n",
 					executionResult.getStandardError()));
 		}
-
-		long duration = System.currentTimeMillis() - start;
 
 		System.out.println(
 			"Fetch completed in " +
@@ -659,6 +661,32 @@ public class GitWorkingDirectory {
 
 		if (duration > (1000 * 60)) {
 			System.out.println(gitBranchesSHAReportStringBuilder.toString());
+		}
+
+		if (JenkinsResultsParserUtil.isCINode() &&
+			(remoteGitRef instanceof RemoteGitBranch) &&
+			remoteURL.contains("github.com:liferay/")) {
+
+			LocalGitBranch liferayGitHubLocalGitBranch = createLocalGitBranch(
+				JenkinsResultsParserUtil.combine(
+					"temp-", remoteGitRef.getName()),
+				true, remoteGitRef.getSHA());
+
+			List<GitRemote> gitHubDevGitRemotes =
+				GitHubDevSyncUtil.getGitHubDevGitRemotes(this);
+
+			try {
+				GitHubDevSyncUtil.pushToAllRemotes(
+					true, liferayGitHubLocalGitBranch, remoteGitRef.getName(),
+					gitHubDevGitRemotes);
+			}
+			finally {
+				if (localGitBranch == null) {
+					deleteLocalGitBranch(liferayGitHubLocalGitBranch);
+				}
+
+				removeGitRemotes(gitHubDevGitRemotes);
+			}
 		}
 
 		if (localSHAExists(remoteGitRefSHA) && (localGitBranch != null)) {
@@ -675,8 +703,8 @@ public class GitWorkingDirectory {
 		return fetch(localGitBranch, true, remoteGitBranch);
 	}
 
-	public LocalGitBranch fetch(RemoteGitBranch remoteGitBranch) {
-		return fetch(null, true, remoteGitBranch);
+	public LocalGitBranch fetch(RemoteGitRef remoteGitRef) {
+		return fetch(null, true, remoteGitRef);
 	}
 
 	public void fetch(RemoteGitRepository remoteGitRepository) {
@@ -711,7 +739,7 @@ public class GitWorkingDirectory {
 
 		StringBuilder sb = new StringBuilder();
 
-		sb.append("git fetch --progress -v -f");
+		sb.append("git fetch -f");
 
 		if (noTags) {
 			sb.append(" --no-tags");
@@ -729,16 +757,17 @@ public class GitWorkingDirectory {
 		GitUtil.ExecutionResult executionResult = executeBashCommands(
 			3, GitUtil.MILLIS_RETRY_DELAY, 1000 * 60 * 30, sb.toString());
 
+		long duration = System.currentTimeMillis() - start;
+
 		if (executionResult.getExitValue() != 0) {
 			System.out.println(gitBranchesSHAReportStringBuilder.toString());
 
 			throw new RuntimeException(
 				JenkinsResultsParserUtil.combine(
-					"Unable to fetch from remote url ", remoteURL, "\n",
+					"Unable to fetch remote url ", remoteURL, " after ",
+					JenkinsResultsParserUtil.toDurationString(duration), "\n",
 					executionResult.getStandardError()));
 		}
-
-		long duration = System.currentTimeMillis() - start;
 
 		System.out.println(
 			"Fetch completed in " +
@@ -758,7 +787,7 @@ public class GitWorkingDirectory {
 
 		StringBuilder sb = new StringBuilder();
 
-		sb.append("git fetch --progress -v -f --no-tags ");
+		sb.append("git fetch -f --no-tags ");
 		sb.append(String.valueOf(localGitBranch.getDirectory()));
 		sb.append(" ");
 		sb.append(localGitBranch.getName());
@@ -1346,10 +1375,10 @@ public class GitWorkingDirectory {
 				checkoutLocalGitBranch(tempLocalGitBranch);
 			}
 
-			RemoteGitBranch senderRemoteGitBranch = getRemoteGitBranch(
+			RemoteGitRef senderRemoteGitRef = getRemoteGitRef(
 				senderBranchName, senderRemoteURL, true);
 
-			fetch(senderRemoteGitBranch);
+			fetch(senderRemoteGitRef);
 
 			LocalGitBranch rebasedLocalGitBranch = createLocalGitBranch(
 				rebasedLocalGitBranchName, true, senderSHA);
@@ -1551,6 +1580,35 @@ public class GitWorkingDirectory {
 			if (matcher.find()) {
 				return matcher.group("sha");
 			}
+		}
+
+		return null;
+	}
+
+	public RemoteGitRef getRemoteGitRef(
+		String remoteGitRefName, GitRemote gitRemote, boolean required) {
+
+		return getRemoteGitRef(
+			remoteGitRefName, gitRemote.getRemoteURL(), required);
+	}
+
+	public RemoteGitRef getRemoteGitRef(
+		String remoteGitRefName, String remoteURL, boolean required) {
+
+		List<RemoteGitRef> remoteGitRefs = GitUtil.getRemoteGitRefs(
+			remoteGitRefName, getWorkingDirectory(), remoteURL);
+
+		for (RemoteGitRef remoteGitRef : remoteGitRefs) {
+			if (remoteGitRefName.equals(remoteGitRef.getName())) {
+				return remoteGitRef;
+			}
+		}
+
+		if (required) {
+			throw new RuntimeException(
+				JenkinsResultsParserUtil.combine(
+					"Unable to find required ref ", remoteGitRefName,
+					" from remote URL ", remoteURL));
 		}
 
 		return null;

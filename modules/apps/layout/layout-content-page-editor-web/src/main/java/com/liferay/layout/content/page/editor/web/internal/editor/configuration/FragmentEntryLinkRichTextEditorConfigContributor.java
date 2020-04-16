@@ -18,6 +18,7 @@ import com.liferay.item.selector.ItemSelector;
 import com.liferay.item.selector.ItemSelectorCriterion;
 import com.liferay.item.selector.criteria.DownloadURLItemSelectorReturnType;
 import com.liferay.item.selector.criteria.URLItemSelectorReturnType;
+import com.liferay.item.selector.criteria.file.criterion.FileItemSelectorCriterion;
 import com.liferay.item.selector.criteria.image.criterion.ImageItemSelectorCriterion;
 import com.liferay.item.selector.criteria.url.criterion.URLItemSelectorCriterion;
 import com.liferay.layout.content.page.editor.constants.ContentPageEditorPortletKeys;
@@ -75,22 +76,25 @@ public class FragmentEntryLinkRichTextEditorConfigContributor
 		sb.append(getAllowedContentTable());
 		sb.append(" span[*](*){*}; ");
 
-		jsonObject.put(
-			"allowedContent", sb.toString()
-		).put(
-			"enterMode", 2
-		).put(
-			"extraPlugins", getExtraPluginsLists()
-		);
-
 		PortletURL itemSelectorURL = _itemSelector.getItemSelectorURL(
+			requestBackedPortletURLFactory, "_EDITOR_NAME_selectItem",
+			getFileItemSelectorCriterion(), getURLItemSelectorCriterion());
+		PortletURL imageSelectorURL = _itemSelector.getItemSelectorURL(
 			requestBackedPortletURLFactory, "_EDITOR_NAME_selectItem",
 			getImageItemSelectorCriterion(), getURLItemSelectorCriterion());
 
 		jsonObject.put(
-			"filebrowserImageBrowseLinkUrl", itemSelectorURL.toString()
+			"allowedContent", sb.toString()
 		).put(
-			"filebrowserImageBrowseUrl", itemSelectorURL.toString()
+			"documentBrowseLinkUrl", itemSelectorURL.toString()
+		).put(
+			"enterMode", 2
+		).put(
+			"extraPlugins", getExtraPluginsLists()
+		).put(
+			"filebrowserImageBrowseLinkUrl", imageSelectorURL.toString()
+		).put(
+			"filebrowserImageBrowseUrl", imageSelectorURL.toString()
 		).put(
 			"removePlugins", getRemovePluginsLists()
 		).put(
@@ -118,6 +122,16 @@ public class FragmentEntryLinkRichTextEditorConfigContributor
 		return "ae_autolink,ae_dragresize,ae_addimages,ae_imagealignment," +
 			"ae_placeholder,ae_selectionregion,ae_tableresize," +
 				"ae_tabletools,ae_uicore,itemselector,media,adaptivemedia";
+	}
+
+	protected ItemSelectorCriterion getFileItemSelectorCriterion() {
+		ItemSelectorCriterion fileItemSelectorCriterion =
+			new FileItemSelectorCriterion();
+
+		fileItemSelectorCriterion.setDesiredItemSelectorReturnTypes(
+			new DownloadURLItemSelectorReturnType());
+
+		return fileItemSelectorCriterion;
 	}
 
 	protected ItemSelectorCriterion getImageItemSelectorCriterion() {
@@ -231,8 +245,19 @@ public class FragmentEntryLinkRichTextEditorConfigContributor
 		);
 	}
 
+	protected JSONObject getToolbarsStylesSelectionsImageJSONObject() {
+		return JSONUtil.put(
+			"buttons", JSONUtil.putAll("imageLeft", "imageCenter", "imageRight")
+		).put(
+			"name", "image"
+		).put(
+			"test", "AlloyEditor.SelectionTest.image"
+		);
+	}
+
 	protected JSONArray getToolbarsStylesSelectionsJSONArray(Locale locale) {
 		return JSONUtil.putAll(
+			getToolbarsStylesSelectionsImageJSONObject(),
 			getToolbarsStylesSelectionsLinkJSONObject(),
 			getToolbarsStylesSelectionsTextJSONObject(locale));
 	}

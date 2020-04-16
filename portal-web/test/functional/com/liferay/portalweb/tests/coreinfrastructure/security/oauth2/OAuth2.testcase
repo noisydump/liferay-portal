@@ -1,6 +1,7 @@
 @component-name = "portal-security"
 definition {
 
+	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.main.component.name = "OAuth 2";
 
@@ -24,8 +25,7 @@ definition {
 	test AddAndEditApplication {
 		property app.server.types = "jboss,tcserver,tomcat,weblogic,websphere,wildfly";
 		property database.types = "db2,hypersonic,mariadb,mysql,oracle,postgresql,sqlserver,sybase";
-		property environment.acceptance = "true";
-		property portal.acceptance = "true";
+		property portal.upstream = "quarantine";
 
 		ProductMenu.gotoPortlet(
 			category = "Configuration",
@@ -153,7 +153,7 @@ definition {
 
 		var portalVersionOutput = JSONCurlUtil.post("${portalVersionCurl}");
 
-		if (!(contains("${portalVersionOutput}", "7.3.10"))) {
+		if (!(contains("${portalVersionOutput}", "7.3"))) {
 			fail("JSON-WS call failed to return Portal version");
 		}
 
@@ -193,7 +193,7 @@ definition {
 
 		var portalVersionOutput = JSONCurlUtil.post("${portalVersionCurl}");
 
-		if (!(contains("${portalVersionOutput}", "7.3.10"))) {
+		if (!(contains("${portalVersionOutput}", "7.3"))) {
 			fail("JSON-WS call failed to return Portal version");
 		}
 
@@ -229,12 +229,13 @@ definition {
 
 		var buildNumberOutput = JSONCurlUtil.post("${buildNumberCurl}");
 
-		if (!(contains("${buildNumberOutput}", "7310"))) {
+		if (!(contains("${buildNumberOutput}", "73"))) {
 			fail("JSON-WS call failed to return build number");
 		}
 	}
 
 	@description = "This is a use case for OAUTH2-242."
+	@ignore = "true"
 	@priority = "5"
 	test AssertAuthorizationCodeWorksInCluster {
 		property app.server.bundles.size = "1";
@@ -323,6 +324,8 @@ definition {
 	@description = "This is a use case for OAUTH2-259."
 	@priority = "4"
 	test AssertClientCredentialsIsUserScoped {
+		property portal.upstream = "quarantine";
+
 		JSONWebcontent.addWebContent(
 			content = "WC Content",
 			groupName = "Guest",
@@ -380,7 +383,7 @@ definition {
 			groupName = "Guest",
 			title = "WC Title");
 
-		var liferaySiteId = JSONGroupAPI._getGroupIdByName(groupName = "Guest");
+		var liferaySiteId = JSONGroupAPI._getGroupIdByName(groupName = "Guest", site = "true");
 
 		var deleteCurl = '''
 			-H 'Authorization: Bearer ${accessToken}' ${portalURL}/api/jsonws/journal.journalarticle/delete-article \
@@ -412,6 +415,48 @@ definition {
 			portlet = "Web Content");
 
 		AssertTextNotPresent(value1 = "WC Title");
+	}
+
+	@description = "This is a use case for LPS-110393."
+	@priority = "4"
+	test AssertExpandPanelsOnGlobalScopes {
+		ProductMenu.gotoPortlet(
+			category = "Configuration",
+			panel = "Control Panel",
+			portlet = "System Settings");
+
+		SystemSettings.gotoConfiguration(
+			configurationCategory = "OAuth 2",
+			configurationName = "Bundle PrefixHandlerFactory",
+			configurationScope = "System Scope");
+
+		SystemSettings.gotoConfigurationEntry(configurationEntry = "Default");
+
+		SystemSettings.deleteConfiguration();
+
+		ProductMenu.gotoPortlet(
+			category = "Configuration",
+			panel = "Control Panel",
+			portlet = "OAuth 2 Administration");
+
+		LexiconEntry.gotoEntryMenuItem(
+			menuItem = "Edit",
+			rowEntry = "Analytics Cloud");
+
+		AssertClick(
+			key_navItem = "Scopes",
+			locator1 = "NavBar#NAV_ITEM_LINK",
+			value1 = "Scopes");
+
+		AssertElementPresent(
+			key_navItem = "Scopes",
+			locator1 = "NavBar#ACTIVE_NAV_ITEM_LINK");
+
+		Navigator.gotoNavUnderline(navUnderline = "Global scopes");
+
+		for (var globalPanel : list "analytics.read,analytics.write,everything.write,everything.read,everything") {
+			OAuth2.expandGlobalPanel(globalPanel = "${globalPanel}");
+		}
 	}
 
 	test AuthorizeExternalApplication {
@@ -657,6 +702,7 @@ definition {
 		property database.types = "db2,hypersonic,mariadb,mysql,oracle,postgresql,sqlserver,sybase";
 		property environment.acceptance = "true";
 		property portal.acceptance = "true";
+		property portal.upstream = "quarantine";
 
 		ProductMenu.gotoPortlet(
 			category = "Configuration",

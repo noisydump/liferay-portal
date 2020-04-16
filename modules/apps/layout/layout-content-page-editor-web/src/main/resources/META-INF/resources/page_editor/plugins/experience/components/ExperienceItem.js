@@ -33,7 +33,7 @@ const ExperienceItem = ({
 	onEditExperience,
 	onPriorityDecrease,
 	onPriorityIncrease,
-	onSelect
+	onSelect,
 }) => {
 	const iconRef = React.useRef();
 	const [showtoolTip, setShowtoolTip] = React.useState(false);
@@ -66,7 +66,9 @@ const ExperienceItem = ({
 
 		const confirmed = confirm(confirmationMessage);
 
-		if (confirmed) onDeleteExperience(experience.segmentsExperienceId);
+		if (confirmed) {
+			onDeleteExperience(experience.segmentsExperienceId);
+		}
 	};
 	const handleExperimentNavigation = event => {
 		event.preventDefault();
@@ -80,7 +82,7 @@ const ExperienceItem = ({
 	};
 
 	const itemClassName = classNames('d-flex dropdown-menu__experience', {
-		'dropdown-menu__experience--active': active
+		'dropdown-menu__experience--active': active,
 	});
 
 	return (
@@ -106,7 +108,6 @@ const ExperienceItem = ({
 											setShowtoolTip(false)
 										}
 										ref={iconRef}
-										small="true"
 										symbol="lock"
 									/>
 
@@ -163,7 +164,7 @@ const ExperienceItem = ({
 						displayType="unstyled"
 						monospaced
 						onClick={handlePriorityIncrease}
-						small="true"
+						small
 						symbol="angle-up"
 						title={Liferay.Language.get('prioritize-experience')}
 						type="button"
@@ -175,7 +176,7 @@ const ExperienceItem = ({
 						displayType="unstyled"
 						monospaced
 						onClick={handlePriorityDecrease}
-						small="true"
+						small
 						symbol="angle-down"
 						title={Liferay.Language.get('deprioritize-experience')}
 						type="button"
@@ -186,7 +187,7 @@ const ExperienceItem = ({
 						displayType="unstyled"
 						monospaced
 						onClick={handleExperienceEdit}
-						small="true"
+						small
 						symbol="pencil"
 						title={Liferay.Language.get('edit-experience')}
 						type="button"
@@ -197,7 +198,7 @@ const ExperienceItem = ({
 						displayType="unstyled"
 						monospaced
 						onClick={handleExperienceDelete}
-						small="true"
+						small
 						symbol="times-circle"
 						title={Liferay.Language.get('delete-experience')}
 						type="button"
@@ -232,7 +233,7 @@ ExperienceItem.propTypes = {
 	onEditExperience: PropTypes.func.isRequired,
 	onPriorityDecrease: PropTypes.func.isRequired,
 	onPriorityIncrease: PropTypes.func.isRequired,
-	onSelect: PropTypes.func.isRequired
+	onSelect: PropTypes.func.isRequired,
 };
 
 export default ExperienceItem;

@@ -227,25 +227,25 @@ public class DLFileEntryTypeFinderImpl
 				sql = sql.concat(StringPool.CLOSE_PARENTHESIS);
 			}
 
-			SQLQuery q = session.createSynchronizedSQLQuery(sql);
+			SQLQuery sqlQuery = session.createSynchronizedSQLQuery(sql);
 
-			q.addScalar(COUNT_COLUMN_NAME, Type.LONG);
+			sqlQuery.addScalar(COUNT_COLUMN_NAME, Type.LONG);
 
-			QueryPos qPos = QueryPos.getInstance(q);
+			QueryPos queryPos = QueryPos.getInstance(sqlQuery);
 
 			if (includeBasicFileEntryType) {
-				qPos.add(names, 2);
-				qPos.add(descriptions, 2);
+				queryPos.add(names, 2);
+				queryPos.add(descriptions, 2);
 			}
 
-			qPos.add(companyId);
-			qPos.add(groupIds);
-			qPos.add(names, 2);
-			qPos.add(descriptions, 2);
+			queryPos.add(companyId);
+			queryPos.add(groupIds);
+			queryPos.add(names, 2);
+			queryPos.add(descriptions, 2);
 
 			int countValue = 0;
 
-			Iterator<Long> itr = q.iterate();
+			Iterator<Long> itr = sqlQuery.iterate();
 
 			while (itr.hasNext()) {
 				Long count = itr.next();
@@ -310,30 +310,30 @@ public class DLFileEntryTypeFinderImpl
 				sql = sql.concat(StringPool.CLOSE_PARENTHESIS);
 			}
 
-			SQLQuery q = session.createSynchronizedSQLQuery(sql);
+			SQLQuery sqlQuery = session.createSynchronizedSQLQuery(sql);
 
-			q.addScalar(COUNT_COLUMN_NAME, Type.LONG);
+			sqlQuery.addScalar(COUNT_COLUMN_NAME, Type.LONG);
 
-			QueryPos qPos = QueryPos.getInstance(q);
+			QueryPos queryPos = QueryPos.getInstance(sqlQuery);
 
 			if (includeBasicFileEntryType) {
-				qPos.add(names, 2);
-				qPos.add(descriptions, 2);
+				queryPos.add(names, 2);
+				queryPos.add(descriptions, 2);
 			}
 
-			qPos.add(companyId);
+			queryPos.add(companyId);
 
 			if (!inherited) {
-				qPos.add(folderId);
+				queryPos.add(folderId);
 			}
 
-			qPos.add(groupIds);
-			qPos.add(names, 2);
-			qPos.add(descriptions, 2);
+			queryPos.add(groupIds);
+			queryPos.add(names, 2);
+			queryPos.add(descriptions, 2);
 
 			int countValue = 0;
 
-			Iterator<Long> itr = q.iterate();
+			Iterator<Long> itr = sqlQuery.iterate();
 
 			while (itr.hasNext()) {
 				Long count = itr.next();
@@ -392,24 +392,24 @@ public class DLFileEntryTypeFinderImpl
 				sql = sql.concat(StringPool.CLOSE_PARENTHESIS);
 			}
 
-			SQLQuery q = session.createSynchronizedSQLQuery(sql);
+			SQLQuery sqlQuery = session.createSynchronizedSQLQuery(sql);
 
-			q.addEntity("DLFileEntryType", DLFileEntryTypeImpl.class);
+			sqlQuery.addEntity("DLFileEntryType", DLFileEntryTypeImpl.class);
 
-			QueryPos qPos = QueryPos.getInstance(q);
+			QueryPos queryPos = QueryPos.getInstance(sqlQuery);
 
 			if (includeBasicFileEntryType) {
-				qPos.add(names, 2);
-				qPos.add(descriptions, 2);
+				queryPos.add(names, 2);
+				queryPos.add(descriptions, 2);
 			}
 
-			qPos.add(companyId);
-			qPos.add(groupIds);
-			qPos.add(names, 2);
-			qPos.add(descriptions, 2);
+			queryPos.add(companyId);
+			queryPos.add(groupIds);
+			queryPos.add(names, 2);
+			queryPos.add(descriptions, 2);
 
 			return (List<DLFileEntryType>)QueryUtil.list(
-				q, getDialect(), start, end);
+				sqlQuery, getDialect(), start, end);
 		}
 		catch (Exception exception) {
 			throw new SystemException(exception);
@@ -464,29 +464,29 @@ public class DLFileEntryTypeFinderImpl
 				sql = sql.concat(StringPool.CLOSE_PARENTHESIS);
 			}
 
-			SQLQuery q = session.createSynchronizedSQLQuery(sql);
+			SQLQuery sqlQuery = session.createSynchronizedSQLQuery(sql);
 
-			q.addEntity("DLFileEntryType", DLFileEntryTypeImpl.class);
+			sqlQuery.addEntity("DLFileEntryType", DLFileEntryTypeImpl.class);
 
-			QueryPos qPos = QueryPos.getInstance(q);
+			QueryPos queryPos = QueryPos.getInstance(sqlQuery);
 
 			if (includeBasicFileEntryType) {
-				qPos.add(names, 2);
-				qPos.add(descriptions, 2);
+				queryPos.add(names, 2);
+				queryPos.add(descriptions, 2);
 			}
 
-			qPos.add(companyId);
+			queryPos.add(companyId);
 
 			if (!inherited) {
-				qPos.add(folderId);
+				queryPos.add(folderId);
 			}
 
-			qPos.add(groupIds);
-			qPos.add(names, 2);
-			qPos.add(descriptions, 2);
+			queryPos.add(groupIds);
+			queryPos.add(names, 2);
+			queryPos.add(descriptions, 2);
 
 			return (List<DLFileEntryType>)QueryUtil.list(
-				q, getDialect(), start, end);
+				sqlQuery, getDialect(), start, end);
 		}
 		catch (Exception exception) {
 			throw new SystemException(exception);

@@ -80,7 +80,8 @@ public abstract class BaseImportTaskResourceImpl implements ImportTaskResource {
 	@Parameters(
 		value = {
 			@Parameter(in = ParameterIn.PATH, name = "className"),
-			@Parameter(in = ParameterIn.QUERY, name = "callbackURL")
+			@Parameter(in = ParameterIn.QUERY, name = "callbackURL"),
+			@Parameter(in = ParameterIn.QUERY, name = "taskItemDelegateName")
 		}
 	)
 	@Path("/import-task/{className}")
@@ -91,6 +92,8 @@ public abstract class BaseImportTaskResourceImpl implements ImportTaskResource {
 				className,
 			@Parameter(hidden = true) @QueryParam("callbackURL") String
 				callbackURL,
+			@Parameter(hidden = true) @QueryParam("taskItemDelegateName") String
+				taskItemDelegateName,
 			Object object)
 		throws Exception {
 
@@ -109,7 +112,8 @@ public abstract class BaseImportTaskResourceImpl implements ImportTaskResource {
 	@Parameters(
 		value = {
 			@Parameter(in = ParameterIn.PATH, name = "className"),
-			@Parameter(in = ParameterIn.QUERY, name = "callbackURL")
+			@Parameter(in = ParameterIn.QUERY, name = "callbackURL"),
+			@Parameter(in = ParameterIn.QUERY, name = "taskItemDelegateName")
 		}
 	)
 	@Path("/import-task/{className}")
@@ -120,6 +124,8 @@ public abstract class BaseImportTaskResourceImpl implements ImportTaskResource {
 				className,
 			@Parameter(hidden = true) @QueryParam("callbackURL") String
 				callbackURL,
+			@Parameter(hidden = true) @QueryParam("taskItemDelegateName") String
+				taskItemDelegateName,
 			MultipartBody multipartBody)
 		throws Exception {
 
@@ -146,7 +152,8 @@ public abstract class BaseImportTaskResourceImpl implements ImportTaskResource {
 		value = {
 			@Parameter(in = ParameterIn.PATH, name = "className"),
 			@Parameter(in = ParameterIn.QUERY, name = "callbackURL"),
-			@Parameter(in = ParameterIn.QUERY, name = "fieldNameMapping")
+			@Parameter(in = ParameterIn.QUERY, name = "fieldNameMapping"),
+			@Parameter(in = ParameterIn.QUERY, name = "taskItemDelegateName")
 		}
 	)
 	@Path("/import-task/{className}")
@@ -159,6 +166,8 @@ public abstract class BaseImportTaskResourceImpl implements ImportTaskResource {
 				callbackURL,
 			@Parameter(hidden = true) @QueryParam("fieldNameMapping") String
 				fieldNameMapping,
+			@Parameter(hidden = true) @QueryParam("taskItemDelegateName") String
+				taskItemDelegateName,
 			Object object)
 		throws Exception {
 
@@ -180,7 +189,8 @@ public abstract class BaseImportTaskResourceImpl implements ImportTaskResource {
 		value = {
 			@Parameter(in = ParameterIn.PATH, name = "className"),
 			@Parameter(in = ParameterIn.QUERY, name = "callbackURL"),
-			@Parameter(in = ParameterIn.QUERY, name = "fieldNameMapping")
+			@Parameter(in = ParameterIn.QUERY, name = "fieldNameMapping"),
+			@Parameter(in = ParameterIn.QUERY, name = "taskItemDelegateName")
 		}
 	)
 	@Path("/import-task/{className}")
@@ -193,6 +203,8 @@ public abstract class BaseImportTaskResourceImpl implements ImportTaskResource {
 				callbackURL,
 			@Parameter(hidden = true) @QueryParam("fieldNameMapping") String
 				fieldNameMapping,
+			@Parameter(hidden = true) @QueryParam("taskItemDelegateName") String
+				taskItemDelegateName,
 			MultipartBody multipartBody)
 		throws Exception {
 
@@ -216,7 +228,8 @@ public abstract class BaseImportTaskResourceImpl implements ImportTaskResource {
 	@Parameters(
 		value = {
 			@Parameter(in = ParameterIn.PATH, name = "className"),
-			@Parameter(in = ParameterIn.QUERY, name = "callbackURL")
+			@Parameter(in = ParameterIn.QUERY, name = "callbackURL"),
+			@Parameter(in = ParameterIn.QUERY, name = "taskItemDelegateName")
 		}
 	)
 	@Path("/import-task/{className}")
@@ -227,6 +240,8 @@ public abstract class BaseImportTaskResourceImpl implements ImportTaskResource {
 				className,
 			@Parameter(hidden = true) @QueryParam("callbackURL") String
 				callbackURL,
+			@Parameter(hidden = true) @QueryParam("taskItemDelegateName") String
+				taskItemDelegateName,
 			Object object)
 		throws Exception {
 
@@ -245,7 +260,8 @@ public abstract class BaseImportTaskResourceImpl implements ImportTaskResource {
 	@Parameters(
 		value = {
 			@Parameter(in = ParameterIn.PATH, name = "className"),
-			@Parameter(in = ParameterIn.QUERY, name = "callbackURL")
+			@Parameter(in = ParameterIn.QUERY, name = "callbackURL"),
+			@Parameter(in = ParameterIn.QUERY, name = "taskItemDelegateName")
 		}
 	)
 	@Path("/import-task/{className}")
@@ -256,6 +272,8 @@ public abstract class BaseImportTaskResourceImpl implements ImportTaskResource {
 				className,
 			@Parameter(hidden = true) @QueryParam("callbackURL") String
 				callbackURL,
+			@Parameter(hidden = true) @QueryParam("taskItemDelegateName") String
+				taskItemDelegateName,
 			MultipartBody multipartBody)
 		throws Exception {
 
@@ -325,12 +343,12 @@ public abstract class BaseImportTaskResourceImpl implements ImportTaskResource {
 	}
 
 	protected Map<String, String> addAction(
-		String actionName, Long id, String methodName, String permissionName,
-		Long siteId) {
+		String actionName, Long id, String methodName, Long ownerId,
+		String permissionName, Long siteId) {
 
 		return ActionUtil.addAction(
-			actionName, getClass(), id, methodName, permissionName,
-			contextScopeChecker, siteId, contextUriInfo);
+			actionName, getClass(), id, methodName, contextScopeChecker,
+			ownerId, permissionName, siteId, contextUriInfo);
 	}
 
 	protected Map<String, String> addAction(
@@ -338,7 +356,7 @@ public abstract class BaseImportTaskResourceImpl implements ImportTaskResource {
 		Long siteId) {
 
 		return addAction(
-			actionName, siteId, methodName, permissionName, siteId);
+			actionName, siteId, methodName, null, permissionName, siteId);
 	}
 
 	protected void preparePatch(
@@ -375,14 +393,14 @@ public abstract class BaseImportTaskResourceImpl implements ImportTaskResource {
 
 	protected AcceptLanguage contextAcceptLanguage;
 	protected com.liferay.portal.kernel.model.Company contextCompany;
-	protected com.liferay.portal.kernel.model.User contextUser;
-	protected GroupLocalService groupLocalService;
 	protected HttpServletRequest contextHttpServletRequest;
 	protected HttpServletResponse contextHttpServletResponse;
+	protected Object contextScopeChecker;
+	protected UriInfo contextUriInfo;
+	protected com.liferay.portal.kernel.model.User contextUser;
+	protected GroupLocalService groupLocalService;
 	protected ResourceActionLocalService resourceActionLocalService;
 	protected ResourcePermissionLocalService resourcePermissionLocalService;
 	protected RoleLocalService roleLocalService;
-	protected Object contextScopeChecker;
-	protected UriInfo contextUriInfo;
 
 }

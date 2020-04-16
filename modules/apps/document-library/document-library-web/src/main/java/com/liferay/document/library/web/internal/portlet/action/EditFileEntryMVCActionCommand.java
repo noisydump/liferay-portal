@@ -35,13 +35,23 @@ import com.liferay.document.library.kernel.exception.NoSuchFolderException;
 import com.liferay.document.library.kernel.exception.RequiredFileException;
 import com.liferay.document.library.kernel.exception.SourceFileNameException;
 import com.liferay.document.library.kernel.model.DLFileEntry;
+import com.liferay.document.library.kernel.model.DLFileEntryMetadata;
+import com.liferay.document.library.kernel.model.DLFileEntryType;
 import com.liferay.document.library.kernel.model.DLVersionNumberIncrease;
 import com.liferay.document.library.kernel.service.DLAppService;
+import com.liferay.document.library.kernel.service.DLFileEntryTypeLocalService;
 import com.liferay.document.library.kernel.service.DLTrashService;
 import com.liferay.document.library.kernel.util.DLUtil;
 import com.liferay.document.library.kernel.util.DLValidator;
+import com.liferay.document.library.web.internal.configuration.FFDocumentLibraryDDMEditorConfigurationUtil;
 import com.liferay.document.library.web.internal.settings.DLPortletInstanceSettings;
+import com.liferay.dynamic.data.mapping.form.values.factory.DDMFormValuesFactory;
+import com.liferay.dynamic.data.mapping.kernel.DDMStructure;
 import com.liferay.dynamic.data.mapping.kernel.StorageFieldRequiredException;
+import com.liferay.dynamic.data.mapping.service.DDMStructureLocalService;
+import com.liferay.dynamic.data.mapping.storage.DDMFormValues;
+import com.liferay.dynamic.data.mapping.util.DDMBeanTranslatorUtil;
+import com.liferay.dynamic.data.mapping.util.DDMFormValuesToFieldsConverter;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -49,6 +59,7 @@ import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
+import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.lock.DuplicateLockException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -87,7 +98,6 @@ import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.TempFileEntryUtil;
-import com.liferay.portal.kernel.util.TextFormatter;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
@@ -729,7 +739,7 @@ public class EditFileEntryMVCActionCommand extends BaseMVCActionCommand {
 		else if (exception instanceof FileSizeException) {
 			errorMessage = themeDisplay.translate(
 				"please-enter-a-file-with-a-valid-file-size-no-larger-than-x",
-				TextFormatter.formatStorageSize(
+				LanguageUtil.formatStorageSize(
 					_dlValidator.getMaxAllowableSize(),
 					themeDisplay.getLocale()));
 		}
@@ -920,6 +930,43 @@ public class EditFileEntryMVCActionCommand extends BaseMVCActionCommand {
 		_dlAppService.revertFileEntry(fileEntryId, version, serviceContext);
 	}
 
+	private void _setUpDDMFormValues(ServiceContext serviceContext)
+		throws PortalException {
+
+		if (!FFDocumentLibraryDDMEditorConfigurationUtil.
+				useDataEngineEditor()) {
+
+			return;
+		}
+
+		long fileEntryTypeId = ParamUtil.getLong(
+			serviceContext, "fileEntryTypeId", -1);
+
+		if (fileEntryTypeId == -1) {
+			return;
+		}
+
+		String className =
+			com.liferay.dynamic.data.mapping.kernel.DDMFormValues.class.
+				getName();
+
+		DLFileEntryType dlFileEntryType =
+			_dlFileEntryTypeLocalService.getDLFileEntryType(fileEntryTypeId);
+
+		com.liferay.dynamic.data.mapping.model.DDMStructure ddmStructure =
+			_ddmStructureLocalService.getStructure(
+				dlFileEntryType.getGroupId(),
+				_portal.getClassNameId(DLFileEntryMetadata.class),
+				DLUtil.getDDMStructureKey(dlFileEntryType.getUuid()));
+
+		DDMFormValues ddmFormValues = _ddmFormValuesFactory.create(
+			serviceContext.getRequest(), ddmStructure.getDDMForm());
+
+		serviceContext.setAttribute(
+			className + StringPool.POUND + ddmStructure.getStructureId(),
+			DDMBeanTranslatorUtil.translate(ddmFormValues));
+	}
+
 	private FileEntry _updateFileEntry(
 			PortletConfig portletConfig, ActionRequest actionRequest,
 			ActionResponse actionResponse,
@@ -998,24 +1045,35 @@ public class EditFileEntryMVCActionCommand extends BaseMVCActionCommand {
 			ServiceContext serviceContext = _createServiceContext(
 				uploadPortletRequest);
 
+			_setUpDDMFormValues(serviceContext);
+
 			FileEntry fileEntry = null;
 
-			if (cmd.equals(Constants.ADD) ||
-				cmd.equals(Constants.ADD_DYNAMIC)) {
+			if (cmd.equals(Constants.ADD)) {
 
 				// Add file entry
 
 				fileEntry = _dlAppService.addFileEntry(
 					repositoryId, folderId, sourceFileName, contentType, title,
 					description, changeLog, inputStream, size, serviceContext);
+			}
+			else if (cmd.equals(Constants.ADD_DYNAMIC)) {
 
-				if (cmd.equals(Constants.ADD_DYNAMIC)) {
-					JSONObject jsonObject = JSONUtil.put(
-						"fileEntryId", fileEntry.getFileEntryId());
+				// Add file entry
 
-					JSONPortletResponseUtil.writeJSON(
-						actionRequest, actionResponse, jsonObject);
-				}
+				String uniqueFileName = DLUtil.getUniqueFileName(
+					themeDisplay.getScopeGroupId(), folderId, title);
+
+				fileEntry = _dlAppService.addFileEntry(
+					repositoryId, folderId, uniqueFileName, contentType,
+					uniqueFileName, description, changeLog, inputStream, size,
+					serviceContext);
+
+				JSONObject jsonObject = JSONUtil.put(
+					"fileEntryId", fileEntry.getFileEntryId());
+
+				JSONPortletResponseUtil.writeJSON(
+					actionRequest, actionResponse, jsonObject);
 			}
 			else if (cmd.equals(Constants.UPDATE_AND_CHECKIN)) {
 
@@ -1062,9 +1120,21 @@ public class EditFileEntryMVCActionCommand extends BaseMVCActionCommand {
 		_assetDisplayPageEntryFormProcessor;
 
 	@Reference
+	private DDMFormValuesFactory _ddmFormValuesFactory;
+
+	@Reference
+	private DDMFormValuesToFieldsConverter _ddmFormValuesToFieldsConverter;
+
+	@Reference
+	private DDMStructureLocalService _ddmStructureLocalService;
+
+	@Reference
 	private DLAppService _dlAppService;
 
 	private volatile DLConfiguration _dlConfiguration;
+
+	@Reference
+	private DLFileEntryTypeLocalService _dlFileEntryTypeLocalService;
 
 	@Reference
 	private DLTrashService _dlTrashService;

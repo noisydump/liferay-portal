@@ -79,9 +79,26 @@ public class CTCollectionLocalServiceWrapper
 		return _ctCollectionLocalService.createCTCollection(ctCollectionId);
 	}
 
+	/**
+	 * @throws PortalException
+	 */
+	@Override
+	public com.liferay.portal.kernel.model.PersistedModel createPersistedModel(
+			java.io.Serializable primaryKeyObj)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _ctCollectionLocalService.createPersistedModel(primaryKeyObj);
+	}
+
 	@Override
 	public void deleteCompanyCTCollections(long companyId) {
 		_ctCollectionLocalService.deleteCompanyCTCollections(companyId);
+	}
+
+	@Override
+	public void deleteCTAutoResolutionInfo(long ctAutoResolutionInfoId) {
+		_ctCollectionLocalService.deleteCTAutoResolutionInfo(
+			ctAutoResolutionInfoId);
 	}
 
 	/**
@@ -299,6 +316,9 @@ public class CTCollectionLocalServiceWrapper
 		return _ctCollectionLocalService.getOSGiServiceIdentifier();
 	}
 
+	/**
+	 * @throws PortalException
+	 */
 	@Override
 	public com.liferay.portal.kernel.model.PersistedModel getPersistedModel(
 			java.io.Serializable primaryKeyObj)

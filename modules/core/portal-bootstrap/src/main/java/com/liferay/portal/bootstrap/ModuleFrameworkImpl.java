@@ -1043,6 +1043,25 @@ public class ModuleFrameworkImpl implements ModuleFramework {
 			StringUtil.merge(PropsValues.MODULE_FRAMEWORK_AUTO_DEPLOY_DIRS);
 	}
 
+	private String _getFragmentHost(Bundle bundle) {
+		Dictionary<String, String> dictionary = bundle.getHeaders(
+			StringPool.BLANK);
+
+		String fragmentHost = dictionary.get(Constants.FRAGMENT_HOST);
+
+		if (fragmentHost == null) {
+			return null;
+		}
+
+		int index = fragmentHost.indexOf(CharPool.SEMICOLON);
+
+		if (index != -1) {
+			fragmentHost = fragmentHost.substring(0, index);
+		}
+
+		return fragmentHost;
+	}
+
 	private Dictionary<String, Object> _getProperties(
 		Object bean, String beanName) {
 
@@ -1161,12 +1180,15 @@ public class ModuleFrameworkImpl implements ModuleFramework {
 	}
 
 	private void _installBundlesFromDir(
-			String dirPath, Map<String, Long> checksums)
+			String dirPath, Map<String, Long> checksums,
+			Set<String> fragmentHosts)
 		throws IOException {
 
 		BundleContext bundleContext = _framework.getBundleContext();
 
 		File dir = new File(dirPath);
+
+		dir = dir.getCanonicalFile();
 
 		for (File file :
 				dir.listFiles((folder, name) -> name.endsWith(".jar"))) {
@@ -1215,7 +1237,10 @@ public class ModuleFrameworkImpl implements ModuleFramework {
 						PropsValues.MODULE_FRAMEWORK_WEB_START_LEVEL);
 				}
 
-				if (!_isFragmentBundle(bundle)) {
+				if (_isFragmentBundle(bundle)) {
+					fragmentHosts.add(_getFragmentHost(bundle));
+				}
+				else {
 					bundle.start();
 				}
 			}
@@ -1253,6 +1278,8 @@ public class ModuleFrameworkImpl implements ModuleFramework {
 
 		File dir = new File(PropsValues.MODULE_FRAMEWORK_CONFIGS_DIR);
 
+		dir = dir.getCanonicalFile();
+
 		for (File file : dir.listFiles()) {
 			method.invoke(configInstaller, file);
 		}
@@ -1261,10 +1288,30 @@ public class ModuleFrameworkImpl implements ModuleFramework {
 	private Map<String, Long> _installDynamicBundles() throws IOException {
 		Map<String, Long> checksums = new HashMap<>();
 
+		Set<String> fragmentHosts = new HashSet<>();
+
 		_installBundlesFromDir(
-			PropsValues.MODULE_FRAMEWORK_PORTAL_DIR, checksums);
+			PropsValues.MODULE_FRAMEWORK_PORTAL_DIR, checksums, fragmentHosts);
 		_installBundlesFromDir(
-			PropsValues.MODULE_FRAMEWORK_MODULES_DIR, checksums);
+			PropsValues.MODULE_FRAMEWORK_MODULES_DIR, checksums, fragmentHosts);
+
+		if (!fragmentHosts.isEmpty()) {
+			List<Bundle> refreshBundles = new ArrayList<>();
+
+			BundleContext bundleContext = _framework.getBundleContext();
+
+			for (Bundle bundle : bundleContext.getBundles()) {
+				if (fragmentHosts.remove(bundle.getSymbolicName())) {
+					refreshBundles.add(bundle);
+
+					if (fragmentHosts.isEmpty()) {
+						break;
+					}
+				}
+			}
+
+			_refreshBundles(refreshBundles);
+		}
 
 		return checksums;
 	}
@@ -1595,6 +1642,8 @@ public class ModuleFrameworkImpl implements ModuleFramework {
 			try (InputStream inputStream = Files.newInputStream(jarPath)) {
 				File file = jarPath.toFile();
 
+				file = file.getCanonicalFile();
+
 				URI uri = file.toURI();
 
 				String uriString = uri.toString();
@@ -1619,6 +1668,8 @@ public class ModuleFrameworkImpl implements ModuleFramework {
 				StaticLPKGResolver.getStaticLPKGFileNames()) {
 
 			File file = new File(deployDir + StringPool.SLASH + staticFileName);
+
+			file = file.getCanonicalFile();
 
 			if (file.exists()) {
 				bundles.addAll(

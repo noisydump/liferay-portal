@@ -15,6 +15,8 @@
 package com.liferay.dynamic.data.mapping.form.builder.internal.converter.serializer;
 
 import com.liferay.dynamic.data.mapping.form.builder.internal.converter.model.action.AutoFillDDMFormRuleAction;
+import com.liferay.dynamic.data.mapping.spi.converter.serializer.SPIDDMFormRuleActionSerializer;
+import com.liferay.dynamic.data.mapping.spi.converter.serializer.SPIDDMFormRuleSerializerContext;
 import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
@@ -27,7 +29,7 @@ import java.util.Map;
  * @author Leonardo Barros
  */
 public class AutoFillDDMFormRuleActionSerializer
-	implements DDMFormRuleActionSerializer {
+	implements SPIDDMFormRuleActionSerializer {
 
 	public AutoFillDDMFormRuleActionSerializer(
 		AutoFillDDMFormRuleAction autoFillDDMFormRuleAction) {
@@ -37,7 +39,7 @@ public class AutoFillDDMFormRuleActionSerializer
 
 	@Override
 	public String serialize(
-		DDMFormRuleSerializerContext ddmFormRuleSerializerContext) {
+		SPIDDMFormRuleSerializerContext spiDDMFormRuleSerializerContext) {
 
 		return String.format(
 			_FUNCTION_CALL_TERNARY_EXPRESSION_FORMAT, "call",

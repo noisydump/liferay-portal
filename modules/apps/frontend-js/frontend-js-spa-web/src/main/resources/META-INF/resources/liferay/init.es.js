@@ -53,7 +53,7 @@ const initSPA = function() {
 				}
 
 				return match;
-			}
+			},
 		},
 		{
 			handler: RenderURLScreen,
@@ -77,8 +77,8 @@ const initSPA = function() {
 				}
 
 				return match;
-			}
-		}
+			},
+		},
 	]);
 
 	Liferay.Util.submitForm = function(form) {
@@ -109,14 +109,16 @@ const initSPA = function() {
 				if (match(globals.document.activeElement, buttonSelector)) {
 					globals.capturedFormButtonElement =
 						globals.document.activeElement;
-				} else {
+				}
+				else {
 					globals.capturedFormButtonElement = formElement.querySelector(
 						buttonSelector
 					);
 				}
 
 				app.navigate(utils.getUrlPath(url));
-			} else {
+			}
+			else {
 				formElement.submit();
 			}
 		});
@@ -138,8 +140,9 @@ export default {
 			globals.document.addEventListener('DOMContentLoaded', () => {
 				callback.call(this, initSPA());
 			});
-		} else {
+		}
+		else {
 			callback.call(this, initSPA());
 		}
-	}
+	},
 };

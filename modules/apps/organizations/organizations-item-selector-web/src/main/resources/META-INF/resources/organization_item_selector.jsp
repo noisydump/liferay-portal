@@ -68,10 +68,11 @@ PortletURL portletURL = organizationItemSelectorViewDisplayContext.getPortletURL
 		>
 
 			<%
-			Map<String, Object> data = new HashMap<>();
-
-			data.put("id", organization.getOrganizationId());
-			data.put("name", organization.getName());
+			Map<String, Object> data = HashMapBuilder.<String, Object>put(
+				"id", organization.getOrganizationId()
+			).put(
+				"name", organization.getName()
+			).build();
 
 			row.setData(data);
 			%>
@@ -118,14 +119,14 @@ PortletURL portletURL = organizationItemSelectorViewDisplayContext.getPortletURL
 
 			arr.push({
 				id: data.id,
-				name: data.name
+				name: data.name,
 			});
 		});
 
 		Liferay.Util.getOpener().Liferay.fire(
 			'<%= HtmlUtil.escapeJS(itemSelectedEventName) %>',
 			{
-				data: arr
+				data: arr,
 			}
 		);
 	});

@@ -67,7 +67,7 @@ definition {
 
 		Form.editDescription();
 
-		Form.gotoAddField(fieldType = "Text Field");
+		Form.addTextField();
 
 		Form.editFieldLabelMetal(fieldValue = "Text Field With Autocomplete");
 
@@ -129,9 +129,9 @@ definition {
 
 		FormFields.editTextWithDataProvider(
 			fieldName = "TextFieldWithAutocomplete",
-			fieldValue = "United");
+			fieldValue = "Bra");
 
-		FormFields.selectAutoCompleteOption(autocompleteOption = "United States");
+		FormFields.selectAutoCompleteOption(autocompleteOption = "Brazil");
 
 		FormPortlet.submit();
 
@@ -146,7 +146,7 @@ definition {
 
 		FormsAdmin.viewFormTableEntry(
 			fieldLabel = "Text Field With Autocomplete",
-			fieldValue = "United States");
+			fieldValue = "Brazil");
 
 		Navigator.openURL();
 
@@ -181,10 +181,10 @@ definition {
 
 		FormFields.editText(
 			fieldName = "TextFieldWithAutocomplete",
-			fieldValue = "Un");
+			fieldValue = "Br");
 
 		AssertElementNotPresent(
-			key_autocompleteOption = "United States",
+			key_autocompleteOption = "Brazil",
 			locator1 = "FormFields#AUTOCOMPLETE_OPTION");
 	}
 
@@ -262,9 +262,13 @@ definition {
 
 		Navigator.gotoPage(pageName = "Form Page");
 
+		Pause(locator1 = "1500");
+
 		FormFields.viewSelectLabel(
 			fieldLabel = "Data Provider Select Field",
 			fieldName = "DataProviderSelectField");
+
+		Pause(locator1 = "1000");
 
 		FormFields.selectSelectOption(
 			fieldName = "Select Field",

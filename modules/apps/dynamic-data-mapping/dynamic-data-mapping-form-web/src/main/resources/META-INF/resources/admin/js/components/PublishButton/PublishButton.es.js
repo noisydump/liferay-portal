@@ -29,7 +29,7 @@ class PublishButton extends Component {
 		return (
 			<ClayButton
 				events={{
-					click: this._handleButtonClicked.bind(this)
+					click: this._handleButtonClicked.bind(this),
 				}}
 				label={
 					published
@@ -48,7 +48,8 @@ class PublishButton extends Component {
 
 		if (published) {
 			promise = this.unpublish(event);
-		} else {
+		}
+		else {
 			promise = this.publish(event);
 		}
 
@@ -85,7 +86,7 @@ PublishButton.PROPS = {
 	published: Config.bool().value(false),
 	spritemap: Config.string().required(),
 	submitForm: Config.func().required(),
-	url: Config.string()
+	url: Config.string(),
 };
 
 export default PublishButton;

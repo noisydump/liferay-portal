@@ -26,12 +26,13 @@ import {
 	STATUS_ERROR,
 	STATUS_LOGIN,
 	STATUS_REPORT,
-	STATUS_SUCCESS
+	STATUS_SUCCESS,
 } from '../constants.es';
 import FlagsModal from './FlagsModal.es';
 
 const Flags = ({
 	baseData,
+	captchaURI,
 	companyName,
 	disabled = false,
 	forceLogin = false,
@@ -40,13 +41,14 @@ const Flags = ({
 	pathTermsOfUse,
 	reasons,
 	signedIn = false,
-	uri
+	uri,
 }) => {
 	const [isSending, setIsSending] = useState(false);
 	const [reportDialogOpen, setReportDialogOpen] = useState(false);
 	const [status, setStatus] = useState(
 		forceLogin ? STATUS_LOGIN : STATUS_REPORT
 	);
+	const [error, setError] = useState(null);
 
 	const [otherReason, setOtherReason] = useState('');
 	const [reporterEmailAddress, setReporterEmailAddress] = useState('');
@@ -60,6 +62,7 @@ const Flags = ({
 		if (selectedReason === OTHER_REASON_VALUE) {
 			return otherReason || Liferay.Language.get('no-reason-specified');
 		}
+
 		return selectedReason;
 	};
 
@@ -68,6 +71,7 @@ const Flags = ({
 	};
 
 	const handleClickClose = () => {
+		setError(false);
 		setReportDialogOpen(false);
 	};
 
@@ -79,9 +83,11 @@ const Flags = ({
 
 		if (name === 'otherReason') {
 			setOtherReason(value);
-		} else if (name === 'reporterEmailAddress') {
+		}
+		else if (name === 'reporterEmailAddress') {
 			setReporterEmailAddress(value);
-		} else if (name === 'selectedReason') {
+		}
+		else if (name === 'selectedReason') {
 			setSelectedReason(value);
 		}
 	};
@@ -95,7 +101,7 @@ const Flags = ({
 
 		const formDataObj = {
 			...baseData,
-			[`${namespace}reason`]: getReason()
+			[`${namespace}reason`]: getReason(),
 		};
 
 		if (!signedIn) {
@@ -105,15 +111,16 @@ const Flags = ({
 		}
 
 		fetch(uri, {
-			body: objectToFormData(formDataObj),
-			method: 'post'
+			body: objectToFormData(formDataObj, new FormData(event.target)),
+			method: 'post',
 		})
-			.then(({status}) => {
+			.then(res => res.json())
+			.then(({error}) => {
 				if (isMounted()) {
-					if (status === Liferay.STATUS_CODE.OK) {
+					setError(error);
+					setIsSending(false);
+					if (!error) {
 						setStatus(STATUS_SUCCESS);
-					} else {
-						setStatus(STATUS_ERROR);
 					}
 				}
 			})
@@ -124,8 +131,8 @@ const Flags = ({
 			});
 	};
 
-	const {observer} = useModal({
-		onClose: handleClickClose
+	const {observer, onClose} = useModal({
+		onClose: handleClickClose,
 	});
 
 	return (
@@ -154,8 +161,10 @@ const Flags = ({
 			</ClayButton>
 			{reportDialogOpen && (
 				<FlagsModal
+					captchaURI={captchaURI}
 					companyName={companyName}
-					handleClose={handleClickClose}
+					error={error}
+					handleClose={onClose}
 					handleInputChange={handleInputChange}
 					handleSubmit={handleSubmitReport}
 					isSending={isSending}
@@ -172,6 +181,7 @@ const Flags = ({
 };
 Flags.propTypes = {
 	baseData: PropTypes.object.isRequired,
+	captchaURI: PropTypes.string.isRequired,
 	companyName: PropTypes.string.isRequired,
 	disabled: PropTypes.bool,
 	forceLogin: PropTypes.bool,
@@ -180,7 +190,7 @@ Flags.propTypes = {
 	pathTermsOfUse: PropTypes.string.isRequired,
 	reasons: PropTypes.object.isRequired,
 	signedIn: PropTypes.bool,
-	uri: PropTypes.string.isRequired
+	uri: PropTypes.string.isRequired,
 };
 
 export default Flags;

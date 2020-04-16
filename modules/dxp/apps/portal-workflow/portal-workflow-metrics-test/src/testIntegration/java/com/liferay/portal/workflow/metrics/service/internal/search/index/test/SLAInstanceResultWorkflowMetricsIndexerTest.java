@@ -22,6 +22,7 @@ import com.liferay.portal.kernel.messaging.MessageListener;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
+import com.liferay.portal.kernel.util.LinkedHashMapBuilder;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
@@ -29,6 +30,7 @@ import com.liferay.portal.workflow.kaleo.model.KaleoDefinition;
 import com.liferay.portal.workflow.kaleo.model.KaleoInstance;
 import com.liferay.portal.workflow.kaleo.service.KaleoDefinitionVersionLocalService;
 import com.liferay.portal.workflow.metrics.model.WorkflowMetricsSLADefinition;
+import com.liferay.portal.workflow.metrics.search.index.name.WorkflowMetricsIndexNameBuilder;
 import com.liferay.portal.workflow.metrics.service.WorkflowMetricsSLADefinitionLocalService;
 import com.liferay.portal.workflow.metrics.service.util.BaseWorkflowMetricsIndexerTestCase;
 
@@ -57,12 +59,17 @@ public class SLAInstanceResultWorkflowMetricsIndexerTest
 		KaleoDefinition kaleoDefinition = getKaleoDefinition();
 
 		retryAssertCount(
-			4, "workflow-metrics-nodes", "WorkflowMetricsNodeType", "companyId",
+			4,
+			_nodeWorkflowMetricsIndexNameBuilder.getIndexName(
+				kaleoDefinition.getCompanyId()),
+			"WorkflowMetricsNodeType", "companyId",
 			kaleoDefinition.getCompanyId(), "processId",
 			kaleoDefinition.getKaleoDefinitionId());
 		retryAssertCount(
-			"workflow-metrics-processes", "WorkflowMetricsProcessType",
-			"companyId", kaleoDefinition.getCompanyId(), "processId",
+			_processWorkflowMetricsIndexNameBuilder.getIndexName(
+				kaleoDefinition.getCompanyId()),
+			"WorkflowMetricsProcessType", "companyId",
+			kaleoDefinition.getCompanyId(), "processId",
 			kaleoDefinition.getKaleoDefinitionId());
 
 		List<BlogsEntry> blogsEntries = ListUtil.fromArray(
@@ -93,6 +100,15 @@ public class SLAInstanceResultWorkflowMetricsIndexerTest
 					new String[] {getTerminalNodeKey(kaleoDefinition)},
 					ServiceContextTestUtil.getServiceContext()));
 
+		WorkflowMetricsSLADefinition firstWorkflowMetricsSLADefinition =
+			_workflowMetricsSLADefinitions.remove(0);
+
+		_workflowMetricsSLADefinitionLocalService.
+			deactivateWorkflowMetricsSLADefinition(
+				firstWorkflowMetricsSLADefinition.
+					getWorkflowMetricsSLADefinitionId(),
+				ServiceContextTestUtil.getServiceContext());
+
 		for (BlogsEntry blogsEntry : blogsEntries) {
 			KaleoInstance kaleoInstance = getKaleoInstance(blogsEntry);
 
@@ -103,22 +119,30 @@ public class SLAInstanceResultWorkflowMetricsIndexerTest
 			completeKaleoInstance(kaleoInstance);
 
 			retryAssertCount(
-				"workflow-metrics-instances", "WorkflowMetricsInstanceType",
-				"className", kaleoInstance.getClassName(), "classPK",
+				_instanceWorkflowMetricsIndexNameBuilder.getIndexName(
+					kaleoDefinition.getCompanyId()),
+				"WorkflowMetricsInstanceType", "className",
+				kaleoInstance.getClassName(), "classPK",
 				kaleoInstance.getClassPK(), "companyId",
 				kaleoInstance.getCompanyId(), "completed", true, "instanceId",
 				kaleoInstance.getKaleoInstanceId(), "processId",
 				kaleoDefinition.getKaleoDefinitionId());
 		}
 
-		WorkflowMetricsSLADefinition firstWorkflowMetricsSLADefinition =
-			_workflowMetricsSLADefinitions.get(0);
+		for (BlogsEntry blogsEntry : blogsEntries) {
+			KaleoInstance kaleoInstance = getKaleoInstance(blogsEntry);
 
-		_workflowMetricsSLADefinitionLocalService.
-			deactivateWorkflowMetricsSLADefinition(
-				firstWorkflowMetricsSLADefinition.
-					getWorkflowMetricsSLADefinitionId(),
-				ServiceContextTestUtil.getServiceContext());
+			assertSLAReindex(
+				LinkedHashMapBuilder.put(
+					_slaInstanceResultWorkflowMetricsIndexNameBuilder.
+						getIndexName(kaleoDefinition.getCompanyId()),
+					2
+				).build(),
+				new String[] {"WorkflowMetricsSLAInstanceResultType"},
+				"companyId", kaleoDefinition.getCompanyId(), "instanceId",
+				kaleoInstance.getKaleoInstanceId(), "processId",
+				kaleoDefinition.getKaleoDefinitionId());
+		}
 
 		for (WorkflowMetricsSLADefinition workflowMetricsSLADefinition :
 				_workflowMetricsSLADefinitions) {
@@ -127,7 +151,10 @@ public class SLAInstanceResultWorkflowMetricsIndexerTest
 				KaleoInstance kaleoInstance = getKaleoInstance(blogsEntry);
 
 				assertSLAReindex(
-					new String[] {"workflow-metrics-sla-instance-results"},
+					new String[] {
+						_slaInstanceResultWorkflowMetricsIndexNameBuilder.
+							getIndexName(kaleoDefinition.getCompanyId())
+					},
 					new String[] {"WorkflowMetricsSLAInstanceResultType"},
 					"companyId", kaleoDefinition.getCompanyId(), "instanceId",
 					kaleoInstance.getKaleoInstanceId(), "processId",
@@ -138,12 +165,28 @@ public class SLAInstanceResultWorkflowMetricsIndexerTest
 		}
 	}
 
+	@Inject(filter = "workflow.metrics.index.entity.name=instance")
+	private WorkflowMetricsIndexNameBuilder
+		_instanceWorkflowMetricsIndexNameBuilder;
+
 	@Inject
 	private JSONFactory _jsonFactory;
 
 	@Inject
 	private KaleoDefinitionVersionLocalService
 		_kaleoDefinitionVersionLocalService;
+
+	@Inject(filter = "workflow.metrics.index.entity.name=node")
+	private WorkflowMetricsIndexNameBuilder
+		_nodeWorkflowMetricsIndexNameBuilder;
+
+	@Inject(filter = "workflow.metrics.index.entity.name=process")
+	private WorkflowMetricsIndexNameBuilder
+		_processWorkflowMetricsIndexNameBuilder;
+
+	@Inject(filter = "workflow.metrics.index.entity.name=sla-instance-result")
+	private WorkflowMetricsIndexNameBuilder
+		_slaInstanceResultWorkflowMetricsIndexNameBuilder;
 
 	@Inject
 	private WorkflowMetricsSLADefinitionLocalService

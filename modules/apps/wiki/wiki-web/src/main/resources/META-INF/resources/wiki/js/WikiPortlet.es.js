@@ -109,7 +109,8 @@ class WikiPortlet extends PortletBase {
 		if (confirm(confirmMessage)) {
 			this.one('form').setAttribute('action', this.renderUrl);
 			this.save_();
-		} else {
+		}
+		else {
 			formatSelect.selectedIndex = this.currentFormatIndex;
 		}
 	}
@@ -172,7 +173,8 @@ class WikiPortlet extends PortletBase {
 				tempImages.forEach(node => {
 					node.parentElement.remove();
 				});
-			} else {
+			}
+			else {
 				discardTempImages = false;
 			}
 		}
@@ -230,7 +232,7 @@ WikiPortlet.STATE = {
 	 * @type {!Object}
 	 */
 	constants: {
-		validator: core.isObject
+		validator: core.isObject,
 	},
 
 	/**
@@ -241,7 +243,7 @@ WikiPortlet.STATE = {
 	 * @type {String}
 	 */
 	currentAction: {
-		validator: core.isString
+		validator: core.isString,
 	},
 
 	/**
@@ -251,7 +253,7 @@ WikiPortlet.STATE = {
 	 * @type {String}
 	 */
 	renderUrl: {
-		validator: core.isString
+		validator: core.isString,
 	},
 
 	/**
@@ -268,9 +270,9 @@ WikiPortlet.STATE = {
 			),
 			confirmLoseFormatting: Liferay.Language.get(
 				'you-may-lose-formatting-when-switching-from-x-to-x'
-			)
-		}
-	}
+			),
+		},
+	},
 };
 
 export default WikiPortlet;

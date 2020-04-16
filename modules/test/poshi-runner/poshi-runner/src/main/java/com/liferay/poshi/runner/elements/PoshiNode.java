@@ -126,7 +126,7 @@ public interface PoshiNode<A extends Node, B extends PoshiNode<A, B>>
 		return parentPoshiNode.getURL();
 	}
 
-	public default boolean isValidPoshiXML() {
+	public default boolean isValidPoshiXML() throws PoshiScriptParserException {
 		PoshiNode parentPoshiNode = (PoshiNode)getParent();
 
 		return parentPoshiNode.isValidPoshiXML();
@@ -150,10 +150,11 @@ public interface PoshiNode<A extends Node, B extends PoshiNode<A, B>>
 		generatedPoshiScript = generatedPoshiScript.replaceAll("\\s+", "");
 
 		if (!originalPoshiScript.equals(generatedPoshiScript)) {
-			PoshiScriptParserException pspe = new PoshiScriptParserException(
-				PoshiScriptParserException.TRANSLATION_LOSS_MESSAGE, this);
+			PoshiScriptParserException poshiScriptParserException =
+				new PoshiScriptParserException(
+					PoshiScriptParserException.TRANSLATION_LOSS_MESSAGE, this);
 
-			throw pspe;
+			throw poshiScriptParserException;
 		}
 	}
 

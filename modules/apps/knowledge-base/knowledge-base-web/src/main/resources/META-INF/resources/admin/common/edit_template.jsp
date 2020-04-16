@@ -47,20 +47,12 @@ renderResponse.setTitle((kbTemplate == null) ? LanguageUtil.get(request, "new-te
 		<aui:fieldset-group markupView="lexicon">
 			<aui:fieldset>
 				<h1 class="kb-title">
-					<liferay-ui:input-editor
-						contents="<%= title %>"
-						editorName="alloyeditor"
-						name="titleEditor"
-						placeholder="title"
-						showSource="<%= false %>"
-					/>
+					<aui:input autocomplete="off" label='<%= LanguageUtil.get(request, "title") %>' name="title" required="<%= true %>" type="text" value="<%= HtmlUtil.escape(title) %>" />
 				</h1>
 
-				<aui:input name="title" type="hidden" />
-
-				<liferay-ui:input-editor
+				<liferay-editor:editor
 					contents="<%= content %>"
-					editorName="alloyeditor"
+					editorName="ckeditor"
 					name="contentEditor"
 					placeholder="content"
 				/>
@@ -91,9 +83,9 @@ renderResponse.setTitle((kbTemplate == null) ? LanguageUtil.get(request, "new-te
 			data: {
 				<%= Constants.CMD %>:
 					'<%= (kbTemplate == null) ? Constants.ADD : Constants.UPDATE %>',
-				title: window.<portlet:namespace />titleEditor.getText(),
-				content: window.<portlet:namespace />contentEditor.getHTML()
-			}
+				title: document.getElementById('<portlet:namespace />title').value,
+				content: window.<portlet:namespace />contentEditor.getHTML(),
+			},
 		});
 	}
 </aui:script>

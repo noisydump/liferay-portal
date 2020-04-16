@@ -20,13 +20,13 @@ import {
 	addVariant,
 	reviewVariants,
 	updateVariant,
-	updateVariants
+	updateVariants,
 } from '../../state/actions.es';
 import {DispatchContext, StateContext} from '../../state/context.es';
 import {navigateToExperience} from '../../util/navigation.es';
 import {
 	STATUS_FINISHED_NO_WINNER,
-	STATUS_FINISHED_WINNER
+	STATUS_FINISHED_WINNER,
 } from '../../util/statuses.es';
 import {openErrorToast, openSuccessToast} from '../../util/toasts.es';
 import VariantForm from './internal/VariantForm.es';
@@ -39,15 +39,15 @@ function Variants({onVariantPublish, selectedSegmentsExperienceId}) {
 
 	const {
 		observer: creatingVariantObserver,
-		onClose: creatingVariantOnClose
+		onClose: creatingVariantOnClose,
 	} = useModal({
-		onClose: () => setCreatingVariant(false)
+		onClose: () => setCreatingVariant(false),
 	});
 	const {
 		observer: editingVariantObserver,
-		onClose: editingVariantOnClose
+		onClose: editingVariantOnClose,
 	} = useModal({
-		onClose: () => setEditingVariant({active: false})
+		onClose: () => setEditingVariant({active: false}),
 	});
 	const [creatingVariant, setCreatingVariant] = useState(false);
 	const [editingVariant, setEditingVariant] = useState({active: false});
@@ -147,7 +147,7 @@ function Variants({onVariantPublish, selectedSegmentsExperienceId}) {
 		const body = {
 			classNameId: page.classNameId,
 			classPK: page.classPK,
-			segmentsExperimentRelId: variantId
+			segmentsExperimentRelId: variantId,
 		};
 
 		return APIService.deleteVariant(body)
@@ -157,16 +157,19 @@ function Variants({onVariantPublish, selectedSegmentsExperienceId}) {
 				let variantExperienceId = null;
 
 				const newVariants = variants.filter(variant => {
-					if (variant.segmentsExperimentRelId !== variantId)
+					if (variant.segmentsExperimentRelId !== variantId) {
 						return true;
+					}
 
 					variantExperienceId = variant.segmentsExperienceId;
+
 					return false;
 				});
 
 				if (variantExperienceId === selectedSegmentsExperienceId) {
 					navigateToExperience(experiment.segmentsExperienceId);
-				} else {
+				}
+				else {
 					dispatch(updateVariants(newVariants));
 					dispatch(reviewVariants());
 				}
@@ -180,7 +183,7 @@ function Variants({onVariantPublish, selectedSegmentsExperienceId}) {
 		setEditingVariant({
 			active: true,
 			name,
-			variantId
+			variantId,
 		});
 	}
 
@@ -189,7 +192,7 @@ function Variants({onVariantPublish, selectedSegmentsExperienceId}) {
 			classNameId: page.classNameId,
 			classPK: page.classPK,
 			name,
-			segmentsExperimentRelId: variantId
+			segmentsExperimentRelId: variantId,
 		};
 
 		return APIService.editVariant(body).then(({segmentsExperimentRel}) => {
@@ -198,9 +201,9 @@ function Variants({onVariantPublish, selectedSegmentsExperienceId}) {
 			dispatch(
 				updateVariant({
 					changes: {
-						name: segmentsExperimentRel.name
+						name: segmentsExperimentRel.name,
 					},
-					variantId
+					variantId,
 				})
 			);
 		});
@@ -211,7 +214,7 @@ function Variants({onVariantPublish, selectedSegmentsExperienceId}) {
 			classNameId: page.classNameId,
 			classPK: page.classPK,
 			name,
-			segmentsExperimentId: experiment.segmentsExperimentId
+			segmentsExperimentId: experiment.segmentsExperimentId,
 		};
 
 		return APIService.createVariant(body)
@@ -221,7 +224,7 @@ function Variants({onVariantPublish, selectedSegmentsExperienceId}) {
 					segmentsExperienceId,
 					segmentsExperimentId,
 					segmentsExperimentRelId,
-					split
+					split,
 				} = segmentsExperimentRel;
 
 				openSuccessToast();
@@ -233,7 +236,7 @@ function Variants({onVariantPublish, selectedSegmentsExperienceId}) {
 						segmentsExperienceId,
 						segmentsExperimentId,
 						segmentsExperimentRelId,
-						split
+						split,
 					})
 				);
 			})
@@ -245,7 +248,7 @@ function Variants({onVariantPublish, selectedSegmentsExperienceId}) {
 
 Variants.propTypes = {
 	onVariantPublish: PropTypes.func.isRequired,
-	selectedSegmentsExperienceId: PropTypes.string.isRequired
+	selectedSegmentsExperienceId: PropTypes.string.isRequired,
 };
 
 export default Variants;

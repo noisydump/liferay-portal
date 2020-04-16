@@ -16,13 +16,12 @@ import ClayButton from '@clayui/button';
 import ClayDropDown, {Align} from '@clayui/drop-down';
 import ClayIcon from '@clayui/icon';
 import classNames from 'classnames';
-import {SearchInput} from 'data-engine-taglib';
+import {DataDefinitionUtils, SearchInput} from 'data-engine-taglib';
 import React, {useContext, useRef, useState} from 'react';
 
-import {getDataDefinitionField} from '../../utils/dataDefinition.es';
 import EditTableViewContext, {
 	REMOVE_FILTER_VALUE,
-	UPDATE_FILTER_VALUE
+	UPDATE_FILTER_VALUE,
 } from './EditTableViewContext.es';
 
 export const MultipleSelectFilter = ({dataDefinitionField, useFieldLabel}) => {
@@ -31,7 +30,7 @@ export const MultipleSelectFilter = ({dataDefinitionField, useFieldLabel}) => {
 	const {
 		customProperties: {options = {}},
 		label: fieldLabel,
-		name: fieldName
+		name: fieldName,
 	} = dataDefinitionField;
 	const localizedOptions = options[themeDisplay.getLanguageId()] || [];
 
@@ -44,19 +43,21 @@ export const MultipleSelectFilter = ({dataDefinitionField, useFieldLabel}) => {
 
 		if (values.includes(optionValue)) {
 			newValue = values.filter(item => item !== optionValue);
-		} else {
+		}
+		else {
 			newValue = [...values, optionValue];
 		}
 
 		if (newValue.length) {
 			dispatch({
 				payload: {fieldName, value: newValue},
-				type: UPDATE_FILTER_VALUE
+				type: UPDATE_FILTER_VALUE,
 			});
-		} else {
+		}
+		else {
 			dispatch({
 				payload: {fieldName},
-				type: REMOVE_FILTER_VALUE
+				type: REMOVE_FILTER_VALUE,
 			});
 		}
 	};
@@ -70,7 +71,7 @@ export const MultipleSelectFilter = ({dataDefinitionField, useFieldLabel}) => {
 	const onClickClear = () => {
 		dispatch({
 			payload: {fieldName},
-			type: REMOVE_FILTER_VALUE
+			type: REMOVE_FILTER_VALUE,
 		});
 	};
 
@@ -78,9 +79,9 @@ export const MultipleSelectFilter = ({dataDefinitionField, useFieldLabel}) => {
 		dispatch({
 			payload: {
 				fieldName,
-				value: localizedOptions.map(({value}) => value)
+				value: localizedOptions.map(({value}) => value),
 			},
-			type: UPDATE_FILTER_VALUE
+			type: UPDATE_FILTER_VALUE,
 		});
 	};
 
@@ -107,7 +108,7 @@ export const MultipleSelectFilter = ({dataDefinitionField, useFieldLabel}) => {
 
 			<ClayButton
 				className={classNames('multiple-select-filter-trigger', {
-					empty: values.length === 0
+					empty: values.length === 0,
 				})}
 				displayType="secondary"
 				onClick={() => setActive(!active)}
@@ -145,7 +146,7 @@ export const MultipleSelectFilter = ({dataDefinitionField, useFieldLabel}) => {
 
 					<ClayDropDown.Item
 						className={classNames('dropdown-select-all', {
-							clearable: values.length > 0
+							clearable: values.length > 0,
 						})}
 						key="all"
 					>
@@ -195,13 +196,13 @@ export const MultipleSelectFilter = ({dataDefinitionField, useFieldLabel}) => {
 
 const RENDERERS = {
 	radio: MultipleSelectFilter,
-	select: MultipleSelectFilter
+	select: MultipleSelectFilter,
 };
 
 export const FilterRenderer = ({fieldName, useFieldLabel}) => {
 	const [{dataDefinition}] = useContext(EditTableViewContext);
 
-	const dataDefinitionField = getDataDefinitionField(
+	const dataDefinitionField = DataDefinitionUtils.getDataDefinitionField(
 		dataDefinition,
 		fieldName
 	);
@@ -224,8 +225,8 @@ export const TableViewFiltersList = () => {
 	const [
 		{
 			dataListView: {fieldNames},
-			focusedColumn
-		}
+			focusedColumn,
+		},
 	] = useContext(EditTableViewContext);
 
 	const filteredFieldNames = focusedColumn
@@ -235,7 +236,7 @@ export const TableViewFiltersList = () => {
 	return (
 		<div
 			className={classNames('table-view-filters-list', {
-				'single-field': !!focusedColumn
+				'single-field': !!focusedColumn,
 			})}
 		>
 			{!focusedColumn && (

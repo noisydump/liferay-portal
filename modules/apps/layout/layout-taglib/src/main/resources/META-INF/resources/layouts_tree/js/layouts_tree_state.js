@@ -32,23 +32,23 @@ AUI.add(
 		var LayoutsTreeState = A.Component.create({
 			ATTRS: {
 				checkedNodes: {
-					validator: Lang.isObject
+					validator: Lang.isObject,
 				},
 
 				localCheckedNodes: {
 					validator: Lang.isArray,
-					value: []
+					value: [],
 				},
 
 				localUncheckedNodes: {
 					validator: Lang.isArray,
-					value: []
+					value: [],
 				},
 
 				rootNodeExpanded: {
 					validator: Lang.isBoolean,
-					value: true
-				}
+					value: true,
+				},
 			},
 
 			EXTENDS: A.Plugin.Base,
@@ -61,14 +61,14 @@ AUI.add(
 				_invokeSessionClick(data, callback) {
 					A.mix(data, {
 						p_auth: Liferay.authToken,
-						useHttpSession: true
+						useHttpSession: true,
 					});
 
 					Liferay.Util.fetch(
 						themeDisplay.getPathMain() + '/portal/session_click',
 						{
 							body: Liferay.Util.objectToFormData(data),
-							method: 'POST'
+							method: 'POST',
 						}
 					)
 						.then(response => response.text())
@@ -97,7 +97,8 @@ AUI.add(
 
 					if (localCheckedNodes.indexOf(plid) > -1) {
 						checked = true;
-					} else if (localUncheckedNodes.indexOf(plid) > -1) {
+					}
+					else if (localUncheckedNodes.indexOf(plid) > -1) {
 						checked = false;
 					}
 
@@ -105,7 +106,7 @@ AUI.add(
 						instance._updateCheckedNodes({
 							checked,
 							forceChildrenState: true,
-							node
+							node,
 						});
 					}
 				},
@@ -141,7 +142,8 @@ AUI.add(
 								'RootNode',
 							expanded
 						);
-					} else {
+					}
+					else {
 						var layoutId = host.extractLayoutId(target);
 
 						instance._updateSessionTreeOpenedState(
@@ -192,12 +194,13 @@ AUI.add(
 					instance._invokeSessionClick(
 						{
 							cmd: 'get',
-							key
+							key,
 						},
 						responseData => {
 							try {
 								paginationMap = JSON.parse(responseData);
-							} catch (e) {}
+							}
+							catch (e) {}
 
 							updatePaginationMap(paginationMap, target);
 
@@ -238,7 +241,7 @@ AUI.add(
 
 					instance._updateCheckedNodes({
 						checked: newVal,
-						node: target
+						node: target,
 					});
 				},
 
@@ -251,7 +254,7 @@ AUI.add(
 						instance._updateCheckedNodes({
 							checked: true,
 							forceChildrenState: true,
-							node
+							node,
 						});
 					}
 
@@ -288,7 +291,8 @@ AUI.add(
 
 					if (instance.get(STR_CHECKED_NODES).indexOf(plid) > -1) {
 						treeNodeTaskSuperClass.check.call(node, tree);
-					} else {
+					}
+					else {
 						treeNodeTaskSuperClass.uncheck.call(node, tree);
 					}
 
@@ -337,7 +341,8 @@ AUI.add(
 								localUncheckedIndex
 							);
 						}
-					} else if (checkedIndex > -1) {
+					}
+					else if (checkedIndex > -1) {
 						AArray.remove(checkedNodes, checkedIndex);
 
 						localUncheckedNodes.push(plid);
@@ -360,7 +365,7 @@ AUI.add(
 							instance._updateCheckedNodes({
 								checked: childrenChecked,
 								forceChildrenState,
-								node: child
+								node: child,
 							});
 						});
 					}
@@ -371,7 +376,7 @@ AUI.add(
 
 					var data = {
 						cmd: state ? 'layoutCheck' : 'layoutUncheck',
-						plid: nodeId
+						plid: nodeId,
 					};
 
 					instance._updateSessionTreeClick(treeId, data);
@@ -389,7 +394,7 @@ AUI.add(
 							groupId: root.groupId,
 							privateLayout: root.privateLayout,
 							recursive: true,
-							treeId
+							treeId,
 						},
 						data
 					);
@@ -399,7 +404,7 @@ AUI.add(
 							'/portal/session_tree_js_click',
 						{
 							body: Liferay.Util.objectToFormData(data),
-							method: 'POST'
+							method: 'POST',
 						}
 					)
 						.then(response => response.json())
@@ -416,7 +421,7 @@ AUI.add(
 
 					var data = {
 						nodeId,
-						openNode: state
+						openNode: state,
 					};
 
 					instance._updateSessionTreeClick(treeId, data);
@@ -471,16 +476,16 @@ AUI.add(
 							'selectableTreeRender',
 							instance._onSelectableTreeRender,
 							instance
-						)
+						),
 					];
-				}
-			}
+				},
+			},
 		});
 
 		A.Plugin.LayoutsTreeState = LayoutsTreeState;
 	},
 	'',
 	{
-		requires: ['aui-base']
+		requires: ['aui-base'],
 	}
 );

@@ -464,7 +464,8 @@ mbGroupServiceSettings = MBGroupServiceSettings.getInstance(themeDisplay.getSite
 					ranksTempTextarea.classList.remove('hide');
 
 					<portlet:namespace />ranksLastLanguageId = selLanguageId;
-				} else {
+				}
+				else {
 					ranksTempTextarea.classList.add('hide');
 				}
 			}
@@ -493,7 +494,7 @@ mbGroupServiceSettings = MBGroupServiceSettings.getInstance(themeDisplay.getSite
 			var value = ranksValue || defaultRanksValue;
 
 			Liferay.Util.setFormValues(form, {
-				ranks_temp: value
+				ranks_temp: value,
 			});
 		}
 	}
@@ -573,7 +574,8 @@ mbGroupServiceSettings = MBGroupServiceSettings.getInstance(themeDisplay.getSite
 			if (localizedPrioritiesTable) {
 				if (selLanguageId) {
 					localizedPrioritiesTable.classList.remove('hide');
-				} else {
+				}
+				else {
 					localizedPrioritiesTable.classList.add('hide');
 				}
 			}
@@ -671,7 +673,7 @@ mbGroupServiceSettings = MBGroupServiceSettings.getInstance(themeDisplay.getSite
 
 		if (emailMessageAdded) {
 			Liferay.Util.setFormValues(form, {
-				'preferences--emailMessageAddedBody--': emailMessageAdded.getHTML()
+				'preferences--emailMessageAddedBody--': emailMessageAdded.getHTML(),
 			});
 		}
 
@@ -680,7 +682,7 @@ mbGroupServiceSettings = MBGroupServiceSettings.getInstance(themeDisplay.getSite
 
 		if (emailMessageUpdated) {
 			Liferay.Util.setFormValues(form, {
-				'preferences--emailMessageUpdatedBody--': emailMessageUpdated.getHTML()
+				'preferences--emailMessageUpdatedBody--': emailMessageUpdated.getHTML(),
 			});
 		}
 	}

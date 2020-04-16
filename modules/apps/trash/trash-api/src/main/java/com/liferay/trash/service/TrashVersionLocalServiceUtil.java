@@ -40,10 +40,11 @@ public class TrashVersionLocalServiceUtil {
 	public static com.liferay.trash.model.TrashVersion addTrashVersion(
 		long trashEntryId, String className, long classPK, int status,
 		com.liferay.portal.kernel.util.UnicodeProperties
-			typeSettingsProperties) {
+			typeSettingsUnicodeProperties) {
 
 		return getService().addTrashVersion(
-			trashEntryId, className, classPK, status, typeSettingsProperties);
+			trashEntryId, className, classPK, status,
+			typeSettingsUnicodeProperties);
 	}
 
 	/**
@@ -56,6 +57,16 @@ public class TrashVersionLocalServiceUtil {
 		com.liferay.trash.model.TrashVersion trashVersion) {
 
 		return getService().addTrashVersion(trashVersion);
+	}
+
+	/**
+	 * @throws PortalException
+	 */
+	public static com.liferay.portal.kernel.model.PersistedModel
+			createPersistedModel(java.io.Serializable primaryKeyObj)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return getService().createPersistedModel(primaryKeyObj);
 	}
 
 	/**
@@ -232,6 +243,9 @@ public class TrashVersionLocalServiceUtil {
 		return getService().getOSGiServiceIdentifier();
 	}
 
+	/**
+	 * @throws PortalException
+	 */
 	public static com.liferay.portal.kernel.model.PersistedModel
 			getPersistedModel(java.io.Serializable primaryKeyObj)
 		throws com.liferay.portal.kernel.exception.PortalException {

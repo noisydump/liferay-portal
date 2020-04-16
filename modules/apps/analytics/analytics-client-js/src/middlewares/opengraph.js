@@ -19,13 +19,13 @@ const openGraphTagPatterns = [
 	/^article:/,
 	/^book:/,
 	/^profile:/,
-	/^fb:/
+	/^fb:/,
 ];
 
 /**
  * Determines whether the given element is a valid OpenGraph meta tag
- * @param {object} element
- * @return {boolean}
+ * @param {Object} element
+ * @returns {boolean}
  */
 function isOpenGraphElement(element) {
 	let openGraphMetaTag = false;
@@ -45,9 +45,9 @@ function isOpenGraphElement(element) {
 
 /**
  * Updates context with OpenGraph information
- * @param {object} request Request object to alter
- * @param {object} analytics Analytics instance
- * @return {object} The updated request object
+ * @param {Object} request Request object to alter
+ * @param {Object} analytics Analytics instance
+ * @returns {Object} The updated request object
  */
 function openGraph(request) {
 	const elements = [].slice.call(document.querySelectorAll('meta'));
@@ -56,14 +56,14 @@ function openGraph(request) {
 	const openGraphData = openGraphElements.reduce(
 		(data, meta) => ({
 			[meta.getAttribute('property')]: meta.getAttribute('content'),
-			...data
+			...data,
 		}),
 		{}
 	);
 
 	request.context = {
 		...openGraphData,
-		...request.context
+		...request.context,
 	};
 
 	return request;

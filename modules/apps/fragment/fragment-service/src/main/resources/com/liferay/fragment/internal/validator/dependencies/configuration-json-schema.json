@@ -46,6 +46,18 @@
 					"if": {
 						"properties": {
 							"type": {
+								"const": "collectionSelector"
+							}
+						}
+					},
+					"then": {
+						"$ref": "#/definitions/fieldCollectionSelector"
+					}
+				},
+				{
+					"if": {
+						"properties": {
+							"type": {
 								"const": "itemSelector"
 							}
 						}
@@ -106,6 +118,7 @@
 					"enum": [
 						"checkbox",
 						"colorPalette",
+						"collectionSelector",
 						"itemSelector",
 						"select",
 						"text"
@@ -139,6 +152,25 @@
 						"boolean",
 						"string"
 					]
+				}
+			}
+		},
+		"fieldCollectionSelector": {
+			"properties": {
+				"typeOptions": {
+					"additionalProperties": false,
+					"properties": {
+						"itemSubtype": {
+							"title": "The ItemSubtype Schema",
+							"type": "string"
+						},
+						"itemType": {
+							"title": "The ItemType Schema",
+							"type": "string"
+						}
+					},
+					"title": "The Typeoptions Schema",
+					"type": "object"
 				}
 			}
 		},
@@ -292,6 +324,91 @@
 						"placeholder": {
 							"title": "The Placeholder Schema",
 							"type": "string"
+						},
+						"validation": {
+							"anyOf": [
+								{
+									"additionalProperties": false,
+									"properties": {
+										"errorMessage": {
+											"title": "The ErrorMessage Schema",
+											"type": "string"
+										},
+										"max": {
+											"title": "The Max Schema",
+											"type": "number"
+										},
+										"min": {
+											"title": "The Min Schema",
+											"type": "number"
+										},
+										"type": {
+											"const": "number"
+										}
+									}
+								},
+								{
+									"additionalProperties": false,
+									"properties": {
+										"errorMessage": {
+											"title": "The ErrorMessage Schema",
+											"type": "string"
+										},
+										"maxLength": {
+											"title": "The MaxLength Schema",
+											"type": "number"
+										},
+										"minLength": {
+											"title": "The MaxLength Schema",
+											"type": "number"
+										},
+										"type": {
+											"enum": [
+												"email",
+												"url",
+												"text"
+											]
+										}
+									}
+								},
+								{
+									"additionalProperties": false,
+									"properties": {
+										"errorMessage": {
+											"title": "The ErrorMessage Schema",
+											"type": "string"
+										},
+										"regexp": {
+											"title": "The RegExp Schema",
+											"type": "string"
+										},
+										"type": {
+											"const": "pattern"
+										}
+									},
+									"required": [
+										"regexp"
+									]
+								}
+							],
+							"properties": {
+								"type": {
+									"enum": [
+										"email",
+										"number",
+										"pattern",
+										"text",
+										"url"
+									],
+									"title": "The Type Schema",
+									"type": "string"
+								}
+							},
+							"required": [
+								"type"
+							],
+							"title": "The Validation Schema",
+							"type": "object"
 						}
 					},
 					"title": "The Typeoptions Schema",

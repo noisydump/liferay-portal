@@ -45,7 +45,6 @@ catch (NoSuchStructureException nsee) {
 
 long classNameId = PortalUtil.getClassNameId(DDMStructure.class);
 long classPK = BeanParamUtil.getLong(structure, request, "structureId");
-String structureKey = BeanParamUtil.getString(structure, request, "structureKey");
 
 String script = null;
 
@@ -219,14 +218,14 @@ if (Validator.isNotNull(requestUpdateStructureURL)) {
 								event.domEvent.preventDefault();
 
 								window.location.href = '<%= viewHistoryURL %>';
-							}
-						}
-					}
+							},
+						},
+					},
 				];
 
 				new A.Toolbar({
 					boundingBox: '#<portlet:namespace />structureHistoryToolbar',
-					children: toolbarChildren
+					children: toolbarChildren,
 				}).render();
 			</aui:script>
 		</c:if>
@@ -351,20 +350,20 @@ if (Validator.isNotNull(requestUpdateStructureURL)) {
 					'<%= PortletURLFactoryUtil.create(request, DDMPortletKeys.DYNAMIC_DATA_MAPPING, PortletRequest.RENDER_PHASE) %>',
 				classPK: <%= (structure != null) ? structure.getPrimaryKey() : 0 %>,
 				dialog: {
-					destroyOnHide: true
+					destroyOnHide: true,
 				},
 				eventName: '<portlet:namespace />selectParentStructure',
 				mvcPath: '/select_structure.jsp',
 				showAncestorScopes: true,
 				showManageTemplates: false,
-				title: '<%= HtmlUtil.escapeJS(scopeTitle) %>'
+				title: '<%= HtmlUtil.escapeJS(scopeTitle) %>',
 			},
 			function(event) {
 				var form = document.<portlet:namespace />fm;
 
 				Liferay.Util.setFormValues(form, {
 					parentStructureId: event.ddmstructureid,
-					parentStructureName: Liferay.Util.unescape(event.name)
+					parentStructureName: Liferay.Util.unescape(event.name),
 				});
 
 				var removeParentStructureButton = Liferay.Util.getFormElement(
@@ -384,7 +383,7 @@ if (Validator.isNotNull(requestUpdateStructureURL)) {
 
 		Liferay.Util.setFormValues(form, {
 			parentStructureId: '',
-			parentStructureName: ''
+			parentStructureName: '',
 		});
 
 		var removeParentStructureButton = Liferay.Util.getFormElement(
@@ -403,8 +402,8 @@ if (Validator.isNotNull(requestUpdateStructureURL)) {
 				definition: <portlet:namespace />formBuilder.getContentValue(),
 				status: draft
 					? <%= String.valueOf(WorkflowConstants.STATUS_DRAFT) %>
-					: <%= String.valueOf(WorkflowConstants.STATUS_APPROVED) %>
-			}
+					: <%= String.valueOf(WorkflowConstants.STATUS_APPROVED) %>,
+			},
 		});
 	}
 </aui:script>

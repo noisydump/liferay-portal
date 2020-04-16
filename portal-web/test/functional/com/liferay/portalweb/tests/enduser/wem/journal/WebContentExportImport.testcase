@@ -85,6 +85,7 @@ definition {
 	@description = "This is a use case for LPS-82492."
 	@priority = "5"
 	test AddWebContentFromImportedStructureAndTemplate {
+		property portal.upstream = "quarantine";
 		property testray.component.names = "Training";
 
 		WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name");
@@ -532,6 +533,7 @@ definition {
 
 	@priority = "5"
 	test MoveImportedWebContentArticlesToFolders {
+		property portal.upstream = "quarantine";
 		property testray.component.names = "Training,Web Content Administration";
 
 		JSONLayout.addPublicLayout(
@@ -671,7 +673,10 @@ definition {
 
 		Button.clickPublish();
 
-		Alert.viewRequiredField();
+		AssertTextEquals.assertPartialText(
+			key_fieldName = "Text",
+			locator1 = "TextInput#SPECIFIC_FIELD_REQUIRED_ALERT",
+			value1 = "This field is required.");
 	}
 
 }

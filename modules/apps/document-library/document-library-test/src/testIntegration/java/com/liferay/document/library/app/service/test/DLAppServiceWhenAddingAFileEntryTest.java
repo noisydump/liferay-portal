@@ -326,14 +326,12 @@ public class DLAppServiceWhenAddingAFileEntryTest extends BaseDLAppTestCase {
 
 		_fileEntryIds = new long[_users.length];
 
-		int successCount = 0;
-
 		for (int i = 0; i < doAsUserThreads.length; i++) {
 			doAsUserThreads[i] = new AddFileEntryThread(
 				_users[i].getUserId(), i);
 		}
 
-		successCount = DLAppServiceTestUtil.runUserThreads(doAsUserThreads);
+		int successCount = DLAppServiceTestUtil.runUserThreads(doAsUserThreads);
 
 		Assert.assertEquals(
 			StringBundler.concat(
@@ -355,7 +353,6 @@ public class DLAppServiceWhenAddingAFileEntryTest extends BaseDLAppTestCase {
 			_users.length, successCount);
 	}
 
-	@Ignore
 	@Test
 	public void testShouldSucceedWithNullBytes() throws Exception {
 		String fileName = RandomTestUtil.randomString();

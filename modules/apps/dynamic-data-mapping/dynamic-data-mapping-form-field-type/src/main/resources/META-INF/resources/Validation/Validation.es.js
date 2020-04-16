@@ -42,9 +42,13 @@ class Validation extends Component {
 		if (parsedState.enableValidation) {
 			this.context = {
 				...this.context,
-				validation: parsedState
+				validation: parsedState,
 			};
 		}
+
+		this._enableValidation = parsedState.enableValidation;
+		this._errorMessage = parsedState.errorMessage;
+		this._parameter = parsedState.parameter;
 
 		return {
 			...state,
@@ -53,7 +57,7 @@ class Validation extends Component {
 				state.validation && state.validation.dataType
 					? state.validation.dataType
 					: state.dataType,
-			localizationMode: editingLanguageId !== defaultLanguageId
+			localizationMode: editingLanguageId !== defaultLanguageId,
 		};
 	}
 
@@ -65,7 +69,7 @@ class Validation extends Component {
 		) {
 			this.setState({
 				dataType: this._dataTypeValueFn(),
-				validations: this._validationsValueFn()
+				validations: this._validationsValueFn(),
 			});
 		}
 	}
@@ -80,7 +84,7 @@ class Validation extends Component {
 		this.emit('fieldEdited', {
 			fieldInstance: this,
 			originalEvent: null,
-			value
+			value,
 		});
 	}
 
@@ -121,11 +125,12 @@ class Validation extends Component {
 
 			if (selectedValidation) {
 				parameterMessage = selectedValidation.parameterMessage;
-			} else {
+			}
+			else {
 				selectedValidation = {
 					name: this.validations[0].name,
 					parameterMessage: this.validations[0].parameterMessage,
-					value: this.validations[0].template
+					value: this.validations[0].template,
 				};
 			}
 		}
@@ -146,28 +151,30 @@ class Validation extends Component {
 			expression,
 			parameter,
 			parameterMessage,
-			selectedValidation
+			selectedValidation,
 		};
 	}
 
 	_getValue() {
 		let expression = {};
 		const {
+			_enableValidation: enableValidation,
+			_errorMessage,
+			_parameter,
 			editingLanguageId,
-			validation: {fieldName: name}
+			validation: {fieldName: name},
 		} = this;
 		let errorMessage = '';
 		let parameter = '';
 
 		if (this.refs.errorMessage) {
-			errorMessage = this.refs.errorMessage.value;
+			errorMessage = _errorMessage;
 		}
 
-		if (this.refs.parameter) {
-			parameter = this.refs.parameter.value;
+		if (this.refs.parameterText || this.refs.parameterNumeric) {
+			parameter = _parameter;
 		}
 
-		const enableValidation = this.refs.enableValidation.value;
 		let selectedValidation = this._getSelectedValidation();
 
 		if (
@@ -186,8 +193,8 @@ class Validation extends Component {
 			expression = {
 				name: selectedValidation.name,
 				value: subWords(selectedValidation.template, {
-					name
-				})
+					name,
+				}),
 			};
 		}
 
@@ -195,13 +202,13 @@ class Validation extends Component {
 			enableValidation,
 			errorMessage: {
 				...this.value.errorMessage,
-				[editingLanguageId]: errorMessage
+				[editingLanguageId]: errorMessage,
 			},
 			expression,
 			parameter: {
 				...this.value.parameter,
-				[editingLanguageId]: parameter
-			}
+				[editingLanguageId]: parameter,
+			},
 		};
 	}
 
@@ -210,7 +217,7 @@ class Validation extends Component {
 			return {
 				...validation,
 				checked: false,
-				value: validation.name
+				value: validation.name,
 			};
 		});
 	}
@@ -232,12 +239,27 @@ class Validation extends Component {
 		return validation;
 	}
 
+	_updateErrorMessageValue(event) {
+		this._errorMessage = event.value;
+		this._updateValue();
+	}
+
+	_updateParameterValue(event) {
+		this._parameter = event.value;
+		this._updateValue();
+	}
+
+	_updateCheckboxValue(event) {
+		this._enableValidation = event.value;
+		this._updateValue();
+	}
+
 	_updateValue() {
 		const value = this._getValue();
 
 		this.setState(
 			{
-				value
+				value,
 			},
 			() => this._emitFieldEdited(value)
 		);
@@ -402,8 +424,8 @@ Validation.STATE = {
 	value: Config.shapeOf({
 		errorMessage: Config.object(),
 		expression: Config.object(),
-		parameter: Config.object()
-	}).value({})
+		parameter: Config.object(),
+	}).value({}),
 };
 
 Soy.register(Validation, templates);

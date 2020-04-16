@@ -12,16 +12,28 @@
  * details.
  */
 
-import ClayButton from '@clayui/button';
+import {ClayButtonWithIcon} from '@clayui/button';
+import ClayDropDown from '@clayui/drop-down';
 import {ClayInput} from '@clayui/form';
-import ClayIcon from '@clayui/icon';
-import React, {useContext} from 'react';
+import PropTypes from 'prop-types';
+import React, {useState} from 'react';
 
-import {ConfigContext} from '../../app/config/index';
+import {config} from '../../app/config/index';
+import {useSelector} from '../../app/store/index';
 import {openInfoItemSelector} from '../../core/openInfoItemSelector';
 
-export default function ItemSelector({label, onItemSelect, selectedItemTitle}) {
-	const config = useContext(ConfigContext);
+export default function ItemSelector({
+	eventName,
+	itemSelectorURL,
+	label,
+	onItemSelect,
+	selectedItemTitle,
+	showMappedItems = true,
+}) {
+	const mappedInfoItems = useSelector(state => state.mappedInfoItems);
+	const [active, setActive] = useState(false);
+
+	const defaultEventName = `${config.portletNamespace}selectInfoItem`;
 
 	return (
 		<>
@@ -29,7 +41,7 @@ export default function ItemSelector({label, onItemSelect, selectedItemTitle}) {
 
 			<div className="d-flex">
 				<ClayInput
-					className="mr-2"
+					className="mr-2 page-editor__item-selector__content-input"
 					id="itemSelectorInput"
 					readOnly
 					sizing="sm"
@@ -37,18 +49,75 @@ export default function ItemSelector({label, onItemSelect, selectedItemTitle}) {
 					value={selectedItemTitle || ''}
 				/>
 
-				<ClayButton.Group>
-					<ClayButton
+				{mappedInfoItems.length > 0 && showMappedItems ? (
+					<ClayDropDown
+						active={active}
+						onActiveChange={setActive}
+						trigger={
+							<ClayButtonWithIcon
+								aria-label={Liferay.Language.get(
+									'select-content-button'
+								)}
+								displayType="secondary"
+								onClick={() => setActive(true)}
+								small
+								symbol="plus"
+							/>
+						}
+					>
+						<ClayDropDown.ItemList>
+							{mappedInfoItems.map(item => (
+								<ClayDropDown.Item
+									key={item.classNameId}
+									onClick={() => {
+										onItemSelect(item);
+										setActive(false);
+									}}
+								>
+									{item.title}
+								</ClayDropDown.Item>
+							))}
+							<ClayDropDown.Divider />
+							<ClayDropDown.Item
+								onClick={() =>
+									openInfoItemSelector(
+										onItemSelect,
+										eventName || defaultEventName,
+										itemSelectorURL ||
+											config.infoItemSelectorURL
+									)
+								}
+							>
+								{Liferay.Language.get('select-content')}...
+							</ClayDropDown.Item>
+						</ClayDropDown.ItemList>
+					</ClayDropDown>
+				) : (
+					<ClayButtonWithIcon
+						aria-label={Liferay.Language.get(
+							'select-content-button'
+						)}
 						displayType="secondary"
 						onClick={() =>
-							openInfoItemSelector(onItemSelect, config)
+							openInfoItemSelector(
+								onItemSelect,
+								eventName || defaultEventName,
+								itemSelectorURL || config.infoItemSelectorURL
+							)
 						}
 						small
-					>
-						<ClayIcon symbol="plus" />
-					</ClayButton>
-				</ClayButton.Group>
+						symbol="plus"
+					/>
+				)}
 			</div>
 		</>
 	);
 }
+
+ItemSelector.propTypes = {
+	eventName: PropTypes.string,
+	itemSelectorURL: PropTypes.string,
+	label: PropTypes.string,
+	onItemSelect: PropTypes.func.isRequired,
+	selectedItemTitle: PropTypes.string,
+};

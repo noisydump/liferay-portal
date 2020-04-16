@@ -85,7 +85,7 @@ Layout curLayout = (Layout)row.getObject();
 
 	<c:if test="<%= layoutsAdminDisplayContext.isShowConvertLayoutAction(curLayout) %>">
 		<liferay-ui:icon
-			message="convert-to-content-page-and-preview"
+			message="convert-to-content-page..."
 			url="<%= layoutsAdminDisplayContext.getConvertLayoutURL(curLayout) %>"
 		/>
 	</c:if>
@@ -108,15 +108,15 @@ Layout curLayout = (Layout)row.getObject();
 					destroyOnHide: true,
 					height: 480,
 					resizable: false,
-					width: 640
+					width: 640,
 				},
 				dialogIframe: {
-					bodyCssClass: 'dialog-with-footer'
+					bodyCssClass: 'dialog-with-footer',
 				},
 				id: '<portlet:namespace />copyLayoutDialog',
 				title: '<liferay-ui:message key="copy-page" />',
 				uri:
-					'<%= layoutsAdminDisplayContext.getCopyLayoutRenderURL(layout) %>'
+					'<%= layoutsAdminDisplayContext.getCopyLayoutRenderURL(layout) %>',
 			});
 		}
 	);

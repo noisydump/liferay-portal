@@ -50,6 +50,7 @@ import com.liferay.portal.kernel.service.PersistedModelLocalService;
 import com.liferay.portal.kernel.service.PersistedModelLocalServiceRegistry;
 import com.liferay.portal.kernel.service.PersistedModelLocalServiceRegistryUtil;
 import com.liferay.portal.kernel.service.change.tracking.CTService;
+import com.liferay.portal.kernel.service.persistence.BasePersistence;
 import com.liferay.portal.kernel.service.persistence.change.tracking.CTPersistence;
 import com.liferay.portal.kernel.transaction.Transactional;
 import com.liferay.portal.kernel.util.File;
@@ -706,6 +707,34 @@ import org.osgi.service.component.annotations.Reference;
 			</#if>
 		</#if>
 
+		<#if serviceBuilder.isVersionGTE_7_3_0()>
+			/**
+			 * @throws PortalException
+			 */
+		</#if>
+		<#if serviceBuilder.isVersionGTE_7_4_0()>
+			@Override
+		</#if>
+		<#if serviceBuilder.isVersionGTE_7_3_0()>
+			public PersistedModel createPersistedModel(Serializable primaryKeyObj) throws PortalException {
+				return ${entity.varName}Persistence.create(
+
+				<#if entity.hasPrimitivePK()>
+					((${serviceBuilder.getPrimitiveObj("${entity.PKClassName}")})
+				<#else>
+					(${entity.PKClassName})
+				</#if>
+
+				primaryKeyObj
+
+				<#if entity.hasPrimitivePK()>
+					)${serviceBuilder.getPrimitiveObjValue(serviceBuilder.getPrimitiveObj("${entity.PKClassName}"))}
+				</#if>
+
+				);
+			}
+		</#if>
+
 		/**
 		 * @throws PortalException
 		 */
@@ -714,6 +743,16 @@ import org.osgi.service.component.annotations.Reference;
 			return ${entity.varName}LocalService.delete${entity.name}((${entity.name})persistedModel);
 		}
 
+		<#if serviceBuilder.isVersionGTE_7_4_0()>
+			@Override
+		</#if>
+		public BasePersistence<${entity.name}> getBasePersistence() {
+			return ${entity.varName}Persistence;
+		}
+
+		/**
+		 * @throws PortalException
+		 */
 		@Override
 		public PersistedModel getPersistedModel(Serializable primaryKeyObj) throws PortalException {
 			return ${entity.varName}Persistence.findByPrimaryKey(primaryKeyObj);
@@ -729,29 +768,29 @@ import org.osgi.service.component.annotations.Reference;
 		<#if entity.hasUuid() && entity.hasEntityColumn("companyId") && !entity.versionEntity??>
 			<#if entity.hasEntityColumn("groupId") && !stringUtil.equals(entity.name, "Group")>
 				/**
-				 * Returns all the ${entity.humanNames} matching the UUID and company.
+				 * Returns all the ${entity.pluralHumanName} matching the UUID and company.
 				 *
-				 * @param uuid the UUID of the ${entity.humanNames}
+				 * @param uuid the UUID of the ${entity.pluralHumanName}
 				 * @param companyId the primary key of the company
-				 * @return the matching ${entity.humanNames}, or an empty list if no matches were found
+				 * @return the matching ${entity.pluralHumanName}, or an empty list if no matches were found
 				 */
 				@Override
-				public List<${entity.name}> get${entity.names}ByUuidAndCompanyId(String uuid, long companyId) {
+				public List<${entity.name}> get${entity.pluralName}ByUuidAndCompanyId(String uuid, long companyId) {
 					return ${entity.varName}Persistence.findByUuid_C(uuid, companyId);
 				}
 
 				/**
-				 * Returns a range of ${entity.humanNames} matching the UUID and company.
+				 * Returns a range of ${entity.pluralHumanName} matching the UUID and company.
 				 *
-				 * @param uuid the UUID of the ${entity.humanNames}
+				 * @param uuid the UUID of the ${entity.pluralHumanName}
 				 * @param companyId the primary key of the company
-				 * @param start the lower bound of the range of ${entity.humanNames}
-				 * @param end the upper bound of the range of ${entity.humanNames} (not inclusive)
+				 * @param start the lower bound of the range of ${entity.pluralHumanName}
+				 * @param end the upper bound of the range of ${entity.pluralHumanName} (not inclusive)
 				 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-				 * @return the range of matching ${entity.humanNames}, or an empty list if no matches were found
+				 * @return the range of matching ${entity.pluralHumanName}, or an empty list if no matches were found
 				 */
 				@Override
-				public List<${entity.name}> get${entity.names}ByUuidAndCompanyId(String uuid, long companyId, int start, int end, OrderByComparator<${entity.name}> orderByComparator) {
+				public List<${entity.name}> get${entity.pluralName}ByUuidAndCompanyId(String uuid, long companyId, int start, int end, OrderByComparator<${entity.name}> orderByComparator) {
 					return ${entity.varName}Persistence.findByUuid_C(uuid, companyId, start, end, orderByComparator);
 				}
 			<#else>
@@ -820,28 +859,28 @@ import org.osgi.service.component.annotations.Reference;
 		</#if>
 
 		/**
-		 * Returns a range of all the ${entity.humanNames}.
+		 * Returns a range of all the ${entity.pluralHumanName}.
 		 *
 		 * <p>
 		 * <#include "range_comment.ftl">
 		 * </p>
 		 *
-		 * @param start the lower bound of the range of ${entity.humanNames}
-		 * @param end the upper bound of the range of ${entity.humanNames} (not inclusive)
-		 * @return the range of ${entity.humanNames}
+		 * @param start the lower bound of the range of ${entity.pluralHumanName}
+		 * @param end the upper bound of the range of ${entity.pluralHumanName} (not inclusive)
+		 * @return the range of ${entity.pluralHumanName}
 		 */
 		@Override
-		public List<${entity.name}> get${entity.names}(int start, int end) {
+		public List<${entity.name}> get${entity.pluralName}(int start, int end) {
 			return ${entity.varName}Persistence.findAll(start, end);
 		}
 
 		/**
-		 * Returns the number of ${entity.humanNames}.
+		 * Returns the number of ${entity.pluralHumanName}.
 		 *
-		 * @return the number of ${entity.humanNames}
+		 * @return the number of ${entity.pluralHumanName}
 		 */
 		@Override
-		public int get${entity.names}Count() {
+		public int get${entity.pluralName}Count() {
 			return ${entity.varName}Persistence.countAll();
 		}
 
@@ -898,7 +937,7 @@ import org.osgi.service.component.annotations.Reference;
 					${referenceEntity.varName}Persistence.add${entity.name}(${referenceEntity.PKVarName}, ${entity.varName});
 				}
 
-				<#assign serviceBaseExceptions = serviceBuilder.getServiceBaseExceptions(methods, "add" + referenceEntity.name + entity.names, [referenceEntity.PKClassName, entity.PKClassName + "[]"], []) />
+				<#assign serviceBaseExceptions = serviceBuilder.getServiceBaseExceptions(methods, "add" + referenceEntity.name + entity.pluralName, [referenceEntity.PKClassName, entity.PKClassName + "[]"], []) />
 
 				/**
 				<#list serviceBaseExceptions as exception>
@@ -906,11 +945,11 @@ import org.osgi.service.component.annotations.Reference;
 				</#list>
 				 */
 				@Override
-				public void add${referenceEntity.name}${entity.names}(${referenceEntity.PKClassName} ${referenceEntity.PKVarName}, ${entity.PKClassName}[] ${entity.PKVarNames}) <#if (serviceBaseExceptions?size gt 0)>throws ${stringUtil.merge(serviceBaseExceptions)} </#if>{
-					${referenceEntity.varName}Persistence.add${entity.names}(${referenceEntity.PKVarName}, ${entity.PKVarNames});
+				public void add${referenceEntity.name}${entity.pluralName}(${referenceEntity.PKClassName} ${referenceEntity.PKVarName}, ${entity.PKClassName}[] ${entity.pluralPKVarName}) <#if (serviceBaseExceptions?size gt 0)>throws ${stringUtil.merge(serviceBaseExceptions)} </#if>{
+					${referenceEntity.varName}Persistence.add${entity.pluralName}(${referenceEntity.PKVarName}, ${entity.pluralPKVarName});
 				}
 
-				<#assign serviceBaseExceptions = serviceBuilder.getServiceBaseExceptions(methods, "add" + referenceEntity.name + entity.names, [referenceEntity.PKClassName, "java.util.List<" + entity.name + ">"], []) />
+				<#assign serviceBaseExceptions = serviceBuilder.getServiceBaseExceptions(methods, "add" + referenceEntity.name + entity.pluralName, [referenceEntity.PKClassName, "java.util.List<" + entity.name + ">"], []) />
 
 				/**
 				<#list serviceBaseExceptions as exception>
@@ -918,11 +957,11 @@ import org.osgi.service.component.annotations.Reference;
 				</#list>
 				 */
 				@Override
-				public void add${referenceEntity.name}${entity.names}(${referenceEntity.PKClassName} ${referenceEntity.PKVarName}, List<${entity.name}> ${entity.varNames}) <#if (serviceBaseExceptions?size gt 0)>throws ${stringUtil.merge(serviceBaseExceptions)} </#if>{
-					${referenceEntity.varName}Persistence.add${entity.names}(${referenceEntity.PKVarName}, ${entity.varNames});
+				public void add${referenceEntity.name}${entity.pluralName}(${referenceEntity.PKClassName} ${referenceEntity.PKVarName}, List<${entity.name}> ${entity.pluralVarName}) <#if (serviceBaseExceptions?size gt 0)>throws ${stringUtil.merge(serviceBaseExceptions)} </#if>{
+					${referenceEntity.varName}Persistence.add${entity.pluralName}(${referenceEntity.PKVarName}, ${entity.pluralVarName});
 				}
 
-				<#assign serviceBaseExceptions = serviceBuilder.getServiceBaseExceptions(methods, "clear" + referenceEntity.name + entity.names, [referenceEntity.PKClassName], []) />
+				<#assign serviceBaseExceptions = serviceBuilder.getServiceBaseExceptions(methods, "clear" + referenceEntity.name + entity.pluralName, [referenceEntity.PKClassName], []) />
 
 				/**
 				<#list serviceBaseExceptions as exception>
@@ -930,8 +969,8 @@ import org.osgi.service.component.annotations.Reference;
 				</#list>
 				 */
 				@Override
-				public void clear${referenceEntity.name}${entity.names}(${referenceEntity.PKClassName} ${referenceEntity.PKVarName}) <#if (serviceBaseExceptions?size gt 0)>throws ${stringUtil.merge(serviceBaseExceptions)} </#if>{
-					${referenceEntity.varName}Persistence.clear${entity.names}(${referenceEntity.PKVarName});
+				public void clear${referenceEntity.name}${entity.pluralName}(${referenceEntity.PKClassName} ${referenceEntity.PKVarName}) <#if (serviceBaseExceptions?size gt 0)>throws ${stringUtil.merge(serviceBaseExceptions)} </#if>{
+					${referenceEntity.varName}Persistence.clear${entity.pluralName}(${referenceEntity.PKVarName});
 				}
 
 				<#assign serviceBaseExceptions = serviceBuilder.getServiceBaseExceptions(methods, "delete" + referenceEntity.name + entity.name, [referenceEntity.PKClassName, entity.PKClassName], []) />
@@ -958,7 +997,7 @@ import org.osgi.service.component.annotations.Reference;
 					${referenceEntity.varName}Persistence.remove${entity.name}(${referenceEntity.PKVarName}, ${entity.varName});
 				}
 
-				<#assign serviceBaseExceptions = serviceBuilder.getServiceBaseExceptions(methods, "delete" + referenceEntity.name + entity.names, [referenceEntity.PKClassName, entity.PKClassName + "[]"], []) />
+				<#assign serviceBaseExceptions = serviceBuilder.getServiceBaseExceptions(methods, "delete" + referenceEntity.name + entity.pluralName, [referenceEntity.PKClassName, entity.PKClassName + "[]"], []) />
 
 				/**
 				<#list serviceBaseExceptions as exception>
@@ -966,11 +1005,11 @@ import org.osgi.service.component.annotations.Reference;
 				</#list>
 				 */
 				@Override
-				public void delete${referenceEntity.name}${entity.names}(${referenceEntity.PKClassName} ${referenceEntity.PKVarName}, ${entity.PKClassName}[] ${entity.PKVarNames}) <#if (serviceBaseExceptions?size gt 0)>throws ${stringUtil.merge(serviceBaseExceptions)} </#if>{
-					${referenceEntity.varName}Persistence.remove${entity.names}(${referenceEntity.PKVarName}, ${entity.PKVarNames});
+				public void delete${referenceEntity.name}${entity.pluralName}(${referenceEntity.PKClassName} ${referenceEntity.PKVarName}, ${entity.PKClassName}[] ${entity.pluralPKVarName}) <#if (serviceBaseExceptions?size gt 0)>throws ${stringUtil.merge(serviceBaseExceptions)} </#if>{
+					${referenceEntity.varName}Persistence.remove${entity.pluralName}(${referenceEntity.PKVarName}, ${entity.pluralPKVarName});
 				}
 
-				<#assign serviceBaseExceptions = serviceBuilder.getServiceBaseExceptions(methods, "delete" + referenceEntity.name + entity.names, [referenceEntity.PKClassName, "java.util.List<" + entity.name + ">"], []) />
+				<#assign serviceBaseExceptions = serviceBuilder.getServiceBaseExceptions(methods, "delete" + referenceEntity.name + entity.pluralName, [referenceEntity.PKClassName, "java.util.List<" + entity.name + ">"], []) />
 
 				/**
 				<#list serviceBaseExceptions as exception>
@@ -978,22 +1017,22 @@ import org.osgi.service.component.annotations.Reference;
 				</#list>
 				 */
 				@Override
-				public void delete${referenceEntity.name}${entity.names}(${referenceEntity.PKClassName} ${referenceEntity.PKVarName}, List<${entity.name}> ${entity.varNames}) <#if (serviceBaseExceptions?size gt 0)>throws ${stringUtil.merge(serviceBaseExceptions)} </#if>{
-					${referenceEntity.varName}Persistence.remove${entity.names}(${referenceEntity.PKVarName}, ${entity.varNames});
+				public void delete${referenceEntity.name}${entity.pluralName}(${referenceEntity.PKClassName} ${referenceEntity.PKVarName}, List<${entity.name}> ${entity.pluralVarName}) <#if (serviceBaseExceptions?size gt 0)>throws ${stringUtil.merge(serviceBaseExceptions)} </#if>{
+					${referenceEntity.varName}Persistence.remove${entity.pluralName}(${referenceEntity.PKVarName}, ${entity.pluralVarName});
 				}
 
 				/**
-				 * Returns the ${referenceEntity.PKVarName}s of the ${referenceEntity.humanNames} associated with the ${entity.humanName}.
+				 * Returns the ${referenceEntity.PKVarName}s of the ${referenceEntity.pluralHumanName} associated with the ${entity.humanName}.
 				 *
 				 * @param ${entity.PKVarName} the ${entity.PKVarName} of the ${entity.humanName}
-				 * @return long[] the ${referenceEntity.PKVarName}s of ${referenceEntity.humanNames} associated with the ${entity.humanName}
+				 * @return long[] the ${referenceEntity.PKVarName}s of ${referenceEntity.pluralHumanName} associated with the ${entity.humanName}
 				 */
 				@Override
 				public long[] get${referenceEntity.name}PrimaryKeys(${entity.PKClassName} ${entity.PKVarName}) {
 					return ${entity.varName}Persistence.get${referenceEntity.name}PrimaryKeys(${entity.PKVarName});
 				}
 
-				<#assign serviceBaseExceptions = serviceBuilder.getServiceBaseExceptions(methods, "get" + referenceEntity.name + entity.names, [referenceEntity.PKClassName], []) />
+				<#assign serviceBaseExceptions = serviceBuilder.getServiceBaseExceptions(methods, "get" + referenceEntity.name + entity.pluralName, [referenceEntity.PKClassName], []) />
 
 				/**
 				<#list serviceBaseExceptions as exception>
@@ -1001,15 +1040,15 @@ import org.osgi.service.component.annotations.Reference;
 				</#list>
 				 */
 				@Override
-				public List<${entity.name}> get${referenceEntity.name}${entity.names}(${referenceEntity.PKClassName} ${referenceEntity.PKVarName}) <#if (serviceBaseExceptions?size gt 0)>throws ${stringUtil.merge(serviceBaseExceptions)} </#if>{
+				public List<${entity.name}> get${referenceEntity.name}${entity.pluralName}(${referenceEntity.PKClassName} ${referenceEntity.PKVarName}) <#if (serviceBaseExceptions?size gt 0)>throws ${stringUtil.merge(serviceBaseExceptions)} </#if>{
 					<#if dependencyInjectorDS>
-						return ${entity.varName}Persistence.get${referenceEntity.name}${entity.names}(${referenceEntity.PKVarName});
+						return ${entity.varName}Persistence.get${referenceEntity.name}${entity.pluralName}(${referenceEntity.PKVarName});
 					<#else>
-						return ${referenceEntity.varName}Persistence.get${entity.names}(${referenceEntity.PKVarName});
+						return ${referenceEntity.varName}Persistence.get${entity.pluralName}(${referenceEntity.PKVarName});
 					</#if>
 				}
 
-				<#assign serviceBaseExceptions = serviceBuilder.getServiceBaseExceptions(methods, "get" + referenceEntity.name + entity.names, [referenceEntity.PKClassName, "int", "int"], []) />
+				<#assign serviceBaseExceptions = serviceBuilder.getServiceBaseExceptions(methods, "get" + referenceEntity.name + entity.pluralName, [referenceEntity.PKClassName, "int", "int"], []) />
 
 				/**
 				<#list serviceBaseExceptions as exception>
@@ -1017,15 +1056,15 @@ import org.osgi.service.component.annotations.Reference;
 				</#list>
 				 */
 				@Override
-				public List<${entity.name}> get${referenceEntity.name}${entity.names}(${referenceEntity.PKClassName} ${referenceEntity.PKVarName}, int start, int end) <#if (serviceBaseExceptions?size gt 0)>throws ${stringUtil.merge(serviceBaseExceptions)} </#if>{
+				public List<${entity.name}> get${referenceEntity.name}${entity.pluralName}(${referenceEntity.PKClassName} ${referenceEntity.PKVarName}, int start, int end) <#if (serviceBaseExceptions?size gt 0)>throws ${stringUtil.merge(serviceBaseExceptions)} </#if>{
 					<#if dependencyInjectorDS>
-						return ${entity.varName}Persistence.get${referenceEntity.name}${entity.names}(${referenceEntity.PKVarName}, start, end);
+						return ${entity.varName}Persistence.get${referenceEntity.name}${entity.pluralName}(${referenceEntity.PKVarName}, start, end);
 					<#else>
-						return ${referenceEntity.varName}Persistence.get${entity.names}(${referenceEntity.PKVarName}, start, end);
+						return ${referenceEntity.varName}Persistence.get${entity.pluralName}(${referenceEntity.PKVarName}, start, end);
 					</#if>
 				}
 
-				<#assign serviceBaseExceptions = serviceBuilder.getServiceBaseExceptions(methods, "get" + referenceEntity.name + entity.names, [referenceEntity.PKClassName, "int", "int", "com.liferay.portal.kernel.util.OrderByComparator"], []) />
+				<#assign serviceBaseExceptions = serviceBuilder.getServiceBaseExceptions(methods, "get" + referenceEntity.name + entity.pluralName, [referenceEntity.PKClassName, "int", "int", "com.liferay.portal.kernel.util.OrderByComparator"], []) />
 
 				/**
 				<#list serviceBaseExceptions as exception>
@@ -1033,15 +1072,15 @@ import org.osgi.service.component.annotations.Reference;
 				</#list>
 				 */
 				@Override
-				public List<${entity.name}> get${referenceEntity.name}${entity.names}(${referenceEntity.PKClassName} ${referenceEntity.PKVarName}, int start, int end, OrderByComparator<${entity.name}> orderByComparator) <#if (serviceBaseExceptions?size gt 0)>throws ${stringUtil.merge(serviceBaseExceptions)} </#if>{
+				public List<${entity.name}> get${referenceEntity.name}${entity.pluralName}(${referenceEntity.PKClassName} ${referenceEntity.PKVarName}, int start, int end, OrderByComparator<${entity.name}> orderByComparator) <#if (serviceBaseExceptions?size gt 0)>throws ${stringUtil.merge(serviceBaseExceptions)} </#if>{
 					<#if dependencyInjectorDS>
-						return ${entity.varName}Persistence.get${referenceEntity.name}${entity.names}(${referenceEntity.PKVarName}, start, end, orderByComparator);
+						return ${entity.varName}Persistence.get${referenceEntity.name}${entity.pluralName}(${referenceEntity.PKVarName}, start, end, orderByComparator);
 					<#else>
-						return ${referenceEntity.varName}Persistence.get${entity.names}(${referenceEntity.PKVarName}, start, end, orderByComparator);
+						return ${referenceEntity.varName}Persistence.get${entity.pluralName}(${referenceEntity.PKVarName}, start, end, orderByComparator);
 					</#if>
 				}
 
-				<#assign serviceBaseExceptions = serviceBuilder.getServiceBaseExceptions(methods, "get" + referenceEntity.name + entity.names + "Count", [referenceEntity.PKClassName], []) />
+				<#assign serviceBaseExceptions = serviceBuilder.getServiceBaseExceptions(methods, "get" + referenceEntity.name + entity.pluralName + "Count", [referenceEntity.PKClassName], []) />
 
 				/**
 				<#list serviceBaseExceptions as exception>
@@ -1049,8 +1088,8 @@ import org.osgi.service.component.annotations.Reference;
 				</#list>
 				 */
 				@Override
-				public int get${referenceEntity.name}${entity.names}Count(${referenceEntity.PKClassName} ${referenceEntity.PKVarName}) <#if (serviceBaseExceptions?size gt 0)>throws ${stringUtil.merge(serviceBaseExceptions)} </#if>{
-					return ${referenceEntity.varName}Persistence.get${entity.names}Size(${referenceEntity.PKVarName});
+				public int get${referenceEntity.name}${entity.pluralName}Count(${referenceEntity.PKClassName} ${referenceEntity.PKVarName}) <#if (serviceBaseExceptions?size gt 0)>throws ${stringUtil.merge(serviceBaseExceptions)} </#if>{
+					return ${referenceEntity.varName}Persistence.get${entity.pluralName}Size(${referenceEntity.PKVarName});
 				}
 
 				<#assign serviceBaseExceptions = serviceBuilder.getServiceBaseExceptions(methods, "has" + referenceEntity.name + entity.name, [referenceEntity.PKClassName, entity.PKClassName], []) />
@@ -1065,7 +1104,7 @@ import org.osgi.service.component.annotations.Reference;
 					return ${referenceEntity.varName}Persistence.contains${entity.name}(${referenceEntity.PKVarName}, ${entity.PKVarName});
 				}
 
-				<#assign serviceBaseExceptions = serviceBuilder.getServiceBaseExceptions(methods, "has" + referenceEntity.name + entity.names, [referenceEntity.PKClassName], []) />
+				<#assign serviceBaseExceptions = serviceBuilder.getServiceBaseExceptions(methods, "has" + referenceEntity.name + entity.pluralName, [referenceEntity.PKClassName], []) />
 
 				/**
 				<#list serviceBaseExceptions as exception>
@@ -1073,11 +1112,11 @@ import org.osgi.service.component.annotations.Reference;
 				</#list>
 				 */
 				@Override
-				public boolean has${referenceEntity.name}${entity.names}(${referenceEntity.PKClassName} ${referenceEntity.PKVarName}) <#if (serviceBaseExceptions?size gt 0)>throws ${stringUtil.merge(serviceBaseExceptions)} </#if>{
-					return ${referenceEntity.varName}Persistence.contains${entity.names}(${referenceEntity.PKVarName});
+				public boolean has${referenceEntity.name}${entity.pluralName}(${referenceEntity.PKClassName} ${referenceEntity.PKVarName}) <#if (serviceBaseExceptions?size gt 0)>throws ${stringUtil.merge(serviceBaseExceptions)} </#if>{
+					return ${referenceEntity.varName}Persistence.contains${entity.pluralName}(${referenceEntity.PKVarName});
 				}
 
-				<#assign serviceBaseExceptions = serviceBuilder.getServiceBaseExceptions(methods, "set" + referenceEntity.name + entity.names, [referenceEntity.PKClassName, entity.PKClassName + "[]"], []) />
+				<#assign serviceBaseExceptions = serviceBuilder.getServiceBaseExceptions(methods, "set" + referenceEntity.name + entity.pluralName, [referenceEntity.PKClassName, entity.PKClassName + "[]"], []) />
 
 				/**
 				<#list serviceBaseExceptions as exception>
@@ -1085,8 +1124,8 @@ import org.osgi.service.component.annotations.Reference;
 				</#list>
 				 */
 				@Override
-				public void set${referenceEntity.name}${entity.names}(${referenceEntity.PKClassName} ${referenceEntity.PKVarName}, ${entity.PKClassName}[] ${entity.PKVarNames}) <#if (serviceBaseExceptions?size gt 0)>throws ${stringUtil.merge(serviceBaseExceptions)} </#if>{
-					${referenceEntity.varName}Persistence.set${entity.names}(${referenceEntity.PKVarName}, ${entity.PKVarNames});
+				public void set${referenceEntity.name}${entity.pluralName}(${referenceEntity.PKClassName} ${referenceEntity.PKVarName}, ${entity.PKClassName}[] ${entity.pluralPKVarName}) <#if (serviceBaseExceptions?size gt 0)>throws ${stringUtil.merge(serviceBaseExceptions)} </#if>{
+					${referenceEntity.varName}Persistence.set${entity.pluralName}(${referenceEntity.PKVarName}, ${entity.pluralPKVarName});
 				}
 			</#if>
 		</#list>
@@ -1110,7 +1149,7 @@ import org.osgi.service.component.annotations.Reference;
 		}
 
 		@Override
-		public List<${localizedEntity.name}> get${localizedEntity.names}(${entity.PKClassName} ${entity.PKVarName}) {
+		public List<${localizedEntity.name}> get${localizedEntity.pluralName}(${entity.PKClassName} ${entity.PKVarName}) {
 			return ${localizedEntity.varName}Persistence.findBy${pkEntityColumn.methodName}(${entity.PKVarName});
 		}
 
@@ -1154,7 +1193,7 @@ import org.osgi.service.component.annotations.Reference;
 		}
 
 		@Override
-		public List<${localizedEntity.name}> update${localizedEntity.names}(
+		public List<${localizedEntity.name}> update${localizedEntity.pluralName}(
 			${entity.name} ${entityVarName},
 			<#list localizedEntityColumns as entityColumn>
 				Map<String, String> ${entityColumn.name}Map
@@ -1191,7 +1230,7 @@ import org.osgi.service.component.annotations.Reference;
 				}
 			</#list>
 
-			List<${localizedEntity.name}> ${localizedEntity.varNames} = new ArrayList<${localizedEntity.name}>(localizedValuesMap.size());
+			List<${localizedEntity.name}> ${localizedEntity.pluralVarName} = new ArrayList<${localizedEntity.name}>(localizedValuesMap.size());
 
 			for (${localizedEntity.name} ${localizedEntity.varName} : ${localizedEntity.varName}Persistence.findBy${pkEntityColumn.methodName}(${entityVarName}.get${pkEntityColumn.methodName}())) {
 				String[] localizedValues = localizedValuesMap.remove(${localizedEntity.varName}.getLanguageId());
@@ -1218,7 +1257,7 @@ import org.osgi.service.component.annotations.Reference;
 						${localizedEntity.varName}.set${entityColumn.methodName}(localizedValues[${entityColumn?index}]);
 					</#list>
 
-					${localizedEntity.varNames}.add(${localizedEntity.varName}Persistence.update(${localizedEntity.varName}));
+					${localizedEntity.pluralVarName}.add(${localizedEntity.varName}Persistence.update(${localizedEntity.varName}));
 				}
 			}
 
@@ -1252,10 +1291,10 @@ import org.osgi.service.component.annotations.Reference;
 					${localizedEntity.varName}.set${entityColumn.methodName}(localizedValues[${entityColumn?index}]);
 				</#list>
 
-				${localizedEntity.varNames}.add(${localizedEntity.varName}Persistence.update(${localizedEntity.varName}));
+				${localizedEntity.pluralVarName}.add(${localizedEntity.varName}Persistence.update(${localizedEntity.varName}));
 			}
 
-			return ${localizedEntity.varNames};
+			return ${localizedEntity.pluralVarName};
 		}
 
 		private ${localizedEntity.name} _update${localizedEntity.name}(
@@ -2032,11 +2071,11 @@ import org.osgi.service.component.annotations.Reference;
 					published${localizedEntity.name}Map.put(published${localizedEntity.name}.getLanguageId(), published${localizedEntity.name});
 				}
 
-				List<${localizedVersionEntity.name}> ${localizedVersionEntity.varNames} = ${localizedVersionEntity.varName}Persistence.findBy${pkEntityMethod}_Version(draft${entity.name}.getHeadId(), version);
+				List<${localizedVersionEntity.name}> ${localizedVersionEntity.pluralVarName} = ${localizedVersionEntity.varName}Persistence.findBy${pkEntityMethod}_Version(draft${entity.name}.getHeadId(), version);
 
-				long ${localizedVersionEntity.varName}BatchCounter = counterLocalService.increment(${localizedVersionEntity.name}.class.getName(), ${localizedVersionEntity.varNames}.size()) - ${localizedVersionEntity.varNames}.size();
+				long ${localizedVersionEntity.varName}BatchCounter = counterLocalService.increment(${localizedVersionEntity.name}.class.getName(), ${localizedVersionEntity.pluralVarName}.size()) - ${localizedVersionEntity.pluralVarName}.size();
 
-				for (${localizedVersionEntity.name} ${localizedVersionEntity.varName} : ${localizedVersionEntity.varNames}) {
+				for (${localizedVersionEntity.name} ${localizedVersionEntity.varName} : ${localizedVersionEntity.pluralVarName}) {
 					${localizedEntity.name} draft${localizedEntity.name} = ${localizedEntity.varName}Persistence.create(++${localizedVersionEntity.varName}BatchCounter);
 
 					long headId = draft${localizedEntity.name}.getPrimaryKey();

@@ -21,8 +21,11 @@ import com.liferay.document.library.kernel.service.DLAppService;
 import com.liferay.document.library.kernel.service.DLFolderLocalService;
 import com.liferay.document.library.repository.authorization.capability.AuthorizationCapability;
 import com.liferay.document.library.web.internal.constants.DLWebKeys;
+import com.liferay.document.library.web.internal.display.context.DLViewFileEntryMetadataSetsDisplayContext;
+import com.liferay.document.library.web.internal.helper.DLTrashHelper;
 import com.liferay.document.library.web.internal.portlet.toolbar.contributor.DLPortletToolbarContributorRegistry;
-import com.liferay.document.library.web.internal.util.DLTrashUtil;
+import com.liferay.dynamic.data.mapping.service.DDMStructureLinkLocalService;
+import com.liferay.dynamic.data.mapping.service.DDMStructureService;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCRenderCommand;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCRenderConstants;
@@ -30,6 +33,7 @@ import com.liferay.portal.kernel.repository.Repository;
 import com.liferay.portal.kernel.repository.RepositoryProviderUtil;
 import com.liferay.portal.kernel.servlet.SessionErrors;
 import com.liferay.portal.kernel.util.ParamUtil;
+import com.liferay.portal.kernel.util.Portal;
 
 import java.io.IOException;
 
@@ -64,6 +68,14 @@ public class DLViewMVCRenderCommand extends GetFolderMVCRenderCommand {
 				DLWebKeys.DOCUMENT_LIBRARY_PORTLET_TOOLBAR_CONTRIBUTOR,
 				_dlPortletToolbarContributorRegistry.
 					getDLPortletToolbarContributor());
+			renderRequest.setAttribute(
+				DLWebKeys.
+					DOCUMENT_LIBRARY_VIEW_FILE_ENTRY_METADATA_SETS_DISPLAY_CONTEXT,
+				new DLViewFileEntryMetadataSetsDisplayContext(
+					_portal.getLiferayPortletRequest(renderRequest),
+					_portal.getLiferayPortletResponse(renderResponse),
+					_ddmStructureLinkLocalService, _ddmStructureService,
+					_portal));
 
 			if (_pingFolderRepository(renderRequest, renderResponse)) {
 				return MVCRenderConstants.MVC_PATH_VALUE_SKIP_DISPATCH;
@@ -83,8 +95,8 @@ public class DLViewMVCRenderCommand extends GetFolderMVCRenderCommand {
 	}
 
 	@Override
-	protected DLTrashUtil getDLTrashUtil() {
-		return _dlTrashUtil;
+	protected DLTrashHelper getDLTrashHelper() {
+		return _dlTrashHelper;
 	}
 
 	@Override
@@ -135,6 +147,12 @@ public class DLViewMVCRenderCommand extends GetFolderMVCRenderCommand {
 	}
 
 	@Reference
+	private DDMStructureLinkLocalService _ddmStructureLinkLocalService;
+
+	@Reference
+	private DDMStructureService _ddmStructureService;
+
+	@Reference
 	private DLAppService _dlAppService;
 
 	@Reference
@@ -145,6 +163,9 @@ public class DLViewMVCRenderCommand extends GetFolderMVCRenderCommand {
 		_dlPortletToolbarContributorRegistry;
 
 	@Reference
-	private DLTrashUtil _dlTrashUtil;
+	private DLTrashHelper _dlTrashHelper;
+
+	@Reference
+	private Portal _portal;
 
 }

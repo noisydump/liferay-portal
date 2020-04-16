@@ -14,16 +14,20 @@
 
 package com.liferay.jenkins.results.parser.spira;
 
-import com.liferay.jenkins.results.parser.JenkinsResultsParserUtil;
 import com.liferay.jenkins.results.parser.JenkinsResultsParserUtil.HttpRequestMethod;
 
 import java.io.IOException;
 
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
+import java.util.function.Function;
+import java.util.function.Supplier;
+
+import org.apache.commons.lang.StringEscapeUtils;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -31,241 +35,293 @@ import org.json.JSONObject;
 /**
  * @author Michael Hashimoto
  */
-public class SpiraRelease {
+public class SpiraRelease extends PathSpiraArtifact {
 
-	public static SpiraRelease getSpiraReleaseByID(
-			SpiraProject spiraProject, Integer releaseID)
-		throws IOException {
+	public static SpiraRelease createSpiraRelease(
+		SpiraProject spiraProject, String releaseName) {
 
-		if (releaseID == null) {
-			throw new RuntimeException("Release ID is null");
-		}
-
-		List<SpiraRelease> spiraReleases = getSpiraReleases(
-			spiraProject, new SearchParameter("ReleaseId", releaseID));
-
-		SpiraRelease spiraRelease = spiraReleases.get(0);
-
-		if (spiraRelease == null) {
-			throw new RuntimeException("Invalid release ID " + releaseID);
-		}
-
-		return spiraRelease;
+		return createSpiraRelease(spiraProject, releaseName, null);
 	}
 
-	public static List<SpiraRelease> getSpiraReleases(
-			SpiraProject spiraProject, SearchParameter... searchParameters)
-		throws IOException {
+	public static SpiraRelease createSpiraRelease(
+		SpiraProject spiraProject, String releaseName,
+		Integer parentReleaseID) {
 
-		List<SpiraRelease> spiraReleases = new ArrayList<>();
+		String urlPath = "projects/{project_id}/releases{parent_release_id}";
 
-		for (SpiraRelease spiraRelease : _spiraReleases.values()) {
-			if (spiraRelease.matches(searchParameters)) {
-				spiraReleases.add(spiraRelease);
-			}
+		Map<String, String> urlPathReplacements = new HashMap<>();
+
+		if ((parentReleaseID == null) || (parentReleaseID == 0)) {
+			urlPathReplacements.put("parent_release_id", "");
 		}
+		else {
+			urlPathReplacements.put("parent_release_id", "/" + parentReleaseID);
+		}
+
+		urlPathReplacements.put(
+			"project_id", String.valueOf(spiraProject.getID()));
+
+		JSONObject requestJSONObject = new JSONObject();
+
+		requestJSONObject.put(
+			"Name", StringEscapeUtils.unescapeJava(releaseName));
+		requestJSONObject.put("ReleaseStatusId", Status.PLANNED.getID());
+		requestJSONObject.put("ReleaseTypeId", Type.MAJOR_RELEASE.getID());
+
+		Calendar calendar = Calendar.getInstance();
+
+		requestJSONObject.put("StartDate", toDateString(calendar));
+
+		calendar.add(Calendar.MONTH, 1);
+
+		requestJSONObject.put("EndDate", toDateString(calendar));
+
+		try {
+			JSONObject responseJSONObject = SpiraRestAPIUtil.requestJSONObject(
+				urlPath, null, urlPathReplacements, HttpRequestMethod.POST,
+				requestJSONObject.toString());
+
+			SpiraRelease spiraRelease = spiraProject.getSpiraReleaseByID(
+				responseJSONObject.getInt(ID_KEY));
+
+			cacheSpiraArtifacts(
+				SpiraRelease.class, Collections.singletonList(spiraRelease));
+
+			return spiraRelease;
+		}
+		catch (IOException ioException) {
+			throw new RuntimeException(ioException);
+		}
+	}
+
+	public static SpiraRelease createSpiraReleaseByPath(
+		SpiraProject spiraProject, String releasePath) {
+
+		List<SpiraRelease> spiraReleases = spiraProject.getSpiraReleasesByPath(
+			releasePath);
 
 		if (!spiraReleases.isEmpty()) {
-			return spiraReleases;
+			return spiraReleases.get(0);
 		}
 
-		Map<String, String> urlReplacements = new HashMap<>();
+		String releaseName = getPathName(releasePath);
+		String parentReleasePath = getParentPath(releasePath);
 
-		urlReplacements.put("number_rows", String.valueOf(_NUMBER_ROWS));
-		urlReplacements.put("project_id", String.valueOf(spiraProject.getID()));
-		urlReplacements.put("start_row", String.valueOf(_START_ROW));
-
-		JSONArray requestJSONArray = new JSONArray();
-
-		for (SearchParameter searchParameter : searchParameters) {
-			requestJSONArray.put(searchParameter.toFilterJSONObject());
+		if (parentReleasePath.isEmpty()) {
+			return createSpiraRelease(spiraProject, releaseName);
 		}
 
-		JSONArray responseJSONArray = SpiraRestAPIUtil.requestJSONArray(
-			"projects/{project_id}/releases/search?number_rows={number_rows}&" +
-				"start_row={start_row}",
-			urlReplacements, HttpRequestMethod.POST,
-			requestJSONArray.toString());
+		SpiraRelease parentSpiraRelease = createSpiraReleaseByPath(
+			spiraProject, parentReleasePath);
 
-		for (int i = 0; i < responseJSONArray.length(); i++) {
-			SpiraRelease spiraRelease = new SpiraRelease(
-				responseJSONArray.getJSONObject(i));
+		return createSpiraRelease(
+			spiraProject, releaseName, parentSpiraRelease.getID());
+	}
 
-			_spiraReleases.put(
-				_createSpiraReleaseKey(
-					spiraProject.getID(), spiraRelease.getID()),
-				spiraRelease);
+	public static void deleteSpiraReleaseByID(
+		SpiraProject spiraProject, int releaseID) {
 
-			if (spiraRelease.matches(searchParameters)) {
-				spiraReleases.add(spiraRelease);
-			}
+		List<SpiraRelease> spiraReleases = getSpiraReleases(
+			spiraProject, new SearchQuery.SearchParameter(ID_KEY, releaseID));
+
+		if (spiraReleases.isEmpty()) {
+			return;
 		}
 
-		return spiraReleases;
-	}
+		Map<String, String> urlPathReplacements = new HashMap<>();
 
-	public int getID() {
-		return _jsonObject.getInt("ReleaseId");
-	}
+		urlPathReplacements.put(
+			"project_id", String.valueOf(spiraProject.getID()));
+		urlPathReplacements.put("release_id", String.valueOf(releaseID));
 
-	public String getName() {
-		return _jsonObject.getString("Name");
-	}
-
-	public String getPath() {
-		String name = getName();
-
-		String parentPath = "";
-
-		SpiraRelease parentSpiraRelease = _getParentSpiraRelease();
-
-		if (parentSpiraRelease != null) {
-			parentPath = parentSpiraRelease.getPath();
+		try {
+			SpiraRestAPIUtil.request(
+				"projects/{project_id}/releases/{release_id}", null,
+				urlPathReplacements, HttpRequestMethod.DELETE, null);
+		}
+		catch (IOException ioException) {
+			throw new RuntimeException(ioException);
 		}
 
-		return JenkinsResultsParserUtil.combine(
-			parentPath, "/", name.replace("/", "\\/"));
+		removeCachedSpiraArtifacts(SpiraRelease.class, spiraReleases);
 	}
 
-	public JSONObject toJSONObject() {
-		JSONObject jsonObject = new JSONObject(_jsonObject.toString());
+	public static void deleteSpiraReleasesByPath(
+		SpiraProject spiraProject, String releasePath) {
 
-		jsonObject.put("Path", getPath());
+		List<SpiraRelease> spiraReleases = spiraProject.getSpiraReleasesByPath(
+			releasePath);
 
-		return jsonObject;
+		for (SpiraRelease spiraRelease : spiraReleases) {
+			deleteSpiraReleaseByID(spiraProject, spiraRelease.getID());
+		}
+	}
+
+	public SpiraRelease getParentSpiraRelease() {
+		if (_parentSpiraRelease != null) {
+			return _parentSpiraRelease;
+		}
+
+		String indentLevel = jsonObject.getString("IndentLevel");
+
+		if (indentLevel.length() <= 3) {
+			return null;
+		}
+
+		String parentIndentLevel = indentLevel.substring(
+			0, indentLevel.length() - 3);
+
+		_parentSpiraRelease = _getSpiraReleaseByIndentLevel(parentIndentLevel);
+
+		return _parentSpiraRelease;
+	}
+
+	public SpiraReleaseBuild getSpiraReleaseBuildByID(int releaseBuildID) {
+		List<SpiraReleaseBuild> spiraReleaseBuilds =
+			SpiraReleaseBuild.getSpiraReleaseBuilds(
+				getSpiraProject(), this,
+				new SearchQuery.SearchParameter(
+					SpiraReleaseBuild.ID_KEY, releaseBuildID));
+
+		if (spiraReleaseBuilds.size() > 1) {
+			throw new RuntimeException(
+				"Duplicate release build id " + releaseBuildID);
+		}
+
+		if (spiraReleaseBuilds.isEmpty()) {
+			throw new RuntimeException(
+				"Missing release build id " + releaseBuildID);
+		}
+
+		return spiraReleaseBuilds.get(0);
+	}
+
+	public static enum Status {
+
+		CANCELED(5), CLOSED(3), DEFERRED(4), IN_PROGRESS(2), PLANNED(1);
+
+		public Integer getID() {
+			return _id;
+		}
+
+		private Status(Integer id) {
+			_id = id;
+		}
+
+		private final Integer _id;
+
+	}
+
+	public static enum Type {
+
+		MAJOR_RELEASE(1), MINOR_RELEASE(2), PHASE(4), SPRINT(3);
+
+		public Integer getID() {
+			return _id;
+		}
+
+		private Type(Integer id) {
+			_id = id;
+		}
+
+		private final Integer _id;
+
+	}
+
+	protected static List<SpiraRelease> getSpiraReleases(
+		final SpiraProject spiraProject,
+		final SearchQuery.SearchParameter... searchParameters) {
+
+		return getSpiraArtifacts(
+			SpiraRelease.class,
+			new Supplier<List<JSONObject>>() {
+
+				@Override
+				public List<JSONObject> get() {
+					return _requestSpiraReleases(
+						spiraProject.getID(), searchParameters);
+				}
+
+			},
+			new Function<JSONObject, SpiraRelease>() {
+
+				@Override
+				public SpiraRelease apply(JSONObject jsonObject) {
+					return new SpiraRelease(jsonObject);
+				}
+
+			},
+			searchParameters);
 	}
 
 	@Override
-	public String toString() {
-		JSONObject jsonObject = toJSONObject();
-
-		return jsonObject.toString();
+	protected PathSpiraArtifact getParentSpiraArtifact() {
+		return getParentSpiraRelease();
 	}
 
-	public static class SearchParameter {
+	protected static final Integer ARTIFACT_TYPE_ID = 2;
 
-		public SearchParameter(String name, Object value) {
-			_name = name;
-			_value = value;
+	protected static final String ARTIFACT_TYPE_NAME = "release";
+
+	protected static final String ID_KEY = "ReleaseId";
+
+	private static List<JSONObject> _requestSpiraReleases(
+		int spiraProjectID, SearchQuery.SearchParameter... searchParameters) {
+
+		Map<String, String> urlParameters = new HashMap<>();
+
+		urlParameters.put("number_rows", String.valueOf(15000));
+		urlParameters.put("start_row", String.valueOf(1));
+
+		Map<String, String> urlPathReplacements = new HashMap<>();
+
+		urlPathReplacements.put("project_id", String.valueOf(spiraProjectID));
+
+		JSONArray requestJSONArray = new JSONArray();
+
+		for (SearchQuery.SearchParameter searchParameter : searchParameters) {
+			requestJSONArray.put(searchParameter.toFilterJSONObject());
 		}
 
-		public String getName() {
-			return _name;
-		}
+		try {
+			JSONArray responseJSONArray = SpiraRestAPIUtil.requestJSONArray(
+				"projects/{project_id}/releases/search", urlParameters,
+				urlPathReplacements, HttpRequestMethod.POST,
+				requestJSONArray.toString());
 
-		public Object getValue() {
-			return _value;
-		}
+			List<JSONObject> spiraReleases = new ArrayList<>();
 
-		public boolean matches(JSONObject jsonObject) {
-			if (!Objects.equals(getValue(), jsonObject.get(getName()))) {
-				return false;
+			for (int i = 0; i < responseJSONArray.length(); i++) {
+				spiraReleases.add(responseJSONArray.getJSONObject(i));
 			}
 
-			return true;
+			return spiraReleases;
 		}
-
-		public JSONObject toFilterJSONObject() {
-			JSONObject filterJSONObject = new JSONObject();
-
-			filterJSONObject.put("PropertyName", _name);
-
-			if (_value instanceof Integer) {
-				Integer intValue = (Integer)_value;
-
-				filterJSONObject.put("IntValue", intValue);
-			}
-			else if (_value instanceof String) {
-				String stringValue = (String)_value;
-
-				stringValue = stringValue.replaceAll("\\[", "[[]");
-
-				filterJSONObject.put("StringValue", stringValue);
-			}
-			else {
-				throw new RuntimeException("Invalid value type");
-			}
-
-			return filterJSONObject;
-		}
-
-		private final String _name;
-		private final Object _value;
-
-	}
-
-	protected SpiraRelease(JSONObject jsonObject) {
-		_jsonObject = jsonObject;
-		_spiraProject = SpiraProject.getSpiraProjectById(
-			jsonObject.getInt("ProjectId"));
-
-		String indentLevel = getIndentLevel();
-
-		int parentSpiraReleaseCount = (indentLevel.length() / 3) - 1;
-
-		_parentSpiraReleases = new SpiraRelease[parentSpiraReleaseCount];
-
-		for (int i = 1; i <= parentSpiraReleaseCount; i++) {
-			String parentIndentLevel = indentLevel.substring(0, i * 3);
-
-			try {
-				SpiraRelease parentSpiraRelease =
-					_spiraProject.getSpiraReleaseByIndentLevel(
-						parentIndentLevel);
-
-				_parentSpiraReleases[i - 1] = parentSpiraRelease;
-			}
-			catch (IOException ioException) {
-				throw new RuntimeException(ioException);
-			}
+		catch (IOException ioException) {
+			throw new RuntimeException(ioException);
 		}
 	}
 
-	protected String getIndentLevel() {
-		return _jsonObject.getString("IndentLevel");
+	private SpiraRelease(JSONObject jsonObject) {
+		super(jsonObject);
 	}
 
-	protected boolean isParentSpiraRelease(SpiraRelease parentSpiraRelease) {
-		String indentLevel = getIndentLevel();
+	private SpiraRelease _getSpiraReleaseByIndentLevel(String indentLevel) {
+		List<SpiraRelease> spiraReleases = getSpiraReleases(
+			getSpiraProject(),
+			new SearchQuery.SearchParameter("IndentLevel", indentLevel));
 
-		return indentLevel.startsWith(parentSpiraRelease.getIndentLevel());
-	}
-
-	protected boolean matches(SearchParameter... searchParameters) {
-		JSONObject jsonObject = toJSONObject();
-
-		for (SearchParameter searchParameter : searchParameters) {
-			if (!searchParameter.matches(jsonObject)) {
-				return false;
-			}
+		if (spiraReleases.size() > 1) {
+			throw new RuntimeException("Duplicate indent level " + indentLevel);
 		}
 
-		return true;
-	}
-
-	private static String _createSpiraReleaseKey(
-		Integer projectID, Integer releaseID) {
-
-		return projectID + "-" + releaseID;
-	}
-
-	private SpiraRelease _getParentSpiraRelease() {
-		if (_parentSpiraReleases.length > 0) {
-			return _parentSpiraReleases[_parentSpiraReleases.length - 1];
+		if (spiraReleases.isEmpty()) {
+			throw new RuntimeException("Missing indent level " + indentLevel);
 		}
 
-		return null;
+		return spiraReleases.get(0);
 	}
 
-	private static final int _NUMBER_ROWS = 15000;
-
-	private static final int _START_ROW = 1;
-
-	private static final Map<String, SpiraRelease> _spiraReleases =
-		new HashMap<>();
-
-	private final JSONObject _jsonObject;
-	private final SpiraRelease[] _parentSpiraReleases;
-	private final SpiraProject _spiraProject;
+	private SpiraRelease _parentSpiraRelease;
 
 }

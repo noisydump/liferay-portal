@@ -17,20 +17,12 @@ import {useRouter} from './useRouter.es';
 const useRouterParams = () => {
 	const {
 		location: {search},
-		match: {params}
+		match: {params},
 	} = useRouter();
 
 	const filters = useMemo(() => getFiltersParam(search), [search]);
 
-	const routerParams = useMemo(
-		() => ({
-			...params,
-			filters
-		}),
-		[filters, params]
-	);
-
-	return routerParams;
+	return useMemo(() => ({...params, filters}), [filters, params]);
 };
 
 export {useRouterParams};

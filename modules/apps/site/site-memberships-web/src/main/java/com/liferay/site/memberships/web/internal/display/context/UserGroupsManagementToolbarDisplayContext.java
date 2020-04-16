@@ -16,10 +16,12 @@ package com.liferay.site.memberships.web.internal.display.context;
 
 import com.liferay.frontend.taglib.clay.servlet.taglib.display.context.SearchContainerManagementToolbarDisplayContext;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.CreationMenu;
+import com.liferay.frontend.taglib.clay.servlet.taglib.util.CreationMenuBuilder;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemList;
+import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemListBuilder;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.LabelItem;
-import com.liferay.frontend.taglib.clay.servlet.taglib.util.LabelItemList;
+import com.liferay.frontend.taglib.clay.servlet.taglib.util.LabelItemListBuilder;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.model.Role;
@@ -191,30 +193,25 @@ public class UserGroupsManagementToolbarDisplayContext
 				"mvcPath", "/select_user_groups.jsp");
 			selectUserGroupsURL.setWindowState(LiferayWindowState.POP_UP);
 
-			return new CreationMenu() {
-				{
-					addDropdownItem(
-						dropdownItem -> {
-							dropdownItem.putData("action", "selectUserGroups");
+			return CreationMenuBuilder.addDropdownItem(
+				dropdownItem -> {
+					dropdownItem.putData("action", "selectUserGroups");
 
-							ThemeDisplay themeDisplay =
-								(ThemeDisplay)request.getAttribute(
-									WebKeys.THEME_DISPLAY);
+					ThemeDisplay themeDisplay =
+						(ThemeDisplay)request.getAttribute(
+							WebKeys.THEME_DISPLAY);
 
-							dropdownItem.putData(
-								"groupTypeLabel",
-								GroupUtil.getGroupTypeLabel(
-									_userGroupsDisplayContext.getGroupId(),
-									themeDisplay.getLocale()));
+					dropdownItem.putData(
+						"groupTypeLabel",
+						GroupUtil.getGroupTypeLabel(
+							_userGroupsDisplayContext.getGroupId(),
+							themeDisplay.getLocale()));
 
-							dropdownItem.putData(
-								"selectUserGroupsURL",
-								selectUserGroupsURL.toString());
-							dropdownItem.setLabel(
-								LanguageUtil.get(request, "add"));
-						});
+					dropdownItem.putData(
+						"selectUserGroupsURL", selectUserGroupsURL.toString());
+					dropdownItem.setLabel(LanguageUtil.get(request, "add"));
 				}
-			};
+			).build();
 		}
 		catch (Exception exception) {
 			return null;
@@ -233,27 +230,21 @@ public class UserGroupsManagementToolbarDisplayContext
 
 		Role role = _userGroupsDisplayContext.getRole();
 
-		return new LabelItemList() {
-			{
-				if (role != null) {
-					add(
-						labelItem -> {
-							PortletURL removeLabelURL = PortletURLUtil.clone(
-								currentURLObj, liferayPortletResponse);
+		return LabelItemListBuilder.add(
+			() -> role != null,
+			labelItem -> {
+				PortletURL removeLabelURL = PortletURLUtil.clone(
+					currentURLObj, liferayPortletResponse);
 
-							removeLabelURL.setParameter("roleId", "0");
+				removeLabelURL.setParameter("roleId", "0");
 
-							labelItem.putData(
-								"removeLabelURL", removeLabelURL.toString());
+				labelItem.putData("removeLabelURL", removeLabelURL.toString());
 
-							labelItem.setCloseable(true);
+				labelItem.setCloseable(true);
 
-							labelItem.setLabel(
-								role.getTitle(themeDisplay.getLocale()));
-						});
-				}
+				labelItem.setLabel(role.getTitle(themeDisplay.getLocale()));
 			}
-		};
+		).build();
 	}
 
 	@Override
@@ -295,51 +286,43 @@ public class UserGroupsManagementToolbarDisplayContext
 
 	@Override
 	protected List<DropdownItem> getFilterNavigationDropdownItems() {
-		ThemeDisplay themeDisplay = (ThemeDisplay)request.getAttribute(
-			WebKeys.THEME_DISPLAY);
-
-		return new DropdownItemList() {
-			{
-				add(
-					dropdownItem -> {
-						dropdownItem.setActive(
-							Objects.equals(getNavigation(), "all"));
-						dropdownItem.setHref(
-							getPortletURL(), "navigation", "all", "roleId",
-							"0");
-						dropdownItem.setLabel(LanguageUtil.get(request, "all"));
-					});
-
-				add(
-					dropdownItem -> {
-						dropdownItem.setActive(
-							Objects.equals(getNavigation(), "roles"));
-						dropdownItem.putData("action", "selectRoles");
-						dropdownItem.putData(
-							"selectRolesURL",
-							_getSelectorURL("/select_site_role.jsp"));
-
-						PortletURL viewRoleURL =
-							liferayPortletResponse.createRenderURL();
-
-						viewRoleURL.setParameter("mvcPath", "/view.jsp");
-						viewRoleURL.setParameter("tabs1", "user-groups");
-						viewRoleURL.setParameter("navigation", "roles");
-						viewRoleURL.setParameter(
-							"redirect", themeDisplay.getURLCurrent());
-						viewRoleURL.setParameter(
-							"groupId",
-							String.valueOf(
-								_userGroupsDisplayContext.getGroupId()));
-
-						dropdownItem.putData(
-							"viewRoleURL", viewRoleURL.toString());
-
-						dropdownItem.setLabel(
-							LanguageUtil.get(request, "roles"));
-					});
+		return DropdownItemListBuilder.add(
+			dropdownItem -> {
+				dropdownItem.setActive(Objects.equals(getNavigation(), "all"));
+				dropdownItem.setHref(
+					getPortletURL(), "navigation", "all", "roleId", "0");
+				dropdownItem.setLabel(LanguageUtil.get(request, "all"));
 			}
-		};
+		).add(
+			dropdownItem -> {
+				dropdownItem.setActive(
+					Objects.equals(getNavigation(), "roles"));
+				dropdownItem.putData("action", "selectRoles");
+				dropdownItem.putData(
+					"selectRolesURL", _getSelectorURL("/select_site_role.jsp"));
+
+				PortletURL viewRoleURL =
+					liferayPortletResponse.createRenderURL();
+
+				viewRoleURL.setParameter("mvcPath", "/view.jsp");
+				viewRoleURL.setParameter("tabs1", "user-groups");
+				viewRoleURL.setParameter("navigation", "roles");
+
+				ThemeDisplay themeDisplay = (ThemeDisplay)request.getAttribute(
+					WebKeys.THEME_DISPLAY);
+
+				viewRoleURL.setParameter(
+					"redirect", themeDisplay.getURLCurrent());
+
+				viewRoleURL.setParameter(
+					"groupId",
+					String.valueOf(_userGroupsDisplayContext.getGroupId()));
+
+				dropdownItem.putData("viewRoleURL", viewRoleURL.toString());
+
+				dropdownItem.setLabel(LanguageUtil.get(request, "roles"));
+			}
+		).build();
 	}
 
 	@Override

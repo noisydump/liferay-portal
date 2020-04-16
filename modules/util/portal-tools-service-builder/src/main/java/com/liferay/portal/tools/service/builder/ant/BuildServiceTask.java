@@ -83,6 +83,10 @@ public class BuildServiceTask extends Task {
 		_serviceBuilderArgs.setImplDirName(implDirName);
 	}
 
+	public void setIncubationFeatures(String incubationFeatures) {
+		_serviceBuilderArgs.setIncubationFeatures(incubationFeatures);
+	}
+
 	public void setInputFileName(String inputFileName) {
 		_serviceBuilderArgs.setInputFileName(inputFileName);
 	}

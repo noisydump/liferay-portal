@@ -41,7 +41,7 @@ AUI.add(
 			browserKey: _browserKey,
 			companyId: themeDisplay.getCompanyId(),
 			portletIdsMap: _portletIdsMap,
-			startPolling: true
+			startPolling: true,
 		};
 
 		var _customDelay = null;
@@ -74,7 +74,8 @@ AUI.add(
 			if (_enabled) {
 				if (Poller.isSupportsComet()) {
 					_receive();
-				} else {
+				}
+				else {
 					_timerId = setTimeout(_receive, Poller.getDelay());
 				}
 			}
@@ -146,7 +147,8 @@ AUI.add(
 
 				if (!meta.suspendPolling) {
 					_thawConnection();
-				} else {
+				}
+				else {
 					_freezeConnection();
 				}
 			}
@@ -166,7 +168,7 @@ AUI.add(
 
 				Liferay.Util.fetch(_getReceiveUrl(), {
 					body,
-					method: 'POST'
+					method: 'POST',
 				})
 					.then(response => {
 						return response.text();
@@ -210,7 +212,7 @@ AUI.add(
 
 				Liferay.Util.fetch(_getSendUrl(), {
 					body,
-					method: 'POST'
+					method: 'POST',
 				})
 					.then(response => {
 						return response.text();
@@ -234,7 +236,7 @@ AUI.add(
 				_portlets[key] = {
 					initialRequest: true,
 					listener,
-					scope
+					scope,
 				};
 
 				if (!_enabled) {
@@ -251,7 +253,8 @@ AUI.add(
 			getDelay() {
 				if (_customDelay !== null) {
 					_requestDelay = _customDelay;
-				} else if (_delayIndex <= _maxDelay) {
+				}
+				else if (_delayIndex <= _maxDelay) {
 					_requestDelay = _delays[_delayIndex];
 					_delayAccessCount++;
 
@@ -301,7 +304,8 @@ AUI.add(
 			setCustomDelay(delay) {
 				if (delay === null) {
 					_customDelay = delay;
-				} else {
+				}
+				else {
 					_customDelay = delay / 1000;
 				}
 			},
@@ -345,7 +349,7 @@ AUI.add(
 
 					var requestData = {
 						data,
-						portletId: key
+						portletId: key,
 					};
 
 					if (chunkId) {
@@ -364,7 +368,7 @@ AUI.add(
 				_suspended = true;
 			},
 
-			url: _url
+			url: _url,
 		};
 
 		A.getWin().on('focus', () => {
@@ -377,6 +381,6 @@ AUI.add(
 	},
 	'',
 	{
-		requires: ['aui-base', 'json']
+		requires: ['aui-base', 'json'],
 	}
 );

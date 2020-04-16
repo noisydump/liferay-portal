@@ -27,9 +27,9 @@ if (scopeGroup.isUser() && layout.isPublicLayout()) {
 	userPublicPage = true;
 }
 
-LinkedHashMap<String, Object> params = new LinkedHashMap<String, Object>();
-
-params.put("inherit", Boolean.TRUE);
+LinkedHashMap<String, Object> params = LinkedHashMapBuilder.<String, Object>put(
+	"inherit", Boolean.TRUE
+).build();
 
 if (userPublicPage) {
 	params.put("socialRelation", new Long[] {scopeGroup.getClassPK()});
@@ -117,10 +117,9 @@ portletURL.setWindowState(WindowState.NORMAL);
 
 												<%
 												for (Group curGroup : groups) {
-													String filterByGroupId = ContactsConstants.FILTER_BY_GROUP + curGroup.getGroupId();
 												%>
 
-													<aui:option label="<%= HtmlUtil.escape(curGroup.getDescriptiveName(locale)) %>" value="<%= filterByGroupId %>" />
+													<aui:option label="<%= HtmlUtil.escape(curGroup.getDescriptiveName(locale)) %>" value="<%= ContactsConstants.FILTER_BY_GROUP + curGroup.getGroupId() %>" />
 
 												<%
 												}
@@ -359,7 +358,14 @@ portletURL.setWindowState(WindowState.NORMAL);
 
 									<aui:row>
 										<aui:col cssClass="connections contacts-count" width="<%= 100 %>">
-											<a href="javascript:;"><liferay-ui:message arguments="<%= String.valueOf(connectionUsersCount) %>" key='<%= showOnlySiteMembers ? "you-have-x-connections-in-this-site" : "you-have-x-connections" %>' translateArguments="<%= false %>" /></a>
+											<c:choose>
+												<c:when test="<%= showOnlySiteMembers %>">
+													<a href="javascript:;"><liferay-ui:message arguments="<%= String.valueOf(connectionUsersCount) %>" key='<%= (connectionUsersCount == 1) ? "you-have-one-connection-in-this-site" : "you-have-x-connections-in-this-site" %>' translateArguments="<%= false %>" /></a>
+												</c:when>
+												<c:otherwise>
+													<a href="javascript:;"><liferay-ui:message arguments="<%= String.valueOf(connectionUsersCount) %>" key='<%= (connectionUsersCount == 1) ? "you-have-one-connection" : "you-have-x-connections" %>' translateArguments="<%= false %>" /></a>
+												</c:otherwise>
+											</c:choose>
 										</aui:col>
 									</aui:row>
 
@@ -372,7 +378,7 @@ portletURL.setWindowState(WindowState.NORMAL);
 									<c:if test="<%= !showOnlySiteMembers %>">
 										<aui:row>
 											<aui:col cssClass="contacts-count followers" width="<%= 100 %>">
-												<a href="javascript:;"><liferay-ui:message arguments="<%= String.valueOf(followerUsersCount) %>" key="you-have-x-followers" translateArguments="<%= false %>" /></a>
+												<a href="javascript:;"><liferay-ui:message arguments="<%= String.valueOf(followerUsersCount) %>" key='<%= (followerUsersCount == 1) ? "you-have-one-follower" : "you-have-x-followers" %>' translateArguments="<%= false %>" /></a>
 											</aui:col>
 										</aui:row>
 
@@ -382,14 +388,14 @@ portletURL.setWindowState(WindowState.NORMAL);
 
 										<aui:row>
 											<aui:col cssClass="contacts contacts-count" width="<%= 100 %>">
-												<a href="javascript:;"><liferay-ui:message arguments="<%= String.valueOf(myContactsCount) %>" key="view-my-x-contacts" translateArguments="<%= false %>" /></a>
+												<a href="javascript:;"><liferay-ui:message arguments="<%= String.valueOf(myContactsCount) %>" key='<%= (myContactsCount == 1) ? "view-one-contact" : "view-my-x-contacts" %>' translateArguments="<%= false %>" /></a>
 											</aui:col>
 										</aui:row>
 									</c:if>
 
 									<aui:row>
 										<aui:col cssClass="all contacts-count" width="<%= 100 %>">
-											<a href="javascript:;"><liferay-ui:message arguments="<%= String.valueOf(allUsersCount) %>" key="view-all-x-users" translateArguments="<%= false %>" /></a>
+											<a href="javascript:;"><liferay-ui:message arguments="<%= String.valueOf(allUsersCount) %>" key='<%= (allUsersCount == 1) ? "view-one-user" : "view-all-x-users" %>' translateArguments="<%= false %>" /></a>
 										</aui:col>
 									</aui:row>
 
@@ -431,7 +437,7 @@ portletURL.setWindowState(WindowState.NORMAL);
 						'<portlet:resourceURL id="getSelectedContacts" />',
 					maxResultCount: <%= ContactsConstants.MAX_RESULT_COUNT %>,
 					namespace: '<portlet:namespace />',
-					showIcon: '<%= showIcon %>'
+					showIcon: '<%= showIcon %>',
 				});
 			});
 
@@ -515,14 +521,14 @@ portletURL.setWindowState(WindowState.NORMAL);
 							contactFilterSelect.get('value') ||
 							'<%= ContactsConstants.FILTER_BY_DEFAULT %>',
 						<portlet:namespace />keywords: searchInput.get('value'),
-						<portlet:namespace />start: start
+						<portlet:namespace />start: start,
 					});
 
 					Liferay.Util.fetch(
 						'<portlet:resourceURL id="getContacts"><portlet:param name="portletResource" value="<%= portletResource %>" /><portlet:param name="redirect" value="<%= currentURL %>" /></portlet:resourceURL>',
 						{
 							body: data,
-							method: 'POST'
+							method: 'POST',
 						}
 					)
 						.then(function(response) {
@@ -544,14 +550,14 @@ portletURL.setWindowState(WindowState.NORMAL);
 
 					if (checkBox.get('checked')) {
 						var data = new URLSearchParams({
-							<portlet:namespace />userId: userId
+							<portlet:namespace />userId: userId,
 						});
 
 						Liferay.Util.fetch(
 							'<portlet:resourceURL id="getContact"><portlet:param name="portletResource" value="<%= portletResource %>" /></portlet:resourceURL>',
 							{
 								body: data,
-								method: 'POST'
+								method: 'POST',
 							}
 						)
 							.then(function(response) {
@@ -562,7 +568,8 @@ portletURL.setWindowState(WindowState.NORMAL);
 									contactsCenter.addContactResult(data);
 								}
 							});
-					} else {
+					}
+					else {
 						contactsCenter.deleteContactResult(userId);
 					}
 				},
@@ -583,7 +590,7 @@ portletURL.setWindowState(WindowState.NORMAL);
 					data.append(<portlet:namespace />userId, userId);
 
 					Liferay.Util.fetch(node.getAttribute('data-viewSummaryURL'), {
-						body: data
+						body: data,
 					})
 						.then(function(response) {
 							return response.text();

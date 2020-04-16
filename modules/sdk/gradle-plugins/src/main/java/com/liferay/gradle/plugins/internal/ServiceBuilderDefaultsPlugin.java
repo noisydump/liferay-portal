@@ -14,16 +14,16 @@
 
 package com.liferay.gradle.plugins.internal;
 
-import aQute.bnd.gradle.BndBuilderPlugin;
-
 import com.liferay.gradle.plugins.BasePortalToolDefaultsPlugin;
 import com.liferay.gradle.plugins.LiferayBasePlugin;
+import com.liferay.gradle.plugins.LiferayOSGiPlugin;
 import com.liferay.gradle.plugins.db.support.DBSupportPlugin;
 import com.liferay.gradle.plugins.db.support.tasks.CleanServiceBuilderTask;
 import com.liferay.gradle.plugins.internal.util.GradleUtil;
 import com.liferay.gradle.plugins.service.builder.BuildServiceTask;
 import com.liferay.gradle.plugins.service.builder.ServiceBuilderPlugin;
 import com.liferay.gradle.plugins.tasks.BuildDBTask;
+import com.liferay.gradle.util.Validator;
 
 import groovy.lang.Closure;
 
@@ -68,6 +68,7 @@ public class ServiceBuilderDefaultsPlugin
 		_addTaskBuildDB(project);
 		_configureTaskCleanServiceBuilder(buildServiceTask);
 		_configureTaskProcessResources(buildServiceTask);
+		_configureTasksBuildService(project);
 
 		GradleUtil.withPlugin(
 			project, LiferayBasePlugin.class,
@@ -86,12 +87,12 @@ public class ServiceBuilderDefaultsPlugin
 			});
 
 		GradleUtil.withPlugin(
-			project, BndBuilderPlugin.class,
-			new Action<BndBuilderPlugin>() {
+			project, LiferayOSGiPlugin.class,
+			new Action<LiferayOSGiPlugin>() {
 
 				@Override
-				public void execute(BndBuilderPlugin bndBuilderPlugin) {
-					_configureTasksBuildServiceForBndBuilderPlugin(project);
+				public void execute(LiferayOSGiPlugin liferayOSGiPlugin) {
+					_configureTasksBuildServiceForLiferayOSGiPlugin(project);
 				}
 
 			});
@@ -149,7 +150,18 @@ public class ServiceBuilderDefaultsPlugin
 		buildDBTask.setClasspath(fileCollection);
 	}
 
-	private void _configureTaskBuildServiceForBndBuilderPlugin(
+	private void _configureTaskBuildService(BuildServiceTask buildServiceTask) {
+		String incubationFeatures = GradleUtil.getProperty(
+			buildServiceTask.getProject(),
+			"service.builder.incubation.features", (String)null);
+
+		if (Validator.isNotNull(incubationFeatures)) {
+			buildServiceTask.setIncubationFeatures(
+				incubationFeatures.split(","));
+		}
+	}
+
+	private void _configureTaskBuildServiceForLiferayOSGiPlugin(
 		BuildServiceTask buildServiceTask) {
 
 		buildServiceTask.setOsgiModule(true);
@@ -219,7 +231,22 @@ public class ServiceBuilderDefaultsPlugin
 			});
 	}
 
-	private void _configureTasksBuildServiceForBndBuilderPlugin(
+	private void _configureTasksBuildService(Project project) {
+		TaskContainer taskContainer = project.getTasks();
+
+		taskContainer.withType(
+			BuildServiceTask.class,
+			new Action<BuildServiceTask>() {
+
+				@Override
+				public void execute(BuildServiceTask buildServiceTask) {
+					_configureTaskBuildService(buildServiceTask);
+				}
+
+			});
+	}
+
+	private void _configureTasksBuildServiceForLiferayOSGiPlugin(
 		Project project) {
 
 		TaskContainer taskContainer = project.getTasks();
@@ -230,7 +257,7 @@ public class ServiceBuilderDefaultsPlugin
 
 				@Override
 				public void execute(BuildServiceTask buildServiceTask) {
-					_configureTaskBuildServiceForBndBuilderPlugin(
+					_configureTaskBuildServiceForLiferayOSGiPlugin(
 						buildServiceTask);
 				}
 

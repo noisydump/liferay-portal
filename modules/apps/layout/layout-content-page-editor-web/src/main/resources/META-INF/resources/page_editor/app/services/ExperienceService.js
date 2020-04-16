@@ -12,19 +12,18 @@
  * details.
  */
 
+import {config} from '../config/index';
 import serviceFetch from './serviceFetch';
 
-function getExperienceUsedPortletIds({body, config, dispatch}) {
+function getExperienceUsedPortletIds({body, dispatch}) {
 	const {segmentsExperienceId} = body;
-	const {getExperienceUsedPortletsURL} = config;
 
 	return serviceFetch(
-		config,
-		getExperienceUsedPortletsURL,
+		config.getExperienceUsedPortletsURL,
 		{
 			body: {
-				segmentsExperienceId
-			}
+				segmentsExperienceId,
+			},
 		},
 		dispatch
 	);
@@ -37,26 +36,19 @@ export default {
 	 * @param {object} options.body
 	 * @param {string} options.body.name Name for the new experience
 	 * @param {string} options.body.segmentsEntryId Id of the segment for the Experience
-	 * @param {object} options.config
-	 * @param {string} options.config.addSegmentsExperienceURL Url of the backend service
-	 * @param {number} options.config.classNameId
-	 * @param {number} options.config.classPK
+	 * @param {function} options.dispatch
 	 */
-	createExperience({body, config, dispatch}) {
+	createExperience({body, dispatch}) {
 		const {name, segmentsEntryId} = body;
-		const {addSegmentsExperienceURL, classNameId, classPK} = config;
 
 		const payload = {
 			active: true,
-			classNameId,
-			classPK,
 			name,
-			segmentsEntryId
+			segmentsEntryId,
 		};
 
 		return serviceFetch(
-			config,
-			addSegmentsExperienceURL,
+			config.addSegmentsExperienceURL,
 			{body: payload},
 			dispatch
 		);
@@ -68,34 +60,30 @@ export default {
 	 * @param {object} options.body
 	 * @param {number[]} options.body.fragmentEntryLinkIds List of fragment entry ids unique to the  experience to delete
 	 * @param {string} options.body.segmentsExperienceId Id of the experience to be deleted
-	 * @param {object} options.config
-	 * @param {string} options.config.deleteSegmentsExperienceURL Url of the backend service
+	 * @param {function} options.dispatch
 	 */
-	removeExperience({body, config, dispatch}) {
+	removeExperience({body, dispatch}) {
 		const {fragmentEntryLinkIds, segmentsExperienceId} = body;
-		const {deleteSegmentsExperienceURL} = config;
 
 		const payload = {
 			deleteSegmentsExperience: true,
 			fragmentEntryLinkIds: JSON.stringify(fragmentEntryLinkIds),
-			segmentsExperienceId
+			segmentsExperienceId,
 		};
 
 		return serviceFetch(
-			config,
-			deleteSegmentsExperienceURL,
+			config.deleteSegmentsExperienceURL,
 			{body: payload},
 			dispatch
 		);
 	},
 
-	selectExperience({body, config, dispatch}) {
+	selectExperience({body, dispatch}) {
 		const {segmentsExperienceId} = body;
 
 		return getExperienceUsedPortletIds({
 			body: {segmentsExperienceId},
-			config,
-			dispatch
+			dispatch,
 		});
 	},
 
@@ -106,15 +94,11 @@ export default {
 	 * @param {string} options.body.name Experience New name for the experience
 	 * @param {string} options.body.segmentsEntryId New audience for the experience
 	 * @param {string} options.body.segmentsExperienceId Id of the experience to be updated
-	 * @param {object} options.config
-	 * @param {string} options.config.updateSegmentsExperienceURL Url of the backend service
+	 * @param {function} options.dispatch
 	 */
-	updateExperience({body, config, dispatch}) {
-		const {updateSegmentsExperienceURL} = config;
-
+	updateExperience({body, dispatch}) {
 		return serviceFetch(
-			config,
-			updateSegmentsExperienceURL,
+			config.updateSegmentsExperienceURL,
 			{body},
 			dispatch
 		);
@@ -126,23 +110,20 @@ export default {
 	 * @param {object} options.body
 	 * @param {number} options.body.newPriority Priority to update the experience
 	 * @param {string} options.body.segmentsExperienceId Id of the experience to be updated
-	 * @param {object} options.config
-	 * @param {string} options.config.updateSegmentsExperiencePriorityURL Url of the backend service
+	 * @param {function} options.dispatch
 	 */
-	updateExperiencePriority({body, config, dispatch}) {
+	updateExperiencePriority({body, dispatch}) {
 		const {newPriority, segmentsExperienceId} = body;
-		const {updateSegmentsExperiencePriorityURL} = config;
 
 		const payload = {
 			newPriority,
-			segmentsExperienceId
+			segmentsExperienceId,
 		};
 
 		return serviceFetch(
-			config,
-			updateSegmentsExperiencePriorityURL,
+			config.updateSegmentsExperiencePriorityURL,
 			{body: payload},
 			dispatch
 		);
-	}
+	},
 };

@@ -23,8 +23,9 @@ import com.liferay.bookmarks.web.internal.portlet.toolbar.contributor.BookmarksP
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.CreationMenu;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemList;
+import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemListBuilder;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.LabelItem;
-import com.liferay.frontend.taglib.clay.servlet.taglib.util.LabelItemList;
+import com.liferay.frontend.taglib.clay.servlet.taglib.util.LabelItemListBuilder;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.ViewTypeItemList;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.search.SearchContainer;
@@ -87,32 +88,27 @@ public class BookmarksManagementToolbarDisplayContext {
 	}
 
 	public List<DropdownItem> getActionDropdownItems() {
-		return new DropdownItemList() {
-			{
-				add(
-					dropdownItem -> {
-						dropdownItem.putData("action", "deleteEntries");
+		return DropdownItemListBuilder.add(
+			dropdownItem -> {
+				dropdownItem.putData("action", "deleteEntries");
 
-						if (_trashHelper.isTrashEnabled(
-								_themeDisplay.getScopeGroupId())) {
+				if (_trashHelper.isTrashEnabled(
+						_themeDisplay.getScopeGroupId())) {
 
-							dropdownItem.setIcon("trash");
-							dropdownItem.setLabel(
-								LanguageUtil.get(
-									_httpServletRequest,
-									"move-to-recycle-bin"));
-						}
-						else {
-							dropdownItem.setIcon("times-circle");
-							dropdownItem.setLabel(
-								LanguageUtil.get(
-									_httpServletRequest, "delete"));
-						}
+					dropdownItem.setIcon("trash");
+					dropdownItem.setLabel(
+						LanguageUtil.get(
+							_httpServletRequest, "move-to-recycle-bin"));
+				}
+				else {
+					dropdownItem.setIcon("times-circle");
+					dropdownItem.setLabel(
+						LanguageUtil.get(_httpServletRequest, "delete"));
+				}
 
-						dropdownItem.setQuickAction(true);
-					});
+				dropdownItem.setQuickAction(true);
 			}
-		};
+		).build();
 	}
 
 	public String getClearResultsURL() {
@@ -158,60 +154,50 @@ public class BookmarksManagementToolbarDisplayContext {
 	}
 
 	public List<DropdownItem> getFilterDropdownItems() {
-		return new DropdownItemList() {
-			{
-				addGroup(
-					dropdownGroupItem -> {
-						dropdownGroupItem.setDropdownItems(
-							_getFilterNavigationDropdownItems());
-						dropdownGroupItem.setLabel(
-							LanguageUtil.get(
-								_httpServletRequest, "filter-by-navigation"));
-					});
+		return DropdownItemListBuilder.addGroup(
+			dropdownGroupItem -> {
+				dropdownGroupItem.setDropdownItems(
+					_getFilterNavigationDropdownItems());
+				dropdownGroupItem.setLabel(
+					LanguageUtil.get(
+						_httpServletRequest, "filter-by-navigation"));
 			}
-		};
+		).build();
 	}
 
 	public List<LabelItem> getFilterLabelItems() {
-		return new LabelItemList() {
-			{
-				String navigation = _getNavigation();
+		String navigation = _getNavigation();
 
-				if (navigation.equals("mine")) {
-					add(
-						labelItem -> {
-							labelItem.putData(
-								"removeLabelURL",
-								_removeNavigartionParameter(_currentURLObj));
+		return LabelItemListBuilder.add(
+			() -> navigation.equals("mine"),
+			labelItem -> {
+				labelItem.putData(
+					"removeLabelURL",
+					_removeNavigartionParameter(_currentURLObj));
 
-							labelItem.setCloseable(true);
+				labelItem.setCloseable(true);
 
-							User user = _themeDisplay.getUser();
+				User user = _themeDisplay.getUser();
 
-							String label = String.format(
-								"%s: %s",
-								LanguageUtil.get(_httpServletRequest, "owner"),
-								user.getFullName());
+				String label = String.format(
+					"%s: %s", LanguageUtil.get(_httpServletRequest, "owner"),
+					user.getFullName());
 
-							labelItem.setLabel(label);
-						});
-				}
-				else if (navigation.equals("recent")) {
-					add(
-						labelItem -> {
-							labelItem.putData(
-								"removeLabelURL",
-								_removeNavigartionParameter(_currentURLObj));
-
-							labelItem.setCloseable(true);
-
-							labelItem.setLabel(
-								LanguageUtil.get(
-									_httpServletRequest, "recent"));
-						});
-				}
+				labelItem.setLabel(label);
 			}
-		};
+		).add(
+			() -> navigation.equals("recent"),
+			labelItem -> {
+				labelItem.putData(
+					"removeLabelURL",
+					_removeNavigartionParameter(_currentURLObj));
+
+				labelItem.setCloseable(true);
+
+				labelItem.setLabel(
+					LanguageUtil.get(_httpServletRequest, "recent"));
+			}
+		).build();
 	}
 
 	public String getSearchActionURL() {

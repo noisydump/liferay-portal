@@ -54,7 +54,8 @@ public class KaleoTransitionLocalServiceUtil {
 
 	public static com.liferay.portal.workflow.kaleo.model.KaleoTransition
 			addKaleoTransition(
-				long kaleoDefinitionVersionId, long kaleoNodeId,
+				long kaleoDefinitionId, long kaleoDefinitionVersionId,
+				long kaleoNodeId,
 				com.liferay.portal.workflow.kaleo.definition.Transition
 					transition,
 				com.liferay.portal.workflow.kaleo.model.KaleoNode
@@ -65,8 +66,8 @@ public class KaleoTransitionLocalServiceUtil {
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return getService().addKaleoTransition(
-			kaleoDefinitionVersionId, kaleoNodeId, transition, sourceKaleoNode,
-			targetKaleoNode, serviceContext);
+			kaleoDefinitionId, kaleoDefinitionVersionId, kaleoNodeId,
+			transition, sourceKaleoNode, targetKaleoNode, serviceContext);
 	}
 
 	/**
@@ -79,6 +80,16 @@ public class KaleoTransitionLocalServiceUtil {
 		createKaleoTransition(long kaleoTransitionId) {
 
 		return getService().createKaleoTransition(kaleoTransitionId);
+	}
+
+	/**
+	 * @throws PortalException
+	 */
+	public static com.liferay.portal.kernel.model.PersistedModel
+			createPersistedModel(java.io.Serializable primaryKeyObj)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return getService().createPersistedModel(primaryKeyObj);
 	}
 
 	public static void deleteCompanyKaleoTransitions(long companyId) {
@@ -319,6 +330,9 @@ public class KaleoTransitionLocalServiceUtil {
 		return getService().getOSGiServiceIdentifier();
 	}
 
+	/**
+	 * @throws PortalException
+	 */
 	public static com.liferay.portal.kernel.model.PersistedModel
 			getPersistedModel(java.io.Serializable primaryKeyObj)
 		throws com.liferay.portal.kernel.exception.PortalException {

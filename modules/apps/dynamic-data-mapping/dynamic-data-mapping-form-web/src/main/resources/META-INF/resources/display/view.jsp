@@ -87,6 +87,7 @@ long formInstanceId = ddmFormDisplayContext.getFormInstanceId();
 
 				<div class="portlet-forms">
 					<aui:form action="<%= addFormInstanceRecordActionURL %>" data-DDMFormInstanceId="<%= formInstanceId %>" data-senna-off="true" method="post" name="fm">
+						<aui:input name="currentURL" type="hidden" value="<%= currentURL %>" />
 
 						<%
 						String redirectURL = ddmFormDisplayContext.getRedirectURL();
@@ -127,6 +128,7 @@ long formInstanceId = ddmFormDisplayContext.getFormInstanceId();
 						<liferay-ui:error exception="<%= NoSuchFormInstanceException.class %>" message="the-selected-form-no-longer-exists" />
 						<liferay-ui:error exception="<%= NoSuchStructureException.class %>" message="unable-to-retrieve-the-definition-of-the-selected-form" />
 						<liferay-ui:error exception="<%= NoSuchStructureLayoutException.class %>" message="unable-to-retrieve-the-layout-of-the-selected-form" />
+						<liferay-ui:error exception="<%= StorageException.class %>" message="there-was-an-error-when-accessing-the-data-storage" />
 
 						<liferay-ui:error-principal />
 
@@ -197,7 +199,7 @@ long formInstanceId = ddmFormDisplayContext.getFormInstanceId();
 					function <portlet:namespace />fireFormView() {
 						Liferay.fire('ddmFormView', {
 							formId: '<%= formInstanceId %>',
-							title: '<%= HtmlUtil.escape(formInstance.getName(displayLocale)) %>'
+							title: '<%= HtmlUtil.escape(formInstance.getName(displayLocale)) %>',
 						});
 					}
 
@@ -216,12 +218,12 @@ long formInstanceId = ddmFormDisplayContext.getFormInstanceId();
 									<portlet:namespace />formInstanceId: <%= formInstanceId %>,
 									<portlet:namespace />serializedDDMFormValues: JSON.stringify(
 										<portlet:namespace />form.toJSON()
-									)
+									),
 								});
 
 								Liferay.Util.fetch('<%= autoSaveFormInstanceRecordURL.toString() %>', {
 									body: data,
-									method: 'POST'
+									method: 'POST',
 								});
 							}
 
@@ -286,7 +288,8 @@ long formInstanceId = ddmFormDisplayContext.getFormInstanceId();
 
 					if (<portlet:namespace />form) {
 						<portlet:namespace />initForm();
-					} else {
+					}
+					else {
 						Liferay.componentReady(
 							'<%= ddmFormDisplayContext.getContainerId() %>'
 						).then(function(component) {

@@ -48,6 +48,35 @@ public class FragmentImage {
 
 	@Schema
 	@Valid
+	public Object getDescription() {
+		return description;
+	}
+
+	public void setDescription(Object description) {
+		this.description = description;
+	}
+
+	@JsonIgnore
+	public void setDescription(
+		UnsafeSupplier<Object, Exception> descriptionUnsafeSupplier) {
+
+		try {
+			description = descriptionUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected Object description;
+
+	@Schema
+	@Valid
 	public Object getTitle() {
 		return title;
 	}
@@ -129,6 +158,16 @@ public class FragmentImage {
 
 		sb.append("{");
 
+		if (description != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"description\": ");
+
+			sb.append(String.valueOf(description));
+		}
+
 		if (title != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -136,11 +175,7 @@ public class FragmentImage {
 
 			sb.append("\"title\": ");
 
-			sb.append("\"");
-
-			sb.append(_escape(title));
-
-			sb.append("\"");
+			sb.append(String.valueOf(title));
 		}
 
 		if (url != null) {
@@ -150,11 +185,7 @@ public class FragmentImage {
 
 			sb.append("\"url\": ");
 
-			sb.append("\"");
-
-			sb.append(_escape(url));
-
-			sb.append("\"");
+			sb.append(String.valueOf(url));
 		}
 
 		sb.append("}");

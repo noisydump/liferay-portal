@@ -1,12 +1,21 @@
 {
 	"dependencies": {
-		"clay-button": "2.20.2",
-		"clay-checkbox": "2.20.2",
-		"clay-dropdown": "2.20.2",
-		"clay-icon": "2.20.2",
-		"clay-label": "2.20.2",
-		"clay-radio": "2.20.2",
+		"@clayui/button": "3.3.0",
+		"@clayui/form": "3.7.0",
+		"@clayui/modal": "3.4.0",
+		"@clayui/table": "4.0.0",
+		"classnames": "2.2.6",
+		"clay-button": "2.21.0",
+		"clay-checkbox": "2.21.0",
+		"clay-dropdown": "2.21.0",
+		"clay-icon": "2.21.0",
+		"clay-label": "2.21.0",
+		"clay-radio": "2.21.0",
+		"frontend-editor-ckeditor-web": "*",
 		"frontend-js-web": "*",
+		"leaflet": "1.2.0",
+		"map-google-maps": "*",
+		"map-openstreetmap": "*",
 		"metal-component": "2.16.8",
 		"metal-dom": "2.16.8",
 		"metal-drag-drop": "3.3.1",
@@ -27,12 +36,13 @@
 			"Checkbox",
 			"DatePicker",
 			"FieldBase",
-			"Grid",
 			"Select",
 			"Tooltip",
-			"Validation"
+			"Validation",
+			"withContextMock"
 		]
 	},
+	"main": "index.js",
 	"name": "dynamic-data-mapping-form-field-type",
 	"private": true,
 	"scripts": {
@@ -41,5 +51,5 @@
 		"format": "liferay-npm-scripts fix",
 		"test": "liferay-npm-scripts test"
 	},
-	"version": "5.0.6"
+	"version": "5.0.20"
 }

@@ -14,6 +14,7 @@
 
 package com.liferay.change.tracking.internal.background.task;
 
+import com.liferay.change.tracking.conflict.ConflictInfo;
 import com.liferay.change.tracking.constants.CTConstants;
 import com.liferay.change.tracking.internal.CTServiceRegistry;
 import com.liferay.change.tracking.internal.CTTableMapperHelper;
@@ -24,6 +25,7 @@ import com.liferay.change.tracking.service.CTCollectionLocalService;
 import com.liferay.change.tracking.service.CTEntryLocalService;
 import com.liferay.change.tracking.service.CTMessageLocalService;
 import com.liferay.change.tracking.service.CTProcessLocalService;
+import com.liferay.petra.lang.SafeClosable;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.backgroundtask.BackgroundTask;
@@ -32,12 +34,16 @@ import com.liferay.portal.kernel.backgroundtask.BackgroundTaskExecutor;
 import com.liferay.portal.kernel.backgroundtask.BackgroundTaskResult;
 import com.liferay.portal.kernel.backgroundtask.BaseBackgroundTaskExecutor;
 import com.liferay.portal.kernel.backgroundtask.display.BackgroundTaskDisplay;
-import com.liferay.portal.kernel.cache.PortalCacheManager;
+import com.liferay.portal.kernel.cache.MultiVMPool;
+import com.liferay.portal.kernel.change.tracking.CTCollectionThreadLocal;
 import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.model.ClassName;
+import com.liferay.portal.kernel.service.ClassNameLocalService;
 import com.liferay.portal.kernel.service.change.tracking.CTService;
 import com.liferay.portal.kernel.transaction.Propagation;
 import com.liferay.portal.kernel.transaction.Transactional;
 import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 
 import java.io.Serializable;
@@ -84,8 +90,40 @@ public class CTPublishBackgroundTaskExecutor
 		long ctCollectionId = GetterUtil.getLong(
 			taskContextMap.get("ctCollectionId"));
 
+		try (SafeClosable safeClosable =
+				CTCollectionThreadLocal.setCTCollectionId(ctCollectionId)) {
+
+			_ctServiceRegistry.onBeforePublish(ctCollectionId);
+		}
+
 		CTCollection ctCollection = _ctCollectionLocalService.getCTCollection(
 			ctCollectionId);
+
+		Map<Long, List<ConflictInfo>> conflictInfosMap =
+			_ctCollectionLocalService.checkConflicts(ctCollection);
+
+		for (Map.Entry<Long, List<ConflictInfo>> entry :
+				conflictInfosMap.entrySet()) {
+
+			for (ConflictInfo conflictInfo : entry.getValue()) {
+				if (conflictInfo.isResolved()) {
+					continue;
+				}
+
+				ClassName className = _classNameLocalService.fetchClassName(
+					entry.getKey());
+
+				throw new SystemException(
+					StringBundler.concat(
+						"Unable to publish ", ctCollection, " for class name ",
+						className, " with primary keys ",
+						conflictInfo.getSourcePrimaryKey(), " and ",
+						conflictInfo.getTargetPrimaryKey(), ": ",
+						conflictInfo.getConflictDescription(
+							conflictInfo.getResourceBundle(
+								LocaleUtil.ENGLISH))));
+			}
+		}
 
 		List<CTEntry> ctEntries = _ctEntryLocalService.getCTCollectionCTEntries(
 			ctCollectionId);
@@ -126,10 +164,9 @@ public class CTPublishBackgroundTaskExecutor
 		for (CTTableMapperHelper ctTableMapperHelper :
 				_ctServiceRegistry.getCTTableMapperHelpers()) {
 
-			ctTableMapperHelper.publish(ctCollectionId, _portalCacheManager);
+			ctTableMapperHelper.publish(
+				ctCollectionId, _multiVMPool.getPortalCacheManager());
 		}
-
-		_ctServiceRegistry.onAfterPublish(ctCollectionId);
 
 		Date modifiedDate = new Date();
 
@@ -140,6 +177,8 @@ public class CTPublishBackgroundTaskExecutor
 		ctCollection.setStatusDate(modifiedDate);
 
 		_ctCollectionLocalService.updateCTCollection(ctCollection);
+
+		_ctServiceRegistry.onAfterPublish(ctCollectionId);
 
 		return BackgroundTaskResult.SUCCESS;
 	}
@@ -164,6 +203,9 @@ public class CTPublishBackgroundTaskExecutor
 	private BackgroundTaskExecutor _backgroundTaskExecutor;
 
 	@Reference
+	private ClassNameLocalService _classNameLocalService;
+
+	@Reference
 	private CTCollectionLocalService _ctCollectionLocalService;
 
 	@Reference
@@ -179,6 +221,6 @@ public class CTPublishBackgroundTaskExecutor
 	private CTServiceRegistry _ctServiceRegistry;
 
 	@Reference
-	private PortalCacheManager<?, ?> _portalCacheManager;
+	private MultiVMPool _multiVMPool;
 
 }

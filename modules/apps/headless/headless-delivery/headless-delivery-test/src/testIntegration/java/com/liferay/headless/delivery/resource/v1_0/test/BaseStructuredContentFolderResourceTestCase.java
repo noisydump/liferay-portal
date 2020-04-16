@@ -444,9 +444,11 @@ public abstract class BaseStructuredContentFolderResourceTestCase {
 				}
 				else {
 					BeanUtils.setProperty(
-						structuredContentFolder1, entityField.getName(), "Aaa");
+						structuredContentFolder1, entityField.getName(),
+						"Aaa" + RandomTestUtil.randomString());
 					BeanUtils.setProperty(
-						structuredContentFolder2, entityField.getName(), "Bbb");
+						structuredContentFolder2, entityField.getName(),
+						"Bbb" + RandomTestUtil.randomString());
 				}
 			});
 	}
@@ -890,9 +892,11 @@ public abstract class BaseStructuredContentFolderResourceTestCase {
 				}
 				else {
 					BeanUtils.setProperty(
-						structuredContentFolder1, entityField.getName(), "Aaa");
+						structuredContentFolder1, entityField.getName(),
+						"Aaa" + RandomTestUtil.randomString());
 					BeanUtils.setProperty(
-						structuredContentFolder2, entityField.getName(), "Bbb");
+						structuredContentFolder2, entityField.getName(),
+						"Bbb" + RandomTestUtil.randomString());
 				}
 			});
 	}
@@ -1013,6 +1017,7 @@ public abstract class BaseStructuredContentFolderResourceTestCase {
 
 	@Test
 	public void testDeleteStructuredContentFolder() throws Exception {
+		@SuppressWarnings("PMD.UnusedLocalVariable")
 		StructuredContentFolder structuredContentFolder =
 			testDeleteStructuredContentFolder_addStructuredContentFolder();
 
@@ -1160,8 +1165,7 @@ public abstract class BaseStructuredContentFolderResourceTestCase {
 				randomPatchStructuredContentFolder);
 
 		StructuredContentFolder expectedPatchStructuredContentFolder =
-			(StructuredContentFolder)BeanUtils.cloneBean(
-				postStructuredContentFolder);
+			postStructuredContentFolder.clone();
 
 		_beanUtilsBean.copyProperties(
 			expectedPatchStructuredContentFolder,
@@ -1754,9 +1758,9 @@ public abstract class BaseStructuredContentFolderResourceTestCase {
 				getAdditionalAssertFieldNames()) {
 
 			if (Objects.equals("actions", additionalAssertFieldName)) {
-				if (!Objects.deepEquals(
-						structuredContentFolder1.getActions(),
-						structuredContentFolder2.getActions())) {
+				if (!equals(
+						(Map)structuredContentFolder1.getActions(),
+						(Map)structuredContentFolder2.getActions())) {
 
 					return false;
 				}
@@ -1913,6 +1917,30 @@ public abstract class BaseStructuredContentFolderResourceTestCase {
 			throw new IllegalArgumentException(
 				"Invalid additional assert field name " +
 					additionalAssertFieldName);
+		}
+
+		return true;
+	}
+
+	protected boolean equals(
+		Map<String, Object> map1, Map<String, Object> map2) {
+
+		if (Objects.equals(map1.keySet(), map2.keySet())) {
+			for (Map.Entry<String, Object> entry : map1.entrySet()) {
+				if (entry.getValue() instanceof Map) {
+					if (!equals(
+							(Map)entry.getValue(),
+							(Map)map2.get(entry.getKey()))) {
+
+						return false;
+					}
+				}
+				else if (!Objects.deepEquals(
+							entry.getValue(), map2.get(entry.getKey()))) {
+
+					return false;
+				}
+			}
 		}
 
 		return true;

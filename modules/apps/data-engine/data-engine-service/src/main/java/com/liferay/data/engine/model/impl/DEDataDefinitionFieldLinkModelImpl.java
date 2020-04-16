@@ -18,6 +18,7 @@ import com.liferay.data.engine.model.DEDataDefinitionFieldLink;
 import com.liferay.data.engine.model.DEDataDefinitionFieldLinkModel;
 import com.liferay.expando.kernel.model.ExpandoBridge;
 import com.liferay.expando.kernel.util.ExpandoBridgeFactoryUtil;
+import com.liferay.exportimport.kernel.lar.StagedModelType;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.bean.AutoEscapeBeanHandler;
 import com.liferay.portal.kernel.model.CacheModel;
@@ -37,6 +38,7 @@ import java.lang.reflect.InvocationHandler;
 import java.sql.Types;
 
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -68,8 +70,10 @@ public class DEDataDefinitionFieldLinkModelImpl
 	public static final Object[][] TABLE_COLUMNS = {
 		{"uuid_", Types.VARCHAR}, {"deDataDefinitionFieldLinkId", Types.BIGINT},
 		{"groupId", Types.BIGINT}, {"companyId", Types.BIGINT},
+		{"createDate", Types.TIMESTAMP}, {"modifiedDate", Types.TIMESTAMP},
 		{"classNameId", Types.BIGINT}, {"classPK", Types.BIGINT},
-		{"ddmStructureId", Types.BIGINT}, {"fieldName", Types.VARCHAR}
+		{"ddmStructureId", Types.BIGINT}, {"fieldName", Types.VARCHAR},
+		{"lastPublishDate", Types.TIMESTAMP}
 	};
 
 	public static final Map<String, Integer> TABLE_COLUMNS_MAP =
@@ -80,14 +84,17 @@ public class DEDataDefinitionFieldLinkModelImpl
 		TABLE_COLUMNS_MAP.put("deDataDefinitionFieldLinkId", Types.BIGINT);
 		TABLE_COLUMNS_MAP.put("groupId", Types.BIGINT);
 		TABLE_COLUMNS_MAP.put("companyId", Types.BIGINT);
+		TABLE_COLUMNS_MAP.put("createDate", Types.TIMESTAMP);
+		TABLE_COLUMNS_MAP.put("modifiedDate", Types.TIMESTAMP);
 		TABLE_COLUMNS_MAP.put("classNameId", Types.BIGINT);
 		TABLE_COLUMNS_MAP.put("classPK", Types.BIGINT);
 		TABLE_COLUMNS_MAP.put("ddmStructureId", Types.BIGINT);
 		TABLE_COLUMNS_MAP.put("fieldName", Types.VARCHAR);
+		TABLE_COLUMNS_MAP.put("lastPublishDate", Types.TIMESTAMP);
 	}
 
 	public static final String TABLE_SQL_CREATE =
-		"create table DEDataDefinitionFieldLink (uuid_ VARCHAR(75) null,deDataDefinitionFieldLinkId LONG not null primary key,groupId LONG,companyId LONG,classNameId LONG,classPK LONG,ddmStructureId LONG,fieldName VARCHAR(75) null)";
+		"create table DEDataDefinitionFieldLink (uuid_ VARCHAR(75) null,deDataDefinitionFieldLinkId LONG not null primary key,groupId LONG,companyId LONG,createDate DATE null,modifiedDate DATE null,classNameId LONG,classPK LONG,ddmStructureId LONG,fieldName VARCHAR(75) null,lastPublishDate DATE null)";
 
 	public static final String TABLE_SQL_DROP =
 		"drop table DEDataDefinitionFieldLink";
@@ -288,6 +295,18 @@ public class DEDataDefinitionFieldLinkModelImpl
 			(BiConsumer<DEDataDefinitionFieldLink, Long>)
 				DEDataDefinitionFieldLink::setCompanyId);
 		attributeGetterFunctions.put(
+			"createDate", DEDataDefinitionFieldLink::getCreateDate);
+		attributeSetterBiConsumers.put(
+			"createDate",
+			(BiConsumer<DEDataDefinitionFieldLink, Date>)
+				DEDataDefinitionFieldLink::setCreateDate);
+		attributeGetterFunctions.put(
+			"modifiedDate", DEDataDefinitionFieldLink::getModifiedDate);
+		attributeSetterBiConsumers.put(
+			"modifiedDate",
+			(BiConsumer<DEDataDefinitionFieldLink, Date>)
+				DEDataDefinitionFieldLink::setModifiedDate);
+		attributeGetterFunctions.put(
 			"classNameId", DEDataDefinitionFieldLink::getClassNameId);
 		attributeSetterBiConsumers.put(
 			"classNameId",
@@ -311,6 +330,12 @@ public class DEDataDefinitionFieldLinkModelImpl
 			"fieldName",
 			(BiConsumer<DEDataDefinitionFieldLink, String>)
 				DEDataDefinitionFieldLink::setFieldName);
+		attributeGetterFunctions.put(
+			"lastPublishDate", DEDataDefinitionFieldLink::getLastPublishDate);
+		attributeSetterBiConsumers.put(
+			"lastPublishDate",
+			(BiConsumer<DEDataDefinitionFieldLink, Date>)
+				DEDataDefinitionFieldLink::setLastPublishDate);
 
 		_attributeGetterFunctions = Collections.unmodifiableMap(
 			attributeGetterFunctions);
@@ -397,6 +422,32 @@ public class DEDataDefinitionFieldLinkModelImpl
 
 	public long getOriginalCompanyId() {
 		return _originalCompanyId;
+	}
+
+	@Override
+	public Date getCreateDate() {
+		return _createDate;
+	}
+
+	@Override
+	public void setCreateDate(Date createDate) {
+		_createDate = createDate;
+	}
+
+	@Override
+	public Date getModifiedDate() {
+		return _modifiedDate;
+	}
+
+	public boolean hasSetModifiedDate() {
+		return _setModifiedDate;
+	}
+
+	@Override
+	public void setModifiedDate(Date modifiedDate) {
+		_setModifiedDate = true;
+
+		_modifiedDate = modifiedDate;
 	}
 
 	@Override
@@ -510,6 +561,24 @@ public class DEDataDefinitionFieldLinkModelImpl
 		return GetterUtil.getString(_originalFieldName);
 	}
 
+	@Override
+	public Date getLastPublishDate() {
+		return _lastPublishDate;
+	}
+
+	@Override
+	public void setLastPublishDate(Date lastPublishDate) {
+		_lastPublishDate = lastPublishDate;
+	}
+
+	@Override
+	public StagedModelType getStagedModelType() {
+		return new StagedModelType(
+			PortalUtil.getClassNameId(
+				DEDataDefinitionFieldLink.class.getName()),
+			getClassNameId());
+	}
+
 	public long getColumnBitmask() {
 		return _columnBitmask;
 	}
@@ -553,10 +622,13 @@ public class DEDataDefinitionFieldLinkModelImpl
 			getDeDataDefinitionFieldLinkId());
 		deDataDefinitionFieldLinkImpl.setGroupId(getGroupId());
 		deDataDefinitionFieldLinkImpl.setCompanyId(getCompanyId());
+		deDataDefinitionFieldLinkImpl.setCreateDate(getCreateDate());
+		deDataDefinitionFieldLinkImpl.setModifiedDate(getModifiedDate());
 		deDataDefinitionFieldLinkImpl.setClassNameId(getClassNameId());
 		deDataDefinitionFieldLinkImpl.setClassPK(getClassPK());
 		deDataDefinitionFieldLinkImpl.setDdmStructureId(getDdmStructureId());
 		deDataDefinitionFieldLinkImpl.setFieldName(getFieldName());
+		deDataDefinitionFieldLinkImpl.setLastPublishDate(getLastPublishDate());
 
 		deDataDefinitionFieldLinkImpl.resetOriginalValues();
 
@@ -634,6 +706,8 @@ public class DEDataDefinitionFieldLinkModelImpl
 
 		deDataDefinitionFieldLinkModelImpl._setOriginalCompanyId = false;
 
+		deDataDefinitionFieldLinkModelImpl._setModifiedDate = false;
+
 		deDataDefinitionFieldLinkModelImpl._originalClassNameId =
 			deDataDefinitionFieldLinkModelImpl._classNameId;
 
@@ -676,6 +750,26 @@ public class DEDataDefinitionFieldLinkModelImpl
 
 		deDataDefinitionFieldLinkCacheModel.companyId = getCompanyId();
 
+		Date createDate = getCreateDate();
+
+		if (createDate != null) {
+			deDataDefinitionFieldLinkCacheModel.createDate =
+				createDate.getTime();
+		}
+		else {
+			deDataDefinitionFieldLinkCacheModel.createDate = Long.MIN_VALUE;
+		}
+
+		Date modifiedDate = getModifiedDate();
+
+		if (modifiedDate != null) {
+			deDataDefinitionFieldLinkCacheModel.modifiedDate =
+				modifiedDate.getTime();
+		}
+		else {
+			deDataDefinitionFieldLinkCacheModel.modifiedDate = Long.MIN_VALUE;
+		}
+
 		deDataDefinitionFieldLinkCacheModel.classNameId = getClassNameId();
 
 		deDataDefinitionFieldLinkCacheModel.classPK = getClassPK();
@@ -689,6 +783,17 @@ public class DEDataDefinitionFieldLinkModelImpl
 
 		if ((fieldName != null) && (fieldName.length() == 0)) {
 			deDataDefinitionFieldLinkCacheModel.fieldName = null;
+		}
+
+		Date lastPublishDate = getLastPublishDate();
+
+		if (lastPublishDate != null) {
+			deDataDefinitionFieldLinkCacheModel.lastPublishDate =
+				lastPublishDate.getTime();
+		}
+		else {
+			deDataDefinitionFieldLinkCacheModel.lastPublishDate =
+				Long.MIN_VALUE;
 		}
 
 		return deDataDefinitionFieldLinkCacheModel;
@@ -780,6 +885,9 @@ public class DEDataDefinitionFieldLinkModelImpl
 	private long _companyId;
 	private long _originalCompanyId;
 	private boolean _setOriginalCompanyId;
+	private Date _createDate;
+	private Date _modifiedDate;
+	private boolean _setModifiedDate;
 	private long _classNameId;
 	private long _originalClassNameId;
 	private boolean _setOriginalClassNameId;
@@ -791,6 +899,7 @@ public class DEDataDefinitionFieldLinkModelImpl
 	private boolean _setOriginalDdmStructureId;
 	private String _fieldName;
 	private String _originalFieldName;
+	private Date _lastPublishDate;
 	private long _columnBitmask;
 	private DEDataDefinitionFieldLink _escapedModel;
 

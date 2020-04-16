@@ -13,75 +13,59 @@ import React, {useMemo} from 'react';
 
 import PromisesResolver from '../../shared/components/promises-resolver/PromisesResolver.es';
 import {parse} from '../../shared/components/router/queryString.es';
-import {useFetch} from '../../shared/hooks/useFetch.es';
 import {useFilter} from '../../shared/hooks/useFilter.es';
+import {usePost} from '../../shared/hooks/usePost.es';
 import {useProcessTitle} from '../../shared/hooks/useProcessTitle.es';
 import {useTimeRangeFetch} from '../filter/hooks/useTimeRangeFetch.es';
-import {isValidDate} from '../filter/util/timeRangeUtil.es';
+import {getTimeRangeParams} from '../filter/util/timeRangeUtil.es';
 import {Body} from './PerformanceByAssigneePageBody.es';
 import {Header} from './PerformanceByAssigneePageHeader.es';
 
 const PerformanceByAssigneePage = ({query, routeParams}) => {
 	useTimeRangeFetch();
 
-	const {processId} = routeParams;
+	const {processId, ...paginationParams} = routeParams;
+	const {search = null} = parse(query);
+	const filterKeys = ['processStep', 'roles'];
 
 	useProcessTitle(processId, Liferay.Language.get('performance-by-assignee'));
 
-	const {search = null} = parse(query);
-
-	const filterKeys = ['processStep', 'roles'];
-
 	const {
-		dispatch,
-		filterState: {timeRange},
-		filterValues: {roleIds, taskKeys},
-		selectedFilters
-	} = useFilter(filterKeys);
+		filterValues: {dateEnd, dateStart, roleIds, taskKeys},
+		prefixedKeys,
+		selectedFilters,
+	} = useFilter({filterKeys});
 
-	const {dateEnd, dateStart} =
-		timeRange && timeRange.length ? timeRange[0] : {};
+	const timeRange = useMemo(() => getTimeRangeParams(dateStart, dateEnd), [
+		dateEnd,
+		dateStart,
+	]);
 
-	let timeRangeParams = {};
-
-	if (isValidDate(dateEnd) && isValidDate(dateStart)) {
-		timeRangeParams = {
-			dateEnd: dateEnd.toISOString(),
-			dateStart: dateStart.toISOString()
-		};
-	}
-
-	const {data, fetchData} = useFetch({
-		params: {
+	const {data, postData} = usePost({
+		body: {
 			completed: true,
 			keywords: search,
 			roleIds,
 			taskKeys,
-			...routeParams,
-			...timeRangeParams
+			...timeRange,
 		},
-		url: `/processes/${processId}/assignee-users`
+		params: paginationParams,
+		url: `/processes/${processId}/assignees/metrics`,
 	});
 
-	const promises = useMemo(() => {
-		if (timeRangeParams.dateEnd && timeRangeParams.dateStart) {
-			return [fetchData()];
-		}
-
-		return [new Promise(() => {})];
-	}, [fetchData, timeRangeParams.dateEnd, timeRangeParams.dateStart]);
+	const promises = useMemo(() => [postData()], [postData]);
 
 	return (
 		<PromisesResolver promises={promises}>
 			<PerformanceByAssigneePage.Header
-				dispatch={dispatch}
+				filterKeys={prefixedKeys}
 				routeParams={{...routeParams, search}}
 				selectedFilters={selectedFilters}
 				totalCount={data.totalCount}
 			/>
 
 			<PerformanceByAssigneePage.Body
-				data={data}
+				{...data}
 				filtered={search || selectedFilters.length > 0}
 			/>
 		</PromisesResolver>

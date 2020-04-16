@@ -1,3 +1,15 @@
+create table CTAutoResolutionInfo (
+	mvccVersion LONG default 0 not null,
+	ctAutoResolutionInfoId LONG not null primary key,
+	companyId LONG,
+	createDate DATE null,
+	ctCollectionId LONG,
+	modelClassNameId LONG,
+	sourceModelClassPK LONG,
+	targetModelClassPK LONG,
+	conflictIdentifier VARCHAR(500) null
+);
+
 create table CTCollection (
 	mvccVersion LONG default 0 not null,
 	ctCollectionId LONG not null primary key,
@@ -29,6 +41,7 @@ create table CTEntry (
 create table CTMessage (
 	mvccVersion LONG default 0 not null,
 	ctMessageId LONG not null primary key,
+	companyId LONG,
 	ctCollectionId LONG,
 	messageContent TEXT null
 );
@@ -39,6 +52,7 @@ create table CTPreferences (
 	companyId LONG,
 	userId LONG,
 	ctCollectionId LONG,
+	previousCtCollectionId LONG,
 	confirmationEnabled BOOLEAN
 );
 

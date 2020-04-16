@@ -14,154 +14,144 @@
 
 import ClayLoadingIndicator from '@clayui/loading-indicator';
 import {ClayPaginationWithBasicItems} from '@clayui/pagination';
-import parser from 'bbcode-to-react';
-import React, {useContext, useEffect, useState} from 'react';
-import {Link} from 'react-router-dom';
+import React, {useCallback, useContext, useEffect, useState} from 'react';
 
 import {AppContext} from '../../AppContext.es';
-import KeywordsList from '../../components/KeywordList.es';
-import QuestionBadge from '../../components/QuestionsBadge.es';
-import UserIcon from '../../components/UserIcon.es';
-import {getThreads} from '../../utils/client.es';
-import {dateToInternationalHuman} from '../../utils/utils.es';
+import Error from '../../components/Error.es';
+import QuestionRow from '../../components/QuestionRow.es';
+import {getRankedThreads, getThreads} from '../../utils/client.es';
+import QuestionsNavigationBar from '../QuestionsNavigationBar.es';
 
 export default ({
 	match: {
-		params: {creatorId, keyword}
-	}
+		params: {creatorId, tag: taxonomyCategoryId},
+	},
 }) => {
-	const context = useContext(AppContext);
-
+	const [error, setError] = useState({});
 	const [loading, setLoading] = useState(true);
 	const [page, setPage] = useState(1);
-	const [pageSize] = useState(5);
+	const [pageSize] = useState(20);
 	const [questions, setQuestions] = useState([]);
+	const [search, setSearch] = useState('');
+	const [section, setSection] = useState({});
+
+	const context = useContext(AppContext);
+
+	const siteKey = context.siteKey;
 
 	useEffect(() => {
-		getThreads({
+		if (section.id) {
+			renderQuestions(loadThreads());
+		}
+	}, [
+		creatorId,
+		page,
+		pageSize,
+		section,
+		search,
+		siteKey,
+		taxonomyCategoryId,
+		loadThreads,
+	]);
+
+	const renderQuestions = questions => {
+		questions
+			.then(data => setQuestions(data || []))
+			.then(() => setLoading(false))
+			.catch(error => {
+				if (process.env.NODE_ENV === 'development') {
+					console.error(error);
+				}
+				setLoading(false);
+				setError({message: 'Loading Questions', title: 'Error'});
+			});
+	};
+
+	const loadThreads = useCallback(
+		sort =>
+			getThreads({
+				creatorId,
+				page,
+				pageSize,
+				search,
+				section,
+				siteKey,
+				sort,
+				taxonomyCategoryId,
+			}),
+		[
 			creatorId,
-			keyword,
 			page,
 			pageSize,
-			siteKey: context.siteKey
-		})
-			.then(data => setQuestions(data))
-			.then(() => setLoading(false));
-	}, [keyword, page, pageSize, context.siteKey, creatorId]);
+			search,
+			section,
+			siteKey,
+			taxonomyCategoryId,
+		]
+	);
 
-	const hasValidAnswer = question =>
-		question.messageBoardMessages.items.filter(
-			message => message.showAsAnswer
-		).length > 0;
+	const filterChange = type => {
+		if (type === 'latest-edited') {
+			renderQuestions(loadThreads('dateModified:desc'));
+		}
+		else if (type === 'week') {
+			const date = new Date();
+			date.setDate(date.getDate() - 7);
+
+			renderQuestions(getRankedThreads(date, page, pageSize, section));
+		}
+		else if (type === 'month') {
+			const date = new Date();
+			date.setDate(date.getDate() - 31);
+
+			renderQuestions(getRankedThreads(date, page, pageSize, section));
+		}
+		else {
+			renderQuestions(loadThreads('dateCreated:desc'));
+		}
+	};
 
 	return (
-		<section>
-			{loading ? (
-				<ClayLoadingIndicator />
-			) : (
-				questions.items &&
-				questions.items.map(question => (
-					<div className={'question-row'} key={question.id}>
-						<div className="autofit-padded autofit-row">
-							<div className="autofit-col autofit-col-expand">
-								<div className="autofit-section">
-									<h2>
-										<Link to={'/questions/' + question.id}>
-											{question.headline}
-										</Link>
-									</h2>
-								</div>
-							</div>
-							<div className="autofit-col">
-								<p>
-									<QuestionBadge
-										symbol="caret-top"
-										value={
-											question.aggregateRating &&
-											question.aggregateRating.ratingCount
-										}
-									/>
-
-									<QuestionBadge
-										symbol="view"
-										value={question.viewCount}
-									/>
-
-									<QuestionBadge
-										className={
-											hasValidAnswer(question)
-												? 'question-accepted-badge'
-												: ''
-										}
-										symbol={
-											hasValidAnswer(question)
-												? 'check-circle-full'
-												: 'message'
-										}
-										value={
-											question.messageBoardMessages.items
-												.length
-										}
-									/>
-								</p>
-							</div>
-						</div>
-						<div className="autofit-padded autofit-row">
-							<div className="autofit-col autofit-col-expand">
-								<p className="text-truncate">
-									{parser.toReact(question.articleBody)}
-								</p>
-							</div>
-						</div>
-
-						<div className="autofit-padded autofit-row autofit-row-center">
-							<div className="autofit-col autofit-col-expand">
-								<div>
-									<UserIcon
-										fullName={question.creator.name}
-										portraitURL={question.creator.image}
-										size="sm"
-										userId={String(question.creator.id)}
-									/>
-									<span>
-										<Link
-											to={
-												'/questions/creator/' +
-												question.creator.id
-											}
-										>
-											<strong>
-												{' ' + question.creator.name}
-											</strong>
-										</Link>
-									</span>
-									<span>
-										{' - ' +
-											dateToInternationalHuman(
-												question.dateModified
-											)}
-									</span>
-								</div>
-							</div>
-							<div>
-								<KeywordsList keywords={question.keywords} />
-							</div>
-						</div>
+		<section className="questions-section questions-section-list">
+			<div className="questions-container">
+				<div className="row">
+					<div className="c-mt-3 col col-xl-12">
+						<QuestionsNavigationBar
+							filterChange={filterChange}
+							searchChange={search => setSearch(search)}
+							sectionChange={section => setSection(section)}
+						/>
 					</div>
-				))
-			)}
 
-			{!!questions.totalCount &&
-				questions.totalCount > questions.pageSize && (
-					<ClayPaginationWithBasicItems
-						activePage={page}
-						ellipsisBuffer={2}
-						onPageChange={setPage}
-						totalPages={Math.ceil(
-							questions.totalCount / questions.pageSize
+					<div className="c-mt-5 c-mx-auto c-px-0 col-xl-10">
+						{loading ? (
+							<ClayLoadingIndicator />
+						) : (
+							questions.items &&
+							questions.items.map(question => (
+								<QuestionRow
+									key={question.id}
+									question={question}
+								/>
+							))
 						)}
-					/>
-				)}
+
+						{!!questions.totalCount &&
+							questions.totalCount > questions.pageSize && (
+								<ClayPaginationWithBasicItems
+									activePage={page}
+									ellipsisBuffer={2}
+									onPageChange={setPage}
+									totalPages={Math.ceil(
+										questions.totalCount /
+											questions.pageSize
+									)}
+								/>
+							)}
+						<Error error={error} />
+					</div>
+				</div>
+			</div>
 		</section>
 	);
 };

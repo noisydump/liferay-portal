@@ -191,13 +191,26 @@ public abstract class BaseWorkflowTaskAssignableUsersResourceTestCase {
 	}
 
 	@Test
-	public void testGetWorkflowTaskAssignableUser() throws Exception {
-		Assert.assertTrue(false);
+	public void testPostWorkflowTaskAssignableUser() throws Exception {
+		WorkflowTaskAssignableUsers randomWorkflowTaskAssignableUsers =
+			randomWorkflowTaskAssignableUsers();
+
+		WorkflowTaskAssignableUsers postWorkflowTaskAssignableUsers =
+			testPostWorkflowTaskAssignableUser_addWorkflowTaskAssignableUsers(
+				randomWorkflowTaskAssignableUsers);
+
+		assertEquals(
+			randomWorkflowTaskAssignableUsers, postWorkflowTaskAssignableUsers);
+		assertValid(postWorkflowTaskAssignableUsers);
 	}
 
-	@Test
-	public void testGraphQLGetWorkflowTaskAssignableUser() throws Exception {
-		Assert.assertTrue(true);
+	protected WorkflowTaskAssignableUsers
+			testPostWorkflowTaskAssignableUser_addWorkflowTaskAssignableUsers(
+				WorkflowTaskAssignableUsers workflowTaskAssignableUsers)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
 	}
 
 	protected void assertHttpResponseStatusCode(
@@ -390,6 +403,30 @@ public abstract class BaseWorkflowTaskAssignableUsersResourceTestCase {
 			throw new IllegalArgumentException(
 				"Invalid additional assert field name " +
 					additionalAssertFieldName);
+		}
+
+		return true;
+	}
+
+	protected boolean equals(
+		Map<String, Object> map1, Map<String, Object> map2) {
+
+		if (Objects.equals(map1.keySet(), map2.keySet())) {
+			for (Map.Entry<String, Object> entry : map1.entrySet()) {
+				if (entry.getValue() instanceof Map) {
+					if (!equals(
+							(Map)entry.getValue(),
+							(Map)map2.get(entry.getKey()))) {
+
+						return false;
+					}
+				}
+				else if (!Objects.deepEquals(
+							entry.getValue(), map2.get(entry.getKey()))) {
+
+					return false;
+				}
+			}
 		}
 
 		return true;

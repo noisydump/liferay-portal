@@ -61,7 +61,7 @@ public class MBMessageCacheModel
 
 	@Override
 	public String toString() {
-		StringBundler sb = new StringBundler(55);
+		StringBundler sb = new StringBundler(57);
 
 		sb.append("{uuid=");
 		sb.append(uuid);
@@ -95,6 +95,8 @@ public class MBMessageCacheModel
 		sb.append(treePath);
 		sb.append(", subject=");
 		sb.append(subject);
+		sb.append(", urlSubject=");
+		sb.append(urlSubject);
 		sb.append(", body=");
 		sb.append(body);
 		sb.append(", format=");
@@ -180,6 +182,13 @@ public class MBMessageCacheModel
 			mbMessageImpl.setSubject(subject);
 		}
 
+		if (urlSubject == null) {
+			mbMessageImpl.setUrlSubject("");
+		}
+		else {
+			mbMessageImpl.setUrlSubject(urlSubject);
+		}
+
 		if (body == null) {
 			mbMessageImpl.setBody("");
 		}
@@ -229,7 +238,9 @@ public class MBMessageCacheModel
 	}
 
 	@Override
-	public void readExternal(ObjectInput objectInput) throws IOException {
+	public void readExternal(ObjectInput objectInput)
+		throws ClassNotFoundException, IOException {
+
 		uuid = objectInput.readUTF();
 
 		messageId = objectInput.readLong();
@@ -256,7 +267,8 @@ public class MBMessageCacheModel
 		parentMessageId = objectInput.readLong();
 		treePath = objectInput.readUTF();
 		subject = objectInput.readUTF();
-		body = objectInput.readUTF();
+		urlSubject = objectInput.readUTF();
+		body = (String)objectInput.readObject();
 		format = objectInput.readUTF();
 
 		anonymous = objectInput.readBoolean();
@@ -328,11 +340,18 @@ public class MBMessageCacheModel
 			objectOutput.writeUTF(subject);
 		}
 
-		if (body == null) {
+		if (urlSubject == null) {
 			objectOutput.writeUTF("");
 		}
 		else {
-			objectOutput.writeUTF(body);
+			objectOutput.writeUTF(urlSubject);
+		}
+
+		if (body == null) {
+			objectOutput.writeObject("");
+		}
+		else {
+			objectOutput.writeObject(body);
 		}
 
 		if (format == null) {
@@ -381,6 +400,7 @@ public class MBMessageCacheModel
 	public long parentMessageId;
 	public String treePath;
 	public String subject;
+	public String urlSubject;
 	public String body;
 	public String format;
 	public boolean anonymous;

@@ -19,9 +19,9 @@ import React, {useContext} from 'react';
 import SegmentsExperimentsContext from '../context.es';
 import {
 	closeReviewAndRunExperiment,
-	updateSegmentsExperimentStatus,
 	reviewAndRunExperiment,
-	runExperiment
+	runExperiment,
+	updateSegmentsExperimentStatus,
 } from '../state/actions.es';
 import {
 	STATUS_COMPLETED,
@@ -30,9 +30,9 @@ import {
 	STATUS_FINISHED_WINNER,
 	STATUS_PAUSED,
 	STATUS_RUNNING,
-	STATUS_TERMINATED
+	STATUS_TERMINATED,
 } from '../util/statuses.es';
-import {StateContext, DispatchContext} from './../state/context.es';
+import {DispatchContext, StateContext} from './../state/context.es';
 import {ReviewExperimentModal} from './ReviewExperimentModal.es';
 
 function SegmentsExperimentsActions({onEditSegmentsExperimentStatus}) {
@@ -40,12 +40,12 @@ function SegmentsExperimentsActions({onEditSegmentsExperimentStatus}) {
 		experiment,
 		reviewExperimentModal,
 		variants,
-		viewExperimentURL
+		viewExperimentURL,
 	} = useContext(StateContext);
 	const dispatch = useContext(DispatchContext);
 
 	const {observer, onClose} = useModal({
-		onClose: () => dispatch(closeReviewAndRunExperiment())
+		onClose: () => dispatch(closeReviewAndRunExperiment()),
 	});
 	const {APIService} = useContext(SegmentsExperimentsContext);
 
@@ -71,11 +71,12 @@ function SegmentsExperimentsActions({onEditSegmentsExperimentStatus}) {
 							)
 						);
 
-						if (confirmed)
+						if (confirmed) {
 							onEditSegmentsExperimentStatus(
 								experiment,
 								STATUS_TERMINATED
 							);
+						}
 					}}
 				>
 					{Liferay.Language.get('terminate-test')}
@@ -147,7 +148,7 @@ function SegmentsExperimentsActions({onEditSegmentsExperimentStatus}) {
 			confidenceLevel,
 			segmentsExperimentId: experiment.segmentsExperimentId,
 			segmentsExperimentRels: JSON.stringify(splitVariantsMap),
-			status: STATUS_RUNNING
+			status: STATUS_RUNNING,
 		};
 
 		return APIService.runExperiment(body).then(response => {
@@ -156,7 +157,7 @@ function SegmentsExperimentsActions({onEditSegmentsExperimentStatus}) {
 			dispatch(
 				runExperiment({
 					experiment: segmentsExperiment,
-					splitVariantsMap
+					splitVariantsMap,
 				})
 			);
 		});
@@ -166,7 +167,7 @@ function SegmentsExperimentsActions({onEditSegmentsExperimentStatus}) {
 		const body = {
 			segmentsExperimentId: experiment.segmentsExperimentId,
 			status: STATUS_COMPLETED,
-			winnerSegmentsExperienceId: experiment.segmentsExperienceId
+			winnerSegmentsExperienceId: experiment.segmentsExperienceId,
 		};
 
 		APIService.publishExperience(body).then(({segmentsExperiment}) => {
@@ -176,7 +177,7 @@ function SegmentsExperimentsActions({onEditSegmentsExperimentStatus}) {
 }
 
 SegmentsExperimentsActions.propTypes = {
-	onEditSegmentsExperimentStatus: PropTypes.func.isRequired
+	onEditSegmentsExperimentStatus: PropTypes.func.isRequired,
 };
 
 export default SegmentsExperimentsActions;

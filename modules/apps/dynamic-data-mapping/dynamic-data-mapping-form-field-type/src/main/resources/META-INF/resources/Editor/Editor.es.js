@@ -82,18 +82,18 @@ class Editor extends Component {
 				srcNode: A.one(editorNode),
 				toolbars: {
 					add: {
-						buttons: ['hline', 'table']
+						buttons: ['hline', 'table'],
 					},
 					styles: {
 						selections: AlloyEditor.Selections,
-						tabIndex: 1
-					}
-				}
+						tabIndex: 1,
+					},
+				},
 			},
 			namespace: name,
 			onChangeMethod: this._onChangeEditor.bind(this),
 			plugins: [],
-			textMode: false
+			textMode: false,
 		}).render();
 
 		this._alloyEditor
@@ -103,7 +103,7 @@ class Editor extends Component {
 
 	_onActionPerformed(event) {
 		const {
-			data: {props}
+			data: {props},
 		} = event;
 
 		if (!props.command) {
@@ -115,7 +115,7 @@ class Editor extends Component {
 		this.emit('fieldEdited', {
 			fieldInstance: this,
 			originalEvent: event,
-			value: this._alloyEditor.getHTML()
+			value: this._alloyEditor.getHTML(),
 		});
 	}
 }
@@ -165,6 +165,15 @@ Editor.STATE = {
 	 */
 
 	label: Config.string(),
+
+	/**
+	 * @default {}
+	 * @instance
+	 * @memberof Editor
+	 * @type {?(object|undefined)}
+	 */
+
+	localizedValue: Config.object().value({}),
 
 	/**
 	 * @default undefined
@@ -263,7 +272,7 @@ Editor.STATE = {
 	 * @type {?(string|undefined)}
 	 */
 
-	value: Config.string().value('')
+	value: Config.string().value(''),
 };
 
 Soy.register(Editor, templates);

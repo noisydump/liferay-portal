@@ -122,13 +122,14 @@ public class GroupItemSelectorProviderImplTest {
 
 	@Test
 	public void testGetIcon() {
-		Assert.assertEquals("repository", _groupItemSelectorProvider.getIcon());
+		Assert.assertEquals("books", _groupItemSelectorProvider.getIcon());
 	}
 
 	@Test
 	public void testGetLabel() {
 		Assert.assertEquals(
-			"Repository", _groupItemSelectorProvider.getLabel(LocaleUtil.US));
+			"Asset Library",
+			_groupItemSelectorProvider.getLabel(LocaleUtil.US));
 	}
 
 	private DepotEntry _addDepotEntry() throws Exception {
@@ -157,7 +158,7 @@ public class GroupItemSelectorProviderImplTest {
 	private Group _group;
 
 	@Inject(
-		filter = "component.name=com.liferay.depot.web.internal.item.selector.provider.GroupItemSelectorProviderImpl",
+		filter = "component.name=com.liferay.depot.web.internal.item.selector.provider.DepotGroupItemSelectorProvider",
 		type = GroupItemSelectorProvider.class
 	)
 	private GroupItemSelectorProvider _groupItemSelectorProvider;

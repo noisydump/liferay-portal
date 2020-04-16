@@ -12,7 +12,7 @@
  * details.
  */
 
-import {cleanup, render, fireEvent} from '@testing-library/react';
+import {cleanup, fireEvent, render} from '@testing-library/react';
 import React from 'react';
 
 import '@testing-library/jest-dom/extend-expect';
@@ -39,7 +39,7 @@ describe('ItemSelectorUrl', () => {
 	describe('when the user types an invalid url', () => {
 		beforeEach(() => {
 			fireEvent.change(itemSelectorUrl.getByLabelText('url'), {
-				target: {value: 'test'}
+				target: {value: 'test'},
 			});
 		});
 

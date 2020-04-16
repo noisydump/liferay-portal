@@ -197,43 +197,43 @@ public class PortletPreferencesPersistenceImpl
 		}
 
 		if (list == null) {
-			StringBundler query = null;
+			StringBundler sb = null;
 
 			if (orderByComparator != null) {
-				query = new StringBundler(
+				sb = new StringBundler(
 					3 + (orderByComparator.getOrderByFields().length * 2));
 			}
 			else {
-				query = new StringBundler(3);
+				sb = new StringBundler(3);
 			}
 
-			query.append(_SQL_SELECT_PORTLETPREFERENCES_WHERE);
+			sb.append(_SQL_SELECT_PORTLETPREFERENCES_WHERE);
 
-			query.append(_FINDER_COLUMN_OWNERID_OWNERID_2);
+			sb.append(_FINDER_COLUMN_OWNERID_OWNERID_2);
 
 			if (orderByComparator != null) {
 				appendOrderByComparator(
-					query, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
+					sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
 			}
 			else {
-				query.append(PortletPreferencesModelImpl.ORDER_BY_JPQL);
+				sb.append(PortletPreferencesModelImpl.ORDER_BY_JPQL);
 			}
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
-				qPos.add(ownerId);
+				queryPos.add(ownerId);
 
 				list = (List<PortletPreferences>)QueryUtil.list(
-					q, getDialect(), start, end);
+					query, getDialect(), start, end);
 
 				cacheResult(list);
 
@@ -277,16 +277,16 @@ public class PortletPreferencesPersistenceImpl
 			return portletPreferences;
 		}
 
-		StringBundler msg = new StringBundler(4);
+		StringBundler sb = new StringBundler(4);
 
-		msg.append(_NO_SUCH_ENTITY_WITH_KEY);
+		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
 
-		msg.append("ownerId=");
-		msg.append(ownerId);
+		sb.append("ownerId=");
+		sb.append(ownerId);
 
-		msg.append("}");
+		sb.append("}");
 
-		throw new NoSuchPortletPreferencesException(msg.toString());
+		throw new NoSuchPortletPreferencesException(sb.toString());
 	}
 
 	/**
@@ -331,16 +331,16 @@ public class PortletPreferencesPersistenceImpl
 			return portletPreferences;
 		}
 
-		StringBundler msg = new StringBundler(4);
+		StringBundler sb = new StringBundler(4);
 
-		msg.append(_NO_SUCH_ENTITY_WITH_KEY);
+		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
 
-		msg.append("ownerId=");
-		msg.append(ownerId);
+		sb.append("ownerId=");
+		sb.append(ownerId);
 
-		msg.append("}");
+		sb.append("}");
 
-		throw new NoSuchPortletPreferencesException(msg.toString());
+		throw new NoSuchPortletPreferencesException(sb.toString());
 	}
 
 	/**
@@ -418,102 +418,102 @@ public class PortletPreferencesPersistenceImpl
 		OrderByComparator<PortletPreferences> orderByComparator,
 		boolean previous) {
 
-		StringBundler query = null;
+		StringBundler sb = null;
 
 		if (orderByComparator != null) {
-			query = new StringBundler(
+			sb = new StringBundler(
 				4 + (orderByComparator.getOrderByConditionFields().length * 3) +
 					(orderByComparator.getOrderByFields().length * 3));
 		}
 		else {
-			query = new StringBundler(3);
+			sb = new StringBundler(3);
 		}
 
-		query.append(_SQL_SELECT_PORTLETPREFERENCES_WHERE);
+		sb.append(_SQL_SELECT_PORTLETPREFERENCES_WHERE);
 
-		query.append(_FINDER_COLUMN_OWNERID_OWNERID_2);
+		sb.append(_FINDER_COLUMN_OWNERID_OWNERID_2);
 
 		if (orderByComparator != null) {
 			String[] orderByConditionFields =
 				orderByComparator.getOrderByConditionFields();
 
 			if (orderByConditionFields.length > 0) {
-				query.append(WHERE_AND);
+				sb.append(WHERE_AND);
 			}
 
 			for (int i = 0; i < orderByConditionFields.length; i++) {
-				query.append(_ORDER_BY_ENTITY_ALIAS);
-				query.append(orderByConditionFields[i]);
+				sb.append(_ORDER_BY_ENTITY_ALIAS);
+				sb.append(orderByConditionFields[i]);
 
 				if ((i + 1) < orderByConditionFields.length) {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(WHERE_GREATER_THAN_HAS_NEXT);
+						sb.append(WHERE_GREATER_THAN_HAS_NEXT);
 					}
 					else {
-						query.append(WHERE_LESSER_THAN_HAS_NEXT);
+						sb.append(WHERE_LESSER_THAN_HAS_NEXT);
 					}
 				}
 				else {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(WHERE_GREATER_THAN);
+						sb.append(WHERE_GREATER_THAN);
 					}
 					else {
-						query.append(WHERE_LESSER_THAN);
+						sb.append(WHERE_LESSER_THAN);
 					}
 				}
 			}
 
-			query.append(ORDER_BY_CLAUSE);
+			sb.append(ORDER_BY_CLAUSE);
 
 			String[] orderByFields = orderByComparator.getOrderByFields();
 
 			for (int i = 0; i < orderByFields.length; i++) {
-				query.append(_ORDER_BY_ENTITY_ALIAS);
-				query.append(orderByFields[i]);
+				sb.append(_ORDER_BY_ENTITY_ALIAS);
+				sb.append(orderByFields[i]);
 
 				if ((i + 1) < orderByFields.length) {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(ORDER_BY_ASC_HAS_NEXT);
+						sb.append(ORDER_BY_ASC_HAS_NEXT);
 					}
 					else {
-						query.append(ORDER_BY_DESC_HAS_NEXT);
+						sb.append(ORDER_BY_DESC_HAS_NEXT);
 					}
 				}
 				else {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(ORDER_BY_ASC);
+						sb.append(ORDER_BY_ASC);
 					}
 					else {
-						query.append(ORDER_BY_DESC);
+						sb.append(ORDER_BY_DESC);
 					}
 				}
 			}
 		}
 		else {
-			query.append(PortletPreferencesModelImpl.ORDER_BY_JPQL);
+			sb.append(PortletPreferencesModelImpl.ORDER_BY_JPQL);
 		}
 
-		String sql = query.toString();
+		String sql = sb.toString();
 
-		Query q = session.createQuery(sql);
+		Query query = session.createQuery(sql);
 
-		q.setFirstResult(0);
-		q.setMaxResults(2);
+		query.setFirstResult(0);
+		query.setMaxResults(2);
 
-		QueryPos qPos = QueryPos.getInstance(q);
+		QueryPos queryPos = QueryPos.getInstance(query);
 
-		qPos.add(ownerId);
+		queryPos.add(ownerId);
 
 		if (orderByComparator != null) {
 			for (Object orderByConditionValue :
 					orderByComparator.getOrderByConditionValues(
 						portletPreferences)) {
 
-				qPos.add(orderByConditionValue);
+				queryPos.add(orderByConditionValue);
 			}
 		}
 
-		List<PortletPreferences> list = q.list();
+		List<PortletPreferences> list = query.list();
 
 		if (list.size() == 2) {
 			return list.get(1);
@@ -564,26 +564,26 @@ public class PortletPreferencesPersistenceImpl
 		}
 
 		if (count == null) {
-			StringBundler query = new StringBundler(2);
+			StringBundler sb = new StringBundler(2);
 
-			query.append(_SQL_COUNT_PORTLETPREFERENCES_WHERE);
+			sb.append(_SQL_COUNT_PORTLETPREFERENCES_WHERE);
 
-			query.append(_FINDER_COLUMN_OWNERID_OWNERID_2);
+			sb.append(_FINDER_COLUMN_OWNERID_OWNERID_2);
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
-				qPos.add(ownerId);
+				queryPos.add(ownerId);
 
-				count = (Long)q.uniqueResult();
+				count = (Long)query.uniqueResult();
 
 				if (productionMode) {
 					FinderCacheUtil.putResult(finderPath, finderArgs, count);
@@ -717,43 +717,43 @@ public class PortletPreferencesPersistenceImpl
 		}
 
 		if (list == null) {
-			StringBundler query = null;
+			StringBundler sb = null;
 
 			if (orderByComparator != null) {
-				query = new StringBundler(
+				sb = new StringBundler(
 					3 + (orderByComparator.getOrderByFields().length * 2));
 			}
 			else {
-				query = new StringBundler(3);
+				sb = new StringBundler(3);
 			}
 
-			query.append(_SQL_SELECT_PORTLETPREFERENCES_WHERE);
+			sb.append(_SQL_SELECT_PORTLETPREFERENCES_WHERE);
 
-			query.append(_FINDER_COLUMN_PLID_PLID_2);
+			sb.append(_FINDER_COLUMN_PLID_PLID_2);
 
 			if (orderByComparator != null) {
 				appendOrderByComparator(
-					query, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
+					sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
 			}
 			else {
-				query.append(PortletPreferencesModelImpl.ORDER_BY_JPQL);
+				sb.append(PortletPreferencesModelImpl.ORDER_BY_JPQL);
 			}
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
-				qPos.add(plid);
+				queryPos.add(plid);
 
 				list = (List<PortletPreferences>)QueryUtil.list(
-					q, getDialect(), start, end);
+					query, getDialect(), start, end);
 
 				cacheResult(list);
 
@@ -796,16 +796,16 @@ public class PortletPreferencesPersistenceImpl
 			return portletPreferences;
 		}
 
-		StringBundler msg = new StringBundler(4);
+		StringBundler sb = new StringBundler(4);
 
-		msg.append(_NO_SUCH_ENTITY_WITH_KEY);
+		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
 
-		msg.append("plid=");
-		msg.append(plid);
+		sb.append("plid=");
+		sb.append(plid);
 
-		msg.append("}");
+		sb.append("}");
 
-		throw new NoSuchPortletPreferencesException(msg.toString());
+		throw new NoSuchPortletPreferencesException(sb.toString());
 	}
 
 	/**
@@ -849,16 +849,16 @@ public class PortletPreferencesPersistenceImpl
 			return portletPreferences;
 		}
 
-		StringBundler msg = new StringBundler(4);
+		StringBundler sb = new StringBundler(4);
 
-		msg.append(_NO_SUCH_ENTITY_WITH_KEY);
+		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
 
-		msg.append("plid=");
-		msg.append(plid);
+		sb.append("plid=");
+		sb.append(plid);
 
-		msg.append("}");
+		sb.append("}");
 
-		throw new NoSuchPortletPreferencesException(msg.toString());
+		throw new NoSuchPortletPreferencesException(sb.toString());
 	}
 
 	/**
@@ -936,102 +936,102 @@ public class PortletPreferencesPersistenceImpl
 		OrderByComparator<PortletPreferences> orderByComparator,
 		boolean previous) {
 
-		StringBundler query = null;
+		StringBundler sb = null;
 
 		if (orderByComparator != null) {
-			query = new StringBundler(
+			sb = new StringBundler(
 				4 + (orderByComparator.getOrderByConditionFields().length * 3) +
 					(orderByComparator.getOrderByFields().length * 3));
 		}
 		else {
-			query = new StringBundler(3);
+			sb = new StringBundler(3);
 		}
 
-		query.append(_SQL_SELECT_PORTLETPREFERENCES_WHERE);
+		sb.append(_SQL_SELECT_PORTLETPREFERENCES_WHERE);
 
-		query.append(_FINDER_COLUMN_PLID_PLID_2);
+		sb.append(_FINDER_COLUMN_PLID_PLID_2);
 
 		if (orderByComparator != null) {
 			String[] orderByConditionFields =
 				orderByComparator.getOrderByConditionFields();
 
 			if (orderByConditionFields.length > 0) {
-				query.append(WHERE_AND);
+				sb.append(WHERE_AND);
 			}
 
 			for (int i = 0; i < orderByConditionFields.length; i++) {
-				query.append(_ORDER_BY_ENTITY_ALIAS);
-				query.append(orderByConditionFields[i]);
+				sb.append(_ORDER_BY_ENTITY_ALIAS);
+				sb.append(orderByConditionFields[i]);
 
 				if ((i + 1) < orderByConditionFields.length) {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(WHERE_GREATER_THAN_HAS_NEXT);
+						sb.append(WHERE_GREATER_THAN_HAS_NEXT);
 					}
 					else {
-						query.append(WHERE_LESSER_THAN_HAS_NEXT);
+						sb.append(WHERE_LESSER_THAN_HAS_NEXT);
 					}
 				}
 				else {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(WHERE_GREATER_THAN);
+						sb.append(WHERE_GREATER_THAN);
 					}
 					else {
-						query.append(WHERE_LESSER_THAN);
+						sb.append(WHERE_LESSER_THAN);
 					}
 				}
 			}
 
-			query.append(ORDER_BY_CLAUSE);
+			sb.append(ORDER_BY_CLAUSE);
 
 			String[] orderByFields = orderByComparator.getOrderByFields();
 
 			for (int i = 0; i < orderByFields.length; i++) {
-				query.append(_ORDER_BY_ENTITY_ALIAS);
-				query.append(orderByFields[i]);
+				sb.append(_ORDER_BY_ENTITY_ALIAS);
+				sb.append(orderByFields[i]);
 
 				if ((i + 1) < orderByFields.length) {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(ORDER_BY_ASC_HAS_NEXT);
+						sb.append(ORDER_BY_ASC_HAS_NEXT);
 					}
 					else {
-						query.append(ORDER_BY_DESC_HAS_NEXT);
+						sb.append(ORDER_BY_DESC_HAS_NEXT);
 					}
 				}
 				else {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(ORDER_BY_ASC);
+						sb.append(ORDER_BY_ASC);
 					}
 					else {
-						query.append(ORDER_BY_DESC);
+						sb.append(ORDER_BY_DESC);
 					}
 				}
 			}
 		}
 		else {
-			query.append(PortletPreferencesModelImpl.ORDER_BY_JPQL);
+			sb.append(PortletPreferencesModelImpl.ORDER_BY_JPQL);
 		}
 
-		String sql = query.toString();
+		String sql = sb.toString();
 
-		Query q = session.createQuery(sql);
+		Query query = session.createQuery(sql);
 
-		q.setFirstResult(0);
-		q.setMaxResults(2);
+		query.setFirstResult(0);
+		query.setMaxResults(2);
 
-		QueryPos qPos = QueryPos.getInstance(q);
+		QueryPos queryPos = QueryPos.getInstance(query);
 
-		qPos.add(plid);
+		queryPos.add(plid);
 
 		if (orderByComparator != null) {
 			for (Object orderByConditionValue :
 					orderByComparator.getOrderByConditionValues(
 						portletPreferences)) {
 
-				qPos.add(orderByConditionValue);
+				queryPos.add(orderByConditionValue);
 			}
 		}
 
-		List<PortletPreferences> list = q.list();
+		List<PortletPreferences> list = query.list();
 
 		if (list.size() == 2) {
 			return list.get(1);
@@ -1081,26 +1081,26 @@ public class PortletPreferencesPersistenceImpl
 		}
 
 		if (count == null) {
-			StringBundler query = new StringBundler(2);
+			StringBundler sb = new StringBundler(2);
 
-			query.append(_SQL_COUNT_PORTLETPREFERENCES_WHERE);
+			sb.append(_SQL_COUNT_PORTLETPREFERENCES_WHERE);
 
-			query.append(_FINDER_COLUMN_PLID_PLID_2);
+			sb.append(_FINDER_COLUMN_PLID_PLID_2);
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
-				qPos.add(plid);
+				queryPos.add(plid);
 
-				count = (Long)q.uniqueResult();
+				count = (Long)query.uniqueResult();
 
 				if (productionMode) {
 					FinderCacheUtil.putResult(finderPath, finderArgs, count);
@@ -1241,54 +1241,54 @@ public class PortletPreferencesPersistenceImpl
 		}
 
 		if (list == null) {
-			StringBundler query = null;
+			StringBundler sb = null;
 
 			if (orderByComparator != null) {
-				query = new StringBundler(
+				sb = new StringBundler(
 					3 + (orderByComparator.getOrderByFields().length * 2));
 			}
 			else {
-				query = new StringBundler(3);
+				sb = new StringBundler(3);
 			}
 
-			query.append(_SQL_SELECT_PORTLETPREFERENCES_WHERE);
+			sb.append(_SQL_SELECT_PORTLETPREFERENCES_WHERE);
 
 			boolean bindPortletId = false;
 
 			if (portletId.isEmpty()) {
-				query.append(_FINDER_COLUMN_PORTLETID_PORTLETID_3);
+				sb.append(_FINDER_COLUMN_PORTLETID_PORTLETID_3);
 			}
 			else {
 				bindPortletId = true;
 
-				query.append(_FINDER_COLUMN_PORTLETID_PORTLETID_2);
+				sb.append(_FINDER_COLUMN_PORTLETID_PORTLETID_2);
 			}
 
 			if (orderByComparator != null) {
 				appendOrderByComparator(
-					query, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
+					sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
 			}
 			else {
-				query.append(PortletPreferencesModelImpl.ORDER_BY_JPQL);
+				sb.append(PortletPreferencesModelImpl.ORDER_BY_JPQL);
 			}
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
 				if (bindPortletId) {
-					qPos.add(portletId);
+					queryPos.add(portletId);
 				}
 
 				list = (List<PortletPreferences>)QueryUtil.list(
-					q, getDialect(), start, end);
+					query, getDialect(), start, end);
 
 				cacheResult(list);
 
@@ -1332,16 +1332,16 @@ public class PortletPreferencesPersistenceImpl
 			return portletPreferences;
 		}
 
-		StringBundler msg = new StringBundler(4);
+		StringBundler sb = new StringBundler(4);
 
-		msg.append(_NO_SUCH_ENTITY_WITH_KEY);
+		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
 
-		msg.append("portletId=");
-		msg.append(portletId);
+		sb.append("portletId=");
+		sb.append(portletId);
 
-		msg.append("}");
+		sb.append("}");
 
-		throw new NoSuchPortletPreferencesException(msg.toString());
+		throw new NoSuchPortletPreferencesException(sb.toString());
 	}
 
 	/**
@@ -1387,16 +1387,16 @@ public class PortletPreferencesPersistenceImpl
 			return portletPreferences;
 		}
 
-		StringBundler msg = new StringBundler(4);
+		StringBundler sb = new StringBundler(4);
 
-		msg.append(_NO_SUCH_ENTITY_WITH_KEY);
+		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
 
-		msg.append("portletId=");
-		msg.append(portletId);
+		sb.append("portletId=");
+		sb.append(portletId);
 
-		msg.append("}");
+		sb.append("}");
 
-		throw new NoSuchPortletPreferencesException(msg.toString());
+		throw new NoSuchPortletPreferencesException(sb.toString());
 	}
 
 	/**
@@ -1480,28 +1480,28 @@ public class PortletPreferencesPersistenceImpl
 		OrderByComparator<PortletPreferences> orderByComparator,
 		boolean previous) {
 
-		StringBundler query = null;
+		StringBundler sb = null;
 
 		if (orderByComparator != null) {
-			query = new StringBundler(
+			sb = new StringBundler(
 				4 + (orderByComparator.getOrderByConditionFields().length * 3) +
 					(orderByComparator.getOrderByFields().length * 3));
 		}
 		else {
-			query = new StringBundler(3);
+			sb = new StringBundler(3);
 		}
 
-		query.append(_SQL_SELECT_PORTLETPREFERENCES_WHERE);
+		sb.append(_SQL_SELECT_PORTLETPREFERENCES_WHERE);
 
 		boolean bindPortletId = false;
 
 		if (portletId.isEmpty()) {
-			query.append(_FINDER_COLUMN_PORTLETID_PORTLETID_3);
+			sb.append(_FINDER_COLUMN_PORTLETID_PORTLETID_3);
 		}
 		else {
 			bindPortletId = true;
 
-			query.append(_FINDER_COLUMN_PORTLETID_PORTLETID_2);
+			sb.append(_FINDER_COLUMN_PORTLETID_PORTLETID_2);
 		}
 
 		if (orderByComparator != null) {
@@ -1509,72 +1509,72 @@ public class PortletPreferencesPersistenceImpl
 				orderByComparator.getOrderByConditionFields();
 
 			if (orderByConditionFields.length > 0) {
-				query.append(WHERE_AND);
+				sb.append(WHERE_AND);
 			}
 
 			for (int i = 0; i < orderByConditionFields.length; i++) {
-				query.append(_ORDER_BY_ENTITY_ALIAS);
-				query.append(orderByConditionFields[i]);
+				sb.append(_ORDER_BY_ENTITY_ALIAS);
+				sb.append(orderByConditionFields[i]);
 
 				if ((i + 1) < orderByConditionFields.length) {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(WHERE_GREATER_THAN_HAS_NEXT);
+						sb.append(WHERE_GREATER_THAN_HAS_NEXT);
 					}
 					else {
-						query.append(WHERE_LESSER_THAN_HAS_NEXT);
+						sb.append(WHERE_LESSER_THAN_HAS_NEXT);
 					}
 				}
 				else {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(WHERE_GREATER_THAN);
+						sb.append(WHERE_GREATER_THAN);
 					}
 					else {
-						query.append(WHERE_LESSER_THAN);
+						sb.append(WHERE_LESSER_THAN);
 					}
 				}
 			}
 
-			query.append(ORDER_BY_CLAUSE);
+			sb.append(ORDER_BY_CLAUSE);
 
 			String[] orderByFields = orderByComparator.getOrderByFields();
 
 			for (int i = 0; i < orderByFields.length; i++) {
-				query.append(_ORDER_BY_ENTITY_ALIAS);
-				query.append(orderByFields[i]);
+				sb.append(_ORDER_BY_ENTITY_ALIAS);
+				sb.append(orderByFields[i]);
 
 				if ((i + 1) < orderByFields.length) {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(ORDER_BY_ASC_HAS_NEXT);
+						sb.append(ORDER_BY_ASC_HAS_NEXT);
 					}
 					else {
-						query.append(ORDER_BY_DESC_HAS_NEXT);
+						sb.append(ORDER_BY_DESC_HAS_NEXT);
 					}
 				}
 				else {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(ORDER_BY_ASC);
+						sb.append(ORDER_BY_ASC);
 					}
 					else {
-						query.append(ORDER_BY_DESC);
+						sb.append(ORDER_BY_DESC);
 					}
 				}
 			}
 		}
 		else {
-			query.append(PortletPreferencesModelImpl.ORDER_BY_JPQL);
+			sb.append(PortletPreferencesModelImpl.ORDER_BY_JPQL);
 		}
 
-		String sql = query.toString();
+		String sql = sb.toString();
 
-		Query q = session.createQuery(sql);
+		Query query = session.createQuery(sql);
 
-		q.setFirstResult(0);
-		q.setMaxResults(2);
+		query.setFirstResult(0);
+		query.setMaxResults(2);
 
-		QueryPos qPos = QueryPos.getInstance(q);
+		QueryPos queryPos = QueryPos.getInstance(query);
 
 		if (bindPortletId) {
-			qPos.add(portletId);
+			queryPos.add(portletId);
 		}
 
 		if (orderByComparator != null) {
@@ -1582,11 +1582,11 @@ public class PortletPreferencesPersistenceImpl
 					orderByComparator.getOrderByConditionValues(
 						portletPreferences)) {
 
-				qPos.add(orderByConditionValue);
+				queryPos.add(orderByConditionValue);
 			}
 		}
 
-		List<PortletPreferences> list = q.list();
+		List<PortletPreferences> list = query.list();
 
 		if (list.size() == 2) {
 			return list.get(1);
@@ -1639,37 +1639,37 @@ public class PortletPreferencesPersistenceImpl
 		}
 
 		if (count == null) {
-			StringBundler query = new StringBundler(2);
+			StringBundler sb = new StringBundler(2);
 
-			query.append(_SQL_COUNT_PORTLETPREFERENCES_WHERE);
+			sb.append(_SQL_COUNT_PORTLETPREFERENCES_WHERE);
 
 			boolean bindPortletId = false;
 
 			if (portletId.isEmpty()) {
-				query.append(_FINDER_COLUMN_PORTLETID_PORTLETID_3);
+				sb.append(_FINDER_COLUMN_PORTLETID_PORTLETID_3);
 			}
 			else {
 				bindPortletId = true;
 
-				query.append(_FINDER_COLUMN_PORTLETID_PORTLETID_2);
+				sb.append(_FINDER_COLUMN_PORTLETID_PORTLETID_2);
 			}
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
 				if (bindPortletId) {
-					qPos.add(portletId);
+					queryPos.add(portletId);
 				}
 
-				count = (Long)q.uniqueResult();
+				count = (Long)query.uniqueResult();
 
 				if (productionMode) {
 					FinderCacheUtil.putResult(finderPath, finderArgs, count);
@@ -1820,58 +1820,58 @@ public class PortletPreferencesPersistenceImpl
 		}
 
 		if (list == null) {
-			StringBundler query = null;
+			StringBundler sb = null;
 
 			if (orderByComparator != null) {
-				query = new StringBundler(
+				sb = new StringBundler(
 					4 + (orderByComparator.getOrderByFields().length * 2));
 			}
 			else {
-				query = new StringBundler(4);
+				sb = new StringBundler(4);
 			}
 
-			query.append(_SQL_SELECT_PORTLETPREFERENCES_WHERE);
+			sb.append(_SQL_SELECT_PORTLETPREFERENCES_WHERE);
 
-			query.append(_FINDER_COLUMN_O_P_OWNERTYPE_2);
+			sb.append(_FINDER_COLUMN_O_P_OWNERTYPE_2);
 
 			boolean bindPortletId = false;
 
 			if (portletId.isEmpty()) {
-				query.append(_FINDER_COLUMN_O_P_PORTLETID_3);
+				sb.append(_FINDER_COLUMN_O_P_PORTLETID_3);
 			}
 			else {
 				bindPortletId = true;
 
-				query.append(_FINDER_COLUMN_O_P_PORTLETID_2);
+				sb.append(_FINDER_COLUMN_O_P_PORTLETID_2);
 			}
 
 			if (orderByComparator != null) {
 				appendOrderByComparator(
-					query, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
+					sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
 			}
 			else {
-				query.append(PortletPreferencesModelImpl.ORDER_BY_JPQL);
+				sb.append(PortletPreferencesModelImpl.ORDER_BY_JPQL);
 			}
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
-				qPos.add(ownerType);
+				queryPos.add(ownerType);
 
 				if (bindPortletId) {
-					qPos.add(portletId);
+					queryPos.add(portletId);
 				}
 
 				list = (List<PortletPreferences>)QueryUtil.list(
-					q, getDialect(), start, end);
+					query, getDialect(), start, end);
 
 				cacheResult(list);
 
@@ -1916,19 +1916,19 @@ public class PortletPreferencesPersistenceImpl
 			return portletPreferences;
 		}
 
-		StringBundler msg = new StringBundler(6);
+		StringBundler sb = new StringBundler(6);
 
-		msg.append(_NO_SUCH_ENTITY_WITH_KEY);
+		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
 
-		msg.append("ownerType=");
-		msg.append(ownerType);
+		sb.append("ownerType=");
+		sb.append(ownerType);
 
-		msg.append(", portletId=");
-		msg.append(portletId);
+		sb.append(", portletId=");
+		sb.append(portletId);
 
-		msg.append("}");
+		sb.append("}");
 
-		throw new NoSuchPortletPreferencesException(msg.toString());
+		throw new NoSuchPortletPreferencesException(sb.toString());
 	}
 
 	/**
@@ -1976,19 +1976,19 @@ public class PortletPreferencesPersistenceImpl
 			return portletPreferences;
 		}
 
-		StringBundler msg = new StringBundler(6);
+		StringBundler sb = new StringBundler(6);
 
-		msg.append(_NO_SUCH_ENTITY_WITH_KEY);
+		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
 
-		msg.append("ownerType=");
-		msg.append(ownerType);
+		sb.append("ownerType=");
+		sb.append(ownerType);
 
-		msg.append(", portletId=");
-		msg.append(portletId);
+		sb.append(", portletId=");
+		sb.append(portletId);
 
-		msg.append("}");
+		sb.append("}");
 
-		throw new NoSuchPortletPreferencesException(msg.toString());
+		throw new NoSuchPortletPreferencesException(sb.toString());
 	}
 
 	/**
@@ -2074,30 +2074,30 @@ public class PortletPreferencesPersistenceImpl
 		OrderByComparator<PortletPreferences> orderByComparator,
 		boolean previous) {
 
-		StringBundler query = null;
+		StringBundler sb = null;
 
 		if (orderByComparator != null) {
-			query = new StringBundler(
+			sb = new StringBundler(
 				5 + (orderByComparator.getOrderByConditionFields().length * 3) +
 					(orderByComparator.getOrderByFields().length * 3));
 		}
 		else {
-			query = new StringBundler(4);
+			sb = new StringBundler(4);
 		}
 
-		query.append(_SQL_SELECT_PORTLETPREFERENCES_WHERE);
+		sb.append(_SQL_SELECT_PORTLETPREFERENCES_WHERE);
 
-		query.append(_FINDER_COLUMN_O_P_OWNERTYPE_2);
+		sb.append(_FINDER_COLUMN_O_P_OWNERTYPE_2);
 
 		boolean bindPortletId = false;
 
 		if (portletId.isEmpty()) {
-			query.append(_FINDER_COLUMN_O_P_PORTLETID_3);
+			sb.append(_FINDER_COLUMN_O_P_PORTLETID_3);
 		}
 		else {
 			bindPortletId = true;
 
-			query.append(_FINDER_COLUMN_O_P_PORTLETID_2);
+			sb.append(_FINDER_COLUMN_O_P_PORTLETID_2);
 		}
 
 		if (orderByComparator != null) {
@@ -2105,74 +2105,74 @@ public class PortletPreferencesPersistenceImpl
 				orderByComparator.getOrderByConditionFields();
 
 			if (orderByConditionFields.length > 0) {
-				query.append(WHERE_AND);
+				sb.append(WHERE_AND);
 			}
 
 			for (int i = 0; i < orderByConditionFields.length; i++) {
-				query.append(_ORDER_BY_ENTITY_ALIAS);
-				query.append(orderByConditionFields[i]);
+				sb.append(_ORDER_BY_ENTITY_ALIAS);
+				sb.append(orderByConditionFields[i]);
 
 				if ((i + 1) < orderByConditionFields.length) {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(WHERE_GREATER_THAN_HAS_NEXT);
+						sb.append(WHERE_GREATER_THAN_HAS_NEXT);
 					}
 					else {
-						query.append(WHERE_LESSER_THAN_HAS_NEXT);
+						sb.append(WHERE_LESSER_THAN_HAS_NEXT);
 					}
 				}
 				else {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(WHERE_GREATER_THAN);
+						sb.append(WHERE_GREATER_THAN);
 					}
 					else {
-						query.append(WHERE_LESSER_THAN);
+						sb.append(WHERE_LESSER_THAN);
 					}
 				}
 			}
 
-			query.append(ORDER_BY_CLAUSE);
+			sb.append(ORDER_BY_CLAUSE);
 
 			String[] orderByFields = orderByComparator.getOrderByFields();
 
 			for (int i = 0; i < orderByFields.length; i++) {
-				query.append(_ORDER_BY_ENTITY_ALIAS);
-				query.append(orderByFields[i]);
+				sb.append(_ORDER_BY_ENTITY_ALIAS);
+				sb.append(orderByFields[i]);
 
 				if ((i + 1) < orderByFields.length) {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(ORDER_BY_ASC_HAS_NEXT);
+						sb.append(ORDER_BY_ASC_HAS_NEXT);
 					}
 					else {
-						query.append(ORDER_BY_DESC_HAS_NEXT);
+						sb.append(ORDER_BY_DESC_HAS_NEXT);
 					}
 				}
 				else {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(ORDER_BY_ASC);
+						sb.append(ORDER_BY_ASC);
 					}
 					else {
-						query.append(ORDER_BY_DESC);
+						sb.append(ORDER_BY_DESC);
 					}
 				}
 			}
 		}
 		else {
-			query.append(PortletPreferencesModelImpl.ORDER_BY_JPQL);
+			sb.append(PortletPreferencesModelImpl.ORDER_BY_JPQL);
 		}
 
-		String sql = query.toString();
+		String sql = sb.toString();
 
-		Query q = session.createQuery(sql);
+		Query query = session.createQuery(sql);
 
-		q.setFirstResult(0);
-		q.setMaxResults(2);
+		query.setFirstResult(0);
+		query.setMaxResults(2);
 
-		QueryPos qPos = QueryPos.getInstance(q);
+		QueryPos queryPos = QueryPos.getInstance(query);
 
-		qPos.add(ownerType);
+		queryPos.add(ownerType);
 
 		if (bindPortletId) {
-			qPos.add(portletId);
+			queryPos.add(portletId);
 		}
 
 		if (orderByComparator != null) {
@@ -2180,11 +2180,11 @@ public class PortletPreferencesPersistenceImpl
 					orderByComparator.getOrderByConditionValues(
 						portletPreferences)) {
 
-				qPos.add(orderByConditionValue);
+				queryPos.add(orderByConditionValue);
 			}
 		}
 
-		List<PortletPreferences> list = q.list();
+		List<PortletPreferences> list = query.list();
 
 		if (list.size() == 2) {
 			return list.get(1);
@@ -2240,41 +2240,41 @@ public class PortletPreferencesPersistenceImpl
 		}
 
 		if (count == null) {
-			StringBundler query = new StringBundler(3);
+			StringBundler sb = new StringBundler(3);
 
-			query.append(_SQL_COUNT_PORTLETPREFERENCES_WHERE);
+			sb.append(_SQL_COUNT_PORTLETPREFERENCES_WHERE);
 
-			query.append(_FINDER_COLUMN_O_P_OWNERTYPE_2);
+			sb.append(_FINDER_COLUMN_O_P_OWNERTYPE_2);
 
 			boolean bindPortletId = false;
 
 			if (portletId.isEmpty()) {
-				query.append(_FINDER_COLUMN_O_P_PORTLETID_3);
+				sb.append(_FINDER_COLUMN_O_P_PORTLETID_3);
 			}
 			else {
 				bindPortletId = true;
 
-				query.append(_FINDER_COLUMN_O_P_PORTLETID_2);
+				sb.append(_FINDER_COLUMN_O_P_PORTLETID_2);
 			}
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
-				qPos.add(ownerType);
+				queryPos.add(ownerType);
 
 				if (bindPortletId) {
-					qPos.add(portletId);
+					queryPos.add(portletId);
 				}
 
-				count = (Long)q.uniqueResult();
+				count = (Long)query.uniqueResult();
 
 				if (productionMode) {
 					FinderCacheUtil.putResult(finderPath, finderArgs, count);
@@ -2427,58 +2427,58 @@ public class PortletPreferencesPersistenceImpl
 		}
 
 		if (list == null) {
-			StringBundler query = null;
+			StringBundler sb = null;
 
 			if (orderByComparator != null) {
-				query = new StringBundler(
+				sb = new StringBundler(
 					4 + (orderByComparator.getOrderByFields().length * 2));
 			}
 			else {
-				query = new StringBundler(4);
+				sb = new StringBundler(4);
 			}
 
-			query.append(_SQL_SELECT_PORTLETPREFERENCES_WHERE);
+			sb.append(_SQL_SELECT_PORTLETPREFERENCES_WHERE);
 
-			query.append(_FINDER_COLUMN_P_P_PLID_2);
+			sb.append(_FINDER_COLUMN_P_P_PLID_2);
 
 			boolean bindPortletId = false;
 
 			if (portletId.isEmpty()) {
-				query.append(_FINDER_COLUMN_P_P_PORTLETID_3);
+				sb.append(_FINDER_COLUMN_P_P_PORTLETID_3);
 			}
 			else {
 				bindPortletId = true;
 
-				query.append(_FINDER_COLUMN_P_P_PORTLETID_2);
+				sb.append(_FINDER_COLUMN_P_P_PORTLETID_2);
 			}
 
 			if (orderByComparator != null) {
 				appendOrderByComparator(
-					query, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
+					sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
 			}
 			else {
-				query.append(PortletPreferencesModelImpl.ORDER_BY_JPQL);
+				sb.append(PortletPreferencesModelImpl.ORDER_BY_JPQL);
 			}
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
-				qPos.add(plid);
+				queryPos.add(plid);
 
 				if (bindPortletId) {
-					qPos.add(portletId);
+					queryPos.add(portletId);
 				}
 
 				list = (List<PortletPreferences>)QueryUtil.list(
-					q, getDialect(), start, end);
+					query, getDialect(), start, end);
 
 				cacheResult(list);
 
@@ -2523,19 +2523,19 @@ public class PortletPreferencesPersistenceImpl
 			return portletPreferences;
 		}
 
-		StringBundler msg = new StringBundler(6);
+		StringBundler sb = new StringBundler(6);
 
-		msg.append(_NO_SUCH_ENTITY_WITH_KEY);
+		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
 
-		msg.append("plid=");
-		msg.append(plid);
+		sb.append("plid=");
+		sb.append(plid);
 
-		msg.append(", portletId=");
-		msg.append(portletId);
+		sb.append(", portletId=");
+		sb.append(portletId);
 
-		msg.append("}");
+		sb.append("}");
 
-		throw new NoSuchPortletPreferencesException(msg.toString());
+		throw new NoSuchPortletPreferencesException(sb.toString());
 	}
 
 	/**
@@ -2583,19 +2583,19 @@ public class PortletPreferencesPersistenceImpl
 			return portletPreferences;
 		}
 
-		StringBundler msg = new StringBundler(6);
+		StringBundler sb = new StringBundler(6);
 
-		msg.append(_NO_SUCH_ENTITY_WITH_KEY);
+		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
 
-		msg.append("plid=");
-		msg.append(plid);
+		sb.append("plid=");
+		sb.append(plid);
 
-		msg.append(", portletId=");
-		msg.append(portletId);
+		sb.append(", portletId=");
+		sb.append(portletId);
 
-		msg.append("}");
+		sb.append("}");
 
-		throw new NoSuchPortletPreferencesException(msg.toString());
+		throw new NoSuchPortletPreferencesException(sb.toString());
 	}
 
 	/**
@@ -2681,30 +2681,30 @@ public class PortletPreferencesPersistenceImpl
 		OrderByComparator<PortletPreferences> orderByComparator,
 		boolean previous) {
 
-		StringBundler query = null;
+		StringBundler sb = null;
 
 		if (orderByComparator != null) {
-			query = new StringBundler(
+			sb = new StringBundler(
 				5 + (orderByComparator.getOrderByConditionFields().length * 3) +
 					(orderByComparator.getOrderByFields().length * 3));
 		}
 		else {
-			query = new StringBundler(4);
+			sb = new StringBundler(4);
 		}
 
-		query.append(_SQL_SELECT_PORTLETPREFERENCES_WHERE);
+		sb.append(_SQL_SELECT_PORTLETPREFERENCES_WHERE);
 
-		query.append(_FINDER_COLUMN_P_P_PLID_2);
+		sb.append(_FINDER_COLUMN_P_P_PLID_2);
 
 		boolean bindPortletId = false;
 
 		if (portletId.isEmpty()) {
-			query.append(_FINDER_COLUMN_P_P_PORTLETID_3);
+			sb.append(_FINDER_COLUMN_P_P_PORTLETID_3);
 		}
 		else {
 			bindPortletId = true;
 
-			query.append(_FINDER_COLUMN_P_P_PORTLETID_2);
+			sb.append(_FINDER_COLUMN_P_P_PORTLETID_2);
 		}
 
 		if (orderByComparator != null) {
@@ -2712,74 +2712,74 @@ public class PortletPreferencesPersistenceImpl
 				orderByComparator.getOrderByConditionFields();
 
 			if (orderByConditionFields.length > 0) {
-				query.append(WHERE_AND);
+				sb.append(WHERE_AND);
 			}
 
 			for (int i = 0; i < orderByConditionFields.length; i++) {
-				query.append(_ORDER_BY_ENTITY_ALIAS);
-				query.append(orderByConditionFields[i]);
+				sb.append(_ORDER_BY_ENTITY_ALIAS);
+				sb.append(orderByConditionFields[i]);
 
 				if ((i + 1) < orderByConditionFields.length) {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(WHERE_GREATER_THAN_HAS_NEXT);
+						sb.append(WHERE_GREATER_THAN_HAS_NEXT);
 					}
 					else {
-						query.append(WHERE_LESSER_THAN_HAS_NEXT);
+						sb.append(WHERE_LESSER_THAN_HAS_NEXT);
 					}
 				}
 				else {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(WHERE_GREATER_THAN);
+						sb.append(WHERE_GREATER_THAN);
 					}
 					else {
-						query.append(WHERE_LESSER_THAN);
+						sb.append(WHERE_LESSER_THAN);
 					}
 				}
 			}
 
-			query.append(ORDER_BY_CLAUSE);
+			sb.append(ORDER_BY_CLAUSE);
 
 			String[] orderByFields = orderByComparator.getOrderByFields();
 
 			for (int i = 0; i < orderByFields.length; i++) {
-				query.append(_ORDER_BY_ENTITY_ALIAS);
-				query.append(orderByFields[i]);
+				sb.append(_ORDER_BY_ENTITY_ALIAS);
+				sb.append(orderByFields[i]);
 
 				if ((i + 1) < orderByFields.length) {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(ORDER_BY_ASC_HAS_NEXT);
+						sb.append(ORDER_BY_ASC_HAS_NEXT);
 					}
 					else {
-						query.append(ORDER_BY_DESC_HAS_NEXT);
+						sb.append(ORDER_BY_DESC_HAS_NEXT);
 					}
 				}
 				else {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(ORDER_BY_ASC);
+						sb.append(ORDER_BY_ASC);
 					}
 					else {
-						query.append(ORDER_BY_DESC);
+						sb.append(ORDER_BY_DESC);
 					}
 				}
 			}
 		}
 		else {
-			query.append(PortletPreferencesModelImpl.ORDER_BY_JPQL);
+			sb.append(PortletPreferencesModelImpl.ORDER_BY_JPQL);
 		}
 
-		String sql = query.toString();
+		String sql = sb.toString();
 
-		Query q = session.createQuery(sql);
+		Query query = session.createQuery(sql);
 
-		q.setFirstResult(0);
-		q.setMaxResults(2);
+		query.setFirstResult(0);
+		query.setMaxResults(2);
 
-		QueryPos qPos = QueryPos.getInstance(q);
+		QueryPos queryPos = QueryPos.getInstance(query);
 
-		qPos.add(plid);
+		queryPos.add(plid);
 
 		if (bindPortletId) {
-			qPos.add(portletId);
+			queryPos.add(portletId);
 		}
 
 		if (orderByComparator != null) {
@@ -2787,11 +2787,11 @@ public class PortletPreferencesPersistenceImpl
 					orderByComparator.getOrderByConditionValues(
 						portletPreferences)) {
 
-				qPos.add(orderByConditionValue);
+				queryPos.add(orderByConditionValue);
 			}
 		}
 
-		List<PortletPreferences> list = q.list();
+		List<PortletPreferences> list = query.list();
 
 		if (list.size() == 2) {
 			return list.get(1);
@@ -2847,41 +2847,41 @@ public class PortletPreferencesPersistenceImpl
 		}
 
 		if (count == null) {
-			StringBundler query = new StringBundler(3);
+			StringBundler sb = new StringBundler(3);
 
-			query.append(_SQL_COUNT_PORTLETPREFERENCES_WHERE);
+			sb.append(_SQL_COUNT_PORTLETPREFERENCES_WHERE);
 
-			query.append(_FINDER_COLUMN_P_P_PLID_2);
+			sb.append(_FINDER_COLUMN_P_P_PLID_2);
 
 			boolean bindPortletId = false;
 
 			if (portletId.isEmpty()) {
-				query.append(_FINDER_COLUMN_P_P_PORTLETID_3);
+				sb.append(_FINDER_COLUMN_P_P_PORTLETID_3);
 			}
 			else {
 				bindPortletId = true;
 
-				query.append(_FINDER_COLUMN_P_P_PORTLETID_2);
+				sb.append(_FINDER_COLUMN_P_P_PORTLETID_2);
 			}
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
-				qPos.add(plid);
+				queryPos.add(plid);
 
 				if (bindPortletId) {
-					qPos.add(portletId);
+					queryPos.add(portletId);
 				}
 
-				count = (Long)q.uniqueResult();
+				count = (Long)query.uniqueResult();
 
 				if (productionMode) {
 					FinderCacheUtil.putResult(finderPath, finderArgs, count);
@@ -3041,51 +3041,51 @@ public class PortletPreferencesPersistenceImpl
 		}
 
 		if (list == null) {
-			StringBundler query = null;
+			StringBundler sb = null;
 
 			if (orderByComparator != null) {
-				query = new StringBundler(
+				sb = new StringBundler(
 					5 + (orderByComparator.getOrderByFields().length * 2));
 			}
 			else {
-				query = new StringBundler(5);
+				sb = new StringBundler(5);
 			}
 
-			query.append(_SQL_SELECT_PORTLETPREFERENCES_WHERE);
+			sb.append(_SQL_SELECT_PORTLETPREFERENCES_WHERE);
 
-			query.append(_FINDER_COLUMN_O_O_P_OWNERID_2);
+			sb.append(_FINDER_COLUMN_O_O_P_OWNERID_2);
 
-			query.append(_FINDER_COLUMN_O_O_P_OWNERTYPE_2);
+			sb.append(_FINDER_COLUMN_O_O_P_OWNERTYPE_2);
 
-			query.append(_FINDER_COLUMN_O_O_P_PLID_2);
+			sb.append(_FINDER_COLUMN_O_O_P_PLID_2);
 
 			if (orderByComparator != null) {
 				appendOrderByComparator(
-					query, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
+					sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
 			}
 			else {
-				query.append(PortletPreferencesModelImpl.ORDER_BY_JPQL);
+				sb.append(PortletPreferencesModelImpl.ORDER_BY_JPQL);
 			}
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
-				qPos.add(ownerId);
+				queryPos.add(ownerId);
 
-				qPos.add(ownerType);
+				queryPos.add(ownerType);
 
-				qPos.add(plid);
+				queryPos.add(plid);
 
 				list = (List<PortletPreferences>)QueryUtil.list(
-					q, getDialect(), start, end);
+					query, getDialect(), start, end);
 
 				cacheResult(list);
 
@@ -3131,22 +3131,22 @@ public class PortletPreferencesPersistenceImpl
 			return portletPreferences;
 		}
 
-		StringBundler msg = new StringBundler(8);
+		StringBundler sb = new StringBundler(8);
 
-		msg.append(_NO_SUCH_ENTITY_WITH_KEY);
+		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
 
-		msg.append("ownerId=");
-		msg.append(ownerId);
+		sb.append("ownerId=");
+		sb.append(ownerId);
 
-		msg.append(", ownerType=");
-		msg.append(ownerType);
+		sb.append(", ownerType=");
+		sb.append(ownerType);
 
-		msg.append(", plid=");
-		msg.append(plid);
+		sb.append(", plid=");
+		sb.append(plid);
 
-		msg.append("}");
+		sb.append("}");
 
-		throw new NoSuchPortletPreferencesException(msg.toString());
+		throw new NoSuchPortletPreferencesException(sb.toString());
 	}
 
 	/**
@@ -3196,22 +3196,22 @@ public class PortletPreferencesPersistenceImpl
 			return portletPreferences;
 		}
 
-		StringBundler msg = new StringBundler(8);
+		StringBundler sb = new StringBundler(8);
 
-		msg.append(_NO_SUCH_ENTITY_WITH_KEY);
+		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
 
-		msg.append("ownerId=");
-		msg.append(ownerId);
+		sb.append("ownerId=");
+		sb.append(ownerId);
 
-		msg.append(", ownerType=");
-		msg.append(ownerType);
+		sb.append(", ownerType=");
+		sb.append(ownerType);
 
-		msg.append(", plid=");
-		msg.append(plid);
+		sb.append(", plid=");
+		sb.append(plid);
 
-		msg.append("}");
+		sb.append("}");
 
-		throw new NoSuchPortletPreferencesException(msg.toString());
+		throw new NoSuchPortletPreferencesException(sb.toString());
 	}
 
 	/**
@@ -3297,110 +3297,110 @@ public class PortletPreferencesPersistenceImpl
 		OrderByComparator<PortletPreferences> orderByComparator,
 		boolean previous) {
 
-		StringBundler query = null;
+		StringBundler sb = null;
 
 		if (orderByComparator != null) {
-			query = new StringBundler(
+			sb = new StringBundler(
 				6 + (orderByComparator.getOrderByConditionFields().length * 3) +
 					(orderByComparator.getOrderByFields().length * 3));
 		}
 		else {
-			query = new StringBundler(5);
+			sb = new StringBundler(5);
 		}
 
-		query.append(_SQL_SELECT_PORTLETPREFERENCES_WHERE);
+		sb.append(_SQL_SELECT_PORTLETPREFERENCES_WHERE);
 
-		query.append(_FINDER_COLUMN_O_O_P_OWNERID_2);
+		sb.append(_FINDER_COLUMN_O_O_P_OWNERID_2);
 
-		query.append(_FINDER_COLUMN_O_O_P_OWNERTYPE_2);
+		sb.append(_FINDER_COLUMN_O_O_P_OWNERTYPE_2);
 
-		query.append(_FINDER_COLUMN_O_O_P_PLID_2);
+		sb.append(_FINDER_COLUMN_O_O_P_PLID_2);
 
 		if (orderByComparator != null) {
 			String[] orderByConditionFields =
 				orderByComparator.getOrderByConditionFields();
 
 			if (orderByConditionFields.length > 0) {
-				query.append(WHERE_AND);
+				sb.append(WHERE_AND);
 			}
 
 			for (int i = 0; i < orderByConditionFields.length; i++) {
-				query.append(_ORDER_BY_ENTITY_ALIAS);
-				query.append(orderByConditionFields[i]);
+				sb.append(_ORDER_BY_ENTITY_ALIAS);
+				sb.append(orderByConditionFields[i]);
 
 				if ((i + 1) < orderByConditionFields.length) {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(WHERE_GREATER_THAN_HAS_NEXT);
+						sb.append(WHERE_GREATER_THAN_HAS_NEXT);
 					}
 					else {
-						query.append(WHERE_LESSER_THAN_HAS_NEXT);
+						sb.append(WHERE_LESSER_THAN_HAS_NEXT);
 					}
 				}
 				else {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(WHERE_GREATER_THAN);
+						sb.append(WHERE_GREATER_THAN);
 					}
 					else {
-						query.append(WHERE_LESSER_THAN);
+						sb.append(WHERE_LESSER_THAN);
 					}
 				}
 			}
 
-			query.append(ORDER_BY_CLAUSE);
+			sb.append(ORDER_BY_CLAUSE);
 
 			String[] orderByFields = orderByComparator.getOrderByFields();
 
 			for (int i = 0; i < orderByFields.length; i++) {
-				query.append(_ORDER_BY_ENTITY_ALIAS);
-				query.append(orderByFields[i]);
+				sb.append(_ORDER_BY_ENTITY_ALIAS);
+				sb.append(orderByFields[i]);
 
 				if ((i + 1) < orderByFields.length) {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(ORDER_BY_ASC_HAS_NEXT);
+						sb.append(ORDER_BY_ASC_HAS_NEXT);
 					}
 					else {
-						query.append(ORDER_BY_DESC_HAS_NEXT);
+						sb.append(ORDER_BY_DESC_HAS_NEXT);
 					}
 				}
 				else {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(ORDER_BY_ASC);
+						sb.append(ORDER_BY_ASC);
 					}
 					else {
-						query.append(ORDER_BY_DESC);
+						sb.append(ORDER_BY_DESC);
 					}
 				}
 			}
 		}
 		else {
-			query.append(PortletPreferencesModelImpl.ORDER_BY_JPQL);
+			sb.append(PortletPreferencesModelImpl.ORDER_BY_JPQL);
 		}
 
-		String sql = query.toString();
+		String sql = sb.toString();
 
-		Query q = session.createQuery(sql);
+		Query query = session.createQuery(sql);
 
-		q.setFirstResult(0);
-		q.setMaxResults(2);
+		query.setFirstResult(0);
+		query.setMaxResults(2);
 
-		QueryPos qPos = QueryPos.getInstance(q);
+		QueryPos queryPos = QueryPos.getInstance(query);
 
-		qPos.add(ownerId);
+		queryPos.add(ownerId);
 
-		qPos.add(ownerType);
+		queryPos.add(ownerType);
 
-		qPos.add(plid);
+		queryPos.add(plid);
 
 		if (orderByComparator != null) {
 			for (Object orderByConditionValue :
 					orderByComparator.getOrderByConditionValues(
 						portletPreferences)) {
 
-				qPos.add(orderByConditionValue);
+				queryPos.add(orderByConditionValue);
 			}
 		}
 
-		List<PortletPreferences> list = q.list();
+		List<PortletPreferences> list = query.list();
 
 		if (list.size() == 2) {
 			return list.get(1);
@@ -3456,34 +3456,34 @@ public class PortletPreferencesPersistenceImpl
 		}
 
 		if (count == null) {
-			StringBundler query = new StringBundler(4);
+			StringBundler sb = new StringBundler(4);
 
-			query.append(_SQL_COUNT_PORTLETPREFERENCES_WHERE);
+			sb.append(_SQL_COUNT_PORTLETPREFERENCES_WHERE);
 
-			query.append(_FINDER_COLUMN_O_O_P_OWNERID_2);
+			sb.append(_FINDER_COLUMN_O_O_P_OWNERID_2);
 
-			query.append(_FINDER_COLUMN_O_O_P_OWNERTYPE_2);
+			sb.append(_FINDER_COLUMN_O_O_P_OWNERTYPE_2);
 
-			query.append(_FINDER_COLUMN_O_O_P_PLID_2);
+			sb.append(_FINDER_COLUMN_O_O_P_PLID_2);
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
-				qPos.add(ownerId);
+				queryPos.add(ownerId);
 
-				qPos.add(ownerType);
+				queryPos.add(ownerType);
 
-				qPos.add(plid);
+				queryPos.add(plid);
 
-				count = (Long)q.uniqueResult();
+				count = (Long)query.uniqueResult();
 
 				if (productionMode) {
 					FinderCacheUtil.putResult(finderPath, finderArgs, count);
@@ -3645,62 +3645,62 @@ public class PortletPreferencesPersistenceImpl
 		}
 
 		if (list == null) {
-			StringBundler query = null;
+			StringBundler sb = null;
 
 			if (orderByComparator != null) {
-				query = new StringBundler(
+				sb = new StringBundler(
 					5 + (orderByComparator.getOrderByFields().length * 2));
 			}
 			else {
-				query = new StringBundler(5);
+				sb = new StringBundler(5);
 			}
 
-			query.append(_SQL_SELECT_PORTLETPREFERENCES_WHERE);
+			sb.append(_SQL_SELECT_PORTLETPREFERENCES_WHERE);
 
-			query.append(_FINDER_COLUMN_O_O_PI_OWNERID_2);
+			sb.append(_FINDER_COLUMN_O_O_PI_OWNERID_2);
 
-			query.append(_FINDER_COLUMN_O_O_PI_OWNERTYPE_2);
+			sb.append(_FINDER_COLUMN_O_O_PI_OWNERTYPE_2);
 
 			boolean bindPortletId = false;
 
 			if (portletId.isEmpty()) {
-				query.append(_FINDER_COLUMN_O_O_PI_PORTLETID_3);
+				sb.append(_FINDER_COLUMN_O_O_PI_PORTLETID_3);
 			}
 			else {
 				bindPortletId = true;
 
-				query.append(_FINDER_COLUMN_O_O_PI_PORTLETID_2);
+				sb.append(_FINDER_COLUMN_O_O_PI_PORTLETID_2);
 			}
 
 			if (orderByComparator != null) {
 				appendOrderByComparator(
-					query, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
+					sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
 			}
 			else {
-				query.append(PortletPreferencesModelImpl.ORDER_BY_JPQL);
+				sb.append(PortletPreferencesModelImpl.ORDER_BY_JPQL);
 			}
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
-				qPos.add(ownerId);
+				queryPos.add(ownerId);
 
-				qPos.add(ownerType);
+				queryPos.add(ownerType);
 
 				if (bindPortletId) {
-					qPos.add(portletId);
+					queryPos.add(portletId);
 				}
 
 				list = (List<PortletPreferences>)QueryUtil.list(
-					q, getDialect(), start, end);
+					query, getDialect(), start, end);
 
 				cacheResult(list);
 
@@ -3746,22 +3746,22 @@ public class PortletPreferencesPersistenceImpl
 			return portletPreferences;
 		}
 
-		StringBundler msg = new StringBundler(8);
+		StringBundler sb = new StringBundler(8);
 
-		msg.append(_NO_SUCH_ENTITY_WITH_KEY);
+		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
 
-		msg.append("ownerId=");
-		msg.append(ownerId);
+		sb.append("ownerId=");
+		sb.append(ownerId);
 
-		msg.append(", ownerType=");
-		msg.append(ownerType);
+		sb.append(", ownerType=");
+		sb.append(ownerType);
 
-		msg.append(", portletId=");
-		msg.append(portletId);
+		sb.append(", portletId=");
+		sb.append(portletId);
 
-		msg.append("}");
+		sb.append("}");
 
-		throw new NoSuchPortletPreferencesException(msg.toString());
+		throw new NoSuchPortletPreferencesException(sb.toString());
 	}
 
 	/**
@@ -3811,22 +3811,22 @@ public class PortletPreferencesPersistenceImpl
 			return portletPreferences;
 		}
 
-		StringBundler msg = new StringBundler(8);
+		StringBundler sb = new StringBundler(8);
 
-		msg.append(_NO_SUCH_ENTITY_WITH_KEY);
+		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
 
-		msg.append("ownerId=");
-		msg.append(ownerId);
+		sb.append("ownerId=");
+		sb.append(ownerId);
 
-		msg.append(", ownerType=");
-		msg.append(ownerType);
+		sb.append(", ownerType=");
+		sb.append(ownerType);
 
-		msg.append(", portletId=");
-		msg.append(portletId);
+		sb.append(", portletId=");
+		sb.append(portletId);
 
-		msg.append("}");
+		sb.append("}");
 
-		throw new NoSuchPortletPreferencesException(msg.toString());
+		throw new NoSuchPortletPreferencesException(sb.toString());
 	}
 
 	/**
@@ -3915,32 +3915,32 @@ public class PortletPreferencesPersistenceImpl
 		OrderByComparator<PortletPreferences> orderByComparator,
 		boolean previous) {
 
-		StringBundler query = null;
+		StringBundler sb = null;
 
 		if (orderByComparator != null) {
-			query = new StringBundler(
+			sb = new StringBundler(
 				6 + (orderByComparator.getOrderByConditionFields().length * 3) +
 					(orderByComparator.getOrderByFields().length * 3));
 		}
 		else {
-			query = new StringBundler(5);
+			sb = new StringBundler(5);
 		}
 
-		query.append(_SQL_SELECT_PORTLETPREFERENCES_WHERE);
+		sb.append(_SQL_SELECT_PORTLETPREFERENCES_WHERE);
 
-		query.append(_FINDER_COLUMN_O_O_PI_OWNERID_2);
+		sb.append(_FINDER_COLUMN_O_O_PI_OWNERID_2);
 
-		query.append(_FINDER_COLUMN_O_O_PI_OWNERTYPE_2);
+		sb.append(_FINDER_COLUMN_O_O_PI_OWNERTYPE_2);
 
 		boolean bindPortletId = false;
 
 		if (portletId.isEmpty()) {
-			query.append(_FINDER_COLUMN_O_O_PI_PORTLETID_3);
+			sb.append(_FINDER_COLUMN_O_O_PI_PORTLETID_3);
 		}
 		else {
 			bindPortletId = true;
 
-			query.append(_FINDER_COLUMN_O_O_PI_PORTLETID_2);
+			sb.append(_FINDER_COLUMN_O_O_PI_PORTLETID_2);
 		}
 
 		if (orderByComparator != null) {
@@ -3948,76 +3948,76 @@ public class PortletPreferencesPersistenceImpl
 				orderByComparator.getOrderByConditionFields();
 
 			if (orderByConditionFields.length > 0) {
-				query.append(WHERE_AND);
+				sb.append(WHERE_AND);
 			}
 
 			for (int i = 0; i < orderByConditionFields.length; i++) {
-				query.append(_ORDER_BY_ENTITY_ALIAS);
-				query.append(orderByConditionFields[i]);
+				sb.append(_ORDER_BY_ENTITY_ALIAS);
+				sb.append(orderByConditionFields[i]);
 
 				if ((i + 1) < orderByConditionFields.length) {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(WHERE_GREATER_THAN_HAS_NEXT);
+						sb.append(WHERE_GREATER_THAN_HAS_NEXT);
 					}
 					else {
-						query.append(WHERE_LESSER_THAN_HAS_NEXT);
+						sb.append(WHERE_LESSER_THAN_HAS_NEXT);
 					}
 				}
 				else {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(WHERE_GREATER_THAN);
+						sb.append(WHERE_GREATER_THAN);
 					}
 					else {
-						query.append(WHERE_LESSER_THAN);
+						sb.append(WHERE_LESSER_THAN);
 					}
 				}
 			}
 
-			query.append(ORDER_BY_CLAUSE);
+			sb.append(ORDER_BY_CLAUSE);
 
 			String[] orderByFields = orderByComparator.getOrderByFields();
 
 			for (int i = 0; i < orderByFields.length; i++) {
-				query.append(_ORDER_BY_ENTITY_ALIAS);
-				query.append(orderByFields[i]);
+				sb.append(_ORDER_BY_ENTITY_ALIAS);
+				sb.append(orderByFields[i]);
 
 				if ((i + 1) < orderByFields.length) {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(ORDER_BY_ASC_HAS_NEXT);
+						sb.append(ORDER_BY_ASC_HAS_NEXT);
 					}
 					else {
-						query.append(ORDER_BY_DESC_HAS_NEXT);
+						sb.append(ORDER_BY_DESC_HAS_NEXT);
 					}
 				}
 				else {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(ORDER_BY_ASC);
+						sb.append(ORDER_BY_ASC);
 					}
 					else {
-						query.append(ORDER_BY_DESC);
+						sb.append(ORDER_BY_DESC);
 					}
 				}
 			}
 		}
 		else {
-			query.append(PortletPreferencesModelImpl.ORDER_BY_JPQL);
+			sb.append(PortletPreferencesModelImpl.ORDER_BY_JPQL);
 		}
 
-		String sql = query.toString();
+		String sql = sb.toString();
 
-		Query q = session.createQuery(sql);
+		Query query = session.createQuery(sql);
 
-		q.setFirstResult(0);
-		q.setMaxResults(2);
+		query.setFirstResult(0);
+		query.setMaxResults(2);
 
-		QueryPos qPos = QueryPos.getInstance(q);
+		QueryPos queryPos = QueryPos.getInstance(query);
 
-		qPos.add(ownerId);
+		queryPos.add(ownerId);
 
-		qPos.add(ownerType);
+		queryPos.add(ownerType);
 
 		if (bindPortletId) {
-			qPos.add(portletId);
+			queryPos.add(portletId);
 		}
 
 		if (orderByComparator != null) {
@@ -4025,11 +4025,11 @@ public class PortletPreferencesPersistenceImpl
 					orderByComparator.getOrderByConditionValues(
 						portletPreferences)) {
 
-				qPos.add(orderByConditionValue);
+				queryPos.add(orderByConditionValue);
 			}
 		}
 
-		List<PortletPreferences> list = q.list();
+		List<PortletPreferences> list = query.list();
 
 		if (list.size() == 2) {
 			return list.get(1);
@@ -4087,45 +4087,45 @@ public class PortletPreferencesPersistenceImpl
 		}
 
 		if (count == null) {
-			StringBundler query = new StringBundler(4);
+			StringBundler sb = new StringBundler(4);
 
-			query.append(_SQL_COUNT_PORTLETPREFERENCES_WHERE);
+			sb.append(_SQL_COUNT_PORTLETPREFERENCES_WHERE);
 
-			query.append(_FINDER_COLUMN_O_O_PI_OWNERID_2);
+			sb.append(_FINDER_COLUMN_O_O_PI_OWNERID_2);
 
-			query.append(_FINDER_COLUMN_O_O_PI_OWNERTYPE_2);
+			sb.append(_FINDER_COLUMN_O_O_PI_OWNERTYPE_2);
 
 			boolean bindPortletId = false;
 
 			if (portletId.isEmpty()) {
-				query.append(_FINDER_COLUMN_O_O_PI_PORTLETID_3);
+				sb.append(_FINDER_COLUMN_O_O_PI_PORTLETID_3);
 			}
 			else {
 				bindPortletId = true;
 
-				query.append(_FINDER_COLUMN_O_O_PI_PORTLETID_2);
+				sb.append(_FINDER_COLUMN_O_O_PI_PORTLETID_2);
 			}
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
-				qPos.add(ownerId);
+				queryPos.add(ownerId);
 
-				qPos.add(ownerType);
+				queryPos.add(ownerType);
 
 				if (bindPortletId) {
-					qPos.add(portletId);
+					queryPos.add(portletId);
 				}
 
-				count = (Long)q.uniqueResult();
+				count = (Long)query.uniqueResult();
 
 				if (productionMode) {
 					FinderCacheUtil.putResult(finderPath, finderArgs, count);
@@ -4290,62 +4290,62 @@ public class PortletPreferencesPersistenceImpl
 		}
 
 		if (list == null) {
-			StringBundler query = null;
+			StringBundler sb = null;
 
 			if (orderByComparator != null) {
-				query = new StringBundler(
+				sb = new StringBundler(
 					5 + (orderByComparator.getOrderByFields().length * 2));
 			}
 			else {
-				query = new StringBundler(5);
+				sb = new StringBundler(5);
 			}
 
-			query.append(_SQL_SELECT_PORTLETPREFERENCES_WHERE);
+			sb.append(_SQL_SELECT_PORTLETPREFERENCES_WHERE);
 
-			query.append(_FINDER_COLUMN_O_P_P_OWNERTYPE_2);
+			sb.append(_FINDER_COLUMN_O_P_P_OWNERTYPE_2);
 
-			query.append(_FINDER_COLUMN_O_P_P_PLID_2);
+			sb.append(_FINDER_COLUMN_O_P_P_PLID_2);
 
 			boolean bindPortletId = false;
 
 			if (portletId.isEmpty()) {
-				query.append(_FINDER_COLUMN_O_P_P_PORTLETID_3);
+				sb.append(_FINDER_COLUMN_O_P_P_PORTLETID_3);
 			}
 			else {
 				bindPortletId = true;
 
-				query.append(_FINDER_COLUMN_O_P_P_PORTLETID_2);
+				sb.append(_FINDER_COLUMN_O_P_P_PORTLETID_2);
 			}
 
 			if (orderByComparator != null) {
 				appendOrderByComparator(
-					query, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
+					sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
 			}
 			else {
-				query.append(PortletPreferencesModelImpl.ORDER_BY_JPQL);
+				sb.append(PortletPreferencesModelImpl.ORDER_BY_JPQL);
 			}
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
-				qPos.add(ownerType);
+				queryPos.add(ownerType);
 
-				qPos.add(plid);
+				queryPos.add(plid);
 
 				if (bindPortletId) {
-					qPos.add(portletId);
+					queryPos.add(portletId);
 				}
 
 				list = (List<PortletPreferences>)QueryUtil.list(
-					q, getDialect(), start, end);
+					query, getDialect(), start, end);
 
 				cacheResult(list);
 
@@ -4391,22 +4391,22 @@ public class PortletPreferencesPersistenceImpl
 			return portletPreferences;
 		}
 
-		StringBundler msg = new StringBundler(8);
+		StringBundler sb = new StringBundler(8);
 
-		msg.append(_NO_SUCH_ENTITY_WITH_KEY);
+		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
 
-		msg.append("ownerType=");
-		msg.append(ownerType);
+		sb.append("ownerType=");
+		sb.append(ownerType);
 
-		msg.append(", plid=");
-		msg.append(plid);
+		sb.append(", plid=");
+		sb.append(plid);
 
-		msg.append(", portletId=");
-		msg.append(portletId);
+		sb.append(", portletId=");
+		sb.append(portletId);
 
-		msg.append("}");
+		sb.append("}");
 
-		throw new NoSuchPortletPreferencesException(msg.toString());
+		throw new NoSuchPortletPreferencesException(sb.toString());
 	}
 
 	/**
@@ -4456,22 +4456,22 @@ public class PortletPreferencesPersistenceImpl
 			return portletPreferences;
 		}
 
-		StringBundler msg = new StringBundler(8);
+		StringBundler sb = new StringBundler(8);
 
-		msg.append(_NO_SUCH_ENTITY_WITH_KEY);
+		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
 
-		msg.append("ownerType=");
-		msg.append(ownerType);
+		sb.append("ownerType=");
+		sb.append(ownerType);
 
-		msg.append(", plid=");
-		msg.append(plid);
+		sb.append(", plid=");
+		sb.append(plid);
 
-		msg.append(", portletId=");
-		msg.append(portletId);
+		sb.append(", portletId=");
+		sb.append(portletId);
 
-		msg.append("}");
+		sb.append("}");
 
-		throw new NoSuchPortletPreferencesException(msg.toString());
+		throw new NoSuchPortletPreferencesException(sb.toString());
 	}
 
 	/**
@@ -4560,32 +4560,32 @@ public class PortletPreferencesPersistenceImpl
 		OrderByComparator<PortletPreferences> orderByComparator,
 		boolean previous) {
 
-		StringBundler query = null;
+		StringBundler sb = null;
 
 		if (orderByComparator != null) {
-			query = new StringBundler(
+			sb = new StringBundler(
 				6 + (orderByComparator.getOrderByConditionFields().length * 3) +
 					(orderByComparator.getOrderByFields().length * 3));
 		}
 		else {
-			query = new StringBundler(5);
+			sb = new StringBundler(5);
 		}
 
-		query.append(_SQL_SELECT_PORTLETPREFERENCES_WHERE);
+		sb.append(_SQL_SELECT_PORTLETPREFERENCES_WHERE);
 
-		query.append(_FINDER_COLUMN_O_P_P_OWNERTYPE_2);
+		sb.append(_FINDER_COLUMN_O_P_P_OWNERTYPE_2);
 
-		query.append(_FINDER_COLUMN_O_P_P_PLID_2);
+		sb.append(_FINDER_COLUMN_O_P_P_PLID_2);
 
 		boolean bindPortletId = false;
 
 		if (portletId.isEmpty()) {
-			query.append(_FINDER_COLUMN_O_P_P_PORTLETID_3);
+			sb.append(_FINDER_COLUMN_O_P_P_PORTLETID_3);
 		}
 		else {
 			bindPortletId = true;
 
-			query.append(_FINDER_COLUMN_O_P_P_PORTLETID_2);
+			sb.append(_FINDER_COLUMN_O_P_P_PORTLETID_2);
 		}
 
 		if (orderByComparator != null) {
@@ -4593,76 +4593,76 @@ public class PortletPreferencesPersistenceImpl
 				orderByComparator.getOrderByConditionFields();
 
 			if (orderByConditionFields.length > 0) {
-				query.append(WHERE_AND);
+				sb.append(WHERE_AND);
 			}
 
 			for (int i = 0; i < orderByConditionFields.length; i++) {
-				query.append(_ORDER_BY_ENTITY_ALIAS);
-				query.append(orderByConditionFields[i]);
+				sb.append(_ORDER_BY_ENTITY_ALIAS);
+				sb.append(orderByConditionFields[i]);
 
 				if ((i + 1) < orderByConditionFields.length) {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(WHERE_GREATER_THAN_HAS_NEXT);
+						sb.append(WHERE_GREATER_THAN_HAS_NEXT);
 					}
 					else {
-						query.append(WHERE_LESSER_THAN_HAS_NEXT);
+						sb.append(WHERE_LESSER_THAN_HAS_NEXT);
 					}
 				}
 				else {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(WHERE_GREATER_THAN);
+						sb.append(WHERE_GREATER_THAN);
 					}
 					else {
-						query.append(WHERE_LESSER_THAN);
+						sb.append(WHERE_LESSER_THAN);
 					}
 				}
 			}
 
-			query.append(ORDER_BY_CLAUSE);
+			sb.append(ORDER_BY_CLAUSE);
 
 			String[] orderByFields = orderByComparator.getOrderByFields();
 
 			for (int i = 0; i < orderByFields.length; i++) {
-				query.append(_ORDER_BY_ENTITY_ALIAS);
-				query.append(orderByFields[i]);
+				sb.append(_ORDER_BY_ENTITY_ALIAS);
+				sb.append(orderByFields[i]);
 
 				if ((i + 1) < orderByFields.length) {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(ORDER_BY_ASC_HAS_NEXT);
+						sb.append(ORDER_BY_ASC_HAS_NEXT);
 					}
 					else {
-						query.append(ORDER_BY_DESC_HAS_NEXT);
+						sb.append(ORDER_BY_DESC_HAS_NEXT);
 					}
 				}
 				else {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(ORDER_BY_ASC);
+						sb.append(ORDER_BY_ASC);
 					}
 					else {
-						query.append(ORDER_BY_DESC);
+						sb.append(ORDER_BY_DESC);
 					}
 				}
 			}
 		}
 		else {
-			query.append(PortletPreferencesModelImpl.ORDER_BY_JPQL);
+			sb.append(PortletPreferencesModelImpl.ORDER_BY_JPQL);
 		}
 
-		String sql = query.toString();
+		String sql = sb.toString();
 
-		Query q = session.createQuery(sql);
+		Query query = session.createQuery(sql);
 
-		q.setFirstResult(0);
-		q.setMaxResults(2);
+		query.setFirstResult(0);
+		query.setMaxResults(2);
 
-		QueryPos qPos = QueryPos.getInstance(q);
+		QueryPos queryPos = QueryPos.getInstance(query);
 
-		qPos.add(ownerType);
+		queryPos.add(ownerType);
 
-		qPos.add(plid);
+		queryPos.add(plid);
 
 		if (bindPortletId) {
-			qPos.add(portletId);
+			queryPos.add(portletId);
 		}
 
 		if (orderByComparator != null) {
@@ -4670,11 +4670,11 @@ public class PortletPreferencesPersistenceImpl
 					orderByComparator.getOrderByConditionValues(
 						portletPreferences)) {
 
-				qPos.add(orderByConditionValue);
+				queryPos.add(orderByConditionValue);
 			}
 		}
 
-		List<PortletPreferences> list = q.list();
+		List<PortletPreferences> list = query.list();
 
 		if (list.size() == 2) {
 			return list.get(1);
@@ -4732,45 +4732,45 @@ public class PortletPreferencesPersistenceImpl
 		}
 
 		if (count == null) {
-			StringBundler query = new StringBundler(4);
+			StringBundler sb = new StringBundler(4);
 
-			query.append(_SQL_COUNT_PORTLETPREFERENCES_WHERE);
+			sb.append(_SQL_COUNT_PORTLETPREFERENCES_WHERE);
 
-			query.append(_FINDER_COLUMN_O_P_P_OWNERTYPE_2);
+			sb.append(_FINDER_COLUMN_O_P_P_OWNERTYPE_2);
 
-			query.append(_FINDER_COLUMN_O_P_P_PLID_2);
+			sb.append(_FINDER_COLUMN_O_P_P_PLID_2);
 
 			boolean bindPortletId = false;
 
 			if (portletId.isEmpty()) {
-				query.append(_FINDER_COLUMN_O_P_P_PORTLETID_3);
+				sb.append(_FINDER_COLUMN_O_P_P_PORTLETID_3);
 			}
 			else {
 				bindPortletId = true;
 
-				query.append(_FINDER_COLUMN_O_P_P_PORTLETID_2);
+				sb.append(_FINDER_COLUMN_O_P_P_PORTLETID_2);
 			}
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
-				qPos.add(ownerType);
+				queryPos.add(ownerType);
 
-				qPos.add(plid);
+				queryPos.add(plid);
 
 				if (bindPortletId) {
-					qPos.add(portletId);
+					queryPos.add(portletId);
 				}
 
-				count = (Long)q.uniqueResult();
+				count = (Long)query.uniqueResult();
 
 				if (productionMode) {
 					FinderCacheUtil.putResult(finderPath, finderArgs, count);
@@ -4937,66 +4937,66 @@ public class PortletPreferencesPersistenceImpl
 		}
 
 		if (list == null) {
-			StringBundler query = null;
+			StringBundler sb = null;
 
 			if (orderByComparator != null) {
-				query = new StringBundler(
+				sb = new StringBundler(
 					6 + (orderByComparator.getOrderByFields().length * 2));
 			}
 			else {
-				query = new StringBundler(6);
+				sb = new StringBundler(6);
 			}
 
-			query.append(_SQL_SELECT_PORTLETPREFERENCES_WHERE);
+			sb.append(_SQL_SELECT_PORTLETPREFERENCES_WHERE);
 
-			query.append(_FINDER_COLUMN_C_O_O_LIKEP_COMPANYID_2);
+			sb.append(_FINDER_COLUMN_C_O_O_LIKEP_COMPANYID_2);
 
-			query.append(_FINDER_COLUMN_C_O_O_LIKEP_OWNERID_2);
+			sb.append(_FINDER_COLUMN_C_O_O_LIKEP_OWNERID_2);
 
-			query.append(_FINDER_COLUMN_C_O_O_LIKEP_OWNERTYPE_2);
+			sb.append(_FINDER_COLUMN_C_O_O_LIKEP_OWNERTYPE_2);
 
 			boolean bindPortletId = false;
 
 			if (portletId.isEmpty()) {
-				query.append(_FINDER_COLUMN_C_O_O_LIKEP_PORTLETID_3);
+				sb.append(_FINDER_COLUMN_C_O_O_LIKEP_PORTLETID_3);
 			}
 			else {
 				bindPortletId = true;
 
-				query.append(_FINDER_COLUMN_C_O_O_LIKEP_PORTLETID_2);
+				sb.append(_FINDER_COLUMN_C_O_O_LIKEP_PORTLETID_2);
 			}
 
 			if (orderByComparator != null) {
 				appendOrderByComparator(
-					query, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
+					sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
 			}
 			else {
-				query.append(PortletPreferencesModelImpl.ORDER_BY_JPQL);
+				sb.append(PortletPreferencesModelImpl.ORDER_BY_JPQL);
 			}
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
-				qPos.add(companyId);
+				queryPos.add(companyId);
 
-				qPos.add(ownerId);
+				queryPos.add(ownerId);
 
-				qPos.add(ownerType);
+				queryPos.add(ownerType);
 
 				if (bindPortletId) {
-					qPos.add(portletId);
+					queryPos.add(portletId);
 				}
 
 				list = (List<PortletPreferences>)QueryUtil.list(
-					q, getDialect(), start, end);
+					query, getDialect(), start, end);
 
 				cacheResult(list);
 
@@ -5043,25 +5043,25 @@ public class PortletPreferencesPersistenceImpl
 			return portletPreferences;
 		}
 
-		StringBundler msg = new StringBundler(10);
+		StringBundler sb = new StringBundler(10);
 
-		msg.append(_NO_SUCH_ENTITY_WITH_KEY);
+		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
 
-		msg.append("companyId=");
-		msg.append(companyId);
+		sb.append("companyId=");
+		sb.append(companyId);
 
-		msg.append(", ownerId=");
-		msg.append(ownerId);
+		sb.append(", ownerId=");
+		sb.append(ownerId);
 
-		msg.append(", ownerType=");
-		msg.append(ownerType);
+		sb.append(", ownerType=");
+		sb.append(ownerType);
 
-		msg.append(", portletIdLIKE");
-		msg.append(portletId);
+		sb.append(", portletIdLIKE");
+		sb.append(portletId);
 
-		msg.append("}");
+		sb.append("}");
 
-		throw new NoSuchPortletPreferencesException(msg.toString());
+		throw new NoSuchPortletPreferencesException(sb.toString());
 	}
 
 	/**
@@ -5113,25 +5113,25 @@ public class PortletPreferencesPersistenceImpl
 			return portletPreferences;
 		}
 
-		StringBundler msg = new StringBundler(10);
+		StringBundler sb = new StringBundler(10);
 
-		msg.append(_NO_SUCH_ENTITY_WITH_KEY);
+		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
 
-		msg.append("companyId=");
-		msg.append(companyId);
+		sb.append("companyId=");
+		sb.append(companyId);
 
-		msg.append(", ownerId=");
-		msg.append(ownerId);
+		sb.append(", ownerId=");
+		sb.append(ownerId);
 
-		msg.append(", ownerType=");
-		msg.append(ownerType);
+		sb.append(", ownerType=");
+		sb.append(ownerType);
 
-		msg.append(", portletIdLIKE");
-		msg.append(portletId);
+		sb.append(", portletIdLIKE");
+		sb.append(portletId);
 
-		msg.append("}");
+		sb.append("}");
 
-		throw new NoSuchPortletPreferencesException(msg.toString());
+		throw new NoSuchPortletPreferencesException(sb.toString());
 	}
 
 	/**
@@ -5224,34 +5224,34 @@ public class PortletPreferencesPersistenceImpl
 		OrderByComparator<PortletPreferences> orderByComparator,
 		boolean previous) {
 
-		StringBundler query = null;
+		StringBundler sb = null;
 
 		if (orderByComparator != null) {
-			query = new StringBundler(
+			sb = new StringBundler(
 				7 + (orderByComparator.getOrderByConditionFields().length * 3) +
 					(orderByComparator.getOrderByFields().length * 3));
 		}
 		else {
-			query = new StringBundler(6);
+			sb = new StringBundler(6);
 		}
 
-		query.append(_SQL_SELECT_PORTLETPREFERENCES_WHERE);
+		sb.append(_SQL_SELECT_PORTLETPREFERENCES_WHERE);
 
-		query.append(_FINDER_COLUMN_C_O_O_LIKEP_COMPANYID_2);
+		sb.append(_FINDER_COLUMN_C_O_O_LIKEP_COMPANYID_2);
 
-		query.append(_FINDER_COLUMN_C_O_O_LIKEP_OWNERID_2);
+		sb.append(_FINDER_COLUMN_C_O_O_LIKEP_OWNERID_2);
 
-		query.append(_FINDER_COLUMN_C_O_O_LIKEP_OWNERTYPE_2);
+		sb.append(_FINDER_COLUMN_C_O_O_LIKEP_OWNERTYPE_2);
 
 		boolean bindPortletId = false;
 
 		if (portletId.isEmpty()) {
-			query.append(_FINDER_COLUMN_C_O_O_LIKEP_PORTLETID_3);
+			sb.append(_FINDER_COLUMN_C_O_O_LIKEP_PORTLETID_3);
 		}
 		else {
 			bindPortletId = true;
 
-			query.append(_FINDER_COLUMN_C_O_O_LIKEP_PORTLETID_2);
+			sb.append(_FINDER_COLUMN_C_O_O_LIKEP_PORTLETID_2);
 		}
 
 		if (orderByComparator != null) {
@@ -5259,78 +5259,78 @@ public class PortletPreferencesPersistenceImpl
 				orderByComparator.getOrderByConditionFields();
 
 			if (orderByConditionFields.length > 0) {
-				query.append(WHERE_AND);
+				sb.append(WHERE_AND);
 			}
 
 			for (int i = 0; i < orderByConditionFields.length; i++) {
-				query.append(_ORDER_BY_ENTITY_ALIAS);
-				query.append(orderByConditionFields[i]);
+				sb.append(_ORDER_BY_ENTITY_ALIAS);
+				sb.append(orderByConditionFields[i]);
 
 				if ((i + 1) < orderByConditionFields.length) {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(WHERE_GREATER_THAN_HAS_NEXT);
+						sb.append(WHERE_GREATER_THAN_HAS_NEXT);
 					}
 					else {
-						query.append(WHERE_LESSER_THAN_HAS_NEXT);
+						sb.append(WHERE_LESSER_THAN_HAS_NEXT);
 					}
 				}
 				else {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(WHERE_GREATER_THAN);
+						sb.append(WHERE_GREATER_THAN);
 					}
 					else {
-						query.append(WHERE_LESSER_THAN);
+						sb.append(WHERE_LESSER_THAN);
 					}
 				}
 			}
 
-			query.append(ORDER_BY_CLAUSE);
+			sb.append(ORDER_BY_CLAUSE);
 
 			String[] orderByFields = orderByComparator.getOrderByFields();
 
 			for (int i = 0; i < orderByFields.length; i++) {
-				query.append(_ORDER_BY_ENTITY_ALIAS);
-				query.append(orderByFields[i]);
+				sb.append(_ORDER_BY_ENTITY_ALIAS);
+				sb.append(orderByFields[i]);
 
 				if ((i + 1) < orderByFields.length) {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(ORDER_BY_ASC_HAS_NEXT);
+						sb.append(ORDER_BY_ASC_HAS_NEXT);
 					}
 					else {
-						query.append(ORDER_BY_DESC_HAS_NEXT);
+						sb.append(ORDER_BY_DESC_HAS_NEXT);
 					}
 				}
 				else {
 					if (orderByComparator.isAscending() ^ previous) {
-						query.append(ORDER_BY_ASC);
+						sb.append(ORDER_BY_ASC);
 					}
 					else {
-						query.append(ORDER_BY_DESC);
+						sb.append(ORDER_BY_DESC);
 					}
 				}
 			}
 		}
 		else {
-			query.append(PortletPreferencesModelImpl.ORDER_BY_JPQL);
+			sb.append(PortletPreferencesModelImpl.ORDER_BY_JPQL);
 		}
 
-		String sql = query.toString();
+		String sql = sb.toString();
 
-		Query q = session.createQuery(sql);
+		Query query = session.createQuery(sql);
 
-		q.setFirstResult(0);
-		q.setMaxResults(2);
+		query.setFirstResult(0);
+		query.setMaxResults(2);
 
-		QueryPos qPos = QueryPos.getInstance(q);
+		QueryPos queryPos = QueryPos.getInstance(query);
 
-		qPos.add(companyId);
+		queryPos.add(companyId);
 
-		qPos.add(ownerId);
+		queryPos.add(ownerId);
 
-		qPos.add(ownerType);
+		queryPos.add(ownerType);
 
 		if (bindPortletId) {
-			qPos.add(portletId);
+			queryPos.add(portletId);
 		}
 
 		if (orderByComparator != null) {
@@ -5338,11 +5338,11 @@ public class PortletPreferencesPersistenceImpl
 					orderByComparator.getOrderByConditionValues(
 						portletPreferences)) {
 
-				qPos.add(orderByConditionValue);
+				queryPos.add(orderByConditionValue);
 			}
 		}
 
-		List<PortletPreferences> list = q.list();
+		List<PortletPreferences> list = query.list();
 
 		if (list.size() == 2) {
 			return list.get(1);
@@ -5408,49 +5408,49 @@ public class PortletPreferencesPersistenceImpl
 		}
 
 		if (count == null) {
-			StringBundler query = new StringBundler(5);
+			StringBundler sb = new StringBundler(5);
 
-			query.append(_SQL_COUNT_PORTLETPREFERENCES_WHERE);
+			sb.append(_SQL_COUNT_PORTLETPREFERENCES_WHERE);
 
-			query.append(_FINDER_COLUMN_C_O_O_LIKEP_COMPANYID_2);
+			sb.append(_FINDER_COLUMN_C_O_O_LIKEP_COMPANYID_2);
 
-			query.append(_FINDER_COLUMN_C_O_O_LIKEP_OWNERID_2);
+			sb.append(_FINDER_COLUMN_C_O_O_LIKEP_OWNERID_2);
 
-			query.append(_FINDER_COLUMN_C_O_O_LIKEP_OWNERTYPE_2);
+			sb.append(_FINDER_COLUMN_C_O_O_LIKEP_OWNERTYPE_2);
 
 			boolean bindPortletId = false;
 
 			if (portletId.isEmpty()) {
-				query.append(_FINDER_COLUMN_C_O_O_LIKEP_PORTLETID_3);
+				sb.append(_FINDER_COLUMN_C_O_O_LIKEP_PORTLETID_3);
 			}
 			else {
 				bindPortletId = true;
 
-				query.append(_FINDER_COLUMN_C_O_O_LIKEP_PORTLETID_2);
+				sb.append(_FINDER_COLUMN_C_O_O_LIKEP_PORTLETID_2);
 			}
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
-				qPos.add(companyId);
+				queryPos.add(companyId);
 
-				qPos.add(ownerId);
+				queryPos.add(ownerId);
 
-				qPos.add(ownerType);
+				queryPos.add(ownerType);
 
 				if (bindPortletId) {
-					qPos.add(portletId);
+					queryPos.add(portletId);
 				}
 
-				count = (Long)q.uniqueResult();
+				count = (Long)query.uniqueResult();
 
 				if (productionMode) {
 					FinderCacheUtil.putResult(finderPath, finderArgs, count);
@@ -5508,29 +5508,29 @@ public class PortletPreferencesPersistenceImpl
 			ownerId, ownerType, plid, portletId);
 
 		if (portletPreferences == null) {
-			StringBundler msg = new StringBundler(10);
+			StringBundler sb = new StringBundler(10);
 
-			msg.append(_NO_SUCH_ENTITY_WITH_KEY);
+			sb.append(_NO_SUCH_ENTITY_WITH_KEY);
 
-			msg.append("ownerId=");
-			msg.append(ownerId);
+			sb.append("ownerId=");
+			sb.append(ownerId);
 
-			msg.append(", ownerType=");
-			msg.append(ownerType);
+			sb.append(", ownerType=");
+			sb.append(ownerType);
 
-			msg.append(", plid=");
-			msg.append(plid);
+			sb.append(", plid=");
+			sb.append(plid);
 
-			msg.append(", portletId=");
-			msg.append(portletId);
+			sb.append(", portletId=");
+			sb.append(portletId);
 
-			msg.append("}");
+			sb.append("}");
 
 			if (_log.isDebugEnabled()) {
-				_log.debug(msg.toString());
+				_log.debug(sb.toString());
 			}
 
-			throw new NoSuchPortletPreferencesException(msg.toString());
+			throw new NoSuchPortletPreferencesException(sb.toString());
 		}
 
 		return portletPreferences;
@@ -5598,49 +5598,49 @@ public class PortletPreferencesPersistenceImpl
 		}
 
 		if (result == null) {
-			StringBundler query = new StringBundler(6);
+			StringBundler sb = new StringBundler(6);
 
-			query.append(_SQL_SELECT_PORTLETPREFERENCES_WHERE);
+			sb.append(_SQL_SELECT_PORTLETPREFERENCES_WHERE);
 
-			query.append(_FINDER_COLUMN_O_O_P_P_OWNERID_2);
+			sb.append(_FINDER_COLUMN_O_O_P_P_OWNERID_2);
 
-			query.append(_FINDER_COLUMN_O_O_P_P_OWNERTYPE_2);
+			sb.append(_FINDER_COLUMN_O_O_P_P_OWNERTYPE_2);
 
-			query.append(_FINDER_COLUMN_O_O_P_P_PLID_2);
+			sb.append(_FINDER_COLUMN_O_O_P_P_PLID_2);
 
 			boolean bindPortletId = false;
 
 			if (portletId.isEmpty()) {
-				query.append(_FINDER_COLUMN_O_O_P_P_PORTLETID_3);
+				sb.append(_FINDER_COLUMN_O_O_P_P_PORTLETID_3);
 			}
 			else {
 				bindPortletId = true;
 
-				query.append(_FINDER_COLUMN_O_O_P_P_PORTLETID_2);
+				sb.append(_FINDER_COLUMN_O_O_P_P_PORTLETID_2);
 			}
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
-				qPos.add(ownerId);
+				queryPos.add(ownerId);
 
-				qPos.add(ownerType);
+				queryPos.add(ownerType);
 
-				qPos.add(plid);
+				queryPos.add(plid);
 
 				if (bindPortletId) {
-					qPos.add(portletId);
+					queryPos.add(portletId);
 				}
 
-				List<PortletPreferences> list = q.list();
+				List<PortletPreferences> list = query.list();
 
 				if (list.isEmpty()) {
 					if (useFinderCache && productionMode) {
@@ -5730,49 +5730,49 @@ public class PortletPreferencesPersistenceImpl
 		}
 
 		if (count == null) {
-			StringBundler query = new StringBundler(5);
+			StringBundler sb = new StringBundler(5);
 
-			query.append(_SQL_COUNT_PORTLETPREFERENCES_WHERE);
+			sb.append(_SQL_COUNT_PORTLETPREFERENCES_WHERE);
 
-			query.append(_FINDER_COLUMN_O_O_P_P_OWNERID_2);
+			sb.append(_FINDER_COLUMN_O_O_P_P_OWNERID_2);
 
-			query.append(_FINDER_COLUMN_O_O_P_P_OWNERTYPE_2);
+			sb.append(_FINDER_COLUMN_O_O_P_P_OWNERTYPE_2);
 
-			query.append(_FINDER_COLUMN_O_O_P_P_PLID_2);
+			sb.append(_FINDER_COLUMN_O_O_P_P_PLID_2);
 
 			boolean bindPortletId = false;
 
 			if (portletId.isEmpty()) {
-				query.append(_FINDER_COLUMN_O_O_P_P_PORTLETID_3);
+				sb.append(_FINDER_COLUMN_O_O_P_P_PORTLETID_3);
 			}
 			else {
 				bindPortletId = true;
 
-				query.append(_FINDER_COLUMN_O_O_P_P_PORTLETID_2);
+				sb.append(_FINDER_COLUMN_O_O_P_P_PORTLETID_2);
 			}
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
-				qPos.add(ownerId);
+				queryPos.add(ownerId);
 
-				qPos.add(ownerType);
+				queryPos.add(ownerType);
 
-				qPos.add(plid);
+				queryPos.add(plid);
 
 				if (bindPortletId) {
-					qPos.add(portletId);
+					queryPos.add(portletId);
 				}
 
-				count = (Long)q.uniqueResult();
+				count = (Long)query.uniqueResult();
 
 				if (productionMode) {
 					FinderCacheUtil.putResult(finderPath, finderArgs, count);
@@ -6557,34 +6557,34 @@ public class PortletPreferencesPersistenceImpl
 			return map;
 		}
 
-		StringBundler query = new StringBundler(primaryKeys.size() * 2 + 1);
+		StringBundler sb = new StringBundler(primaryKeys.size() * 2 + 1);
 
-		query.append(getSelectSQL());
-		query.append(" WHERE ");
-		query.append(getPKDBName());
-		query.append(" IN (");
+		sb.append(getSelectSQL());
+		sb.append(" WHERE ");
+		sb.append(getPKDBName());
+		sb.append(" IN (");
 
 		for (Serializable primaryKey : primaryKeys) {
-			query.append((long)primaryKey);
+			sb.append((long)primaryKey);
 
-			query.append(",");
+			sb.append(",");
 		}
 
-		query.setIndex(query.index() - 1);
+		sb.setIndex(sb.index() - 1);
 
-		query.append(")");
+		sb.append(")");
 
-		String sql = query.toString();
+		String sql = sb.toString();
 
 		Session session = null;
 
 		try {
 			session = openSession();
 
-			Query q = session.createQuery(sql);
+			Query query = session.createQuery(sql);
 
 			for (PortletPreferences portletPreferences :
-					(List<PortletPreferences>)q.list()) {
+					(List<PortletPreferences>)query.list()) {
 
 				map.put(
 					portletPreferences.getPrimaryKeyObj(), portletPreferences);
@@ -6694,19 +6694,19 @@ public class PortletPreferencesPersistenceImpl
 		}
 
 		if (list == null) {
-			StringBundler query = null;
+			StringBundler sb = null;
 			String sql = null;
 
 			if (orderByComparator != null) {
-				query = new StringBundler(
+				sb = new StringBundler(
 					2 + (orderByComparator.getOrderByFields().length * 2));
 
-				query.append(_SQL_SELECT_PORTLETPREFERENCES);
+				sb.append(_SQL_SELECT_PORTLETPREFERENCES);
 
 				appendOrderByComparator(
-					query, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
+					sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
 
-				sql = query.toString();
+				sql = sb.toString();
 			}
 			else {
 				sql = _SQL_SELECT_PORTLETPREFERENCES;
@@ -6719,10 +6719,10 @@ public class PortletPreferencesPersistenceImpl
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
 				list = (List<PortletPreferences>)QueryUtil.list(
-					q, getDialect(), start, end);
+					query, getDialect(), start, end);
 
 				cacheResult(list);
 
@@ -6779,9 +6779,10 @@ public class PortletPreferencesPersistenceImpl
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(_SQL_COUNT_PORTLETPREFERENCES);
+				Query query = session.createQuery(
+					_SQL_COUNT_PORTLETPREFERENCES);
 
-				count = (Long)q.uniqueResult();
+				count = (Long)query.uniqueResult();
 
 				if (productionMode) {
 					FinderCacheUtil.putResult(

@@ -99,10 +99,6 @@ public class JSONCurlUtil {
 		return _getParsedResponse(request, jsonPath);
 	}
 
-	protected Request getRequest(String requestString, String requestMethod) {
-		return new Request(requestString, requestMethod);
-	}
-
 	private static String _getParsedResponse(Request request, String jsonPath)
 		throws IOException, TimeoutException {
 
@@ -171,8 +167,8 @@ public class JSONCurlUtil {
 
 				_curlDataMap.put(key, matcher.group(1));
 
-				encodedRequestString = encodedRequestString.replace(
-					matcher.group(0), key);
+				encodedRequestString = StringUtil.replace(
+					encodedRequestString, matcher.group(0), key);
 			}
 
 			return encodedRequestString;
@@ -334,7 +330,7 @@ public class JSONCurlUtil {
 
 				optionValue = optionValue.replaceAll("(?<!\\\\)\"", "\\\\\\\"");
 
-				optionValue = optionValue.replace("&", "^&");
+				optionValue = StringUtil.replace(optionValue, "&", "^&");
 
 				sb.append(optionValue);
 
@@ -367,7 +363,7 @@ public class JSONCurlUtil {
 
 					optionValue = jsonObject.toString();
 				}
-				catch (JSONException jsone) {
+				catch (JSONException jsonException) {
 					throw new RuntimeException(
 						"Invalid JSON: '" + optionValue + "'");
 				}
@@ -382,7 +378,7 @@ public class JSONCurlUtil {
 
 				return true;
 			}
-			catch (JSONException jsone) {
+			catch (JSONException jsonException) {
 				return false;
 			}
 		}

@@ -134,9 +134,9 @@ TrashManagementToolbarDisplayContext trashManagementToolbarDisplayContext = new 
 						viewContentURLString = viewContentURL.toString();
 					}
 
-					Map<String, Object> rowData = new HashMap<>();
-
-					rowData.put("actions", trashManagementToolbarDisplayContext.getAvailableActions(trashEntry));
+					Map<String, Object> rowData = HashMapBuilder.<String, Object>put(
+						"actions", trashManagementToolbarDisplayContext.getAvailableActions(trashEntry)
+					).build();
 
 					row.setData(rowData);
 					%>
@@ -290,6 +290,7 @@ TrashManagementToolbarDisplayContext trashManagementToolbarDisplayContext = new 
 
 <liferay-frontend:component
 	componentId="<%= trashManagementToolbarDisplayContext.getDefaultEventHandler() %>"
+	context="<%= trashManagementToolbarDisplayContext.getComponentContext() %>"
 	module="js/ManagementToolbarDefaultEventHandler.es"
 />
 

@@ -174,9 +174,9 @@ long assetClassPK = DLAssetHelperUtil.getAssetClassPK(fileEntry, fileVersion);
 										<c:otherwise>
 
 											<%
-											Map<String, String> data = new HashMap<>();
-
-											data.put("analytics-file-entry-id", String.valueOf(fileEntry.getFileEntryId()));
+											Map<String, String> data = HashMapBuilder.put(
+												"analytics-file-entry-id", String.valueOf(fileEntry.getFileEntryId())
+											).build();
 											%>
 
 											<div class="btn-group-item">
@@ -186,7 +186,7 @@ long assetClassPK = DLAssetHelperUtil.getAssetClassPK(fileEntry, fileVersion);
 													elementClasses="btn-sm"
 													href="<%= DLURLHelperUtil.getDownloadURL(fileEntry, fileVersion, themeDisplay, StringPool.BLANK, false, true) %>"
 													label='<%= LanguageUtil.get(resourceBundle, "download") %>'
-													title='<%= LanguageUtil.format(resourceBundle, "file-size-x", TextFormatter.formatStorageSize(fileVersion.getSize(), locale), false) %>'
+													title='<%= LanguageUtil.format(resourceBundle, "file-size-x", LanguageUtil.formatStorageSize(fileVersion.getSize(), locale), false) %>'
 												/>
 											</div>
 										</c:otherwise>
@@ -199,7 +199,7 @@ long assetClassPK = DLAssetHelperUtil.getAssetClassPK(fileEntry, fileVersion);
 											elementClasses="btn-sm"
 											href="<%= DLURLHelperUtil.getDownloadURL(fileEntry, fileVersion, themeDisplay, StringPool.BLANK, false, true) %>"
 											label='<%= LanguageUtil.get(resourceBundle, "download") %>'
-											title='<%= LanguageUtil.format(resourceBundle, "file-size-x", TextFormatter.formatStorageSize(fileVersion.getSize(), locale), false) %>'
+											title='<%= LanguageUtil.format(resourceBundle, "file-size-x", LanguageUtil.formatStorageSize(fileVersion.getSize(), locale), false) %>'
 										/>
 									</div>
 								</c:otherwise>
@@ -232,9 +232,9 @@ long assetClassPK = DLAssetHelperUtil.getAssetClassPK(fileEntry, fileVersion);
 
 						String urlInputId = liferayPortletResponse.getNamespace() + "urlInput";
 
-						Map<String, String> urlButtonData = new HashMap<>();
-
-						urlButtonData.put("clipboard-target", "#" + urlInputId);
+						Map<String, String> urlButtonData = HashMapBuilder.put(
+							"clipboard-target", "#" + urlInputId
+						).build();
 						%>
 
 						<div class="form-group">
@@ -271,9 +271,9 @@ long assetClassPK = DLAssetHelperUtil.getAssetClassPK(fileEntry, fileVersion);
 
 							String webDavURLInputId = liferayPortletResponse.getNamespace() + "webDavURLInput";
 
-							Map<String, String> webDavButtonData = new HashMap<>();
-
-							webDavButtonData.put("clipboard-target", "#" + webDavURLInputId);
+							Map<String, String> webDavButtonData = HashMapBuilder.put(
+								"clipboard-target", "#" + webDavURLInputId
+							).build();
 							%>
 
 							<div class="form-group">
@@ -334,7 +334,7 @@ long assetClassPK = DLAssetHelperUtil.getAssetClassPK(fileEntry, fileVersion);
 					<liferay-ui:message key="size" />
 				</dt>
 				<dd class="sidebar-dd">
-					<%= HtmlUtil.escape(TextFormatter.formatStorageSize(fileVersion.getSize(), locale)) %>
+					<%= HtmlUtil.escape(LanguageUtil.formatStorageSize(fileVersion.getSize(), locale)) %>
 				</dd>
 				<dt class="sidebar-dt">
 					<liferay-ui:message key="modified" />
@@ -375,7 +375,7 @@ long assetClassPK = DLAssetHelperUtil.getAssetClassPK(fileEntry, fileVersion);
 						<liferay-ui:message key="ratings" />
 					</dt>
 					<dd class="sidebar-dd">
-						<liferay-ui:ratings
+						<liferay-ratings:ratings
 							className="<%= DLFileEntryConstants.getClassName() %>"
 							classPK="<%= fileEntry.getFileEntryId() %>"
 							inTrash="<%= fileEntry.isInTrash() %>"
@@ -515,7 +515,6 @@ long assetClassPK = DLAssetHelperUtil.getAssetClassPK(fileEntry, fileVersion);
 						}
 
 						if (ddmFormValues != null) {
-							String name = "metadata." + ddmStructure.getStructureKey();
 				%>
 
 							<liferay-ui:panel
@@ -525,7 +524,7 @@ long assetClassPK = DLAssetHelperUtil.getAssetClassPK(fileEntry, fileVersion);
 								id='<%= "documentLibraryMetadataPanel" + StringPool.UNDERLINE + ddmStructure.getStructureId() %>'
 								markupView="lexicon"
 								persistState="<%= true %>"
-								title="<%= name %>"
+								title='<%= "metadata." + ddmStructure.getStructureKey() %>'
 							>
 								<liferay-ddm:html
 									classNameId="<%= PortalUtil.getClassNameId(com.liferay.dynamic.data.mapping.model.DDMStructure.class) %>"

@@ -416,9 +416,11 @@ public abstract class BaseDocumentResourceTestCase {
 				}
 				else {
 					BeanUtils.setProperty(
-						document1, entityField.getName(), "Aaa");
+						document1, entityField.getName(),
+						"Aaa" + RandomTestUtil.randomString());
 					BeanUtils.setProperty(
-						document2, entityField.getName(), "Bbb");
+						document2, entityField.getName(),
+						"Bbb" + RandomTestUtil.randomString());
 				}
 			});
 	}
@@ -520,6 +522,7 @@ public abstract class BaseDocumentResourceTestCase {
 
 	@Test
 	public void testDeleteDocument() throws Exception {
+		@SuppressWarnings("PMD.UnusedLocalVariable")
 		Document document = testDeleteDocument_addDocument();
 
 		assertHttpResponseStatusCode(
@@ -637,8 +640,7 @@ public abstract class BaseDocumentResourceTestCase {
 		Document patchDocument = documentResource.patchDocument(
 			postDocument.getId(), randomPatchDocument, multipartFiles);
 
-		Document expectedPatchDocument = (Document)BeanUtils.cloneBean(
-			postDocument);
+		Document expectedPatchDocument = postDocument.clone();
 
 		_beanUtilsBean.copyProperties(
 			expectedPatchDocument, randomPatchDocument);
@@ -687,6 +689,7 @@ public abstract class BaseDocumentResourceTestCase {
 
 	@Test
 	public void testDeleteDocumentMyRating() throws Exception {
+		@SuppressWarnings("PMD.UnusedLocalVariable")
 		Document document = testDeleteDocumentMyRating_addDocument();
 
 		assertHttpResponseStatusCode(
@@ -898,9 +901,11 @@ public abstract class BaseDocumentResourceTestCase {
 				}
 				else {
 					BeanUtils.setProperty(
-						document1, entityField.getName(), "Aaa");
+						document1, entityField.getName(),
+						"Aaa" + RandomTestUtil.randomString());
 					BeanUtils.setProperty(
-						document2, entityField.getName(), "Bbb");
+						document2, entityField.getName(),
+						"Bbb" + RandomTestUtil.randomString());
 				}
 			});
 	}
@@ -1514,9 +1519,9 @@ public abstract class BaseDocumentResourceTestCase {
 			}
 
 			if (Objects.equals(
-					"taxonomyCategories", additionalAssertFieldName)) {
+					"taxonomyCategoryBriefs", additionalAssertFieldName)) {
 
-				if (document.getTaxonomyCategories() == null) {
+				if (document.getTaxonomyCategoryBriefs() == null) {
 					valid = false;
 				}
 
@@ -1681,8 +1686,9 @@ public abstract class BaseDocumentResourceTestCase {
 				getAdditionalAssertFieldNames()) {
 
 			if (Objects.equals("actions", additionalAssertFieldName)) {
-				if (!Objects.deepEquals(
-						document1.getActions(), document2.getActions())) {
+				if (!equals(
+						(Map)document1.getActions(),
+						(Map)document2.getActions())) {
 
 					return false;
 				}
@@ -1861,11 +1867,11 @@ public abstract class BaseDocumentResourceTestCase {
 			}
 
 			if (Objects.equals(
-					"taxonomyCategories", additionalAssertFieldName)) {
+					"taxonomyCategoryBriefs", additionalAssertFieldName)) {
 
 				if (!Objects.deepEquals(
-						document1.getTaxonomyCategories(),
-						document2.getTaxonomyCategories())) {
+						document1.getTaxonomyCategoryBriefs(),
+						document2.getTaxonomyCategoryBriefs())) {
 
 					return false;
 				}
@@ -1909,6 +1915,30 @@ public abstract class BaseDocumentResourceTestCase {
 			throw new IllegalArgumentException(
 				"Invalid additional assert field name " +
 					additionalAssertFieldName);
+		}
+
+		return true;
+	}
+
+	protected boolean equals(
+		Map<String, Object> map1, Map<String, Object> map2) {
+
+		if (Objects.equals(map1.keySet(), map2.keySet())) {
+			for (Map.Entry<String, Object> entry : map1.entrySet()) {
+				if (entry.getValue() instanceof Map) {
+					if (!equals(
+							(Map)entry.getValue(),
+							(Map)map2.get(entry.getKey()))) {
+
+						return false;
+					}
+				}
+				else if (!Objects.deepEquals(
+							entry.getValue(), map2.get(entry.getKey()))) {
+
+					return false;
+				}
+			}
 		}
 
 		return true;
@@ -2315,7 +2345,7 @@ public abstract class BaseDocumentResourceTestCase {
 				"Invalid entity field " + entityFieldName);
 		}
 
-		if (entityFieldName.equals("taxonomyCategories")) {
+		if (entityFieldName.equals("taxonomyCategoryBriefs")) {
 			throw new IllegalArgumentException(
 				"Invalid entity field " + entityFieldName);
 		}

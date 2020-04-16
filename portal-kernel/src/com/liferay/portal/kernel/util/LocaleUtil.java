@@ -15,6 +15,7 @@
 package com.liferay.portal.kernel.util;
 
 import com.liferay.petra.string.CharPool;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.log.Log;
@@ -233,6 +234,17 @@ public class LocaleUtil {
 
 		if (locale != null) {
 			return locale;
+		}
+
+		if (languageId.equals("zh-Hans-CN")) {
+			languageId = "zh_CN";
+		}
+		else if (languageId.equals("zh-Hant-TW")) {
+			languageId = "zh_TW";
+		}
+		else {
+			languageId = StringUtil.replace(
+				languageId, CharPool.MINUS, CharPool.UNDERLINE);
 		}
 
 		try {

@@ -21,11 +21,14 @@ import com.liferay.portal.vulcan.accept.language.AcceptLanguage;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 
+import java.util.Locale;
+
 import javax.annotation.Generated;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 
 import org.osgi.annotation.versioning.ProviderType;
@@ -42,6 +45,10 @@ import org.osgi.annotation.versioning.ProviderType;
 @ProviderType
 public interface OrganizationResource {
 
+	public static Builder builder() {
+		return FactoryHolder.factory.create();
+	}
+
 	public Page<Organization> getOrganizationsPage(
 			Boolean flatten, String search, Filter filter,
 			Pagination pagination, Sort[] sorts)
@@ -50,7 +57,13 @@ public interface OrganizationResource {
 	public Organization postOrganization(Organization organization)
 		throws Exception;
 
+	public Response postOrganizationBatch(String callbackURL, Object object)
+		throws Exception;
+
 	public void deleteOrganization(String organizationId) throws Exception;
+
+	public Response deleteOrganizationBatch(String callbackURL, Object object)
+		throws Exception;
 
 	public Organization getOrganization(String organizationId) throws Exception;
 
@@ -60,6 +73,9 @@ public interface OrganizationResource {
 
 	public Organization putOrganization(
 			String organizationId, Organization organization)
+		throws Exception;
+
+	public Response putOrganizationBatch(String callbackURL, Object object)
 		throws Exception;
 
 	public Page<Organization> getOrganizationOrganizationsPage(
@@ -87,5 +103,34 @@ public interface OrganizationResource {
 
 	public void setContextUser(
 		com.liferay.portal.kernel.model.User contextUser);
+
+	public static class FactoryHolder {
+
+		public static volatile Factory factory;
+
+	}
+
+	@ProviderType
+	public interface Builder {
+
+		public OrganizationResource build();
+
+		public Builder checkPermissions(boolean checkPermissions);
+
+		public Builder httpServletRequest(
+			HttpServletRequest httpServletRequest);
+
+		public Builder preferredLocale(Locale preferredLocale);
+
+		public Builder user(com.liferay.portal.kernel.model.User user);
+
+	}
+
+	@ProviderType
+	public interface Factory {
+
+		public Builder create();
+
+	}
 
 }

@@ -47,9 +47,11 @@ AUI.add(
 
 				if (Lang.isDate(value)) {
 					result = instance._encodeDate(value);
-				} else if (Array.isArray(value)) {
+				}
+				else if (Array.isArray(value)) {
 					result = instance._encodeDaysOfWeek(value);
-				} else if (value.position && value.dayOfWeek) {
+				}
+				else if (value.position && value.dayOfWeek) {
 					result = value.position + value.dayOfWeek;
 				}
 
@@ -123,7 +125,7 @@ AUI.add(
 
 				return {
 					dayOfWeek,
-					position: Lang.toInt(position)
+					position: Lang.toInt(position),
 				};
 			},
 
@@ -159,7 +161,8 @@ AUI.add(
 
 					if (rrule.freq === WEEKLY) {
 						rrule.byday = rrule.byday.split(STR_COMMA);
-					} else if (rrule.byday) {
+					}
+					else if (rrule.byday) {
 						rrule.byday = instance._parsePositionalByDay(
 							rrule.byday
 						);
@@ -207,7 +210,7 @@ AUI.add(
 
 					if (rrule) {
 						recurrence = {
-							rrule
+							rrule,
 						};
 
 						var exdate = instance._parseExDate(parts[1]);
@@ -219,7 +222,7 @@ AUI.add(
 				}
 
 				return recurrence;
-			}
+			},
 		});
 
 		Liferay.RecurrenceConverter = RecurrenceConverter;

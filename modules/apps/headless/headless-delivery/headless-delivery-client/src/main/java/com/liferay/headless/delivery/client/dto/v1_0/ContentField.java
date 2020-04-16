@@ -27,7 +27,53 @@ import javax.annotation.Generated;
  * @generated
  */
 @Generated("")
-public class ContentField {
+public class ContentField implements Cloneable {
+
+	public ContentFieldValue getContentFieldValue() {
+		return contentFieldValue;
+	}
+
+	public void setContentFieldValue(ContentFieldValue contentFieldValue) {
+		this.contentFieldValue = contentFieldValue;
+	}
+
+	public void setContentFieldValue(
+		UnsafeSupplier<ContentFieldValue, Exception>
+			contentFieldValueUnsafeSupplier) {
+
+		try {
+			contentFieldValue = contentFieldValueUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected ContentFieldValue contentFieldValue;
+
+	public Map<String, ContentFieldValue> getContentFieldValue_i18n() {
+		return contentFieldValue_i18n;
+	}
+
+	public void setContentFieldValue_i18n(
+		Map<String, ContentFieldValue> contentFieldValue_i18n) {
+
+		this.contentFieldValue_i18n = contentFieldValue_i18n;
+	}
+
+	public void setContentFieldValue_i18n(
+		UnsafeSupplier<Map<String, ContentFieldValue>, Exception>
+			contentFieldValue_i18nUnsafeSupplier) {
+
+		try {
+			contentFieldValue_i18n = contentFieldValue_i18nUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected Map<String, ContentFieldValue> contentFieldValue_i18n;
 
 	public String getDataType() {
 		return dataType;
@@ -176,46 +222,10 @@ public class ContentField {
 
 	protected Boolean repeatable;
 
-	public Value getValue() {
-		return value;
+	@Override
+	public ContentField clone() throws CloneNotSupportedException {
+		return (ContentField)super.clone();
 	}
-
-	public void setValue(Value value) {
-		this.value = value;
-	}
-
-	public void setValue(UnsafeSupplier<Value, Exception> valueUnsafeSupplier) {
-		try {
-			value = valueUnsafeSupplier.get();
-		}
-		catch (Exception e) {
-			throw new RuntimeException(e);
-		}
-	}
-
-	protected Value value;
-
-	public Map<String, Object> getValue_i18n() {
-		return value_i18n;
-	}
-
-	public void setValue_i18n(Map<String, Object> value_i18n) {
-		this.value_i18n = value_i18n;
-	}
-
-	public void setValue_i18n(
-		UnsafeSupplier<Map<String, Object>, Exception>
-			value_i18nUnsafeSupplier) {
-
-		try {
-			value_i18n = value_i18nUnsafeSupplier.get();
-		}
-		catch (Exception e) {
-			throw new RuntimeException(e);
-		}
-	}
-
-	protected Map<String, Object> value_i18n;
 
 	@Override
 	public boolean equals(Object object) {

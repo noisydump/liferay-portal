@@ -17,7 +17,7 @@ import {fetch} from 'frontend-js-web';
 const HEADERS = {
 	Accept: 'application/json',
 	'Accept-Language': Liferay.ThemeDisplay.getBCP47LanguageId(),
-	'Content-Type': 'text/plain; charset=utf-8'
+	'Content-Type': 'text/plain; charset=utf-8',
 };
 
 function escape(x) {
@@ -46,7 +46,7 @@ export const request = query =>
 	fetch(getURL(), {
 		body: `{"query": "${query}"}`,
 		headers: HEADERS,
-		method: 'POST'
+		method: 'POST',
 	})
 		.then(response => response.json())
 		.then(json => {
@@ -63,7 +63,7 @@ export const getURL = params => {
 	params = {
 		['p_auth']: Liferay.authToken,
 		t: Date.now(),
-		...params
+		...params,
 	};
 
 	const uri = new URL(`${window.location.origin}/o/graphql`);
@@ -77,7 +77,7 @@ export const getURL = params => {
 export const createAnswer = (articleBody, messageBoardThreadId) =>
 	request(gql`
         mutation {
-            createMessageBoardThreadMessageBoardMessage(messageBoardMessage: {articleBody: ${articleBody}, viewableBy: ANYONE}, messageBoardThreadId: ${messageBoardThreadId}){
+            createMessageBoardThreadMessageBoardMessage(messageBoardMessage: {articleBody: ${articleBody}, encodingFormat: "html", viewableBy: ANYONE}, messageBoardThreadId: ${messageBoardThreadId}){
                 viewableBy
             }
         }`);
@@ -85,7 +85,8 @@ export const createAnswer = (articleBody, messageBoardThreadId) =>
 export const createComment = (articleBody, messageBoardMessageId) =>
 	request(gql`
         mutation {
-            createMessageBoardMessageMessageBoardMessage(messageBoardMessage: {articleBody: ${articleBody}, viewableBy: ANYONE}, parentMessageBoardMessageId: ${messageBoardMessageId}){
+            createMessageBoardMessageMessageBoardMessage(messageBoardMessage: {articleBody: ${articleBody}, encodingFormat: "html", viewableBy: ANYONE}, parentMessageBoardMessageId: ${messageBoardMessageId}){
+            	actions
                 articleBody
                 creator {
                 	name
@@ -94,19 +95,24 @@ export const createComment = (articleBody, messageBoardMessageId) =>
             }
         }`);
 
-export const createQuestion = (articleBody, headline, keywords, siteKey) => {
-	keywords = keywords.length ? keywords.split(',').filter(x => x) : null;
-
-	return request(gql`
+export const createQuestion = (
+	articleBody,
+	headline,
+	messageBoardSectionId,
+	tags
+) =>
+	request(gql`
         mutation {
-            createSiteMessageBoardThread(messageBoardThread: {articleBody: ${articleBody}, headline: ${headline}, keywords: ${keywords}, showAsQuestion: true, viewableBy: ANYONE}, siteKey: ${siteKey}){
+            createMessageBoardSectionMessageBoardThread(messageBoardSectionId: ${messageBoardSectionId}, messageBoardThread: {articleBody: ${articleBody}, encodingFormat: "html", headline: ${headline}, showAsQuestion: true, taxonomyCategoryIds: ${tags}, viewableBy: ANYONE}){
                 articleBody
                 headline
-                keywords
+                taxonomyCategoryBriefs {
+                	taxonomyCategoryId
+					taxonomyCategoryName 
+                }
                 showAsQuestion
             }
         }`);
-};
 
 export const createVoteMessage = (id, rating) =>
 	request(gql`
@@ -138,18 +144,26 @@ export const deleteMessage = messageBoardMessage =>
 				)
 			);
 		}
+
 		return data;
 	});
 
-export const getKeywords = (page = 1, siteKey) =>
+export const deleteMessageBoardThread = messageBoardThreadId =>
+	request(gql`
+		mutation {
+			deleteMessageBoardThread(messageBoardThreadId: ${messageBoardThreadId})
+		}
+	`);
+
+export const getTags = (page = 1, siteKey) =>
 	request(gql`
         query {
-            keywords(page: ${page}, pageSize: 20, siteKey: ${siteKey} sort: "dateModified:desc"){
+            taxonomyCategoryRanked(page: ${page}, pageSize: 20, siteKey: ${siteKey}){
                 items {
                     name
                     dateCreated
                     id
-                    keywordUsageCount
+                    taxonomyCategoryUsageCount
                 }
                 lastPage
                 page
@@ -158,25 +172,43 @@ export const getKeywords = (page = 1, siteKey) =>
             }
         }`);
 
-export const getMessage = messageBoardMessageId =>
+export const getAllTags = siteKey =>
+	request(gql`   
+		query {
+			taxonomyVocabularies(siteKey: ${siteKey}){
+				items {
+					taxonomyCategories {
+						items {
+							id
+							name
+						}
+					}
+					assetTypes {
+						type
+					}
+				}
+			}
+		}`);
+
+export const getMessage = (friendlyUrlPath, siteKey) =>
 	request(gql`
         query {
-            messageBoardMessage(messageBoardMessageId: ${messageBoardMessageId}){
-                articleBody 
+            messageBoardMessageByFriendlyUrlPath(friendlyUrlPath: ${friendlyUrlPath}, siteKey: ${siteKey}){
+                articleBody
                 headline
-                id 
-                keywords 
+                id
             }
         }`);
 
 export const getThread = (
-	messageBoardThreadId,
+	friendlyUrlPath,
+	siteKey,
 	page = 1,
 	sort = 'showAsAnswer:desc,dateModified:desc'
 ) =>
 	request(gql`
         query {
-            messageBoardThread(messageBoardThreadId: ${messageBoardThreadId}){
+            messageBoardThreadByFriendlyUrlPath(friendlyUrlPath: ${friendlyUrlPath}, siteKey: ${siteKey}){
             	actions
                 aggregateRating {
                     ratingAverage
@@ -188,11 +220,18 @@ export const getThread = (
                     id
                     name
                 } 
+                creatorStatistics {
+					joinDate
+					lastPostDate
+					postsNumber
+					rank
+				}
                 dateCreated
                 dateModified
+                encodingFormat
+                friendlyUrlPath
                 headline
                 id 
-                keywords 
                 messageBoardMessages(page: ${page}, pageSize: 20, sort: ${sort}) {
                     items {
                     	actions
@@ -206,6 +245,14 @@ export const getThread = (
                             id
                             name
                         }
+                        creatorStatistics {
+                        	joinDate
+                        	lastPostDate
+                        	postsNumber
+                        	rank
+                        }
+                        encodingFormat
+                        friendlyUrlPath
                         id
                         messageBoardMessages {
                             items {
@@ -215,6 +262,7 @@ export const getThread = (
                                     id
                                     name
                                 }
+                                encodingFormat
                                 id
                                 showAsAnswer
                             }
@@ -227,10 +275,17 @@ export const getThread = (
                     pageSize
                     totalCount
                 }
+                messageBoardSection {
+                	title
+                }
                 myRating {
                     ratingValue
                 }
                 subscribed
+				taxonomyCategoryBriefs {
+                	taxonomyCategoryId
+					taxonomyCategoryName 
+                }
                 viewCount
             }
         }`);
@@ -246,6 +301,7 @@ export const getMessages = (
               messageBoardThreadMessageBoardMessages(messageBoardThreadId: ${parentMessageBoardMessageId}, page: ${page}, pageSize: ${pageSize}, sort: ${'showAsAnswer:desc,' +
 		sort}){
                 items {
+                	actions
                     aggregateRating {
                         ratingAverage
                         ratingCount
@@ -256,14 +312,24 @@ export const getMessages = (
                         id
                         name
                     }
+                    creatorStatistics {
+						joinDate
+						lastPostDate
+						postsNumber
+						rank
+					}
+                    encodingFormat
+                    friendlyUrlPath
                     id
                     messageBoardMessages {
                         items {
+                        	actions
                             articleBody
                             creator {
                                 id
                                 name
                             }
+                            encodingFormat
                             id
                             showAsAnswer
                         }
@@ -278,14 +344,17 @@ export const getMessages = (
             }
         }`).then(x => x.items);
 
-export const getThreadContent = messageBoardThreadId =>
+export const getThreadContent = (friendlyUrlPath, siteKey) =>
 	request(gql`
         query {
-            messageBoardThread(messageBoardThreadId: ${messageBoardThreadId}){
+            messageBoardThreadByFriendlyUrlPath(friendlyUrlPath: ${friendlyUrlPath}, siteKey: ${siteKey}){
                 articleBody 
                 headline
                 id 
-                keywords 
+				taxonomyCategoryBriefs {
+                	taxonomyCategoryId
+					taxonomyCategoryName 
+                } 
             }
         }`);
 
@@ -299,97 +368,162 @@ export const hasListPermissions = (permission, siteKey) =>
 
 export const getThreads = ({
 	creatorId = '',
-	keyword = '',
 	page = 1,
 	pageSize = 30,
 	search = '',
+	section,
 	siteKey,
-	sort = 'dateModified:desc'
+	sort = 'dateCreated:desc',
+	taxonomyCategoryId = '',
 }) => {
-	let filter = '';
-	if (keyword) {
-		filter = `keywords/any(x:x eq '${keyword}')`;
-	} else if (creatorId) {
+	let filter = `(messageBoardSectionId eq ${section.id} `;
+
+	for (let i = 0; i < section.messageBoardSections.items.length; i++) {
+		filter += `or messageBoardSectionId eq ${section.messageBoardSections.items[i].id} `;
+	}
+
+	filter += ')';
+
+	if (taxonomyCategoryId) {
+		filter = `taxonomyCategoryIds/any(x:x eq ${taxonomyCategoryId})`;
+	}
+	else if (creatorId) {
 		filter = `creator/id eq ${creatorId}`;
 	}
 
 	return request(gql`
         query {
-            messageBoardThreads(filter: ${filter}, page: ${page}, pageSize: ${pageSize}, search: ${search}, siteKey: ${siteKey}, sort: ${sort}){
-                items {
-                    aggregateRating {
-                        ratingAverage
-                        ratingCount
-                        ratingValue
-                    } 
-                    articleBody
-                    creator {
-                        id
-                        image
-                        name
-                    } 
-                    dateModified
-                    headline
-                    id 
-                    keywords 
-                    messageBoardMessages {
-                        items {
-                            showAsAnswer
-                        }
-                    }
-                    viewCount
-                } 
-                page 
-                pageSize 
-                totalCount
-            }
+			messageBoardThreads(filter: ${filter}, flatten:true, page: ${page}, pageSize: ${pageSize}, search: ${search}, siteKey: ${siteKey}, sort: ${sort}){
+				items {
+					aggregateRating {
+						ratingAverage
+						ratingCount
+						ratingValue
+					} 
+					articleBody
+					creator {
+						id
+						image
+						name
+					} 
+					dateModified
+					friendlyUrlPath
+					headline
+					id 
+					messageBoardMessages {
+						items {
+							showAsAnswer
+						}
+					}
+					messageBoardSection {
+						title
+					}
+					taxonomyCategoryBriefs {
+						taxonomyCategoryId
+						taxonomyCategoryName
+					} 
+					viewCount
+				}
+				page 
+				pageSize 
+				totalCount
+			}
         }`);
 };
 
-export const getRankedThreads = (dateModified, page = 1, pageSize = 30, sort) =>
+export const getSection = (title, siteKey) => {
+	const filter = `title eq '${title}' or id eq '${title}'`;
+
+	return request(gql`
+		query {
+			messageBoardSections(filter: ${filter}, flatten:true, pageSize: 1, siteKey: ${siteKey}, sort: "title:desc") {
+				items {
+					actions
+					id
+					messageBoardSections(sort: "title:asc") {
+						items {
+							id
+							parentMessageBoardSectionId
+							subscribed
+							title
+						}
+					}
+					parentMessageBoardSectionId
+					subscribed
+					title
+				}
+			}
+		}
+	`).then(data => data.items[0]);
+};
+
+export const getRankedThreads = (
+	dateModified,
+	page = 1,
+	pageSize = 20,
+	section,
+	sort = ''
+) =>
 	request(gql`
         query {
-          messageBoardThreadsRanked(dateModified: ${dateModified.toISOString()}, page: ${page}, pageSize: ${pageSize}, sort: ${sort}){
-            items {
-                aggregateRating {
-                    ratingAverage
-                    ratingCount
-                    ratingValue
-                } 
-                articleBody
-                creator {
-                    id
-                    name
-                } 
-                dateModified
-                headline
-                id 
-                keywords 
-                messageBoardMessages {
-                    items {
-                        showAsAnswer
-                    }
-                }
-                viewCount
-            }   
-            page
-            pageSize
-            totalCount
-          }
-        }`);
+			messageBoardThreadsRanked(dateModified: ${dateModified.toISOString()}, messageBoardSectionId: ${
+		section.id
+	}, page: ${page}, pageSize: ${pageSize}, sort: ${sort}){
+				items {
+					aggregateRating {
+						ratingAverage
+						ratingCount
+						ratingValue
+					} 
+					articleBody
+					creator {
+						id
+						name
+					} 
+					dateModified
+					headline
+					id  
+					messageBoardMessages {
+						items {
+							showAsAnswer
+						}
+					}
+					messageBoardSection {
+						title
+					}
+					taxonomyCategoryBriefs {
+						taxonomyCategoryId
+						taxonomyCategoryName
+					} 
+					viewCount
+				}   
+				page
+				pageSize
+				totalCount
+        	}
+		}`);
 
 export const getRelatedThreads = (search = '', siteKey) =>
 	request(gql`
         query {
-            messageBoardThreads(page: 1, pageSize: 10, flatten: true, search: ${search}, siteKey: ${siteKey}){
+            messageBoardThreads(page: 1, pageSize: 4, flatten: true, search: ${search}, siteKey: ${siteKey}){
                 items {
                     aggregateRating {
                         ratingAverage
                         ratingCount
                         ratingValue
                     }
+                    creator {
+                    	id
+                    	name
+                	} 
+                    dateModified
+                    friendlyUrlPath
                     headline
                     id 
+					messageBoardSection {
+						title
+				  	}
                 } 
                 page 
                 pageSize 
@@ -397,15 +531,70 @@ export const getRelatedThreads = (search = '', siteKey) =>
             }
         }`);
 
-export const getUserAccount = userAccountId =>
+export const getSections = siteKey =>
 	request(gql`
-        query {
-            userAccount(userAccountId: ${userAccountId}) {
-                emailAddress
-                id
-                name
-            }
-        }`);
+		query {
+			messageBoardSections(siteKey: ${siteKey}, sort: "title:desc") {
+				items {
+					description
+					id
+					numberOfMessageBoardThreads
+					parentMessageBoardSectionId
+					subscribed
+					title
+				}
+			}
+		}
+`);
+
+export const getUserActivity = (siteKey, userId = '') => {
+	const filter = `creatorId eq ${userId}`;
+
+	return request(gql`
+		query {
+			messageBoardThreads(filter: ${filter}, flatten: true, siteKey: ${siteKey}, sort: "dateCreated:desc") {
+				items {
+					aggregateRating {
+						ratingAverage
+						ratingCount
+						ratingValue
+					}
+					articleBody
+					creator {
+						id
+						name
+						image
+					}
+					creatorStatistics {
+						postsNumber
+						rank
+					}
+					dateModified
+					friendlyUrlPath
+					headline
+					id
+					messageBoardSection {
+						title
+					}
+					messageBoardMessages {
+						items {
+						showAsAnswer
+						}
+					}
+					messageBoardSection {
+						title
+					}
+					taxonomyCategoryBriefs{
+						taxonomyCategoryId
+						taxonomyCategoryName
+					}
+				}
+			page
+			pageSize
+			totalCount
+			}
+		}`);
+};
 
 export const markAsAnswerMessageBoardMessage = (
 	messageBoardMessageId,
@@ -421,7 +610,7 @@ export const markAsAnswerMessageBoardMessage = (
 export const updateMessage = (articleBody, messageBoardMessageId) =>
 	request(gql`
         mutation {
-            patchMessageBoardMessage(messageBoardMessage: {articleBody: ${articleBody}}, messageBoardMessageId: ${messageBoardMessageId}){
+            patchMessageBoardMessage(messageBoardMessage: {articleBody: ${articleBody},  encodingFormat: "html"}, messageBoardMessageId: ${messageBoardMessageId}){
                 articleBody
             }
         }`);
@@ -429,33 +618,20 @@ export const updateMessage = (articleBody, messageBoardMessageId) =>
 export const updateThread = (
 	articleBody,
 	headline,
-	keywords,
-	messageBoardThreadId
-) => {
-	keywords = keywords.length ? keywords.split(',').filter(x => x) : null;
-
-	return request(gql`
+	messageBoardThreadId,
+	taxonomyCategoryIds
+) =>
+	request(gql`
         mutation {
-            patchMessageBoardThread(messageBoardThread: {articleBody: ${articleBody}, headline: ${headline}, keywords: ${keywords}}, messageBoardThreadId: ${messageBoardThreadId}){
+            patchMessageBoardThread(messageBoardThread: {articleBody: ${articleBody}, encodingFormat: "html", headline: ${headline}, taxonomyCategoryIds: ${taxonomyCategoryIds}}, messageBoardThreadId: ${messageBoardThreadId}){
                 articleBody
                 headline
-                keywords
+				taxonomyCategoryBriefs {
+					taxonomyCategoryId
+					taxonomyCategoryName
+				} 
             }
         }`);
-};
-
-export const getMyUserAccount = () =>
-	request(gql`
-		query {
-			myUserAccount {
-				id
-				name
-				roleBriefs {
-					name
-				}
-			}
-		}
-	`);
 
 export const subscribe = messageBoardThreadId =>
 	request(gql`
@@ -468,5 +644,19 @@ export const unsubscribe = messageBoardThreadId =>
 	request(gql`
         mutation {
             updateMessageBoardThreadUnsubscribe(messageBoardThreadId: ${messageBoardThreadId})
+        }
+    `);
+
+export const subscribeSection = messageBoardSectionId =>
+	request(gql`
+        mutation {
+            updateMessageBoardSectionSubscribe(messageBoardSectionId: ${messageBoardSectionId})
+        }
+    `);
+
+export const unsubscribeSection = messageBoardSectionId =>
+	request(gql`
+        mutation {
+            updateMessageBoardSectionUnsubscribe(messageBoardSectionId: ${messageBoardSectionId})
         }
     `);

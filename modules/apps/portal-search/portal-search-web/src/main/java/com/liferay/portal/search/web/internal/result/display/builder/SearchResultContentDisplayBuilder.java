@@ -18,6 +18,7 @@ import com.liferay.asset.kernel.AssetRendererFactoryRegistryUtil;
 import com.liferay.asset.kernel.model.AssetEntry;
 import com.liferay.asset.kernel.model.AssetRenderer;
 import com.liferay.asset.kernel.model.AssetRendererFactory;
+import com.liferay.asset.util.AssetRendererFactoryLookup;
 import com.liferay.portal.kernel.portlet.LiferayWindowState;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.util.Portal;
@@ -39,9 +40,8 @@ public class SearchResultContentDisplayBuilder {
 		SearchResultContentDisplayContext searchResultContentDisplayContext =
 			new SearchResultContentDisplayContext();
 
-		AssetRendererFactory<?> assetRendererFactory;
-
-		assetRendererFactory = getAssetRendererFactoryByType(_type);
+		AssetRendererFactory<?> assetRendererFactory =
+			getAssetRendererFactoryByType(_type);
 
 		searchResultContentDisplayContext.setAssetRendererFactory(
 			assetRendererFactory);

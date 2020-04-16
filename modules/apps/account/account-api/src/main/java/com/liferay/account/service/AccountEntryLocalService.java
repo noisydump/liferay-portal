@@ -93,6 +93,12 @@ public interface AccountEntryLocalService
 	@Transactional(enabled = false)
 	public AccountEntry createAccountEntry(long accountEntryId);
 
+	/**
+	 * @throws PortalException
+	 */
+	public PersistedModel createPersistedModel(Serializable primaryKeyObj)
+		throws PortalException;
+
 	public void deactivateAccountEntries(long[] accountEntryIds)
 		throws PortalException;
 
@@ -103,6 +109,8 @@ public interface AccountEntryLocalService
 
 	public void deleteAccountEntries(long[] accountEntryIds)
 		throws PortalException;
+
+	public void deleteAccountEntriesByCompanyId(long companyId);
 
 	/**
 	 * Deletes the account entry from the database. Also notifies the appropriate model listeners.
@@ -256,6 +264,9 @@ public interface AccountEntryLocalService
 	 */
 	public String getOSGiServiceIdentifier();
 
+	/**
+	 * @throws PortalException
+	 */
 	@Override
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public PersistedModel getPersistedModel(Serializable primaryKeyObj)

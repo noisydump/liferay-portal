@@ -52,13 +52,7 @@ public class JavaAPISignatureCheck extends BaseJavaTermCheck {
 			String fileContent)
 		throws IOException {
 
-		if (javaTerm.hasAnnotation("Override")) {
-			return javaTerm.getContent();
-		}
-
-		String accessModifier = javaTerm.getAccessModifier();
-
-		if (!accessModifier.equals(JavaTerm.ACCESS_MODIFIER_PUBLIC)) {
+		if (!javaTerm.isPublic() || javaTerm.hasAnnotation("Override")) {
 			return javaTerm.getContent();
 		}
 
@@ -95,8 +89,7 @@ public class JavaAPISignatureCheck extends BaseJavaTermCheck {
 				addMessage(
 					fileName,
 					"Do not use type '" + parameterType +
-						"' in API method signature",
-					"api_method_signatures.markdown");
+						"' in API method signature");
 			}
 
 			if (illegalAPIParameterTypes.contains(parameterType) &&
@@ -107,8 +100,7 @@ public class JavaAPISignatureCheck extends BaseJavaTermCheck {
 				addMessage(
 					fileName,
 					"Do not use type '" + parameterType +
-						"' in API method signature",
-					"api_method_signatures.markdown");
+						"' in API method signature");
 			}
 		}
 

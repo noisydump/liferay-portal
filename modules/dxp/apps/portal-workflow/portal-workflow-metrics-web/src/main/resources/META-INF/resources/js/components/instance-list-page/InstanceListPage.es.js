@@ -9,46 +9,23 @@
  * distribution rights of the Software.
  */
 
-import React, {useMemo, useState} from 'react';
+import React, {useMemo} from 'react';
 
-import EmptyState from '../../shared/components/empty-state/EmptyState.es';
-import ReloadButton from '../../shared/components/list/ReloadButton.es';
-import LoadingState from '../../shared/components/loading/LoadingState.es';
-import PaginationBar from '../../shared/components/pagination-bar/PaginationBar.es';
-import PromisesResolver from '../../shared/components/promises-resolver/PromisesResolver.es';
 import {useFetch} from '../../shared/hooks/useFetch.es';
 import {useFilter} from '../../shared/hooks/useFilter.es';
 import {useProcessTitle} from '../../shared/hooks/useProcessTitle.es';
 import {processStatusConstants} from '../filter/ProcessStatusFilter.es';
 import {useTimeRangeFetch} from '../filter/hooks/useTimeRangeFetch.es';
-import {isValidDate} from '../filter/util/timeRangeUtil.es';
+import {getTimeRangeParams} from '../filter/util/timeRangeUtil.es';
+import {Body} from './InstanceListPageBody.es';
 import {Header} from './InstanceListPageHeader.es';
-import {ItemDetail} from './InstanceListPageItemDetail.es';
-import {Table} from './InstanceListPageTable.es';
-import {ModalContext} from './modal/ModalContext.es';
-import {BulkReassignModal} from './modal/bulk-reassign/BulkReassignModal.es';
-import {SingleReassignModal} from './modal/single-reassign/SingleReassignModal.es';
-import {InstanceListProvider} from './store/InstanceListPageStore.es';
+import InstanceListPageProvider from './InstanceListPageProvider.es';
+import ModalProvider from './modal/ModalProvider.es';
 
 const InstanceListPage = ({routeParams}) => {
 	useTimeRangeFetch();
 
 	const {page, pageSize, processId} = routeParams;
-	const [singleModal, setSingleModal] = useState({
-		selectedItem: undefined,
-		visible: false
-	});
-
-	const [bulkModal, setBulkModal] = useState({
-		reassignedTasks: [],
-		reassigning: false,
-		selectedAssignee: null,
-		selectedTasks: [],
-		useSameAssignee: false,
-		visible: false
-	});
-
-	const modalState = {bulkModal, setBulkModal, setSingleModal, singleModal};
 
 	useProcessTitle(processId, Liferay.Language.get('all-items'));
 
@@ -57,58 +34,49 @@ const InstanceListPage = ({routeParams}) => {
 		'processStep',
 		'processStatus',
 		'slaStatus',
-		'timeRange'
+		'timeRange',
 	];
 
 	const {
-		dispatch,
-		filterState: {timeRange},
-		filterValues: {assigneeUserIds, slaStatuses, statuses = [], taskKeys},
-		selectedFilters
-	} = useFilter(filterKeys);
+		filterValues: {
+			assigneeIds,
+			dateEnd,
+			dateStart,
+			slaStatuses,
+			statuses = [],
+			taskKeys,
+		},
+		prefixedKeys,
+		selectedFilters,
+	} = useFilter({filterKeys});
 
-	const {dateEnd, dateStart} =
-		timeRange && timeRange.length ? timeRange[0] : {};
+	const completedStatus = statuses.some(
+		status => status === processStatusConstants.completed
+	);
 
-	let timeRangeParams = {};
+	const timeRange = useMemo(
+		() => (completedStatus ? getTimeRangeParams(dateStart, dateEnd) : {}),
+		[completedStatus, dateEnd, dateStart]
+	);
 
-	if (
-		statuses.some(status => status === processStatusConstants.completed) &&
-		isValidDate(dateEnd) &&
-		isValidDate(dateStart)
-	) {
-		timeRangeParams = {
-			dateEnd: dateEnd.toISOString(),
-			dateStart: dateStart.toISOString()
-		};
-	}
 	const {data, fetchData} = useFetch({
 		params: {
-			assigneeUserIds,
+			assigneeIds,
 			page,
 			pageSize,
 			slaStatuses,
 			statuses,
 			taskKeys,
-			...timeRangeParams
+			...timeRange,
 		},
-		url: `/processes/${processId}/instances`
+		url: `/processes/${processId}/instances`,
 	});
 
-	const promises = useMemo(() => {
-		if (!bulkModal.visible && !singleModal.visible) {
-			return [fetchData()];
-		}
-
-		return [];
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [bulkModal.visible, fetchData, singleModal.visible]);
-
 	return (
-		<ModalContext.Provider value={modalState}>
-			<InstanceListProvider>
+		<ModalProvider processId={processId}>
+			<InstanceListPageProvider>
 				<InstanceListPage.Header
-					dispatch={dispatch}
+					filterKeys={prefixedKeys}
 					items={data.items}
 					processId={processId}
 					routeParams={routeParams}
@@ -116,84 +84,18 @@ const InstanceListPage = ({routeParams}) => {
 					totalCount={data.totalCount}
 				/>
 
-				<PromisesResolver promises={promises}>
-					<InstanceListPage.Body
-						data={data}
-						filtered={selectedFilters.length > 0}
-						routeParams={routeParams}
-					/>
-				</PromisesResolver>
-			</InstanceListProvider>
-		</ModalContext.Provider>
-	);
-};
-
-const Body = ({data, filtered, routeParams}) => {
-	const {items, totalCount} = data;
-
-	const emptyMessageText = filtered
-		? Liferay.Language.get('no-results-were-found')
-		: Liferay.Language.get(
-				'once-there-are-active-processes-metrics-will-appear-here'
-		  );
-	const errorMessageText = Liferay.Language.get(
-		'there-was-a-problem-retrieving-data-please-try-reloading-the-page'
-	);
-
-	return (
-		<>
-			<div className="container-fluid-1280 mt-4">
-				<PromisesResolver.Pending>
-					<LoadingState />
-				</PromisesResolver.Pending>
-
-				<PromisesResolver.Resolved>
-					{items && items.length ? (
-						<>
-							<InstanceListPage.Body.Table items={items} />
-
-							<PaginationBar
-								pageBuffer={3}
-								pageCount={items.length}
-								{...routeParams}
-								totalCount={totalCount}
-							/>
-						</>
-					) : (
-						<EmptyState
-							className="border-1"
-							hideAnimation={false}
-							message={emptyMessageText}
-							type="not-found"
-						/>
-					)}
-				</PromisesResolver.Resolved>
-
-				<PromisesResolver.Rejected>
-					<EmptyState
-						actionButton={<ReloadButton />}
-						className="border-1"
-						hideAnimation={true}
-						message={errorMessageText}
-						messageClassName="small"
-						type="error"
-					/>
-				</PromisesResolver.Rejected>
-			</div>
-
-			<InstanceListPage.SingleReassignModal />
-
-			<InstanceListPage.BulkReassignModal />
-
-			<ItemDetail processId={routeParams.processId} />
-		</>
+				<InstanceListPage.Body
+					data={data}
+					fetchData={fetchData}
+					filtered={selectedFilters.length > 0}
+					routeParams={routeParams}
+				/>
+			</InstanceListPageProvider>
+		</ModalProvider>
 	);
 };
 
 InstanceListPage.Body = Body;
-InstanceListPage.Body.Table = Table;
-InstanceListPage.BulkReassignModal = BulkReassignModal;
 InstanceListPage.Header = Header;
-InstanceListPage.SingleReassignModal = SingleReassignModal;
 
 export default InstanceListPage;

@@ -15,6 +15,7 @@
 package com.liferay.account.service.impl;
 
 import com.liferay.account.constants.AccountConstants;
+import com.liferay.account.exception.DuplicateAccountEntryIdException;
 import com.liferay.account.exception.DuplicateAccountEntryUserRelException;
 import com.liferay.account.model.AccountEntry;
 import com.liferay.account.model.AccountEntryUserRel;
@@ -23,12 +24,15 @@ import com.liferay.account.service.base.AccountEntryUserRelLocalServiceBaseImpl;
 import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.User;
+import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.util.SetUtil;
 
 import java.time.Month;
 
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -68,9 +72,7 @@ public class AccountEntryUserRelLocalServiceImpl
 		accountEntryUserRel.setAccountEntryId(accountEntryId);
 		accountEntryUserRel.setAccountUserId(accountUserId);
 
-		accountEntryUserRel = addAccountEntryUserRel(accountEntryUserRel);
-
-		return accountEntryUserRel;
+		return addAccountEntryUserRel(accountEntryUserRel);
 	}
 
 	@Override
@@ -80,10 +82,14 @@ public class AccountEntryUserRelLocalServiceImpl
 			String middleName, String lastName, long prefixId, long suffixId)
 		throws PortalException {
 
-		AccountEntry accountEntry = accountEntryLocalService.getAccountEntry(
-			accountEntryId);
+		long companyId = CompanyThreadLocal.getCompanyId();
 
-		long companyId = accountEntry.getCompanyId();
+		if (accountEntryId != AccountConstants.ACCOUNT_ENTRY_ID_DEFAULT) {
+			AccountEntry accountEntry =
+				accountEntryLocalService.getAccountEntry(accountEntryId);
+
+			companyId = accountEntry.getCompanyId();
+		}
 
 		boolean autoPassword = true;
 		String password1 = null;
@@ -168,6 +174,33 @@ public class AccountEntryUserRelLocalServiceImpl
 		}
 
 		return false;
+	}
+
+	@Override
+	public void updateAccountEntryUserRels(
+			long[] addAccountEntryIds, long[] deleteAccountEntryIds,
+			long accountUserId)
+		throws PortalException {
+
+		Set<Long> set = SetUtil.intersect(
+			addAccountEntryIds, deleteAccountEntryIds);
+
+		if (!SetUtil.isEmpty(set)) {
+			throw new DuplicateAccountEntryIdException();
+		}
+
+		for (long addAccountEntryId : addAccountEntryIds) {
+			if (!hasAccountEntryUserRel(addAccountEntryId, accountUserId)) {
+				addAccountEntryUserRel(addAccountEntryId, accountUserId);
+			}
+		}
+
+		for (long deleteAccountEntryId : deleteAccountEntryIds) {
+			if (hasAccountEntryUserRel(deleteAccountEntryId, accountUserId)) {
+				accountEntryUserRelPersistence.removeByAEI_AUI(
+					deleteAccountEntryId, accountUserId);
+			}
+		}
 	}
 
 	@Reference

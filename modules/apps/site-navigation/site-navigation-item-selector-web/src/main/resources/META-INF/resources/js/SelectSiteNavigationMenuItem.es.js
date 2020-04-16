@@ -36,11 +36,11 @@ const SelectSiteNavigationMenuItem = ({itemSelectorSaveEvent, nodes}) => {
 
 			const data = {
 				selectSiteNavigationMenuItemId: id,
-				selectSiteNavigationMenuItemName: name
+				selectSiteNavigationMenuItemName: name,
 			};
 
 			Liferay.Util.getOpener().Liferay.fire(itemSelectorSaveEvent, {
-				data
+				data,
 			});
 		}
 	};
@@ -77,6 +77,4 @@ const SelectSiteNavigationMenuItem = ({itemSelectorSaveEvent, nodes}) => {
 	);
 };
 
-export default function(props) {
-	return <SelectSiteNavigationMenuItem {...props} />;
-}
+export default SelectSiteNavigationMenuItem;

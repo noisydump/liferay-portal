@@ -43,7 +43,10 @@ import com.liferay.portal.upgrade.PortalUpgradeProcess;
 import com.liferay.portal.util.InitUtil;
 import com.liferay.portal.util.PortalClassPathUtil;
 import com.liferay.portal.util.PropsValues;
+import com.liferay.portal.verify.VerifyException;
+import com.liferay.portal.verify.VerifyGroup;
 import com.liferay.portal.verify.VerifyProperties;
+import com.liferay.portal.verify.VerifyResourcePermissions;
 import com.liferay.registry.Registry;
 import com.liferay.registry.RegistryUtil;
 import com.liferay.registry.ServiceRegistrar;
@@ -63,6 +66,23 @@ import org.apache.commons.lang.time.StopWatch;
  * @author Brian Wing Shun Chan
  */
 public class DBUpgrader {
+
+	public static void checkReleaseState() throws Exception {
+		if (_getReleaseState() == ReleaseConstants.STATE_GOOD) {
+			return;
+		}
+
+		StringBundler sb = new StringBundler(6);
+
+		sb.append("The database contains changes from a previous upgrade ");
+		sb.append("attempt that failed. Please restore the old database and ");
+		sb.append("file system and retry the upgrade. A patch may be ");
+		sb.append("required if the upgrade failed due to a bug or an ");
+		sb.append("unforeseen data permutation that resulted from a corrupt ");
+		sb.append("database.");
+
+		throw new IllegalStateException(sb.toString());
+	}
 
 	public static void checkRequiredBuildNumber(int requiredBuildNumber)
 		throws PortalException {
@@ -107,10 +127,6 @@ public class DBUpgrader {
 
 			StartupHelperUtil.printPatchLevel();
 
-			VerifyProperties verifyProperties = new VerifyProperties();
-
-			verifyProperties.verify();
-
 			upgrade();
 
 			_checkClassNamesAndResourceActions();
@@ -130,7 +146,7 @@ public class DBUpgrader {
 			_registerModuleServiceLifecycle("portlets.initialized");
 
 			System.out.println(
-				"\nCompleted Liferay core upgrade and verify processes in " +
+				"\nCompleted Liferay core upgrade process in " +
 					(stopWatch.getTime() / Time.SECOND) + " seconds");
 
 			System.out.println(
@@ -152,8 +168,6 @@ public class DBUpgrader {
 			_log.debug("Disable cache registry");
 		}
 
-		CacheRegistryUtil.setActive(false);
-
 		// Check required build number
 
 		checkRequiredBuildNumber(ReleaseInfo.RELEASE_6_2_0_BUILD_NUMBER);
@@ -163,6 +177,8 @@ public class DBUpgrader {
 				return;
 			}
 		}
+
+		CacheRegistryUtil.setActive(false);
 
 		// Upgrade
 
@@ -176,7 +192,7 @@ public class DBUpgrader {
 		}
 
 		_checkPermissionAlgorithm();
-		_checkReleaseState(_getReleaseState());
+		checkReleaseState();
 
 		if (PropsValues.UPGRADE_DATABASE_TRANSACTIONS_DISABLED) {
 			TransactionsUtil.disableTransactions();
@@ -197,6 +213,14 @@ public class DBUpgrader {
 				TransactionsUtil.enableTransactions();
 			}
 		}
+
+		// Update indexes
+
+		StartupHelperUtil.updateIndexes(true);
+
+		// Update Release
+
+		_updateReleaseBuildInfo();
 
 		// Reload SQL
 
@@ -223,99 +247,29 @@ public class DBUpgrader {
 			PortalCacheHelperUtil.clearPortalCaches(
 				PortalCacheManagerNames.MULTI_VM);
 		}
-	}
 
-	public static void verify() throws Exception {
-
-		// Check release
-
-		Release release = ReleaseLocalServiceUtil.fetchRelease(
-			ReleaseConstants.DEFAULT_SERVLET_CONTEXT_NAME);
-
-		if (release == null) {
-			release = ReleaseLocalServiceUtil.addRelease(
-				ReleaseConstants.DEFAULT_SERVLET_CONTEXT_NAME,
-				ReleaseInfo.getParentBuildNumber());
-		}
-
-		_checkReleaseState(release.getState());
-
-		// Update indexes
-
-		if (StartupHelperUtil.isUpgraded() ||
-			PropsValues.DATABASE_INDEXES_UPDATE_ON_STARTUP) {
-
-			StartupHelperUtil.setDropIndexes(true);
-
-			StartupHelperUtil.updateIndexes();
-		}
-
-		// Verify
-
-		if (PropsValues.VERIFY_DATABASE_TRANSACTIONS_DISABLED) {
-			TransactionsUtil.disableTransactions();
-		}
-
-		try {
-			StartupHelperUtil.verifyProcess(release.isVerified());
-		}
-		catch (Exception exception) {
-			_updateReleaseState(ReleaseConstants.STATE_VERIFY_FAILURE);
-
-			_log.error(
-				"Unable to execute verify process: " + exception.getMessage(),
-				exception);
-
-			throw exception;
-		}
-		finally {
-			if (PropsValues.VERIFY_DATABASE_TRANSACTIONS_DISABLED) {
-				TransactionsUtil.enableTransactions();
-			}
-		}
-
-		// Update indexes
-
-		if (PropsValues.DATABASE_INDEXES_UPDATE_ON_STARTUP ||
-			StartupHelperUtil.isUpgraded()) {
-
-			StartupHelperUtil.updateIndexes(false);
-		}
-
-		// Update release
-
-		boolean verified = StartupHelperUtil.isVerified();
-
-		if (release.isVerified()) {
-			verified = true;
-		}
-
-		release.setBuildNumber(ReleaseInfo.getParentBuildNumber());
-		release.setBuildDate(ReleaseInfo.getBuildDate());
-		release.setVerified(verified);
-
-		release = ReleaseLocalServiceUtil.updateRelease(release);
-
-		// Enable database caching after verify
+		// Enable database caching after upgrade
 
 		CacheRegistryUtil.setActive(true);
 
 		// Register release service
 
-		Registry registry = RegistryUtil.getRegistry();
+		_registerReleaseService();
+	}
 
-		ServiceRegistrar<Release> serviceRegistrar =
-			registry.getServiceRegistrar(Release.class);
+	public static void verify() throws VerifyException {
+		VerifyProperties verifyProperties = new VerifyProperties();
 
-		Map<String, Object> properties = HashMapBuilder.<String, Object>put(
-			"build.date", release.getBuildDate()
-		).put(
-			"build.number", release.getBuildNumber()
-		).put(
-			"servlet.context.name", release.getServletContextName()
-		).build();
+		verifyProperties.verify();
 
-		serviceRegistrar.registerService(Release.class, release, properties);
+		VerifyGroup verifyGroup = new VerifyGroup();
+
+		verifyGroup.verify();
+
+		VerifyResourcePermissions verifyResourcePermissions =
+			new VerifyResourcePermissions();
+
+		verifyResourcePermissions.verify();
 	}
 
 	private static void _checkClassNamesAndResourceActions() {
@@ -353,23 +307,6 @@ public class DBUpgrader {
 		throw new IllegalStateException(sb.toString());
 	}
 
-	private static void _checkReleaseState(int state) throws Exception {
-		if (state == ReleaseConstants.STATE_GOOD) {
-			return;
-		}
-
-		StringBundler sb = new StringBundler(6);
-
-		sb.append("The database contains changes from a previous upgrade ");
-		sb.append("attempt that failed. Please restore the old database and ");
-		sb.append("file system and retry the upgrade. A patch may be ");
-		sb.append("required if the upgrade failed due to a bug or an ");
-		sb.append("unforeseen data permutation that resulted from a corrupt ");
-		sb.append("database.");
-
-		throw new IllegalStateException(sb.toString());
-	}
-
 	private static int _getBuildNumberForMissedUpgradeProcesses(int buildNumber)
 		throws Exception {
 
@@ -388,44 +325,29 @@ public class DBUpgrader {
 	}
 
 	private static int _getReleaseState() throws Exception {
-		Connection con = null;
-		PreparedStatement ps = null;
-		ResultSet rs = null;
-
-		try {
-			con = DataAccess.getConnection();
-
-			ps = con.prepareStatement(
-				"select state_ from Release_ where releaseId = ?");
+		try (Connection con = DataAccess.getConnection();
+			PreparedStatement ps = con.prepareStatement(
+				"select state_ from Release_ where releaseId = ?")) {
 
 			ps.setLong(1, ReleaseConstants.DEFAULT_ID);
 
-			rs = ps.executeQuery();
-
-			if (rs.next()) {
-				return rs.getInt("state_");
+			try (ResultSet rs = ps.executeQuery()) {
+				if (rs.next()) {
+					return rs.getInt("state_");
+				}
 			}
 
 			throw new IllegalArgumentException(
 				"No Release exists with the primary key " +
 					ReleaseConstants.DEFAULT_ID);
 		}
-		finally {
-			DataAccess.cleanUp(con, ps, rs);
-		}
 	}
 
 	private static long _getResourceCodesCount() throws Exception {
-		Connection con = null;
-		PreparedStatement ps = null;
-		ResultSet rs = null;
-
-		try {
-			con = DataAccess.getConnection();
-
-			ps = con.prepareStatement("select count(*) from ResourceCode");
-
-			rs = ps.executeQuery();
+		try (Connection con = DataAccess.getConnection();
+			PreparedStatement ps = con.prepareStatement(
+				"select count(*) from ResourceCode");
+			ResultSet rs = ps.executeQuery()) {
 
 			if (rs.next()) {
 				return rs.getInt(1);
@@ -435,9 +357,6 @@ public class DBUpgrader {
 		}
 		catch (Exception exception) {
 			return 0;
-		}
-		finally {
-			DataAccess.cleanUp(con, ps, rs);
 		}
 	}
 
@@ -461,31 +380,61 @@ public class DBUpgrader {
 			properties);
 	}
 
+	private static void _registerReleaseService() {
+		Registry registry = RegistryUtil.getRegistry();
+
+		ServiceRegistrar<Release> serviceRegistrar =
+			registry.getServiceRegistrar(Release.class);
+
+		Release release = ReleaseLocalServiceUtil.fetchRelease(
+			ReleaseConstants.DEFAULT_SERVLET_CONTEXT_NAME);
+
+		Map<String, Object> properties = HashMapBuilder.<String, Object>put(
+			"build.date", release.getBuildDate()
+		).put(
+			"build.number", release.getBuildNumber()
+		).put(
+			"servlet.context.name", release.getServletContextName()
+		).build();
+
+		serviceRegistrar.registerService(Release.class, release, properties);
+	}
+
 	private static void _updateCompanyKey() throws Exception {
 		DB db = DBManagerUtil.getDB();
 
 		db.runSQL("update CompanyInfo set key_ = null");
 	}
 
+	private static void _updateReleaseBuildInfo() throws Exception {
+		try (Connection connection = DataAccess.getConnection();
+			PreparedStatement ps = connection.prepareStatement(
+				"update Release_ set buildNumber = ?, buildDate = ? where " +
+					"releaseId = ?")) {
+
+			ps.setInt(1, ReleaseInfo.getParentBuildNumber());
+
+			java.util.Date buildDate = ReleaseInfo.getBuildDate();
+
+			ps.setDate(2, new Date(buildDate.getTime()));
+
+			ps.setLong(3, ReleaseConstants.DEFAULT_ID);
+
+			ps.executeUpdate();
+		}
+	}
+
 	private static void _updateReleaseState(int state) throws Exception {
-		Connection con = null;
-		PreparedStatement ps = null;
-
-		try {
-			con = DataAccess.getConnection();
-
-			ps = con.prepareStatement(
+		try (Connection con = DataAccess.getConnection();
+			PreparedStatement ps = con.prepareStatement(
 				"update Release_ set modifiedDate = ?, state_ = ? where " +
-					"releaseId = ?");
+					"releaseId = ?")) {
 
 			ps.setDate(1, new Date(System.currentTimeMillis()));
 			ps.setInt(2, state);
 			ps.setLong(3, ReleaseConstants.DEFAULT_ID);
 
 			ps.executeUpdate();
-		}
-		finally {
-			DataAccess.cleanUp(con, ps);
 		}
 	}
 

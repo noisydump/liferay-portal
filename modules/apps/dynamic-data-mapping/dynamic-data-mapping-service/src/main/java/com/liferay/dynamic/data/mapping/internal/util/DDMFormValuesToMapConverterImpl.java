@@ -74,7 +74,17 @@ public class DDMFormValuesToMapConverterImpl
 		DDMFormField ddmFormField, DDMFormFieldValue ddmFormFieldValue,
 		Map<String, Object> values) {
 
+		if (ddmFormField == null) {
+			return;
+		}
+
 		Value value = ddmFormFieldValue.getValue();
+
+		if (value == null) {
+			values.put(ddmFormField.getName(), null);
+
+			return;
+		}
 
 		if (ddmFormField.isRepeatable()) {
 			if (ddmFormField.isLocalizable()) {
@@ -90,15 +100,14 @@ public class DDMFormValuesToMapConverterImpl
 				for (Locale locale : availableLocales) {
 					String languageId = LanguageUtil.getLanguageId(locale);
 
-					Map<String, Object> instancesValue =
-						(Map<String, Object>)localizedValues.getOrDefault(
-							languageId, new HashMap<>());
+					Object[] instancesValue =
+						(Object[])localizedValues.getOrDefault(
+							languageId, new Object[0]);
 
-					instancesValue.put(
-						ddmFormFieldValue.getInstanceId(),
-						localizedValue.getString(locale));
-
-					localizedValues.put(languageId, instancesValue);
+					localizedValues.put(
+						languageId,
+						ArrayUtil.append(
+							instancesValue, localizedValue.getString(locale)));
 				}
 
 				values.put(ddmFormField.getName(), localizedValues);

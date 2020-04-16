@@ -22,16 +22,21 @@
 
 <div class="container-fluid container-fluid-max-xl main-content-body">
 	<aui:form method="post" name="fm">
+		<aui:input name="deleteQuestionIds" type="hidden" />
+
 		<liferay-ui:error exception="<%= DuplicateVoteException.class %>" message="you-may-only-vote-once" />
 		<liferay-ui:error exception="<%= NoSuchChoiceException.class %>" message="please-select-an-option" />
 
 		<liferay-ui:search-container
 			cssClass="table-nowrap"
 			id="<%= pollsDisplayContext.getSearchContainerId() %>"
+			rowChecker="<%= new EmptyOnClickRowChecker(renderResponse) %>"
 			searchContainer="<%= pollsDisplayContext.getSearch() %>"
 		>
 			<liferay-ui:search-container-row
 				className="com.liferay.polls.model.PollsQuestion"
+				cssClass="entry-display-style"
+				keyProperty="questionId"
 				modelVar="question"
 			>
 

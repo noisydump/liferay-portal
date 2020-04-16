@@ -166,7 +166,8 @@ currentURLObj.setParameter("historyKey", renderResponse.getNamespace() + "userGr
 
 			if (!searchContainerData.length) {
 				searchContainerData = [];
-			} else {
+			}
+			else {
 				searchContainerData = searchContainerData.split(',');
 			}
 
@@ -174,7 +175,7 @@ currentURLObj.setParameter("historyKey", renderResponse.getNamespace() + "userGr
 				{
 					dialog: {
 						constrain: true,
-						modal: true
+						modal: true,
 					},
 
 					<%
@@ -195,7 +196,7 @@ currentURLObj.setParameter("historyKey", renderResponse.getNamespace() + "userGr
 					selectUserGroupURL.setWindowState(LiferayWindowState.POP_UP);
 					%>
 
-					uri: '<%= selectUserGroupURL.toString() %>'
+					uri: '<%= selectUserGroupURL.toString() %>',
 				},
 				function(event) {
 					var A = AUI();

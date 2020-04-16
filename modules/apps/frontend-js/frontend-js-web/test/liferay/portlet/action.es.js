@@ -34,7 +34,7 @@ describe('PortletHub', () => {
 		let listenerA;
 
 		beforeEach(() => {
-			global.fetchMock([portletA]);
+			global.fetch.mockResponse(JSON.stringify([portletA]));
 
 			return Promise.all([register(portletA), register(portletB)]).then(
 				values => {
@@ -99,7 +99,7 @@ describe('PortletHub', () => {
 
 		it('throws a TypeError if action parameters is invalid', () => {
 			const parameters = {
-				a: 'value'
+				a: 'value',
 			};
 
 			const testFn = () => {
@@ -138,7 +138,7 @@ describe('PortletHub', () => {
 		it('does not throw if both arguments are valid', () => {
 			const element = document.createElement('form');
 			const parameters = {
-				param1: ['paramValue1']
+				param1: ['paramValue1'],
 			};
 
 			return hubA.action(parameters, element).then(() => {
@@ -161,7 +161,7 @@ describe('PortletHub', () => {
 		it('throws an NotInitializedException if no onStateChange listener is registered.', () => {
 			const element = document.createElement('form');
 			const parameters = {
-				param1: ['paramValue1']
+				param1: ['paramValue1'],
 			};
 
 			const testFn = () => {
@@ -208,7 +208,7 @@ describe('PortletHub', () => {
 				register(portletA),
 				register(portletB),
 				register(portletC),
-				register(portletD)
+				register(portletD),
 			]).then(values => {
 				hubA = values[0];
 
@@ -256,7 +256,7 @@ describe('PortletHub', () => {
 		});
 
 		it('throws an AccessDeniedException if called before previous action completes', () => {
-			global.fetchMock([portletA]);
+			global.fetch.mockResponse(JSON.stringify([portletA]));
 
 			const element = document.createElement('form');
 			const parameters = {};
@@ -272,7 +272,7 @@ describe('PortletHub', () => {
 		});
 
 		it('allows actions that update the state of 2 portlets. other portlets are not updated', () => {
-			global.fetchMock([portletB, portletC]);
+			global.fetch.mockResponse(JSON.stringify([portletB, portletC]));
 
 			const element = document.createElement('form');
 			const parameters = {};

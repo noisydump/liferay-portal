@@ -20,7 +20,15 @@ export const EDITABLE_FLOATING_TOOLBAR_BUTTONS = {
 		icon: 'pencil',
 		id: 'edit',
 		title: Liferay.Language.get('edit'),
-		type: 'editor'
+		type: 'editor',
+	},
+
+	imageProperties: {
+		icon: 'pencil',
+		id: 'image_properties',
+		panelId: 'image_properties',
+		title: Liferay.Language.get('image-properties'),
+		type: 'panel',
 	},
 
 	link: {
@@ -28,7 +36,7 @@ export const EDITABLE_FLOATING_TOOLBAR_BUTTONS = {
 		id: 'link',
 		panelId: 'link',
 		title: Liferay.Language.get('link'),
-		type: 'panel'
+		type: 'panel',
 	},
 
 	map: {
@@ -36,6 +44,6 @@ export const EDITABLE_FLOATING_TOOLBAR_BUTTONS = {
 		id: 'mapping',
 		panelId: 'mapping',
 		title: Liferay.Language.get('map'),
-		type: 'panel'
-	}
+		type: 'panel',
+	},
 };

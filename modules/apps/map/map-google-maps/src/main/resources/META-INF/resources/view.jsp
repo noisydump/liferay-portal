@@ -26,7 +26,7 @@ boolean geolocation = GetterUtil.getBoolean(request.getAttribute("liferay-map:ma
 double latitude = (Double)request.getAttribute("liferay-map:map:latitude");
 double longitude = (Double)request.getAttribute("liferay-map:map:longitude");
 String name = (String)request.getAttribute("liferay-map:map:name");
-String points =(String)request.getAttribute("liferay-map:map:points");
+String points = (String)request.getAttribute("liferay-map:map:points");
 
 name = namespace + name;
 %>
@@ -70,7 +70,7 @@ name = namespace + name;
 						MapControls.PAN,
 						MapControls.SEARCH,
 						MapControls.TYPE,
-						MapControls.ZOOM
+						MapControls.ZOOM,
 					],
 				</c:otherwise>
 			</c:choose>
@@ -86,9 +86,9 @@ name = namespace + name;
 			position: {
 				location: {
 					lat: <%= latitude %>,
-					lng: <%= longitude %>
-				}
-			}
+					lng: <%= longitude %>,
+				},
+			},
 		</c:if>
 	};
 
@@ -104,7 +104,8 @@ name = namespace + name;
 
 	if (Liferay.Maps.gmapsReady) {
 		createMap();
-	} else {
+	}
+	else {
 		Liferay.once('gmapsReady', createMap);
 	}
 </aui:script>

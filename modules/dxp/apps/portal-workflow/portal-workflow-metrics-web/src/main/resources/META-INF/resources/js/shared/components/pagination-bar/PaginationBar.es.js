@@ -11,29 +11,29 @@
 
 import {ClayPaginationBarWithBasicItems} from '@clayui/pagination-bar';
 import pathToRegexp from 'path-to-regexp';
-import React, {useContext, useMemo, useCallback} from 'react';
+import React, {useCallback, useContext, useMemo} from 'react';
 
 import {AppContext} from '../../../components/AppContext.es';
 import {useRouter} from '../../hooks/useRouter.es';
 
 const PaginationBar = ({
-	routing = true,
 	page,
 	pageBuffer,
 	pageSize,
 	totalCount,
 	setPage = () => {},
-	setPageSize = () => {}
+	setPageSize = () => {},
+	withoutRouting,
 }) => {
 	const {deltaValues} = useContext(AppContext);
 	const {
 		history,
 		location: {search},
-		match: {params, path}
+		match: {params, path},
 	} = useRouter();
 
 	const deltas = useMemo(() => deltaValues.map(label => ({label})), [
-		deltaValues
+		deltaValues,
 	]);
 
 	const labels = useMemo(
@@ -42,22 +42,23 @@ const PaginationBar = ({
 				'showing-x-to-x-of-x-entries'
 			),
 			perPageItems: Liferay.Language.get('x-entries'),
-			selectPerPageItems: Liferay.Language.get('x-entries')
+			selectPerPageItems: Liferay.Language.get('x-entries'),
 		}),
 		[]
 	);
 
 	const handleChangePageSize = useCallback(
 		newPageSize => {
-			if (routing) {
+			if (!withoutRouting) {
 				const pathname = pathToRegexp.compile(path)({
 					...params,
 					page: 1,
-					pageSize: newPageSize
+					pageSize: newPageSize,
 				});
 
 				history.push({pathname, search});
-			} else {
+			}
+			else {
 				setPage(1);
 				setPageSize(newPageSize);
 			}
@@ -68,14 +69,15 @@ const PaginationBar = ({
 
 	const handleChangePage = useCallback(
 		newPage => {
-			if (routing) {
+			if (!withoutRouting) {
 				const pathname = pathToRegexp.compile(path)({
 					...params,
-					page: newPage
+					page: newPage,
 				});
 
 				history.push({pathname, search});
-			} else {
+			}
+			else {
 				setPage(newPage);
 			}
 		},
@@ -87,18 +89,16 @@ const PaginationBar = ({
 		return <></>;
 	}
 
-	const spritemap = `${Liferay.ThemeDisplay.getPathThemeImages()}/lexicon/icons.svg`;
-
 	return (
 		<ClayPaginationBarWithBasicItems
 			activeDelta={Number(pageSize)}
 			activePage={Number(page)}
+			className="mt-2"
 			deltas={deltas}
 			ellipsisBuffer={pageBuffer}
 			labels={labels}
 			onDeltaChange={handleChangePageSize}
 			onPageChange={handleChangePage}
-			spritemap={spritemap}
 			totalItems={Number(totalCount)}
 		/>
 	);

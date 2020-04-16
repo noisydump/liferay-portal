@@ -145,7 +145,7 @@ else {
 			dataType: 'JSON',
 			form: {
 				id: form.getDOMNode(),
-				upload: true
+				upload: true,
 			},
 			method: 'POST',
 			on: {
@@ -167,14 +167,15 @@ else {
 								Liferay.Mail.keywords
 							);
 						}
-					} catch (e) {
+					}
+					catch (e) {
 						Liferay.Mail.setStatus(
 							'error',
 							'<liferay-ui:message key="unable-to-send-message" />'
 						);
 					}
-				}
-			}
+				},
+			},
 		});
 	});
 
@@ -190,7 +191,7 @@ else {
 		A.io.request(themeDisplay.getLayoutURL() + '/-/mail/save_draft', {
 			dataType: 'JSON',
 			form: {
-				id: form.getDOMNode()
+				id: form.getDOMNode(),
 			},
 			on: {
 				failure: function(event, id, obj) {
@@ -206,8 +207,8 @@ else {
 						responseData.status,
 						responseData.message
 					);
-				}
-			}
+				},
+			},
 		});
 	});
 

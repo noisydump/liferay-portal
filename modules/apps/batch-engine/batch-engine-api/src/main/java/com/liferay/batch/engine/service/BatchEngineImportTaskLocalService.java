@@ -81,7 +81,8 @@ public interface BatchEngineImportTaskLocalService
 		long companyId, long userId, long batchSize, String callbackURL,
 		String className, byte[] content, String contentType,
 		String executeStatus, Map<String, String> fieldNameMappingMap,
-		String operation, Map<String, Serializable> parameters);
+		String operation, Map<String, Serializable> parameters,
+		String taskItemDelegateName);
 
 	/**
 	 * Creates a new batch engine import task with the primary key. Does not add the batch engine import task to the database.
@@ -92,6 +93,12 @@ public interface BatchEngineImportTaskLocalService
 	@Transactional(enabled = false)
 	public BatchEngineImportTask createBatchEngineImportTask(
 		long batchEngineImportTaskId);
+
+	/**
+	 * @throws PortalException
+	 */
+	public PersistedModel createPersistedModel(Serializable primaryKeyObj)
+		throws PortalException;
 
 	/**
 	 * Deletes the batch engine import task from the database. Also notifies the appropriate model listeners.
@@ -276,6 +283,9 @@ public interface BatchEngineImportTaskLocalService
 	 */
 	public String getOSGiServiceIdentifier();
 
+	/**
+	 * @throws PortalException
+	 */
 	@Override
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public PersistedModel getPersistedModel(Serializable primaryKeyObj)

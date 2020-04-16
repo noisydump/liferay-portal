@@ -12,36 +12,27 @@
  * details.
  */
 
+import {fireEvent} from '@testing-library/react';
+
 import Options from '../../../src/main/resources/META-INF/resources/Options/Options.es';
-
-const fireEvent = {
-	input: (element, config) => {
-		element.value = config.target.value;
-
-		var event = new Event('input', {
-			...config,
-			bubbles: true,
-			cancelable: true
-		});
-
-		element.dispatchEvent(event);
-	}
-};
+import withContextMock from '../__mocks__/withContextMock.es';
 
 let component;
 const spritemap = 'icons.svg';
+
+const OptionsWithContextMock = withContextMock(Options);
 
 const optionsValue = {
 	en_US: [
 		{
 			label: 'Option 1',
-			value: 'Option1'
+			value: 'Option1',
 		},
 		{
 			label: 'Option 2',
-			value: 'Option2'
-		}
-	]
+			value: 'Option2',
+		},
+	],
 };
 
 describe('Options', () => {
@@ -54,27 +45,27 @@ describe('Options', () => {
 	});
 
 	it('shows the options', () => {
-		component = new Options({
+		component = new OptionsWithContextMock({
 			name: 'options',
 			spritemap,
-			value: optionsValue
+			value: optionsValue,
 		});
 
 		expect(component).toMatchSnapshot();
 	});
 
 	it('shows an empty option when value is an array of size 1', () => {
-		component = new Options({
+		component = new OptionsWithContextMock({
 			name: 'options',
 			spritemap,
 			value: {
 				[themeDisplay.getLanguageId()]: [
 					{
 						label: 'Option',
-						value: 'Option'
-					}
-				]
-			}
+						value: 'Option',
+					},
+				],
+			},
 		});
 
 		jest.runAllTimers();
@@ -96,7 +87,7 @@ describe('Options', () => {
 	});
 
 	it('does not show an empty option when translating', () => {
-		component = new Options({
+		component = new OptionsWithContextMock({
 			defaultLanguageId: themeDisplay.getLanguageId(),
 			editingLanguageId: 'pt_BR',
 			name: 'options',
@@ -105,10 +96,10 @@ describe('Options', () => {
 				[themeDisplay.getLanguageId()]: [
 					{
 						label: 'Option',
-						value: 'Option'
-					}
-				]
-			}
+						value: 'Option',
+					},
+				],
+			},
 		});
 
 		jest.runAllTimers();
@@ -122,17 +113,17 @@ describe('Options', () => {
 	});
 
 	it('edits the value of an option based on the label', () => {
-		component = new Options({
+		component = new OptionsWithContextMock({
 			name: 'options',
 			spritemap,
 			value: {
 				[themeDisplay.getLanguageId()]: [
 					{
 						label: 'Option',
-						value: 'Option'
-					}
-				]
-			}
+						value: 'Option',
+					},
+				],
+			},
 		});
 
 		jest.runAllTimers();
@@ -140,7 +131,11 @@ describe('Options', () => {
 		const {element} = component;
 		const labelInputs = element.querySelectorAll('.ddm-field-text');
 
-		fireEvent.input(labelInputs[0], {target: {value: 'Hello'}});
+		fireEvent.change(labelInputs[0], {
+			target: {
+				value: 'Hello',
+			},
+		});
 
 		jest.runAllTimers();
 
@@ -150,17 +145,17 @@ describe('Options', () => {
 	});
 
 	it('inserts a new empty option when editing the last option', () => {
-		component = new Options({
+		component = new OptionsWithContextMock({
 			name: 'options',
 			spritemap,
 			value: {
 				[themeDisplay.getLanguageId()]: [
 					{
 						label: 'Option',
-						value: 'Option'
-					}
-				]
-			}
+						value: 'Option',
+					},
+				],
+			},
 		});
 
 		jest.runAllTimers();
@@ -168,7 +163,11 @@ describe('Options', () => {
 		const {element} = component;
 		const labelInputs = element.querySelectorAll('.ddm-field-text');
 
-		fireEvent.input(labelInputs[1], {target: {value: 'Hello'}});
+		fireEvent.change(labelInputs[1], {
+			target: {
+				value: 'Hello',
+			},
+		});
 
 		jest.runAllTimers();
 
@@ -178,7 +177,7 @@ describe('Options', () => {
 	});
 
 	it('does not insert a new empty option automatically if translating', () => {
-		component = new Options({
+		component = new OptionsWithContextMock({
 			defaultLanguageId: themeDisplay.getLanguageId(),
 			editingLanguageId: 'pt_BR',
 			name: 'options',
@@ -187,10 +186,10 @@ describe('Options', () => {
 				[themeDisplay.getLanguageId()]: [
 					{
 						label: 'Option',
-						value: 'Option'
-					}
-				]
-			}
+						value: 'Option',
+					},
+				],
+			},
 		});
 
 		jest.runAllTimers();

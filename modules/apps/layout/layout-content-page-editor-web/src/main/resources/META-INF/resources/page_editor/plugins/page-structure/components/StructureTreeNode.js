@@ -15,76 +15,50 @@
 import ClayButton from '@clayui/button';
 import ClayIcon from '@clayui/icon';
 import classNames from 'classnames';
-import React, {useContext} from 'react';
+import PropTypes from 'prop-types';
+import React from 'react';
 
+import {useToControlsId} from '../../../app/components/CollectionItemContext';
 import {
+	useActiveItemId,
 	useHoverItem,
-	useIsHovered,
-	useIsSelected,
-	useSelectItem
+	useHoveredItemId,
+	useSelectItem,
 } from '../../../app/components/Controls';
-import {ConfigContext} from '../../../app/config/index';
-import {useSelector, useDispatch} from '../../../app/store/index';
+import {fromControlsId} from '../../../app/components/layout-data-items/Collection';
+import {ITEM_ACTIVATION_ORIGINS} from '../../../app/config/constants/itemActivationOrigins';
+import {useDispatch, useSelector} from '../../../app/store/index';
 import deleteItem from '../../../app/thunks/deleteItem';
 
-const NameButton = ({id, name}) => {
-	const isSelected = useIsSelected();
-
-	return (
-		<ClayButton
-			className={classNames(
-				'page-editor__page-structure__tree-node__name-button',
-				{
-					'page-editor__page-structure__tree-node__name-button--active': isSelected(
-						id
-					)
-				}
-			)}
-			displayType="unstyled"
-		>
-			{name || Liferay.Language.get('element')}
-		</ClayButton>
-	);
-};
-
-const RemoveButton = ({node}) => {
-	const config = useContext(ConfigContext);
-	const dispatch = useDispatch();
-	const store = useSelector(state => state);
-
-	return (
-		<ClayButton
-			className="page-editor__page-structure__tree-node__remove-button"
-			displayType="unstyled"
-			onClick={event => {
-				event.stopPropagation();
-
-				dispatch(deleteItem({config, itemId: node.id, store}));
-			}}
-		>
-			<ClayIcon symbol="times-circle" />
-		</ClayButton>
-	);
-};
+const nodeIsHovered = (nodeId, hoveredItemId) =>
+	nodeId === fromControlsId(hoveredItemId);
+const nodeIsSelected = (nodeId, activeItemId) =>
+	nodeId === fromControlsId(activeItemId);
 
 export default function StructureTreeNode({node}) {
 	const hoverItem = useHoverItem();
-	const isHovered = useIsHovered();
-	const isSelected = useIsSelected();
+	const activeItemId = useActiveItemId();
+	const hoveredItemId = useHoveredItemId();
 	const selectItem = useSelectItem();
+	const toControlsId = useToControlsId();
 
 	return (
 		<div
-			className="page-editor__page-structure__tree-node"
-			onClick={event => {
-				event.stopPropagation();
-
-				selectItem(node.id, {multiSelect: event.shiftKey});
-			}}
+			aria-selected={
+				node.activable && nodeIsSelected(node.id, activeItemId)
+			}
+			className={classNames('page-editor__page-structure__tree-node', {
+				'page-editor__page-structure__tree-node--active':
+					node.activable && nodeIsSelected(node.id, activeItemId),
+				'page-editor__page-structure__tree-node--hovered': nodeIsHovered(
+					node.id,
+					hoveredItemId
+				),
+			})}
 			onMouseLeave={event => {
 				event.stopPropagation();
 
-				if (isHovered(node.id)) {
+				if (nodeIsHovered(node.id, hoveredItemId)) {
 					hoverItem(null);
 				}
 			}}
@@ -93,10 +67,96 @@ export default function StructureTreeNode({node}) {
 				hoverItem(node.id);
 			}}
 		>
-			<NameButton id={node.id} name={node.name} />
-			{node.removable && (isHovered(node.id) || isSelected(node.id)) && (
-				<RemoveButton node={node} />
+			<ClayButton
+				aria-label={Liferay.Util.sub(Liferay.Language.get('select-x'), [
+					node.name,
+				])}
+				className="page-editor__page-structure__tree-node__mask"
+				disabled={node.disabled}
+				displayType="unstyled"
+				onClick={event => {
+					event.stopPropagation();
+					event.target.focus();
+
+					selectItem(toControlsId(node.id), {
+						itemType: node.type,
+						multiSelect: event.shiftKey,
+						origin: ITEM_ACTIVATION_ORIGINS.structureTree,
+					});
+				}}
+				onDoubleClick={event => event.stopPropagation()}
+			/>
+
+			<NameLabel
+				activable={node.activable}
+				disabled={node.disabled}
+				id={node.id}
+				name={node.name}
+			/>
+
+			{node.removable && (
+				<RemoveButton
+					node={node}
+					visible={
+						nodeIsHovered(node.id, hoveredItemId) ||
+						nodeIsSelected(node.id, activeItemId)
+					}
+				/>
 			)}
 		</div>
 	);
 }
+
+StructureTreeNode.propTypes = {
+	node: PropTypes.shape({
+		id: PropTypes.string.isRequired,
+		name: PropTypes.string.isRequired,
+		removable: PropTypes.bool,
+	}).isRequired,
+};
+
+const NameLabel = ({activable, disabled, id, name}) => {
+	const activeItemId = useActiveItemId();
+
+	return (
+		<div
+			className={classNames(
+				'page-editor__page-structure__tree-node__name',
+				{
+					'page-editor__page-structure__tree-node__name--active':
+						activable && nodeIsSelected(id, activeItemId),
+					'page-editor__page-structure__tree-node__name--disabled': disabled,
+				}
+			)}
+		>
+			{name || Liferay.Language.get('element')}
+		</div>
+	);
+};
+
+const RemoveButton = ({node, visible}) => {
+	const dispatch = useDispatch();
+	const store = useSelector(state => state);
+
+	return (
+		<ClayButton
+			aria-label={Liferay.Util.sub(Liferay.Language.get('remove-x'), [
+				node.name,
+			])}
+			className={classNames(
+				'page-editor__page-structure__tree-node__remove-button',
+				{
+					'page-editor__page-structure__tree-node__remove-button--visible': visible,
+				}
+			)}
+			displayType="unstyled"
+			onClick={event => {
+				event.stopPropagation();
+
+				dispatch(deleteItem({itemId: node.id, store}));
+			}}
+		>
+			<ClayIcon symbol="times-circle" />
+		</ClayButton>
+	);
+};

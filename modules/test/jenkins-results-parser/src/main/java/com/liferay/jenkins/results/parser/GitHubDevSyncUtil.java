@@ -113,35 +113,35 @@ public class GitHubDevSyncUtil {
 			gitWorkingDirectory);
 
 		try {
-			int retries = 0;
-
-			while ((retries < 10) && !gitHubDevGitRemotes.isEmpty()) {
-				retries++;
-
+			while (!gitHubDevGitRemotes.isEmpty()) {
 				GitRemote gitHubDevGitRemote = getRandomGitRemote(
 					gitHubDevGitRemotes);
 
 				gitHubDevGitRemotes.remove(gitHubDevGitRemote);
 
 				try {
-					RemoteGitBranch cacheRemoteGitBranch =
+					RemoteGitBranch cachedRemoteGitBranch =
 						gitWorkingDirectory.getRemoteGitBranch(
 							cacheBranchName, gitHubDevGitRemote, true);
 
-					gitWorkingDirectory.fetch(cacheRemoteGitBranch);
+					gitWorkingDirectory.fetch(cachedRemoteGitBranch);
 
-					return cacheRemoteGitBranch;
+					return cachedRemoteGitBranch;
 				}
-				catch (Exception exception) {
+				catch (RuntimeException runtimeException) {
 					String message = JenkinsResultsParserUtil.combine(
-						"Unable to fetch ", cacheBranchName, " from ",
-						gitHubDevGitRemote.getHostname());
+						"Unable to fetch cached remote Git branch ",
+						cacheBranchName, "\n", runtimeException.getMessage());
 
-					if (retries == 10) {
-						throw new RuntimeException(message, exception);
+					if (gitHubDevGitRemotes.isEmpty()) {
+						System.out.println(message);
+
+						throw new RuntimeException(
+							JenkinsResultsParserUtil.combine(
+								"Unable to fetch ", cacheBranchName,
+								" from git@github-dev.com"),
+							runtimeException);
 					}
-
-					JenkinsResultsParserUtil.sleep(30000);
 
 					System.out.println("Retrying: " + message);
 				}
@@ -150,10 +150,7 @@ public class GitHubDevSyncUtil {
 				}
 			}
 
-			throw new RuntimeException(
-				JenkinsResultsParserUtil.combine(
-					"Unable to fetch ", cacheBranchName,
-					" from git@github-dev.com"));
+			return null;
 		}
 		finally {
 			gitWorkingDirectory.removeGitRemotes(gitHubDevGitRemotes);
@@ -406,33 +403,34 @@ public class GitHubDevSyncUtil {
 
 			String lastBlock = matcher.group(2);
 
-			if (lastBlock.matches("\\d+")) {
-				branchCount++;
+			if (!lastBlock.matches("\\d+")) {
+				continue;
+			}
 
-				long remoteGitBranchTimestamp = Long.parseLong(lastBlock);
+			branchCount++;
 
-				long branchAge = timestamp - remoteGitBranchTimestamp;
+			long remoteGitBranchTimestamp = Long.parseLong(lastBlock);
 
-				if (branchAge > _MILLIS_BRANCH_EXPIRATION) {
-					String gitRepositoryBaseRemoteGitBranchName =
-						remoteGitBranchName.replaceAll("(.*)-\\d+", "$1");
+			long branchAge = timestamp - remoteGitBranchTimestamp;
 
-					RemoteGitBranch gitRepositoryBaseRemoteGitBranch =
-						remoteGitBranches.get(
-							gitRepositoryBaseRemoteGitBranchName);
+			if (branchAge > _MILLIS_BRANCH_EXPIRATION) {
+				String gitRepositoryBaseRemoteGitBranchName =
+					remoteGitBranchName.replaceAll("(.*)-\\d+", "$1");
 
-					if (gitRepositoryBaseRemoteGitBranch != null) {
-						expiredRemoteGitBranches.add(
-							gitRepositoryBaseRemoteGitBranch);
-					}
+				RemoteGitBranch gitRepositoryBaseRemoteGitBranch =
+					remoteGitBranches.get(gitRepositoryBaseRemoteGitBranchName);
 
-					expiredRemoteGitBranches.add(remoteGitBranch);
-
-					deleteCount++;
+				if (gitRepositoryBaseRemoteGitBranch != null) {
+					expiredRemoteGitBranches.add(
+						gitRepositoryBaseRemoteGitBranch);
 				}
-				else {
-					oldestBranchAge = Math.max(oldestBranchAge, branchAge);
-				}
+
+				expiredRemoteGitBranches.add(remoteGitBranch);
+
+				deleteCount++;
+			}
+			else {
+				oldestBranchAge = Math.max(oldestBranchAge, branchAge);
 			}
 		}
 

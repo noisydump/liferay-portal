@@ -13,14 +13,17 @@
  */
 
 import Radio from '../../../src/main/resources/META-INF/resources/Radio/Radio.es';
+import withContextMock from '../__mocks__/withContextMock.es';
 
 let component;
 const spritemap = 'icons.svg';
 
 const defaultRadioConfig = {
 	name: 'radioField',
-	spritemap
+	spritemap,
 };
+
+const RadioWithContextMock = withContextMock(Radio);
 
 describe('Field Radio', () => {
 	afterEach(() => {
@@ -30,25 +33,25 @@ describe('Field Radio', () => {
 	});
 
 	it('is not edidable', () => {
-		component = new Radio({
+		component = new RadioWithContextMock({
 			...defaultRadioConfig,
-			readOnly: false
+			readOnly: false,
 		});
 
 		expect(component).toMatchSnapshot();
 	});
 
 	it('has a helptext', () => {
-		component = new Radio({
+		component = new RadioWithContextMock({
 			...defaultRadioConfig,
-			tip: 'Type something'
+			tip: 'Type something',
 		});
 
 		expect(component).toMatchSnapshot();
 	});
 
 	it('renders options', () => {
-		component = new Radio({
+		component = new RadioWithContextMock({
 			...defaultRadioConfig,
 			options: [
 				{
@@ -59,7 +62,7 @@ describe('Field Radio', () => {
 					label: 'label',
 					name: 'name',
 					showLabel: true,
-					value: 'item'
+					value: 'item',
 				},
 				{
 					checked: false,
@@ -69,79 +72,79 @@ describe('Field Radio', () => {
 					label: 'label2',
 					name: 'name',
 					showLabel: true,
-					value: 'item'
-				}
-			]
+					value: 'item',
+				},
+			],
 		});
 
 		expect(component).toMatchSnapshot();
 	});
 
 	it('renders no options when options is empty', () => {
-		component = new Radio({
+		component = new RadioWithContextMock({
 			...defaultRadioConfig,
-			options: []
+			options: [],
 		});
 
 		expect(component).toMatchSnapshot();
 	});
 
 	it('has an id', () => {
-		component = new Radio({
+		component = new RadioWithContextMock({
 			...defaultRadioConfig,
-			id: 'ID'
+			id: 'ID',
 		});
 
 		expect(component).toMatchSnapshot();
 	});
 
 	it('has a label', () => {
-		component = new Radio({
+		component = new RadioWithContextMock({
 			...defaultRadioConfig,
-			label: 'label'
+			label: 'label',
 		});
 
 		expect(component).toMatchSnapshot();
 	});
 
 	it('has a predefined Value', () => {
-		component = new Radio({
+		component = new RadioWithContextMock({
 			...defaultRadioConfig,
-			placeholder: 'Option 1'
+			placeholder: 'Option 1',
 		});
 
 		expect(component).toMatchSnapshot();
 	});
 
 	it('is not required', () => {
-		component = new Radio({
+		component = new RadioWithContextMock({
 			...defaultRadioConfig,
-			required: false
+			required: false,
 		});
 
 		expect(component).toMatchSnapshot();
 	});
 
 	it('renders Label if showLabel is true', () => {
-		component = new Radio({
+		component = new RadioWithContextMock({
 			...defaultRadioConfig,
 			label: 'text',
-			showLabel: true
+			showLabel: true,
 		});
 
 		expect(component).toMatchSnapshot();
 	});
 
 	it('has a spritemap', () => {
-		component = new Radio(defaultRadioConfig);
+		component = new RadioWithContextMock(defaultRadioConfig);
 
 		expect(component).toMatchSnapshot();
 	});
 
 	it('has a value', () => {
-		component = new Radio({
+		component = new RadioWithContextMock({
 			...defaultRadioConfig,
-			value: 'value'
+			value: 'value',
 		});
 
 		expect(component).toMatchSnapshot();

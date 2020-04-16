@@ -24,7 +24,10 @@ import com.liferay.portal.kernel.exception.PortalException;
 
 /**
  * @author Jürgen Kappler
+ * @deprecated As of Athanasius (7.3.x), replaced by {@link
+ *             AssetDisplayPageUtil}
  */
+@Deprecated
 public class AssetDisplayPageHelper {
 
 	public static LayoutPageTemplateEntry

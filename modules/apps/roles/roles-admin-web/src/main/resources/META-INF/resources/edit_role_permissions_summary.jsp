@@ -44,7 +44,7 @@
 		headerNames.add("permissions");
 
 		if (role.getType() == RoleConstants.TYPE_REGULAR) {
-			headerNames.add("sites");
+			headerNames.add("sites-and-asset-libraries");
 		}
 
 		headerNames.add(StringPool.BLANK);
@@ -139,13 +139,13 @@
 			int scope;
 
 			if (role.getType() == RoleConstants.TYPE_REGULAR) {
-				LinkedHashMap<String, Object> groupParams = new LinkedHashMap<String, Object>();
-
 				RolePermissions rolePermissions = new RolePermissions(curResource, ResourceConstants.SCOPE_GROUP, actionId, role.getRoleId());
 
-				groupParams.put("rolePermissions", rolePermissions);
+				LinkedHashMap<String, Object> groupParams = LinkedHashMapBuilder.<String, Object>put(
+					"rolePermissions", rolePermissions
+				).build();
 
-				groups = GroupLocalServiceUtil.search(company.getCompanyId(), new long[] {PortalUtil.getClassNameId(Company.class), PortalUtil.getClassNameId(Group.class), PortalUtil.getClassNameId(Organization.class), PortalUtil.getClassNameId(UserPersonalSite.class)}, null, null, groupParams, true, QueryUtil.ALL_POS, QueryUtil.ALL_POS);
+				groups = GroupLocalServiceUtil.search(company.getCompanyId(), GroupTypeContributorUtil.getClassNameIds(), null, null, groupParams, true, QueryUtil.ALL_POS, QueryUtil.ALL_POS);
 
 				if (groups.isEmpty()) {
 					scope = ResourceConstants.SCOPE_COMPANY;
@@ -210,7 +210,7 @@
 			row.addText(sb.toString());
 
 			if (scope == ResourceConstants.SCOPE_COMPANY) {
-				row.addText(LanguageUtil.get(request, _isShowScope(request, role, curResource, curPortletName) ? "all-sites" : StringPool.BLANK));
+				row.addText(LanguageUtil.get(request, _isShowScope(request, role, curResource, curPortletName) ? "all-sites-and-asset-libraries" : StringPool.BLANK));
 			}
 			else if (scope == ResourceConstants.SCOPE_GROUP_TEMPLATE) {
 			}
@@ -240,8 +240,18 @@
 		%>
 
 		<liferay-ui:search-iterator
+			paginate="<%= false %>"
 			searchContainer="<%= searchContainer %>"
 			searchResultCssClass="show-quick-actions-on-hover table table-autofit"
 		/>
+
+		<c:if test="<%= searchContainer.getTotal() > 0 %>">
+			<div class="autofit-col sheet-footer taglib-search-iterator-page-iterator-bottom">
+				<liferay-ui:search-paginator
+					markupView="lexicon"
+					searchContainer="<%= searchContainer %>"
+				/>
+			</div>
+		</c:if>
 	</div>
 </div>

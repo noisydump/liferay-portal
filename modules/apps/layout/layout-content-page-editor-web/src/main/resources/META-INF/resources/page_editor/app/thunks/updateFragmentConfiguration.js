@@ -12,65 +12,49 @@
  * details.
  */
 
-import {FREEMARKER_FRAGMENT_ENTRY_PROCESSOR} from '../../../js/utils/constants';
 import updateEditableValues from '../actions/updateEditableValues';
 import updateFragmentEntryLinkContent from '../actions/updateFragmentEntryLinkContent';
+import {FREEMARKER_FRAGMENT_ENTRY_PROCESSOR} from '../config/constants/freemarkerFragmentEntryProcessor';
 import FragmentService from '../services/FragmentService';
 
 export default function updateFragmentConfiguration({
-	config,
 	configurationValues,
 	fragmentEntryLink,
-	segmentsExperienceId
+	prefixedSegmentsExperienceId,
+	segmentsExperienceId,
 }) {
 	const {editableValues, fragmentEntryLinkId} = fragmentEntryLink;
 
 	const nextEditableValues = {
 		...editableValues,
-		[FREEMARKER_FRAGMENT_ENTRY_PROCESSOR]: {
-			...editableValues[FREEMARKER_FRAGMENT_ENTRY_PROCESSOR],
-			[segmentsExperienceId]: configurationValues
-		}
+		[FREEMARKER_FRAGMENT_ENTRY_PROCESSOR]: prefixedSegmentsExperienceId
+			? {
+					...editableValues[FREEMARKER_FRAGMENT_ENTRY_PROCESSOR],
+					[prefixedSegmentsExperienceId]: configurationValues,
+			  }
+			: configurationValues,
 	};
 
 	return dispatch => {
-		return FragmentService.updateEditableValues({
-			config,
-			editableValues: nextEditableValues,
+		return FragmentService.updateConfigurationValues({
+			configurationValues: nextEditableValues,
 			fragmentEntryLinkId,
-			onNetworkStatus: dispatch
-		})
-			.then(() => {
-				return FragmentService.renderFragmentEntryLinkContent({
-					config,
+			onNetworkStatus: dispatch,
+		}).then(({content, editableValues}) => {
+			dispatch(
+				updateEditableValues({
+					editableValues,
 					fragmentEntryLinkId,
-					onNetworkStatus: dispatch,
-					segmentsExperienceId
-				});
-			})
-			.then(({content}) => {
-				// TODO: This is a temporary "hack"
-				//       until the backend is consitent
-				//       between both "metal+soy" and "react" versions
-				const nextContent = {
-					value: {
-						content
-					}
-				};
+					segmentsExperienceId,
+				})
+			);
 
-				dispatch(
-					updateEditableValues({
-						editableValues: nextEditableValues,
-						fragmentEntryLinkId
-					})
-				);
-
-				dispatch(
-					updateFragmentEntryLinkContent({
-						content: nextContent,
-						fragmentEntryLinkId
-					})
-				);
-			});
+			dispatch(
+				updateFragmentEntryLinkContent({
+					content,
+					fragmentEntryLinkId,
+				})
+			);
+		});
 	};
 }

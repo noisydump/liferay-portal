@@ -23,7 +23,7 @@ import {Body} from './ProcessListPageBody.es';
 const Header = ({page, pageSize, search, sort, totalCount}) => {
 	return (
 		<>
-			<ClayManagementToolbar>
+			<ClayManagementToolbar className="mb-0">
 				<div className="navbar-form-autofit">
 					<SearchField disabled={!search && totalCount === 0} />
 				</div>
@@ -49,9 +49,7 @@ const Header = ({page, pageSize, search, sort, totalCount}) => {
 
 const ProcessListPage = ({history, query, routeParams}) => {
 	if (history.location.pathname === '/') {
-		history.replace(
-			`/processes/20/1/${encodeURIComponent('overdueInstanceCount:desc')}`
-		);
+		history.replace(`/processes/20/1/overdueInstanceCount:desc`);
 	}
 
 	usePageTitle(Liferay.Language.get('metrics'));
@@ -62,9 +60,9 @@ const ProcessListPage = ({history, query, routeParams}) => {
 	const {data, fetchData} = useFetch({
 		params: {
 			title: search,
-			...routeParams
+			...routeParams,
 		},
-		url: '/processes'
+		url: '/processes/metrics',
 	});
 
 	const promises = useMemo(() => {
@@ -83,7 +81,7 @@ const ProcessListPage = ({history, query, routeParams}) => {
 				{...routeParams}
 			/>
 
-			<ProcessListPage.Body data={data} search={search} />
+			<ProcessListPage.Body {...data} filtered={search} />
 		</PromisesResolver>
 	);
 };

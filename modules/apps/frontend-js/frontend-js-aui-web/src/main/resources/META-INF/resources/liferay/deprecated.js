@@ -15,7 +15,7 @@
 // For details about this file see: LPS-2155
 
 (function(A, Liferay) {
-	var Util = Liferay.namespace('Util');
+	var Util = Liferay.Util;
 
 	var Lang = A.Lang;
 
@@ -33,7 +33,7 @@
 		'/': '&#047;',
 		'<': '&lt;',
 		'>': '&gt;',
-		'`': '&#096;'
+		'`': '&#096;',
 	};
 
 	var MAP_HTML_CHARS_UNESCAPED = {};
@@ -138,7 +138,8 @@
 			Util.addInputType = function(el) {
 				if (el) {
 					el = A.one(el);
-				} else {
+				}
+				else {
 					el = A.one(document.body);
 				}
 
@@ -195,7 +196,8 @@
 					STR_RIGHT_SQUARE_BRACKET,
 				'g'
 			);
-		} else {
+		}
+		else {
 			entities = MAP_HTML_CHARS_ESCAPED;
 
 			entitiesValues = htmlEscapedValues;
@@ -269,7 +271,8 @@
 					el.focus();
 					el.setSelectionRange(caretPos, caretPos);
 				}, 0);
-			} else {
+			}
+			else {
 				document.selection.createRange().text = '\t';
 			}
 
@@ -436,7 +439,8 @@
 				box.all('option')
 					.item(selectedIndex)
 					.remove(true);
-			} else {
+			}
+			else {
 				box.all('option[value=' + value + STR_RIGHT_SQUARE_BRACKET)
 					.item(selectedIndex)
 					.remove(true);
@@ -470,7 +474,8 @@
 							if (el.get('nodeName').toLowerCase() != 'iframe') {
 								el = window[elString];
 							}
-						} catch (e) {}
+						}
+						catch (e) {}
 					}
 
 					if (!diff) {
@@ -483,7 +488,8 @@
 							var region = templateEditor.getXY();
 
 							diff = buttonRow.outerHeight(true) + region[1] + 25;
-						} else {
+						}
+						else {
 							diff = 170;
 						}
 					}
@@ -491,7 +497,7 @@
 					el = A.one(el);
 
 					var styles = {
-						width: '98%'
+						width: '98%',
 					};
 
 					if (event) {

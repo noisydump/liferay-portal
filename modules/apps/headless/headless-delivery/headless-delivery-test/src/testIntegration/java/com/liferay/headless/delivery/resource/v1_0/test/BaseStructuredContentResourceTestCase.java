@@ -447,9 +447,11 @@ public abstract class BaseStructuredContentResourceTestCase {
 				}
 				else {
 					BeanUtils.setProperty(
-						structuredContent1, entityField.getName(), "Aaa");
+						structuredContent1, entityField.getName(),
+						"Aaa" + RandomTestUtil.randomString());
 					BeanUtils.setProperty(
-						structuredContent2, entityField.getName(), "Bbb");
+						structuredContent2, entityField.getName(),
+						"Bbb" + RandomTestUtil.randomString());
 				}
 			});
 	}
@@ -756,9 +758,11 @@ public abstract class BaseStructuredContentResourceTestCase {
 				}
 				else {
 					BeanUtils.setProperty(
-						structuredContent1, entityField.getName(), "Aaa");
+						structuredContent1, entityField.getName(),
+						"Aaa" + RandomTestUtil.randomString());
 					BeanUtils.setProperty(
-						structuredContent2, entityField.getName(), "Bbb");
+						structuredContent2, entityField.getName(),
+						"Bbb" + RandomTestUtil.randomString());
 				}
 			});
 	}
@@ -1042,7 +1046,7 @@ public abstract class BaseStructuredContentResourceTestCase {
 			204,
 			structuredContentResource.
 				putSiteStructuredContentPermissionHttpResponse(
-					testGroup.getGroupId(),
+					structuredContent.getSiteId(),
 					new Permission[] {
 						new Permission() {
 							{
@@ -1056,7 +1060,7 @@ public abstract class BaseStructuredContentResourceTestCase {
 			404,
 			structuredContentResource.
 				putSiteStructuredContentPermissionHttpResponse(
-					testGroup.getGroupId(),
+					structuredContent.getSiteId(),
 					new Permission[] {
 						new Permission() {
 							{
@@ -1322,9 +1326,11 @@ public abstract class BaseStructuredContentResourceTestCase {
 				}
 				else {
 					BeanUtils.setProperty(
-						structuredContent1, entityField.getName(), "Aaa");
+						structuredContent1, entityField.getName(),
+						"Aaa" + RandomTestUtil.randomString());
 					BeanUtils.setProperty(
-						structuredContent2, entityField.getName(), "Bbb");
+						structuredContent2, entityField.getName(),
+						"Bbb" + RandomTestUtil.randomString());
 				}
 			});
 	}
@@ -1437,6 +1443,7 @@ public abstract class BaseStructuredContentResourceTestCase {
 
 	@Test
 	public void testDeleteStructuredContent() throws Exception {
+		@SuppressWarnings("PMD.UnusedLocalVariable")
 		StructuredContent structuredContent =
 			testDeleteStructuredContent_addStructuredContent();
 
@@ -1574,7 +1581,7 @@ public abstract class BaseStructuredContentResourceTestCase {
 				postStructuredContent.getId(), randomPatchStructuredContent);
 
 		StructuredContent expectedPatchStructuredContent =
-			(StructuredContent)BeanUtils.cloneBean(postStructuredContent);
+			postStructuredContent.clone();
 
 		_beanUtilsBean.copyProperties(
 			expectedPatchStructuredContent, randomPatchStructuredContent);
@@ -1626,6 +1633,7 @@ public abstract class BaseStructuredContentResourceTestCase {
 
 	@Test
 	public void testDeleteStructuredContentMyRating() throws Exception {
+		@SuppressWarnings("PMD.UnusedLocalVariable")
 		StructuredContent structuredContent =
 			testDeleteStructuredContentMyRating_addStructuredContent();
 
@@ -2299,9 +2307,9 @@ public abstract class BaseStructuredContentResourceTestCase {
 			}
 
 			if (Objects.equals(
-					"taxonomyCategories", additionalAssertFieldName)) {
+					"taxonomyCategoryBriefs", additionalAssertFieldName)) {
 
-				if (structuredContent.getTaxonomyCategories() == null) {
+				if (structuredContent.getTaxonomyCategoryBriefs() == null) {
 					valid = false;
 				}
 
@@ -2485,9 +2493,9 @@ public abstract class BaseStructuredContentResourceTestCase {
 				getAdditionalAssertFieldNames()) {
 
 			if (Objects.equals("actions", additionalAssertFieldName)) {
-				if (!Objects.deepEquals(
-						structuredContent1.getActions(),
-						structuredContent2.getActions())) {
+				if (!equals(
+						(Map)structuredContent1.getActions(),
+						(Map)structuredContent2.getActions())) {
 
 					return false;
 				}
@@ -2610,9 +2618,9 @@ public abstract class BaseStructuredContentResourceTestCase {
 			}
 
 			if (Objects.equals("description_i18n", additionalAssertFieldName)) {
-				if (!Objects.deepEquals(
-						structuredContent1.getDescription_i18n(),
-						structuredContent2.getDescription_i18n())) {
+				if (!equals(
+						(Map)structuredContent1.getDescription_i18n(),
+						(Map)structuredContent2.getDescription_i18n())) {
 
 					return false;
 				}
@@ -2634,9 +2642,9 @@ public abstract class BaseStructuredContentResourceTestCase {
 			if (Objects.equals(
 					"friendlyUrlPath_i18n", additionalAssertFieldName)) {
 
-				if (!Objects.deepEquals(
-						structuredContent1.getFriendlyUrlPath_i18n(),
-						structuredContent2.getFriendlyUrlPath_i18n())) {
+				if (!equals(
+						(Map)structuredContent1.getFriendlyUrlPath_i18n(),
+						(Map)structuredContent2.getFriendlyUrlPath_i18n())) {
 
 					return false;
 				}
@@ -2722,11 +2730,11 @@ public abstract class BaseStructuredContentResourceTestCase {
 			}
 
 			if (Objects.equals(
-					"taxonomyCategories", additionalAssertFieldName)) {
+					"taxonomyCategoryBriefs", additionalAssertFieldName)) {
 
 				if (!Objects.deepEquals(
-						structuredContent1.getTaxonomyCategories(),
-						structuredContent2.getTaxonomyCategories())) {
+						structuredContent1.getTaxonomyCategoryBriefs(),
+						structuredContent2.getTaxonomyCategoryBriefs())) {
 
 					return false;
 				}
@@ -2759,9 +2767,9 @@ public abstract class BaseStructuredContentResourceTestCase {
 			}
 
 			if (Objects.equals("title_i18n", additionalAssertFieldName)) {
-				if (!Objects.deepEquals(
-						structuredContent1.getTitle_i18n(),
-						structuredContent2.getTitle_i18n())) {
+				if (!equals(
+						(Map)structuredContent1.getTitle_i18n(),
+						(Map)structuredContent2.getTitle_i18n())) {
 
 					return false;
 				}
@@ -2794,6 +2802,30 @@ public abstract class BaseStructuredContentResourceTestCase {
 			throw new IllegalArgumentException(
 				"Invalid additional assert field name " +
 					additionalAssertFieldName);
+		}
+
+		return true;
+	}
+
+	protected boolean equals(
+		Map<String, Object> map1, Map<String, Object> map2) {
+
+		if (Objects.equals(map1.keySet(), map2.keySet())) {
+			for (Map.Entry<String, Object> entry : map1.entrySet()) {
+				if (entry.getValue() instanceof Map) {
+					if (!equals(
+							(Map)entry.getValue(),
+							(Map)map2.get(entry.getKey()))) {
+
+						return false;
+					}
+				}
+				else if (!Objects.deepEquals(
+							entry.getValue(), map2.get(entry.getKey()))) {
+
+					return false;
+				}
+			}
 		}
 
 		return true;
@@ -3259,7 +3291,7 @@ public abstract class BaseStructuredContentResourceTestCase {
 				"Invalid entity field " + entityFieldName);
 		}
 
-		if (entityFieldName.equals("taxonomyCategories")) {
+		if (entityFieldName.equals("taxonomyCategoryBriefs")) {
 			throw new IllegalArgumentException(
 				"Invalid entity field " + entityFieldName);
 		}

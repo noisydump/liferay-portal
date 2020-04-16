@@ -92,6 +92,16 @@ public class AccountEntryUserRelLocalServiceUtil {
 	}
 
 	/**
+	 * @throws PortalException
+	 */
+	public static com.liferay.portal.kernel.model.PersistedModel
+			createPersistedModel(java.io.Serializable primaryKeyObj)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return getService().createPersistedModel(primaryKeyObj);
+	}
+
+	/**
 	 * Deletes the account entry user rel from the database. Also notifies the appropriate model listeners.
 	 *
 	 * @param accountEntryUserRel the account entry user rel
@@ -310,6 +320,9 @@ public class AccountEntryUserRelLocalServiceUtil {
 		return getService().getOSGiServiceIdentifier();
 	}
 
+	/**
+	 * @throws PortalException
+	 */
 	public static com.liferay.portal.kernel.model.PersistedModel
 			getPersistedModel(java.io.Serializable primaryKeyObj)
 		throws com.liferay.portal.kernel.exception.PortalException {
@@ -334,6 +347,15 @@ public class AccountEntryUserRelLocalServiceUtil {
 			com.liferay.account.model.AccountEntryUserRel accountEntryUserRel) {
 
 		return getService().updateAccountEntryUserRel(accountEntryUserRel);
+	}
+
+	public static void updateAccountEntryUserRels(
+			long[] addAccountEntryIds, long[] deleteAccountEntryIds,
+			long accountUserId)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		getService().updateAccountEntryUserRels(
+			addAccountEntryIds, deleteAccountEntryIds, accountUserId);
 	}
 
 	public static AccountEntryUserRelLocalService getService() {

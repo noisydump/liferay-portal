@@ -14,7 +14,7 @@
 
 import {
 	convertToFormData,
-	makeFetch
+	makeFetch,
 } from 'dynamic-data-mapping-form-renderer/js/util/fetch.es';
 import Component from 'metal-jsx';
 import {Config} from 'metal-state';
@@ -25,7 +25,7 @@ class AutoSave extends Component {
 		const currentState = this.getCurrentState();
 		const currentStateHash = this.getStateHash(currentState);
 
-		this._lastKownHash = currentStateHash;
+		this._lastKnownHash = currentStateHash;
 
 		this.start();
 	}
@@ -45,7 +45,7 @@ class AutoSave extends Component {
 	getStateHash(state) {
 		return objectHash(state, {
 			algorithm: 'md5',
-			unorderedObjects: true
+			unorderedObjects: true,
 		});
 	}
 
@@ -53,7 +53,7 @@ class AutoSave extends Component {
 		const currentState = this.getCurrentState();
 		const currentStateHash = this.getStateHash(currentState);
 
-		return this._lastKownHash !== currentStateHash;
+		return this._lastKnownHash !== currentStateHash;
 	}
 
 	save(saveAsDraft = this.props.saveAsDraft) {
@@ -64,7 +64,7 @@ class AutoSave extends Component {
 
 		this._pendingRequest = makeFetch({
 			body: this._getFormData(saveAsDraft),
-			url: this.props.url
+			url: this.props.url,
 		})
 			.then(responseData => {
 				this._pendingRequest = null;
@@ -75,7 +75,7 @@ class AutoSave extends Component {
 
 				this.emit('autosaved', {
 					modifiedDate: responseData.modifiedDate,
-					savedAsDraft: saveAsDraft
+					savedAsDraft: saveAsDraft,
 				});
 
 				return responseData;
@@ -97,7 +97,8 @@ class AutoSave extends Component {
 				this._pendingRequest
 					.then(() => this.saveIfNeeded())
 					.catch(() => {});
-			} else if (
+			}
+			else if (
 				this.hasUnsavedChanges() &&
 				!stateSyncronizer.isEmpty()
 			) {
@@ -107,7 +108,7 @@ class AutoSave extends Component {
 	}
 
 	saveStateHash(state) {
-		this._lastKownHash = this.getStateHash(state);
+		this._lastKnownHash = this.getStateHash(state);
 	}
 
 	start() {
@@ -173,7 +174,7 @@ AutoSave.PROPS = {
 	interval: Config.number().setter('_setInterval'),
 	saveAsDraft: Config.bool().value(true),
 	stateSyncronizer: Config.any(),
-	url: Config.string()
+	url: Config.string(),
 };
 
 export default AutoSave;

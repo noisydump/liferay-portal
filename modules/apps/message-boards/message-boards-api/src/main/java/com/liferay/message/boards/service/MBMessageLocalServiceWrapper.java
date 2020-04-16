@@ -205,6 +205,17 @@ public class MBMessageLocalServiceWrapper
 		return _mbMessageLocalService.createMBMessage(messageId);
 	}
 
+	/**
+	 * @throws PortalException
+	 */
+	@Override
+	public com.liferay.portal.kernel.model.PersistedModel createPersistedModel(
+			java.io.Serializable primaryKeyObj)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _mbMessageLocalService.createPersistedModel(primaryKeyObj);
+	}
+
 	@Override
 	public com.liferay.message.boards.model.MBMessage deleteDiscussionMessage(
 			long messageId)
@@ -417,6 +428,14 @@ public class MBMessageLocalServiceWrapper
 		long messageId) {
 
 		return _mbMessageLocalService.fetchMBMessage(messageId);
+	}
+
+	@Override
+	public com.liferay.message.boards.model.MBMessage
+		fetchMBMessageByUrlSubject(long groupId, String urlSubject) {
+
+		return _mbMessageLocalService.fetchMBMessageByUrlSubject(
+			groupId, urlSubject);
 	}
 
 	/**
@@ -814,6 +833,9 @@ public class MBMessageLocalServiceWrapper
 		return _mbMessageLocalService.getOSGiServiceIdentifier();
 	}
 
+	/**
+	 * @throws PortalException
+	 */
 	@Override
 	public com.liferay.portal.kernel.model.PersistedModel getPersistedModel(
 			java.io.Serializable primaryKeyObj)

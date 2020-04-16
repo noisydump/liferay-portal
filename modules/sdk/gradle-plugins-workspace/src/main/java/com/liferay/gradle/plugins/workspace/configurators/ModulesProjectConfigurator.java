@@ -23,13 +23,12 @@ import com.liferay.gradle.plugins.service.builder.ServiceBuilderPlugin;
 import com.liferay.gradle.plugins.test.integration.TestIntegrationBasePlugin;
 import com.liferay.gradle.plugins.test.integration.TestIntegrationPlugin;
 import com.liferay.gradle.plugins.upgrade.table.builder.UpgradeTableBuilderPlugin;
-import com.liferay.gradle.plugins.util.BndBuilderUtil;
+import com.liferay.gradle.plugins.util.BndUtil;
 import com.liferay.gradle.plugins.workspace.FrontendPlugin;
 import com.liferay.gradle.plugins.workspace.WorkspaceExtension;
 import com.liferay.gradle.plugins.workspace.WorkspacePlugin;
 import com.liferay.gradle.plugins.workspace.internal.util.FileUtil;
 import com.liferay.gradle.plugins.workspace.internal.util.GradleUtil;
-import com.liferay.gradle.plugins.workspace.tasks.InitBundleTask;
 import com.liferay.gradle.plugins.wsdd.builder.WSDDBuilderPlugin;
 
 import groovy.json.JsonSlurper;
@@ -138,7 +137,6 @@ public class ModulesProjectConfigurator extends BaseProjectConfigurator {
 			_configureLiferayOSGi(project);
 
 			_configureRootTaskDistBundle(jar);
-			_configureRootTaskInitBundle(jar);
 
 			project.afterEvaluate(
 				new Action<Project>() {
@@ -164,7 +162,6 @@ public class ModulesProjectConfigurator extends BaseProjectConfigurator {
 					project, LifecycleBasePlugin.BUILD_TASK_NAME);
 
 				_configureRootTaskDistBundle(buildTask);
-				_configureRootTaskInitBundle(buildTask);
 
 				jarSourcePath = new Callable<ConfigurableFileCollection>() {
 
@@ -347,78 +344,14 @@ public class ModulesProjectConfigurator extends BaseProjectConfigurator {
 		copy.into("osgi/modules", _copyJarClosure(project, buildTask));
 	}
 
-	private void _configureRootTaskInitBundle(final Jar jar) {
-		final Project project = jar.getProject();
-
-		InitBundleTask initBundleTask = (InitBundleTask)GradleUtil.getTask(
-			project.getRootProject(),
-			RootProjectConfigurator.INIT_BUNDLE_TASK_NAME);
-
-		initBundleTask.dependsOn(jar);
-
-		initBundleTask.doLast(
-			new Action<Task>() {
-
-				@Override
-				public void execute(Task t) {
-					project.copy(
-						new Action<CopySpec>() {
-
-							@Override
-							public void execute(CopySpec copySpec) {
-								copySpec.from(jar);
-								copySpec.into(
-									new File(
-										initBundleTask.getDestinationDir(),
-										"osgi/modules"));
-							}
-
-						});
-				}
-
-			});
-	}
-
-	private void _configureRootTaskInitBundle(final Task buildTask) {
-		final Project project = buildTask.getProject();
-
-		InitBundleTask initBundleTask = (InitBundleTask)GradleUtil.getTask(
-			project.getRootProject(),
-			RootProjectConfigurator.INIT_BUNDLE_TASK_NAME);
-
-		initBundleTask.dependsOn(buildTask);
-
-		initBundleTask.doLast(
-			new Action<Task>() {
-
-				@Override
-				public void execute(Task t) {
-					project.copy(
-						new Action<CopySpec>() {
-
-							@Override
-							public void execute(CopySpec copySpec) {
-								copySpec.into(
-									new File(
-										initBundleTask.getDestinationDir(),
-										"osgi/modules"),
-									_copyJarClosure(project, buildTask));
-							}
-
-						});
-				}
-
-			});
-	}
-
 	private void _configureTaskDeployFast(
 		Copy deployFastTask, WorkspaceExtension workspaceExtension) {
 
 		Project project = deployFastTask.getProject();
 
-		String bundleSymbolicName = BndBuilderUtil.getInstruction(
+		String bundleSymbolicName = BndUtil.getInstruction(
 			project, Constants.BUNDLE_SYMBOLICNAME);
-		String bundleVersion = BndBuilderUtil.getInstruction(
+		String bundleVersion = BndUtil.getInstruction(
 			project, Constants.BUNDLE_VERSION);
 
 		StringBuilder sb = new StringBuilder();

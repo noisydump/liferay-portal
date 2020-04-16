@@ -16,19 +16,26 @@ package com.liferay.poshi.runner;
 
 import com.liferay.poshi.runner.logger.PoshiLogger;
 import com.liferay.poshi.runner.logger.SummaryLogger;
-import com.liferay.poshi.runner.selenium.LiferaySeleniumHelper;
+import com.liferay.poshi.runner.selenium.LiferaySeleniumUtil;
 import com.liferay.poshi.runner.selenium.SeleniumUtil;
+import com.liferay.poshi.runner.util.FileUtil;
 import com.liferay.poshi.runner.util.PropsValues;
+
+import java.io.IOException;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.dom4j.Element;
 
 import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -51,6 +58,36 @@ import org.openqa.selenium.remote.UnreachableBrowserException;
  */
 @RunWith(Parameterized.class)
 public class PoshiRunner {
+
+	@AfterClass
+	public static void evaluateResults() throws IOException {
+		StringBuilder sb = new StringBuilder();
+
+		for (Map.Entry<String, List<String>> testResult :
+				_testResults.entrySet()) {
+
+			List<String> testResultMessages = testResult.getValue();
+
+			if (testResultMessages.size() == 1) {
+				continue;
+			}
+
+			int passes = Collections.frequency(testResultMessages, "PASS");
+
+			int failures = testResultMessages.size() - passes;
+
+			if ((passes > 0) && (failures > 0)) {
+				sb.append("\n");
+				sb.append(testResult.getKey());
+			}
+		}
+
+		if (sb.length() != 0) {
+			FileUtil.write(
+				FileUtil.getCanonicalPath(".") + "/test-results/flaky-tests",
+				sb.toString());
+		}
+	}
 
 	@Parameterized.Parameters(name = "{0}")
 	public static List<String> getList() throws Exception {
@@ -131,27 +168,27 @@ public class PoshiRunner {
 
 			_runSetUp();
 		}
-		catch (WebDriverException wde) {
-			wde.printStackTrace();
+		catch (WebDriverException webDriverException) {
+			webDriverException.printStackTrace();
 
-			throw wde;
+			throw webDriverException;
 		}
-		catch (Exception e) {
-			LiferaySeleniumHelper.printJavaProcessStacktrace();
+		catch (Exception exception) {
+			LiferaySeleniumUtil.printJavaProcessStacktrace();
 
-			PoshiRunnerStackTraceUtil.printStackTrace(e.getMessage());
+			PoshiRunnerStackTraceUtil.printStackTrace(exception.getMessage());
 
 			PoshiRunnerStackTraceUtil.emptyStackTrace();
 
-			e.printStackTrace();
+			exception.printStackTrace();
 
-			throw e;
+			throw exception;
 		}
 	}
 
 	@After
 	public void tearDown() throws Exception {
-		LiferaySeleniumHelper.writePoshiWarnings();
+		LiferaySeleniumUtil.writePoshiWarnings();
 
 		SummaryLogger.createSummaryReport();
 
@@ -160,8 +197,8 @@ public class PoshiRunner {
 				_runTearDown();
 			}
 		}
-		catch (Exception e) {
-			PoshiRunnerStackTraceUtil.printStackTrace(e.getMessage());
+		catch (Exception exception) {
+			PoshiRunnerStackTraceUtil.printStackTrace(exception.getMessage());
 
 			PoshiRunnerStackTraceUtil.emptyStackTrace();
 		}
@@ -179,18 +216,18 @@ public class PoshiRunner {
 		try {
 			_runCommand();
 
-			LiferaySeleniumHelper.assertNoPoshiWarnings();
+			LiferaySeleniumUtil.assertNoPoshiWarnings();
 		}
-		catch (Exception e) {
-			LiferaySeleniumHelper.printJavaProcessStacktrace();
+		catch (Exception exception) {
+			LiferaySeleniumUtil.printJavaProcessStacktrace();
 
-			PoshiRunnerStackTraceUtil.printStackTrace(e.getMessage());
+			PoshiRunnerStackTraceUtil.printStackTrace(exception.getMessage());
 
 			PoshiRunnerStackTraceUtil.emptyStackTrace();
 
-			e.printStackTrace();
+			exception.printStackTrace();
 
-			throw e;
+			throw exception;
 		}
 	}
 
@@ -268,6 +305,10 @@ public class PoshiRunner {
 		_runNamespacedClassCommandName(_testNamespacedClassName + "#tear-down");
 	}
 
+	private static int _jvmRetryCount;
+	private static final Map<String, List<String>> _testResults =
+		new HashMap<>();
+
 	private final PoshiLogger _poshiLogger;
 	private final PoshiRunnerExecutor _poshiRunnerExecutor;
 	private final String _testNamespacedClassCommandName;
@@ -287,18 +328,35 @@ public class PoshiRunner {
 
 			@Override
 			public void evaluate() throws Throwable {
-				for (int i = 0; i <= _MAX_RETRY_COUNT; i++) {
+				while (true) {
 					try {
 						_statement.evaluate();
+
+						_testResultMessages.add("PASS");
+
+						_testResults.put(
+							_testNamespacedClassCommandName,
+							_testResultMessages);
 
 						return;
 					}
 					catch (Throwable t) {
-						if ((i == _MAX_RETRY_COUNT) ||
-							!_isValidRetryThrowable(t)) {
+						_testResultMessages.add(t.getMessage());
+
+						if (!_isRetryable(t)) {
+							_testResults.put(
+								_testNamespacedClassCommandName,
+								_testResultMessages);
 
 							throw t;
 						}
+
+						_jvmRetryCount++;
+						_testcaseRetryCount++;
+
+						System.out.println(
+							"Retrying test attempt " + _testcaseRetryCount +
+								" of " + PropsValues.TEST_TESTCASE_MAX_RETRIES);
 					}
 				}
 			}
@@ -317,14 +375,14 @@ public class PoshiRunner {
 				return message;
 			}
 
-			private boolean _isValidRetryThrowable(Throwable throwable) {
+			private boolean _isKnownFlakyIssue(Throwable throwable) {
 				List<Throwable> throwables = null;
 
 				if (throwable instanceof MultipleFailureException) {
-					MultipleFailureException mfe =
+					MultipleFailureException multipleFailureException =
 						(MultipleFailureException)throwable;
 
-					throwables = mfe.getFailures();
+					throwables = multipleFailureException.getFailures();
 				}
 				else {
 					throwables = Arrays.asList(throwable);
@@ -356,13 +414,46 @@ public class PoshiRunner {
 				return false;
 			}
 
-			private static final int _MAX_RETRY_COUNT = 2;
+			private boolean _isRetryable(Throwable throwable) {
+				if (_jvmRetryCount >= PropsValues.TEST_JVM_MAX_RETRIES) {
+					System.out.println(
+						"Test retry attempts exceeded in Poshi Runner JVM");
+
+					return false;
+				}
+
+				if (_isKnownFlakyIssue(throwable) || _isTestcaseRetryable()) {
+					return true;
+				}
+
+				return false;
+			}
+
+			private boolean _isTestcaseRetryable() {
+				if (_testcaseRetryCount >=
+						PropsValues.TEST_TESTCASE_MAX_RETRIES) {
+
+					return false;
+				}
+
+				if (PropsValues.TEST_SKIP_TEAR_DOWN ||
+					(PropsValues.TEST_TESTCASE_MAX_RETRIES == 0)) {
+
+					return false;
+				}
+
+				return true;
+			}
 
 			private final Statement _statement;
+			private int _testcaseRetryCount;
+			private final List<String> _testResultMessages = new ArrayList<>();
 			private final Throwable[] _validRetryThrowables = {
 				new TimeoutException(), new UnreachableBrowserException(null),
 				new WebDriverException(
-					"Timed out waiting 45 seconds for Firefox to start.")
+					"Timed out waiting 45 seconds for Firefox to start."),
+				new WebDriverException(
+					"unknown error: unable to discover open pages")
 			};
 
 		}

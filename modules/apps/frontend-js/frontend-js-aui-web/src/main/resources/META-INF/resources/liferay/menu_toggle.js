@@ -23,39 +23,39 @@ AUI.add(
 		var MenuToggle = A.Component.create({
 			ATTRS: {
 				content: {
-					validator: '_validateContent'
+					validator: '_validateContent',
 				},
 
 				maxDisplayItems: {
 					validator: Lang.isNumber,
-					value: 10
+					value: 10,
 				},
 
 				open: {
 					validator: Lang.isBoolean,
-					value: false
+					value: false,
 				},
 
 				strings: {
 					validator: Lang.isObject,
 					value: {
-						placeholder: 'Search'
-					}
+						placeholder: 'Search',
+					},
 				},
 
 				toggle: {
 					validator: Lang.isBoolean,
-					value: false
+					value: false,
 				},
 
 				toggleTouch: {
 					validator: Lang.isBoolean,
-					value: false
+					value: false,
 				},
 
 				trigger: {
-					setter: A.one
-				}
+					setter: A.one,
+				},
 			},
 
 			NAME,
@@ -88,7 +88,8 @@ AUI.add(
 								);
 							}
 						}
-					} else {
+					}
+					else {
 						menuFilter.reset();
 					}
 				},
@@ -122,7 +123,7 @@ AUI.add(
 								.one('.nav-item-label')
 								.text()
 								.trim(),
-							node
+							node,
 						});
 					});
 
@@ -132,7 +133,7 @@ AUI.add(
 						queryDelay: 0,
 						resultFilters: 'phraseMatch',
 						resultTextLocator: 'name',
-						source: results
+						source: results,
 					});
 
 					return instance._menuFilter;
@@ -145,7 +146,8 @@ AUI.add(
 
 					if (eventOutside.indexOf('pointerup') > -1) {
 						eventOutside = 'mouseup';
-					} else if (eventOutside.indexOf('touchend') > -1) {
+					}
+					else if (eventOutside.indexOf('touchend') > -1) {
 						eventOutside = 'mouseover';
 					}
 
@@ -227,14 +229,16 @@ AUI.add(
 									}
 								}
 							);
-						} else if (handle) {
+						}
+						else if (handle) {
 							handle.detach();
 
 							handle = null;
 						}
 
 						Liferay.Data[handleId] = handle;
-					} else {
+					}
+					else {
 						var data = {};
 
 						data[handleId] = open ? 'open' : 'closed';
@@ -270,8 +274,8 @@ AUI.add(
 					AEvent.defineOutside('touchstart');
 
 					instance._bindUI();
-				}
-			}
+				},
+			},
 		});
 
 		Liferay.MenuToggle = MenuToggle;
@@ -282,7 +286,7 @@ AUI.add(
 			'aui-node',
 			'event-outside',
 			'event-tap',
-			'liferay-menu-filter'
-		]
+			'liferay-menu-filter',
+		],
 	}
 );

@@ -16,18 +16,16 @@ import updateLayoutData from '../actions/updateLayoutData';
 import LayoutService from '../services/LayoutService';
 
 export default function updateRowColumns({
-	config,
 	itemId,
 	numberOfColumns,
-	segmentsExperienceId
+	segmentsExperienceId,
 }) {
 	return dispatch =>
 		LayoutService.updateRowColumns({
-			config,
 			itemId,
 			numberOfColumns,
 			onNetworkStatus: dispatch,
-			segmentsExperienceId
+			segmentsExperienceId,
 		}).then(({layoutData}) => {
 			dispatch(updateLayoutData({layoutData}));
 		});

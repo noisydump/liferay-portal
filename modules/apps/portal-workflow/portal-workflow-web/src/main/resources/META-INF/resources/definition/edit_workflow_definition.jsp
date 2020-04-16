@@ -133,7 +133,7 @@ renderResponse.setTitle((workflowDefinition == null) ? LanguageUtil.get(request,
 						refresh="<%= false %>"
 					>
 						<liferay-ui:section>
-							<div style="margin-top:1.5rem;">
+							<div style="margin-top: 1.5rem;">
 
 								<%
 								String creatorUserName = workflowDefinitionDisplayContext.getCreatorUserName(workflowDefinition);
@@ -150,7 +150,7 @@ renderResponse.setTitle((workflowDefinition == null) ? LanguageUtil.get(request,
 												<%= dateFormatTime.format(workflowDefinitionDisplayContext.getCreatedDate(workflowDefinition)) %>
 											</c:when>
 											<c:otherwise>
-												<liferay-ui:message arguments="<%= new String[] {dateFormatTime.format(workflowDefinitionDisplayContext.getCreatedDate(workflowDefinition)), creatorUserName} %>" key="x-by-x" translateArguments="<%= false %>" />
+												<liferay-ui:message arguments="<%= new String[] {dateFormatTime.format(workflowDefinitionDisplayContext.getCreatedDate(workflowDefinition)), HtmlUtil.escape(creatorUserName)} %>" key="x-by-x" translateArguments="<%= false %>" />
 											</c:otherwise>
 										</c:choose>
 									</dd>
@@ -163,7 +163,7 @@ renderResponse.setTitle((workflowDefinition == null) ? LanguageUtil.get(request,
 												<%= dateFormatTime.format(workflowDefinition.getModifiedDate()) %>
 											</c:when>
 											<c:otherwise>
-												<liferay-ui:message arguments="<%= new String[] {dateFormatTime.format(workflowDefinition.getModifiedDate()), userName} %>" key="x-by-x" translateArguments="<%= false %>" />
+												<liferay-ui:message arguments="<%= new String[] {dateFormatTime.format(workflowDefinition.getModifiedDate()), HtmlUtil.escape(userName)} %>" key="x-by-x" translateArguments="<%= false %>" />
 											</c:otherwise>
 										</c:choose>
 									</dd>
@@ -310,7 +310,7 @@ renderResponse.setTitle((workflowDefinition == null) ? LanguageUtil.get(request,
 		height: 600,
 		mode: 'xml',
 		tabSize: 4,
-		width: '100%'
+		width: '100%',
 	}).render();
 
 	contentEditor.set(
@@ -372,16 +372,16 @@ renderResponse.setTitle((workflowDefinition == null) ? LanguageUtil.get(request,
 
 		if (!titleElement) {
 			Liferay.Util.setFormValues(form, {
-				titleElement: ''
+				titleElement: '',
 			});
 		}
 
 		Liferay.Util.postForm(form, {
 			data: {
 				content: contentEditor.get(STR_VALUE),
-				titleValue: untitledWorkflowTitle
+				titleValue: untitledWorkflowTitle,
 			},
-			url: '<%= deployWorkflowDefinitionURL %>'
+			url: '<%= deployWorkflowDefinitionURL %>',
 		});
 	});
 
@@ -393,16 +393,16 @@ renderResponse.setTitle((workflowDefinition == null) ? LanguageUtil.get(request,
 
 		if (!titleElement) {
 			Liferay.Util.setFormValues(form, {
-				titleElement: ''
+				titleElement: '',
 			});
 		}
 
 		Liferay.Util.postForm(form, {
 			data: {
 				content: contentEditor.get(STR_VALUE),
-				titleValue: untitledWorkflowTitle
+				titleValue: untitledWorkflowTitle,
 			},
-			url: '<%= saveWorkflowDefinitionURL %>'
+			url: '<%= saveWorkflowDefinitionURL %>',
 		});
 	});
 

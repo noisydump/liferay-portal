@@ -136,6 +136,17 @@ public class DDMFormInstanceLocalServiceWrapper
 	}
 
 	/**
+	 * @throws PortalException
+	 */
+	@Override
+	public com.liferay.portal.kernel.model.PersistedModel createPersistedModel(
+			java.io.Serializable primaryKeyObj)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _ddmFormInstanceLocalService.createPersistedModel(primaryKeyObj);
+	}
+
+	/**
 	 * Deletes the ddm form instance from the database. Also notifies the appropriate model listeners.
 	 *
 	 * @param ddmFormInstance the ddm form instance
@@ -473,6 +484,13 @@ public class DDMFormInstanceLocalServiceWrapper
 	}
 
 	@Override
+	public int getFormInstancesCount(String uuid)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _ddmFormInstanceLocalService.getFormInstancesCount(uuid);
+	}
+
+	@Override
 	public com.liferay.dynamic.data.mapping.storage.DDMFormValues
 			getFormInstanceSettingsFormValues(
 				com.liferay.dynamic.data.mapping.model.DDMFormInstance
@@ -512,6 +530,9 @@ public class DDMFormInstanceLocalServiceWrapper
 		return _ddmFormInstanceLocalService.getOSGiServiceIdentifier();
 	}
 
+	/**
+	 * @throws PortalException
+	 */
 	@Override
 	public com.liferay.portal.kernel.model.PersistedModel getPersistedModel(
 			java.io.Serializable primaryKeyObj)

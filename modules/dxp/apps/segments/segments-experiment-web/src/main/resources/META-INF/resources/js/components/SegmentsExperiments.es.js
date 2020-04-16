@@ -21,16 +21,16 @@ import React, {useContext, useState} from 'react';
 
 import SegmentsExperimentsContext from '../context.es';
 import {archiveExperiment} from '../state/actions.es';
-import {StateContext, DispatchContext} from '../state/context.es';
+import {DispatchContext, StateContext} from '../state/context.es';
 import {SegmentsExperienceType} from '../types.es';
 import {NO_EXPERIMENT_ILLUSTRATION_FILE_NAME} from '../util/contants.es';
 import {
-	statusToLabelDisplayType,
+	STATUS_COMPLETED,
 	STATUS_DRAFT,
 	STATUS_FINISHED_WINNER,
-	STATUS_COMPLETED
+	statusToLabelDisplayType,
 } from '../util/statuses.es';
-import {openSuccessToast, openErrorToast} from '../util/toasts.es';
+import {openErrorToast, openSuccessToast} from '../util/toasts.es';
 import ClickGoalPicker from './ClickGoalPicker/ClickGoalPicker.es';
 import ExperimentsHistory from './ExperimentsHistory.es';
 import SegmentsExperimentsActions from './SegmentsExperimentsActions.es';
@@ -39,7 +39,7 @@ import Variants from './Variants/Variants.es';
 
 const TABS_STATES = {
 	ACTIVE: 0,
-	HISTORY: 1
+	HISTORY: 1,
 };
 
 function SegmentsExperiments({
@@ -49,7 +49,7 @@ function SegmentsExperiments({
 	onEditSegmentsExperimentStatus,
 	onSelectSegmentsExperienceChange,
 	onTargetChange,
-	segmentsExperiences = []
+	segmentsExperiences = [],
 }) {
 	const [dropdown, setDropdown] = useState(false);
 	const [activeTab, setActiveTab] = useState(TABS_STATES.ACTIVE);
@@ -57,7 +57,7 @@ function SegmentsExperiments({
 		experiment,
 		experimentHistory,
 		selectedExperienceId,
-		variants
+		variants,
 	} = useContext(StateContext);
 	const {APIService, assetsPath} = useContext(SegmentsExperimentsContext);
 	const dispatch = useContext(DispatchContext);
@@ -188,7 +188,7 @@ function SegmentsExperiments({
 												'<strong>',
 												winnerVariant.name,
 												'</strong>'
-											)
+											),
 										}}
 									/>
 
@@ -286,8 +286,9 @@ function SegmentsExperiments({
 			Liferay.Language.get('are-you-sure-you-want-to-delete-this')
 		);
 
-		if (confirmed)
+		if (confirmed) {
 			return onDeleteSegmentsExperiment(experiment.segmentsExperimentId);
+		}
 	}
 
 	function _handleExperienceSelection(event) {
@@ -304,7 +305,7 @@ function SegmentsExperiments({
 		const body = {
 			segmentsExperimentId: experiment.segmentsExperimentId,
 			status: STATUS_COMPLETED,
-			winnerSegmentsExperienceId: experienceId
+			winnerSegmentsExperienceId: experienceId,
 		};
 
 		const confirmed = confirm(
@@ -320,7 +321,7 @@ function SegmentsExperiments({
 
 					dispatch(
 						archiveExperiment({
-							status: segmentsExperiment.status
+							status: segmentsExperiment.status,
 						})
 					);
 				})
@@ -338,7 +339,7 @@ SegmentsExperiments.propTypes = {
 	onEditSegmentsExperimentStatus: PropTypes.func.isRequired,
 	onSelectSegmentsExperienceChange: PropTypes.func.isRequired,
 	onTargetChange: PropTypes.func.isRequired,
-	segmentsExperiences: PropTypes.arrayOf(SegmentsExperienceType)
+	segmentsExperiences: PropTypes.arrayOf(SegmentsExperienceType),
 };
 
 export default SegmentsExperiments;

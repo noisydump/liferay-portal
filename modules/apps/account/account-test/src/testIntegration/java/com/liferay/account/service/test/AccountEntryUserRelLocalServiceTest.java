@@ -14,6 +14,8 @@
 
 package com.liferay.account.service.test;
 
+import com.liferay.account.constants.AccountConstants;
+import com.liferay.account.exception.DuplicateAccountEntryIdException;
 import com.liferay.account.exception.DuplicateAccountEntryUserRelException;
 import com.liferay.account.exception.NoSuchEntryException;
 import com.liferay.account.exception.NoSuchEntryUserRelException;
@@ -34,12 +36,14 @@ import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.test.util.UserTestUtil;
+import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.LocaleThreadLocal;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
+import com.liferay.portal.vulcan.util.TransformUtil;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -78,8 +82,6 @@ public class AccountEntryUserRelLocalServiceTest {
 			_accountEntryUserRelLocalService.addAccountEntryUserRel(
 				_accountEntry.getAccountEntryId(), _user.getUserId());
 
-		_accountEntryUserRels.add(accountEntryUserRel);
-
 		Assert.assertNotNull(accountEntryUserRel);
 		Assert.assertNotNull(
 			_accountEntryUserRelLocalService.fetchAccountEntryUserRel(
@@ -90,9 +92,8 @@ public class AccountEntryUserRelLocalServiceTest {
 	public void testAddAccountEntryUserRel1ThrowsDuplicateAccountEntryUserRelException()
 		throws Exception {
 
-		_accountEntryUserRels.add(
-			_accountEntryUserRelLocalService.addAccountEntryUserRel(
-				_accountEntry.getAccountEntryId(), _user.getUserId()));
+		_accountEntryUserRelLocalService.addAccountEntryUserRel(
+			_accountEntry.getAccountEntryId(), _user.getUserId());
 
 		_accountEntryUserRelLocalService.addAccountEntryUserRel(
 			_accountEntry.getAccountEntryId(), _user.getUserId());
@@ -118,27 +119,17 @@ public class AccountEntryUserRelLocalServiceTest {
 
 	@Test
 	public void testAddAccountEntryUserRel2() throws Exception {
-		AccountEntryUserRel accountEntryUserRel = _addAccountEntryUserRel(
-			_accountEntry.getAccountEntryId());
+		_testAddAccountEntryUserRel2(
+			_accountEntry.getAccountEntryId(), _accountEntry.getCompanyId());
+	}
 
-		User user = _userLocalService.fetchUser(
-			accountEntryUserRel.getAccountUserId());
+	@Test
+	public void testAddAccountEntryUserRel2WithDefaultAccountEntryId()
+		throws Exception {
 
-		Assert.assertNotNull(user);
-		Assert.assertEquals(_userInfo.screenName, user.getScreenName());
-		Assert.assertEquals(
-			accountEntryUserRel.getAccountUserId(), user.getUserId());
-
-		BaseModelSearchResult<User> baseModelSearchResult =
-			_accountUserRetriever.searchAccountUsers(
-				_accountEntry.getAccountEntryId(), user.getScreenName(),
-				WorkflowConstants.STATUS_APPROVED, QueryUtil.ALL_POS,
-				QueryUtil.ALL_POS, "screenName", false);
-
-		List<User> users = baseModelSearchResult.getBaseModels();
-
-		Assert.assertEquals(users.toString(), 1, users.size());
-		Assert.assertEquals(users.get(0), user);
+		_testAddAccountEntryUserRel2(
+			AccountConstants.ACCOUNT_ENTRY_ID_DEFAULT,
+			TestPropsValues.getCompanyId());
 	}
 
 	@Test
@@ -257,9 +248,8 @@ public class AccountEntryUserRelLocalServiceTest {
 		_users.add(UserTestUtil.addUser());
 
 		for (User user : _users) {
-			_accountEntryUserRels.add(
-				_accountEntryUserRelLocalService.addAccountEntryUserRel(
-					_accountEntry.getAccountEntryId(), user.getUserId()));
+			_accountEntryUserRelLocalService.addAccountEntryUserRel(
+				_accountEntry.getAccountEntryId(), user.getUserId());
 		}
 
 		List<AccountEntryUserRel> accountEntryUserRels =
@@ -280,6 +270,98 @@ public class AccountEntryUserRelLocalServiceTest {
 		Assert.assertArrayEquals(expectedUserIds, actualUserIds);
 	}
 
+	@Test
+	public void testUpdateAccountEntryUserRels() throws Exception {
+		long userId = _user.getUserId();
+
+		// Add account entries for a user
+
+		long[] addAccountEntryIds1 = _addAccountEntries(3);
+		long[] deleteAccountEntryIds1 = _addAccountEntries(2);
+
+		_accountEntryUserRelLocalService.updateAccountEntryUserRels(
+			addAccountEntryIds1, deleteAccountEntryIds1, userId);
+
+		List<AccountEntryUserRel> accountEntryUserRels =
+			_accountEntryUserRelLocalService.
+				getAccountEntryUserRelsByAccountUserId(userId);
+
+		Assert.assertEquals(
+			accountEntryUserRels.toString(), 3, accountEntryUserRels.size());
+
+		// Add and delete account entries for a user
+
+		long[] addAccountEntryIds2 = _addAccountEntries(5);
+		long[] deleteAccountEntryIds2 = {addAccountEntryIds1[0]};
+
+		_accountEntryUserRelLocalService.updateAccountEntryUserRels(
+			addAccountEntryIds2, deleteAccountEntryIds2, userId);
+
+		List<Long> expectedAccountEntryIdsList = new ArrayList<>(
+			ListUtil.fromArray(addAccountEntryIds2));
+
+		expectedAccountEntryIdsList.add(addAccountEntryIds1[1]);
+		expectedAccountEntryIdsList.add(addAccountEntryIds1[2]);
+
+		accountEntryUserRels =
+			_accountEntryUserRelLocalService.
+				getAccountEntryUserRelsByAccountUserId(userId);
+
+		List<Long> actualAccountEntryIds = TransformUtil.transform(
+			accountEntryUserRels, AccountEntryUserRelModel::getAccountEntryId);
+
+		Assert.assertEquals(
+			ListUtil.sort(expectedAccountEntryIdsList),
+			ListUtil.sort(actualAccountEntryIds));
+
+		// Delete all account entries for a user
+
+		long[] addAccountEntryIds3 = new long[0];
+		long[] deleteAccountEntryIds3 = ArrayUtil.toLongArray(
+			expectedAccountEntryIdsList);
+
+		_accountEntryUserRelLocalService.updateAccountEntryUserRels(
+			addAccountEntryIds3, deleteAccountEntryIds3, userId);
+
+		accountEntryUserRels =
+			_accountEntryUserRelLocalService.
+				getAccountEntryUserRelsByAccountUserId(userId);
+
+		Assert.assertEquals(
+			accountEntryUserRels.toString(), 1, accountEntryUserRels.size());
+
+		AccountEntryUserRel accountEntryUserRel = accountEntryUserRels.get(0);
+
+		Assert.assertEquals(
+			AccountConstants.ACCOUNT_ENTRY_ID_DEFAULT,
+			accountEntryUserRel.getAccountEntryId());
+	}
+
+	@Test(expected = DuplicateAccountEntryIdException.class)
+	public void testUpdateAccountEntryUserRelsThrowsDuplicateAccountEntryIdException()
+		throws Exception {
+
+		long[] accountEntryIds = _addAccountEntries(3);
+
+		_accountEntryUserRelLocalService.updateAccountEntryUserRels(
+			accountEntryIds, accountEntryIds, _user.getUserId());
+	}
+
+	private long[] _addAccountEntries(int count) throws Exception {
+		long[] accountEntryIds = new long[count];
+
+		for (int i = 0; i < count; i++) {
+			AccountEntry accountEntry = AccountEntryTestUtil.addAccountEntry(
+				_accountEntryLocalService);
+
+			_accountEntries.add(accountEntry);
+
+			accountEntryIds[i] = accountEntry.getAccountEntryId();
+		}
+
+		return accountEntryIds;
+	}
+
 	private AccountEntryUserRel _addAccountEntryUserRel(long accountEntryId)
 		throws Exception {
 
@@ -296,6 +378,36 @@ public class AccountEntryUserRelLocalServiceTest {
 		return accountEntryUserRel;
 	}
 
+	private void _testAddAccountEntryUserRel2(
+			long accountEntryId, long expectedCompanyId)
+		throws Exception {
+
+		AccountEntryUserRel accountEntryUserRel = _addAccountEntryUserRel(
+			accountEntryId);
+
+		User user = _userLocalService.fetchUser(
+			accountEntryUserRel.getAccountUserId());
+
+		Assert.assertNotNull(user);
+		Assert.assertEquals(expectedCompanyId, user.getCompanyId());
+		Assert.assertEquals(
+			accountEntryUserRel.getAccountUserId(), user.getUserId());
+
+		BaseModelSearchResult<User> baseModelSearchResult =
+			_accountUserRetriever.searchAccountUsers(
+				accountEntryId, user.getScreenName(),
+				WorkflowConstants.STATUS_APPROVED, QueryUtil.ALL_POS,
+				QueryUtil.ALL_POS, "screenName", false);
+
+		List<User> users = baseModelSearchResult.getBaseModels();
+
+		Assert.assertEquals(users.toString(), 1, users.size());
+		Assert.assertEquals(users.get(0), user);
+	}
+
+	@DeleteAfterTestRun
+	private final List<AccountEntry> _accountEntries = new ArrayList<>();
+
 	@DeleteAfterTestRun
 	private AccountEntry _accountEntry;
 
@@ -304,10 +416,6 @@ public class AccountEntryUserRelLocalServiceTest {
 
 	@Inject
 	private AccountEntryUserRelLocalService _accountEntryUserRelLocalService;
-
-	@DeleteAfterTestRun
-	private final List<AccountEntryUserRel> _accountEntryUserRels =
-		new ArrayList<>();
 
 	@Inject
 	private AccountUserRetriever _accountUserRetriever;

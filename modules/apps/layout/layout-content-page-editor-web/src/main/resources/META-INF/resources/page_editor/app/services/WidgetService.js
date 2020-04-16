@@ -12,13 +12,14 @@
  * details.
  */
 
+import {config} from '../config/index';
 import serviceFetch from './serviceFetch';
 
 export default {
 	/**
 	 * Adds a Widget to the current layout
 	 * @param {object} options
-	 * @param {object} options.config Application config
+	 * @param {function} options.onNetworkStatus
 	 * @param {string} options.portletId Portlet id of the Widget
 	 * @param {string} options.parentItemId id of the parent where the portlet is going to be added
 	 * @param {string} options.position position where the portlet is going to be added
@@ -27,29 +28,24 @@ export default {
 	 * @return {Promise<object>}
 	 */
 	addPortlet({
-		config,
 		onNetworkStatus,
 		parentItemId,
 		portletId,
 		position,
-		segmentsExperienceId
+		segmentsExperienceId,
 	}) {
-		const {addPortletURL, classNameId, classPK} = config;
-
 		return serviceFetch(
-			config,
-			addPortletURL,
+			config.addPortletURL,
 			{
 				body: {
-					classNameId,
-					classPK,
 					parentItemId,
 					portletId,
 					position,
-					segmentsExperienceId
-				}
+					segmentsExperienceId,
+				},
 			},
-			onNetworkStatus
+			onNetworkStatus,
+			{requestGenerateDraft: true}
 		);
-	}
+	},
 };

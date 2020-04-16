@@ -14,9 +14,9 @@
 
 import {EventHandler} from 'metal-events';
 import PropTypes from 'prop-types';
-import React, {useEffect, useRef, useState, useContext} from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 
-import {ConfigContext} from '../../app/config/index';
+import {config} from '../../app/config/index';
 
 export default function Editor({
 	autoFocus = false,
@@ -24,14 +24,10 @@ export default function Editor({
 	id,
 	initialValue,
 	onChange,
-	placeholder
+	placeholder,
 }) {
-	const {defaultEditorConfigurations, portletNamespace} = useContext(
-		ConfigContext
-	);
-
 	const editorConfig =
-		defaultEditorConfigurations[configurationName].editorConfig;
+		config.defaultEditorConfigurations[configurationName].editorConfig;
 
 	const [editor, setEditor] = useState(null);
 
@@ -77,7 +73,7 @@ export default function Editor({
 			...editorConfig,
 			enterMode: 1,
 			startupFocus: autoFocus,
-			title: false
+			title: false,
 		});
 
 		let ready = false;
@@ -95,27 +91,32 @@ export default function Editor({
 				if (ready) {
 					newEditor.destroy();
 					setEditor(null);
-				} else {
+				}
+				else {
 					instanceReadyEventHandler.removeListener();
 
 					newEditor.get('nativeEditor').once('instanceReady', () => {
 						newEditor.destroy();
 					});
 				}
-			} catch (_err) {
+			}
+			catch (_err) {
 				// https://github.com/liferay/alloy-editor/issues/1306
 			}
 		};
 	}, [autoFocus, editorConfig]);
 
 	return (
-		<div className="alloy-editor-container" id={`${portletNamespace}${id}`}>
+		<div
+			className="alloy-editor-container"
+			id={`${config.portletNamespace}${id}`}
+		>
 			<div
 				className="alloy-editor alloy-editor-placeholder form-control form-control-sm page-editor__editor"
 				contentEditable={false}
 				data-placeholder={placeholder}
 				data-required={false}
-				id={`${portletNamespace}${id}`}
+				id={`${config.portletNamespace}${id}`}
 				name={id}
 				ref={wrapperRef}
 			/>
@@ -131,5 +132,5 @@ Editor.propTypes = {
 	id: PropTypes.string.isRequired,
 	initialValue: PropTypes.string.isRequired,
 	onChange: PropTypes.func.isRequired,
-	placeholder: PropTypes.string.isRequired
+	placeholder: PropTypes.string.isRequired,
 };

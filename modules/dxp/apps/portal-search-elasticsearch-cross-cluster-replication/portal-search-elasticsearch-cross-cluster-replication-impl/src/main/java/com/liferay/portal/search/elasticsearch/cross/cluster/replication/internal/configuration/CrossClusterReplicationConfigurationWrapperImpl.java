@@ -35,9 +35,24 @@ public class CrossClusterReplicationConfigurationWrapperImpl
 	implements CrossClusterReplicationConfigurationWrapper {
 
 	@Override
-	public String getCCRLocalClusterConnectionId() {
+	public String[] getCCRLocalClusterConnectionConfigurations() {
 		return crossClusterReplicationConfiguration.
-			ccrLocalClusterConnectionId();
+			ccrLocalClusterConnectionConfigurations();
+	}
+
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 #getCCRLocalClusterConnectionConfigurations()}
+	 */
+	@Deprecated
+	@Override
+	public String getCCRLocalClusterConnectionId() {
+		return null;
+	}
+
+	@Override
+	public String getRemoteClusterAlias() {
+		return crossClusterReplicationConfiguration.remoteClusterAlias();
 	}
 
 	@Override

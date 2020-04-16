@@ -39,7 +39,7 @@ const SimpleInputModal = ({
 	mainFieldName,
 	namespace,
 	onFormSuccess,
-	placeholder
+	placeholder,
 }) => {
 	const isMounted = useIsMounted();
 	const [errorMessage, setErrorMessage] = useState();
@@ -61,7 +61,7 @@ const SimpleInputModal = ({
 
 		fetch(formSubmitURL, {
 			body: formData,
-			method: 'POST'
+			method: 'POST',
 		})
 			.then(response => response.json())
 			.then(responseContent => {
@@ -70,19 +70,21 @@ const SimpleInputModal = ({
 						setLoadingResponse(false);
 
 						handleFormError(responseContent);
-					} else {
+					}
+					else {
 						setVisible(false);
 
 						closeModal();
 
 						if (responseContent.redirectURL) {
 							navigate(responseContent.redirectURL);
-						} else {
+						}
+						else {
 							if (onFormSuccess) {
 								onFormSuccess({
 									...responseContent,
 									redirectURL:
-										responseContent.redirectURL || ''
+										responseContent.redirectURL || '',
 								});
 							}
 						}
@@ -101,7 +103,7 @@ const SimpleInputModal = ({
 			setVisible(false);
 
 			closeModal();
-		}
+		},
 	});
 
 	return (

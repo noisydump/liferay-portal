@@ -80,7 +80,7 @@
 
 			return instance._audioTPL.output({
 				oggUrl: audioOggUrl,
-				url: audioUrl
+				url: audioUrl,
 			});
 		},
 
@@ -99,7 +99,7 @@
 								value,
 								editor,
 								type
-							)
+							),
 						},
 						editor,
 						type
@@ -148,7 +148,7 @@
 				ogvUrl: videoOgvUrl,
 				poster,
 				url: videoUrl,
-				width: videoWidth
+				width: videoWidth,
 			});
 		},
 
@@ -164,7 +164,8 @@
 						node,
 						extraStyles
 					);
-				} else if (type === 'video') {
+				}
+				else if (type === 'video') {
 					mediaScript = instance._commitVideoValue(
 						value,
 						node,
@@ -195,7 +196,8 @@
 				itemSelectorDialog.zIndex = CKEDITOR.getNextZIndex();
 
 				callback(itemSelectorDialog);
-			} else {
+			}
+			else {
 				Liferay.Loader.require(
 					'frontend-js-web/liferay/ItemSelectorDialog.es',
 					ItemSelectorDialog => {
@@ -203,7 +205,11 @@
 							eventName,
 							singleSelect: true,
 							url,
-							zIndex: CKEDITOR.getNextZIndex()
+							zIndex: CKEDITOR.getNextZIndex(),
+						});
+
+						itemSelectorDialog.on('disposed', () => {
+							instance._itemSelectorDialog = null;
 						});
 
 						instance._itemSelectorDialog = itemSelectorDialog;
@@ -225,7 +231,8 @@
 						? editor.config.attachmentURLPrefix +
 						  encodeURIComponent(itemValue.title)
 						: itemValue.url;
-				} catch (e) {}
+				}
+				catch (e) {}
 			}
 
 			return itemSrc;
@@ -253,7 +260,8 @@
 				if (audioSrc) {
 					if (typeof callback === 'function') {
 						callback(audioSrc);
-					} else {
+					}
+					else {
 						instance._commitMediaValue(audioSrc, editor, 'audio');
 					}
 				}
@@ -273,7 +281,8 @@
 					if (imageSrc) {
 						if (typeof callback === 'function') {
 							callback(imageSrc, selectedItem);
-						} else {
+						}
+						else {
 							var elementOuterHtml =
 								'<img src="' + imageSrc + '">';
 
@@ -306,10 +315,11 @@
 										nativeEvent: {},
 										selectionData: {
 											element,
-											region: element.getClientRect()
-										}
+											region: element.getClientRect(),
+										},
 									});
-								} else {
+								}
+								else {
 									editor.execCommand('enter');
 								}
 							}
@@ -348,7 +358,8 @@
 				if (videoSrc) {
 					if (typeof callback === 'function') {
 						callback(videoSrc);
-					} else {
+					}
+					else {
 						instance._commitMediaValue(videoSrc, editor, 'video');
 					}
 				}
@@ -382,7 +393,7 @@
 							itemSelectorDialog.open();
 						}
 					);
-				}
+				},
 			});
 
 			editor.addCommand('imageselector', {
@@ -406,7 +417,7 @@
 							itemSelectorDialog.open();
 						}
 					);
-				}
+				},
 			});
 
 			editor.addCommand('linkselector', {
@@ -430,7 +441,7 @@
 							itemSelectorDialog.open();
 						}
 					);
-				}
+				},
 			});
 
 			editor.addCommand('videoselector', {
@@ -454,26 +465,26 @@
 							itemSelectorDialog.open();
 						}
 					);
-				}
+				},
 			});
 
 			if (editor.ui.addButton) {
 				editor.ui.addButton('ImageSelector', {
 					command: 'imageselector',
 					icon: instance.path + 'assets/image.png',
-					label: editor.lang.common.image
+					label: editor.lang.common.image,
 				});
 
 				editor.ui.addButton('AudioSelector', {
 					command: 'audioselector',
 					icon: instance.path + 'assets/audio.png',
-					label: Liferay.Language.get('audio')
+					label: Liferay.Language.get('audio'),
 				});
 
 				editor.ui.addButton('VideoSelector', {
 					command: 'videoselector',
 					icon: instance.path + 'assets/video.png',
-					label: Liferay.Language.get('video')
+					label: Liferay.Language.get('video'),
 				});
 			}
 
@@ -490,7 +501,8 @@
 						'audioselector',
 						'url'
 					);
-				} else if (dialogName === 'image') {
+				}
+				else if (dialogName === 'image') {
 					instance._bindBrowseButton(
 						event.editor,
 						dialogDefinition,
@@ -506,7 +518,8 @@
 							.getInputElement()
 							.setAttribute('readOnly', true);
 					};
-				} else if (dialogName === 'video') {
+				}
+				else if (dialogName === 'video') {
 					instance._bindBrowseButton(
 						event.editor,
 						dialogDefinition,
@@ -514,7 +527,8 @@
 						'videoselector',
 						'poster'
 					);
-				} else if (dialogName === 'link') {
+				}
+				else if (dialogName === 'link') {
 					instance._bindBrowseButton(
 						event.editor,
 						dialogDefinition,
@@ -530,6 +544,6 @@
 					instance._itemSelectorDialog.dispose();
 				}
 			});
-		}
+		},
 	});
 })();

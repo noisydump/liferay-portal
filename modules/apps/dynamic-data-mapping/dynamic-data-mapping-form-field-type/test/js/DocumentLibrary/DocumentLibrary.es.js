@@ -13,14 +13,17 @@
  */
 
 import DocumentLibrary from '../../../src/main/resources/META-INF/resources/DocumentLibrary/DocumentLibrary.es';
+import withContextMock from '../__mocks__/withContextMock.es';
 
 let component;
 const spritemap = 'icons.svg';
 
 const defaultDocumentLibraryConfig = {
 	name: 'textField',
-	spritemap
+	spritemap,
 };
+
+const DocumentLibraryWithContextMock = withContextMock(DocumentLibrary);
 
 describe('Field DocumentLibrary', () => {
 	afterEach(() => {
@@ -30,79 +33,81 @@ describe('Field DocumentLibrary', () => {
 	});
 
 	it('is not readOnly', () => {
-		component = new DocumentLibrary({
+		component = new DocumentLibraryWithContextMock({
 			...defaultDocumentLibraryConfig,
-			readOnly: false
+			readOnly: false,
 		});
 
 		expect(component).toMatchSnapshot();
 	});
 
 	it('has a helptext', () => {
-		component = new DocumentLibrary({
+		component = new DocumentLibraryWithContextMock({
 			...defaultDocumentLibraryConfig,
-			tip: 'Type something'
+			tip: 'Type something',
 		});
 
 		expect(component).toMatchSnapshot();
 	});
 
 	it('has an id', () => {
-		component = new DocumentLibrary({
+		component = new DocumentLibraryWithContextMock({
 			...defaultDocumentLibraryConfig,
-			id: 'ID'
+			id: 'ID',
 		});
 
 		expect(component).toMatchSnapshot();
 	});
 
 	it('has a label', () => {
-		component = new DocumentLibrary({
+		component = new DocumentLibraryWithContextMock({
 			...defaultDocumentLibraryConfig,
-			label: 'label'
+			label: 'label',
 		});
 
 		expect(component).toMatchSnapshot();
 	});
 
 	it('has a placeholder', () => {
-		component = new DocumentLibrary({
+		component = new DocumentLibraryWithContextMock({
 			...defaultDocumentLibraryConfig,
-			placeholder: 'Placeholder'
+			placeholder: 'Placeholder',
 		});
 
 		expect(component).toMatchSnapshot();
 	});
 
 	it('is not required', () => {
-		component = new DocumentLibrary({
+		component = new DocumentLibraryWithContextMock({
 			...defaultDocumentLibraryConfig,
-			required: false
+			required: false,
 		});
 
 		expect(component).toMatchSnapshot();
 	});
 
 	it('renders Label if showLabel is true', () => {
-		component = new DocumentLibrary({
+		component = new DocumentLibraryWithContextMock({
 			...defaultDocumentLibraryConfig,
 			label: 'text',
-			showLabel: true
+			showLabel: true,
 		});
 
 		expect(component).toMatchSnapshot();
 	});
 
 	it('has a spritemap', () => {
-		component = new DocumentLibrary(defaultDocumentLibraryConfig);
+		component = new DocumentLibraryWithContextMock(
+			defaultDocumentLibraryConfig
+		);
 
 		expect(component).toMatchSnapshot();
 	});
 
 	it('has a value', () => {
-		component = new DocumentLibrary({
+		component = new DocumentLibraryWithContextMock({
 			...defaultDocumentLibraryConfig,
-			value: '{"id":"123"}'
+			value: '{"id":"123"}',
 		});
 
 		expect(component).toMatchSnapshot();

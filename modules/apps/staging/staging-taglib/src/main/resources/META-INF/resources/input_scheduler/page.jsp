@@ -39,8 +39,6 @@
 		int startMonth = ParamUtil.get(request, "schedulerStartDateMonth", cal.get(Calendar.MONTH));
 		int startYear = ParamUtil.get(request, "schedulerStartDateYear", cal.get(Calendar.YEAR));
 
-		String cssClass = GetterUtil.getString((String)request.getAttribute("liferay-ui:input-repeat:cssClass"));
-
 		Recurrence recurrence = null;
 
 		int recurrenceType = ParamUtil.getInteger(request, "recurrenceType", Recurrence.NO_RECURRENCE);
@@ -456,7 +454,8 @@
 						Array.prototype.forEach.call(tables, function(table) {
 							if (table.id !== selectedTableId) {
 								table.classList.add('hide');
-							} else {
+							}
+							else {
 								table.classList.remove('hide');
 							}
 						});
@@ -495,18 +494,18 @@
 		'<portlet:namespace />schedulerEndDateType'
 	);
 	Liferay.Util.toggleRadio('<portlet:namespace />schedulerNoEndDate', '', [
-		'<portlet:namespace />schedulerEndDateType'
+		'<portlet:namespace />schedulerEndDateType',
 	]);
 
 	Liferay.Util.toggleRadio(
 		'<portlet:namespace />monthlyTypeDayOfMonth',
 		[
 			'<portlet:namespace />schedulerMonthlyDayOfMonthTypeDay',
-			'<portlet:namespace />schedulerMonthlyDayOfMonthTypeMonth'
+			'<portlet:namespace />schedulerMonthlyDayOfMonthTypeMonth',
 		],
 		[
 			'<portlet:namespace />schedulerMonthlyDayOfWeekTypeDay',
-			'<portlet:namespace />schedulerMonthlyDayOfWeekTypeMonth'
+			'<portlet:namespace />schedulerMonthlyDayOfWeekTypeMonth',
 		]
 	);
 
@@ -514,11 +513,11 @@
 		'<portlet:namespace />monthlyTypeDayOfWeek',
 		[
 			'<portlet:namespace />schedulerMonthlyDayOfWeekTypeDay',
-			'<portlet:namespace />schedulerMonthlyDayOfWeekTypeMonth'
+			'<portlet:namespace />schedulerMonthlyDayOfWeekTypeMonth',
 		],
 		[
 			'<portlet:namespace />schedulerMonthlyDayOfMonthTypeDay',
-			'<portlet:namespace />schedulerMonthlyDayOfMonthTypeMonth'
+			'<portlet:namespace />schedulerMonthlyDayOfMonthTypeMonth',
 		]
 	);
 
@@ -527,12 +526,12 @@
 		[
 			'<portlet:namespace />schedulerYearlyDayOfMonthTypeDay',
 			'<portlet:namespace />schedulerYearlyDayOfMonthTypeMonth',
-			'<portlet:namespace />schedulerYearlyDayOfMonthTypeYear'
+			'<portlet:namespace />schedulerYearlyDayOfMonthTypeYear',
 		],
 		[
 			'<portlet:namespace />schedulerYearlyDayOfWeekTypeDay',
 			'<portlet:namespace />schedulerYearlyDayOfWeekTypeMonth',
-			'<portlet:namespace />schedulerYearlyDayOfWeekTypeYear'
+			'<portlet:namespace />schedulerYearlyDayOfWeekTypeYear',
 		]
 	);
 
@@ -541,12 +540,12 @@
 		[
 			'<portlet:namespace />schedulerYearlyDayOfWeekTypeDay',
 			'<portlet:namespace />schedulerYearlyDayOfWeekTypeMonth',
-			'<portlet:namespace />schedulerYearlyDayOfWeekTypeYear'
+			'<portlet:namespace />schedulerYearlyDayOfWeekTypeYear',
 		],
 		[
 			'<portlet:namespace />schedulerYearlyDayOfMonthTypeDay',
 			'<portlet:namespace />schedulerYearlyDayOfMonthTypeMonth',
-			'<portlet:namespace />schedulerYearlyDayOfMonthTypeYear'
+			'<portlet:namespace />schedulerYearlyDayOfMonthTypeYear',
 		]
 	);
 </aui:script>

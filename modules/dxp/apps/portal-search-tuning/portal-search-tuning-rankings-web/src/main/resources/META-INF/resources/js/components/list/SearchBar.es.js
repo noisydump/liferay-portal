@@ -43,18 +43,19 @@ class SearchBar extends Component {
 		onUpdateSearchBarTerm: PropTypes.func,
 		resultIds: PropTypes.arrayOf(String),
 		searchBarTerm: PropTypes.string,
-		selectedIds: PropTypes.arrayOf(String)
+		selectedIds: PropTypes.arrayOf(String),
 	};
 
 	static defaultProps = {
 		resultIds: [],
-		selectedIds: []
+		selectedIds: [],
 	};
 
 	_handleAllCheckbox = () => {
 		if (this.props.selectedIds.length > 0) {
 			this.props.onSelectClear();
-		} else {
+		}
+		else {
 			this.props.onSelectAll();
 		}
 	};
@@ -76,7 +77,8 @@ class SearchBar extends Component {
 			onRemoveSelect(selectedIds.filter(id => dataMap[id].hidden));
 
 			onClickPin(unpinnedIds, true);
-		} else {
+		}
+		else {
 			onRemoveSelect(selectedIds.filter(id => dataMap[id].addedResult));
 
 			onClickPin(selectedIds, false);
@@ -114,7 +116,7 @@ class SearchBar extends Component {
 			fetchDocumentsSearchUrl,
 			onAddResultSubmit,
 			resultIds,
-			selectedIds
+			selectedIds,
 		} = this.props;
 
 		const classManagementBar = getCN(

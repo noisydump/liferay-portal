@@ -14,6 +14,7 @@
 
 package com.liferay.knowledge.base.internal.upgrade.v2_0_2;
 
+import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.dao.jdbc.AutoBatchPreparedStatementUtil;
 import com.liferay.portal.kernel.upgrade.UpgradeProcess;
@@ -56,23 +57,32 @@ public class UpgradeKBArticle extends UpgradeProcess {
 	}
 
 	private String _getUniqueUrlTitle(String urlTitle, int n) {
-		Matcher matcher = _pattern.matcher(urlTitle);
+		String suffix = _DEFAULT_SUFFIX;
 
-		if (!matcher.matches()) {
-			return urlTitle + _DEFAULT_SUFFIX;
+		int i = urlTitle.lastIndexOf(CharPool.DASH);
+
+		if (i != -1) {
+			Matcher matcher = _pattern.matcher(urlTitle);
+
+			matcher.region(i, urlTitle.length());
+
+			if (matcher.matches()) {
+				int counter = GetterUtil.getInteger(urlTitle.substring(i + 1));
+
+				int spreadValue = 16 + n;
+
+				suffix = CharPool.DASH + String.valueOf(counter + spreadValue);
+
+				urlTitle = urlTitle.substring(0, i);
+			}
 		}
 
-		int i = urlTitle.lastIndexOf('-');
-
-		if (i == -1) {
-			return urlTitle + _DEFAULT_SUFFIX;
+		if ((urlTitle.length() + suffix.length()) > _MAX_URL_TITLE_LENGTH) {
+			urlTitle = urlTitle.substring(
+				0, _MAX_URL_TITLE_LENGTH - suffix.length());
 		}
 
-		int counter = GetterUtil.getInteger(urlTitle.substring(i + 1));
-
-		int spreadValue = 16 + n;
-
-		return urlTitle + (counter + spreadValue);
+		return urlTitle + suffix;
 	}
 
 	private boolean _renameConflictingFriendlyURL(
@@ -140,6 +150,8 @@ public class UpgradeKBArticle extends UpgradeProcess {
 	}
 
 	private static final String _DEFAULT_SUFFIX = "-1";
+
+	private static final int _MAX_URL_TITLE_LENGTH = 74;
 
 	private static final Pattern _pattern = Pattern.compile("-\\d+$");
 

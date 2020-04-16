@@ -20,7 +20,12 @@
 </tr>
 <tr>
 	<td>CHECKOUT_SUCCESS</td>
-	<td>//div[contains(@class,'content')]/div[contains(@class,'alert-success')]</td>
+	<td>//div[contains(@class,'content')]/div[contains(@class,'alert-info')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>CONVERSION_ALERT_MESSAGE</td>
+	<td>//div[contains(@class,'conversion-messages')]/div[contains(@class,'alert-${key_type}')][contains(.,'${key_alertMessage}')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -51,6 +56,16 @@
 <tr>
 	<td>EMPTY_INFO_TAGLIB</td>
 	<td>//div[contains(@class,'taglib-empty-result-message')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>EMPTY_INFO_TAGLIB_TITLE</td>
+	<td>//div/h1[contains(@class,'taglib-empty-result-message-title')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>EMPTY_INFO_TAGLIB_DESCRIPTION</td>
+	<td>//div/p[contains(@class,'taglib-empty-result-message-description')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -131,6 +146,11 @@
 <tr>
 	<td>ERROR_ENTER_A_VALID_URL</td>
 	<td>//div[contains(@class,'alert-danger') and contains(.,'Please enter a valid URL')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>ERROR_ENTER_A_VALID_VALUE</td>
+	<td>//div[@role='alert' and contains(.,'${key_alertMessage}')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -261,11 +281,6 @@
 <tr>
 	<td>NO_ENTRIES</td>
 	<td>//div[contains(@id,'Empty') and contains(.,'No entries were found')]</td>
-	<td></td>
-</tr>
-<tr>
-	<td>NO_PAGES</td>
-	<td>//h1[contains(.,'No Pages yet')]</td>
 	<td></td>
 </tr>
 <tr>

@@ -36,7 +36,7 @@ function _fixSplitArray(variants, editedIndex, indexToFix, totalSplit) {
 		if (correctedSplit < 0) {
 			variants[indexToFix] = {
 				...variants[indexToFix],
-				split: 0
+				split: 0,
 			};
 
 			return _fixSplitArray(
@@ -45,10 +45,11 @@ function _fixSplitArray(variants, editedIndex, indexToFix, totalSplit) {
 				nextIndexToFix,
 				100 - (correctedSplit - variants[indexToFix].split)
 			);
-		} else {
+		}
+		else {
 			variants[indexToFix] = {
 				...variants[indexToFix],
-				split: correctedSplit
+				split: correctedSplit,
 			};
 		}
 	}
@@ -59,7 +60,7 @@ function _fixSplitArray(variants, editedIndex, indexToFix, totalSplit) {
 		if (correctedSplit > 100) {
 			variants[indexToFix] = {
 				...variants[indexToFix],
-				split: 100
+				split: 100,
 			};
 
 			return _fixSplitArray(
@@ -68,10 +69,11 @@ function _fixSplitArray(variants, editedIndex, indexToFix, totalSplit) {
 				nextIndexToFix,
 				totalSplit - correctedSplit
 			);
-		} else {
+		}
+		else {
 			variants[indexToFix] = {
 				...variants[indexToFix],
-				split: correctedSplit
+				split: correctedSplit,
 			};
 		}
 	}
@@ -98,7 +100,8 @@ function changeSplitValue(splitVariants, variantId, value) {
 			newSplitVariants.push({...variant, split: value});
 			totalSplit += value;
 			editedIndex = i;
-		} else {
+		}
+		else {
 			newSplitVariants.push(variant);
 			totalSplit += variant.split;
 		}

@@ -16,16 +16,25 @@ package com.liferay.layout.type.controller.portlet.internal.layout.type.controll
 
 import com.liferay.fragment.constants.FragmentActionKeys;
 import com.liferay.fragment.renderer.FragmentRendererController;
-import com.liferay.info.constants.InfoDisplayWebKeys;
 import com.liferay.info.display.contributor.InfoDisplayContributorTracker;
+import com.liferay.layout.list.retriever.LayoutListRetrieverTracker;
+import com.liferay.layout.list.retriever.ListObjectReferenceFactoryTracker;
+import com.liferay.layout.type.controller.portlet.internal.constants.PortletLayoutTypeControllerWebKeys;
+import com.liferay.layout.type.controller.portlet.internal.display.context.PortletLayoutDisplayContext;
 import com.liferay.portal.kernel.io.unsync.UnsyncStringWriter;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.LayoutConstants;
 import com.liferay.portal.kernel.model.LayoutTypeController;
+import com.liferay.portal.kernel.model.Portlet;
 import com.liferay.portal.kernel.model.impl.BaseLayoutTypeControllerImpl;
+import com.liferay.portal.kernel.service.PortletLocalService;
 import com.liferay.portal.kernel.servlet.DirectRequestDispatcherFactoryUtil;
 import com.liferay.portal.kernel.servlet.TransferHeadersHelperUtil;
+import com.liferay.portal.kernel.util.ParamUtil;
+import com.liferay.portal.kernel.util.Portal;
+import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
+import com.liferay.portal.servlet.DynamicServletRequestUtil;
 import com.liferay.taglib.servlet.PipingServletResponse;
 
 import javax.servlet.RequestDispatcher;
@@ -84,13 +93,36 @@ public class PortletLayoutTypeController extends BaseLayoutTypeControllerImpl {
 			FragmentActionKeys.FRAGMENT_RENDERER_CONTROLLER,
 			_fragmentRendererController);
 		httpServletRequest.setAttribute(
-			InfoDisplayWebKeys.INFO_DISPLAY_CONTRIBUTOR_TRACKER,
-			_infoDisplayContributorTracker);
+			PortletLayoutDisplayContext.class.getName(),
+			new PortletLayoutDisplayContext(
+				httpServletRequest, _infoDisplayContributorTracker,
+				_layoutListRetrieverTracker,
+				_listObjectReferenceFactoryTracker));
 
 		RequestDispatcher requestDispatcher =
 			TransferHeadersHelperUtil.getTransferHeadersRequestDispatcher(
 				DirectRequestDispatcherFactoryUtil.getRequestDispatcher(
 					servletContext, getViewPage()));
+
+		HttpServletRequest originalHttpServletRequest =
+			_portal.getOriginalServletRequest(httpServletRequest);
+
+		String portletId = ParamUtil.getString(httpServletRequest, "p_p_id");
+
+		if (Validator.isNotNull(portletId)) {
+			Portlet portlet = _portletLocalService.getPortletById(portletId);
+
+			if (portlet != null) {
+				originalHttpServletRequest =
+					DynamicServletRequestUtil.createDynamicServletRequest(
+						originalHttpServletRequest, portlet,
+						httpServletRequest.getParameterMap(), true);
+			}
+		}
+
+		httpServletRequest.setAttribute(
+			PortletLayoutTypeControllerWebKeys.ORIGINAL_HTTP_SERVLET_REQUEST,
+			originalHttpServletRequest);
 
 		UnsyncStringWriter unsyncStringWriter = new UnsyncStringWriter();
 
@@ -175,5 +207,18 @@ public class PortletLayoutTypeController extends BaseLayoutTypeControllerImpl {
 
 	@Reference
 	private InfoDisplayContributorTracker _infoDisplayContributorTracker;
+
+	@Reference
+	private LayoutListRetrieverTracker _layoutListRetrieverTracker;
+
+	@Reference
+	private ListObjectReferenceFactoryTracker
+		_listObjectReferenceFactoryTracker;
+
+	@Reference
+	private Portal _portal;
+
+	@Reference
+	private PortletLocalService _portletLocalService;
 
 }

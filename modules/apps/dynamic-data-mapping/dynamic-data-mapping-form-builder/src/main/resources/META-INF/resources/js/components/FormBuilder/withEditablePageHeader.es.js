@@ -17,10 +17,9 @@ import './EditablePageHeader.soy';
 import {PagesVisitor} from 'dynamic-data-mapping-form-renderer';
 import {EventHandler} from 'metal-events';
 import Component from 'metal-jsx';
-import {Config} from 'metal-state';
 
-import {focusedFieldStructure, pageStructure} from '../../util/config.es';
 import {sub} from '../../util/strings.es';
+import formBuilderProps from './props.es';
 
 const withEditablePageHeader = ChildComponent => {
 	class EditablePageHeader extends Component {
@@ -59,7 +58,7 @@ const withEditablePageHeader = ChildComponent => {
 						Liferay.Language.get('untitled-page-x-of-x'),
 						[pageIndex + 1, total]
 					),
-					total
+					total,
 				};
 			});
 		}
@@ -88,8 +87,8 @@ const withEditablePageHeader = ChildComponent => {
 							description: value,
 							localizedDescription: {
 								...page.localizedDescription,
-								[editingLanguageId]: value
-							}
+								[editingLanguageId]: value,
+							},
 						};
 					}
 
@@ -113,9 +112,9 @@ const withEditablePageHeader = ChildComponent => {
 							...page,
 							localizedTitle: {
 								...page.localizedTitle,
-								[editingLanguageId]: value
+								[editingLanguageId]: value,
 							},
-							title: value
+							title: value,
 						};
 					}
 
@@ -126,123 +125,7 @@ const withEditablePageHeader = ChildComponent => {
 	}
 
 	EditablePageHeader.PROPS = {
-		/**
-		 * @default
-		 * @instance
-		 * @memberof FormBuilder
-		 * @type {?number}
-		 */
-
-		activePage: Config.number().value(0),
-
-		/**
-		 * @default undefined
-		 * @instance
-		 * @memberof FormBuilder
-		 * @type {?string}
-		 */
-
-		defaultLanguageId: Config.string(),
-
-		/**
-		 * @default undefined
-		 * @instance
-		 * @memberof FormBuilder
-		 * @type {?string}
-		 */
-
-		editingLanguageId: Config.string(),
-
-		/**
-		 * @default undefined
-		 * @instance
-		 * @memberof FormBuilder
-		 * @type {?string}
-		 */
-
-		fieldSetDefinitionURL: Config.string(),
-
-		/**
-		 * @default []
-		 * @instance
-		 * @memberof FormBuilder
-		 * @type {?(array|undefined)}
-		 */
-
-		fieldSets: Config.array().value([]),
-
-		/**
-		 * @default []
-		 * @instance
-		 * @memberof FormBuilder
-		 * @type {?(array|undefined)}
-		 */
-
-		fieldTypes: Config.array().value([]),
-
-		/**
-		 * @default {}
-		 * @instance
-		 * @memberof FormBuilder
-		 * @type {?object}
-		 */
-
-		focusedField: focusedFieldStructure.value({}),
-
-		/**
-		 * @default []
-		 * @instance
-		 * @memberof FormBuilder
-		 * @type {?array<object>}
-		 */
-
-		pages: Config.arrayOf(pageStructure).value([]),
-
-		/**
-		 * @instance
-		 * @memberof FormBuilder
-		 * @type {string}
-		 */
-
-		paginationMode: Config.string().required(),
-
-		/**
-		 * @instance
-		 * @memberof FormBuilder
-		 * @type {string}
-		 */
-
-		portletNamespace: Config.string().required(),
-
-		/**
-		 * @default undefined
-		 * @instance
-		 * @memberof FormBuilder
-		 * @type {!string}
-		 */
-
-		spritemap: Config.string().required(),
-
-		/**
-		 * @instance
-		 * @memberof FormBuilder
-		 * @type {object}
-		 */
-
-		successPageSettings: Config.shapeOf({
-			body: Config.object(),
-			enabled: Config.bool(),
-			title: Config.object()
-		}).value({}),
-
-		/**
-		 * @default undefined
-		 * @instance
-		 * @memberof FormBuilder
-		 * @type {?string}
-		 */
-
-		view: Config.string()
+		...formBuilderProps,
 	};
 
 	return EditablePageHeader;

@@ -13,47 +13,53 @@
  */
 
 import baseReducer from './baseReducer';
+import collectionsReducer from './collectionsReducer';
 import fragmentEntryLinksReducer from './fragmentEntryLinksReducer';
-import languageReducer from './languageReducer';
+import fragmentsReducer from './fragmentsReducer';
+import languageIdReducer from './languageIdReducer';
 import layoutDataReducer from './layoutDataReducer';
-import mappingReducer from './mappingReducer';
+import mappedInfoItemsReducer from './mappedInfoItemsReducer';
 import networkReducer from './networkReducer';
+import pageContentsReducer from './pageContentsReducer';
 import permissionsReducer from './permissionsReducer';
-import resolvedCommentsReducer from './resolvedCommentsReducer';
+import selectedViewportSizeReducer from './selectedViewportSizeReducer';
+import showResolvedCommentsReducer from './showResolvedCommentsReducer';
 import sidebarReducer from './sidebarReducer';
 import widgetsReducer from './widgetsReducer';
-
-function combineReducers(reducersObject) {
-	return (state, action) =>
-		Object.entries(reducersObject).reduce(
-			(nextState, [namespace, reducer]) => ({
-				...nextState,
-				[namespace]: reducer(nextState[namespace], action)
-			}),
-			state
-		);
-}
 
 /**
  * Runs the base reducer plus any dynamically loaded reducers that have
  * been registered from plugins.
  */
 export function reducer(state, action) {
-	return [
-		baseReducer,
-		sidebarReducer,
-		combineReducers({
-			fragmentEntryLinks: fragmentEntryLinksReducer,
-			languageId: languageReducer,
-			layoutData: layoutDataReducer,
-			mappedInfoItems: mappingReducer,
-			network: networkReducer,
-			permissions: permissionsReducer,
-			showResolvedComments: resolvedCommentsReducer,
-			widgets: widgetsReducer
-		}),
-		...Object.values(state.reducers)
-	].reduce((nextState, nextReducer) => {
-		return nextReducer(nextState, action);
-	}, state);
+	return [combinedReducer, ...Object.values(state.reducers || {})].reduce(
+		(nextState, nextReducer) => {
+			return nextReducer(nextState, action);
+		},
+		state
+	);
 }
+
+const combinedReducer = (state, action) =>
+	Object.entries({
+		collections: collectionsReducer,
+		fragmentEntryLinks: fragmentEntryLinksReducer,
+		fragments: fragmentsReducer,
+		languageId: languageIdReducer,
+		layoutData: layoutDataReducer,
+		mappedInfoItems: mappedInfoItemsReducer,
+		network: networkReducer,
+		pageContents: pageContentsReducer,
+		permissions: permissionsReducer,
+		reducers: baseReducer,
+		selectedViewportSize: selectedViewportSizeReducer,
+		showResolvedComments: showResolvedCommentsReducer,
+		sidebar: sidebarReducer,
+		widgets: widgetsReducer,
+	}).reduce(
+		(nextState, [namespace, reducer]) => ({
+			...nextState,
+			[namespace]: reducer(nextState[namespace], action),
+		}),
+		state
+	);

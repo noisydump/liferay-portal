@@ -19,13 +19,13 @@ const Body = (...children) =>
 const Column = ({align, children, className = '', weight}) => {
 	const classes = getCN(`${CLASSNAME}-column`, className, {
 		[`font-weight-${weight}`]: weight,
-		[`text-${align}`]: align
+		[`text-${align}`]: align,
 	});
 
 	return `
 		<td>
 			<div class="${CLASSNAME}-content ${classes}">
-				${children}					
+			${children}
 			</div>
 		</td>
 		`;
@@ -48,7 +48,7 @@ const TooltipChart = ({header, rows}) => {
 						Column({
 							children: label,
 							weight,
-							width
+							width,
 						})
 					)
 				)
@@ -59,7 +59,7 @@ const TooltipChart = ({header, rows}) => {
 					...columnRows.map(({label, weight}) =>
 						Column({
 							children: label,
-							weight
+							weight,
 						})
 					)
 				)

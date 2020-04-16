@@ -20,12 +20,12 @@ import React from 'react';
 const Header = ({
 	disabledAddButton = false,
 	handleClickAdd,
-	handleClickClose,
+	handleClickBack,
 	handleClickEdit,
 	headerTitle,
 	infoButtonRef,
 	showEditIcon,
-	showInfoIcon
+	showInfoIcon,
 }) => (
 	<div className="navbar navigation-bar navigation-bar-light">
 		<div className="container-fluid header">
@@ -37,7 +37,7 @@ const Header = ({
 								borderless
 								displayType="secondary"
 								monospaced
-								onClick={handleClickClose}
+								onClick={handleClickBack}
 							>
 								<ClayIcon symbol="angle-left" />
 							</ClayButton>
@@ -96,11 +96,11 @@ const Header = ({
 Header.propTypes = {
 	disabledAddButton: PropTypes.bool,
 	handleClickAdd: PropTypes.func.isRequired,
-	handleClickClose: PropTypes.func.isRequired,
+	handleClickBack: PropTypes.func.isRequired,
 	handleClickEdit: PropTypes.func,
 	headerTitle: PropTypes.string.isRequired,
 	showEditIcon: PropTypes.bool,
-	showInfoIcon: PropTypes.bool
+	showInfoIcon: PropTypes.bool,
 };
 
 export default Header;

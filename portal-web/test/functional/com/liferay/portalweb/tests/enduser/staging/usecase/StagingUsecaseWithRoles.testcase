@@ -413,7 +413,7 @@ definition {
 
 	@priority = "5"
 	test StagingDemoLocalLive4 {
-		property portal.acceptance = "true";
+		property portal.upstream = "quarantine";
 		property testray.component.names = "Training";
 
 		ProductMenu.gotoPortlet(
@@ -884,7 +884,7 @@ definition {
 
 	@priority = "5"
 	test StagingPublishPage {
-		property portal.acceptance = "true";
+		property portal.upstream = "quarantine";
 		property testray.component.names = "Training";
 
 		ProductMenu.gotoPortlet(
@@ -1022,6 +1022,10 @@ definition {
 			userFirstName = "userfn",
 			userLastName = "userln",
 			userScreenName = "usersn");
+
+		JSONGroup.assignUserToGroup(
+			groupName = "Site Name",
+			userEmailAddress = "userea@liferay.com");
 
 		JSONRole.assignRoleToUser(
 			roleTitle = "Web Content Comment Reviewer",

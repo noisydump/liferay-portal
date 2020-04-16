@@ -170,13 +170,13 @@ if (Validator.isNotNull(portletResource)) {
 						}
 
 						if (role.getType() == RoleConstants.TYPE_REGULAR) {
-							LinkedHashMap<String, Object> groupParams = new LinkedHashMap<String, Object>();
-
 							RolePermissions rolePermissions = new RolePermissions(resource, ResourceConstants.SCOPE_GROUP, actionId, role.getRoleId());
 
-							groupParams.put("rolePermissions", rolePermissions);
+							LinkedHashMap<String, Object> groupParams = LinkedHashMapBuilder.<String, Object>put(
+								"rolePermissions", rolePermissions
+							).build();
 
-							groups = GroupLocalServiceUtil.search(company.getCompanyId(), new long[] {PortalUtil.getClassNameId(Company.class), PortalUtil.getClassNameId(Group.class), PortalUtil.getClassNameId(Organization.class), PortalUtil.getClassNameId(UserPersonalSite.class)}, null, null, groupParams, true, QueryUtil.ALL_POS, QueryUtil.ALL_POS);
+							groups = GroupLocalServiceUtil.search(company.getCompanyId(), GroupTypeContributorUtil.getClassNameIds(), null, null, groupParams, true, QueryUtil.ALL_POS, QueryUtil.ALL_POS);
 
 							groupIdsArray = new long[groups.size()];
 
@@ -196,7 +196,7 @@ if (Validator.isNotNull(portletResource)) {
 							scope = ResourceConstants.SCOPE_GROUP_TEMPLATE;
 						}
 
-						ResultRow row = new ResultRow(new Object[] {role, actionId, resource, target, scope, supportsFilterByGroup, groups, groupIdsArray, groupNames}, target, relatedPortletResources.size());
+						ResultRow row = new ResultRow(new Object[] {role, actionId, resource, target, scope, supportsFilterByGroup, groups, groupIdsArray, groupNames, curPortlet.getPortletId()}, target, relatedPortletResources.size());
 
 						relatedPortletResources.add(curPortlet.getPortletId());
 

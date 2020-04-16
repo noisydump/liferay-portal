@@ -19,7 +19,7 @@
 <%
 JournalEditDDMTemplateDisplayContext journalEditDDMTemplateDisplayContext = new JournalEditDDMTemplateDisplayContext(request);
 
-JournalDDMTemplateUtil journalDDMTemplateUtil = (JournalDDMTemplateUtil)request.getAttribute(JournalDDMTemplateUtil.class.getName());
+JournalDDMTemplateHelper journalDDMTemplateHelper = (JournalDDMTemplateHelper)request.getAttribute(JournalDDMTemplateHelper.class.getName());
 %>
 
 <aui:input name="scriptContent" type="hidden" value="<%= journalEditDDMTemplateDisplayContext.getScript() %>" />
@@ -56,7 +56,7 @@ JournalDDMTemplateUtil journalDDMTemplateUtil = (JournalDDMTemplateUtil)request.
 										%>
 
 											<li class="palette-item-container">
-												<span class="palette-item" data-content="<%= HtmlUtil.escapeAttribute(journalDDMTemplateUtil.getDataContent(templateVariableDefinition, journalEditDDMTemplateDisplayContext.getLanguage())) %>" data-title="<%= HtmlUtil.escapeAttribute(journalDDMTemplateUtil.getPaletteItemTitle(request, journalEditDDMTemplateDisplayContext.getTemplateHandlerResourceBundle(), templateVariableDefinition)) %>">
+												<span class="palette-item" data-content="<%= HtmlUtil.escapeAttribute(journalDDMTemplateHelper.getDataContent(templateVariableDefinition, journalEditDDMTemplateDisplayContext.getLanguage())) %>" data-title="<%= HtmlUtil.escapeAttribute(journalDDMTemplateHelper.getPaletteItemTitle(request, journalEditDDMTemplateDisplayContext.getTemplateHandlerResourceBundle(), templateVariableDefinition)) %>">
 													<%= HtmlUtil.escape(LanguageUtil.get(request, journalEditDDMTemplateDisplayContext.getTemplateHandlerResourceBundle(), templateVariableDefinition.getLabel())) %>
 
 													<c:if test="<%= templateVariableDefinition.isCollection() || templateVariableDefinition.isRepeatable() %>">*</c:if>
@@ -168,8 +168,8 @@ JournalDDMTemplateUtil journalDDMTemplateUtil = (JournalDDMTemplateUtil)request.
 
 						instance._bindUIACBase();
 						instance._syncUIACBase();
-					}
-				}
+					},
+				},
 			});
 
 			var getItems = function() {
@@ -178,7 +178,7 @@ JournalDDMTemplateUtil journalDDMTemplateUtil = (JournalDDMTemplateUtil)request.
 				paletteItems.each(function(item, index) {
 					results.push({
 						data: item.text().trim(),
-						node: item.ancestor()
+						node: item.ancestor(),
 					});
 				});
 
@@ -206,7 +206,7 @@ JournalDDMTemplateUtil journalDDMTemplateUtil = (JournalDDMTemplateUtil)request.
 				nodes: '.palette-item-container',
 				resultFilters: 'phraseMatch',
 				resultTextLocator: 'data',
-				source: getItems()
+				source: getItems(),
 			});
 
 			paletteSearch.on('results', function(event) {
@@ -234,7 +234,8 @@ JournalDDMTemplateUtil journalDDMTemplateUtil = (JournalDDMTemplateUtil)request.
 
 				if (foundVisibleSection) {
 					noResultsNode.remove();
-				} else {
+				}
+				else {
 					paletteDataContainer.appendChild(noResultsNode);
 				}
 			});
@@ -318,7 +319,7 @@ JournalDDMTemplateUtil journalDDMTemplateUtil = (JournalDDMTemplateUtil)request.
 
 		if (AutoComplete) {
 			var processor = new AutoComplete({
-				variables: <%= journalEditDDMTemplateDisplayContext.getAutocompleteJSON() %>
+				variables: <%= journalEditDDMTemplateDisplayContext.getAutocompleteJSON() %>,
 			});
 
 			if (processor) {
@@ -328,9 +329,10 @@ JournalDDMTemplateUtil journalDDMTemplateUtil = (JournalDDMTemplateUtil)request.
 					processor: processor,
 					render: true,
 					visible: false,
-					zIndex: 10000
+					zIndex: 10000,
 				});
-			} else {
+			}
+			else {
 				richEditor.unplug(ACPlugin);
 			}
 		}
@@ -347,15 +349,15 @@ JournalDDMTemplateUtil journalDDMTemplateUtil = (JournalDDMTemplateUtil)request.
 				boundingBox: editorNode,
 				height: 400,
 				mode: '<%= journalEditDDMTemplateDisplayContext.getEditorMode() %>',
-				width: '100%'
+				width: '100%',
 			}).render();
 
 			new A.Resize({
 				handles: ['br'],
 				node: editorNode,
 				on: {
-					resize: resizeEditor
-				}
+					resize: resizeEditor,
+				},
 			});
 
 			if (editorContentElement) {
@@ -383,12 +385,12 @@ JournalDDMTemplateUtil journalDDMTemplateUtil = (JournalDDMTemplateUtil)request.
 					animated: true,
 					container: paletteDataContainer,
 					content: '.palette-item-content',
-					header: '.palette-item-header'
+					header: '.palette-item-header',
 				});
 
 				new A.TooltipDelegate({
 					align: {
-						points: [A.WidgetPositionAlign.LC, A.WidgetPositionAlign.RC]
+						points: [A.WidgetPositionAlign.LC, A.WidgetPositionAlign.RC],
 					},
 					duration: 0.5,
 					html: true,
@@ -396,7 +398,7 @@ JournalDDMTemplateUtil journalDDMTemplateUtil = (JournalDDMTemplateUtil)request.
 					trigger:
 						'#<portlet:namespace />templatePaletteContainer .palette-item',
 					visible: false,
-					zIndex: 6
+					zIndex: 6,
 				});
 
 				createLiveSearch();

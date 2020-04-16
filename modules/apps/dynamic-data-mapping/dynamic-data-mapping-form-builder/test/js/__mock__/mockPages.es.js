@@ -14,6 +14,11 @@
 
 export default [
 	{
+		description: 'Page Description',
+		localizedDescription: {},
+		localizedTitle: {
+			en_US: 'Localized Title',
+		},
 		rows: [
 			{
 				columns: [
@@ -22,15 +27,18 @@ export default [
 							{
 								fieldName: 'radio',
 								label: 'Radio Field',
+								localizedValue: {
+									en_US: 'Radio Field',
+								},
 								options: [
 									{
 										label: 'Option 1',
-										value: 'option1'
+										value: 'option1',
 									},
 									{
 										label: 'Option 2',
-										value: 'option2'
-									}
+										value: 'option2',
+									},
 								],
 								settingsContext: {
 									pages: [
@@ -44,49 +52,58 @@ export default [
 																	fieldName:
 																		'label',
 																	localizable: true,
+																	localizedValue: {
+																		en_US:
+																			'Radio Field',
+																	},
 																	settingsContext: {
 																		pages: [
 																			{
 																				rows: [
 																					{
-																						columns: []
-																					}
-																				]
-																			}
-																		]
-																	}
+																						columns: [],
+																					},
+																				],
+																			},
+																		],
+																	},
 																},
 																{
 																	fieldName:
-																		'name'
+																		'name',
 																},
 																{
 																	fieldName:
-																		'required'
+																		'required',
 																},
 																{
 																	fieldName:
-																		'type'
-																}
+																		'type',
+																},
+																{
+																	fieldName:
+																		'validation',
+																	value: {},
+																},
 															],
-															size: 12
-														}
-													]
-												}
-											]
-										}
-									]
+															size: 12,
+														},
+													],
+												},
+											],
+										},
+									],
 								},
-								type: 'radio'
-							}
+								type: 'radio',
+							},
 						],
-						size: 3
+						size: 3,
 					},
 					{
 						fields: [],
-						size: 9
-					}
-				]
+						size: 9,
+					},
+				],
 			},
 			{
 				columns: [
@@ -95,23 +112,25 @@ export default [
 							{
 								fieldName: 'text1',
 								label: 'Text Field 1',
+								options: [],
 								required: true,
 								settingsContext: {
-									pages: []
+									pages: [],
 								},
-								type: 'text'
+								type: 'text',
 							},
 							{
 								fieldName: 'text2',
 								label: 'Text Field 2',
+								options: [],
 								required: true,
 								settingsContext: {
-									pages: []
+									pages: [],
 								},
-								type: 'text'
-							}
+								type: 'text',
+							},
 						],
-						size: 4
+						size: 4,
 					},
 					{
 						fields: [
@@ -121,27 +140,27 @@ export default [
 								options: [
 									{
 										label: 'Option 1',
-										value: 'option1'
+										value: 'option1',
 									},
 									{
 										label: 'Option 2',
-										value: 'option2'
-									}
+										value: 'option2',
+									},
 								],
 								required: true,
 								settingsContext: {
-									pages: []
+									pages: [],
 								},
-								type: 'select'
-							}
+								type: 'select',
+							},
 						],
-						size: 6
+						size: 6,
 					},
 					{
 						fields: [],
-						size: 2
-					}
-				]
+						size: 2,
+					},
+				],
 			},
 			{
 				columns: [
@@ -150,16 +169,17 @@ export default [
 							{
 								fieldName: 'date',
 								label: 'Date Field',
+								options: [],
 								required: true,
 								settingsContext: {
-									pages: []
+									pages: [],
 								},
-								type: 'date'
-							}
+								type: 'date',
+							},
 						],
-						size: 12
-					}
-				]
+						size: 12,
+					},
+				],
 			},
 			{
 				columns: [
@@ -168,18 +188,19 @@ export default [
 							{
 								fieldName: 'numeric',
 								label: 'Numeric Field',
+								options: [],
 								required: true,
 								settingsContext: {
-									pages: []
+									pages: [],
 								},
-								type: 'numeric'
-							}
+								type: 'numeric',
+							},
 						],
-						size: 12
-					}
-				]
-			}
+						size: 12,
+					},
+				],
+			},
 		],
-		title: 'Untitled name'
-	}
+		title: 'Untitled name',
+	},
 ];

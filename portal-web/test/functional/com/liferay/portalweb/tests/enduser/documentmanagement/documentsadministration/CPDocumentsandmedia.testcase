@@ -3,7 +3,6 @@ definition {
 
 	property portal.release = "true";
 	property portal.upstream = "true";
-	property test.assert.warning.exceptions = "true";
 	property testray.main.component.name = "Documents Management";
 
 	setUp {
@@ -28,10 +27,8 @@ definition {
 	}
 
 	@description = "This is a use case for LPS-82073."
-	@ignore = "true"
 	@priority = "5"
 	test AddShortcutToSiteDocument {
-		property portal.acceptance = "true";
 		property testray.component.names = "Training";
 
 		JSONGroup.addGroup(groupName = "Site Name");
@@ -249,6 +246,43 @@ definition {
 			dmDocumentVersionNumber = "1.1");
 	}
 
+	@description = "This case covers LPS-110213. It ensures that a document file can be downloaded after moving it between folders."
+	@priority = "5"
+	test DownloadDocumentAfterMoveBetweenFolders {
+		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "guest");
+
+		DMFolder.addCP(
+			dmFolderDescription = "DM Folder 1 Description",
+			dmFolderName = "DM Folder 1 Name");
+
+		DMFolder.addCP(
+			dmFolderDescription = "DM Folder 2 Description",
+			dmFolderName = "DM Folder 2 Name");
+
+		DMNavigator.gotoFolder(dmFolderName = "DM Folder 1 Name");
+
+		DMDocument.addCP(
+			dmDocumentDescription = "DM Document Description1",
+			dmDocumentFile = "Document_1.doc",
+			dmDocumentTitle = "DM Document Title");
+
+		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "guest");
+
+		DMNavigator.gotoFolder(dmFolderName = "DM Folder 1 Name");
+
+		DMDocument.moveToFolderCP(
+			dmDocumentTitle = "DM Document Title",
+			dmFolderName = "DM Folder 2 Name");
+
+		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "guest");
+
+		DMNavigator.gotoFolder(dmFolderName = "DM Folder 2 Name");
+
+		DMDocument.downloadCP(dmDocumentTitle = "DM Document Title");
+
+		AssertTextNotPresent(value1 = "The requested resource could not be found.");
+	}
+
 	@description = "This test edits the title and description of a document. It asserts minor version increment because only its metadata was updated."
 	@priority = "5"
 	test EditDocument {
@@ -450,6 +484,8 @@ definition {
 	@description = "This case covers the folder name of a document can be viewed in the info panel and navigate to it."
 	@priority = "5"
 	test MoveDocumentToFolder {
+		property portal.acceptance = "true";
+
 		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "guest");
 
 		DMDocument.addCP(
@@ -606,6 +642,8 @@ definition {
 	@description = "This test covers LPS-104957. It ensures that the JPG file can be previewed."
 	@priority = "5"
 	test PreviewJPG {
+		property portal.acceptance = "true";
+
 		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "guest");
 
 		DMDocument.addCP(
@@ -625,6 +663,8 @@ definition {
 	@description = "This is a use case for LPS-88785."
 	@priority = "5"
 	test PreviewPDF {
+		property portal.acceptance = "true";
+
 		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "guest");
 
 		DMDocument.addCP(
@@ -665,7 +705,10 @@ definition {
 
 	@description = "This ensures that the SVG file can be previewed."
 	@priority = "5"
+
 	test PreviewSVG {
+		property portal.acceptance = "true";
+
 		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "guest");
 
 		DMDocument.addCP(
@@ -680,36 +723,6 @@ definition {
 		DMDocument.expandInfo();
 
 		AssertVisible(locator1 = "DocumentsAndMediaDocument#DOCUMENT_INFO_THUMBNAIL");
-	}
-
-	@priority = "4"
-	test RotateImageViaDMSiteAdmin {
-		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "guest");
-
-		DMDocument.addCP(
-			dmDocumentDescription = "DM Document Description",
-			dmDocumentFile = "Document_2.jpg",
-			dmDocumentTitle = "Document_2.jpg");
-
-		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "guest");
-
-		AssertVisible(
-			locator1 = "Portlet#HEADER",
-			value1 = "Documents and Media");
-
-		ImageEditor.gotoImageEditorViaDM(dmDocumentTitle = "Document_2.jpg");
-
-		ImageEditor.rotateImage(rotateDirection = "left");
-
-		Pause(locator1 = "3000");
-
-		ImageEditor.applyChangesAndSaveFile();
-
-		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "guest");
-
-		DMNavigator.gotoDocumentCP(dmDocumentTitle = "Document_2.jpg");
-
-		DMDocument.viewDocumentVersionNumberCmdPG(dmDocumentVersionNumber = "1.1");
 	}
 
 	@priority = "4"
@@ -733,9 +746,9 @@ definition {
 
 		DMDocument.addMultipleCP(dmDocumentFileList = "Document_1.doc,Document_2.jpg,Document_3.xls,Document_4.txt,Document_1.txt,Document_2.xls,Document_3.jpg,Document_4.jpg,Document_1.xls,Document_2.doc");
 
-		Pagination.changePagination(itemsPerPage = "5");
+		Pagination.changePagination(itemsPerPage = "4");
 
-		Pagination.viewResults(results = "Showing 1 to 5 of 10 entries.");
+		Pagination.viewResults(results = "Showing 1 to 4 of 10 entries.");
 
 		PortletEntry.selectAll();
 
@@ -748,24 +761,6 @@ definition {
 		Alert.viewSuccessMessage();
 
 		DMDocument.viewDefaultCP();
-	}
-
-	@priority = "5"
-	test ViewImageEditorControls {
-		property portal.acceptance = "true";
-
-		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "guest");
-
-		DMDocument.addCP(
-			dmDocumentDescription = "DM Document Description",
-			dmDocumentFile = "Document_1.jpg",
-			dmDocumentTitle = "Document_1.jpg");
-
-		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "guest");
-
-		ImageEditor.gotoImageEditorViaDM(dmDocumentTitle = "Document_1.jpg");
-
-		ImageEditor.viewBaseControls();
 	}
 
 }

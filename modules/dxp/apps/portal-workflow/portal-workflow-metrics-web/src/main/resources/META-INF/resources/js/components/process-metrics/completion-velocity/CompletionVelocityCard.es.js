@@ -17,94 +17,84 @@ import {useFetch} from '../../../shared/hooks/useFetch.es';
 import {useFilter} from '../../../shared/hooks/useFilter.es';
 import TimeRangeFilter from '../../filter/TimeRangeFilter.es';
 import VelocityUnitFilter from '../../filter/VelocityUnitFilter.es';
-import {isValidDate} from '../../filter/util/timeRangeUtil.es';
+import {getTimeRangeParams} from '../../filter/util/timeRangeUtil.es';
 import {getVelocityUnits} from '../../filter/util/velocityUnitUtil.es';
 import {Body} from './CompletionVelocityCardBody.es';
 
 const CompletionVelocityCard = ({routeParams}) => {
 	const {processId} = routeParams;
-
 	const filterKeys = ['timeRange', 'velocityUnit'];
 	const prefixKey = 'completion';
 	const prefixKeys = [prefixKey];
-	const {dispatch, filterState = {}} = useFilter(filterKeys, prefixKeys);
 
 	const {
-		completionvelocityUnit: velocityUnit = [],
-		completiontimeRange: timeRange = []
-	} = filterState;
+		filterValues: {
+			completionDateEnd,
+			completionDateStart,
+			completionVelocityUnit: [velocity] = [],
+		},
+		filtersError,
+	} = useFilter({filterKeys, prefixKeys});
 
-	const timeRangeValues = timeRange.length ? timeRange[0] : {};
-	const {dateEnd, dateStart} = timeRangeValues;
-
-	let timeRangeParams = {};
-	if (isValidDate(dateEnd) && isValidDate(dateStart)) {
-		timeRangeParams = {
-			dateEnd: dateEnd.toISOString(),
-			dateStart: dateStart.toISOString()
-		};
-	}
-
-	const velocityUnitKeys = velocityUnit.length ? velocityUnit[0] : {};
-
-	const velocityUnits = useMemo(
-		() => getVelocityUnits({dateEnd, dateStart}),
-		[dateEnd, dateStart]
+	const timeRange = useMemo(
+		() => getTimeRangeParams(completionDateStart, completionDateEnd),
+		[completionDateEnd, completionDateStart]
 	);
 
+	const velocityUnits = useMemo(() => getVelocityUnits(timeRange), [
+		timeRange,
+	]);
+
 	const defaultUnit = useMemo(
-		() =>
-			velocityUnits.find(
-				velocityUnit => velocityUnit.defaultVelocityUnit
-			) || {},
+		() => velocityUnits.find(unit => unit.defaultVelocityUnit) || {},
 		[velocityUnits]
 	);
 
-	const velocityUnitValues = useMemo(
-		() =>
-			velocityUnits.find(
-				velocityUnit => velocityUnit.key === velocityUnitKeys.key
-			) || defaultUnit,
-		[defaultUnit, velocityUnits, velocityUnitKeys.key]
+	const velocityUnit = useMemo(
+		() => velocityUnits.find(unit => unit.key === velocity),
+		[velocity, velocityUnits]
 	);
-	const {key: unit} = velocityUnitValues;
+
+	const currentVelocityUnit = velocityUnit || defaultUnit;
+
+	const {key: unit} = currentVelocityUnit;
 
 	const {data, fetchData} = useFetch({
 		params: {
-			...timeRangeParams,
-			unit
+			...timeRange,
+			unit,
 		},
-		url: `processes/${processId}/metric`
+		url: `processes/${processId}/histograms/metrics`,
 	});
 
 	const promises = useMemo(() => {
-		if (timeRangeParams.dateEnd && timeRangeParams.dateStart && unit) {
+		if (timeRange.dateEnd && timeRange.dateStart && unit) {
 			return [fetchData()];
 		}
 
-		return [new Promise(() => {})];
-	}, [timeRangeParams.dateEnd, timeRangeParams.dateStart, fetchData, unit]);
+		return [new Promise((_, reject) => reject(filtersError))];
+	}, [fetchData, filtersError, timeRange.dateEnd, timeRange.dateStart, unit]);
 
 	return (
 		<PromisesResolver promises={promises}>
 			<Panel>
 				<CompletionVelocityCard.Header
-					dispatch={dispatch}
+					disableFilters={filtersError}
 					prefixKey={prefixKey}
-					timeRange={timeRangeValues}
+					timeRange={timeRange}
 				/>
 
 				<CompletionVelocityCard.Body
 					data={data}
-					timeRange={timeRangeValues}
-					velocityUnit={velocityUnitValues}
+					timeRange={timeRange}
+					velocityUnit={currentVelocityUnit}
 				/>
 			</Panel>
 		</PromisesResolver>
 	);
 };
 
-const Header = ({dispatch, prefixKey, timeRange: {dateEnd, dateStart}}) => {
+const Header = ({disableFilters, prefixKey, timeRange}) => {
 	return (
 		<Panel.HeaderWithOptions
 			description={Liferay.Language.get(
@@ -116,19 +106,17 @@ const Header = ({dispatch, prefixKey, timeRange: {dateEnd, dateStart}}) => {
 			<div className="autofit-col m-0 management-bar management-bar-light navbar">
 				<ul className="navbar-nav">
 					<TimeRangeFilter
-						dispatch={dispatch}
+						disabled={disableFilters}
 						options={{position: 'right'}}
 						prefixKey={prefixKey}
 					/>
 
-					{dateEnd && dateStart && (
-						<VelocityUnitFilter
-							className={'pl-3'}
-							dispatch={dispatch}
-							prefixKey={prefixKey}
-							timeRange={{dateEnd, dateStart}}
-						/>
-					)}
+					<VelocityUnitFilter
+						className={'pl-3'}
+						disabled={disableFilters}
+						prefixKey={prefixKey}
+						timeRange={timeRange}
+					/>
 				</ul>
 			</div>
 		</Panel.HeaderWithOptions>

@@ -14,13 +14,12 @@
 
 package com.liferay.portal.dao.db;
 
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.db.DBType;
 import com.liferay.portal.kernel.dao.db.Index;
-import com.liferay.portal.kernel.dao.jdbc.DataAccess;
 import com.liferay.portal.kernel.io.unsync.UnsyncBufferedReader;
 import com.liferay.portal.kernel.io.unsync.UnsyncStringReader;
-import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringUtil;
 
 import java.io.IOException;
@@ -48,8 +47,7 @@ public class SQLServerDB extends BaseDB {
 
 	@Override
 	public String buildSQL(String template) throws IOException {
-		template = convertTimestamp(template);
-		template = replaceTemplate(template, getTemplate());
+		template = replaceTemplate(template);
 
 		template = reword(template);
 		template = StringUtil.replace(template, "\ngo;\n", "\ngo\n");
@@ -64,32 +62,24 @@ public class SQLServerDB extends BaseDB {
 	public List<Index> getIndexes(Connection con) throws SQLException {
 		List<Index> indexes = new ArrayList<>();
 
-		PreparedStatement ps = null;
-		ResultSet rs = null;
+		DatabaseMetaData databaseMetaData = con.getMetaData();
 
-		try {
-			DatabaseMetaData databaseMetaData = con.getMetaData();
+		if (databaseMetaData.getDatabaseMajorVersion() <= _SQL_SERVER_2000) {
+			return indexes;
+		}
 
-			if (databaseMetaData.getDatabaseMajorVersion() <=
-					_SQL_SERVER_2000) {
+		StringBundler sb = new StringBundler(5);
 
-				return indexes;
-			}
+		sb.append("select sys.tables.name as table_name, sys.indexes.name as ");
+		sb.append("index_name, is_unique from sys.indexes inner join ");
+		sb.append("sys.tables on sys.tables.object_id = ");
+		sb.append("sys.indexes.object_id where sys.indexes.name like ");
+		sb.append("'LIFERAY_%' or sys.indexes.name like 'IX_%'");
 
-			StringBundler sb = new StringBundler(6);
+		String sql = sb.toString();
 
-			sb.append("select sys.tables.name as table_name, ");
-			sb.append("sys.indexes.name as index_name, is_unique from ");
-			sb.append("sys.indexes inner join sys.tables on ");
-			sb.append("sys.tables.object_id = sys.indexes.object_id where ");
-			sb.append("sys.indexes.name like 'LIFERAY_%' or sys.indexes.name ");
-			sb.append("like 'IX_%'");
-
-			String sql = sb.toString();
-
-			ps = con.prepareStatement(sql);
-
-			rs = ps.executeQuery();
+		try (PreparedStatement ps = con.prepareStatement(sql);
+			ResultSet rs = ps.executeQuery()) {
 
 			while (rs.next()) {
 				String indexName = rs.getString("index_name");
@@ -98,9 +88,6 @@ public class SQLServerDB extends BaseDB {
 
 				indexes.add(new Index(indexName, tableName, unique));
 			}
-		}
-		finally {
-			DataAccess.cleanUp(ps, rs);
 		}
 
 		return indexes;
@@ -112,23 +99,20 @@ public class SQLServerDB extends BaseDB {
 	}
 
 	@Override
-	public boolean isSupportsAlterColumnType() {
-		return _SUPPORTS_ALTER_COLUMN_TYPE;
+	public String getPopulateSQL(String databaseName, String sqlContent) {
+		StringBundler sb = new StringBundler(4);
+
+		sb.append("use ");
+		sb.append(databaseName);
+		sb.append(";\n\n");
+		sb.append(sqlContent);
+
+		return sb.toString();
 	}
 
 	@Override
-	public boolean isSupportsNewUuidFunction() {
-		return _SUPPORTS_NEW_UUID_FUNCTION;
-	}
-
-	@Override
-	protected String buildCreateFileContent(
-			String sqlDir, String databaseName, int population)
-		throws IOException {
-
-		String suffix = getSuffix(population);
-
-		StringBundler sb = new StringBundler(17);
+	public String getRecreateSQL(String databaseName) {
+		StringBundler sb = new StringBundler(9);
 
 		sb.append("drop database ");
 		sb.append(databaseName);
@@ -140,23 +124,12 @@ public class SQLServerDB extends BaseDB {
 		sb.append("go\n");
 		sb.append("\n");
 
-		if (population != BARE) {
-			sb.append("use ");
-			sb.append(databaseName);
-			sb.append(";\n\n");
-			sb.append(getCreateTablesContent(sqlDir, suffix));
-			sb.append("\n\n");
-			sb.append(readFile(sqlDir + "/indexes/indexes-sql-server.sql"));
-			sb.append("\n\n");
-			sb.append(readFile(sqlDir + "/sequences/sequences-sql-server.sql"));
-		}
-
 		return sb.toString();
 	}
 
 	@Override
-	protected String getServerName() {
-		return "sql-server";
+	public boolean isSupportsNewUuidFunction() {
+		return _SUPPORTS_NEW_UUID_FUNCTION;
 	}
 
 	@Override
@@ -191,8 +164,11 @@ public class SQLServerDB extends BaseDB {
 					String[] template = buildColumnTypeTokens(line);
 
 					line = StringUtil.replace(
-						"alter table @table@ alter column @old-column@ @type@;",
+						"alter table @table@ alter column @old-column@ " +
+							"@type@ @nullable@;",
 						REWORD_TEMPLATE, template);
+
+					line = StringUtil.replace(line, " ;", ";");
 				}
 				else if (line.startsWith(ALTER_TABLE_NAME)) {
 					String[] template = buildTableNameTokens(line);
@@ -234,11 +210,9 @@ public class SQLServerDB extends BaseDB {
 
 	private static final int[] _SQL_TYPES = {
 		Types.LONGVARBINARY, Types.LONGVARBINARY, Types.BIT, Types.TIMESTAMP,
-		Types.DOUBLE, Types.INTEGER, Types.BIGINT, Types.LONGVARCHAR,
-		Types.LONGVARCHAR, Types.VARCHAR
+		Types.DOUBLE, Types.INTEGER, Types.BIGINT, Types.NVARCHAR,
+		Types.NVARCHAR, Types.NVARCHAR
 	};
-
-	private static final boolean _SUPPORTS_ALTER_COLUMN_TYPE = false;
 
 	private static final boolean _SUPPORTS_NEW_UUID_FUNCTION = true;
 

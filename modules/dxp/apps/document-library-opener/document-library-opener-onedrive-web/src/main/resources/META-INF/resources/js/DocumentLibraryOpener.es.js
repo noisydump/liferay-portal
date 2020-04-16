@@ -13,7 +13,7 @@ import {
 	fetch,
 	navigate,
 	openSimpleInputModal,
-	openToast
+	openToast,
 } from 'frontend-js-web';
 
 const TIME_POLLING = 500;
@@ -54,11 +54,13 @@ class DocumentLibraryOpener {
 			.then(response => {
 				if (response.complete) {
 					this._openExternal({
-						externalURL: response.office365EditURL
+						externalURL: response.office365EditURL,
 					});
-				} else if (response.error) {
+				}
+				else if (response.error) {
 					throw DEFAULT_ERROR;
-				} else {
+				}
+				else {
 					return new Promise(resolve => {
 						setTimeout(() => {
 							this._polling({statusURL}).then(resolve);
@@ -75,7 +77,7 @@ class DocumentLibraryOpener {
 		openToast({
 			message,
 			title: Liferay.Language.get('error'),
-			type: 'danger'
+			type: 'danger',
 		});
 	}
 
@@ -90,9 +92,9 @@ class DocumentLibraryOpener {
 						modal: true,
 						resizable: false,
 						title: '',
-						width: 320
+						width: 320,
 					},
-					id: this._dialogLoadingId
+					id: this._dialogLoadingId,
 				},
 				() => {
 					setTimeout(resolve, TIME_SHOW_MSG);
@@ -108,7 +110,7 @@ class DocumentLibraryOpener {
 					'the-document-has-been-checked-out-please-on-finish-editing-check-in-the-document-to-save-changes-into-the-document-library'
 				),
 				style: 'info',
-				title: Liferay.Language.get('info')
+				title: Liferay.Language.get('info'),
 			},
 			dialogTitle,
 			formSubmitURL,
@@ -121,12 +123,13 @@ class DocumentLibraryOpener {
 						dialogMessage: serverResponseContent.dialogMessage,
 						refresh: true,
 						statusURL:
-							serverResponseContent.oneDriveBackgroundTaskStatusURL
+							serverResponseContent.oneDriveBackgroundTaskStatusURL,
 					});
 				}
 			},
 			spritemap:
-				Liferay.ThemeDisplay.getPathThemeImages() + '/lexicon/icons.svg'
+				Liferay.ThemeDisplay.getPathThemeImages() +
+				'/lexicon/icons.svg',
 		});
 	}
 
@@ -136,7 +139,7 @@ class DocumentLibraryOpener {
 		const loadingPromise = this._showLoading({
 			dialogMessage: Liferay.Language.get(
 				'you-are-being-redirected-to-an-external-editor-to-edit-this-document'
-			)
+			),
 		});
 
 		const fetchPromise = fetch(formSubmitURL)
@@ -150,11 +153,13 @@ class DocumentLibraryOpener {
 			.then(response => {
 				if (response.redirectURL) {
 					navigate(response.redirectURL);
-				} else if (response.oneDriveBackgroundTaskStatusURL) {
+				}
+				else if (response.oneDriveBackgroundTaskStatusURL) {
 					return this._polling({
-						statusURL: response.oneDriveBackgroundTaskStatusURL
+						statusURL: response.oneDriveBackgroundTaskStatusURL,
 					});
-				} else if (response.error) {
+				}
+				else if (response.error) {
 					throw response.error.errorMessage || DEFAULT_ERROR;
 				}
 			})
@@ -170,12 +175,12 @@ class DocumentLibraryOpener {
 			'you-are-being-redirected-to-an-external-editor-to-edit-this-document'
 		),
 		statusURL,
-		refresh = false
+		refresh = false,
 	}) {
 		this._refreshAfterNavigate = refresh;
 
 		const loadingPromise = this._showLoading({
-			dialogMessage
+			dialogMessage,
 		});
 		const pollingPromise = this._polling({statusURL});
 

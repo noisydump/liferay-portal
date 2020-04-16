@@ -69,7 +69,7 @@ ManifestSummary manifestSummary = ExportImportHelperUtil.getManifestSummary(them
 							Date exportDate = manifestSummary.getExportDate();
 							%>
 
-							<span onmouseover="Liferay.Portal.ToolTip.show(this, '<%= HtmlUtil.escapeJS(dateFormatDateTime.format(exportDate)) %>')">
+							<span class="lfr-portal-tooltip" title="<%= HtmlUtil.escape(dateFormatDateTime.format(exportDate)) %>">
 								<liferay-ui:message arguments="<%= LanguageUtil.getTimeDescription(request, System.currentTimeMillis() - exportDate.getTime(), true) %>" key="x-ago" translateArguments="<%= false %>" />
 							</span>
 						</dd>
@@ -83,7 +83,7 @@ ManifestSummary manifestSummary = ExportImportHelperUtil.getManifestSummary(them
 							<liferay-ui:message key="size" />
 						</dt>
 						<dd>
-							<%= TextFormatter.formatStorageSize(fileEntry.getSize(), locale) %>
+							<%= LanguageUtil.formatStorageSize(fileEntry.getSize(), locale) %>
 						</dd>
 					</dl>
 				</aui:fieldset>
@@ -134,9 +134,9 @@ ManifestSummary manifestSummary = ExportImportHelperUtil.getManifestSummary(them
 												<span class="selected-labels" id="<portlet:namespace />selectedConfiguration_<%= selPortlet.getRootPortletId() %>"></span>
 
 												<%
-												Map<String, Object> data = new HashMap<String, Object>();
-
-												data.put("portletid", selPortlet.getRootPortletId());
+												Map<String, Object> data = HashMapBuilder.<String, Object>put(
+													"portletid", selPortlet.getRootPortletId()
+												).build();
 												%>
 
 												<aui:a cssClass="configuration-link modify-link" data="<%= data %>" href="javascript:;" label="change" method="get" />
@@ -248,9 +248,9 @@ ManifestSummary manifestSummary = ExportImportHelperUtil.getManifestSummary(them
 													<span class="selected-labels" id="<portlet:namespace />selectedContent_<%= selPortlet.getRootPortletId() %>"></span>
 
 													<%
-													Map<String, Object> data = new HashMap<String, Object>();
-
-													data.put("portletid", selPortlet.getRootPortletId());
+													Map<String, Object> data = HashMapBuilder.<String, Object>put(
+														"portletid", selPortlet.getRootPortletId()
+													).build();
 													%>
 
 													<aui:a cssClass="content-link modify-link" data="<%= data %>" href="javascript:;" id='<%= "contentLink_" + selPortlet.getRootPortletId() %>' label="change" method="get" />
@@ -365,6 +365,6 @@ ManifestSummary manifestSummary = ExportImportHelperUtil.getManifestSummary(them
 		locale: '<%= locale.toLanguageTag() %>',
 		namespace: '<portlet:namespace />',
 		ratingsNode: '#<%= PortletDataHandlerKeys.RATINGS %>',
-		timeZoneOffset: <%= timeZoneOffset %>
+		timeZoneOffset: <%= timeZoneOffset %>,
 	});
 </aui:script>

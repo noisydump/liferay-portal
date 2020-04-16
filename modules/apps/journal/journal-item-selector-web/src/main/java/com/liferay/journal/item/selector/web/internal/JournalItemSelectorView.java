@@ -17,13 +17,14 @@ package com.liferay.journal.item.selector.web.internal;
 import com.liferay.item.selector.ItemSelectorReturnType;
 import com.liferay.item.selector.ItemSelectorReturnTypeResolverHandler;
 import com.liferay.item.selector.ItemSelectorView;
+import com.liferay.item.selector.PortletItemSelectorView;
 import com.liferay.item.selector.criteria.FileEntryItemSelectorReturnType;
 import com.liferay.item.selector.criteria.URLItemSelectorReturnType;
+import com.liferay.journal.constants.JournalPortletKeys;
 import com.liferay.journal.item.selector.criterion.JournalItemSelectorCriterion;
 import com.liferay.journal.item.selector.web.internal.constants.JournalItemSelectorWebKeys;
 import com.liferay.journal.item.selector.web.internal.display.context.JournalItemSelectorViewDisplayContext;
 import com.liferay.portal.kernel.language.Language;
-import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ListUtil;
 
 import java.io.IOException;
@@ -39,6 +40,7 @@ import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
+import javax.servlet.http.HttpServletRequest;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -51,11 +53,16 @@ import org.osgi.service.component.annotations.Reference;
 	service = ItemSelectorView.class
 )
 public class JournalItemSelectorView
-	implements ItemSelectorView<JournalItemSelectorCriterion> {
+	implements PortletItemSelectorView<JournalItemSelectorCriterion> {
 
 	@Override
 	public Class<JournalItemSelectorCriterion> getItemSelectorCriterionClass() {
 		return JournalItemSelectorCriterion.class;
+	}
+
+	@Override
+	public List<String> getPortletIds() {
+		return _portletIds;
 	}
 
 	public ServletContext getServletContext() {
@@ -73,11 +80,6 @@ public class JournalItemSelectorView
 	}
 
 	@Override
-	public boolean isVisible(ThemeDisplay themeDisplay) {
-		return true;
-	}
-
-	@Override
 	public void renderHTML(
 			ServletRequest servletRequest, ServletResponse servletResponse,
 			JournalItemSelectorCriterion journalItemSelectorCriterion,
@@ -87,9 +89,9 @@ public class JournalItemSelectorView
 		JournalItemSelectorViewDisplayContext
 			journalItemSelectorViewDisplayContext =
 				new JournalItemSelectorViewDisplayContext(
-					journalItemSelectorCriterion, this,
+					(HttpServletRequest)servletRequest, itemSelectedEventName,
 					_itemSelectorReturnTypeResolverHandler,
-					itemSelectedEventName, search, portletURL);
+					journalItemSelectorCriterion, this, portletURL, search);
 
 		servletRequest.setAttribute(
 			JournalItemSelectorWebKeys.
@@ -121,6 +123,8 @@ public class JournalItemSelectorView
 		_servletContext = servletContext;
 	}
 
+	private static final List<String> _portletIds = Collections.singletonList(
+		JournalPortletKeys.JOURNAL);
 	private static final List<ItemSelectorReturnType>
 		_supportedItemSelectorReturnTypes = Collections.unmodifiableList(
 			ListUtil.fromArray(

@@ -262,9 +262,7 @@ public class WikiPageLocalServiceImpl extends WikiPageLocalServiceBaseImpl {
 
 		// Workflow
 
-		page = _startWorkflowInstance(userId, page, serviceContext);
-
-		return page;
+		return _startWorkflowInstance(userId, page, serviceContext);
 	}
 
 	@Override
@@ -1638,14 +1636,15 @@ public class WikiPageLocalServiceImpl extends WikiPageLocalServiceBaseImpl {
 			wikiPageResourcePersistence.fetchByPrimaryKey(
 				page.getResourcePrimKey());
 
-		UnicodeProperties typeSettingsProperties = new UnicodeProperties();
+		UnicodeProperties typeSettingsUnicodeProperties =
+			new UnicodeProperties();
 
-		typeSettingsProperties.put("title", page.getTitle());
+		typeSettingsUnicodeProperties.put("title", page.getTitle());
 
 		TrashEntry trashEntry = _trashEntryLocalService.addTrashEntry(
 			userId, page.getGroupId(), WikiPage.class.getName(),
 			page.getResourcePrimKey(), page.getUuid(), null, oldStatus,
-			pageVersionStatusOVPs, typeSettingsProperties);
+			pageVersionStatusOVPs, typeSettingsUnicodeProperties);
 
 		String trashTitle = _trashHelper.getTrashTitle(trashEntry.getEntryId());
 
@@ -2184,7 +2183,7 @@ public class WikiPageLocalServiceImpl extends WikiPageLocalServiceBaseImpl {
 				if (!curPage.equals(page)) {
 					curPage.setHead(false);
 
-					curPage = wikiPagePersistence.update(curPage);
+					wikiPagePersistence.update(curPage);
 				}
 			}
 		}
@@ -2655,14 +2654,15 @@ public class WikiPageLocalServiceImpl extends WikiPageLocalServiceBaseImpl {
 		String trashTitle = oldTitle;
 
 		if (createTrashVersion) {
-			UnicodeProperties typeSettingsProperties = new UnicodeProperties();
+			UnicodeProperties typeSettingsUnicodeProperties =
+				new UnicodeProperties();
 
-			typeSettingsProperties.put("title", oldTitle);
+			typeSettingsUnicodeProperties.put("title", oldTitle);
 
 			TrashVersion trashVersion =
 				_trashVersionLocalService.addTrashVersion(
 					trashEntryId, WikiPage.class.getName(), page.getPageId(),
-					page.getStatus(), typeSettingsProperties);
+					page.getStatus(), typeSettingsUnicodeProperties);
 
 			trashTitle = _trashHelper.getTrashTitle(
 				trashVersion.getVersionId());
@@ -3301,9 +3301,7 @@ public class WikiPageLocalServiceImpl extends WikiPageLocalServiceBaseImpl {
 
 		// Workflow
 
-		page = _startWorkflowInstance(userId, page, serviceContext);
-
-		return page;
+		return _startWorkflowInstance(userId, page, serviceContext);
 	}
 
 	private void _validate(long nodeId, String content, String format)

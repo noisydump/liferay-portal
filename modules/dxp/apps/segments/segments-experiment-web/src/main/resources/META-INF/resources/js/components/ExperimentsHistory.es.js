@@ -96,13 +96,15 @@ function ExperimentsHistory({experimentHistory, onDeleteSegmentsExperiment}) {
 			Liferay.Language.get('are-you-sure-you-want-to-delete-this')
 		);
 
-		if (confirmed) return onDeleteSegmentsExperiment(experimentId);
+		if (confirmed) {
+			return onDeleteSegmentsExperiment(experimentId);
+		}
 	}
 }
 
 ExperimentsHistory.propTypes = {
 	experimentHistory: PropTypes.arrayOf(SegmentsExperimentType).isRequired,
-	onDeleteSegmentsExperiment: PropTypes.func.isRequired
+	onDeleteSegmentsExperiment: PropTypes.func.isRequired,
 };
 
 export default ExperimentsHistory;

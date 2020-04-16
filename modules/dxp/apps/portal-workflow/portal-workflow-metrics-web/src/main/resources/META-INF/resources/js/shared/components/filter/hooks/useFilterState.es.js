@@ -9,37 +9,40 @@
  * distribution rights of the Software.
  */
 
-import {useEffect, useMemo, useState} from 'react';
+import {useMemo, useState} from 'react';
 
+import {useFilter} from '../../../hooks/useFilter.es';
 import {useRouterParams} from '../../../hooks/useRouterParams.es';
 import {buildFallbackItems} from '../util/filterEvents.es';
 
-const useFilterState = (dispatch, filterKey, prefixKey = '') => {
+const useFilterState = (prefixedKey, withoutRouteParams) => {
+	const {dispatchFilter, filterValues} = useFilter({withoutRouteParams});
+
 	const {filters} = useRouterParams();
 	const [items, setItems] = useState([]);
 
-	const filter = `${prefixKey}${filterKey}`;
-
-	const selectedKeys = filters[filter];
+	const selectedKeys = withoutRouteParams
+		? filterValues[prefixedKey]
+		: filters[prefixedKey];
 
 	const selectedItems = useMemo(() => {
-		if (selectedKeys) {
-			if (selectedKeys && items.length) {
-				return items.filter(item => selectedKeys.includes(item.key));
-			}
+		let selectedItems = buildFallbackItems(selectedKeys) || [];
 
-			return buildFallbackItems(selectedKeys);
+		if (items.length && selectedKeys) {
+			selectedItems = items.filter(item =>
+				selectedKeys.includes(item.key)
+			);
 		}
 
-		return [];
+		if (!withoutRouteParams) {
+			dispatchFilter(prefixedKey, selectedItems);
+		}
+
+		return selectedItems;
+		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [items, selectedKeys]);
 
-	useEffect(() => {
-		dispatch({filterKey: filter, selectedItems});
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [selectedItems]);
-
-	return {items, selectedItems, setItems};
+	return {items, selectedItems, selectedKeys, setItems};
 };
 
 export {useFilterState};

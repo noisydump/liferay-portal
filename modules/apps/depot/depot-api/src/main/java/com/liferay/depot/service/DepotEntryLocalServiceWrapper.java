@@ -70,6 +70,17 @@ public class DepotEntryLocalServiceWrapper
 	}
 
 	/**
+	 * @throws PortalException
+	 */
+	@Override
+	public com.liferay.portal.kernel.model.PersistedModel createPersistedModel(
+			java.io.Serializable primaryKeyObj)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _depotEntryLocalService.createPersistedModel(primaryKeyObj);
+	}
+
+	/**
 	 * Deletes the depot entry from the database. Also notifies the appropriate model listeners.
 	 *
 	 * @param depotEntry the depot entry
@@ -340,6 +351,21 @@ public class DepotEntryLocalServiceWrapper
 	}
 
 	@Override
+	public java.util.List<com.liferay.depot.model.DepotEntry>
+			getGroupConnectedDepotEntries(long groupId, int start, int end)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _depotEntryLocalService.getGroupConnectedDepotEntries(
+			groupId, start, end);
+	}
+
+	@Override
+	public int getGroupConnectedDepotEntriesCount(long groupId) {
+		return _depotEntryLocalService.getGroupConnectedDepotEntriesCount(
+			groupId);
+	}
+
+	@Override
 	public com.liferay.depot.model.DepotEntry getGroupDepotEntry(long groupId)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
@@ -363,6 +389,9 @@ public class DepotEntryLocalServiceWrapper
 		return _depotEntryLocalService.getOSGiServiceIdentifier();
 	}
 
+	/**
+	 * @throws PortalException
+	 */
 	@Override
 	public com.liferay.portal.kernel.model.PersistedModel getPersistedModel(
 			java.io.Serializable primaryKeyObj)
@@ -390,13 +419,13 @@ public class DepotEntryLocalServiceWrapper
 			java.util.Map<java.util.Locale, String> descriptionMap,
 			java.util.Map<String, Boolean> depotAppCustomizationMap,
 			com.liferay.portal.kernel.util.UnicodeProperties
-				typeSettingsProperties,
+				typeSettingsUnicodeProperties,
 			com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _depotEntryLocalService.updateDepotEntry(
 			depotEntryId, nameMap, descriptionMap, depotAppCustomizationMap,
-			typeSettingsProperties, serviceContext);
+			typeSettingsUnicodeProperties, serviceContext);
 	}
 
 	@Override

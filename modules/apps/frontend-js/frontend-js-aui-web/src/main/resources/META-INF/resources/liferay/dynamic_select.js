@@ -28,7 +28,8 @@ AUI.add(
 
 			if (nameA < nameB) {
 				retVal = -1;
-			} else if (nameA > nameB) {
+			}
+			else if (nameA > nameB) {
 				retVal = 1;
 			}
 
@@ -156,13 +157,13 @@ AUI.add(
 						Liferay.Util.toggleDisabled(select, !list.length);
 					}
 				}
-			}
+			},
 		};
 
 		Liferay.DynamicSelect = DynamicSelect;
 	},
 	'',
 	{
-		requires: ['aui-base']
+		requires: ['aui-base'],
 	}
 );

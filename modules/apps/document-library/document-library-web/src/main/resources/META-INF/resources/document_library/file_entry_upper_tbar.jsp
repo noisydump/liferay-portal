@@ -34,8 +34,14 @@ FileVersion fileVersion = (FileVersion)request.getAttribute("file_entry_upper_tb
 						</h2>
 
 						<c:if test="<%= fileEntry.hasLock() || fileEntry.isCheckedOut() %>">
-							<span>
-								<aui:icon cssClass="icon-monospaced" image="lock" markupView="lexicon" message="locked" />
+							<span class="inline-item inline-item-after state-icon">
+								<aui:icon image="lock" markupView="lexicon" message="locked" />
+							</span>
+						</c:if>
+
+						<c:if test="<%= dlViewFileVersionDisplayContext.isShared() %>">
+							<span class="inline-item inline-item-after lfr-portal-tooltip state-icon" title="<%= LanguageUtil.get(request, "shared") %>">
+								<aui:icon image="users" markupView="lexicon" message="shared" />
 							</span>
 						</c:if>
 					</div>
@@ -65,9 +71,9 @@ FileVersion fileVersion = (FileVersion)request.getAttribute("file_entry_upper_tb
 					<li class="d-none d-sm-flex tbar-item">
 
 						<%
-						Map<String, String> data = new HashMap<>();
-
-						data.put("analytics-file-entry-id", String.valueOf(fileEntry.getFileEntryId()));
+						Map<String, String> data = HashMapBuilder.put(
+							"analytics-file-entry-id", String.valueOf(fileEntry.getFileEntryId())
+						).build();
 						%>
 
 						<clay:link
@@ -77,7 +83,7 @@ FileVersion fileVersion = (FileVersion)request.getAttribute("file_entry_upper_tb
 							href="<%= DLURLHelperUtil.getDownloadURL(fileEntry, fileVersion, themeDisplay, StringPool.BLANK, false, true) %>"
 							icon="download"
 							label='<%= LanguageUtil.get(resourceBundle, "download") %>'
-							title='<%= LanguageUtil.format(resourceBundle, "file-size-x", TextFormatter.formatStorageSize(fileVersion.getSize(), locale), false) %>'
+							title='<%= LanguageUtil.format(resourceBundle, "file-size-x", LanguageUtil.formatStorageSize(fileVersion.getSize(), locale), false) %>'
 						/>
 					</li>
 				</c:if>

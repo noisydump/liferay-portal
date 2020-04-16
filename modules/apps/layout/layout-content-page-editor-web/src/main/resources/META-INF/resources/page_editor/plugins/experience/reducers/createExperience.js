@@ -13,9 +13,9 @@
  */
 
 import {
+	addExperience,
 	storeNewLayoutData,
 	updateFragmentEntryLinksEditableValues,
-	addExperience
 } from './utils';
 
 function createExperienceReducer(state, payload) {
@@ -25,7 +25,7 @@ function createExperienceReducer(state, payload) {
 
 	const newExperience = {
 		...segmentsExperience,
-		hasLockedSegmentsExperiment: false
+		hasLockedSegmentsExperiment: false,
 	};
 
 	nextState = addExperience(nextState, newExperience);

@@ -16,6 +16,7 @@ package com.liferay.portal.upgrade.v7_0_0;
 
 import com.liferay.asset.kernel.model.AssetCategoryConstants;
 import com.liferay.document.library.kernel.model.DLFileEntryConstants;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.dao.db.DBType;
 import com.liferay.portal.kernel.dao.db.DBTypeToSQLMap;
 import com.liferay.portal.kernel.dao.jdbc.AutoBatchPreparedStatementUtil;
@@ -24,7 +25,6 @@ import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.LoggingTimer;
 import com.liferay.portal.kernel.util.PortalUtil;
-import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.UnicodeProperties;
 import com.liferay.portal.upgrade.v7_0_0.util.AssetEntryTable;
@@ -156,25 +156,26 @@ public class UpgradeAsset extends UpgradeProcess {
 	}
 
 	protected String upgradeVocabularySettings(String settings) {
-		UnicodeProperties properties = new UnicodeProperties(true);
+		UnicodeProperties unicodeProperties = new UnicodeProperties(true);
 
-		properties.fastLoad(settings);
+		unicodeProperties.fastLoad(settings);
 
 		AssetVocabularySettingsHelper vocabularySettingsHelper =
 			new AssetVocabularySettingsHelper();
 
 		vocabularySettingsHelper.setMultiValued(
-			GetterUtil.getBoolean(properties.getProperty("multiValued"), true));
+			GetterUtil.getBoolean(
+				unicodeProperties.getProperty("multiValued"), true));
 
 		long[] classNameIds = StringUtil.split(
-			properties.getProperty("selectedClassNameIds"), 0L);
+			unicodeProperties.getProperty("selectedClassNameIds"), 0L);
 
 		long[] classTypePKs = new long[classNameIds.length];
 
 		Arrays.fill(classTypePKs, AssetCategoryConstants.ALL_CLASS_TYPE_PK);
 
 		long[] requiredClassNameIds = StringUtil.split(
-			properties.getProperty("requiredClassNameIds"), 0L);
+			unicodeProperties.getProperty("requiredClassNameIds"), 0L);
 
 		boolean[] requireds = new boolean[classNameIds.length];
 

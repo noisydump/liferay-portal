@@ -15,6 +15,7 @@
 package com.liferay.portal.search.web.internal.search.results.portlet;
 
 import com.liferay.asset.kernel.service.AssetEntryLocalService;
+import com.liferay.asset.util.AssetRendererFactoryLookup;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.search.DisplayTerms;
 import com.liferay.portal.kernel.dao.search.SearchContainer;
@@ -25,6 +26,7 @@ import com.liferay.portal.kernel.portlet.bridges.mvc.MVCPortlet;
 import com.liferay.portal.kernel.search.Document;
 import com.liferay.portal.kernel.search.IndexerRegistry;
 import com.liferay.portal.kernel.security.permission.ResourceActions;
+import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.FastDateFormatFactory;
 import com.liferay.portal.kernel.util.Http;
@@ -41,7 +43,6 @@ import com.liferay.portal.search.web.internal.document.DocumentFormPermissionChe
 import com.liferay.portal.search.web.internal.document.DocumentFormPermissionCheckerImpl;
 import com.liferay.portal.search.web.internal.portlet.shared.search.NullPortletURL;
 import com.liferay.portal.search.web.internal.portlet.shared.task.PortletSharedRequestHelper;
-import com.liferay.portal.search.web.internal.result.display.builder.AssetRendererFactoryLookup;
 import com.liferay.portal.search.web.internal.result.display.builder.SearchResultSummaryDisplayBuilder;
 import com.liferay.portal.search.web.internal.result.display.context.SearchResultSummaryDisplayContext;
 import com.liferay.portal.search.web.internal.search.results.constants.SearchResultsPortletKeys;
@@ -111,6 +112,11 @@ public class SearchResultsPortlet extends MVCPortlet {
 		SearchResultsPortletDisplayContext searchResultsPortletDisplayContext =
 			buildDisplayContext(
 				portletSharedSearchResponse, renderRequest, renderResponse);
+
+		if (searchResultsPortletDisplayContext.isRenderNothing()) {
+			renderRequest.setAttribute(
+				WebKeys.PORTLET_CONFIGURATOR_VISIBILITY, Boolean.TRUE);
+		}
 
 		renderRequest.setAttribute(
 			WebKeys.PORTLET_DISPLAY_CONTEXT,
@@ -317,6 +323,8 @@ public class SearchResultsPortlet extends MVCPortlet {
 			documentBuilderFactory
 		).setFastDateFormatFactory(
 			fastDateFormatFactory
+		).setGroupLocalService(
+			groupLocalService
 		).setHighlightEnabled(
 			searchResultsPortletPreferences.isHighlightEnabled()
 		).setImageRequested(
@@ -399,10 +407,7 @@ public class SearchResultsPortlet extends MVCPortlet {
 		String urlString = portletSharedRequestHelper.getCompleteURL(
 			renderRequest);
 
-		urlString = http.removeParameter(
-			urlString, paginationStartParameterName);
-
-		return urlString;
+		return http.removeParameter(urlString, paginationStartParameterName);
 	}
 
 	protected boolean isRenderNothing(
@@ -418,11 +423,7 @@ public class SearchResultsPortlet extends MVCPortlet {
 
 		SearchRequest searchRequest = searchResponse.getRequest();
 
-		if (searchRequest.isEmptySearchEnabled()) {
-			return false;
-		}
-
-		return true;
+		return !searchRequest.isEmptySearchEnabled();
 	}
 
 	protected void removeSearchResultImageContributor(
@@ -441,6 +442,9 @@ public class SearchResultsPortlet extends MVCPortlet {
 
 	@Reference
 	protected FastDateFormatFactory fastDateFormatFactory;
+
+	@Reference
+	protected GroupLocalService groupLocalService;
 
 	@Reference
 	protected Http http;

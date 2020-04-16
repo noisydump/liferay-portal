@@ -100,9 +100,9 @@ List<AssetRendererFactory<?>> classTypesAssetRendererFactories = (List<AssetRend
 
 		classTypesAssetRendererFactories.add(assetRendererFactory);
 
-		String className = assetPublisherWebUtil.getClassName(assetRendererFactory);
+		String className = assetPublisherWebHelper.getClassName(assetRendererFactory);
 
-		Long[] assetSelectedClassTypeIds = assetPublisherWebUtil.getClassTypeIds(portletPreferences, className, classTypes);
+		Long[] assetSelectedClassTypeIds = assetPublisherWebHelper.getClassTypeIds(portletPreferences, className, classTypes);
 
 		// Left list
 
@@ -250,7 +250,7 @@ List<AssetRendererFactory<?>> classTypesAssetRendererFactories = (List<AssetRend
 
 	<%
 	for (AssetRendererFactory<?> curRendererFactory : classTypesAssetRendererFactories) {
-		String className = assetPublisherWebUtil.getClassName(curRendererFactory);
+		String className = assetPublisherWebHelper.getClassName(curRendererFactory);
 	%>
 
 		Util.toggleSelectBox(
@@ -275,7 +275,8 @@ List<AssetRendererFactory<?>> classTypesAssetRendererFactories = (List<AssetRend
 
 			if (showOptions) {
 				<%= className %>Options.classList.remove('hide');
-			} else {
+			}
+			else {
 				<%= className %>Options.classList.add('hide');
 			}
 
@@ -322,7 +323,7 @@ List<AssetRendererFactory<?>> classTypesAssetRendererFactories = (List<AssetRend
 			String orderByColumn2 = assetPublisherDisplayContext.getOrderByColumn2();
 
 			for (ClassTypeField classTypeField : classTypeFields) {
-				String value = assetPublisherWebUtil.encodeName(classTypeField.getClassTypeId(), classTypeField.getName(), null);
+				String value = assetPublisherWebHelper.encodeName(classTypeField.getClassTypeId(), classTypeField.getName(), null);
 				String selectedOrderByColumn1 = StringPool.BLANK;
 				String selectedOrderByColumn2 = StringPool.BLANK;
 
@@ -417,10 +418,12 @@ List<AssetRendererFactory<?>> classTypesAssetRendererFactories = (List<AssetRend
 
 						if (structureOptions) {
 							subtypeFieldsWrapper.classList.remove('hide');
-						} else if (hideSubtypeFilterEnableWrapper) {
+						}
+						else if (hideSubtypeFilterEnableWrapper) {
 							subtypeFieldsWrapper.classList.add('hide');
 						}
-					} else if (hideSubtypeFilterEnableWrapper) {
+					}
+					else if (hideSubtypeFilterEnableWrapper) {
 						subtypeFieldsWrapper.classList.add('hide');
 					}
 				});
@@ -461,7 +464,7 @@ List<AssetRendererFactory<?>> classTypesAssetRendererFactories = (List<AssetRend
 
 		<%
 		for (AssetRendererFactory<?> curRendererFactory : classTypesAssetRendererFactories) {
-			String className = assetPublisherWebUtil.getClassName(curRendererFactory);
+			String className = assetPublisherWebHelper.getClassName(curRendererFactory);
 		%>
 
 			<portlet:namespace />toggle<%= className %>(removeOrderBySubtype);
@@ -564,13 +567,13 @@ List<AssetRendererFactory<?>> classTypesAssetRendererFactories = (List<AssetRend
 			{
 				dialog: {
 					constrain: true,
-					modal: true
+					modal: true,
 				},
 				eventName: '<portlet:namespace />selectDDMStructureField',
 				id: '<portlet:namespace />selectDDMStructure' + delegateTarget.id,
 				title:
 					'<liferay-ui:message arguments="structure-field" key="select-x" />',
-				uri: uri
+				uri: uri,
 			},
 			function(event) {
 				setDDMFields(

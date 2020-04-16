@@ -258,10 +258,10 @@ public class StagedLayoutSetStagedModelDataHandler
 
 		// Last publish date must not be exported
 
-		UnicodeProperties settingsProperties =
+		UnicodeProperties settingsUnicodeProperties =
 			layoutSet.getSettingsProperties();
 
-		settingsProperties.remove("last-publish-date");
+		settingsUnicodeProperties.remove("last-publish-date");
 
 		// Page versioning
 
@@ -368,7 +368,13 @@ public class StagedLayoutSetStagedModelDataHandler
 
 		// Last merge time
 
-		updateLastMergeTime(portletDataContext, modifiedLayouts);
+		LayoutSet importedLayoutSet = importedStagedLayoutSet.getLayoutSet();
+
+		Group group = importedLayoutSet.getGroup();
+
+		if (!group.isLayoutSetPrototype()) {
+			updateLastMergeTime(portletDataContext, modifiedLayouts);
+		}
 
 		// Page priorities
 
@@ -695,10 +701,10 @@ public class StagedLayoutSetStagedModelDataHandler
 				continue;
 			}
 
-			UnicodeProperties typeSettingsProperties =
+			UnicodeProperties typeSettingsUnicodeProperties =
 				layout.getTypeSettingsProperties();
 
-			typeSettingsProperties.setProperty(
+			typeSettingsUnicodeProperties.setProperty(
 				Sites.LAST_MERGE_TIME, String.valueOf(lastMergeTime));
 
 			_layoutLocalService.updateLayout(layout);
@@ -712,15 +718,22 @@ public class StagedLayoutSetStagedModelDataHandler
 			portletDataContext.getGroupId(),
 			portletDataContext.isPrivateLayout());
 
-		UnicodeProperties settingsProperties =
+		UnicodeProperties settingsUnicodeProperties =
 			layoutSet.getSettingsProperties();
 
-		String mergeFailFriendlyURLLayouts = settingsProperties.getProperty(
-			Sites.MERGE_FAIL_FRIENDLY_URL_LAYOUTS);
+		String mergeFailFriendlyURLLayouts =
+			settingsUnicodeProperties.getProperty(
+				Sites.MERGE_FAIL_FRIENDLY_URL_LAYOUTS);
 
 		if (Validator.isNull(mergeFailFriendlyURLLayouts)) {
-			settingsProperties.setProperty(
+			settingsUnicodeProperties.setProperty(
 				Sites.LAST_MERGE_TIME, String.valueOf(lastMergeTime));
+
+			long lastMergeVersion = MapUtil.getLong(
+				portletDataContext.getParameterMap(), "lastMergeVersion");
+
+			settingsUnicodeProperties.setProperty(
+				Sites.LAST_MERGE_VERSION, String.valueOf(lastMergeVersion));
 
 			_layoutSetLocalService.updateLayoutSet(layoutSet);
 		}
@@ -843,30 +856,31 @@ public class StagedLayoutSetStagedModelDataHandler
 			portletDataContext.getGroupId(),
 			portletDataContext.isPrivateLayout());
 
-		UnicodeProperties settingsProperties =
+		UnicodeProperties settingsUnicodeProperties =
 			layoutSet.getSettingsProperties();
 
-		String mergeFailFriendlyURLLayouts = settingsProperties.getProperty(
-			Sites.MERGE_FAIL_FRIENDLY_URL_LAYOUTS);
+		String mergeFailFriendlyURLLayouts =
+			settingsUnicodeProperties.getProperty(
+				Sites.MERGE_FAIL_FRIENDLY_URL_LAYOUTS);
 
 		LayoutSet stagedLayoutSet = importedLayoutSet.getLayoutSet();
 
 		if (Validator.isNull(mergeFailFriendlyURLLayouts)) {
-			UnicodeProperties importedSettingsProperties =
+			UnicodeProperties importedSettingsUnicodeProperties =
 				stagedLayoutSet.getSettingsProperties();
 
 			boolean showSearchHeader = GetterUtil.getBoolean(
-				settingsProperties.getProperty(
+				settingsUnicodeProperties.getProperty(
 					"lfr-theme:regular:show-header-search"),
 				true);
 
 			boolean importedShowSearchHeader = GetterUtil.getBoolean(
-				importedSettingsProperties.getProperty(
+				importedSettingsUnicodeProperties.getProperty(
 					"lfr-theme:regular:show-header-search"),
 				true);
 
 			if (showSearchHeader != importedShowSearchHeader) {
-				settingsProperties.setProperty(
+				settingsUnicodeProperties.setProperty(
 					"lfr-theme:regular:show-header-search",
 					String.valueOf(importedShowSearchHeader));
 
@@ -884,28 +898,29 @@ public class StagedLayoutSetStagedModelDataHandler
 			portletDataContext.getGroupId(),
 			portletDataContext.isPrivateLayout());
 
-		UnicodeProperties settingsProperties =
+		UnicodeProperties settingsUnicodeProperties =
 			layoutSet.getSettingsProperties();
 
-		String mergeFailFriendlyURLLayouts = settingsProperties.getProperty(
-			Sites.MERGE_FAIL_FRIENDLY_URL_LAYOUTS);
+		String mergeFailFriendlyURLLayouts =
+			settingsUnicodeProperties.getProperty(
+				Sites.MERGE_FAIL_FRIENDLY_URL_LAYOUTS);
 
 		LayoutSet stagedLayoutSet = importedLayoutSet.getLayoutSet();
 
 		if (Validator.isNull(mergeFailFriendlyURLLayouts)) {
-			UnicodeProperties importedSettingsProperties =
+			UnicodeProperties importedSettingsUnicodeProperties =
 				stagedLayoutSet.getSettingsProperties();
 
 			boolean showSiteName = GetterUtil.getBoolean(
-				settingsProperties.getProperty(
+				settingsUnicodeProperties.getProperty(
 					Sites.SHOW_SITE_NAME, Boolean.TRUE.toString()));
 
 			boolean importedShowSiteName = GetterUtil.getBoolean(
-				importedSettingsProperties.getProperty(
+				importedSettingsUnicodeProperties.getProperty(
 					Sites.SHOW_SITE_NAME, Boolean.TRUE.toString()));
 
 			if (showSiteName != importedShowSiteName) {
-				settingsProperties.setProperty(
+				settingsUnicodeProperties.setProperty(
 					Sites.SHOW_SITE_NAME, String.valueOf(importedShowSiteName));
 
 				_layoutSetLocalService.updateLayoutSet(layoutSet);

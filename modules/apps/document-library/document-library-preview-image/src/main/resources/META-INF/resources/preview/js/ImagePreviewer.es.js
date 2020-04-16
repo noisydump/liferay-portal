@@ -96,7 +96,8 @@ const ImagePreviewer = ({imageURL}) => {
 		if (currentZoom === 1) {
 			setImageHeight(null);
 			setImageWidth(null);
-		} else {
+		}
+		else {
 			applyZoom(1);
 		}
 	};
@@ -140,7 +141,8 @@ const ImagePreviewer = ({imageURL}) => {
 				scrollTop =
 					(imageContainerElement.clientHeight * (zoomRatio - 1)) / 2 +
 					imageContainerElement.scrollTop * zoomRatio;
-			} else {
+			}
+			else {
 				scrollTop =
 					(imageHeight - imageContainerElement.clientHeight) / 2;
 				scrollLeft =
@@ -225,9 +227,7 @@ const ImagePreviewer = ({imageURL}) => {
 };
 
 ImagePreviewer.propTypes = {
-	imageURL: PropTypes.string
+	imageURL: PropTypes.string,
 };
 
-export default function(props) {
-	return <ImagePreviewer {...props} />;
-}
+export default ImagePreviewer;

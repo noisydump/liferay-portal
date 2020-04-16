@@ -14,42 +14,34 @@
 
 import React from 'react';
 
-import {LAYOUT_DATA_ITEM_TYPES} from '../../config/constants/layoutDataItemTypes';
-import selectShowLayoutItemTopper from '../../selectors/selectShowLayoutItemTopper';
-import {useSelector} from '../../store/index';
+import {
+	LayoutDataPropTypes,
+	getLayoutDataItemPropTypes,
+} from '../../../prop-types/index';
 import ManageAllowedFragmentButton from '../ManageAllowedFragmentButton';
 import Topper from '../Topper';
 
 const DropZoneWithControls = React.forwardRef(({item, layoutData}, ref) => {
-	const showLayoutItemTopper = useSelector(selectShowLayoutItemTopper);
+	return (
+		<Topper active item={item} itemRef={ref} layoutData={layoutData}>
+			<div className="page-editor__drop-zone" ref={ref}>
+				<p>{Liferay.Language.get('drop-zone')}</p>
 
-	const content = (
-		<div className="fragments-editor__drop-zone" ref={ref}>
-			<p>{Liferay.Language.get('drop-zone')}</p>
+				<p>
+					{Liferay.Language.get(
+						'fragments-and-widgets-for-pages-based-on-this-master-will-be-placed-here'
+					)}
+				</p>
 
-			<p>
-				{Liferay.Language.get(
-					'fragments-and-widgets-for-pages-based-on-this-master-will-be-placed-here'
-				)}
-			</p>
-
-			<ManageAllowedFragmentButton item={item} />
-		</div>
-	);
-
-	return showLayoutItemTopper ? (
-		<Topper
-			acceptDrop={[LAYOUT_DATA_ITEM_TYPES.fragment]}
-			active
-			item={item}
-			layoutData={layoutData}
-			name={Liferay.Language.get('drop-zone')}
-		>
-			{() => content}
+				<ManageAllowedFragmentButton item={item} />
+			</div>
 		</Topper>
-	) : (
-		content
 	);
 });
+
+DropZoneWithControls.propTypes = {
+	item: getLayoutDataItemPropTypes().isRequired,
+	layoutData: LayoutDataPropTypes.isRequired,
+};
 
 export default DropZoneWithControls;

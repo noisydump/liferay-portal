@@ -22,8 +22,7 @@ import com.liferay.document.library.kernel.service.DLFileEntryTypeService;
 import com.liferay.document.library.kernel.util.DLUtil;
 import com.liferay.document.library.web.internal.constants.DLWebKeys;
 import com.liferay.document.library.web.internal.display.context.DLEditFileEntryTypeDisplayContext;
-import com.liferay.dynamic.data.mapping.kernel.DDMStructure;
-import com.liferay.dynamic.data.mapping.kernel.DDMStructureManagerUtil;
+import com.liferay.dynamic.data.mapping.model.DDMStructure;
 import com.liferay.dynamic.data.mapping.service.DDMStorageLinkLocalService;
 import com.liferay.dynamic.data.mapping.service.DDMStructureLocalService;
 import com.liferay.dynamic.data.mapping.util.DDM;
@@ -51,6 +50,7 @@ import org.osgi.service.component.annotations.Reference;
  * @author Sergio González
  */
 @Component(
+	configurationPid = "com.liferay.document.library.configuration.FFDocumentLibraryDDMEditorConfiguration",
 	property = {
 		"javax.portlet.name=" + DLPortletKeys.DOCUMENT_LIBRARY,
 		"javax.portlet.name=" + DLPortletKeys.DOCUMENT_LIBRARY_ADMIN,
@@ -73,7 +73,8 @@ public class EditFileEntryTypeMVCRenderCommand implements MVCRenderCommand {
 				new DLEditFileEntryTypeDisplayContext(
 					_ddm, _ddmStorageLinkLocalService,
 					_ddmStructureLocalService, _language,
-					_portal.getLiferayPortletRequest(renderRequest)));
+					_portal.getLiferayPortletRequest(renderRequest),
+					_portal.getLiferayPortletResponse(renderResponse)));
 
 			long fileEntryTypeId = ParamUtil.getLong(
 				renderRequest, "fileEntryTypeId");
@@ -112,28 +113,26 @@ public class EditFileEntryTypeMVCRenderCommand implements MVCRenderCommand {
 	}
 
 	private DDMStructure _getDDMStructure(DLFileEntryType dlFileEntryType) {
-		DDMStructure ddmStructure = DDMStructureManagerUtil.fetchStructure(
+		DDMStructure ddmStructure = _ddmStructureLocalService.fetchStructure(
 			dlFileEntryType.getGroupId(),
 			_portal.getClassNameId(DLFileEntryMetadata.class),
 			DLUtil.getDDMStructureKey(dlFileEntryType));
 
-		if (ddmStructure != null) {
-			return ddmStructure;
+		if (ddmStructure == null) {
+			ddmStructure = _ddmStructureLocalService.fetchStructure(
+				dlFileEntryType.getGroupId(),
+				_portal.getClassNameId(DLFileEntryMetadata.class),
+				DLUtil.getDeprecatedDDMStructureKey(dlFileEntryType));
 		}
 
-		ddmStructure = DDMStructureManagerUtil.fetchStructure(
-			dlFileEntryType.getGroupId(),
-			_portal.getClassNameId(DLFileEntryMetadata.class),
-			DLUtil.getDeprecatedDDMStructureKey(dlFileEntryType));
-
-		if (ddmStructure != null) {
-			return ddmStructure;
+		if (ddmStructure == null) {
+			ddmStructure = _ddmStructureLocalService.fetchStructure(
+				dlFileEntryType.getGroupId(),
+				_portal.getClassNameId(DLFileEntryMetadata.class),
+				dlFileEntryType.getFileEntryTypeKey());
 		}
 
-		return DDMStructureManagerUtil.fetchStructure(
-			dlFileEntryType.getGroupId(),
-			_portal.getClassNameId(DLFileEntryMetadata.class),
-			dlFileEntryType.getFileEntryTypeKey());
+		return ddmStructure;
 	}
 
 	@Reference
@@ -144,6 +143,12 @@ public class EditFileEntryTypeMVCRenderCommand implements MVCRenderCommand {
 
 	@Reference
 	private DDMStructureLocalService _ddmStructureLocalService;
+
+	@Reference(
+		target = "(model.class.name=com.liferay.dynamic.data.mapping.model.DDMStructure)"
+	)
+	private ModelResourcePermission<DDMStructure>
+		_ddmStructureModelResourcePermission;
 
 	@Reference(
 		target = "(model.class.name=com.liferay.document.library.kernel.model.DLFileEntryType)"

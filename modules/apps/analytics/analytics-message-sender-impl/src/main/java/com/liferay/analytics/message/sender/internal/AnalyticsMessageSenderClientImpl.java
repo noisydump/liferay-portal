@@ -19,6 +19,7 @@ import com.liferay.analytics.message.storage.service.AnalyticsMessageLocalServic
 import com.liferay.analytics.settings.configuration.AnalyticsConfiguration;
 import com.liferay.analytics.settings.configuration.AnalyticsConfigurationTracker;
 import com.liferay.analytics.settings.security.constants.AnalyticsSecurityConstants;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.log.Log;
@@ -56,6 +57,10 @@ public class AnalyticsMessageSenderClientImpl
 
 	@Override
 	public Object send(String body, long companyId) throws Exception {
+		if (!_analyticsConfigurationTracker.isActive()) {
+			return null;
+		}
+
 		AnalyticsConfiguration analyticsConfiguration =
 			_analyticsConfigurationTracker.getAnalyticsConfiguration(companyId);
 
@@ -76,6 +81,10 @@ public class AnalyticsMessageSenderClientImpl
 
 	@Override
 	public void validateConnection(long companyId) throws Exception {
+		if (!_analyticsConfigurationTracker.isActive()) {
+			return;
+		}
+
 		AnalyticsConfiguration analyticsConfiguration =
 			_analyticsConfigurationTracker.getAnalyticsConfiguration(companyId);
 
@@ -115,11 +124,13 @@ public class AnalyticsMessageSenderClientImpl
 			httpUriRequest = httpPost;
 		}
 
-		httpUriRequest.setHeader("Content-Type", "application/json");
-		httpUriRequest.setHeader("OSB-Asah-Data-Source-ID", dataSourceId);
-		httpUriRequest.setHeader(
-			"OSB-Asah-Faro-Backend-Security-Signature",
-			faroBackendSecuritySignature);
+		if (httpUriRequest != null) {
+			httpUriRequest.setHeader("Content-Type", "application/json");
+			httpUriRequest.setHeader("OSB-Asah-Data-Source-ID", dataSourceId);
+			httpUriRequest.setHeader(
+				"OSB-Asah-Faro-Backend-Security-Signature",
+				faroBackendSecuritySignature);
+		}
 
 		return httpUriRequest;
 	}
@@ -148,7 +159,8 @@ public class AnalyticsMessageSenderClientImpl
 			if (_log.isWarnEnabled()) {
 				_log.warn(
 					"Unable to remove analytics preferences for company " +
-						companyId);
+						companyId,
+					exception);
 			}
 		}
 
@@ -160,7 +172,8 @@ public class AnalyticsMessageSenderClientImpl
 			if (_log.isWarnEnabled()) {
 				_log.warn(
 					"Unable to remove analytics configuration for company " +
-						companyId);
+						companyId,
+					exception);
 			}
 		}
 	}
@@ -193,10 +206,23 @@ public class AnalyticsMessageSenderClientImpl
 			String message = responseJSONObject.getString("message");
 
 			if (message.equals("INVALID_TOKEN")) {
+				if (_log.isWarnEnabled()) {
+					_log.warn(
+						StringBundler.concat(
+							"Disconnecting data source for company ", companyId,
+							". Cause: ", message));
+				}
+
 				_disconnectDataSource(companyId);
 
 				_analyticsMessageLocalService.deleteAnalyticsMessages(
 					companyId);
+
+				if (_log.isInfoEnabled()) {
+					_log.info(
+						"Deleted all analytics messages for company " +
+							companyId);
+				}
 			}
 
 			return closeableHttpResponse;

@@ -67,6 +67,11 @@ else {
 String redirect = ParamUtil.getString(request, "redirect", assetCategoriesDisplayContext.getEditCategoryRedirect());
 
 long vocabularyId = ParamUtil.getLong(request, "vocabularyId");
+
+portletDisplay.setShowBackIcon(true);
+portletDisplay.setURLBack(redirect);
+
+renderResponse.setTitle(category.getTitle(locale));
 %>
 
 <portlet:actionURL name="editProperties" var="editPropertiesURL">
@@ -132,7 +137,7 @@ long vocabularyId = ParamUtil.getLong(request, "vocabularyId");
 	var autoFields = new Liferay.AutoFields({
 		contentBox: '#<portlet:namespace />categoryPropertiesId',
 		fieldIndexes: '<portlet:namespace />categoryPropertiesIndexes',
-		namespace: '<portlet:namespace />'
+		namespace: '<portlet:namespace />',
 	}).render();
 
 	var categoryPropertiesTrigger = A.one(

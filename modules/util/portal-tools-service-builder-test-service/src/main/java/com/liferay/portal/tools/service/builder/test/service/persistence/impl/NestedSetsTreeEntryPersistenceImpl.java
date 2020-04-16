@@ -539,19 +539,19 @@ public class NestedSetsTreeEntryPersistenceImpl
 		}
 
 		if (list == null) {
-			StringBundler query = null;
+			StringBundler sb = null;
 			String sql = null;
 
 			if (orderByComparator != null) {
-				query = new StringBundler(
+				sb = new StringBundler(
 					2 + (orderByComparator.getOrderByFields().length * 2));
 
-				query.append(_SQL_SELECT_NESTEDSETSTREEENTRY);
+				sb.append(_SQL_SELECT_NESTEDSETSTREEENTRY);
 
 				appendOrderByComparator(
-					query, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
+					sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
 
-				sql = query.toString();
+				sql = sb.toString();
 			}
 			else {
 				sql = _SQL_SELECT_NESTEDSETSTREEENTRY;
@@ -564,10 +564,10 @@ public class NestedSetsTreeEntryPersistenceImpl
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
 				list = (List<NestedSetsTreeEntry>)QueryUtil.list(
-					q, getDialect(), start, end);
+					query, getDialect(), start, end);
 
 				cacheResult(list);
 
@@ -617,9 +617,10 @@ public class NestedSetsTreeEntryPersistenceImpl
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(_SQL_COUNT_NESTEDSETSTREEENTRY);
+				Query query = session.createQuery(
+					_SQL_COUNT_NESTEDSETSTREEENTRY);
 
-				count = (Long)q.uniqueResult();
+				count = (Long)query.uniqueResult();
 
 				finderCache.putResult(
 					_finderPathCountAll, FINDER_ARGS_EMPTY, count);
@@ -846,17 +847,18 @@ public class NestedSetsTreeEntryPersistenceImpl
 					session.flush();
 				}
 
-				SQLQuery selectQuery = session.createSQLQuery(
+				SQLQuery selectSQLQuery = session.createSQLQuery(
 					"SELECT nestedSetsTreeEntryId FROM NestedSetsTreeEntry WHERE groupId = ? AND parentNestedSetsTreeEntryId = ? ORDER BY nestedSetsTreeEntryId ASC");
 
-				selectQuery.addScalar(
+				selectSQLQuery.addScalar(
 					"nestedSetsTreeEntryId",
 					com.liferay.portal.kernel.dao.orm.Type.LONG);
 
-				SQLQuery updateQuery = session.createSQLQuery(
+				SQLQuery updateSQLQuery = session.createSQLQuery(
 					"UPDATE NestedSetsTreeEntry SET leftNestedSetsTreeEntryId = ?, rightNestedSetsTreeEntryId = ? WHERE nestedSetsTreeEntryId = ?");
 
-				rebuildTree(session, selectQuery, updateQuery, groupId, 0, 0);
+				rebuildTree(
+					session, selectSQLQuery, updateSQLQuery, groupId, 0, 0);
 			}
 			catch (Exception exception) {
 				throw processException(exception);
@@ -880,17 +882,17 @@ public class NestedSetsTreeEntryPersistenceImpl
 		try {
 			session = openSession();
 
-			SQLQuery q = session.createSynchronizedSQLQuery(
+			SQLQuery sqlQuery = session.createSynchronizedSQLQuery(
 				"SELECT COUNT(*) AS COUNT_VALUE FROM NestedSetsTreeEntry WHERE groupId = ? AND (leftNestedSetsTreeEntryId = 0 OR leftNestedSetsTreeEntryId IS NULL OR rightNestedSetsTreeEntryId = 0 OR rightNestedSetsTreeEntryId IS NULL)");
 
-			q.addScalar(
+			sqlQuery.addScalar(
 				COUNT_COLUMN_NAME, com.liferay.portal.kernel.dao.orm.Type.LONG);
 
-			QueryPos qPos = QueryPos.getInstance(q);
+			QueryPos queryPos = QueryPos.getInstance(sqlQuery);
 
-			qPos.add(groupId);
+			queryPos.add(groupId);
 
-			return (Long)q.uniqueResult();
+			return (Long)sqlQuery.uniqueResult();
 		}
 		catch (Exception exception) {
 			throw processException(exception);
@@ -901,33 +903,33 @@ public class NestedSetsTreeEntryPersistenceImpl
 	}
 
 	protected long rebuildTree(
-		Session session, SQLQuery selectQuery, SQLQuery updateQuery,
+		Session session, SQLQuery selectSQLQuery, SQLQuery updateSQLQuery,
 		long groupId, long parentNestedSetsTreeEntryId,
 		long leftNestedSetsTreeEntryId) {
 
 		long rightNestedSetsTreeEntryId = leftNestedSetsTreeEntryId + 1;
 
-		QueryPos qPos = QueryPos.getInstance(selectQuery);
+		QueryPos queryPos = QueryPos.getInstance(selectSQLQuery);
 
-		qPos.add(groupId);
-		qPos.add(parentNestedSetsTreeEntryId);
+		queryPos.add(groupId);
+		queryPos.add(parentNestedSetsTreeEntryId);
 
-		List<Long> nestedSetsTreeEntryIds = selectQuery.list();
+		List<Long> nestedSetsTreeEntryIds = selectSQLQuery.list();
 
 		for (long nestedSetsTreeEntryId : nestedSetsTreeEntryIds) {
 			rightNestedSetsTreeEntryId = rebuildTree(
-				session, selectQuery, updateQuery, groupId,
+				session, selectSQLQuery, updateSQLQuery, groupId,
 				nestedSetsTreeEntryId, rightNestedSetsTreeEntryId);
 		}
 
 		if (parentNestedSetsTreeEntryId > 0) {
-			qPos = QueryPos.getInstance(updateQuery);
+			queryPos = QueryPos.getInstance(updateSQLQuery);
 
-			qPos.add(leftNestedSetsTreeEntryId);
-			qPos.add(rightNestedSetsTreeEntryId);
-			qPos.add(parentNestedSetsTreeEntryId);
+			queryPos.add(leftNestedSetsTreeEntryId);
+			queryPos.add(rightNestedSetsTreeEntryId);
+			queryPos.add(parentNestedSetsTreeEntryId);
 
-			updateQuery.executeUpdate();
+			updateSQLQuery.executeUpdate();
 		}
 
 		return rightNestedSetsTreeEntryId + 1;

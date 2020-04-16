@@ -1,15 +1,19 @@
+@import 'atlas-variables';
+
 @import '../../app/components/variables';
 
-$collapseLineColor: #dfdfe9;
 $collapseMarginBottom: $pageEditorSpacing * 2;
 
 .page-editor__collapse {
-	border-color: $collapseLineColor;
-	border-radius: 0;
-	font-size: 12px;
-	margin-bottom: $collapseMarginBottom;
+	cursor: pointer;
 
-	&:focus {
-		border-radius: 1px;
+	.collapse-icon {
+		background: none;
+		border-color: $secondary-l2;
+		font-size: 0.75rem;
+		margin-bottom: $collapseMarginBottom;
+		padding-left: 0;
+		text-align: left;
+		width: 100%;
 	}
 }

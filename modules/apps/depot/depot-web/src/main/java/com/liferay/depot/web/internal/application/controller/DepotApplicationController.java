@@ -21,9 +21,13 @@ import com.liferay.depot.service.DepotAppCustomizationLocalService;
 import com.liferay.depot.service.DepotEntryLocalService;
 import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMap;
 import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMapFactory;
+import com.liferay.trash.constants.TrashPortletKeys;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.stream.Stream;
 
 import org.osgi.framework.BundleContext;
 import org.osgi.service.component.annotations.Activate;
@@ -49,6 +53,60 @@ public class DepotApplicationController {
 		return depotApplications;
 	}
 
+	public boolean isClassNameEnabled(String className, long groupId) {
+		DepotEntry depotEntry = _depotEntryLocalService.fetchGroupDepotEntry(
+			groupId);
+
+		if (depotEntry == null) {
+			return false;
+		}
+
+		Collection<DepotApplication> depotApplications =
+			_serviceTrackerMap.values();
+
+		Stream<DepotApplication> stream = depotApplications.stream();
+
+		Optional<DepotApplication> depotApplicationOptional = stream.filter(
+			depotApplication -> depotApplication.getClassNames(
+			).contains(
+				className
+			)
+		).findAny();
+
+		return depotApplicationOptional.map(
+			depotApplication -> {
+				if (!depotApplication.isCustomizable()) {
+					return true;
+				}
+
+				DepotAppCustomization depotApplicationCustomization =
+					_depotAppCustomizationLocalService.
+						fetchDepotAppCustomization(
+							depotEntry.getDepotEntryId(),
+							depotApplication.getPortletId());
+
+				if (depotApplicationCustomization == null) {
+					return true;
+				}
+
+				return depotApplicationCustomization.isEnabled();
+			}
+		).orElse(
+			false
+		);
+	}
+
+	public boolean isEnabled(String portletId) {
+		DepotApplication depotApplication = _serviceTrackerMap.getService(
+			portletId);
+
+		if (depotApplication == null) {
+			return false;
+		}
+
+		return true;
+	}
+
 	public boolean isEnabled(String portletId, long groupId) {
 		DepotEntry depotEntry = _depotEntryLocalService.fetchGroupDepotEntry(
 			groupId);
@@ -65,6 +123,10 @@ public class DepotApplicationController {
 		}
 
 		if (!depotApplication.isCustomizable()) {
+			if (Objects.equals(portletId, TrashPortletKeys.TRASH)) {
+				return _isTrashEnabled(depotEntry.getDepotEntryId());
+			}
+
 			return true;
 		}
 
@@ -96,6 +158,23 @@ public class DepotApplicationController {
 	@Deactivate
 	protected void deactivate() {
 		_serviceTrackerMap.close();
+	}
+
+	private boolean _isTrashEnabled(long depotEntryId) {
+		int enabledDepotAppCustomizationCount =
+			_depotAppCustomizationLocalService.getDepotAppCustomizationsCount(
+				depotEntryId, true);
+		int disabledDepotAppCustomizationCount =
+			_depotAppCustomizationLocalService.getDepotAppCustomizationsCount(
+				depotEntryId, false);
+
+		if ((enabledDepotAppCustomizationCount == 0) &&
+			(disabledDepotAppCustomizationCount > 0)) {
+
+			return false;
+		}
+
+		return true;
 	}
 
 	@Reference

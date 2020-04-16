@@ -125,7 +125,7 @@ AUI.add(
 				CSS_DIRECTION_DOWN,
 				'max-display-items-15',
 				CSS_EXTENDED,
-				CSS_SHOW_ARROW
+				CSS_SHOW_ARROW,
 			].join(STR_SPACE) +
 			'">' +
 			'<li class="lfr-trigger">' +
@@ -160,68 +160,68 @@ AUI.add(
 			ATTRS: {
 				availableLocales: {
 					validator: Array.isArray,
-					valueFn: '_valueAvailableLocales'
+					valueFn: '_valueAvailableLocales',
 				},
 
 				availableTranslationsLinksNode: {
-					valueFn: '_valueAvailableTranslationsLinksNode'
+					valueFn: '_valueAvailableTranslationsLinksNode',
 				},
 
 				availableTranslationsNode: {
-					valueFn: '_valueAvailableTranslationsNode'
+					valueFn: '_valueAvailableTranslationsNode',
 				},
 
 				changeDefaultLocaleNode: {
-					valueFn: '_valueChangeDefaultLocaleNode'
+					valueFn: '_valueChangeDefaultLocaleNode',
 				},
 
 				changeableDefaultLanguage: {
 					validator: Lang.isBoolean,
-					value: true
+					value: true,
 				},
 
 				defaultLocale: {
 					validator: Lang.isString,
-					value: 'en_US'
+					value: 'en_US',
 				},
 
 				defaultLocaleLabelNode: {
-					valueFn: '_valueDefaultLocaleLabelNode'
+					valueFn: '_valueDefaultLocaleLabelNode',
 				},
 
 				defaultLocaleNode: {
-					valueFn: '_valueDefaultLocaleNode'
+					valueFn: '_valueDefaultLocaleNode',
 				},
 
 				defaultLocaleTextNode: {
-					valueFn: '_valueDefaultLocaleTextNode'
+					valueFn: '_valueDefaultLocaleTextNode',
 				},
 
 				editingLocale: {
 					lazyAdd: false,
 					setter: '_setEditingLocale',
-					valueFn: '_valueEditingLocale'
+					valueFn: '_valueEditingLocale',
 				},
 
 				iconMenuNode: {
-					valueFn: '_valueIconMenuNode'
+					valueFn: '_valueIconMenuNode',
 				},
 
 				localesMap: {
 					setter: '_setLocalesMap',
 					validator: Lang.isObject,
 					value: {},
-					writeOnce: true
+					writeOnce: true,
 				},
 
 				portletNamespace: {
-					value: STR_BLANK
+					value: STR_BLANK,
 				},
 
 				readOnly: {
 					validator: Lang.isBoolean,
-					value: false
-				}
+					value: false,
+				},
 			},
 
 			CSS_PREFIX: 'lfr-translation-manager',
@@ -234,7 +234,7 @@ AUI.add(
 				defaultLocaleLabelNode: STR_DOT + CSS_DEFAULT_LOCALE_LABEL,
 				defaultLocaleNode: STR_DOT + CSS_DEFAULT_LOCALE,
 				defaultLocaleTextNode: STR_DOT + CSS_DEFAULT_LOCALE_TEXT,
-				iconMenuNode: STR_DOT + CSS_ICON_MENU
+				iconMenuNode: STR_DOT + CSS_ICON_MENU,
 			},
 
 			NAME: 'translationmanager',
@@ -243,7 +243,7 @@ AUI.add(
 				'availableLocales',
 				'defaultLocale',
 				'editingLocale',
-				'readOnly'
+				'readOnly',
 			],
 
 			prototype: {
@@ -300,7 +300,8 @@ AUI.add(
 								instance._resetEditingLocale();
 							}
 						}
-					} else {
+					}
+					else {
 						instance.set('editingLocale', locale);
 					}
 				},
@@ -375,7 +376,7 @@ AUI.add(
 					var tplBuffer = {
 						cssClass: STR_BLANK,
 						displayName: STR_BLANK,
-						locale: STR_BLANK
+						locale: STR_BLANK,
 					};
 
 					val.forEach(item => {
@@ -415,7 +416,7 @@ AUI.add(
 
 					if (optionNode) {
 						var content = Lang.sub(TPL_LOCALE_IMAGE, {
-							locale: val
+							locale: val,
 						});
 
 						content += optionNode.getContent();
@@ -449,7 +450,8 @@ AUI.add(
 
 					if (val === instance.get('defaultLocale')) {
 						localeNode = defaultLocaleTextNode;
-					} else {
+					}
+					else {
 						localeNode = availableTranslationsLinksNode.one(
 							'span[locale=' + val + ']'
 						);
@@ -508,7 +510,7 @@ AUI.add(
 
 					var html = Lang.sub(TPL_DEFAULT_LOCALE_TEXT_NODE, {
 						displayName: localesMap[defaultLocale],
-						locale: defaultLocale
+						locale: defaultLocale,
 					});
 
 					return Node.create(html);
@@ -526,7 +528,7 @@ AUI.add(
 					var buffer = instance._getFormattedBuffer(TPL_ICON_NODE);
 
 					var html = Lang.sub(TPL_ICON_MENU_NODE, {
-						menuItems: buffer.join(STR_BLANK)
+						menuItems: buffer.join(STR_BLANK),
 					});
 
 					return Node.create(html);
@@ -544,7 +546,7 @@ AUI.add(
 					}
 
 					instance.fire('addAvailableLocale', {
-						locale
+						locale,
 					});
 				},
 
@@ -608,7 +610,7 @@ AUI.add(
 					instance.set('availableLocales', availableLocales);
 
 					instance.fire('deleteAvailableLocale', {
-						locale
+						locale,
 					});
 				},
 
@@ -642,7 +644,7 @@ AUI.add(
 					var nodes = [
 						defaultLocaleLabelNode,
 						defaultLocaleTextNode,
-						defaultLocaleNode
+						defaultLocaleNode,
 					];
 
 					if (changeableDefaultLanguage) {
@@ -657,7 +659,7 @@ AUI.add(
 
 					nodes = nodes.concat([
 						iconMenuNode,
-						availableTranslationsNode
+						availableTranslationsNode,
 					]);
 
 					var nodeList = new A.NodeList(nodes);
@@ -700,19 +702,20 @@ AUI.add(
 
 					if (defaultLocaleNode.test(':hidden')) {
 						text = Liferay.Language.get('change');
-					} else {
+					}
+					else {
 						text = Liferay.Language.get('cancel');
 					}
 
 					instance._changeDefaultLocaleNode.text(text);
-				}
-			}
+				},
+			},
 		});
 
 		Liferay.TranslationManager = TranslationManager;
 	},
 	'',
 	{
-		requires: ['aui-base', 'liferay-menu']
+		requires: ['aui-base', 'liferay-menu'],
 	}
 );

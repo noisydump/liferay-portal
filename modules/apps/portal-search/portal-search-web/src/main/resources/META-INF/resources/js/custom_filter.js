@@ -18,6 +18,10 @@ AUI.add(
 		var FacetUtil = Liferay.Search.FacetUtil;
 
 		var CustomFilter = function(form) {
+			if (!form) {
+				return;
+			}
+
 			var instance = this;
 
 			instance.form = form;
@@ -30,7 +34,9 @@ AUI.add(
 
 			var applyButton = instance.form.one('.custom-filter-apply-button');
 
-			applyButton.on('click', A.bind(instance._onClick, instance));
+			if (applyButton) {
+				applyButton.on('click', A.bind(instance._onClick, instance));
+			}
 		};
 
 		A.mix(CustomFilter.prototype, {
@@ -88,13 +94,13 @@ AUI.add(
 				}
 
 				return queryString;
-			}
+			},
 		});
 
 		Liferay.namespace('Search').CustomFilter = CustomFilter;
 	},
 	'',
 	{
-		requires: ['liferay-search-facet-util']
+		requires: ['liferay-search-facet-util'],
 	}
 );

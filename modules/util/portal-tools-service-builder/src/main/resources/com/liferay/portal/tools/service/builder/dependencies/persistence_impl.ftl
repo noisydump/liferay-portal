@@ -297,13 +297,13 @@ public class ${entity.name}PersistenceImpl extends BasePersistenceImpl<${entity.
 	}
 
 	/**
-	 * Caches the ${entity.humanNames} in the entity cache if it is enabled.
+	 * Caches the ${entity.pluralHumanName} in the entity cache if it is enabled.
 	 *
-	 * @param ${entity.varNames} the ${entity.humanNames}
+	 * @param ${entity.pluralVarName} the ${entity.pluralHumanName}
 	 */
 	@Override
-	public void cacheResult(List<${entity.name}> ${entity.varNames}) {
-		for (${entity.name} ${entity.varName} : ${entity.varNames}) {
+	public void cacheResult(List<${entity.name}> ${entity.pluralVarName}) {
+		for (${entity.name} ${entity.varName} : ${entity.pluralVarName}) {
 			<#if entity.isChangeTrackingEnabled()>
 				if (${entity.varName}.getCtCollectionId() != 0) {
 					${entity.varName}.resetOriginalValues();
@@ -322,7 +322,7 @@ public class ${entity.name}PersistenceImpl extends BasePersistenceImpl<${entity.
 	}
 
 	/**
-	 * Clears the cache for all ${entity.humanNames}.
+	 * Clears the cache for all ${entity.pluralHumanName}.
 	 *
 	 * <p>
 	 * The <code>com.liferay.portal.kernel.dao.orm.EntityCache</code> and <code>com.liferay.portal.kernel.dao.orm.FinderCache</code> are both cleared by this method.
@@ -357,11 +357,11 @@ public class ${entity.name}PersistenceImpl extends BasePersistenceImpl<${entity.
 	}
 
 	@Override
-	public void clearCache(List<${entity.name}> ${entity.varNames}) {
+	public void clearCache(List<${entity.name}> ${entity.pluralVarName}) {
 		${finderCache}.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
 		${finderCache}.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
 
-		for (${entity.name} ${entity.varName} : ${entity.varNames}) {
+		for (${entity.name} ${entity.varName} : ${entity.pluralVarName}) {
 			${entityCache}.removeResult(${entityCacheEnabled}, ${entity.name}Impl.class, ${entity.varName}.getPrimaryKey());
 
 			<#if entity.uniqueEntityFinders?size &gt; 0>
@@ -1097,46 +1097,46 @@ public class ${entity.name}PersistenceImpl extends BasePersistenceImpl<${entity.
 					return map;
 				}
 
-				StringBundler query = new StringBundler(uncachedPrimaryKeys.size() * 2 + 1);
+				StringBundler sb = new StringBundler(uncachedPrimaryKeys.size() * 2 + 1);
 
-				query.append(_SQL_SELECT_${entity.alias?upper_case}_WHERE_PKS_IN);
+				sb.append(_SQL_SELECT_${entity.alias?upper_case}_WHERE_PKS_IN);
 
 				<#if stringUtil.equals(entity.PKClassName, "String")>
 					for (int i = 0; i < uncachedPrimaryKeys.size(); i++) {
-						query.append("?");
+						sb.append("?");
 
-						query.append(",");
+						sb.append(",");
 					}
 				<#else>
 					for (Serializable primaryKey : uncachedPrimaryKeys) {
-						query.append((${entity.PKClassName})primaryKey);
+						sb.append((${entity.PKClassName})primaryKey);
 
-						query.append(",");
+						sb.append(",");
 					}
 				</#if>
 
-				query.setIndex(query.index() - 1);
+				sb.setIndex(sb.index() - 1);
 
-				query.append(")");
+				sb.append(")");
 
-				String sql = query.toString();
+				String sql = sb.toString();
 
 				Session session = null;
 
 				try {
 					session = openSession();
 
-					Query q = session.createQuery(sql);
+					Query query = session.createQuery(sql);
 
 					<#if stringUtil.equals(entity.PKClassName, "String")>
-						QueryPos qPos = QueryPos.getInstance(q);
+						QueryPos queryPos = QueryPos.getInstance(query);
 
 						for (Serializable primaryKey : uncachedPrimaryKeys) {
-							qPos.add((String)primaryKey);
+							queryPos.add((String)primaryKey);
 						}
 					</#if>
 
-					for (${entity.name} ${entity.varName} : (List<${entity.name}>)q.list()) {
+					for (${entity.name} ${entity.varName} : (List<${entity.name}>)query.list()) {
 						map.put(${entity.varName}.getPrimaryKeyObj(), ${entity.varName});
 
 						cacheResult(${entity.varName});
@@ -1185,33 +1185,33 @@ public class ${entity.name}PersistenceImpl extends BasePersistenceImpl<${entity.
 				return map;
 			}
 
-			StringBundler query = new StringBundler(primaryKeys.size() * 2 + 1);
+			StringBundler sb = new StringBundler(primaryKeys.size() * 2 + 1);
 
-			query.append(getSelectSQL());
-			query.append(" WHERE ");
-			query.append(getPKDBName());
-			query.append(" IN (");
+			sb.append(getSelectSQL());
+			sb.append(" WHERE ");
+			sb.append(getPKDBName());
+			sb.append(" IN (");
 
 			for (Serializable primaryKey : primaryKeys) {
-				query.append((${entity.PKClassName})primaryKey);
+				sb.append((${entity.PKClassName})primaryKey);
 
-				query.append(",");
+				sb.append(",");
 			}
 
-			query.setIndex(query.index() - 1);
+			sb.setIndex(sb.index() - 1);
 
-			query.append(")");
+			sb.append(")");
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				for (${entity.name} ${entity.varName} : (List<${entity.name}>)q.list()) {
+				for (${entity.name} ${entity.varName} : (List<${entity.name}>)query.list()) {
 					map.put(${entity.varName}.getPrimaryKeyObj(), ${entity.varName});
 
 					cacheResult(${entity.varName});
@@ -1229,9 +1229,9 @@ public class ${entity.name}PersistenceImpl extends BasePersistenceImpl<${entity.
 	</#if>
 
 	/**
-	 * Returns all the ${entity.humanNames}.
+	 * Returns all the ${entity.pluralHumanName}.
 	 *
-	 * @return the ${entity.humanNames}
+	 * @return the ${entity.pluralHumanName}
 	 */
 	@Override
 	public List<${entity.name}> findAll() {
@@ -1239,15 +1239,15 @@ public class ${entity.name}PersistenceImpl extends BasePersistenceImpl<${entity.
 	}
 
 	/**
-	 * Returns a range of all the ${entity.humanNames}.
+	 * Returns a range of all the ${entity.pluralHumanName}.
 	 *
 	 * <p>
 	 * <#include "range_comment.ftl">
 	 * </p>
 	 *
-	 * @param start the lower bound of the range of ${entity.humanNames}
-	 * @param end the upper bound of the range of ${entity.humanNames} (not inclusive)
-	 * @return the range of ${entity.humanNames}
+	 * @param start the lower bound of the range of ${entity.pluralHumanName}
+	 * @param end the upper bound of the range of ${entity.pluralHumanName} (not inclusive)
+	 * @return the range of ${entity.pluralHumanName}
 	 */
 	@Override
 	public List<${entity.name}> findAll(int start, int end) {
@@ -1255,16 +1255,16 @@ public class ${entity.name}PersistenceImpl extends BasePersistenceImpl<${entity.
 	}
 
 	/**
-	 * Returns an ordered range of all the ${entity.humanNames}.
+	 * Returns an ordered range of all the ${entity.pluralHumanName}.
 	 *
 	 * <p>
 	 * <#include "range_comment.ftl">
 	 * </p>
 	 *
-	 * @param start the lower bound of the range of ${entity.humanNames}
-	 * @param end the upper bound of the range of ${entity.humanNames} (not inclusive)
+	 * @param start the lower bound of the range of ${entity.pluralHumanName}
+	 * @param end the upper bound of the range of ${entity.pluralHumanName} (not inclusive)
 	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @return the ordered range of ${entity.humanNames}
+	 * @return the ordered range of ${entity.pluralHumanName}
 	 */
 	@Override
 	public List<${entity.name}> findAll(int start, int end, OrderByComparator<${entity.name}> orderByComparator) {
@@ -1272,17 +1272,17 @@ public class ${entity.name}PersistenceImpl extends BasePersistenceImpl<${entity.
 	}
 
 	/**
-	 * Returns an ordered range of all the ${entity.humanNames}.
+	 * Returns an ordered range of all the ${entity.pluralHumanName}.
 	 *
 	 * <p>
 	 * <#include "range_comment.ftl">
 	 * </p>
 	 *
-	 * @param start the lower bound of the range of ${entity.humanNames}
-	 * @param end the upper bound of the range of ${entity.humanNames} (not inclusive)
+	 * @param start the lower bound of the range of ${entity.pluralHumanName}
+	 * @param end the upper bound of the range of ${entity.pluralHumanName} (not inclusive)
 	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
 	 * @param useFinderCache whether to use the finder cache
-	 * @return the ordered range of ${entity.humanNames}
+	 * @return the ordered range of ${entity.pluralHumanName}
 	 */
 	@Override
 	public List<${entity.name}> findAll(int start, int end, OrderByComparator<${entity.name}> orderByComparator, boolean useFinderCache) {
@@ -1311,17 +1311,17 @@ public class ${entity.name}PersistenceImpl extends BasePersistenceImpl<${entity.
 		}
 
 		if (list == null) {
-			StringBundler query = null;
+			StringBundler sb = null;
 			String sql = null;
 
 			if (orderByComparator != null) {
-				query = new StringBundler(2 + (orderByComparator.getOrderByFields().length * 2));
+				sb = new StringBundler(2 + (orderByComparator.getOrderByFields().length * 2));
 
-				query.append(_SQL_SELECT_${entity.alias?upper_case});
+				sb.append(_SQL_SELECT_${entity.alias?upper_case});
 
-				appendOrderByComparator(query, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
+				appendOrderByComparator(sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
 
-				sql = query.toString();
+				sql = sb.toString();
 			}
 			else {
 				sql = _SQL_SELECT_${entity.alias?upper_case};
@@ -1334,9 +1334,9 @@ public class ${entity.name}PersistenceImpl extends BasePersistenceImpl<${entity.
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				list = (List<${entity.name}>)QueryUtil.list(q, getDialect(), start, end);
+				list = (List<${entity.name}>)QueryUtil.list(query, getDialect(), start, end);
 
 				cacheResult(list);
 
@@ -1360,7 +1360,7 @@ public class ${entity.name}PersistenceImpl extends BasePersistenceImpl<${entity.
 	}
 
 	/**
-	 * Removes all the ${entity.humanNames} from the database.
+	 * Removes all the ${entity.pluralHumanName} from the database.
 	 *
 	 */
 	@Override
@@ -1371,9 +1371,9 @@ public class ${entity.name}PersistenceImpl extends BasePersistenceImpl<${entity.
 	}
 
 	/**
-	 * Returns the number of ${entity.humanNames}.
+	 * Returns the number of ${entity.pluralHumanName}.
 	 *
-	 * @return the number of ${entity.humanNames}
+	 * @return the number of ${entity.pluralHumanName}
 	 */
 	@Override
 	public int countAll() {
@@ -1395,9 +1395,9 @@ public class ${entity.name}PersistenceImpl extends BasePersistenceImpl<${entity.
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(_SQL_COUNT_${entity.alias?upper_case});
+				Query query = session.createQuery(_SQL_COUNT_${entity.alias?upper_case});
 
-				count = (Long)q.uniqueResult();
+				count = (Long)query.uniqueResult();
 
 				<#if entity.isChangeTrackingEnabled()>
 					if (productionMode) {
@@ -1431,10 +1431,10 @@ public class ${entity.name}PersistenceImpl extends BasePersistenceImpl<${entity.
 			<#assign referenceEntity = serviceBuilder.getEntity(entityColumn.entityName) />
 
 			/**
-			 * Returns the primaryKeys of ${referenceEntity.humanNames} associated with the ${entity.humanName}.
+			 * Returns the primaryKeys of ${referenceEntity.pluralHumanName} associated with the ${entity.humanName}.
 			 *
 			 * @param pk the primary key of the ${entity.humanName}
-			 * @return long[] of the primaryKeys of ${referenceEntity.humanNames} associated with the ${entity.humanName}
+			 * @return long[] of the primaryKeys of ${referenceEntity.pluralHumanName} associated with the ${entity.humanName}
 			 */
 			@Override
 			public long[] get${referenceEntity.name}PrimaryKeys(${entity.PKClassName} pk) {
@@ -1448,11 +1448,11 @@ public class ${entity.name}PersistenceImpl extends BasePersistenceImpl<${entity.
 				 * Returns all the ${entity.humanName} associated with the ${referenceEntity.humanName}.
 				 *
 				 * @param pk the primary key of the ${referenceEntity.humanName}
-				 * @return the ${entity.humanNames} associated with the ${referenceEntity.humanName}
+				 * @return the ${entity.pluralHumanName} associated with the ${referenceEntity.humanName}
 				 */
 				@Override
-				public List<${entity.name}> get${referenceEntity.name}${entity.names}(${referenceEntity.PKClassName} pk) {
-					return get${referenceEntity.name}${entity.names}(pk, QueryUtil.ALL_POS, QueryUtil.ALL_POS);
+				public List<${entity.name}> get${referenceEntity.name}${entity.pluralName}(${referenceEntity.PKClassName} pk) {
+					return get${referenceEntity.name}${entity.pluralName}(pk, QueryUtil.ALL_POS, QueryUtil.ALL_POS);
 				}
 
 				/**
@@ -1463,13 +1463,13 @@ public class ${entity.name}PersistenceImpl extends BasePersistenceImpl<${entity.
 				 * </p>
 				 *
 				 * @param pk the primary key of the ${referenceEntity.humanName}
-				 * @param start the lower bound of the range of ${referenceEntity.humanNames}
-				 * @param end the upper bound of the range of ${referenceEntity.humanNames} (not inclusive)
-				 * @return the range of ${entity.humanNames} associated with the ${referenceEntity.humanName}
+				 * @param start the lower bound of the range of ${referenceEntity.pluralHumanName}
+				 * @param end the upper bound of the range of ${referenceEntity.pluralHumanName} (not inclusive)
+				 * @return the range of ${entity.pluralHumanName} associated with the ${referenceEntity.humanName}
 				 */
 				@Override
-				public List<${entity.name}> get${referenceEntity.name}${entity.names}(${referenceEntity.PKClassName} pk, int start, int end) {
-					return get${referenceEntity.name}${entity.names}(pk, start, end, null);
+				public List<${entity.name}> get${referenceEntity.name}${entity.pluralName}(${referenceEntity.PKClassName} pk, int start, int end) {
+					return get${referenceEntity.name}${entity.pluralName}(pk, start, end, null);
 				}
 
 				/**
@@ -1480,71 +1480,71 @@ public class ${entity.name}PersistenceImpl extends BasePersistenceImpl<${entity.
 				 * </p>
 				 *
 				 * @param pk the primary key of the ${referenceEntity.humanName}
-				 * @param start the lower bound of the range of ${referenceEntity.humanNames}
-				 * @param end the upper bound of the range of ${referenceEntity.humanNames} (not inclusive)
+				 * @param start the lower bound of the range of ${referenceEntity.pluralHumanName}
+				 * @param end the upper bound of the range of ${referenceEntity.pluralHumanName} (not inclusive)
 				 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-				 * @return the ordered range of ${entity.humanNames} associated with the ${referenceEntity.humanName}
+				 * @return the ordered range of ${entity.pluralHumanName} associated with the ${referenceEntity.humanName}
 				 */
 				@Override
-				public List<${entity.name}> get${referenceEntity.name}${entity.names}(${referenceEntity.PKClassName} pk, int start, int end, OrderByComparator<${entity.name}> orderByComparator) {
+				public List<${entity.name}> get${referenceEntity.name}${entity.pluralName}(${referenceEntity.PKClassName} pk, int start, int end, OrderByComparator<${entity.name}> orderByComparator) {
 					return ${entity.varName}To${referenceEntity.name}TableMapper.getLeftBaseModels(pk, start, end, orderByComparator);
 				}
 			<#else>
 				/**
-				 * Returns all the ${referenceEntity.humanNames} associated with the ${entity.humanName}.
+				 * Returns all the ${referenceEntity.pluralHumanName} associated with the ${entity.humanName}.
 				 *
 				 * @param pk the primary key of the ${entity.humanName}
-				 * @return the ${referenceEntity.humanNames} associated with the ${entity.humanName}
+				 * @return the ${referenceEntity.pluralHumanName} associated with the ${entity.humanName}
 				 */
 				@Override
-				public List<${referenceEntity.apiPackagePath}.model.${referenceEntity.name}> get${referenceEntity.names}(${entity.PKClassName} pk) {
-					return get${referenceEntity.names}(pk, QueryUtil.ALL_POS, QueryUtil.ALL_POS);
+				public List<${referenceEntity.apiPackagePath}.model.${referenceEntity.name}> get${referenceEntity.pluralName}(${entity.PKClassName} pk) {
+					return get${referenceEntity.pluralName}(pk, QueryUtil.ALL_POS, QueryUtil.ALL_POS);
 				}
 
 				/**
-				 * Returns a range of all the ${referenceEntity.humanNames} associated with the ${entity.humanName}.
+				 * Returns a range of all the ${referenceEntity.pluralHumanName} associated with the ${entity.humanName}.
 				 *
 				 * <p>
 				 * <#include "range_comment.ftl">
 				 * </p>
 				 *
 				 * @param pk the primary key of the ${entity.humanName}
-				 * @param start the lower bound of the range of ${entity.humanNames}
-				 * @param end the upper bound of the range of ${entity.humanNames} (not inclusive)
-				 * @return the range of ${referenceEntity.humanNames} associated with the ${entity.humanName}
+				 * @param start the lower bound of the range of ${entity.pluralHumanName}
+				 * @param end the upper bound of the range of ${entity.pluralHumanName} (not inclusive)
+				 * @return the range of ${referenceEntity.pluralHumanName} associated with the ${entity.humanName}
 				 */
 				@Override
-				public List<${referenceEntity.apiPackagePath}.model.${referenceEntity.name}> get${referenceEntity.names}(${entity.PKClassName} pk, int start, int end) {
-					return get${referenceEntity.names}(pk, start, end, null);
+				public List<${referenceEntity.apiPackagePath}.model.${referenceEntity.name}> get${referenceEntity.pluralName}(${entity.PKClassName} pk, int start, int end) {
+					return get${referenceEntity.pluralName}(pk, start, end, null);
 				}
 
 				/**
-				 * Returns an ordered range of all the ${referenceEntity.humanNames} associated with the ${entity.humanName}.
+				 * Returns an ordered range of all the ${referenceEntity.pluralHumanName} associated with the ${entity.humanName}.
 				 *
 				 * <p>
 				 * <#include "range_comment.ftl">
 				 * </p>
 				 *
 				 * @param pk the primary key of the ${entity.humanName}
-				 * @param start the lower bound of the range of ${entity.humanNames}
-				 * @param end the upper bound of the range of ${entity.humanNames} (not inclusive)
+				 * @param start the lower bound of the range of ${entity.pluralHumanName}
+				 * @param end the upper bound of the range of ${entity.pluralHumanName} (not inclusive)
 				 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-				 * @return the ordered range of ${referenceEntity.humanNames} associated with the ${entity.humanName}
+				 * @return the ordered range of ${referenceEntity.pluralHumanName} associated with the ${entity.humanName}
 				 */
 				@Override
-				public List<${referenceEntity.apiPackagePath}.model.${referenceEntity.name}> get${referenceEntity.names}(${entity.PKClassName} pk, int start, int end, OrderByComparator<${referenceEntity.apiPackagePath}.model.${referenceEntity.name}> orderByComparator) {
+				public List<${referenceEntity.apiPackagePath}.model.${referenceEntity.name}> get${referenceEntity.pluralName}(${entity.PKClassName} pk, int start, int end, OrderByComparator<${referenceEntity.apiPackagePath}.model.${referenceEntity.name}> orderByComparator) {
 					return ${entity.varName}To${referenceEntity.name}TableMapper.getRightBaseModels(pk, start, end, orderByComparator);
 				}
 			</#if>
 
 			/**
-			 * Returns the number of ${referenceEntity.humanNames} associated with the ${entity.humanName}.
+			 * Returns the number of ${referenceEntity.pluralHumanName} associated with the ${entity.humanName}.
 			 *
 			 * @param pk the primary key of the ${entity.humanName}
-			 * @return the number of ${referenceEntity.humanNames} associated with the ${entity.humanName}
+			 * @return the number of ${referenceEntity.pluralHumanName} associated with the ${entity.humanName}
 			 */
 			@Override
-			public int get${referenceEntity.names}Size(${entity.PKClassName} pk) {
+			public int get${referenceEntity.pluralName}Size(${entity.PKClassName} pk) {
 				long[] pks = ${entity.varName}To${referenceEntity.name}TableMapper.getRightPrimaryKeys(pk);
 
 				return pks.length;
@@ -1563,14 +1563,14 @@ public class ${entity.name}PersistenceImpl extends BasePersistenceImpl<${entity.
 			}
 
 			/**
-			 * Returns <code>true</code> if the ${entity.humanName} has any ${referenceEntity.humanNames} associated with it.
+			 * Returns <code>true</code> if the ${entity.humanName} has any ${referenceEntity.pluralHumanName} associated with it.
 			 *
-			 * @param pk the primary key of the ${entity.humanName} to check for associations with ${referenceEntity.humanNames}
-			 * @return <code>true</code> if the ${entity.humanName} has any ${referenceEntity.humanNames} associated with it; <code>false</code> otherwise
+			 * @param pk the primary key of the ${entity.humanName} to check for associations with ${referenceEntity.pluralHumanName}
+			 * @return <code>true</code> if the ${entity.humanName} has any ${referenceEntity.pluralHumanName} associated with it; <code>false</code> otherwise
 			 */
 			@Override
-			public boolean contains${referenceEntity.names}(${entity.PKClassName} pk) {
-				if (get${referenceEntity.names}Size(pk)> 0) {
+			public boolean contains${referenceEntity.pluralName}(${entity.PKClassName} pk) {
+				if (get${referenceEntity.pluralName}Size(pk)> 0) {
 					return true;
 				}
 				else {
@@ -1618,13 +1618,13 @@ public class ${entity.name}PersistenceImpl extends BasePersistenceImpl<${entity.
 				}
 
 				/**
-				 * Adds an association between the ${entity.humanName} and the ${referenceEntity.humanNames}. Also notifies the appropriate model listeners and clears the mapping table finder cache.
+				 * Adds an association between the ${entity.humanName} and the ${referenceEntity.pluralHumanName}. Also notifies the appropriate model listeners and clears the mapping table finder cache.
 				 *
 				 * @param pk the primary key of the ${entity.humanName}
-				 * @param ${referenceEntity.varName}PKs the primary keys of the ${referenceEntity.humanNames}
+				 * @param ${referenceEntity.varName}PKs the primary keys of the ${referenceEntity.pluralHumanName}
 				 */
 				@Override
-				public void add${referenceEntity.names}(${entity.PKClassName} pk, ${referenceEntity.PKClassName}[] ${referenceEntity.varName}PKs) {
+				public void add${referenceEntity.pluralName}(${entity.PKClassName} pk, ${referenceEntity.PKClassName}[] ${referenceEntity.varName}PKs) {
 					long companyId = 0;
 
 					${entity.name} ${entity.varName} = fetchByPrimaryKey(pk);
@@ -1640,23 +1640,23 @@ public class ${entity.name}PersistenceImpl extends BasePersistenceImpl<${entity.
 				}
 
 				/**
-				 * Adds an association between the ${entity.humanName} and the ${referenceEntity.humanNames}. Also notifies the appropriate model listeners and clears the mapping table finder cache.
+				 * Adds an association between the ${entity.humanName} and the ${referenceEntity.pluralHumanName}. Also notifies the appropriate model listeners and clears the mapping table finder cache.
 				 *
 				 * @param pk the primary key of the ${entity.humanName}
-				 * @param ${referenceEntity.varNames} the ${referenceEntity.humanNames}
+				 * @param ${referenceEntity.pluralVarName} the ${referenceEntity.pluralHumanName}
 				 */
 				@Override
-				public void add${referenceEntity.names}(${entity.PKClassName} pk, List<${referenceEntity.apiPackagePath}.model.${referenceEntity.name}> ${referenceEntity.varNames}) {
-					add${referenceEntity.names}(pk, ListUtil.toLongArray(${referenceEntity.varNames}, ${referenceEntity.apiPackagePath}.model.${referenceEntity.name}.${textFormatter.format(textFormatter.format(referenceEntity.getPKVarName(), 7), 0)}_ACCESSOR));
+				public void add${referenceEntity.pluralName}(${entity.PKClassName} pk, List<${referenceEntity.apiPackagePath}.model.${referenceEntity.name}> ${referenceEntity.pluralVarName}) {
+					add${referenceEntity.pluralName}(pk, ListUtil.toLongArray(${referenceEntity.pluralVarName}, ${referenceEntity.apiPackagePath}.model.${referenceEntity.name}.${textFormatter.format(textFormatter.format(referenceEntity.getPKVarName(), 7), 0)}_ACCESSOR));
 				}
 
 				/**
-				 * Clears all associations between the ${entity.humanName} and its ${referenceEntity.humanNames}. Also notifies the appropriate model listeners and clears the mapping table finder cache.
+				 * Clears all associations between the ${entity.humanName} and its ${referenceEntity.pluralHumanName}. Also notifies the appropriate model listeners and clears the mapping table finder cache.
 				 *
-				 * @param pk the primary key of the ${entity.humanName} to clear the associated ${referenceEntity.humanNames} from
+				 * @param pk the primary key of the ${entity.humanName} to clear the associated ${referenceEntity.pluralHumanName} from
 				 */
 				@Override
-				public void clear${referenceEntity.names}(${entity.PKClassName} pk) {
+				public void clear${referenceEntity.pluralName}(${entity.PKClassName} pk) {
 					${entity.varName}To${referenceEntity.name}TableMapper.deleteLeftPrimaryKeyTableMappings(pk);
 				}
 
@@ -1683,35 +1683,35 @@ public class ${entity.name}PersistenceImpl extends BasePersistenceImpl<${entity.
 				}
 
 				/**
-				 * Removes the association between the ${entity.humanName} and the ${referenceEntity.humanNames}. Also notifies the appropriate model listeners and clears the mapping table finder cache.
+				 * Removes the association between the ${entity.humanName} and the ${referenceEntity.pluralHumanName}. Also notifies the appropriate model listeners and clears the mapping table finder cache.
 				 *
 				 * @param pk the primary key of the ${entity.humanName}
-				 * @param ${referenceEntity.varName}PKs the primary keys of the ${referenceEntity.humanNames}
+				 * @param ${referenceEntity.varName}PKs the primary keys of the ${referenceEntity.pluralHumanName}
 				 */
 				@Override
-				public void remove${referenceEntity.names}(${entity.PKClassName} pk, ${referenceEntity.PKClassName}[] ${referenceEntity.varName}PKs) {
+				public void remove${referenceEntity.pluralName}(${entity.PKClassName} pk, ${referenceEntity.PKClassName}[] ${referenceEntity.varName}PKs) {
 					${entity.varName}To${referenceEntity.name}TableMapper.deleteTableMappings(pk, ${referenceEntity.varName}PKs);
 				}
 
 				/**
-				 * Removes the association between the ${entity.humanName} and the ${referenceEntity.humanNames}. Also notifies the appropriate model listeners and clears the mapping table finder cache.
+				 * Removes the association between the ${entity.humanName} and the ${referenceEntity.pluralHumanName}. Also notifies the appropriate model listeners and clears the mapping table finder cache.
 				 *
 				 * @param pk the primary key of the ${entity.humanName}
-				 * @param ${referenceEntity.varNames} the ${referenceEntity.humanNames}
+				 * @param ${referenceEntity.pluralVarName} the ${referenceEntity.pluralHumanName}
 				 */
 				@Override
-				public void remove${referenceEntity.names}(${entity.PKClassName} pk, List<${referenceEntity.apiPackagePath}.model.${referenceEntity.name}> ${referenceEntity.varNames}) {
-					remove${referenceEntity.names}(pk, ListUtil.toLongArray(${referenceEntity.varNames}, ${referenceEntity.apiPackagePath}.model.${referenceEntity.name}.${textFormatter.format(textFormatter.format(referenceEntity.getPKVarName(), 7), 0)}_ACCESSOR));
+				public void remove${referenceEntity.pluralName}(${entity.PKClassName} pk, List<${referenceEntity.apiPackagePath}.model.${referenceEntity.name}> ${referenceEntity.pluralVarName}) {
+					remove${referenceEntity.pluralName}(pk, ListUtil.toLongArray(${referenceEntity.pluralVarName}, ${referenceEntity.apiPackagePath}.model.${referenceEntity.name}.${textFormatter.format(textFormatter.format(referenceEntity.getPKVarName(), 7), 0)}_ACCESSOR));
 				}
 
 				/**
-				 * Sets the ${referenceEntity.humanNames} associated with the ${entity.humanName}, removing and adding associations as necessary. Also notifies the appropriate model listeners and clears the mapping table finder cache.
+				 * Sets the ${referenceEntity.pluralHumanName} associated with the ${entity.humanName}, removing and adding associations as necessary. Also notifies the appropriate model listeners and clears the mapping table finder cache.
 				 *
 				 * @param pk the primary key of the ${entity.humanName}
-				 * @param ${referenceEntity.varName}PKs the primary keys of the ${referenceEntity.humanNames} to be associated with the ${entity.humanName}
+				 * @param ${referenceEntity.varName}PKs the primary keys of the ${referenceEntity.pluralHumanName} to be associated with the ${entity.humanName}
 				 */
 				@Override
-				public void set${referenceEntity.names}(${entity.PKClassName} pk, ${referenceEntity.PKClassName}[] ${referenceEntity.varName}PKs) {
+				public void set${referenceEntity.pluralName}(${entity.PKClassName} pk, ${referenceEntity.PKClassName}[] ${referenceEntity.varName}PKs) {
 					Set<Long> new${referenceEntity.name}PKsSet = SetUtil.fromArray(${referenceEntity.varName}PKs);
 					Set<Long> old${referenceEntity.name}PKsSet = SetUtil.fromArray(${entity.varName}To${referenceEntity.name}TableMapper.getRightPrimaryKeys(pk));
 
@@ -1738,23 +1738,23 @@ public class ${entity.name}PersistenceImpl extends BasePersistenceImpl<${entity.
 				}
 
 				/**
-				 * Sets the ${referenceEntity.humanNames} associated with the ${entity.humanName}, removing and adding associations as necessary. Also notifies the appropriate model listeners and clears the mapping table finder cache.
+				 * Sets the ${referenceEntity.pluralHumanName} associated with the ${entity.humanName}, removing and adding associations as necessary. Also notifies the appropriate model listeners and clears the mapping table finder cache.
 				 *
 				 * @param pk the primary key of the ${entity.humanName}
-				 * @param ${referenceEntity.varNames} the ${referenceEntity.humanNames} to be associated with the ${entity.humanName}
+				 * @param ${referenceEntity.pluralVarName} the ${referenceEntity.pluralHumanName} to be associated with the ${entity.humanName}
 				 */
 				@Override
-				public void set${referenceEntity.names}(${entity.PKClassName} pk, List<${referenceEntity.apiPackagePath}.model.${referenceEntity.name}> ${referenceEntity.varNames}) {
+				public void set${referenceEntity.pluralName}(${entity.PKClassName} pk, List<${referenceEntity.apiPackagePath}.model.${referenceEntity.name}> ${referenceEntity.pluralVarName}) {
 					try {
-						${referenceEntity.PKClassName}[] ${referenceEntity.varName}PKs = new ${referenceEntity.PKClassName}[${referenceEntity.varNames}.size()];
+						${referenceEntity.PKClassName}[] ${referenceEntity.varName}PKs = new ${referenceEntity.PKClassName}[${referenceEntity.pluralVarName}.size()];
 
-						for (int i = 0; i < ${referenceEntity.varNames}.size(); i++) {
-							${referenceEntity.apiPackagePath}.model.${referenceEntity.name} ${referenceEntity.varName} = ${referenceEntity.varNames}.get(i);
+						for (int i = 0; i < ${referenceEntity.pluralVarName}.size(); i++) {
+							${referenceEntity.apiPackagePath}.model.${referenceEntity.name} ${referenceEntity.varName} = ${referenceEntity.pluralVarName}.get(i);
 
 							${referenceEntity.varName}PKs[i] = ${referenceEntity.varName}.getPrimaryKey();
 						}
 
-						set${referenceEntity.names}(pk, ${referenceEntity.varName}PKs);
+						set${referenceEntity.pluralName}(pk, ${referenceEntity.varName}PKs);
 					}
 					catch (Exception exception) {
 						throw processException(exception);
@@ -1997,7 +1997,7 @@ public class ${entity.name}PersistenceImpl extends BasePersistenceImpl<${entity.
 		}
 
 		/**
-		 * Rebuilds the ${entity.humanNames} tree for the scope using the modified pre-order tree traversal algorithm.
+		 * Rebuilds the ${entity.pluralHumanName} tree for the scope using the modified pre-order tree traversal algorithm.
 		 *
 		 * <p>
 		 * Only call this method if the tree has become stale through operations other than normal CRUD. Under normal circumstances the tree is automatically rebuilt whenver necessary.
@@ -2022,13 +2022,13 @@ public class ${entity.name}PersistenceImpl extends BasePersistenceImpl<${entity.
 						session.flush();
 					}
 
-					SQLQuery selectQuery = session.createSQLQuery("SELECT ${pkEntityColumn.DBName} FROM ${entity.table} WHERE ${scopeEntityColumn.DBName} = ? AND parent${pkEntityColumn.methodName} = ? ORDER BY ${pkEntityColumn.DBName} ASC");
+					SQLQuery selectSQLQuery = session.createSQLQuery("SELECT ${pkEntityColumn.DBName} FROM ${entity.table} WHERE ${scopeEntityColumn.DBName} = ? AND parent${pkEntityColumn.methodName} = ? ORDER BY ${pkEntityColumn.DBName} ASC");
 
-					selectQuery.addScalar("${pkEntityColumn.name}", com.liferay.portal.kernel.dao.orm.Type.LONG);
+					selectSQLQuery.addScalar("${pkEntityColumn.name}", com.liferay.portal.kernel.dao.orm.Type.LONG);
 
-					SQLQuery updateQuery = session.createSQLQuery("UPDATE ${entity.table} SET left${pkEntityColumn.methodName} = ?, right${pkEntityColumn.methodName} = ? WHERE ${pkEntityColumn.DBName} = ?");
+					SQLQuery updateSQLQuery = session.createSQLQuery("UPDATE ${entity.table} SET left${pkEntityColumn.methodName} = ?, right${pkEntityColumn.methodName} = ? WHERE ${pkEntityColumn.DBName} = ?");
 
-					rebuildTree(session, selectQuery, updateQuery, ${scopeEntityColumn.name}, 0, 0);
+					rebuildTree(session, selectSQLQuery, updateSQLQuery, ${scopeEntityColumn.name}, 0, 0);
 				}
 				catch (Exception exception) {
 					throw processException(exception);
@@ -2052,15 +2052,15 @@ public class ${entity.name}PersistenceImpl extends BasePersistenceImpl<${entity.
 			try {
 				session = openSession();
 
-				SQLQuery q = session.createSynchronizedSQLQuery("SELECT COUNT(*) AS COUNT_VALUE FROM ${entity.table} WHERE ${scopeEntityColumn.DBName} = ? AND (left${pkEntityColumn.methodName} = 0 OR left${pkEntityColumn.methodName} IS NULL OR right${pkEntityColumn.methodName} = 0 OR right${pkEntityColumn.methodName} IS NULL)");
+				SQLQuery sqlQuery = session.createSynchronizedSQLQuery("SELECT COUNT(*) AS COUNT_VALUE FROM ${entity.table} WHERE ${scopeEntityColumn.DBName} = ? AND (left${pkEntityColumn.methodName} = 0 OR left${pkEntityColumn.methodName} IS NULL OR right${pkEntityColumn.methodName} = 0 OR right${pkEntityColumn.methodName} IS NULL)");
 
-				q.addScalar(COUNT_COLUMN_NAME, com.liferay.portal.kernel.dao.orm.Type.LONG);
+				sqlQuery.addScalar(COUNT_COLUMN_NAME, com.liferay.portal.kernel.dao.orm.Type.LONG);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(sqlQuery);
 
-				qPos.add(${scopeEntityColumn.name});
+				queryPos.add(${scopeEntityColumn.name});
 
-				return (Long)q.uniqueResult();
+				return (Long)sqlQuery.uniqueResult();
 			}
 			catch (Exception exception) {
 				throw processException(exception);
@@ -2070,28 +2070,28 @@ public class ${entity.name}PersistenceImpl extends BasePersistenceImpl<${entity.
 			}
 		}
 
-		protected long rebuildTree(Session session, SQLQuery selectQuery, SQLQuery updateQuery, long ${scopeEntityColumn.name}, long parent${pkEntityColumn.methodName}, long left${pkEntityColumn.methodName}) {
+		protected long rebuildTree(Session session, SQLQuery selectSQLQuery, SQLQuery updateSQLQuery, long ${scopeEntityColumn.name}, long parent${pkEntityColumn.methodName}, long left${pkEntityColumn.methodName}) {
 			long right${pkEntityColumn.methodName} = left${pkEntityColumn.methodName} + 1;
 
-			QueryPos qPos = QueryPos.getInstance(selectQuery);
+			QueryPos queryPos = QueryPos.getInstance(selectSQLQuery);
 
-			qPos.add(${scopeEntityColumn.name});
-			qPos.add(parent${pkEntityColumn.methodName});
+			queryPos.add(${scopeEntityColumn.name});
+			queryPos.add(parent${pkEntityColumn.methodName});
 
-			List<Long> ${pkEntityColumn.names} = selectQuery.list();
+			List<Long> ${pkEntityColumn.pluralName} = selectSQLQuery.list();
 
-			for (long ${pkEntityColumn.name} : ${pkEntityColumn.names}) {
-				right${pkEntityColumn.methodName} = rebuildTree(session, selectQuery, updateQuery, ${scopeEntityColumn.name}, ${pkEntityColumn.name}, right${pkEntityColumn.methodName});
+			for (long ${pkEntityColumn.name} : ${pkEntityColumn.pluralName}) {
+				right${pkEntityColumn.methodName} = rebuildTree(session, selectSQLQuery, updateSQLQuery, ${scopeEntityColumn.name}, ${pkEntityColumn.name}, right${pkEntityColumn.methodName});
 			}
 
 			if (parent${pkEntityColumn.methodName} > 0) {
-				qPos = QueryPos.getInstance(updateQuery);
+				queryPos = QueryPos.getInstance(updateSQLQuery);
 
-				qPos.add(left${pkEntityColumn.methodName});
-				qPos.add(right${pkEntityColumn.methodName});
-				qPos.add(parent${pkEntityColumn.methodName});
+				queryPos.add(left${pkEntityColumn.methodName});
+				queryPos.add(right${pkEntityColumn.methodName});
+				queryPos.add(parent${pkEntityColumn.methodName});
 
-				updateQuery.executeUpdate();
+				updateSQLQuery.executeUpdate();
 			}
 
 			return right${pkEntityColumn.methodName} + 1;
@@ -2519,18 +2519,18 @@ public class ${entity.name}PersistenceImpl extends BasePersistenceImpl<${entity.
 	<#list entityColumns as entityColumn>
 		<#if _arrayable && entityColumn.hasArrayableOperator()>
 			<#if stringUtil.equals(entityColumn.type, "String")>
-				for (String ${entityColumn.name} : ${entityColumn.names}) {
+				for (String ${entityColumn.name} : ${entityColumn.pluralName}) {
 					if (${entityColumn.name} != null && !${entityColumn.name}.isEmpty()) {
-						qPos.add(${entityColumn.name});
+						queryPos.add(${entityColumn.name});
 					}
 				}
 			</#if>
 		<#elseif entityColumn.isPrimitiveType()>
-			qPos.add(${entityColumn.name}${serviceBuilder.getPrimitiveObjValue("${entityColumn.type}")});
+			queryPos.add(${entityColumn.name}${serviceBuilder.getPrimitiveObjValue("${entityColumn.type}")});
 
 		<#else>
 			if (bind${entityColumn.methodName}) {
-				qPos.add(
+				queryPos.add(
 					<#if stringUtil.equals(entityColumn.type, "Date")>
 						new Timestamp(${entityColumn.name}.getTime())
 					<#elseif stringUtil.equals(entityColumn.type, "String") && !entityColumn.isCaseSensitive()>

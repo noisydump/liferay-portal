@@ -29,7 +29,7 @@ AUI.add(
 		var TRIGGER_CONFIG_DEFAULTS = {
 			activateFirstItem: true,
 			resultFilters: STR_PHRASE_MATCH,
-			resultHighlighter: STR_PHRASE_MATCH
+			resultHighlighter: STR_PHRASE_MATCH,
 		};
 
 		var AutoCompleteInputBase = function() {};
@@ -37,40 +37,40 @@ AUI.add(
 		AutoCompleteInputBase.ATTRS = {
 			caretAtTerm: {
 				validator: Lang.isBoolean,
-				value: true
+				value: true,
 			},
 
 			inputNode: {
 				setter: A.one,
-				writeOnce: true
+				writeOnce: true,
 			},
 
 			offset: {
 				validator: '_validateOffset',
-				value: 10
+				value: 10,
 			},
 
 			regExp: {
 				validator(newVal) {
 					return Lang.isRegExp(newVal) || Lang.isString(newVal);
 				},
-				value: '(?:\\strigger|^trigger)(\\w[\\s\\w]*)'
+				value: '(?:\\strigger|^trigger)(\\w[\\s\\w]*)',
 			},
 
 			source: {},
 
 			tplReplace: {
-				validator: Lang.isString
+				validator: Lang.isString,
 			},
 
 			tplResults: {
-				validator: Lang.isString
+				validator: Lang.isString,
 			},
 
 			trigger: {
 				setter: AArray,
-				value: '@'
-			}
+				value: '@',
+			},
 		};
 
 		AutoCompleteInputBase.prototype = {
@@ -99,7 +99,8 @@ AUI.add(
 				if (Array.isArray(offset)) {
 					offsetX = offset[0];
 					offsetY = offset[1];
-				} else if (Lang.isNumber(offset)) {
+				}
+				else if (Lang.isNumber(offset)) {
 					offsetY = offset;
 				}
 
@@ -149,7 +150,7 @@ AUI.add(
 				instance._updateValue(text);
 
 				instance._ariaSay('item_selected', {
-					item: event.result.text
+					item: event.result.text,
 				});
 
 				instance.hide();
@@ -205,7 +206,8 @@ AUI.add(
 					instance._setTriggerConfig(input[0]);
 
 					event.query = input.substring(1);
-				} else {
+				}
+				else {
 					event.preventDefault();
 
 					if (instance.get(STR_VISIBLE)) {
@@ -223,7 +225,8 @@ AUI.add(
 					query = query.substring(1);
 
 					instance.sendRequest(query);
-				} else if (instance.get(STR_VISIBLE)) {
+				}
+				else if (instance.get(STR_VISIBLE)) {
 					instance.hide();
 				}
 			},
@@ -288,7 +291,7 @@ AUI.add(
 					false,
 					autocompleteAttrs
 				);
-			}
+			},
 		};
 
 		Liferay.AutoCompleteInputBase = AutoCompleteInputBase;
@@ -299,7 +302,7 @@ AUI.add(
 			'aui-base',
 			'autocomplete',
 			'autocomplete-filters',
-			'autocomplete-highlighters'
-		]
+			'autocomplete-highlighters',
+		],
 	}
 );

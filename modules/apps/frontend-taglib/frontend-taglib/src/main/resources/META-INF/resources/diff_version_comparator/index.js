@@ -36,7 +36,7 @@ function Comparator({
 	previousVersion,
 	resourceURL,
 	sourceVersion,
-	targetVersion
+	targetVersion,
 }) {
 	const isMounted = useIsMounted();
 
@@ -126,7 +126,8 @@ function Comparator({
 
 		if (cached) {
 			setDiff(cached);
-		} else {
+		}
+		else {
 			fetch(diffURL)
 				.then(res => res.text())
 				.then(text => {
@@ -194,7 +195,7 @@ function Comparator({
 						<div className="col-md-8 diff-target-selector">
 							<Selector
 								label={sub(Liferay.Language.get('version-x'), [
-									targetVersion
+									targetVersion,
 								])}
 								selectedVersion={nextVersion}
 								uniqueVersionLabel={Liferay.Language.get(
@@ -253,6 +254,4 @@ function Comparator({
 	);
 }
 
-export default function(props) {
-	return <Comparator {...props} />;
-}
+export default Comparator;

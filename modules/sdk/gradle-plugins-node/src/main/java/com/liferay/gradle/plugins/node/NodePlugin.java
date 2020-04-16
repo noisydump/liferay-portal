@@ -14,7 +14,6 @@
 
 package com.liferay.gradle.plugins.node;
 
-import com.liferay.gradle.plugins.node.internal.util.FileUtil;
 import com.liferay.gradle.plugins.node.internal.util.GradleUtil;
 import com.liferay.gradle.plugins.node.internal.util.StringUtil;
 import com.liferay.gradle.plugins.node.tasks.DownloadNodeModuleTask;
@@ -34,8 +33,10 @@ import groovy.json.JsonSlurper;
 import groovy.lang.Closure;
 
 import java.io.File;
+import java.io.IOException;
 
 import java.nio.file.FileSystem;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.PathMatcher;
 
@@ -51,6 +52,7 @@ import org.gradle.api.GradleException;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
+import org.gradle.api.UncheckedIOException;
 import org.gradle.api.file.CopySpec;
 import org.gradle.api.internal.plugins.osgi.OsgiHelper;
 import org.gradle.api.plugins.BasePlugin;
@@ -59,7 +61,6 @@ import org.gradle.api.plugins.PluginContainer;
 import org.gradle.api.specs.Spec;
 import org.gradle.api.tasks.Copy;
 import org.gradle.api.tasks.Delete;
-import org.gradle.api.tasks.SourceSet;
 import org.gradle.api.tasks.TaskContainer;
 import org.gradle.api.tasks.TaskOutputs;
 import org.gradle.jvm.tasks.Jar;
@@ -93,10 +94,10 @@ public class NodePlugin implements Plugin<Project> {
 		final NodeExtension nodeExtension = GradleUtil.addExtension(
 			project, EXTENSION_NAME, NodeExtension.class);
 
+		Delete cleanNpmTask = _addTaskCleanNpm(project, nodeExtension);
+
 		final DownloadNodeTask downloadNodeTask = _addTaskDownloadNode(
 			project, nodeExtension);
-
-		Delete cleanNpmTask = _addTaskCleanNpm(project);
 
 		NpmInstallTask npmInstallTask = _addTaskNpmInstall(
 			project, cleanNpmTask);
@@ -135,19 +136,44 @@ public class NodePlugin implements Plugin<Project> {
 					_configureTasksExecutePackageManagerArgs(
 						project, nodeExtension);
 					_configureTasksNpmInstall(project, nodeExtension);
-					_configureTasksPackageRun(project);
 				}
 
 			});
 	}
 
-	private Delete _addTaskCleanNpm(Project project) {
+	private Delete _addTaskCleanNpm(
+		final Project project, final NodeExtension nodeExtension) {
+
 		Delete delete = GradleUtil.addTask(
 			project, CLEAN_NPM_TASK_NAME, Delete.class);
 
-		delete.delete(
-			"node_modules", "npm-shrinkwrap.json", "package-lock.json");
+		delete.delete("node_modules", "npm-shrinkwrap.json");
 		delete.setDescription("Deletes NPM files from this project.");
+
+		delete.doLast(
+			new Action<Task>() {
+
+				@Override
+				public void execute(Task task) {
+					File file = project.file("package-lock.json");
+
+					if (!file.exists()) {
+						return;
+					}
+
+					try {
+						Files.delete(file.toPath());
+					}
+					catch (IOException ioException) {
+						throw new UncheckedIOException(ioException);
+					}
+
+					// LPS-110486
+
+					nodeExtension.setUseNpm(true);
+				}
+
+			});
 
 		return delete;
 	}
@@ -606,33 +632,6 @@ public class NodePlugin implements Plugin<Project> {
 		npmInstallTask.setNpmVersion(nodeExtension.getNpmVersion());
 	}
 
-	private void _configureTaskPackageRun(PackageRunTask packageRunTask) {
-		Project project = packageRunTask.getProject();
-
-		PluginContainer pluginContainer = project.getPlugins();
-
-		if (pluginContainer.hasPlugin(JavaPlugin.class)) {
-			SourceSet sourceSet = GradleUtil.getSourceSet(
-				packageRunTask.getProject(), SourceSet.MAIN_SOURCE_SET_NAME);
-
-			File javaClassesDir = FileUtil.getJavaClassesDir(sourceSet);
-
-			if (!javaClassesDir.exists()) {
-				TaskOutputs taskOutputs = packageRunTask.getOutputs();
-
-				taskOutputs.upToDateWhen(
-					new Spec<Task>() {
-
-						@Override
-						public boolean isSatisfiedBy(Task task) {
-							return false;
-						}
-
-					});
-			}
-		}
-	}
-
 	@SuppressWarnings("serial")
 	private void _configureTaskPackageRunBuildForJavaPlugin(
 		final PackageRunBuildTask packageRunBuildTask) {
@@ -900,21 +899,6 @@ public class NodePlugin implements Plugin<Project> {
 				@Override
 				public void execute(NpmInstallTask npmInstallTask) {
 					_configureTaskNpmInstall(npmInstallTask, nodeExtension);
-				}
-
-			});
-	}
-
-	private void _configureTasksPackageRun(Project project) {
-		TaskContainer taskContainer = project.getTasks();
-
-		taskContainer.withType(
-			PackageRunTask.class,
-			new Action<PackageRunTask>() {
-
-				@Override
-				public void execute(PackageRunTask packageRunTask) {
-					_configureTaskPackageRun(packageRunTask);
 				}
 
 			});

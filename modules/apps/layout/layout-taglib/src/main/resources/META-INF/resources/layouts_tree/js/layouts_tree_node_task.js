@@ -56,11 +56,12 @@ AUI.add(
 
 					if (checked) {
 						instance.uncheck();
-					} else {
+					}
+					else {
 						instance.check();
 					}
-				}
-			}
+				},
+			},
 		});
 
 		A.LayoutsTreeNodeTask = LayoutsTreeNodeTask;
@@ -69,6 +70,6 @@ AUI.add(
 	},
 	'',
 	{
-		requires: ['aui-tree-node']
+		requires: ['aui-tree-node'],
 	}
 );

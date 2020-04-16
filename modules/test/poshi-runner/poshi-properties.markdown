@@ -184,16 +184,6 @@ Sets the maximum number of tests running in a batch.
 
 Sets the maximum number of tests running in an axis.
 
-### test.batch.property.names
-
-Sets the names of properties used to filter out tests in PQL. This must be
-paired with [`test.batch.property.values`](#testbatchpropertyvalues).
-
-### test.batch.property.values
-
-Sets the values of properties used to filter out tests in PQL. This must be
-paired with [`test.batch.property.names`](#testbatchpropertynames).
-
 ### test.batch.run.type
 
 Sets how groups of tests are organized; valid values are `sequential` or
@@ -237,6 +227,11 @@ tests.
 Sets a comma-delimited list of directory paths to include in the Poshi project
 files. This does not include `*.testcase` files.
 
+### test.jvm.max.retries
+
+Sets the maximum cumulative amount of attempts that failing tests in the test
+group may be reexecuted.
+
 ### test.name
 
 Sets the test case(s) to run. The tests can be specified by the test case
@@ -276,6 +271,11 @@ Sets a boolean for whether the tear down is skipped.
 
 Sets a comma-delimited list of subrepository directory paths to include in the
 Poshi project files. This includes all Poshi file types.
+
+### test.testcase.max.retries
+
+Sets the maximum amount of attempts that an individual failing testcase may be
+reexecuted.
 
 ### timeout.explicit.wait
 

@@ -17,10 +17,12 @@ const createItems = size => {
 
 	for (let i = 0; i < size; i++) {
 		items.push({
-			dateCreated: '01/01/2019',
-			dateModified: '01/02/2019',
+			dateCreated: '2020-03-26T11:26:54.262Z',
+			dateModified: '2020-03-26T11:26:54.262Z',
 			id: i + 1,
-			name: `Name ${i + 1}`
+			name: {
+				en_US: `Item ${i + 1}`,
+			},
 		});
 	}
 
@@ -29,57 +31,57 @@ const createItems = size => {
 
 export const ACTIONS = [
 	{
-		callback: () => {},
-		name: 'Delete'
-	}
+		action: () => {},
+		name: 'Delete',
+	},
 ];
-
-export const BODY = item => item;
 
 export const COLUMNS = [
 	{
-		name: 'Name'
+		key: 'name',
+		value: 'Name',
 	},
 	{
-		dateCreated: 'Created Date'
+		key: 'dateCreated',
+		value: 'Created Date',
 	},
 	{
-		dateModified: 'Modified Date'
-	}
+		key: 'dateModified',
+		value: 'Modified Date',
+	},
 ];
 
 export const EMPTY_STATE = {
 	description: 'description',
-	title: 'title'
+	title: 'title',
 };
 
 export const ENDPOINT = '/endpoint';
 
 export const ITEMS = {
 	ONE: createItems(1),
-	TWENTY: createItems(20)
+	TWENTY: createItems(20),
 };
 
 export const RESPONSES = {
 	NO_ITEMS: {
-		items: [],
 		lastPage: 1,
 		page: 1,
 		pageSize: 20,
-		totalCount: 0
+		totalCount: 0,
 	},
 	ONE_ITEM: {
 		items: ITEMS.ONE,
 		lastPage: 1,
 		page: 1,
 		pageSize: 20,
-		totalCount: ITEMS.ONE.length
+		totalCount: ITEMS.ONE.length,
 	},
 	TWENTY_ONE_ITEMS: {
 		items: ITEMS.TWENTY,
 		lastPage: 2,
 		page: 1,
 		pageSize: 20,
-		totalCount: ITEMS.TWENTY.length + 1
-	}
+		totalCount: ITEMS.TWENTY.length + 1,
+	},
 };

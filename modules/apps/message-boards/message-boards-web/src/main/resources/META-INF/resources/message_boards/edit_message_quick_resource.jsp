@@ -102,9 +102,7 @@ boolean showPermanentLink = GetterUtil.getBoolean(request.getAttribute("edit-mes
 			</h4>
 
 			<%
-			MBStatsUser statsUser = MBStatsUserLocalServiceUtil.getStatsUser(scopeGroupId, themeDisplay.getUserId());
-
-			String[] ranks = MBUserRankUtil.getUserRank(mbGroupServiceSettings, themeDisplay.getLanguageId(), statsUser);
+			String[] ranks = MBStatsUserLocalServiceUtil.getUserRank(themeDisplay.getSiteGroupId(), themeDisplay.getLanguageId(), message.getUserId());
 			%>
 
 			<c:if test="<%= Validator.isNotNull(ranks[1]) %>">
@@ -142,7 +140,7 @@ boolean showPermanentLink = GetterUtil.getBoolean(request.getAttribute("edit-mes
 
 			<aui:model-context bean="<%= message %>" model="<%= MBMessage.class %>" />
 
-			<liferay-ui:input-editor
+			<liferay-editor:editor
 				allowBrowseDocuments="<%= false %>"
 				autoCreate="<%= true %>"
 				configKey="replyMBEditor"
@@ -222,12 +220,12 @@ boolean showPermanentLink = GetterUtil.getBoolean(request.getAttribute("edit-mes
 	new MBPortlet.default({
 		constants: {
 			ACTION_PUBLISH: '<%= WorkflowConstants.ACTION_PUBLISH %>',
-			CMD: '<%= Constants.CMD %>'
+			CMD: '<%= Constants.CMD %>',
 		},
 		currentAction: '<%= Constants.ADD %>',
 		namespace: '<portlet:namespace />',
 		replyToMessageId: '<%= parentMessageId %>',
-		rootNode: '#<portlet:namespace />addQuickReply<%= parentMessageId %>'
+		rootNode: '#<portlet:namespace />addQuickReply<%= parentMessageId %>',
 	});
 </aui:script>
 

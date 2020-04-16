@@ -12,7 +12,14 @@
 @include file-icon(4, #ffb46e);
 @include file-icon(6, #4b9bff);
 
-@import 'radio-secondary-text';
+@import 'radio_secondary_text';
+
+$toolbarDesktopHeight: 64px;
+$toolbarHeight: 110px;
+$toolbarZIndex: 971;
+
+$productMenuTransitionDuration: 0.5s;
+$productMenuWidth: 320px;
 
 .portlet-document-library,
 .portlet-document-library-display {
@@ -45,6 +52,102 @@
 				.loading-animation {
 					float: left;
 					margin: 6px 8px;
+				}
+			}
+		}
+	}
+
+	.edit-metadata-type-form {
+		.component-tbar.tbar-metadata-type {
+			height: auto;
+			left: 0;
+			min-height: 3.5rem;
+			position: fixed;
+			transition: left ease $productMenuTransitionDuration,
+				width ease $productMenuTransitionDuration;
+			width: 100%;
+			z-index: $toolbarZIndex;
+
+			body.open & {
+				left: $productMenuWidth;
+				width: calc(100% - #{$productMenuWidth});
+
+				@media (max-width: 768px) {
+					left: 0;
+					width: 100%;
+				}
+			}
+
+			> .container-fluid {
+				padding: 0;
+
+				> .tbar-nav {
+					flex-wrap: wrap;
+
+					> .tbar-item {
+						padding: 0.5em;
+					}
+
+					> .tbar-item:first-child {
+						border-top: solid thin #e7e7ed;
+						order: 1;
+						width: 100%;
+					}
+
+					> .tbar-item:last-child {
+						flex-grow: 1;
+						padding-right: 1em;
+
+						> .tbar-section {
+							display: flex;
+							justify-content: flex-end;
+						}
+					}
+				}
+			}
+
+			.form-text {
+				display: none;
+			}
+
+			.input-localized {
+				flex-direction: row-reverse;
+
+				.form-validator-stack {
+					display: none;
+				}
+
+				.input-group-item {
+					order: 2;
+				}
+
+				.input-localized-content {
+					order: 1;
+					padding-right: 0.5rem;
+				}
+			}
+
+			.metadata-type-button-row .btn-cancel {
+				border: 0;
+			}
+
+			@media (min-width: 768px) {
+				min-height: $toolbarDesktopHeight;
+
+				> .container-fluid > .tbar-nav {
+					> .tbar-item:first-child {
+						border-top: none;
+						order: 0;
+						width: auto;
+					}
+
+					> .tbar-item:last-child {
+						flex-grow: 0;
+					}
+				}
+
+				.input-localized {
+					flex-direction: row;
 				}
 			}
 		}
@@ -211,19 +314,8 @@
 		margin: 0 0 0.5em 0.5em;
 	}
 
-	img.locked-icon,
-	img.shortcut-icon {
-		bottom: 10px;
-		position: absolute;
-		z-index: 10;
-	}
-
-	img.locked-icon {
-		right: -10px;
-	}
-
-	img.shortcut-icon {
-		left: -5px;
+	.state-icon {
+		color: $secondary;
 	}
 
 	.button-holder.toolbar {
@@ -300,10 +392,6 @@
 		.workflow-status {
 			vertical-align: text-bottom;
 		}
-	}
-
-	.taglib-workflow-status {
-		margin-right: 4px;
 	}
 
 	.document-library-breadcrumb ul {

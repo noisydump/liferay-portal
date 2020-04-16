@@ -34,10 +34,20 @@ import org.osgi.service.component.annotations.ReferencePolicyOption;
 @Component(immediate = true, service = DataDefinitionContentTypeTracker.class)
 public class DataDefinitionContentTypeTracker {
 
+	public Long getClassNameId(String contentType) {
+		return _classNameIds.get(contentType);
+	}
+
+	public DataDefinitionContentType getDataDefinitionContentType(
+		long classNameId) {
+
+		return _dataDefinitionContentTypesByClassNameId.get(classNameId);
+	}
+
 	public DataDefinitionContentType getDataDefinitionContentType(
 		String contentType) {
 
-		return _dataDefinitionContentTypes.get(contentType);
+		return _dataDefinitionContentTypesByContentType.get(contentType);
 	}
 
 	@Reference(
@@ -53,26 +63,42 @@ public class DataDefinitionContentTypeTracker {
 			return;
 		}
 
-		_dataDefinitionContentTypes.put(
-			MapUtil.getString(properties, "content.type"),
+		String contentType = MapUtil.getString(properties, "content.type");
+
+		_classNameIds.put(
+			contentType, dataDefinitionContentType.getClassNameId());
+
+		_dataDefinitionContentTypesByClassNameId.put(
+			dataDefinitionContentType.getClassNameId(),
 			dataDefinitionContentType);
+
+		_dataDefinitionContentTypesByContentType.put(
+			contentType, dataDefinitionContentType);
 	}
 
 	@Deactivate
 	protected void deactivate() {
-		_dataDefinitionContentTypes.clear();
+		_dataDefinitionContentTypesByContentType.clear();
 	}
 
 	protected void removeDataDefinitionContentType(
 		DataDefinitionContentType dataDefinitionContentType,
 		Map<String, Object> properties) {
 
-		_dataDefinitionContentTypes.remove(
-			MapUtil.getString(properties, "content.type"));
+		String contentType = MapUtil.getString(properties, "content.type");
+
+		_dataDefinitionContentTypesByClassNameId.remove(
+			_classNameIds.get(contentType));
+
+		_classNameIds.remove(contentType);
+		_dataDefinitionContentTypesByContentType.remove(contentType);
 	}
 
+	private final Map<String, Long> _classNameIds = new TreeMap<>();
+	private final Map<Long, DataDefinitionContentType>
+		_dataDefinitionContentTypesByClassNameId = new TreeMap<>();
 	private final Map<String, DataDefinitionContentType>
-		_dataDefinitionContentTypes = new TreeMap<>();
+		_dataDefinitionContentTypesByContentType = new TreeMap<>();
 
 	@Reference
 	private Portal _portal;

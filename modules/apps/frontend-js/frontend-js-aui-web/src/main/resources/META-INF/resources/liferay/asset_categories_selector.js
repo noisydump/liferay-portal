@@ -85,7 +85,7 @@ AUI.add(
 
 						return value;
 					},
-					value: []
+					value: [],
 				},
 
 				curEntryIds: {
@@ -96,39 +96,39 @@ AUI.add(
 
 						return value;
 					},
-					value: []
+					value: [],
 				},
 
 				label: {
 					validator: '_isValidString',
-					value: Liferay.Language.get('select')
+					value: Liferay.Language.get('select'),
 				},
 
 				labelNode: {
 					setter(value) {
 						return A.one(value) || A.Attribute.INVALID_VALUE;
 					},
-					value: null
+					value: null,
 				},
 
 				maxEntries: {
 					validator: Lang.isNumber,
-					value: -1
+					value: -1,
 				},
 
 				moreResultsLabel: {
 					validator: '_isValidString',
-					value: Liferay.Language.get('load-more-results')
+					value: Liferay.Language.get('load-more-results'),
 				},
 
 				singleSelect: {
 					validator: Lang.isBoolean,
-					value: false
+					value: false,
 				},
 
 				title: {
 					validator: '_isValidString',
-					value: Liferay.Language.get('select-categories')
+					value: Liferay.Language.get('select-categories'),
 				},
 
 				vocabularyGroupIds: {
@@ -139,7 +139,7 @@ AUI.add(
 
 						return value;
 					},
-					value: []
+					value: [],
 				},
 
 				vocabularyIds: {
@@ -150,8 +150,8 @@ AUI.add(
 
 						return value;
 					},
-					value: []
-				}
+					value: [],
+				},
 			},
 
 			EXTENDS: Liferay.AssetTagsSelector,
@@ -213,14 +213,14 @@ AUI.add(
 								checkedChange: A.bind(
 									'_onCheckedChange',
 									instance
-								)
+								),
 							},
 							checked,
 							id: treeId,
 							label: LString.escapeHTML(item.titleCurrentValue),
 							leaf: !item.hasChildren,
 							paginator: instance._getPaginatorConfig(item),
-							type
+							type,
 						};
 
 						output.push(newTreeNode);
@@ -247,7 +247,8 @@ AUI.add(
 							if (parentVocabularyId) {
 								data.vocabularyId = parentVocabularyId;
 							}
-						} else {
+						}
+						else {
 							data.vocabularyId = assetId;
 						}
 					}
@@ -273,17 +274,18 @@ AUI.add(
 									'$childrenCount = /assetcategory/get-vocabulary-root-categories-count': {
 										'@groupId': '$vocabularies.groupId',
 										'@vocabularyId':
-											'$vocabularies.vocabularyId'
+											'$vocabularies.vocabularyId',
 									},
 									'$group[descriptiveName] = /group/get-group': {
-										'@groupId': '$vocabularies.groupId'
+										'@groupId': '$vocabularies.groupId',
 									},
-									vocabularyIds
-								}
+									vocabularyIds,
+								},
 							},
 							callback
 						);
-					} else {
+					}
+					else {
 						if (
 							!portalModelResource &&
 							themeDisplay.getSiteGroupId() !=
@@ -300,14 +302,14 @@ AUI.add(
 									'$childrenCount = /assetcategory/get-vocabulary-root-categories-count': {
 										'@vocabularyId':
 											'$vocabularies.vocabularyId',
-										groupId: '$vocabularies.groupId'
+										groupId: '$vocabularies.groupId',
 									},
 									'$group[descriptiveName] = /group/get-group': {
-										'@groupId': '$vocabularies.groupId'
+										'@groupId': '$vocabularies.groupId',
 									},
 									className,
-									groupIds
-								}
+									groupIds,
+								},
 							},
 							callback
 						);
@@ -318,7 +320,7 @@ AUI.add(
 					var instance = this;
 
 					var paginatorConfig = {
-						offsetParam: STR_START
+						offsetParam: STR_START,
 					};
 
 					var maxEntries = instance.get(STR_MAX_ENTRIES);
@@ -329,7 +331,8 @@ AUI.add(
 							STR_MORE_RESULTS_LABEL
 						);
 						paginatorConfig.total = item.childrenCount;
-					} else {
+					}
+					else {
 						paginatorConfig.end = -1;
 						paginatorConfig.start = -1;
 					}
@@ -431,7 +434,8 @@ AUI.add(
 						assetId = currentTarget.attr('data-categoryId');
 
 						entryMatchKey = currentTarget.val();
-					} else {
+					}
+					else {
 						assetId = instance._getTreeNodeAssetId(currentTarget);
 
 						entryMatchKey = currentTarget.get('label');
@@ -440,7 +444,7 @@ AUI.add(
 					var matchKey = instance.get('matchKey');
 
 					var entry = {
-						categoryId: assetId
+						categoryId: assetId,
 					};
 
 					entry[matchKey] = entryMatchKey;
@@ -471,7 +475,8 @@ AUI.add(
 
 					if (A.instanceOf(currentTarget, A.Node)) {
 						assetId = currentTarget.attr('data-categoryId');
-					} else {
+					}
+					else {
 						assetId = instance._getTreeNodeAssetId(currentTarget);
 					}
 
@@ -487,7 +492,8 @@ AUI.add(
 						}
 
 						instance._onCheckboxCheck(event);
-					} else {
+					}
+					else {
 						instance._onCheckboxUncheck(event);
 					}
 				},
@@ -532,9 +538,10 @@ AUI.add(
 
 							buffer.push(Lang.sub(TPL_INPUT, item));
 						});
-					} else {
+					}
+					else {
 						var message = Lang.sub(TPL_MESSAGE, [
-							Liferay.Language.get('no-categories-were-found')
+							Liferay.Language.get('no-categories-were-found'),
 						]);
 
 						buffer.push(message);
@@ -555,11 +562,11 @@ AUI.add(
 							{
 								label: instance.get('label'),
 								on: {
-									click: A.bind('_showSelectPopup', instance)
+									click: A.bind('_showSelectPopup', instance),
 								},
-								title: instance.get('title')
-							}
-						]
+								title: instance.get('title'),
+							},
+						],
 					}).render(contentBox);
 
 					var iconsBoundingBox = instance.icons.get(BOUNDING_BOX);
@@ -590,14 +597,14 @@ AUI.add(
 								'$display = /assetcategory/search-categories-display': {
 									'categories.$path = /assetcategory/get-category-path': {
 										'@categoryId':
-											'$display.categories.categoryId'
+											'$display.categories.categoryId',
 									},
 									end: -1,
 									groupIds: vocabularyGroupIds,
 									start: -1,
 									title: searchValue,
-									vocabularyIds
-								}
+									vocabularyIds,
+								},
 							},
 							callback
 						);
@@ -687,7 +694,8 @@ AUI.add(
 					if (item.groupId == themeDisplay.getCompanyGroupId()) {
 						vocabularyTitle +=
 							' (' + Liferay.Language.get('global') + ')';
-					} else {
+					}
+					else {
 						vocabularyTitle +=
 							' (' + item.group.descriptiveName + ')';
 					}
@@ -700,7 +708,7 @@ AUI.add(
 						label: vocabularyTitle,
 						leaf: false,
 						paginator: instance._getPaginatorConfig(item),
-						type: 'io'
+						type: 'io',
 					};
 
 					instance.TREEVIEWS[vocabularyId] = new A.TreeView({
@@ -730,14 +738,14 @@ AUI.add(
 
 											delete treeViews[vocabularyId];
 										}
-									}
-								}
+									},
+								},
 							},
 							formatter: A.bind('_formatJSONResult', instance),
 							url:
 								themeDisplay.getPathMain() +
-								'/asset/get_categories'
-						}
+								'/asset/get_categories',
+						},
 					}).render(popup.entriesNode);
 				},
 
@@ -787,7 +795,7 @@ AUI.add(
 
 					curEntryIds.forEach((item, index) => {
 						var entry = {
-							categoryId: item
+							categoryId: item,
 						};
 
 						entry[matchKey] = curEntries[index];
@@ -796,14 +804,14 @@ AUI.add(
 
 						instance.entries.add(entry);
 					});
-				}
-			}
+				},
+			},
 		});
 
 		Liferay.AssetCategoriesSelector = AssetCategoriesSelector;
 	},
 	'',
 	{
-		requires: ['aui-tree', 'liferay-asset-tags-selector']
+		requires: ['aui-tree', 'liferay-asset-tags-selector'],
 	}
 );

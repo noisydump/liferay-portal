@@ -15,8 +15,9 @@
 package com.liferay.portal.search.tuning.rankings.web.internal.display.context;
 
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.CreationMenu;
+import com.liferay.frontend.taglib.clay.servlet.taglib.util.CreationMenuBuilder;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem;
-import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemList;
+import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemListBuilder;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.search.EmptyOnClickRowChecker;
 import com.liferay.portal.kernel.dao.search.SearchContainer;
@@ -25,17 +26,21 @@ import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.util.Html;
 import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
+import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.search.engine.SearchEngineInformation;
 import com.liferay.portal.search.engine.adapter.SearchEngineAdapter;
 import com.liferay.portal.search.hits.SearchHit;
 import com.liferay.portal.search.hits.SearchHits;
+import com.liferay.portal.search.index.IndexNameBuilder;
 import com.liferay.portal.search.query.Queries;
 import com.liferay.portal.search.sort.Sorts;
 import com.liferay.portal.search.tuning.rankings.web.internal.index.DocumentToRankingTranslator;
 import com.liferay.portal.search.tuning.rankings.web.internal.index.Ranking;
 import com.liferay.portal.search.tuning.rankings.web.internal.index.RankingFields;
+import com.liferay.portal.search.tuning.rankings.web.internal.index.name.RankingIndexName;
+import com.liferay.portal.search.tuning.rankings.web.internal.index.name.RankingIndexNameBuilder;
 import com.liferay.portal.search.tuning.rankings.web.internal.request.SearchRankingRequest;
 import com.liferay.portal.search.tuning.rankings.web.internal.request.SearchRankingResponse;
 
@@ -57,15 +62,20 @@ public class RankingPortletDisplayBuilder {
 
 	public RankingPortletDisplayBuilder(
 		DocumentToRankingTranslator documentToRankingTranslator,
-		HttpServletRequest httpServletRequest, Language language,
-		Queries queries, Sorts sorts, RenderRequest renderRequest,
-		RenderResponse renderResponse, SearchEngineAdapter searchEngineAdapter,
+		HttpServletRequest httpServletRequest,
+		IndexNameBuilder indexNameBuilder, Language language, Portal portal,
+		Queries queries, RankingIndexNameBuilder rankingIndexNameBuilder,
+		Sorts sorts, RenderRequest renderRequest, RenderResponse renderResponse,
+		SearchEngineAdapter searchEngineAdapter,
 		SearchEngineInformation searchEngineInformation) {
 
 		_documentToRankingTranslator = documentToRankingTranslator;
 		_httpServletRequest = httpServletRequest;
+		_indexNameBuilder = indexNameBuilder;
 		_language = language;
+		_portal = portal;
 		_queries = queries;
+		_rankingIndexNameBuilder = rankingIndexNameBuilder;
 		_sorts = sorts;
 		_renderRequest = renderRequest;
 		_renderResponse = renderResponse;
@@ -115,39 +125,40 @@ public class RankingPortletDisplayBuilder {
 		return rankingEntryDisplayContextBuilder.build();
 	}
 
+	protected RankingIndexName buildRankingIndexName() {
+		return _rankingIndexNameBuilder.getRankingIndexName(
+			_indexNameBuilder.getIndexName(
+				_portal.getCompanyId(_httpServletRequest)));
+	}
+
 	protected List<DropdownItem> getActionDropdownItems() {
-		return new DropdownItemList() {
-			{
-				add(
-					dropdownItem -> {
-						dropdownItem.putData(
-							"action", "deactivateResultsRankingsEntries");
-						dropdownItem.setIcon("hidden");
-						dropdownItem.setLabel(
-							LanguageUtil.get(
-								_httpServletRequest, "deactivate"));
-						dropdownItem.setQuickAction(true);
-					});
-				add(
-					dropdownItem -> {
-						dropdownItem.putData(
-							"action", "activateResultsRankingsEntries");
-						dropdownItem.setIcon("undo");
-						dropdownItem.setLabel(
-							LanguageUtil.get(_httpServletRequest, "activate"));
-						dropdownItem.setQuickAction(true);
-					});
-				add(
-					dropdownItem -> {
-						dropdownItem.putData(
-							"action", "deleteResultsRankingsEntries");
-						dropdownItem.setIcon("times-circle");
-						dropdownItem.setLabel(
-							LanguageUtil.get(_httpServletRequest, "delete"));
-						dropdownItem.setQuickAction(true);
-					});
+		return DropdownItemListBuilder.add(
+			dropdownItem -> {
+				dropdownItem.putData(
+					"action", "deactivateResultsRankingsEntries");
+				dropdownItem.setIcon("hidden");
+				dropdownItem.setLabel(
+					LanguageUtil.get(_httpServletRequest, "deactivate"));
+				dropdownItem.setQuickAction(true);
 			}
-		};
+		).add(
+			dropdownItem -> {
+				dropdownItem.putData(
+					"action", "activateResultsRankingsEntries");
+				dropdownItem.setIcon("undo");
+				dropdownItem.setLabel(
+					LanguageUtil.get(_httpServletRequest, "activate"));
+				dropdownItem.setQuickAction(true);
+			}
+		).add(
+			dropdownItem -> {
+				dropdownItem.putData("action", "deleteResultsRankingsEntries");
+				dropdownItem.setIcon("times-circle");
+				dropdownItem.setLabel(
+					LanguageUtil.get(_httpServletRequest, "delete"));
+				dropdownItem.setQuickAction(true);
+			}
+		).build();
 	}
 
 	@SuppressWarnings("deprecation")
@@ -160,21 +171,16 @@ public class RankingPortletDisplayBuilder {
 	}
 
 	protected CreationMenu getCreationMenu() {
-		return new CreationMenu() {
-			{
-				addPrimaryDropdownItem(
-					dropdownItem -> {
-						dropdownItem.setHref(
-							_renderResponse.createRenderURL(),
-							"mvcRenderCommandName", "addResultsRankingEntry",
-							"redirect",
-							PortalUtil.getCurrentURL(_httpServletRequest));
-						dropdownItem.setLabel(
-							LanguageUtil.get(
-								_httpServletRequest, "new-ranking"));
-					});
+		return CreationMenuBuilder.addPrimaryDropdownItem(
+			dropdownItem -> {
+				dropdownItem.setHref(
+					_renderResponse.createRenderURL(), "mvcRenderCommandName",
+					"addResultsRankingEntry", "redirect",
+					PortalUtil.getCurrentURL(_httpServletRequest));
+				dropdownItem.setLabel(
+					LanguageUtil.get(_httpServletRequest, "new-ranking"));
 			}
-		};
+		).build();
 	}
 
 	protected String getDisplayStyle() {
@@ -182,25 +188,22 @@ public class RankingPortletDisplayBuilder {
 	}
 
 	protected List<DropdownItem> getFilterItemsDropdownItems() {
-		return new DropdownItemList() {
-			{
-				addGroup(
-					dropdownGroupItem -> {
-						dropdownGroupItem.setDropdownItems(
-							_getFilterNavigationDropdownItems());
-						dropdownGroupItem.setLabel(
-							LanguageUtil.get(
-								_httpServletRequest, "filter-by-navigation"));
-					});
-				addGroup(
-					dropdownGroupItem -> {
-						dropdownGroupItem.setDropdownItems(
-							_getOrderByDropdownItems(getKeywords()));
-						dropdownGroupItem.setLabel(
-							LanguageUtil.get(_httpServletRequest, "order-by"));
-					});
+		return DropdownItemListBuilder.addGroup(
+			dropdownGroupItem -> {
+				dropdownGroupItem.setDropdownItems(
+					_getFilterNavigationDropdownItems());
+				dropdownGroupItem.setLabel(
+					LanguageUtil.get(
+						_httpServletRequest, "filter-by-navigation"));
 			}
-		};
+		).addGroup(
+			dropdownGroupItem -> {
+				dropdownGroupItem.setDropdownItems(
+					_getOrderByDropdownItems(getKeywords()));
+				dropdownGroupItem.setLabel(
+					LanguageUtil.get(_httpServletRequest, "order-by"));
+			}
+		).build();
 	}
 
 	protected String getKeywords() {
@@ -282,17 +285,14 @@ public class RankingPortletDisplayBuilder {
 	}
 
 	private List<DropdownItem> _getFilterNavigationDropdownItems() {
-		return new DropdownItemList() {
-			{
-				add(
-					dropdownItem -> {
-						dropdownItem.setActive(true);
-						dropdownItem.setHref(_renderResponse.createRenderURL());
-						dropdownItem.setLabel(
-							LanguageUtil.get(_httpServletRequest, "all"));
-					});
+		return DropdownItemListBuilder.add(
+			dropdownItem -> {
+				dropdownItem.setActive(true);
+				dropdownItem.setHref(_renderResponse.createRenderURL());
+				dropdownItem.setLabel(
+					LanguageUtil.get(_httpServletRequest, "all"));
 			}
-		};
+		).build();
 	}
 
 	private String _getOrderByCol() {
@@ -302,30 +302,23 @@ public class RankingPortletDisplayBuilder {
 	private List<DropdownItem> _getOrderByDropdownItems(String keywords) {
 		PortletURL portletURL = _getPortletURL(keywords);
 
-		return new DropdownItemList() {
-			{
-				add(
-					dropdownItem -> {
-						dropdownItem.setActive(
-							Objects.equals(_getOrderByCol(), "keywords"));
-						dropdownItem.setHref(
-							portletURL, "orderByCol", "keywords");
-						dropdownItem.setLabel(
-							LanguageUtil.get(
-								_httpServletRequest, "search-query"));
-					});
-				add(
-					dropdownItem -> {
-						dropdownItem.setActive(
-							Objects.equals(_getOrderByCol(), _ORDER_BY_COL));
-						dropdownItem.setHref(
-							portletURL, "orderByCol", _ORDER_BY_COL);
-						dropdownItem.setLabel(
-							LanguageUtil.get(
-								_httpServletRequest, _ORDER_BY_COL));
-					});
+		return DropdownItemListBuilder.add(
+			dropdownItem -> {
+				dropdownItem.setActive(
+					Objects.equals(_getOrderByCol(), "keywords"));
+				dropdownItem.setHref(portletURL, "orderByCol", "keywords");
+				dropdownItem.setLabel(
+					LanguageUtil.get(_httpServletRequest, "search-query"));
 			}
-		};
+		).add(
+			dropdownItem -> {
+				dropdownItem.setActive(
+					Objects.equals(_getOrderByCol(), _ORDER_BY_COL));
+				dropdownItem.setHref(portletURL, "orderByCol", _ORDER_BY_COL);
+				dropdownItem.setLabel(
+					LanguageUtil.get(_httpServletRequest, _ORDER_BY_COL));
+			}
+		).build();
 	}
 
 	@SuppressWarnings("deprecation")
@@ -368,8 +361,8 @@ public class RankingPortletDisplayBuilder {
 			getSearchContainer(getKeywords());
 
 		SearchRankingRequest searchRankingRequest = new SearchRankingRequest(
-			_httpServletRequest, _queries, _sorts, searchContainer,
-			_searchEngineAdapter);
+			_httpServletRequest, _queries, buildRankingIndexName(), _sorts,
+			searchContainer, _searchEngineAdapter);
 
 		SearchRankingResponse searchRankingResponse =
 			searchRankingRequest.search();
@@ -390,8 +383,11 @@ public class RankingPortletDisplayBuilder {
 
 	private final DocumentToRankingTranslator _documentToRankingTranslator;
 	private final HttpServletRequest _httpServletRequest;
+	private final IndexNameBuilder _indexNameBuilder;
 	private final Language _language;
+	private final Portal _portal;
 	private final Queries _queries;
+	private final RankingIndexNameBuilder _rankingIndexNameBuilder;
 	private final RenderRequest _renderRequest;
 	private final RenderResponse _renderResponse;
 	private final SearchEngineAdapter _searchEngineAdapter;

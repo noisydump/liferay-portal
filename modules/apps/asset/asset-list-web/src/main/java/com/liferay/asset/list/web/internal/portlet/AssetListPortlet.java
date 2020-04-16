@@ -19,10 +19,15 @@ import com.liferay.asset.list.constants.AssetListPortletKeys;
 import com.liferay.asset.list.constants.AssetListWebKeys;
 import com.liferay.asset.list.exception.AssetListEntryTitleException;
 import com.liferay.asset.list.exception.DuplicateAssetListEntryTitleException;
+import com.liferay.asset.list.model.AssetListEntry;
+import com.liferay.asset.list.web.internal.display.context.AssetListDisplayContext;
+import com.liferay.asset.list.web.internal.display.context.EditAssetListDisplayContext;
+import com.liferay.asset.util.AssetRendererFactoryClassProvider;
 import com.liferay.dynamic.data.mapping.model.DDMStructure;
 import com.liferay.dynamic.data.mapping.storage.Field;
 import com.liferay.dynamic.data.mapping.storage.Fields;
 import com.liferay.dynamic.data.mapping.util.DDMUtil;
+import com.liferay.item.selector.ItemSelector;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCPortlet;
@@ -32,6 +37,7 @@ import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.DateFormatFactoryUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
+import com.liferay.portal.kernel.util.UnicodeProperties;
 import com.liferay.portal.kernel.util.WebKeys;
 
 import java.io.IOException;
@@ -190,6 +196,24 @@ public class AssetListPortlet extends MVCPortlet {
 			AssetListWebKeys.ASSET_LIST_ASSET_ENTRY_PROVIDER,
 			_assetListAssetEntryProvider);
 
+		AssetListDisplayContext assetListDisplayContext =
+			new AssetListDisplayContext(
+				_assetRendererFactoryClassProvider, renderRequest,
+				renderResponse);
+
+		renderRequest.setAttribute(
+			AssetListWebKeys.ASSET_LIST_DISPLAY_CONTEXT,
+			assetListDisplayContext);
+		renderRequest.setAttribute(
+			AssetListWebKeys.EDIT_ASSET_LIST_DISPLAY_CONTEXT,
+			new EditAssetListDisplayContext(
+				_assetRendererFactoryClassProvider, _itemSelector,
+				renderRequest, renderResponse,
+				_getUnicodeProperties(assetListDisplayContext)));
+
+		renderRequest.setAttribute(
+			AssetListWebKeys.ITEM_SELECTOR, _itemSelector);
+
 		super.doDispatch(renderRequest, renderResponse);
 	}
 
@@ -204,7 +228,34 @@ public class AssetListPortlet extends MVCPortlet {
 		return super.isSessionErrorException(cause);
 	}
 
+	private UnicodeProperties _getUnicodeProperties(
+			AssetListDisplayContext assetListDisplayContext)
+		throws IOException {
+
+		AssetListEntry assetListEntry =
+			assetListDisplayContext.getAssetListEntry();
+
+		if (assetListEntry == null) {
+			return new UnicodeProperties();
+		}
+
+		UnicodeProperties unicodeProperties = new UnicodeProperties();
+
+		unicodeProperties.load(
+			assetListEntry.getTypeSettings(
+				assetListDisplayContext.getSegmentsEntryId()));
+
+		return unicodeProperties;
+	}
+
 	@Reference
 	private AssetListAssetEntryProvider _assetListAssetEntryProvider;
+
+	@Reference
+	private AssetRendererFactoryClassProvider
+		_assetRendererFactoryClassProvider;
+
+	@Reference
+	private ItemSelector _itemSelector;
 
 }

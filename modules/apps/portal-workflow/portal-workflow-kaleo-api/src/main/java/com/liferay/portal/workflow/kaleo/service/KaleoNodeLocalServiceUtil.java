@@ -53,13 +53,13 @@ public class KaleoNodeLocalServiceUtil {
 
 	public static com.liferay.portal.workflow.kaleo.model.KaleoNode
 			addKaleoNode(
-				long kaleoDefinitionVersionId,
+				long kaleoDefinitionId, long kaleoDefinitionVersionId,
 				com.liferay.portal.workflow.kaleo.definition.Node node,
 				com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return getService().addKaleoNode(
-			kaleoDefinitionVersionId, node, serviceContext);
+			kaleoDefinitionId, kaleoDefinitionVersionId, node, serviceContext);
 	}
 
 	/**
@@ -72,6 +72,16 @@ public class KaleoNodeLocalServiceUtil {
 		createKaleoNode(long kaleoNodeId) {
 
 		return getService().createKaleoNode(kaleoNodeId);
+	}
+
+	/**
+	 * @throws PortalException
+	 */
+	public static com.liferay.portal.kernel.model.PersistedModel
+			createPersistedModel(java.io.Serializable primaryKeyObj)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return getService().createPersistedModel(primaryKeyObj);
 	}
 
 	public static void deleteCompanyKaleoNodes(long companyId) {
@@ -285,6 +295,9 @@ public class KaleoNodeLocalServiceUtil {
 		return getService().getOSGiServiceIdentifier();
 	}
 
+	/**
+	 * @throws PortalException
+	 */
 	public static com.liferay.portal.kernel.model.PersistedModel
 			getPersistedModel(java.io.Serializable primaryKeyObj)
 		throws com.liferay.portal.kernel.exception.PortalException {

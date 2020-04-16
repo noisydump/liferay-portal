@@ -35,7 +35,8 @@ AUI.add(
 
 				if (answers.cancel) {
 					A.soon(showNextQuestion);
-				} else {
+				}
+				else {
 					Liferay.CalendarMessageUtil.confirm(
 						TPL_MESSAGE_UPDATE_ALL_INVITED,
 						Liferay.Language.get('save-changes'),
@@ -59,7 +60,8 @@ AUI.add(
 
 				if (answers.cancel) {
 					A.soon(showNextQuestion);
-				} else {
+				}
+				else {
 					Liferay.RecurrenceUtil.openConfirmationPanel(
 						'update',
 						() => {
@@ -92,7 +94,8 @@ AUI.add(
 
 				if (answers.cancel) {
 					A.soon(showNextQuestion);
-				} else {
+				}
+				else {
 					var content = [
 						'<p class="calendar-portlet-confirmation-text">',
 						Lang.sub(
@@ -101,7 +104,7 @@ AUI.add(
 							),
 							[LString.escapeHTML(data.calendarName)]
 						),
-						'</p>'
+						'</p>',
 					].join(STR_BLANK);
 
 					Liferay.CalendarMessageUtil.confirm(
@@ -131,8 +134,8 @@ AUI.add(
 								}
 
 								confirmationPanel.hide();
-							}
-						}
+							},
+						},
 					};
 				};
 
@@ -145,12 +148,12 @@ AUI.add(
 						toolbars: {
 							footer: [
 								getButtonConfig(yesButtonLabel, yesFn),
-								getButtonConfig(noButtonLabel, noFn)
-							]
+								getButtonConfig(noButtonLabel, noFn),
+							],
 						},
-						width: 700
+						width: 700,
 					},
-					title: Liferay.Language.get('are-you-sure')
+					title: Liferay.Language.get('are-you-sure'),
 				});
 
 				return confirmationPanel.render().show();
@@ -169,7 +172,7 @@ AUI.add(
 						autoContinue: false,
 						context: instance,
 						fn: instance._queueableQuestionUpdateRecurring,
-						timeout: 0
+						timeout: 0,
 					});
 				}
 
@@ -180,16 +183,17 @@ AUI.add(
 							autoContinue: false,
 							context: instance,
 							fn: instance._queueableQuestionUpdateAllInvited,
-							timeout: 0
+							timeout: 0,
 						});
 					}
-				} else {
+				}
+				else {
 					queue.add({
 						args: [data],
 						autoContinue: false,
 						context: instance,
 						fn: instance._queueableQuestionUserCalendarOnly,
-						timeout: 0
+						timeout: 0,
 					});
 				}
 
@@ -198,7 +202,7 @@ AUI.add(
 					autoContinue: false,
 					context: instance,
 					fn: data.resolver,
-					timeout: 0
+					timeout: 0,
 				});
 
 				instance.queue = queue;
@@ -213,7 +217,7 @@ AUI.add(
 					closeable: true,
 					cssClass: 'alert-success',
 					destroyOnHide: true,
-					duration: 1
+					duration: 1,
 				}).render(container);
 			},
 
@@ -230,11 +234,11 @@ AUI.add(
 					closeable: true,
 					delay: {
 						hide: 3000,
-						show: 0
+						show: 0,
 					},
 					icon: 'exclamation-full',
 					message: errorMessage,
-					type: 'danger'
+					type: 'danger',
 				});
 
 				if (!alert.get('rendered')) {
@@ -267,11 +271,11 @@ AUI.add(
 					closeable: true,
 					delay: {
 						hide: 3000,
-						show: 0
+						show: 0,
 					},
 					icon: 'check',
 					message,
-					type: 'success'
+					type: 'success',
 				});
 
 				if (!alert.get('rendered')) {
@@ -281,11 +285,11 @@ AUI.add(
 				alert.show();
 
 				instance._alert = alert;
-			}
+			},
 		};
 	},
 	'',
 	{
-		requires: ['aui-alert', 'liferay-alert', 'liferay-util-window']
+		requires: ['aui-alert', 'liferay-alert', 'liferay-util-window'],
 	}
 );

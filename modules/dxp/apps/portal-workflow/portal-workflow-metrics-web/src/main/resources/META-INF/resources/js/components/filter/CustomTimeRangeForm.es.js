@@ -9,36 +9,39 @@
  * distribution rights of the Software.
  */
 
+import ClayIcon from '@clayui/icon';
 import React, {useEffect, useRef} from 'react';
 import MaskedInput from 'react-text-mask';
 
-import Icon from '../../shared/components/Icon.es';
 import {
 	addClickOutsideListener,
+	handleClickOutside,
 	removeClickOutsideListener,
-	handleClickOutside
 } from '../../shared/components/filter/util/filterEvents.es';
+import {getMaskByDateFormat} from '../../shared/util/date.es';
 import {sub} from '../../shared/util/lang.es';
 import {useCustomTimeRange} from './hooks/useCustomTimeRange.es';
 
 const CustomTimeRangeForm = ({
-	filterKey,
+	handleSelectFilter,
 	items,
 	prefixKey = '',
-	setFormVisible
+	setFormVisible,
+	withoutRouteParams,
 }) => {
 	const {
 		applyCustomFilter,
 		dateEnd,
+		dateFormat,
 		dateStart,
 		errors = {},
 		setDateEnd,
 		setDateStart,
-		validate
-	} = useCustomTimeRange(filterKey, prefixKey);
+		validate,
+	} = useCustomTimeRange(prefixKey, withoutRouteParams);
 	const wrapperRef = useRef();
 
-	const dateFormat = 'MM/DD/YYYY';
+	const dateMask = getMaskByDateFormat(dateFormat);
 
 	const activeCustomFilter = () => {
 		items.forEach(item => {
@@ -63,12 +66,10 @@ const CustomTimeRangeForm = ({
 
 		if (!dateEndError && !dateStartError) {
 			activeCustomFilter();
-			applyCustomFilter();
+			applyCustomFilter(handleSelectFilter);
 			setFormVisible(false);
 		}
 	};
-
-	const dateMask = [/\d/, /\d/, '/', /\d/, /\d/, '/', /\d/, /\d/, /\d/, /\d/];
 
 	useEffect(() => {
 		const onClickOutside = handleClickOutside(() => {
@@ -90,7 +91,7 @@ const CustomTimeRangeForm = ({
 
 				<span className="form-text mb-3 text-semi-bold">
 					{sub(Liferay.Language.get('default-date-format-is-x'), [
-						dateFormat
+						dateFormat,
 					])}
 				</span>
 
@@ -164,7 +165,7 @@ const FormGroupItem = ({children, error}) => (
 			<div className="form-feedback-group">
 				<div className="form-feedback-item">
 					<span className="form-feedback-indicator mr-2">
-						<Icon iconName="exclamation-full" />
+						<ClayIcon symbol="exclamation-full" />
 					</span>
 
 					<span className="text-semi-bold" data-testid="errorSpan">

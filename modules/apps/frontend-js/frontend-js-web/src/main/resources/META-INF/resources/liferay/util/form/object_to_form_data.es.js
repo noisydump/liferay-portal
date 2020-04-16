@@ -35,14 +35,16 @@ export default function objectToFormData(
 			value.forEach(item => {
 				objectToFormData(
 					{
-						[formKey]: item
+						[formKey]: item,
 					},
 					formData
 				);
 			});
-		} else if (isObject(value) && !(value instanceof File)) {
+		}
+		else if (isObject(value) && !(value instanceof File)) {
 			objectToFormData(value, formData, formKey);
-		} else {
+		}
+		else {
 			formData.append(formKey, value);
 		}
 	});

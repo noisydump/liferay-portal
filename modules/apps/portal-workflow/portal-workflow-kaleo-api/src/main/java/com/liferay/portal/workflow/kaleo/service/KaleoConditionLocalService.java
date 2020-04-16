@@ -73,8 +73,9 @@ public interface KaleoConditionLocalService
 	public KaleoCondition addKaleoCondition(KaleoCondition kaleoCondition);
 
 	public KaleoCondition addKaleoCondition(
-			long kaleoDefinitionVersionId, long kaleoNodeId,
-			Condition condition, ServiceContext serviceContext)
+			long kaleoDefinitionId, long kaleoDefinitionVersionId,
+			long kaleoNodeId, Condition condition,
+			ServiceContext serviceContext)
 		throws PortalException;
 
 	/**
@@ -85,6 +86,12 @@ public interface KaleoConditionLocalService
 	 */
 	@Transactional(enabled = false)
 	public KaleoCondition createKaleoCondition(long kaleoConditionId);
+
+	/**
+	 * @throws PortalException
+	 */
+	public PersistedModel createPersistedModel(Serializable primaryKeyObj)
+		throws PortalException;
 
 	public void deleteCompanyKaleoConditions(long companyId);
 
@@ -237,6 +244,9 @@ public interface KaleoConditionLocalService
 	 */
 	public String getOSGiServiceIdentifier();
 
+	/**
+	 * @throws PortalException
+	 */
 	@Override
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public PersistedModel getPersistedModel(Serializable primaryKeyObj)

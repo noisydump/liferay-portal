@@ -58,7 +58,10 @@ renderResponse.setTitle((category == null) ? LanguageUtil.get(request, "add-new-
 				collapsible="<%= true %>"
 				label="details"
 			>
-				<aui:input autoFocus="<%= true %>" label="name" name="title" placeholder="name" />
+				<aui:input label="name" localized="<%= true %>" name="title" placeholder="name" type="text" value="<%= (category == null) ? StringPool.BLANK : assetCategoriesDisplayContext.getCategoryLocalizationXML(category) %>">
+					<aui:validator name="maxLength"><%= ModelHintsUtil.getMaxLength(AssetCategory.class.getName(), "name") %></aui:validator>
+					<aui:validator name="required" />
+				</aui:input>
 
 				<aui:input name="description" placeholder="description" />
 

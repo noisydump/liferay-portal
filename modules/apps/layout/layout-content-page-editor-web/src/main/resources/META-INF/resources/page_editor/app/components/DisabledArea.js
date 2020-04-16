@@ -14,9 +14,13 @@
 
 import ClayPopover from '@clayui/popover';
 import {useEventListener} from 'frontend-js-react-web';
+import {match} from 'metal-dom';
 import {Align} from 'metal-position';
-import React, {useRef, useLayoutEffect, useState} from 'react';
+import React, {useEffect, useLayoutEffect, useRef, useState} from 'react';
 import {createPortal} from 'react-dom';
+
+import {useSelector} from '../store/index';
+import {useSelectItem} from './Controls';
 
 const DEFAULT_DISABLED_AREA_CLASS = 'page-editor__disabled-area';
 const DEFAULT_ORIGIN = 'layout-content';
@@ -25,7 +29,7 @@ const DEFAULT_WHITELIST = [
 	DEFAULT_DISABLED_AREA_CLASS,
 	'control-menu',
 	'lfr-add-panel',
-	'lfr-product-menu-panel'
+	'lfr-product-menu-panel',
 ];
 const POPOVER_POSITIONS = {
 	[Align.Bottom]: 'bottom',
@@ -35,7 +39,7 @@ const POPOVER_POSITIONS = {
 	[Align.Right]: 'right',
 	[Align.Top]: 'top',
 	[Align.TopLeft]: 'top',
-	[Align.TopRight]: 'top'
+	[Align.TopRight]: 'top',
 };
 const STATIC_POSITIONS = ['', 'static', 'relative'];
 
@@ -44,6 +48,8 @@ const DisabledArea = () => {
 	const [currentElementClicked, setCurrentElementClicked] = useState(null);
 	const [show, setShow] = useState(false);
 	const [position, setPosition] = useState('bottom');
+	const sidebarOpen = useSelector(state => state.sidebar.open);
+	const selectItem = useSelectItem();
 
 	const isDisabled = element => {
 		const {height} = element.getBoundingClientRect();
@@ -58,11 +64,26 @@ const DisabledArea = () => {
 			!hasAbsolutePosition &&
 			!DEFAULT_WHITELIST.some(
 				selector =>
-					element.matches(`.${selector}`) ||
+					match(element, `.${selector}`) ||
 					element.querySelector(`.${selector}`)
 			)
 		);
 	};
+
+	useEffect(() => {
+		const element = document.querySelector(
+			`.${DEFAULT_DISABLED_AREA_CLASS}`
+		);
+
+		if (element) {
+			if (sidebarOpen) {
+				element.classList.add('collapsed');
+			}
+			else {
+				element.classList.remove('collapsed');
+			}
+		}
+	}, [sidebarOpen]);
 
 	useEventListener(
 		'scroll',
@@ -85,8 +106,10 @@ const DisabledArea = () => {
 				)
 			) {
 				setCurrentElementClicked(event.target);
+				selectItem(null);
 				setShow(true);
-			} else if (show) {
+			}
+			else if (show) {
 				setCurrentElementClicked(null);
 				setShow(false);
 			}

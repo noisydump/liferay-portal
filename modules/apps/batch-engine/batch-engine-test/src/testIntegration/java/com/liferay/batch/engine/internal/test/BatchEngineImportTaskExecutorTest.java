@@ -21,11 +21,10 @@ import com.liferay.batch.engine.BatchEngineTaskOperation;
 import com.liferay.batch.engine.model.BatchEngineImportTask;
 import com.liferay.batch.engine.service.BatchEngineImportTaskLocalService;
 import com.liferay.blogs.model.BlogsEntry;
-import com.liferay.headless.delivery.dto.v1_0.BlogPosting;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
 import com.liferay.portal.kernel.util.HashMapBuilder;
-import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Time;
 import com.liferay.portal.test.log.CaptureAppender;
@@ -466,25 +465,21 @@ public class BatchEngineImportTaskExecutorTest
 	private byte[] _compressContent(byte[] content, String contentType)
 		throws Exception {
 
-		ByteArrayOutputStream byteArrayOutputStream =
-			new ByteArrayOutputStream();
+		try (ByteArrayOutputStream byteArrayOutputStream =
+				new ByteArrayOutputStream()) {
 
-		try (ZipOutputStream zipOutputStream = new ZipOutputStream(
-				byteArrayOutputStream)) {
+			try (ZipOutputStream zipOutputStream = new ZipOutputStream(
+					byteArrayOutputStream)) {
 
-			ZipEntry zipEntry = new ZipEntry(
-				"import." + StringUtil.toLowerCase(contentType));
+				ZipEntry zipEntry = new ZipEntry(
+					"import." + StringUtil.toLowerCase(contentType));
 
-			zipOutputStream.putNextEntry(zipEntry);
+				zipOutputStream.putNextEntry(zipEntry);
 
-			zipOutputStream.write(content, 0, content.length);
-		}
+				zipOutputStream.write(content, 0, content.length);
+			}
 
-		try {
 			return byteArrayOutputStream.toByteArray();
-		}
-		finally {
-			byteArrayOutputStream.close();
 		}
 	}
 
@@ -815,7 +810,8 @@ public class BatchEngineImportTaskExecutorTest
 				user.getCompanyId(), user.getUserId(), 10, null,
 				BlogPosting.class.getName(), content, contentType,
 				BatchEngineTaskExecuteStatus.INITIAL.name(),
-				fieldNameMappingMap, batchEngineTaskOperation.name(), null);
+				fieldNameMappingMap, batchEngineTaskOperation.name(), null,
+				null);
 
 		_batchEngineImportTaskExecutor.execute(_batchEngineImportTask);
 	}
@@ -830,18 +826,14 @@ public class BatchEngineImportTaskExecutorTest
 	}
 
 	private byte[] _toContent(XSSFWorkbook xssfWorkbook) throws Exception {
-		ByteArrayOutputStream byteArrayOutputStream =
-			new ByteArrayOutputStream();
+		try (ByteArrayOutputStream byteArrayOutputStream =
+				new ByteArrayOutputStream()) {
 
-		xssfWorkbook.write(byteArrayOutputStream);
+			xssfWorkbook.write(byteArrayOutputStream);
 
-		xssfWorkbook.close();
+			xssfWorkbook.close();
 
-		try {
 			return _compressContent(byteArrayOutputStream.toByteArray(), "XLS");
-		}
-		finally {
-			byteArrayOutputStream.close();
 		}
 	}
 

@@ -170,7 +170,7 @@
 </tr>
 <tr>
 	<td>MOVE_TO_RECYCLE_BIN</td>
-	<td>//a[contains(@data-qa-id,'recycle-binButton')]/span[contains(@class,'icon-monospaced')] | //*[*[name()='svg'][contains(@class,'icon-trash')] | //a[@data-title='Deactivate']]</td>
+	<td>//a[contains(@data-qa-id,'recycle-binButton')]/span[contains(@class,'icon-monospaced')] | //*[*[name()='svg'][contains(@class,'icon-trash')] | //a[@data-title='Deactivate']]  | //a[@title='Deactivate'] | //a[@title='Delete']</td>
 	<td></td>
 </tr>
 <tr>
@@ -204,8 +204,8 @@
 	<td></td>
 </tr>
 <tr>
-	<td>REMOVE_USER</td>
-	<td>//td[contains(.,'${key_userFirstName}')]//..//span[contains(@class,'remove')]</td>
+	<td>REMOVE_ASSIGNEE</td>
+	<td>//td[contains(.,'${key_assigneeName}')]//..//span[contains(@class,'remove')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -225,12 +225,17 @@
 </tr>
 <tr>
 	<td>TIMES</td>
-	<td>//*[*[name()='svg'][contains(@class,'icon-times')]]</td>
+	<td>//button[*[name()='svg'][contains(@class,'icon-times')]]</td>
 	<td></td>
 </tr>
 <tr>
 	<td>TOOLTIP</td>
 	<td>//span[*[name()='svg'][contains(@class,'icon-question')]]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>TRASH</td>
+	<td>//*[*[name()='svg'][contains(@class,'icon-trash')]]</td>
 	<td></td>
 </tr>
 <tr>
@@ -260,8 +265,8 @@
 	<td></td>
 </tr>
 <tr>
-	<td>FRAGMENT_VERTICAL_ELLIPSIS</td>
-	<td>//*[contains(@class, 'fragments-editor-sidebar')]//*[contains(@class, 'lexicon-icon-ellipsis-v')]</td>
+	<td>DEPOT_LANGUAGES_ELLIPSIS</td>
+	<td>//tr[contains(.,'${key_language}')]//*[name()='svg'][contains(@class,'icon-ellipsis')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -286,7 +291,7 @@
 </tr>
 <tr>
 	<td>PAGE_CUSTOMIZATION_ELLIPSIS</td>
-	<td>//*[@data-qa-id='controlMenu']//div[contains(@class,'icon-menu')]</td>
+	<td>//div[@class='control-menu-level-2']//div[contains(@class,'icon-menu')]</td>
 	<td></td>
 </tr>
 <tr>

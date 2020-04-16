@@ -32,16 +32,16 @@ BackgroundTask backgroundTask = (BackgroundTask)row.getObject();
 		<%
 		FileEntry fileEntry = UADExportProcessUtil.getFileEntry(backgroundTask);
 
-		Map<String, Object> data = new HashMap<String, Object>();
-
-		data.put("senna-off", "true");
+		Map<String, Object> data = HashMapBuilder.<String, Object>put(
+			"senna-off", "true"
+		).build();
 
 		StringBundler sb = new StringBundler(5);
 
 		sb.append(LanguageUtil.get(request, "download"));
 		sb.append(StringPool.SPACE);
 		sb.append(StringPool.OPEN_PARENTHESIS);
-		sb.append(TextFormatter.formatStorageSize(fileEntry.getSize(), locale));
+		sb.append(LanguageUtil.formatStorageSize(fileEntry.getSize(), locale));
 		sb.append(StringPool.CLOSE_PARENTHESIS);
 		%>
 

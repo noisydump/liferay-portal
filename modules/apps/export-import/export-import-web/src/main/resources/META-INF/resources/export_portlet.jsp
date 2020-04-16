@@ -141,9 +141,9 @@ portletURL.setParameter("portletResource", portletResource);
 														<span class="selected-labels" id="<portlet:namespace />selectedConfiguration_<%= selPortlet.getRootPortletId() %>"></span>
 
 														<%
-														Map<String, Object> data = new HashMap<String, Object>();
-
-														data.put("portletid", selPortlet.getRootPortletId());
+														Map<String, Object> data = HashMapBuilder.<String, Object>put(
+															"portletid", selPortlet.getRootPortletId()
+														).build();
 														%>
 
 														<aui:a cssClass="configuration-link modify-link" data="<%= data %>" href="javascript:;" label="change" method="get" />
@@ -390,9 +390,9 @@ portletURL.setParameter("portletResource", portletResource);
 																	<span class="selected-labels" id="<portlet:namespace />selectedContent_<%= selPortlet.getRootPortletId() %>"></span>
 
 																	<%
-																	Map<String, Object> data = new HashMap<String, Object>();
-
-																	data.put("portletid", selPortlet.getRootPortletId());
+																	Map<String, Object> data = HashMapBuilder.<String, Object>put(
+																		"portletid", selPortlet.getRootPortletId()
+																	).build();
 																	%>
 
 																	<aui:a cssClass="content-link modify-link" data="<%= data %>" href="javascript:;" id='<%= "contentLink_" + selPortlet.getRootPortletId() %>' label="change" method="get" />
@@ -478,7 +478,8 @@ portletURL.setParameter("portletResource", portletResource);
 
 			if (dateChecker.validRange) {
 				submitForm(form, form.attr('action'), false);
-			} else {
+			}
+			else {
 				exportImport.showNotification(dateChecker);
 			}
 		});
@@ -511,8 +512,8 @@ portletURL.setParameter("portletResource", portletResource);
 				errorMessage:
 					'<%= LanguageUtil.get(request, "the-following-are-invalid-characters") + HtmlUtil.escapeJS(Arrays.toString(PropsValues.DL_CHAR_BLACKLIST)) %>',
 				fieldName: '<portlet:namespace />exportFileName',
-				validatorName: 'custom_exportFileNameValidator'
-			}
+				validatorName: 'custom_exportFileNameValidator',
+			},
 		];
 
 		if (oldFieldRules) {
@@ -554,7 +555,7 @@ portletURL.setParameter("portletResource", portletResource);
 		rangeDateRangeNode: '#rangeDateRange',
 		rangeLastNode: '#rangeLast',
 		ratingsNode: '#<%= PortletDataHandlerKeys.RATINGS %>',
-		timeZoneOffset: <%= timeZoneOffset %>
+		timeZoneOffset: <%= timeZoneOffset %>,
 	});
 
 	Liferay.component('<portlet:namespace />ExportImportComponent', exportImport);
@@ -567,7 +568,7 @@ portletURL.setParameter("portletResource", portletResource);
 <aui:script>
 	Liferay.Util.toggleRadio('<portlet:namespace />rangeAll', '', [
 		'<portlet:namespace />startEndDate',
-		'<portlet:namespace />rangeLastInputs'
+		'<portlet:namespace />rangeLastInputs',
 	]);
 	Liferay.Util.toggleRadio(
 		'<portlet:namespace />rangeDateRange',

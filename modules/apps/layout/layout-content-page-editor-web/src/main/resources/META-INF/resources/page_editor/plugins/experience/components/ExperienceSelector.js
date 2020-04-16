@@ -17,19 +17,19 @@ import ClayButton from '@clayui/button';
 import ClayIcon from '@clayui/icon';
 import {useModal} from '@clayui/modal';
 import {useIsMounted} from 'frontend-js-react-web';
-import React, {useContext, useEffect, useState} from 'react';
+import React, {useEffect, useState} from 'react';
 
 import {LAYOUT_DATA_ITEM_TYPES} from '../../../app/config/constants/layoutDataItemTypes';
-import {ConfigContext} from '../../../app/config/index';
+import {config} from '../../../app/config/index';
 import {useDispatch, useSelector} from '../../../app/store/index';
 import createExperience from '../thunks/createExperience';
 import removeExperience from '../thunks/removeExperience';
 import updateExperience from '../thunks/updateExperience';
 import updateExperiencePriority from '../thunks/updateExperiencePriority';
 import {
-	storeModalExperienceState,
 	recoverModalExperienceState,
-	useDebounceCallback
+	storeModalExperienceState,
+	useDebounceCallback,
 } from '../utils';
 import ExperienceModal from './ExperienceModal';
 import ExperiencesList from './ExperiencesList';
@@ -51,7 +51,8 @@ function getUpdateExperiencePriorityTargets(
 
 	if (direction === 'up') {
 		subtargetIndex = targetIndex - 1;
-	} else {
+	}
+	else {
 		subtargetIndex = targetIndex + 1;
 	}
 
@@ -61,12 +62,12 @@ function getUpdateExperiencePriorityTargets(
 	return {
 		subtarget: {
 			priority: targetExperience.priority,
-			segmentsExperienceId: subtargetExperience.segmentsExperienceId
+			segmentsExperienceId: subtargetExperience.segmentsExperienceId,
 		},
 		target: {
 			priority: subtargetExperience.priority,
-			segmentsExperienceId: targetExperience.segmentsExperienceId
-		}
+			segmentsExperienceId: targetExperience.segmentsExperienceId,
+		},
 	};
 }
 
@@ -74,21 +75,19 @@ const ExperienceSelector = ({
 	experiences,
 	segments,
 	selectId,
-	selectedExperience
+	selectedExperience,
 }) => {
-	const config = useContext(ConfigContext);
 	const dispatch = useDispatch();
 	const layoutData = useSelector(state => state.layoutData);
 	const layoutDataList = useSelector(state => state.layoutDataList);
 
-	const {
-		classPK,
-		defaultSegmentsExperienceId,
-		editSegmentsEntryURL,
-		hasEditSegmentsEntryPermission,
-		hasUpdatePermissions,
-		selectedSegmentsEntryId
-	} = config;
+	const hasEditSegmentsEntryPermission = useSelector(
+		({permissions}) => permissions.EDIT_SEGMENTS_ENTRY
+	);
+
+	const hasUpdatePermissions = useSelector(
+		({permissions}) => permissions.UPDATE
+	);
 
 	const isMounted = useIsMounted();
 	const [open, setOpen] = useState(false);
@@ -98,7 +97,7 @@ const ExperienceSelector = ({
 	const {observer: modalObserver, onClose: onModalClose} = useModal({
 		onClose: () => {
 			setOpenModal(false);
-		}
+		},
 	});
 
 	const [debouncedSetOpen] = useDebounceCallback(value => {
@@ -115,49 +114,46 @@ const ExperienceSelector = ({
 	const handleNewSegmentClick = ({
 		experienceId,
 		experienceName,
-		segmentId
+		segmentId,
 	}) => {
 		storeModalExperienceState({
-			classPK,
 			experienceId,
 			experienceName,
-			segmentId
+			plid: config.plid,
+			segmentId,
 		});
 
-		Liferay.Util.navigate(editSegmentsEntryURL);
+		Liferay.Util.navigate(config.editSegmentsEntryURL);
 	};
 
 	useEffect(() => {
-		if (classPK) {
+		if (config.plid) {
 			const modalExperienceState = recoverModalExperienceState();
 
 			if (
 				modalExperienceState &&
-				classPK === modalExperienceState.classPK
+				config.plid === modalExperienceState.plid
 			) {
 				setOpenModal(true);
 				setEditingExperience({
 					name: modalExperienceState.experienceName,
 					segmentsEntryId:
-						selectedSegmentsEntryId ||
+						config.selectedSegmentsEntryId ||
 						modalExperienceState.segmentId,
-					segmentsExperienceId: modalExperienceState.experienceId
+					segmentsExperienceId: modalExperienceState.experienceId,
 				});
 			}
 		}
-	}, [classPK, selectedSegmentsEntryId]);
+	}, []);
 
 	const handleExperienceCreation = ({
 		name,
 		segmentsEntryId,
-		segmentsExperienceId
+		segmentsExperienceId,
 	}) => {
 		if (segmentsExperienceId) {
 			return dispatch(
-				updateExperience(
-					{name, segmentsEntryId, segmentsExperienceId},
-					config
-				)
+				updateExperience({name, segmentsEntryId, segmentsExperienceId})
 			)
 				.then(() => {
 					if (isMounted()) {
@@ -169,7 +165,7 @@ const ExperienceSelector = ({
 						title: Liferay.Language.get(
 							'the-experience-was-updated-successfully'
 						),
-						type: 'success'
+						type: 'success',
 					});
 				})
 				.catch(() => {
@@ -180,19 +176,17 @@ const ExperienceSelector = ({
 							),
 							name,
 							segmentsEntryId,
-							segmentsExperienceId
+							segmentsExperienceId,
 						});
 					}
 				});
-		} else {
+		}
+		else {
 			return dispatch(
-				createExperience(
-					{
-						name,
-						segmentsEntryId
-					},
-					config
-				)
+				createExperience({
+					name,
+					segmentsEntryId,
+				})
 			)
 				.then(() => {
 					if (isMounted()) {
@@ -203,7 +197,7 @@ const ExperienceSelector = ({
 						title: Liferay.Language.get(
 							'the-experience-was-created-successfully'
 						),
-						type: 'success'
+						type: 'success',
 					});
 				})
 				.catch(_error => {
@@ -214,7 +208,7 @@ const ExperienceSelector = ({
 							),
 							name,
 							segmentsEntryId,
-							segmentsExperienceId
+							segmentsExperienceId,
 						});
 					}
 				});
@@ -231,7 +225,7 @@ const ExperienceSelector = ({
 		setEditingExperience({
 			name,
 			segmentsEntryId,
-			segmentsExperienceId
+			segmentsExperienceId,
 		});
 	};
 
@@ -249,7 +243,7 @@ const ExperienceSelector = ({
 			)
 			.concat({
 				layoutData,
-				segmentsExperienceId: selectedExperience.segmentsExperienceId
+				segmentsExperienceId: selectedExperience.segmentsExperienceId,
 			});
 
 		const otherExperiencesFragmentEntryLinkIds = upToDateLayoutDataList
@@ -274,15 +268,11 @@ const ExperienceSelector = ({
 		);
 
 		dispatch(
-			removeExperience(
-				{
-					fragmentEntryLinkIds: uniqueFragmentEntryLinks,
-					segmentsExperienceId: id,
-					selectedExperienceId:
-						selectedExperience.segmentsExperienceId
-				},
-				config
-			)
+			removeExperience({
+				fragmentEntryLinkIds: uniqueFragmentEntryLinks,
+				segmentsExperienceId: id,
+				selectedExperienceId: selectedExperience.segmentsExperienceId,
+			})
 		).catch(_error => {
 			// TODO handle error
 		});
@@ -296,13 +286,10 @@ const ExperienceSelector = ({
 		);
 
 		dispatch(
-			updateExperiencePriority(
-				{
-					subtarget,
-					target
-				},
-				config
-			)
+			updateExperiencePriority({
+				subtarget,
+				target,
+			})
 		);
 	};
 	const increasePriority = id => {
@@ -313,13 +300,10 @@ const ExperienceSelector = ({
 		);
 
 		dispatch(
-			updateExperiencePriority(
-				{
-					subtarget,
-					target
-				},
-				config
-			)
+			updateExperiencePriority({
+				subtarget,
+				target,
+			})
 		);
 	};
 
@@ -331,13 +315,13 @@ const ExperienceSelector = ({
 				id={selectId}
 				onBlur={handleDropdownButtonBlur}
 				onClick={handleDropdownButtonClick}
-				small={true}
+				small
 				type="button"
 			>
 				<span className="text-truncate">{selectedExperience.name}</span>
 
 				{selectedExperience.hasLockedSegmentsExperiment && (
-					<ClayIcon symbol="lock" />
+					<ClayIcon className="mr-3" symbol="lock" />
 				)}
 			</ClayButton>
 
@@ -360,7 +344,9 @@ const ExperienceSelector = ({
 							activeExperienceId={
 								selectedExperience.segmentsExperienceId
 							}
-							defaultExperienceId={defaultSegmentsExperienceId}
+							defaultExperienceId={
+								config.defaultSegmentsExperienceId
+							}
 							experiences={experiences}
 							hasUpdatePermissions={hasUpdatePermissions}
 							onDeleteExperience={deleteExperience}
@@ -394,7 +380,7 @@ const ExperienceSelector = ({
 const ExperiencesSelectorHeader = ({
 	canCreateExperiences,
 	onNewExperience,
-	showEmptyStateMessage
+	showEmptyStateMessage,
 }) => {
 	return (
 		<>

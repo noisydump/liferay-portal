@@ -175,7 +175,8 @@ public abstract class BaseTransitionResourceTestCase {
 
 		Transition transition = randomTransition();
 
-		transition.setTransitionName(regex);
+		transition.setLabel(regex);
+		transition.setName(regex);
 
 		String json = TransitionSerDes.toJSON(transition);
 
@@ -183,7 +184,8 @@ public abstract class BaseTransitionResourceTestCase {
 
 		transition = TransitionSerDes.toDTO(json);
 
-		Assert.assertEquals(regex, transition.getTransitionName());
+		Assert.assertEquals(regex, transition.getLabel());
+		Assert.assertEquals(regex, transition.getName());
 	}
 
 	@Test
@@ -497,8 +499,16 @@ public abstract class BaseTransitionResourceTestCase {
 		for (String additionalAssertFieldName :
 				getAdditionalAssertFieldNames()) {
 
-			if (Objects.equals("transitionName", additionalAssertFieldName)) {
-				if (transition.getTransitionName() == null) {
+			if (Objects.equals("label", additionalAssertFieldName)) {
+				if (transition.getLabel() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals("name", additionalAssertFieldName)) {
+				if (transition.getName() == null) {
 					valid = false;
 				}
 
@@ -558,10 +568,19 @@ public abstract class BaseTransitionResourceTestCase {
 		for (String additionalAssertFieldName :
 				getAdditionalAssertFieldNames()) {
 
-			if (Objects.equals("transitionName", additionalAssertFieldName)) {
+			if (Objects.equals("label", additionalAssertFieldName)) {
 				if (!Objects.deepEquals(
-						transition1.getTransitionName(),
-						transition2.getTransitionName())) {
+						transition1.getLabel(), transition2.getLabel())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals("name", additionalAssertFieldName)) {
+				if (!Objects.deepEquals(
+						transition1.getName(), transition2.getName())) {
 
 					return false;
 				}
@@ -577,14 +596,47 @@ public abstract class BaseTransitionResourceTestCase {
 		return true;
 	}
 
+	protected boolean equals(
+		Map<String, Object> map1, Map<String, Object> map2) {
+
+		if (Objects.equals(map1.keySet(), map2.keySet())) {
+			for (Map.Entry<String, Object> entry : map1.entrySet()) {
+				if (entry.getValue() instanceof Map) {
+					if (!equals(
+							(Map)entry.getValue(),
+							(Map)map2.get(entry.getKey()))) {
+
+						return false;
+					}
+				}
+				else if (!Objects.deepEquals(
+							entry.getValue(), map2.get(entry.getKey()))) {
+
+					return false;
+				}
+			}
+		}
+
+		return true;
+	}
+
 	protected boolean equalsJSONObject(
 		Transition transition, JSONObject jsonObject) {
 
 		for (String fieldName : getAdditionalAssertFieldNames()) {
-			if (Objects.equals("transitionName", fieldName)) {
+			if (Objects.equals("label", fieldName)) {
 				if (!Objects.deepEquals(
-						transition.getTransitionName(),
-						jsonObject.getString("transitionName"))) {
+						transition.getLabel(), jsonObject.getString("label"))) {
+
+					return false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals("name", fieldName)) {
+				if (!Objects.deepEquals(
+						transition.getName(), jsonObject.getString("name"))) {
 
 					return false;
 				}
@@ -649,9 +701,17 @@ public abstract class BaseTransitionResourceTestCase {
 		sb.append(operator);
 		sb.append(" ");
 
-		if (entityFieldName.equals("transitionName")) {
+		if (entityFieldName.equals("label")) {
 			sb.append("'");
-			sb.append(String.valueOf(transition.getTransitionName()));
+			sb.append(String.valueOf(transition.getLabel()));
+			sb.append("'");
+
+			return sb.toString();
+		}
+
+		if (entityFieldName.equals("name")) {
+			sb.append("'");
+			sb.append(String.valueOf(transition.getName()));
 			sb.append("'");
 
 			return sb.toString();
@@ -681,7 +741,8 @@ public abstract class BaseTransitionResourceTestCase {
 	protected Transition randomTransition() throws Exception {
 		return new Transition() {
 			{
-				transitionName = RandomTestUtil.randomString();
+				label = RandomTestUtil.randomString();
+				name = RandomTestUtil.randomString();
 			}
 		};
 	}

@@ -370,9 +370,11 @@ public abstract class BaseDataDefinitionResourceTestCase {
 				}
 				else {
 					BeanUtils.setProperty(
-						dataDefinition1, entityField.getName(), "Aaa");
+						dataDefinition1, entityField.getName(),
+						"Aaa" + RandomTestUtil.randomString());
 					BeanUtils.setProperty(
-						dataDefinition2, entityField.getName(), "Bbb");
+						dataDefinition2, entityField.getName(),
+						"Bbb" + RandomTestUtil.randomString());
 				}
 			});
 	}
@@ -486,6 +488,7 @@ public abstract class BaseDataDefinitionResourceTestCase {
 
 	@Test
 	public void testDeleteDataDefinition() throws Exception {
+		@SuppressWarnings("PMD.UnusedLocalVariable")
 		DataDefinition dataDefinition =
 			testDeleteDataDefinition_addDataDefinition();
 
@@ -855,9 +858,11 @@ public abstract class BaseDataDefinitionResourceTestCase {
 				}
 				else {
 					BeanUtils.setProperty(
-						dataDefinition1, entityField.getName(), "Aaa");
+						dataDefinition1, entityField.getName(),
+						"Aaa" + RandomTestUtil.randomString());
 					BeanUtils.setProperty(
-						dataDefinition2, entityField.getName(), "Bbb");
+						dataDefinition2, entityField.getName(),
+						"Bbb" + RandomTestUtil.randomString());
 				}
 			});
 	}
@@ -1182,6 +1187,14 @@ public abstract class BaseDataDefinitionResourceTestCase {
 				continue;
 			}
 
+			if (Objects.equals("dataRules", additionalAssertFieldName)) {
+				if (dataDefinition.getDataRules() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
 			if (Objects.equals(
 					"defaultDataLayout", additionalAssertFieldName)) {
 
@@ -1345,6 +1358,17 @@ public abstract class BaseDataDefinitionResourceTestCase {
 				continue;
 			}
 
+			if (Objects.equals("dataRules", additionalAssertFieldName)) {
+				if (!Objects.deepEquals(
+						dataDefinition1.getDataRules(),
+						dataDefinition2.getDataRules())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
 			if (Objects.equals("dateCreated", additionalAssertFieldName)) {
 				if (!Objects.deepEquals(
 						dataDefinition1.getDateCreated(),
@@ -1394,9 +1418,9 @@ public abstract class BaseDataDefinitionResourceTestCase {
 			}
 
 			if (Objects.equals("description", additionalAssertFieldName)) {
-				if (!Objects.deepEquals(
-						dataDefinition1.getDescription(),
-						dataDefinition2.getDescription())) {
+				if (!equals(
+						(Map)dataDefinition1.getDescription(),
+						(Map)dataDefinition2.getDescription())) {
 
 					return false;
 				}
@@ -1415,8 +1439,9 @@ public abstract class BaseDataDefinitionResourceTestCase {
 			}
 
 			if (Objects.equals("name", additionalAssertFieldName)) {
-				if (!Objects.deepEquals(
-						dataDefinition1.getName(), dataDefinition2.getName())) {
+				if (!equals(
+						(Map)dataDefinition1.getName(),
+						(Map)dataDefinition2.getName())) {
 
 					return false;
 				}
@@ -1449,6 +1474,30 @@ public abstract class BaseDataDefinitionResourceTestCase {
 			throw new IllegalArgumentException(
 				"Invalid additional assert field name " +
 					additionalAssertFieldName);
+		}
+
+		return true;
+	}
+
+	protected boolean equals(
+		Map<String, Object> map1, Map<String, Object> map2) {
+
+		if (Objects.equals(map1.keySet(), map2.keySet())) {
+			for (Map.Entry<String, Object> entry : map1.entrySet()) {
+				if (entry.getValue() instanceof Map) {
+					if (!equals(
+							(Map)entry.getValue(),
+							(Map)map2.get(entry.getKey()))) {
+
+						return false;
+					}
+				}
+				else if (!Objects.deepEquals(
+							entry.getValue(), map2.get(entry.getKey()))) {
+
+					return false;
+				}
+			}
 		}
 
 		return true;
@@ -1605,6 +1654,11 @@ public abstract class BaseDataDefinitionResourceTestCase {
 			sb.append("'");
 
 			return sb.toString();
+		}
+
+		if (entityFieldName.equals("dataRules")) {
+			throw new IllegalArgumentException(
+				"Invalid entity field " + entityFieldName);
 		}
 
 		if (entityFieldName.equals("dateCreated")) {

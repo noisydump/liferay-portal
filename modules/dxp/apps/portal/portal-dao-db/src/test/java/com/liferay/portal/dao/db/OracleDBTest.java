@@ -17,47 +17,90 @@ package com.liferay.portal.dao.db;
 import com.liferay.portal.kernel.dao.db.DB;
 import com.liferay.portal.kernel.dao.db.test.BaseDBTestCase;
 
-import java.io.IOException;
-
 import org.junit.Assert;
 import org.junit.Test;
 
 /**
  * @author Shinn Lok
+ * @author Alberto Chaparro
  */
 public class OracleDBTest extends BaseDBTestCase {
 
 	@Test
-	public void testRewordAlterColumnType() throws IOException {
+	public void testRewordAlterColumnType() throws Exception {
 		Assert.assertEquals(
-			"alter table DLFolder modify name VARCHAR2(255 CHAR);\n",
-			buildSQL("alter_column_type DLFolder name VARCHAR(255) null;"));
+			"alter table DLFolder modify userName VARCHAR2(75 CHAR);\n",
+			buildSQL("alter_column_type DLFolder userName VARCHAR(75);"));
 	}
 
 	@Test
-	public void testRewordAlterColumnTypeLowerCase() throws IOException {
+	public void testRewordAlterColumnTypeLowerCase() throws Exception {
 		Assert.assertEquals(
-			"alter table DLFolder modify name VARCHAR2(255 CHAR);\n",
-			buildSQL("alter_column_type DLFolder name varchar(255);"));
+			"alter table DLFolder modify userName VARCHAR2(75 CHAR);\n",
+			buildSQL("alter_column_type DLFolder userName varchar(75);"));
 	}
 
 	@Test
-	public void testRewordAlterColumnTypeString() throws IOException {
+	public void testRewordAlterColumnTypeNoSemicolon() throws Exception {
+		Assert.assertEquals(
+			"alter table DLFolder modify userName VARCHAR2(75 CHAR);\n",
+			buildSQL("alter_column_type DLFolder userName VARCHAR(75)"));
+	}
+
+	@Test
+	public void testRewordAlterColumnTypeNotNullWhenNotNull() throws Exception {
+		Assert.assertEquals(
+			"alter table DLFolder modify userName VARCHAR2(75 CHAR);\n",
+			buildSQL(
+				"alter_column_type DLFolder userName VARCHAR(75) not null;"));
+	}
+
+	@Test
+	public void testRewordAlterColumnTypeNotNullWhenNull() throws Exception {
+		_nullable = true;
+
+		Assert.assertEquals(
+			"alter table DLFolder modify userName VARCHAR2(75 CHAR) not " +
+				"null;\n",
+			buildSQL(
+				"alter_column_type DLFolder userName VARCHAR(75) not null;"));
+	}
+
+	@Test
+	public void testRewordAlterColumnTypeNullWhenNotNull() throws Exception {
+		Assert.assertEquals(
+			"alter table DLFolder modify userName VARCHAR2(75 CHAR) null;\n",
+			buildSQL("alter_column_type DLFolder userName VARCHAR(75) null;"));
+	}
+
+	@Test
+	public void testRewordAlterColumnTypeNullWhenNull() throws Exception {
+		_nullable = true;
+
+		Assert.assertEquals(
+			"alter table DLFolder modify userName VARCHAR2(75 CHAR);\n",
+			buildSQL("alter_column_type DLFolder userName VARCHAR(75) null;"));
+	}
+
+	@Test
+	public void testRewordAlterColumnTypeString() throws Exception {
 		Assert.assertEquals(
 			"alter table BlogsEntry modify description VARCHAR2(4000 CHAR);\n",
 			buildSQL("alter_column_type BlogsEntry description STRING;"));
 	}
 
-	@Test
-	public void testRewordAlterColumnTypeStringNull() throws IOException {
-		Assert.assertEquals(
-			"alter table BlogsEntry modify description VARCHAR2(4000 CHAR);\n",
-			buildSQL("alter_column_type BlogsEntry description STRING null;"));
-	}
-
 	@Override
 	protected DB getDB() {
-		return new OracleDB(0, 0);
+		return new OracleDB(0, 0) {
+
+			@Override
+			protected boolean isNullable(String tableName, String columnName) {
+				return _nullable;
+			}
+
+		};
 	}
+
+	private boolean _nullable;
 
 }

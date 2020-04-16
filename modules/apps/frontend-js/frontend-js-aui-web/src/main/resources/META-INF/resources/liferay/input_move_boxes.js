@@ -35,8 +35,8 @@ AUI.add(
 					MOVE_LEFT: '',
 					MOVE_RIGHT: '',
 					RIGHT_MOVE_DOWN: '',
-					RIGHT_MOVE_UP: ''
-				}
+					RIGHT_MOVE_UP: '',
+				},
 			},
 
 			HTML_PARSER: {
@@ -46,7 +46,7 @@ AUI.add(
 
 				rightReorder(contentBox) {
 					return contentBox.hasClass(CSS_RIGHT_REORDER);
-				}
+				},
 			},
 
 			NAME,
@@ -129,7 +129,7 @@ AUI.add(
 
 					Liferay.fire(NAME + ':moveItem', {
 						fromBox: from,
-						toBox: to
+						toBox: to,
 					});
 				},
 
@@ -146,7 +146,7 @@ AUI.add(
 
 					Liferay.fire(NAME + ':orderItem', {
 						box,
-						direction
+						direction,
 					});
 				},
 
@@ -181,9 +181,9 @@ AUI.add(
 										on: {
 											click(event) {
 												event.domEvent.preventDefault();
-											}
+											},
 										},
-										title: strings.MOVE_RIGHT
+										title: strings.MOVE_RIGHT,
 									},
 									{
 										cssClass: 'move-left',
@@ -191,12 +191,12 @@ AUI.add(
 										on: {
 											click(event) {
 												event.domEvent.preventDefault();
-											}
+											},
 										},
-										title: strings.MOVE_LEFT
-									}
-								]
-							]
+										title: strings.MOVE_LEFT,
+									},
+								],
+							],
 						});
 
 						moveToolbar.get(
@@ -219,8 +219,8 @@ AUI.add(
 									on: {
 										click(event) {
 											event.domEvent.preventDefault();
-										}
-									}
+										},
+									},
 								},
 								{
 									cssClass: 'reorder-down',
@@ -228,11 +228,11 @@ AUI.add(
 									on: {
 										click(event) {
 											event.domEvent.preventDefault();
-										}
-									}
-								}
-							]
-						]
+										},
+									},
+								},
+							],
+						],
 					};
 
 					if (instance.get('leftReorder')) {
@@ -285,7 +285,8 @@ AUI.add(
 						if (target.get('length') > 0) {
 							if (target == instance._rightBox) {
 								btnDisabledLeft = false;
-							} else if (target == instance._leftBox) {
+							}
+							else if (target == instance._leftBox) {
 								btnDisabledRight = false;
 							}
 						}
@@ -317,9 +318,11 @@ AUI.add(
 
 						if (selectedIndex === length - 1) {
 							btnDisabledDown = true;
-						} else if (selectedIndex === 0) {
+						}
+						else if (selectedIndex === 0) {
 							btnDisabledUp = true;
-						} else if (selectedIndex === -1) {
+						}
+						else if (selectedIndex === -1) {
 							btnDisabledDown = true;
 							btnDisabledUp = true;
 						}
@@ -437,7 +440,7 @@ AUI.add(
 					for (var i = 0; i < options.size(); i++) {
 						newBox[i] = [
 							options.item(i).val(),
-							options.item(i).text()
+							options.item(i).text(),
 						];
 					}
 
@@ -456,14 +459,14 @@ AUI.add(
 								'</option>'
 						);
 					});
-				}
-			}
+				},
+			},
 		});
 
 		Liferay.InputMoveBoxes = InputMoveBoxes;
 	},
 	'',
 	{
-		requires: ['aui-base', 'aui-toolbar']
+		requires: ['aui-base', 'aui-toolbar'],
 	}
 );

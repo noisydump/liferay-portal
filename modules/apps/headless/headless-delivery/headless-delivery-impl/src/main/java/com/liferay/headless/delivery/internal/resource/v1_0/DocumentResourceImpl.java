@@ -46,6 +46,7 @@ import com.liferay.portal.kernel.search.filter.TermFilter;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.odata.entity.EntityModel;
 import com.liferay.portal.vulcan.dto.converter.DTOConverterRegistry;
@@ -103,7 +104,22 @@ public class DocumentResourceImpl
 			Filter filter, Pagination pagination, Sort[] sorts)
 		throws Exception {
 
+		Folder folder = _dlAppService.getFolder(documentFolderId);
+
 		return _getDocumentsPage(
+			HashMapBuilder.<String, Map<String, String>>put(
+				"create",
+				addAction(
+					"ADD_DOCUMENT", folder.getFolderId(),
+					"postDocumentFolderDocument", folder.getUserId(),
+					"com.liferay.document.library", folder.getGroupId())
+			).put(
+				"get",
+				addAction(
+					"VIEW", folder.getFolderId(),
+					"getDocumentFolderDocumentsPage", folder.getUserId(),
+					"com.liferay.document.library", folder.getGroupId())
+			).build(),
 			booleanQuery -> {
 				if (documentFolderId != null) {
 					BooleanFilter booleanFilter =
@@ -120,7 +136,7 @@ public class DocumentResourceImpl
 						BooleanClauseOccur.MUST);
 				}
 			},
-			search, filter, pagination, sorts);
+			filter, search, pagination, sorts);
 	}
 
 	public Rating getDocumentMyRating(Long documentId) throws Exception {
@@ -145,6 +161,17 @@ public class DocumentResourceImpl
 		throws Exception {
 
 		return _getDocumentsPage(
+			HashMapBuilder.<String, Map<String, String>>put(
+				"create",
+				addAction(
+					"ADD_DOCUMENT", "postSiteDocument",
+					"com.liferay.document.library", siteId)
+			).put(
+				"get",
+				addAction(
+					"VIEW", "getSiteDocumentsPage",
+					"com.liferay.document.library", siteId)
+			).build(),
 			booleanQuery -> {
 				BooleanFilter booleanFilter =
 					booleanQuery.getPreBooleanFilter();
@@ -164,7 +191,7 @@ public class DocumentResourceImpl
 						BooleanClauseOccur.MUST);
 				}
 			},
-			search, filter, pagination, sorts);
+			filter, search, pagination, sorts);
 	}
 
 	@Override
@@ -381,21 +408,22 @@ public class DocumentResourceImpl
 	}
 
 	private Page<Document> _getDocumentsPage(
+			Map<String, Map<String, String>> actions,
 			UnsafeConsumer<BooleanQuery, Exception> booleanQueryUnsafeConsumer,
-			String search, Filter filter, Pagination pagination, Sort[] sorts)
+			Filter filter, String keywords, Pagination pagination, Sort[] sorts)
 		throws Exception {
 
 		return SearchUtil.search(
-			booleanQueryUnsafeConsumer, filter, DLFileEntry.class, search,
-			pagination,
+			actions, booleanQueryUnsafeConsumer, filter, DLFileEntry.class,
+			keywords, pagination,
 			queryConfig -> queryConfig.setSelectedFieldNames(
 				Field.ENTRY_CLASS_PK),
 			searchContext -> searchContext.setCompanyId(
 				contextCompany.getCompanyId()),
+			sorts,
 			document -> _toDocument(
 				_dlAppService.getFileEntry(
-					GetterUtil.getLong(document.get(Field.ENTRY_CLASS_PK)))),
-			sorts);
+					GetterUtil.getLong(document.get(Field.ENTRY_CLASS_PK)))));
 	}
 
 	private CustomField[] _getExpandoBridgeAttributes(
@@ -420,14 +448,74 @@ public class DocumentResourceImpl
 	private SPIRatingResource<Rating> _getSPIRatingResource() {
 		return new SPIRatingResource<>(
 			DLFileEntry.class.getName(), _ratingsEntryLocalService,
-			ratingsEntry -> RatingUtil.toRating(
-				_portal, ratingsEntry, _userLocalService),
+			ratingsEntry -> {
+				FileEntry fileEntry = _dlAppService.getFileEntry(
+					ratingsEntry.getClassPK());
+
+				return RatingUtil.toRating(
+					HashMapBuilder.<String, Map<String, String>>put(
+						"create",
+						addAction(
+							"UPDATE", fileEntry.getPrimaryKey(),
+							"postDocumentMyRating", fileEntry.getUserId(),
+							DLFileEntry.class.getName(), fileEntry.getGroupId())
+					).put(
+						"delete",
+						addAction(
+							"UPDATE", fileEntry.getPrimaryKey(),
+							"deleteDocumentMyRating", fileEntry.getUserId(),
+							DLFileEntry.class.getName(), fileEntry.getGroupId())
+					).put(
+						"get",
+						addAction(
+							"VIEW", fileEntry.getPrimaryKey(),
+							"getDocumentMyRating", fileEntry.getUserId(),
+							DLFileEntry.class.getName(), fileEntry.getGroupId())
+					).put(
+						"replace",
+						addAction(
+							"UPDATE", fileEntry.getPrimaryKey(),
+							"putDocumentMyRating", fileEntry.getUserId(),
+							DLFileEntry.class.getName(), fileEntry.getGroupId())
+					).build(),
+					_portal, ratingsEntry, _userLocalService);
+			},
 			contextUser);
 	}
 
 	private Document _toDocument(FileEntry fileEntry) throws Exception {
 		return _documentDTOConverter.toDTO(
 			new DefaultDTOConverterContext(
+				contextAcceptLanguage.isAcceptAllLanguages(),
+				HashMapBuilder.<String, Map<String, String>>put(
+					"delete",
+					addAction(
+						"DELETE", fileEntry.getPrimaryKey(), "deleteDocument",
+						fileEntry.getUserId(),
+						"com.liferay.document.library.kernel.model.DLFileEntry",
+						fileEntry.getGroupId())
+				).put(
+					"get",
+					addAction(
+						"VIEW", fileEntry.getPrimaryKey(), "getDocument",
+						fileEntry.getUserId(),
+						"com.liferay.document.library.kernel.model.DLFileEntry",
+						fileEntry.getGroupId())
+				).put(
+					"replace",
+					addAction(
+						"UPDATE", fileEntry.getPrimaryKey(), "putDocument",
+						fileEntry.getUserId(),
+						"com.liferay.document.library.kernel.model.DLFileEntry",
+						fileEntry.getGroupId())
+				).put(
+					"update",
+					addAction(
+						"UPDATE", fileEntry.getPrimaryKey(), "patchDocument",
+						fileEntry.getUserId(),
+						"com.liferay.document.library.kernel.model.DLFileEntry",
+						fileEntry.getGroupId())
+				).build(),
 				_dtoConverterRegistry, fileEntry.getFileEntryId(), null,
 				contextUriInfo, contextUser));
 	}

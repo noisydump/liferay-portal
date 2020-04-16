@@ -62,26 +62,26 @@ public class BackgroundTaskFinderImpl
 			sql = StringUtil.replace(
 				sql, "[$ORDER_BY_TYPE$]", orderByType ? "ASC" : "DESC");
 
-			SQLQuery q = session.createSynchronizedSQLQuery(sql);
+			SQLQuery sqlQuery = session.createSynchronizedSQLQuery(sql);
 
-			q.addEntity("BackgroundTask", BackgroundTaskImpl.class);
+			sqlQuery.addEntity("BackgroundTask", BackgroundTaskImpl.class);
 
-			QueryPos qPos = QueryPos.getInstance(q);
+			QueryPos queryPos = QueryPos.getInstance(sqlQuery);
 
 			for (long groupId : groupIds) {
-				qPos.add(groupId);
+				queryPos.add(groupId);
 			}
 
 			for (String taskExecutorClassName : taskExecutorClassNames) {
-				qPos.add(taskExecutorClassName);
+				queryPos.add(taskExecutorClassName);
 			}
 
 			if (completed != null) {
-				qPos.add(completed.booleanValue());
+				queryPos.add(completed.booleanValue());
 			}
 
 			return (List<BackgroundTask>)QueryUtil.list(
-				q, getDialect(), start, end);
+				sqlQuery, getDialect(), start, end);
 		}
 		catch (Exception exception) {
 			throw new SystemException(exception);

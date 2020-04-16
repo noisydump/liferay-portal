@@ -17,6 +17,7 @@ package com.liferay.project.templates;
 import aQute.bnd.main.bnd;
 
 import com.liferay.maven.executor.MavenExecutor;
+import com.liferay.project.templates.extensions.ProjectTemplatesArgs;
 import com.liferay.project.templates.extensions.util.FileUtil;
 import com.liferay.project.templates.extensions.util.ProjectTemplatesUtil;
 import com.liferay.project.templates.extensions.util.Validator;
@@ -31,6 +32,7 @@ import difflib.Patch;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
@@ -52,6 +54,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.regex.Matcher;
@@ -80,12 +83,15 @@ import org.junit.rules.TemporaryFolder;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+import org.w3c.dom.Node;
 import org.w3c.dom.Text;
 
 /**
  * @author Lawrence Lee
  */
 public interface BaseProjectTemplatesTestCase {
+
+	public static final String BUILD_GRADLE_FILE_NAME = "build.gradle";
 
 	public static final String BUILD_PROJECTS = System.getProperty(
 		"project.templates.test.builds");
@@ -105,6 +111,9 @@ public interface BaseProjectTemplatesTestCase {
 	public static final String DEPENDENCY_PORTAL_KERNEL =
 		"compileOnly group: \"com.liferay.portal\", name: " +
 			"\"com.liferay.portal.kernel\"";
+
+	public static final String GRADLE_PROPERTIES_FILE_NAME =
+		"gradle.properties";
 
 	public static final String GRADLE_TASK_PATH_BUILD = ":build";
 
@@ -130,8 +139,77 @@ public interface BaseProjectTemplatesTestCase {
 	public static final String REPOSITORY_CDN_URL =
 		"https://repository-cdn.liferay.com/nexus/content/groups/public";
 
+	public static final String SETTINGS_GRADLE_FILE_NAME = "settings.gradle";
+
 	public static final boolean TEST_DEBUG_BUNDLE_DIFFS = Boolean.getBoolean(
 		"test.debug.bundle.diffs");
+
+	public static File findParentFile(
+		File dir, String[] fileNames, boolean checkParents) {
+
+		if (dir == null) {
+			return null;
+		}
+
+		if (Objects.equals(".", dir.toString()) || !dir.isAbsolute()) {
+			try {
+				dir = dir.getCanonicalFile();
+			}
+			catch (Exception exception) {
+				dir = dir.getAbsoluteFile();
+			}
+		}
+
+		for (String fileName : fileNames) {
+			File file = new File(dir, fileName);
+
+			if (file.exists()) {
+				return dir;
+			}
+		}
+
+		if (checkParents) {
+			return findParentFile(dir.getParentFile(), fileNames, checkParents);
+		}
+
+		return null;
+	}
+
+	public default void addCssBuilderConfigurationElement(
+		Document document, String configurationName, String configurationText) {
+
+		Element projectElement = document.getDocumentElement();
+
+		Element buildElement = XMLTestUtil.getChildElement(
+			projectElement, "build");
+
+		Element pluginsElement = XMLTestUtil.getChildElement(
+			buildElement, "plugins");
+
+		List<Element> pluginElementList = XMLTestUtil.getChildElements(
+			pluginsElement);
+
+		for (Element pluginElement : pluginElementList) {
+			Element artifactIdElement = XMLTestUtil.getChildElement(
+				pluginElement, "artifactId");
+
+			Node node = artifactIdElement.getFirstChild();
+
+			String artifactId = node.getNodeValue();
+
+			if (artifactId.equals("com.liferay.css.builder")) {
+				Element configurationElement = XMLTestUtil.getChildElement(
+					pluginElement, "configuration");
+
+				Element newElement = document.createElement(configurationName);
+
+				newElement.appendChild(
+					document.createTextNode(configurationText));
+
+				configurationElement.appendChild(newElement);
+			}
+		}
+	}
 
 	public default void addNexusRepositoriesElement(
 		Document document, String parentElementName, String elementName) {
@@ -346,7 +424,7 @@ public interface BaseProjectTemplatesTestCase {
 			String... args)
 		throws Exception {
 
-		File destinationDir = temporaryFolder.newFolder("gradle");
+		File destinationDir = temporaryFolder.newFolder("gradle" + name);
 
 		return buildTemplateWithGradle(destinationDir, template, name, args);
 	}
@@ -386,8 +464,6 @@ public interface BaseProjectTemplatesTestCase {
 		completeArgs.add("-DartifactId=" + name);
 		completeArgs.add("-Dversion=1.0.0");
 
-		String liferayVersion = null;
-
 		boolean liferayVersionSet = false;
 		boolean projectTypeSet = false;
 
@@ -395,7 +471,6 @@ public interface BaseProjectTemplatesTestCase {
 			completeArgs.add(arg);
 
 			if (arg.startsWith("-DliferayVersion=")) {
-				liferayVersion = arg.substring(17);
 				liferayVersionSet = true;
 			}
 			else if (arg.startsWith("-DprojectType=")) {
@@ -404,22 +479,11 @@ public interface BaseProjectTemplatesTestCase {
 		}
 
 		if (!liferayVersionSet) {
-			completeArgs.add("-DliferayVersion=7.2");
-			liferayVersion = "7.2";
+			completeArgs.add("-DliferayVersion=" + getDefaultLiferayVersion());
 		}
 
 		if (!projectTypeSet) {
 			completeArgs.add("-DprojectType=standalone");
-		}
-
-		if (template.startsWith("npm-") && !liferayVersion.startsWith("7.0") &&
-			!liferayVersion.startsWith("7.1")) {
-
-			executeMaven(
-				destinationDir, true, mavenExecutor,
-				completeArgs.toArray(new String[0]));
-
-			return destinationDir;
 		}
 
 		executeMaven(
@@ -441,19 +505,23 @@ public interface BaseProjectTemplatesTestCase {
 			String groupId, MavenExecutor mavenExecutor, String... args)
 		throws Exception {
 
-		File mavenDir = temporaryFolder.newFolder("maven");
+		File mavenDir = temporaryFolder.newFolder("maven" + name);
 
 		return buildTemplateWithMaven(
 			mavenDir, mavenDir, template, name, groupId, mavenExecutor, args);
 	}
 
-	public default File buildWorkspace(TemporaryFolder temporaryFolder)
+	public default File buildWorkspace(
+			TemporaryFolder temporaryFolder, String liferayVersion)
 		throws Exception {
 
-		File destinationDir = temporaryFolder.newFolder("workspace");
+		String name = "test-workspace";
+
+		File destinationDir = temporaryFolder.newFolder("workspace" + name);
 
 		return buildTemplateWithGradle(
-			destinationDir, WorkspaceUtil.WORKSPACE, "test-workspace");
+			destinationDir, WorkspaceUtil.WORKSPACE, name, "--liferay-version",
+			liferayVersion);
 	}
 
 	public default void editXml(File xmlFile, Consumer<Document> consumer)
@@ -507,9 +575,11 @@ public interface BaseProjectTemplatesTestCase {
 		String projectPath = projectDir.getPath();
 
 		if (projectPath.contains("workspace")) {
-			File buildFile = new File(projectDir, "build.gradle");
+			File workspaceDir = getWorkspaceDir(projectDir);
 
-			Path buildFilePath = buildFile.toPath();
+			File workspaceBuildFile = new File(workspaceDir, "build.gradle");
+
+			Path buildFilePath = workspaceBuildFile.toPath();
 
 			String content = FileUtil.read(buildFilePath);
 
@@ -699,6 +769,37 @@ public interface BaseProjectTemplatesTestCase {
 		return executeMaven(projectDir, false, mavenExecutor, args);
 	}
 
+	public default String getDefaultLiferayVersion() {
+		ProjectTemplatesArgs projectTemplatesArgs = new ProjectTemplatesArgs();
+
+		return projectTemplatesArgs.getLiferayVersion();
+	}
+
+	public default File getWorkspaceDir(File dir) {
+		File gradleParent = findParentFile(
+			dir,
+			new String[] {
+				SETTINGS_GRADLE_FILE_NAME, GRADLE_PROPERTIES_FILE_NAME
+			},
+			true);
+
+		if ((gradleParent != null) && gradleParent.exists()) {
+			return gradleParent;
+		}
+
+		FilenameFilter gradleFilter = (file, name) ->
+			SETTINGS_GRADLE_FILE_NAME.equals(name) ||
+			GRADLE_PROPERTIES_FILE_NAME.equals(name);
+
+		File[] matches = dir.listFiles(gradleFilter);
+
+		if (Objects.nonNull(matches) && (matches.length > 0)) {
+			return dir;
+		}
+
+		return null;
+	}
+
 	public default boolean isBuildProjects() {
 		if (Validator.isNotNull(BUILD_PROJECTS) &&
 			BUILD_PROJECTS.equals("true")) {
@@ -726,18 +827,31 @@ public interface BaseProjectTemplatesTestCase {
 			String template, String name, String jarFilePath, String... args)
 		throws Exception {
 
-		File workspaceDir = buildWorkspace(temporaryFolder);
-
 		List<String> argsList = Arrays.asList(args);
 
+		File workspaceDir = null;
+
 		if (argsList.contains("7.0.6")) {
+			workspaceDir = buildWorkspace(temporaryFolder, "7.0.6");
+
 			enableTargetPlatformInWorkspace(workspaceDir, "7.0.6");
 		}
 		else if (argsList.contains("7.1.3")) {
+			workspaceDir = buildWorkspace(temporaryFolder, "7.1.3");
+
 			enableTargetPlatformInWorkspace(workspaceDir, "7.1.3");
 		}
-		else {
+		else if (argsList.contains("7.2.1")) {
+			workspaceDir = buildWorkspace(temporaryFolder, "7.2.1");
+
 			enableTargetPlatformInWorkspace(workspaceDir, "7.2.1");
+		}
+		else {
+			workspaceDir = buildWorkspace(
+				temporaryFolder, getDefaultLiferayVersion());
+
+			enableTargetPlatformInWorkspace(
+				workspaceDir, getDefaultLiferayVersion());
 		}
 
 		File modulesDir = new File(workspaceDir, "modules");
@@ -1009,6 +1123,21 @@ public interface BaseProjectTemplatesTestCase {
 		}
 
 		Assert.assertFalse(message.toString() + differences, realChange);
+	}
+
+	public default File writeGradlePropertiesInWorkspace(
+			File workspaceDir, String gradleProperties)
+		throws IOException {
+
+		File gradlePropertiesFile = new File(workspaceDir, "gradle.properties");
+
+		gradleProperties = System.lineSeparator() + gradleProperties;
+
+		Files.write(
+			gradlePropertiesFile.toPath(), gradleProperties.getBytes(),
+			StandardOpenOption.APPEND);
+
+		return gradlePropertiesFile;
 	}
 
 }

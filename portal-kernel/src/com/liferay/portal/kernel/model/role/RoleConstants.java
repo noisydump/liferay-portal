@@ -80,6 +80,14 @@ public class RoleConstants {
 		SITE_ADMINISTRATOR, SITE_MEMBER, SITE_OWNER
 	};
 
+	public static final int TYPE_ACCOUNT = 6;
+
+	public static final String TYPE_ACCOUNT_LABEL = "account";
+
+	public static final int TYPE_DEPOT = 5;
+
+	public static final String TYPE_DEPOT_LABEL = "depot";
+
 	public static final int TYPE_ORGANIZATION = 3;
 
 	public static final String TYPE_ORGANIZATION_LABEL = "organization";
@@ -126,7 +134,13 @@ public class RoleConstants {
 	}
 
 	public static String getTypeLabel(int type) {
-		if (type == TYPE_ORGANIZATION) {
+		if (type == TYPE_ACCOUNT) {
+			return TYPE_ACCOUNT_LABEL;
+		}
+		else if (type == TYPE_DEPOT) {
+			return TYPE_DEPOT_LABEL;
+		}
+		else if (type == TYPE_ORGANIZATION) {
 			return TYPE_ORGANIZATION_LABEL;
 		}
 		else if (type == TYPE_SITE) {

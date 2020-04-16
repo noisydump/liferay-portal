@@ -12,7 +12,7 @@
  * details.
  */
 
-import openToast from 'frontend-js-web/liferay/toast/commands/OpenToast.es';
+import {DataDefinitionUtils} from 'data-engine-taglib';
 import React, {useContext, useEffect, useState} from 'react';
 import {Link, withRouter} from 'react-router-dom';
 
@@ -22,7 +22,7 @@ import ListView from '../../components/list-view/ListView.es';
 import {Loading} from '../../components/loading/Loading.es';
 import {toQuery, toQueryString} from '../../hooks/useQuery.es';
 import {confirmDelete, getItem} from '../../utils/client.es';
-import {getFieldLabel} from '../../utils/dataDefinition.es';
+import {errorToast, successToast} from '../../utils/toast.es';
 import {FieldValuePreview} from './FieldPreview.es';
 import {ACTIONS, PermissionsContext} from './PermissionsContext.es';
 
@@ -30,16 +30,16 @@ const ListEntries = withRouter(({history, location}) => {
 	const [state, setState] = useState({
 		dataDefinition: null,
 		dataListView: {
-			fieldNames: []
+			fieldNames: [],
 		},
-		isLoading: true
+		isLoading: true,
 	});
 
 	const {
 		basePortletURL,
 		dataDefinitionId,
 		dataListViewId,
-		showFormView
+		showFormView,
 	} = useContext(AppContext);
 
 	const actionIds = useContext(PermissionsContext);
@@ -49,21 +49,32 @@ const ListEntries = withRouter(({history, location}) => {
 	useEffect(() => {
 		Promise.all([
 			getItem(`/o/data-engine/v2.0/data-definitions/${dataDefinitionId}`),
-			getItem(`/o/data-engine/v2.0/data-list-views/${dataListViewId}`)
-		]).then(([dataDefinition, dataListView]) => {
-			setState(prevState => ({
-				...prevState,
-				dataDefinition: {
-					...prevState.dataDefinition,
-					...dataDefinition
-				},
-				dataListView: {
-					...prevState.dataListView,
-					...dataListView
-				},
-				isLoading: false
-			}));
-		});
+			getItem(`/o/data-engine/v2.0/data-list-views/${dataListViewId}`),
+		])
+			.then(([dataDefinition, dataListView]) => {
+				setState(prevState => ({
+					...prevState,
+					dataDefinition: {
+						...prevState.dataDefinition,
+						...dataDefinition,
+					},
+					dataListView: {
+						...prevState.dataListView,
+						...dataListView,
+					},
+					isLoading: false,
+				}));
+			})
+			.catch(() => {
+				setState(prevState => ({
+					...prevState,
+					isLoading: false,
+				}));
+
+				errorToast(
+					Liferay.Language.get('an-unexpected-error-occurred')
+				);
+			});
 	}, [dataDefinitionId, dataListViewId]);
 
 	const {dataDefinition, dataListView, isLoading} = state;
@@ -72,7 +83,7 @@ const ListEntries = withRouter(({history, location}) => {
 	const getEditURL = (dataRecordId = 0) =>
 		Liferay.Util.PortletURL.createRenderURL(basePortletURL, {
 			dataRecordId,
-			mvcPath: '/edit_entry.jsp'
+			mvcPath: '/edit_entry.jsp',
 		});
 
 	const handleEditItem = dataRecordId => {
@@ -85,14 +96,14 @@ const ListEntries = withRouter(({history, location}) => {
 		if (hasViewPermission) {
 			actions.push({
 				action: ({viewURL}) => Promise.resolve(history.push(viewURL)),
-				name: Liferay.Language.get('view')
+				name: Liferay.Language.get('view'),
 			});
 		}
 
 		if (actionIds.includes(ACTIONS.UPDATE_DATA_RECORD)) {
 			actions.push({
 				action: ({id}) => Promise.resolve(handleEditItem(id)),
-				name: Liferay.Language.get('edit')
+				name: Liferay.Language.get('edit'),
 			});
 		}
 
@@ -103,18 +114,14 @@ const ListEntries = withRouter(({history, location}) => {
 						item
 					).then(confirmed => {
 						if (confirmed) {
-							openToast({
-								message: Liferay.Language.get(
-									'an-entry-was-deleted'
-								),
-								title: Liferay.Language.get('success'),
-								type: 'success'
-							});
+							successToast(
+								Liferay.Language.get('an-entry-was-deleted')
+							);
 						}
 
 						return Promise.resolve(confirmed);
 					}),
-				name: Liferay.Language.get('delete')
+				name: Liferay.Language.get('delete'),
 			});
 		}
 	}
@@ -127,7 +134,7 @@ const ListEntries = withRouter(({history, location}) => {
 					showFormView &&
 					hasAddPermission && (
 						<Button
-							className="nav-btn nav-btn-monospaced navbar-breakpoint-down-d-none"
+							className="nav-btn nav-btn-monospaced"
 							onClick={() => handleEditItem(0)}
 							symbol="plus"
 							tooltip={Liferay.Language.get('new-entry')}
@@ -137,7 +144,10 @@ const ListEntries = withRouter(({history, location}) => {
 				columns={columns.map(column => ({
 					key: 'dataRecordValues/' + column,
 					sortable: true,
-					value: getFieldLabel(dataDefinition, column)
+					value: DataDefinitionUtils.getFieldLabel(
+						dataDefinition,
+						column
+					),
 				}))}
 				emptyState={{
 					button: () =>
@@ -150,7 +160,7 @@ const ListEntries = withRouter(({history, location}) => {
 								{Liferay.Language.get('new-entry')}
 							</Button>
 						),
-					title: Liferay.Language.get('there-are-no-entries-yet')
+					title: Liferay.Language.get('there-are-no-entries-yet'),
 				}}
 				endpoint={`/o/data-engine/v2.0/data-definitions/${dataDefinitionId}/data-records`}
 				queryParams={{dataListViewId}}
@@ -161,7 +171,7 @@ const ListEntries = withRouter(({history, location}) => {
 						keywords: '',
 						page: 1,
 						pageSize: 20,
-						sort: ''
+						sort: '',
 					});
 
 					const entryIndex =
@@ -197,7 +207,7 @@ const ListEntries = withRouter(({history, location}) => {
 					return {
 						...displayedDataRecordValues,
 						id,
-						viewURL
+						viewURL,
 					};
 				}}
 			</ListView>

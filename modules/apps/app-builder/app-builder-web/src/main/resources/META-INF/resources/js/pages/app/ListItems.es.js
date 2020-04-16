@@ -15,14 +15,14 @@
 import {ClayRadio, ClayRadioGroup} from '@clayui/form';
 import ClayTable from '@clayui/table';
 import classNames from 'classnames';
-import moment from 'moment';
 import React, {useContext} from 'react';
 
 import {withLoading} from '../../components/loading/Loading.es';
 import {withEmpty} from '../../components/table/EmptyState.es';
+import {fromNow} from '../../utils/time.es';
 import EditAppContext, {
 	UPDATE_DATA_LAYOUT_ID,
-	UPDATE_DATA_LIST_VIEW_ID
+	UPDATE_DATA_LIST_VIEW_ID,
 } from './EditAppContext.es';
 
 const {Body, Cell, Head, Row} = ClayTable;
@@ -31,8 +31,8 @@ const ListItems = ({itemType, items}) => {
 	const {
 		dispatch,
 		state: {
-			app: {dataLayoutId, dataListViewId}
-		}
+			app: {dataLayoutId, dataListViewId},
+		},
 	} = useContext(EditAppContext);
 
 	const itemId = itemType === 'DATA_LAYOUT' ? dataLayoutId : dataListViewId;
@@ -45,7 +45,7 @@ const ListItems = ({itemType, items}) => {
 
 		dispatch({
 			id,
-			type
+			type,
 		});
 	};
 
@@ -72,21 +72,21 @@ const ListItems = ({itemType, items}) => {
 							dateCreated,
 							dateModified,
 							id,
-							name: {en_US: itemName}
+							name: {en_US: itemName},
 						},
 						index
 					) => {
 						return (
 							<Row
 								className={classNames('selectable-row', {
-									'selectable-active': id === itemId
+									'selectable-active': id === itemId,
 								})}
 								key={index}
 								onClick={() => onItemIdChange(id)}
 							>
 								<Cell align="left">{itemName}</Cell>
-								<Cell>{moment(dateCreated).fromNow()}</Cell>
-								<Cell>{moment(dateModified).fromNow()}</Cell>
+								<Cell>{fromNow(dateCreated)}</Cell>
+								<Cell>{fromNow(dateModified)}</Cell>
 								<Cell align={'right'}>
 									<ClayRadioGroup
 										inline

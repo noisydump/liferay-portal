@@ -180,7 +180,11 @@ public class OpenAPIParserUtil {
 					schema.getAdditionalPropertySchema();
 
 				if (additionalPropertySchema.getReference() != null) {
-					javaDataType = Map.class.getName();
+					String referenceType = javaDataTypeMap.get(
+						getReferenceName(
+							additionalPropertySchema.getReference()));
+
+					javaDataType = "Map<String, " + referenceType + ">";
 				}
 
 				AbstractMap.SimpleImmutableEntry<String, String> key =
@@ -189,7 +193,11 @@ public class OpenAPIParserUtil {
 						additionalPropertySchema.getFormat());
 
 				if (_openAPIDataTypeMap.containsKey(key)) {
-					javaDataType = Map.class.getName();
+					String additionalJavaDataType = getJavaDataType(
+						javaDataTypeMap, schema.getAdditionalPropertySchema());
+
+					javaDataType =
+						"Map<String, " + additionalJavaDataType + ">";
 				}
 			}
 

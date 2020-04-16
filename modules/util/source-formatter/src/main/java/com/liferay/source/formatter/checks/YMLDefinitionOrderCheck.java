@@ -57,9 +57,7 @@ public class YMLDefinitionOrderCheck extends BaseFileCheck {
 
 		sb.setIndex(sb.index() - 1);
 
-		content = _sortPathParameters(sb.toString());
-
-		return content;
+		return _sortPathParameters(sb.toString());
 	}
 
 	private List<String> _combineComments(
@@ -187,10 +185,7 @@ public class YMLDefinitionOrderCheck extends BaseFileCheck {
 								definition1, definition2, "name");
 						}
 
-						String value1 = definition1Lines[1].trim();
-						String value2 = definition2Lines[1].trim();
-
-						return value1.compareTo(value2);
+						return 0;
 					}
 
 					if (trimmedDefinition1Line.startsWith("in:") ||
@@ -293,9 +288,7 @@ public class YMLDefinitionOrderCheck extends BaseFileCheck {
 			matcher2 = pattern.matcher(path);
 
 			while (matcher2.find()) {
-				String inPaths = null;
-
-				inPaths = matcher2.group();
+				String inPaths = matcher2.group();
 
 				pattern = Pattern.compile(" *-\n( +)in: path(\n\\1.+)*\n");
 

@@ -27,7 +27,18 @@ definition {
 
 		LexiconEntry.gotoAdd();
 
-		MenuItem.click(menuItem = "${adtType} Template");
+		if (IsElementPresent(key_text = "More", locator1 = "Button#ANY")) {
+			Button.clickMore();
+
+			ScrollWebElementIntoView(
+				key_menuItem = "${adtType} Template",
+				locator1 = "MenuItem#ANY_MENU_ITEM");
+
+			MenuItem.click(menuItem = "${adtType} Template");
+		}
+		else {
+			MenuItem.click(menuItem = "${adtType} Template");
+		}
 
 		SiteAdmin.viewPortletTitle(portletTitle = "New ${adtType} Template");
 
@@ -119,10 +130,6 @@ definition {
 			value1 = "${adtFile}");
 
 		PortletEntry.save();
-
-		AssertTextEquals(
-			locator1 = "ApplicationDisplayTemplates#ADT_TABLE_NAME_1",
-			value1 = "${adtType} Test ADT");
 
 		SelectFrameTop(value1 = "relative=top");
 	}

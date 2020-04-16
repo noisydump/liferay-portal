@@ -43,10 +43,10 @@ export function mapDataLayoutColumns(dataLayoutPages, fn = () => {}) {
 										rowIndex,
 										pageIndex
 									)
-							)
+							),
 						};
 					}
-				)
+				),
 			};
 		}
 	);
@@ -60,7 +60,7 @@ export function deleteField(dataLayoutPages, fieldName) {
 				...dataLayoutColumn,
 				fieldNames: (fieldNames || []).filter(
 					name => name !== fieldName
-				)
+				),
 			};
 		}
 	);
@@ -85,7 +85,7 @@ export function getIndexesFromFieldName({dataLayoutPages}, fieldName) {
 						indexes = {
 							columnIndex,
 							pageIndex,
-							rowIndex
+							rowIndex,
 						};
 
 						return true;
@@ -98,4 +98,20 @@ export function getIndexesFromFieldName({dataLayoutPages}, fieldName) {
 	});
 
 	return indexes;
+}
+
+export function normalizeLogicalOperator(dataRule) {
+	if (Object.prototype.hasOwnProperty.call(dataRule, 'logical-operator')) {
+		dataRule['logicalOperator'] = dataRule['logical-operator'];
+		delete dataRule['logical-operator'];
+	}
+
+	if (!Object.prototype.hasOwnProperty.call(dataRule, 'ruleEditedIndex')) {
+		dataRule = {
+			...dataRule,
+			ruleEditedIndex: Math.floor(Math.random() * 100000),
+		};
+	}
+
+	return dataRule;
 }

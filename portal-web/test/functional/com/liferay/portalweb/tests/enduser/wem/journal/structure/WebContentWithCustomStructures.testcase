@@ -268,29 +268,38 @@ definition {
 
 		WebContentNavigator.gotoEditCP(webContentTitle = "WC WebContent Title");
 
+		AssertTextEquals(
+			locator1 = "TextInput#TITLE",
+			value1 = "WC WebContent Title");
+
+		FormFields.viewTextValue(
+			fieldName = "Text",
+			fieldValue = "Text");
+
+		FormFields.viewTextMultilineValue(
+			fieldName = "TextBox",
+			fieldValue = "Text Box");
+
 		PortletEntry.changeLocale(locale = "es-ES");
 
 		WebContent.addCP(webContentTitle = "Title Spanish");
 
-		FormFields.editText(
+		AssertTextEquals(
+			locator1 = "TextInput#TITLE",
+			value1 = "Title Spanish");
+
+		Type(
+			key_fieldName = "Text",
+			locator1 = "TextInput#DDM",
+			value1 = "Text Spanish");
+
+		FormFields.viewTextValue(
 			fieldName = "Text",
 			fieldValue = "Text Spanish");
 
-		FormFields.editTextMultiline(
-			fieldName = "TextBox",
-			fieldValue = "Text Box Spanish");
-
-		PortletEntry.publish();
-
-		WebContentNavigator.gotoEditCP(webContentTitle = "WC WebContent Title");
-
-		WebContent.viewUnlocalizableTextBox(
-			editLocalizedTextBox = "Text Box Unlocalized",
-			localizedText = "Text Spanish",
-			localizedTextBox = "Text Box",
-			localizedTitle = "Title Spanish",
-			webContentTextBox = "Text Box",
-			webContentTitle = "WC WebContent Title");
+		AssertNotEditable(
+			key_fieldName = "TextBox",
+			locator1 = "DDMField#TEXT_BOX");
 	}
 
 	@description = "This is a use case for LPS-69560."
@@ -414,6 +423,7 @@ definition {
 
 	@priority = "3"
 	test AddWebContentWithColorField {
+		property portal.upstream = "quarantine";
 		property testray.component.names = "Web Content Administration";
 
 		WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name");
@@ -1131,7 +1141,10 @@ definition {
 
 		Button.clickPublish();
 
-		Alert.viewRequiredField();
+		AssertTextEquals.assertPartialText(
+			key_fieldName = "Text",
+			locator1 = "TextInput#SPECIFIC_FIELD_REQUIRED_ALERT",
+			value1 = "This field is required.");
 	}
 
 	@priority = "4"
@@ -1346,7 +1359,10 @@ definition {
 
 	@priority = "4"
 	test WebContentAdministrationDataValidation {
+		property portal.upstream = "quarantine";
 		property testray.component.names = "Web Content Administration";
+
+		// Quarantine for LRQA-57161
 
 		WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name");
 
@@ -1372,12 +1388,7 @@ definition {
 
 		WebContent.editNullCP(
 			webContentContent = "WC WebContent Content",
-			webContentContentEdit = "WC WebContent Content",
-			webContentTitle = "WC WebContent Title");
-
-		WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name");
-
-		WebContentNavigator.gotoEditCP(webContentTitle = "Untitled");
+			webContentContentEdit = "WC WebContent Content");
 
 		WebContent.editCP(
 			webContentContentEdit = "WC WebContent Content Edit",

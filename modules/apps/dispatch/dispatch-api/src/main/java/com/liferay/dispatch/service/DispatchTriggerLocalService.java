@@ -76,7 +76,7 @@ public interface DispatchTriggerLocalService
 
 	public DispatchTrigger addDispatchTrigger(
 			long userId, String name, boolean system, String type,
-			UnicodeProperties typeSettingsProperties)
+			UnicodeProperties typeSettingsUnicodeProperties)
 		throws PortalException;
 
 	/**
@@ -87,6 +87,12 @@ public interface DispatchTriggerLocalService
 	 */
 	@Transactional(enabled = false)
 	public DispatchTrigger createDispatchTrigger(long dispatchTriggerId);
+
+	/**
+	 * @throws PortalException
+	 */
+	public PersistedModel createPersistedModel(Serializable primaryKeyObj)
+		throws PortalException;
 
 	/**
 	 * Deletes the dispatch trigger from the database. Also notifies the appropriate model listeners.
@@ -247,6 +253,9 @@ public interface DispatchTriggerLocalService
 	 */
 	public String getOSGiServiceIdentifier();
 
+	/**
+	 * @throws PortalException
+	 */
 	@Override
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public PersistedModel getPersistedModel(Serializable primaryKeyObj)
@@ -275,7 +284,7 @@ public interface DispatchTriggerLocalService
 
 	public DispatchTrigger updateDispatchTrigger(
 			long dispatchTriggerId, String name,
-			UnicodeProperties typeSettingsProperties)
+			UnicodeProperties typeSettingsUnicodeProperties)
 		throws PortalException;
 
 }

@@ -16,21 +16,21 @@ definition {
 		SelectFrame.selectSecondFrame(locator1 = "IFrame#DIALOG");
 
 		if (isSet(depotName)) {
-			var key_contentName = "${webContentTitle}";
+			var key_rowEntry = "${webContentTitle}";
 
 			AssertClick(
-				key_breadcrumbName = "Workspaces",
+				key_breadcrumbName = "Sites and Libraries",
 				locator1 = "Breadcrumb#BREADCRUMB_ENTRY",
-				value1 = "Workspaces");
+				value1 = "Sites and Libraries");
 
 			AssertClick(
-				key_groupTab = "Repository",
+				key_groupTab = "Asset Library",
 				locator1 = "ItemSelector#NAVIGATION_GROUP_TAB",
-				value1 = "Repository");
+				value1 = "Asset Library");
 
 			LexiconCard.clickCard(card = "${depotName}");
 
-			Click(locator1 = "ItemSelector#SELECT_FILE_WEB_CONTENT");
+			Click(locator1 = "ContentRow#ENTRY_CONTENT_ENTRY_NAME");
 
 			SelectFrame(locator1 = "IFrame#DIALOG");
 
@@ -223,6 +223,8 @@ definition {
 
 		Search.searchCP(searchTerm = "${searchTerm}");
 
+		LexiconEntry.changeDisplayStyle(displayStyle = "list");
+
 		var key_webContentTitle = "${webContentTitle}";
 
 		AssertTextEquals(
@@ -266,6 +268,8 @@ definition {
 
 		Search.searchCP(searchTerm = "${webContentTitle}");
 
+		LexiconEntry.changeDisplayStyle(displayStyle = "list");
+
 		var key_webContentTitle = "${webContentTitle}";
 
 		AssertElementNotPresent(
@@ -290,9 +294,13 @@ definition {
 
 		SelectFrame(locator1 = "IFrame#DIALOG");
 
-		Click(locator1 = "Dropdown#FILTER_AND_ORDER");
+		Click(
+			key_breadcrumbName = "Sites",
+			locator1 = "Breadcrumb#BREADCRUMB_ENTRY_LINK");
 
-		MenuItem.click(menuItem = "${otherSiteName}");
+		Click(
+			key_card = "${otherSiteName}",
+			locator1 = "LexiconCard#CARD_TITLE_LINK");
 
 		var key_listEntry = "${webContentTitle}";
 
@@ -319,24 +327,9 @@ definition {
 	}
 
 	macro selectWebContent {
-		if ("${contentPage}" == "true") {
-			MouseOver(
-				key_infoMessage = "Select Web Content to make it visible",
-				locator1 = "Message#INFO_SPECIFIC");
-
-			Click(
-				key_fragmentName = "Web Content Display",
-				locator1 = "Fragment#FRAGMENT_ELLIPSIS_ICON");
-
-			Click(
-				key_menuItem = "Configuration",
-				locator1 = "Fragment#FRAGMENT_FLOATING_MENU_ITEM");
-		}
-		else {
-			Portlet.gotoPortletOptions(
-				portletName = "Web Content Display",
-				portletOption = "Configuration");
-		}
+		Portlet.gotoPortletOptions(
+			portletName = "Web Content Display",
+			portletOption = "Configuration");
 
 		SelectFrame(locator1 = "IFrame#DIALOG");
 
@@ -351,21 +344,21 @@ definition {
 		SelectFrame.selectSecondFrame(locator1 = "IFrame#DIALOG");
 
 		if (isSet(depotName)) {
-			var key_contentName = "${webContentTitle}";
+			var key_rowEntry = "${webContentTitle}";
 
 			AssertClick(
-				key_breadcrumbName = "Workspaces",
+				key_breadcrumbName = "Sites and Libraries",
 				locator1 = "Breadcrumb#BREADCRUMB_ENTRY",
-				value1 = "Workspaces");
+				value1 = "Sites and Libraries");
 
 			AssertClick(
-				key_groupTab = "Repository",
+				key_groupTab = "Asset Library",
 				locator1 = "ItemSelector#NAVIGATION_GROUP_TAB",
-				value1 = "Repository");
+				value1 = "Asset Library");
 
 			LexiconCard.clickCard(card = "${depotName}");
 
-			Click(locator1 = "ItemSelector#SELECT_FILE_WEB_CONTENT");
+			Click(locator1 = "ContentRow#ENTRY_CONTENT_ENTRY_NAME");
 
 			SelectFrame(locator1 = "IFrame#DIALOG");
 
@@ -444,9 +437,13 @@ definition {
 			locator1 = "Button#REPLY",
 			value1 = "Reply");
 
-		AssertElementPresent(locator1 = "Ratings#THUMB_UP");
+		AssertElementPresent(
+			key_ratingResult = "Rate this as good",
+			locator1 = "Ratings#THUMB");
 
-		AssertElementPresent(locator1 = "Ratings#THUMB_DOWN");
+		AssertElementPresent(
+			key_ratingResult = "Rate this as bad",
+			locator1 = "Ratings#THUMB");
 	}
 
 	macro viewConfigureScopePG {
@@ -493,13 +490,13 @@ definition {
 	macro viewDefaultMessage {
 		Alert.viewInfoMessageSpecific(infoMessage = "This application is not visible to users yet");
 
-		Alert.viewInfoMessageSpecific(infoMessage = "Select Web Content to make it visible");
+		Alert.viewInfoMessageSpecific(infoMessage = "Select web content to make it visible");
 	}
 
 	macro viewDeletedArticle {
 		Alert.viewWarningSpecific(warningMessage = "The selected web content no longer exists.");
 
-		Alert.viewWarningSpecific(warningMessage = "Do you want to Select Another Web Content?");
+		Alert.viewWarningSpecific(warningMessage = "Do you want to Select Another web content?");
 	}
 
 	macro viewEnabledFileTypesPGViaWCD {

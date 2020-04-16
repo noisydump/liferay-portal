@@ -15,23 +15,16 @@
 import updateLayoutData from '../actions/updateLayoutData';
 import LayoutService from '../services/LayoutService';
 
-export default function moveItem({
-	config,
-	itemId,
-	parentItemId,
-	position,
-	store
-}) {
+export default function moveItem({itemId, parentItemId, position, store}) {
 	return dispatch => {
 		const {segmentsExperienceId} = store;
 
 		LayoutService.moveItem({
-			config,
 			itemId,
 			onNetworkStatus: dispatch,
 			parentItemId,
 			position,
-			segmentsExperienceId
+			segmentsExperienceId,
 		}).then(layoutData => {
 			dispatch(updateLayoutData({layoutData}));
 		});

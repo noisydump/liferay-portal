@@ -37,15 +37,6 @@ describe('AutoSave', () => {
 	let form;
 	let stateSyncronizer;
 
-	afterEach(() => {
-		if (component) {
-			component.dispose();
-		}
-		if (form) {
-			dom.exitDocument(form);
-		}
-	});
-
 	beforeEach(() => {
 		jest.useFakeTimers();
 		fetch.resetMocks();
@@ -55,12 +46,12 @@ describe('AutoSave', () => {
 		stateSyncronizer = {
 			getState: () => {
 				return {
-					pages: stateSyncronizer.pages
+					pages: stateSyncronizer.pages,
 				};
 			},
 			isEmpty: () => true,
 			pages: [],
-			syncInputs: () => {}
+			syncInputs: () => {},
 		};
 
 		component = new AutoSave({
@@ -68,8 +59,22 @@ describe('AutoSave', () => {
 			interval: AUTOSAVE_INTERVAL,
 			namespace: '',
 			stateSyncronizer,
-			url: URL
+			url: URL,
 		});
+
+		Object.defineProperty(window, 'location', {
+			value: {reload: jest.fn()},
+			writable: true,
+		});
+	});
+
+	afterEach(() => {
+		if (component) {
+			component.dispose();
+		}
+		if (form) {
+			dom.exitDocument(form);
+		}
 	});
 
 	it('calls the saveIfNeeded function every given interval', () => {
@@ -89,13 +94,13 @@ describe('AutoSave', () => {
 
 		stateSyncronizer.getState = () => {
 			return {
-				newState: true
+				newState: true,
 			};
 		};
 		stateSyncronizer.isEmpty = () => false;
 
 		fetch.mockResponse(JSON.stringify({}), {
-			status: 200
+			status: 200,
 		});
 
 		jest.advanceTimersByTime(component.props.interval * 3);
@@ -114,7 +119,7 @@ describe('AutoSave', () => {
 		fetch.mockResponse(
 			JSON.stringify({
 				modifiedDate,
-				saveAsDraft
+				saveAsDraft,
 			})
 		);
 
@@ -124,28 +129,22 @@ describe('AutoSave', () => {
 	});
 
 	it('reloads the page when session has expired', () => {
-		const reloadMock = jest.spyOn(window.location, 'reload');
-
-		reloadMock.mockImplementation(() => null);
+		window.location.reload.mockImplementation(() => null);
 
 		fetch.mockReject({status: 401});
 
 		return component.save().catch(() => {
-			expect(reloadMock).toHaveBeenCalledTimes(1);
-			reloadMock.mockRestore();
+			expect(window.location.reload).toHaveBeenCalledTimes(1);
 		});
 	});
 
 	it('does not reload the page when request failed for other reasons', () => {
-		const reloadMock = jest.spyOn(window.location, 'reload');
-
-		reloadMock.mockImplementation(() => null);
+		window.location.reload.mockImplementation(() => null);
 
 		fetch.mockReject({status: 500});
 
 		return component.save().catch(() => {
-			expect(reloadMock).not.toHaveBeenCalled();
-			reloadMock.mockRestore();
+			expect(window.location.reload).not.toHaveBeenCalled();
 		});
 	});
 
@@ -158,14 +157,14 @@ describe('AutoSave', () => {
 		fetch.mockResponse(
 			JSON.stringify({
 				modifiedDate,
-				saveAsDraft
+				saveAsDraft,
 			})
 		);
 
 		return component.save().then(() => {
 			expect(spy).toHaveBeenCalledWith('autosaved', {
 				modifiedDate,
-				savedAsDraft: saveAsDraft
+				savedAsDraft: saveAsDraft,
 			});
 		});
 	});
@@ -177,7 +176,7 @@ describe('AutoSave', () => {
 		fetch.mockResponse(
 			JSON.stringify({
 				ddmStructureId: 456,
-				formInstanceId: '123'
+				formInstanceId: '123',
 			})
 		);
 

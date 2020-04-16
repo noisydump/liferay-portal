@@ -84,7 +84,7 @@ PortletURL portletURL = viewRolesManagementToolbarDisplayContext.getPortletURL()
 
 				rowURL.setParameter("mvcPath", "/edit_role.jsp");
 				rowURL.setParameter("tabs1", "details");
-				rowURL.setParameter("redirect", roleSearchContainer.getIteratorURL().toString());
+				rowURL.setParameter("backURL", roleSearchContainer.getIteratorURL().toString());
 				rowURL.setParameter("roleId", String.valueOf(role.getRoleId()));
 			}
 			%>
@@ -116,20 +116,20 @@ PortletURL portletURL = viewRolesManagementToolbarDisplayContext.getPortletURL()
 		) {
 			Liferay.Util.postForm(form, {
 				data: {
-					deleteRoleIds: deleteRoleIds
+					deleteRoleIds: deleteRoleIds,
 				},
 
 				<portlet:actionURL name="deleteRoles" var="deleteRolesURL">
 					<portlet:param name="redirect" value="<%= portletURL.toString() %>" />
 				</portlet:actionURL>
 
-				url: '<%= deleteRolesURL %>'
+				url: '<%= deleteRolesURL %>',
 			});
 		}
 	};
 
 	var ACTIONS = {
-		deleteRoles: deleteRoles
+		deleteRoles: deleteRoles,
 	};
 
 	Liferay.componentReady('viewRolesManagementToolbar').then(function(

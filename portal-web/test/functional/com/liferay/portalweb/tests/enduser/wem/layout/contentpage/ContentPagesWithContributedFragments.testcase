@@ -70,6 +70,7 @@ definition {
 		PageEditor.addContentDisplay(fragmentName = "Content");
 
 		PageEditor.editContentDisplay(
+			fragmentName = "Content",
 			webcontent = "true",
 			webContentContent = "WC WebContent Content",
 			webContentTitle = "WebContent Title");
@@ -94,10 +95,9 @@ definition {
 
 		task ("Assert there is a message in page editor informing the page author that the content is no longer available") {
 			AssertVisible(
-				key_content = "The selected content is no longer available. Please select another.",
-				key_fragmentClass = "entry",
-				key_position = "1",
-				locator1 = "Fragment#PAGE_EDITOR_FRAGMENT");
+				key_fragmentName = "Content",
+				key_messageIfo = "The selected content is no longer available. Please select another.",
+				locator1 = "Fragment#MESSAGE_INFO");
 		}
 	}
 
@@ -121,7 +121,8 @@ definition {
 		PageEditor.editContentDisplay(
 			blogs = "true",
 			entryContent = "This content maps from blog content",
-			entryTitle = "Blogs Entry Title");
+			entryTitle = "Blogs Entry Title",
+			fragmentName = "Content");
 
 		Button.clickPublish();
 
@@ -152,6 +153,7 @@ definition {
 
 		PageEditor.editContentDisplay(
 			documentandmedia = "true",
+			fragmentName = "Content",
 			imageFileName = "Document_1.jpg");
 
 		Button.clickPublish();
@@ -185,6 +187,7 @@ definition {
 		PageEditor.addContentDisplay(fragmentName = "Content");
 
 		PageEditor.editContentDisplay(
+			fragmentName = "Content",
 			webcontent = "true",
 			webContentContent = "This content maps from web content",
 			webContentTitle = "Webcontent Title");
@@ -196,7 +199,7 @@ definition {
 			siteName = "Test Site Name");
 
 		AssertTextEquals.assertPartialTextAceEditor(
-			locator1 = "PageEditor#CONTENT_PAGE_TEXT_CONTENT",
+			locator1 = "PageEditor#CONTENT_PAGE_WEB_CONTENT_CONTENT",
 			value1 = "This content maps from web content");
 	}
 
@@ -212,11 +215,10 @@ definition {
 		}
 
 		task ("Add a blog") {
-			Navigator.openSiteURL(siteName = "Test Site Name");
-
 			JSONBlog.addEntry(
 				entryContent = "Blogs Entry Content",
-				entryTitle = "Blogs Entry Title");
+				entryTitle = "Blogs Entry Title",
+				groupName = "Test Site Name");
 		}
 
 		task ("Add a document with an image") {
@@ -248,22 +250,21 @@ definition {
 			PageEditor.gotoSelectPanel(fragmentName = "Documents and Media");
 		}
 
-		task ("Assert only Documents and Media tab exist") {
+		task ("Assert only Documents and Media entry shown") {
 			AssertElementPresent(
-				key_navItem = "Documents and Media",
-				locator1 = "NavBar#NAV_ITEM_LINK");
+				key_card = "DM Document Title",
+				locator1 = "LexiconCard#CARD");
 
 			AssertElementNotPresent(
 				key_navItem = "Web Content",
 				locator1 = "NavBar#NAV_ITEM_LINK");
+
 			AssertElementNotPresent(
 				key_navItem = "Blogs",
 				locator1 = "NavBar#NAV_ITEM_LINK");
 		}
 
 		task ("Assert fragment display correctly") {
-			NavItem.click(navItem = "Documents and Media");
-
 			LexiconCard.clickCard(card = "DM Document Title");
 
 			AssertTextEquals(
@@ -298,7 +299,7 @@ definition {
 
 			FormFields.disableCheckbox(fieldName = "Autogenerate Structure Key");
 
-			PortletEntry.update();
+			PortletEntry.save();
 		}
 
 		task ("Add a structure with Text field") {
@@ -369,8 +370,6 @@ definition {
 		}
 
 		task ("Assert only WC with text field shown in popup") {
-			NavItem.click(navItem = "Web Content");
-
 			AssertElementNotPresent(
 				key_listEntry = "Basic Web Content Title",
 				locator1 = "LexiconList#LIST_ENTRY_TITLE");
@@ -408,7 +407,8 @@ definition {
 
 			JSONBlog.addEntry(
 				entryContent = "Blogs Entry Content",
-				entryTitle = "Blogs Entry Title");
+				entryTitle = "Blogs Entry Title",
+				groupName = "Test Site Name");
 		}
 
 		task ("Add a document") {
@@ -438,22 +438,21 @@ definition {
 			PageEditor.gotoSelectPanel(fragmentName = "Web Content");
 		}
 
-		task ("Assert only Web Content tab exist") {
+		task ("Assert only Web Content entry shown") {
 			AssertElementPresent(
-				key_navItem = "Web Content",
-				locator1 = "NavBar#NAV_ITEM_LINK");
+				key_listEntry = "Web Content Title",
+				locator1 = "LexiconList#LIST_ENTRY_TITLE");
 
 			AssertElementNotPresent(
 				key_navItem = "Documents and Media",
 				locator1 = "NavBar#NAV_ITEM_LINK");
+
 			AssertElementNotPresent(
 				key_navItem = "Blogs",
 				locator1 = "NavBar#NAV_ITEM_LINK");
 		}
 
 		task ("Assert fragment display correctly") {
-			NavItem.click(navItem = "Web Content");
-
 			AssertClick(
 				key_listEntry = "Web Content Title",
 				locator1 = "LexiconList#LIST_ENTRY_TITLE",
@@ -498,6 +497,7 @@ definition {
 
 		PageEditor.editContentDisplay(
 			customWebcontenttemplate = "WC Template Name",
+			fragmentName = "Content",
 			webcontent = "true",
 			webContentContent = "${siteID}",
 			webContentTitle = "Webcontent Title");

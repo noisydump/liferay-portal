@@ -16,9 +16,10 @@
  * Available editable types
  */
 export const EDITABLE_TYPES = {
+	backgroundImage: 'background-image',
 	html: 'html',
 	image: 'image',
 	link: 'link',
 	'rich-text': 'rich-text',
-	text: 'text'
+	text: 'text',
 };

@@ -14,15 +14,25 @@
 
 package com.liferay.portal.kernel.dao.orm;
 
+import com.liferay.petra.function.UnsafeConsumer;
+import com.liferay.petra.sql.dsl.query.DSLQuery;
+
 import java.io.Serializable;
 
 import java.sql.Connection;
+import java.sql.SQLException;
+
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * @author Brian Wing Shun Chan
  * @author Shuyang Zhou
  */
+@ProviderType
 public interface Session {
+
+	public void apply(UnsafeConsumer<Connection, SQLException> unsafeConsumer)
+		throws ORMException;
 
 	public void clear() throws ORMException;
 
@@ -38,6 +48,9 @@ public interface Session {
 	public SQLQuery createSQLQuery(String queryString) throws ORMException;
 
 	public SQLQuery createSQLQuery(String queryString, boolean strictName)
+		throws ORMException;
+
+	public SQLQuery createSynchronizedSQLQuery(DSLQuery dslQuery)
 		throws ORMException;
 
 	public SQLQuery createSynchronizedSQLQuery(String queryString)

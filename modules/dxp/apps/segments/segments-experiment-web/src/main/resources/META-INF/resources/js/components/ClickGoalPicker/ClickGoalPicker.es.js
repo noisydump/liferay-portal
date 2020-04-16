@@ -20,13 +20,13 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 
 import {StateContext as GlobalStateContext} from './../../state/context.es';
-import {getInitialState, reducer, StateContext} from './reducer.es';
+import {StateContext, getInitialState, reducer} from './reducer.es';
 import {
 	GeometryType,
+	getElementGeometry,
+	getRootElementGeometry,
 	getTargetableElements,
 	stopImmediatePropagation,
-	getRootElementGeometry,
-	getElementGeometry
 } from './utils.es';
 
 const {
@@ -36,12 +36,12 @@ const {
 	useLayoutEffect,
 	useReducer,
 	useRef,
-	useState
+	useState,
 } = React;
 
 const ESCAPE_KEYS = [
 	'Escape', // Most browsers.
-	'Esc' // IE and Edge.
+	'Esc', // IE and Edge.
 ];
 
 const POPOVER_PADDING = 16;
@@ -92,6 +92,7 @@ function ClickGoalPicker({allowEdit = true, onSelectClickGoalTarget, target}) {
 			'Cannot render <SegmentsExperimentsClickGoal /> without #content element',
 			document.querySelectorAll('section').length
 		);
+
 		return null;
 	}
 
@@ -190,7 +191,7 @@ function ClickGoalPicker({allowEdit = true, onSelectClickGoalTarget, target}) {
 ClickGoalPicker.propTypes = {
 	allowEdit: PropTypes.bool,
 	onSelectClickGoalTarget: PropTypes.func,
-	target: PropTypes.string
+	target: PropTypes.string,
 };
 
 /**
@@ -290,7 +291,7 @@ function OverlayContainer({allowEdit, root}) {
 
 OverlayContainer.propTypes = {
 	allowEdit: PropTypes.bool,
-	root: PropTypes.instanceOf(Element).isRequired
+	root: PropTypes.instanceOf(Element).isRequired,
 };
 
 /**
@@ -321,8 +322,13 @@ function Overlay({allowEdit, root, targetableElements}) {
 		<div className="lfr-segments-experiment-click-goal-root">
 			{targetableElements
 				.filter(element => {
-					if (allowEdit === true) return true;
-					if ('#' + element.id === selectedTarget) return true;
+					if (allowEdit === true) {
+						return true;
+					}
+					if ('#' + element.id === selectedTarget) {
+						return true;
+					}
+
 					return false;
 				})
 				.map(element => {
@@ -354,7 +360,7 @@ Overlay.propTypes = {
 	allowEdit: PropTypes.bool,
 	root: PropTypes.instanceOf(Element).isRequired,
 	targetableElements: PropTypes.arrayOf(PropTypes.instanceOf(Element))
-		.isRequired
+		.isRequired,
 };
 
 /**
@@ -380,7 +386,7 @@ function Target({allowEdit, element, geometry, mode, selector}) {
 	const handleClick = event => {
 		dispatch({
 			selector,
-			type: 'editTarget'
+			type: 'editTarget',
 		});
 
 		stopImmediatePropagation(event);
@@ -403,7 +409,7 @@ function Target({allowEdit, element, geometry, mode, selector}) {
 				alignItems: align === 'left' ? 'flex-start' : 'flex-end',
 				left: align === 'left' ? spaceOnLeft : null,
 				right: align === 'right' ? spaceOnRight : null,
-				top: spaceOnTop
+				top: spaceOnTop,
 			}}
 		>
 			<div
@@ -413,7 +419,7 @@ function Target({allowEdit, element, geometry, mode, selector}) {
 					'lfr-segments-experiment-click-goal-target-overlay-editing':
 						mode === 'editing',
 					'lfr-segments-experiment-click-goal-target-overlay-selected':
-						mode === 'selected'
+						mode === 'selected',
 				})}
 				data-target-selector={selector}
 				data-title={
@@ -447,7 +453,7 @@ Target.propTypes = {
 	element: PropTypes.instanceOf(Element).isRequired,
 	geometry: GeometryType.isRequired,
 	mode: PropTypes.oneOf(['inactive', 'selected', 'editing']).isRequired,
-	selector: PropTypes.string.isRequired
+	selector: PropTypes.string.isRequired,
 };
 
 /**
@@ -468,7 +474,7 @@ function TargetTopper({allowEdit, geometry, isEditing, selector}) {
 			const {
 				height,
 				left,
-				width
+				width,
 			} = topperRef.current.getBoundingClientRect();
 
 			setTop(-height);
@@ -482,7 +488,7 @@ function TargetTopper({allowEdit, geometry, isEditing, selector}) {
 
 		dispatch({
 			selector: '',
-			type: 'selectTarget'
+			type: 'selectTarget',
 		});
 	};
 
@@ -494,13 +500,13 @@ function TargetTopper({allowEdit, geometry, isEditing, selector}) {
 				'lfr-segments-experiment-click-goal-target-topper-editing': isEditing,
 				'px-2': true,
 				small: true,
-				'text-white': true
+				'text-white': true,
 			})}
 			onClick={stopImmediatePropagation}
 			ref={topperRef}
 			style={{
 				maxWidth: width !== null ? `${width}px` : null,
-				top: `${top}px`
+				top: `${top}px`,
 			}}
 		>
 			<span className="mr-2 text-truncate">
@@ -523,7 +529,7 @@ TargetTopper.propTypes = {
 	allowEdit: PropTypes.bool,
 	geometry: GeometryType.isRequired,
 	isEditing: PropTypes.bool.isRequired,
-	selector: PropTypes.string.isRequired
+	selector: PropTypes.string.isRequired,
 };
 
 /**
@@ -551,7 +557,7 @@ function TargetPopover({selector}) {
 	const handleClick = () => {
 		dispatch({
 			selector,
-			type: 'selectTarget'
+			type: 'selectTarget',
 		});
 	};
 
@@ -572,7 +578,7 @@ function TargetPopover({selector}) {
 }
 
 TargetPopover.propTypes = {
-	selector: PropTypes.string.isRequired
+	selector: PropTypes.string.isRequired,
 };
 
 ClickGoalPicker.Overlay = Overlay;

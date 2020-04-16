@@ -18,6 +18,8 @@ import com.liferay.analytics.settings.web.internal.util.AnalyticsSettingsUtil;
 import com.liferay.configuration.admin.constants.ConfigurationAdminPortletKeys;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONUtil;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ArrayUtil;
@@ -123,14 +125,19 @@ public class EditSyncedContactsMVCActionCommand
 		StatusLine statusLine = httpResponse.getStatusLine();
 
 		if (statusLine.getStatusCode() == HttpStatus.SC_FORBIDDEN) {
-			disconnectDataSource(themeDisplay.getCompanyId(), httpResponse);
+			checkResponse(themeDisplay.getCompanyId(), httpResponse);
 
 			return;
 		}
 
 		if (statusLine.getStatusCode() != HttpStatus.SC_OK) {
+			_log.error("Unable to notify Analytics Cloud");
+
 			throw new PortalException("Invalid token");
 		}
 	}
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		EditSyncedContactsMVCActionCommand.class);
 
 }

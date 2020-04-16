@@ -13,14 +13,17 @@
  */
 
 import Editor from '../../../src/main/resources/META-INF/resources/Editor/Editor.es';
+import withContextMock from '../__mocks__/withContextMock.es';
 
 let component;
 const spritemap = 'icons.svg';
 
 const defaultEditorConfig = {
 	name: 'textField',
-	spritemap
+	spritemap,
 };
+
+const EditorWithContextMock = withContextMock(Editor);
 
 describe('Field Editor', () => {
 	afterEach(() => {
@@ -30,96 +33,96 @@ describe('Field Editor', () => {
 	});
 
 	it('is readOnly', () => {
-		component = new Editor({
+		component = new EditorWithContextMock({
 			...defaultEditorConfig,
-			readOnly: true
+			readOnly: true,
 		});
 
 		expect(component).toMatchSnapshot();
 	});
 
 	it('has a helptext', () => {
-		component = new Editor({
+		component = new EditorWithContextMock({
 			...defaultEditorConfig,
-			tip: 'Type something'
+			tip: 'Type something',
 		});
 
 		expect(component).toMatchSnapshot();
 	});
 
 	it('has an id', () => {
-		component = new Editor({
+		component = new EditorWithContextMock({
 			...defaultEditorConfig,
-			id: 'ID'
+			id: 'ID',
 		});
 
 		expect(component).toMatchSnapshot();
 	});
 
 	it('has a label', () => {
-		component = new Editor({
+		component = new EditorWithContextMock({
 			...defaultEditorConfig,
-			label: 'label'
+			label: 'label',
 		});
 
 		expect(component).toMatchSnapshot();
 	});
 
 	it('has a placeholder', () => {
-		component = new Editor({
+		component = new EditorWithContextMock({
 			...defaultEditorConfig,
-			placeholder: 'Placeholder'
+			placeholder: 'Placeholder',
 		});
 
 		expect(component).toMatchSnapshot();
 	});
 
 	it('is not required', () => {
-		component = new Editor({
+		component = new EditorWithContextMock({
 			...defaultEditorConfig,
-			required: false
+			required: false,
 		});
 
 		expect(component).toMatchSnapshot();
 	});
 
 	it('renders Label if showLabel is true', () => {
-		component = new Editor({
+		component = new EditorWithContextMock({
 			...defaultEditorConfig,
 			label: 'text',
-			showLabel: true
+			showLabel: true,
 		});
 
 		expect(component).toMatchSnapshot();
 	});
 
 	it('has a spritemap', () => {
-		component = new Editor(defaultEditorConfig);
+		component = new EditorWithContextMock(defaultEditorConfig);
 
 		expect(component).toMatchSnapshot();
 	});
 
 	it('has a value', () => {
-		component = new Editor({
+		component = new EditorWithContextMock({
 			...defaultEditorConfig,
-			value: 'value'
+			value: 'value',
 		});
 
 		expect(component).toMatchSnapshot();
 	});
 
 	it('has a key', () => {
-		component = new Editor({
+		component = new EditorWithContextMock({
 			...defaultEditorConfig,
-			key: 'key'
+			key: 'key',
 		});
 
 		expect(component).toMatchSnapshot();
 	});
 
 	it('emits a change value when onChangeEditor method is triggered', () => {
-		component = new Editor({
-			...defaultEditorConfig
+		component = new EditorWithContextMock({
+			...defaultEditorConfig,
 		});
 		const event = {};
 		const spy = jest.spyOn(component, 'emit');
@@ -130,21 +133,21 @@ describe('Field Editor', () => {
 	});
 
 	it('triggers AlloyEditor actionPerformed method', () => {
-		component = new Editor({
-			...defaultEditorConfig
+		component = new EditorWithContextMock({
+			...defaultEditorConfig,
 		});
 
 		component._onActionPerformed({
 			data: {
-				props: {}
-			}
+				props: {},
+			},
 		});
 
 		component.willReceiveState({
 			children: true,
 			value: {
-				newVal: '<p>test</p>'
-			}
+				newVal: '<p>test</p>',
+			},
 		});
 
 		expect(component).toMatchSnapshot();

@@ -14,30 +14,38 @@
 
 package com.liferay.layout.type.controller.portlet.internal.display.context;
 
-import com.liferay.info.constants.InfoDisplayWebKeys;
 import com.liferay.info.display.contributor.InfoDisplayContributor;
 import com.liferay.info.display.contributor.InfoDisplayContributorTracker;
 import com.liferay.info.display.contributor.InfoDisplayObjectProvider;
+import com.liferay.info.pagination.Pagination;
+import com.liferay.layout.list.retriever.DefaultLayoutListRetrieverContext;
+import com.liferay.layout.list.retriever.LayoutListRetriever;
+import com.liferay.layout.list.retriever.LayoutListRetrieverTracker;
+import com.liferay.layout.list.retriever.ListObjectReferenceFactory;
+import com.liferay.layout.list.retriever.ListObjectReferenceFactoryTracker;
 import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
 import com.liferay.layout.page.template.model.LayoutPageTemplateStructure;
 import com.liferay.layout.page.template.service.LayoutPageTemplateEntryLocalServiceUtil;
 import com.liferay.layout.page.template.service.LayoutPageTemplateStructureLocalServiceUtil;
+import com.liferay.layout.util.structure.CollectionLayoutStructureItem;
+import com.liferay.layout.util.structure.LayoutStructure;
+import com.liferay.layout.util.structure.LayoutStructureItem;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.json.JSONArray;
-import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
-import com.liferay.portal.kernel.json.JSONUtil;
-import com.liferay.portal.kernel.log.Log;
-import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.service.LayoutLocalServiceUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
+import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.segments.constants.SegmentsExperienceConstants;
+import com.liferay.segments.constants.SegmentsWebKeys;
+
+import java.util.Collections;
+import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -46,12 +54,16 @@ import javax.servlet.http.HttpServletRequest;
  */
 public class PortletLayoutDisplayContext {
 
-	public PortletLayoutDisplayContext(HttpServletRequest httpServletRequest) {
-		_httpServletRequest = httpServletRequest;
+	public PortletLayoutDisplayContext(
+		HttpServletRequest httpServletRequest,
+		InfoDisplayContributorTracker infoDisplayContributorTracker,
+		LayoutListRetrieverTracker layoutListRetrieverTracker,
+		ListObjectReferenceFactoryTracker listObjectReferenceFactoryTracker) {
 
-		_infoDisplayContributorTracker =
-			(InfoDisplayContributorTracker)httpServletRequest.getAttribute(
-				InfoDisplayWebKeys.INFO_DISPLAY_CONTRIBUTOR_TRACKER);
+		_httpServletRequest = httpServletRequest;
+		_infoDisplayContributorTracker = infoDisplayContributorTracker;
+		_layoutListRetrieverTracker = layoutListRetrieverTracker;
+		_listObjectReferenceFactoryTracker = listObjectReferenceFactoryTracker;
 	}
 
 	public String getBackgroundImage(JSONObject rowConfigJSONObject)
@@ -61,19 +73,11 @@ public class PortletLayoutDisplayContext {
 			return StringPool.BLANK;
 		}
 
-		JSONObject backgroundImageJSONObject =
-			rowConfigJSONObject.getJSONObject("backgroundImage");
-
-		if (backgroundImageJSONObject == null) {
-			return rowConfigJSONObject.getString(
-				"backgroundImage", StringPool.BLANK);
-		}
-
-		String fieldId = backgroundImageJSONObject.getString("fieldId");
+		String fieldId = rowConfigJSONObject.getString("fieldId");
 
 		if (Validator.isNotNull(fieldId)) {
-			long classNameId = backgroundImageJSONObject.getLong("classNameId");
-			long classPK = backgroundImageJSONObject.getLong("classPK");
+			long classNameId = rowConfigJSONObject.getLong("classNameId");
+			long classPK = rowConfigJSONObject.getLong("classPK");
 
 			if ((classNameId != 0L) && (classPK != 0L)) {
 				InfoDisplayContributor infoDisplayContributor =
@@ -103,7 +107,7 @@ public class PortletLayoutDisplayContext {
 			}
 		}
 
-		String backgroundImageURL = backgroundImageJSONObject.getString("url");
+		String backgroundImageURL = rowConfigJSONObject.getString("url");
 
 		if (Validator.isNotNull(backgroundImageURL)) {
 			return backgroundImageURL;
@@ -112,65 +116,114 @@ public class PortletLayoutDisplayContext {
 		return StringPool.BLANK;
 	}
 
-	public JSONArray getStructureJSONArray() {
-		try {
-			ThemeDisplay themeDisplay =
-				(ThemeDisplay)_httpServletRequest.getAttribute(
-					WebKeys.THEME_DISPLAY);
+	public List getCollection(
+		CollectionLayoutStructureItem collectionLayoutStructureItem) {
 
-			Layout layout = LayoutLocalServiceUtil.fetchLayout(
-				themeDisplay.getPlid());
+		JSONObject collectionJSONObject =
+			collectionLayoutStructureItem.getCollectionJSONObject();
 
-			LayoutPageTemplateEntry masterLayoutPageTemplateEntry =
-				LayoutPageTemplateEntryLocalServiceUtil.
-					fetchLayoutPageTemplateEntryByPlid(
-						layout.getMasterLayoutPlid());
-
-			if (masterLayoutPageTemplateEntry == null) {
-				return _getDefaultStructureJSONArray();
-			}
-
-			LayoutPageTemplateStructure masterLayoutPageTemplateStructure =
-				LayoutPageTemplateStructureLocalServiceUtil.
-					fetchLayoutPageTemplateStructure(
-						masterLayoutPageTemplateEntry.getGroupId(),
-						PortalUtil.getClassNameId(Layout.class),
-						masterLayoutPageTemplateEntry.getPlid());
-
-			String data = masterLayoutPageTemplateStructure.getData(
-				SegmentsExperienceConstants.ID_DEFAULT);
-
-			if (Validator.isNull(data)) {
-				return _getDefaultStructureJSONArray();
-			}
-
-			JSONObject dataJSONObject = JSONFactoryUtil.createJSONObject(data);
-
-			return dataJSONObject.getJSONArray("structure");
+		if (collectionJSONObject.length() <= 0) {
+			return Collections.emptyList();
 		}
-		catch (Exception exception) {
-			_log.error("Unable to get structure JSON array", exception);
 
-			return null;
+		String type = collectionJSONObject.getString("type");
+
+		LayoutListRetriever layoutListRetriever =
+			_layoutListRetrieverTracker.getLayoutListRetriever(type);
+
+		if (layoutListRetriever == null) {
+			return Collections.emptyList();
 		}
+
+		ListObjectReferenceFactory listObjectReferenceFactory =
+			_listObjectReferenceFactoryTracker.getListObjectReference(type);
+
+		if (listObjectReferenceFactory == null) {
+			return Collections.emptyList();
+		}
+
+		DefaultLayoutListRetrieverContext defaultLayoutListRetrieverContext =
+			new DefaultLayoutListRetrieverContext();
+
+		defaultLayoutListRetrieverContext.setSegmentsExperienceIdsOptional(
+			_getSegmentsExperienceIds());
+		defaultLayoutListRetrieverContext.setPagination(
+			Pagination.of(collectionLayoutStructureItem.getNumberOfItems(), 0));
+
+		return layoutListRetriever.getList(
+			listObjectReferenceFactory.getListObjectReference(
+				collectionJSONObject),
+			defaultLayoutListRetrieverContext);
 	}
 
-	private JSONArray _getDefaultStructureJSONArray() {
-		return JSONUtil.putAll(
-			JSONUtil.put(
-				"columns",
-				JSONUtil.putAll(
-					JSONUtil.put(
-						"fragmentEntryLinkIds", JSONUtil.putAll("drop-zone")
-					).put(
-						"size", 12
-					))));
+	public LayoutStructure getLayoutStructure() {
+		if (_layoutStructure != null) {
+			return _layoutStructure;
+		}
+
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)_httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
+
+		Layout layout = LayoutLocalServiceUtil.fetchLayout(
+			themeDisplay.getPlid());
+
+		LayoutPageTemplateEntry masterLayoutPageTemplateEntry =
+			LayoutPageTemplateEntryLocalServiceUtil.
+				fetchLayoutPageTemplateEntryByPlid(
+					layout.getMasterLayoutPlid());
+
+		if (masterLayoutPageTemplateEntry == null) {
+			_layoutStructure = _getDefaultMasterLayoutStructure();
+
+			return _layoutStructure;
+		}
+
+		LayoutPageTemplateStructure masterLayoutPageTemplateStructure =
+			LayoutPageTemplateStructureLocalServiceUtil.
+				fetchLayoutPageTemplateStructure(
+					masterLayoutPageTemplateEntry.getGroupId(),
+					PortalUtil.getClassNameId(Layout.class),
+					masterLayoutPageTemplateEntry.getPlid());
+
+		String data = masterLayoutPageTemplateStructure.getData(
+			SegmentsExperienceConstants.ID_DEFAULT);
+
+		if (Validator.isNull(data)) {
+			_layoutStructure = _getDefaultMasterLayoutStructure();
+
+			return _layoutStructure;
+		}
+
+		_layoutStructure = LayoutStructure.of(data);
+
+		return _layoutStructure;
 	}
 
-	private static final Log _log = LogFactoryUtil.getLog(
-		PortletLayoutDisplayContext.class);
+	private LayoutStructure _getDefaultMasterLayoutStructure() {
+		LayoutStructure layoutStructure = new LayoutStructure();
+
+		LayoutStructureItem rootLayoutStructureItem =
+			layoutStructure.addRootLayoutStructureItem();
+
+		layoutStructure.addDropZoneLayoutStructureItem(
+			rootLayoutStructureItem.getItemId(), 0);
+
+		return layoutStructure;
+	}
+
+	private long[] _getSegmentsExperienceIds() {
+		return GetterUtil.getLongValues(
+			_httpServletRequest.getAttribute(
+				SegmentsWebKeys.SEGMENTS_EXPERIENCE_IDS),
+			new long[] {SegmentsExperienceConstants.ID_DEFAULT});
+	}
 
 	private final HttpServletRequest _httpServletRequest;
 	private final InfoDisplayContributorTracker _infoDisplayContributorTracker;
+	private final LayoutListRetrieverTracker _layoutListRetrieverTracker;
+	private LayoutStructure _layoutStructure;
+	private final ListObjectReferenceFactoryTracker
+		_listObjectReferenceFactoryTracker;
 
 }

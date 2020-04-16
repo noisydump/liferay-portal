@@ -57,6 +57,10 @@ public class LayoutSitemapURLProvider implements SitemapURLProvider {
 		Layout layout = _layoutLocalService.getLayoutByUuidAndGroupId(
 			layoutUuid, layoutSet.getGroupId(), layoutSet.isPrivateLayout());
 
+		if (layout.isSystem()) {
+			return;
+		}
+
 		visitLayout(element, layout, themeDisplay);
 	}
 
@@ -95,11 +99,15 @@ public class LayoutSitemapURLProvider implements SitemapURLProvider {
 			Element element, Layout layout, ThemeDisplay themeDisplay)
 		throws PortalException {
 
-		UnicodeProperties typeSettingsProperties =
+		if (layout.isSystem()) {
+			return;
+		}
+
+		UnicodeProperties typeSettingsUnicodeProperties =
 			layout.getTypeSettingsProperties();
 
 		if (!GetterUtil.getBoolean(
-				typeSettingsProperties.getProperty(
+				typeSettingsUnicodeProperties.getProperty(
 					LayoutTypePortletConstants.SITEMAP_INCLUDE),
 				true)) {
 
@@ -116,7 +124,7 @@ public class LayoutSitemapURLProvider implements SitemapURLProvider {
 
 		for (String alternateURL : alternateURLs.values()) {
 			_sitemap.addURLElement(
-				element, alternateURL, typeSettingsProperties,
+				element, alternateURL, typeSettingsUnicodeProperties,
 				layout.getModifiedDate(), layoutFullURL, alternateURLs);
 		}
 	}

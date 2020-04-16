@@ -68,10 +68,11 @@ PortletURL portletURL = userGroupItemSelectorViewDisplayContext.getPortletURL();
 		>
 
 			<%
-			Map<String, Object> data = new HashMap<>();
-
-			data.put("id", userGroup.getUserGroupId());
-			data.put("name", userGroup.getName());
+			Map<String, Object> data = HashMapBuilder.<String, Object>put(
+				"id", userGroup.getUserGroupId()
+			).put(
+				"name", userGroup.getName()
+			).build();
 
 			row.setData(data);
 			%>
@@ -115,7 +116,7 @@ PortletURL portletURL = userGroupItemSelectorViewDisplayContext.getPortletURL();
 		Liferay.Util.getOpener().Liferay.fire(
 			'<%= HtmlUtil.escapeJS(itemSelectedEventName) %>',
 			{
-				data: arr
+				data: arr,
 			}
 		);
 	});

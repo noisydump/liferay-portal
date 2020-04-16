@@ -12,57 +12,58 @@
  * details.
  */
 
+import {config} from '../../../app/config/index';
 import ExperienceService from '../../../app/services/ExperienceService';
 import deleteExperienceAction from '../actions/deleteExperience';
 import selectExperienceAction from '../actions/selectExperience';
 
-export default function removeExperience(
-	{fragmentEntryLinkIds, segmentsExperienceId, selectedExperienceId},
-	config
-) {
+export default function removeExperience({
+	fragmentEntryLinkIds,
+	segmentsExperienceId,
+	selectedExperienceId,
+}) {
 	return dispatch => {
 		if (segmentsExperienceId === selectedExperienceId) {
 			return ExperienceService.selectExperience({
 				body: {
-					segmentsExperienceId: config.defaultSegmentsExperienceId
+					segmentsExperienceId: config.defaultSegmentsExperienceId,
 				},
-				config,
-				dispatch
+				dispatch,
 			}).then(portletIds => {
 				dispatch(
 					selectExperienceAction({
 						portletIds,
-						segmentsExperienceId: config.defaultSegmentsExperienceId
+						segmentsExperienceId:
+							config.defaultSegmentsExperienceId,
 					})
 				);
 
 				ExperienceService.removeExperience({
 					body: {
 						fragmentEntryLinkIds,
-						segmentsExperienceId
+						segmentsExperienceId,
 					},
-					config,
-					dispatch
+					dispatch,
 				}).then(() => {
 					return dispatch(
 						deleteExperienceAction({
-							segmentsExperienceId
+							segmentsExperienceId,
 						})
 					);
 				});
 			});
-		} else {
+		}
+		else {
 			return ExperienceService.removeExperience({
 				body: {
 					fragmentEntryLinkIds,
-					segmentsExperienceId
+					segmentsExperienceId,
 				},
-				config,
-				dispatch
+				dispatch,
 			}).then(() => {
 				return dispatch(
 					deleteExperienceAction({
-						segmentsExperienceId
+						segmentsExperienceId,
 					})
 				);
 			});

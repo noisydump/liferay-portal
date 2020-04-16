@@ -16,9 +16,10 @@ package com.liferay.depot.web.internal.application.list;
 
 import com.liferay.application.list.BasePanelApp;
 import com.liferay.application.list.PanelApp;
+import com.liferay.depot.configuration.DepotConfiguration;
 import com.liferay.depot.web.internal.constants.DepotAdminPanelCategoryKeys;
 import com.liferay.depot.web.internal.constants.DepotPortletKeys;
-import com.liferay.depot.web.internal.util.DepotSupportChecker;
+import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Portlet;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
@@ -49,8 +50,14 @@ public class DepotAdminPanelApp extends BasePanelApp {
 	}
 
 	@Override
-	public boolean isShow(PermissionChecker permissionChecker, Group group) {
-		return _depotSupportChecker.isEnabled();
+	public boolean isShow(PermissionChecker permissionChecker, Group group)
+		throws PortalException {
+
+		if (!_depotConfiguration.isEnabled()) {
+			return false;
+		}
+
+		return super.isShow(permissionChecker, group);
 	}
 
 	@Override
@@ -72,6 +79,6 @@ public class DepotAdminPanelApp extends BasePanelApp {
 	}
 
 	@Reference
-	private DepotSupportChecker _depotSupportChecker;
+	private DepotConfiguration _depotConfiguration;
 
 }

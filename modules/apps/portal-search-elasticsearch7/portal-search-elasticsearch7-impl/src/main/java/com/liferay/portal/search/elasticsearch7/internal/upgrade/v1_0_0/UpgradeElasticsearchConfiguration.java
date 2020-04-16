@@ -18,6 +18,7 @@ import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.upgrade.UpgradeProcess;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.kernel.util.HashMapDictionary;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.search.elasticsearch7.configuration.ElasticsearchConfiguration;
 import com.liferay.portal.search.elasticsearch7.configuration.ElasticsearchConnectionConfiguration;
@@ -41,90 +42,46 @@ public class UpgradeElasticsearchConfiguration extends UpgradeProcess {
 
 	@Override
 	protected void doUpgrade() throws Exception {
-		upgradeElasticsearchConfiguration();
+		upgradeElasticsearchConfigurations();
 	}
 
-	protected void upgradeElasticsearchConfiguration() throws Exception {
+	protected void upgradeElasticsearchConfigurations() throws Exception {
 		Configuration elasticsearchConfiguration = _getConfiguration(
 			ElasticsearchConfiguration.class.getName());
 
-		if (elasticsearchConfiguration == null) {
+		Dictionary<String, Object> elasticsearchConfigurationProperties =
+			new HashMapDictionary<>();
+
+		if (elasticsearchConfiguration != null) {
+			elasticsearchConfigurationProperties =
+				elasticsearchConfiguration.getProperties();
+		}
+
+		String operationMode = GetterUtil.getString(
+			elasticsearchConfigurationProperties.get("operationMode"));
+
+		if ((elasticsearchConfiguration == null) ||
+			!operationMode.equals("REMOTE")) {
+
+			_setDefaultConfigurationActivePropertyToFalse();
+
 			return;
 		}
 
-		Dictionary<String, Object> elasticsearchConfigurationProperties =
-			elasticsearchConfiguration.getProperties();
+		String remoteClusterConnectionId = GetterUtil.getString(
+			elasticsearchConfigurationProperties.get(
+				"remoteClusterConnectionId"));
 
-		Configuration elasticsearchConnectionConfiguration = _getConfiguration(
-			ElasticsearchConnectionConfiguration.class.getName() + ".*");
+		if (Validator.isBlank(remoteClusterConnectionId)) {
+			elasticsearchConfigurationProperties.put(
+				"remoteClusterConnectionId", "remote");
 
-		Dictionary<String, Object>
-			elasticsearchConnectionConfigurationProperties =
-				elasticsearchConnectionConfiguration.getProperties();
-
-		elasticsearchConnectionConfigurationProperties.put("active", true);
-
-		elasticsearchConnectionConfigurationProperties.put(
-			"authenticationEnabled",
-			GetterUtil.getBoolean(
-				elasticsearchConfigurationProperties.get(
-					"authenticationEnabled")));
-
-		elasticsearchConnectionConfigurationProperties.put(
-			"httpSSLEnabled",
-			GetterUtil.getBoolean(
-				elasticsearchConfigurationProperties.get("httpSSLEnabled")));
-
-		String[] networkHostAddresses = GetterUtil.getStringValues(
-			elasticsearchConfigurationProperties.get("networkHostAddresses"));
-
-		if (ArrayUtil.isNotEmpty(networkHostAddresses)) {
-			elasticsearchConnectionConfigurationProperties.put(
-				"networkHostAddresses", networkHostAddresses);
+			elasticsearchConfiguration.update(
+				elasticsearchConfigurationProperties);
 		}
-
-		String password = GetterUtil.getString(
-			elasticsearchConfigurationProperties.get("password"));
-
-		if (!Validator.isBlank(password)) {
-			elasticsearchConnectionConfigurationProperties.put(
-				"password", password);
+		else if (!remoteClusterConnectionId.equals("remote")) {
+			_setDefaultConfigurationActivePropertyToFalse();
 		}
-
-		String truststorePassword = GetterUtil.getString(
-			elasticsearchConfigurationProperties.get("truststorePassword"));
-
-		if (!Validator.isBlank(truststorePassword)) {
-			elasticsearchConnectionConfigurationProperties.put(
-				"truststorePassword", truststorePassword);
-		}
-
-		String truststorePath = GetterUtil.getString(
-			elasticsearchConfigurationProperties.get("truststorePath"));
-
-		if (!Validator.isBlank(truststorePath)) {
-			elasticsearchConnectionConfigurationProperties.put(
-				"truststorePath", truststorePath);
-		}
-
-		String truststoreType = GetterUtil.getString(
-			elasticsearchConfigurationProperties.get("truststoreType"));
-
-		if (!Validator.isBlank(truststoreType)) {
-			elasticsearchConnectionConfigurationProperties.put(
-				"truststoreType", truststoreType);
-		}
-
-		String username = GetterUtil.getString(
-			elasticsearchConfigurationProperties.get("username"));
-
-		if (!Validator.isBlank(username)) {
-			elasticsearchConnectionConfigurationProperties.put(
-				"username", username);
-		}
-
-		elasticsearchConnectionConfiguration.update(
-			elasticsearchConnectionConfigurationProperties);
 	}
 
 	private Configuration _getConfiguration(String className) throws Exception {
@@ -139,6 +96,55 @@ public class UpgradeElasticsearchConfiguration extends UpgradeProcess {
 		}
 
 		return null;
+	}
+
+	private Configuration _getDefaultConfiguration(String className)
+		throws Exception {
+
+		String filterString = StringBundler.concat(
+			"(", Constants.SERVICE_PID, "=", className, ".*)");
+
+		Configuration[] configurations = _configurationAdmin.listConfigurations(
+			filterString);
+
+		if (ArrayUtil.isEmpty(configurations)) {
+			return null;
+		}
+
+		for (Configuration configuration : configurations) {
+			Dictionary<String, Object> properties =
+				configuration.getProperties();
+
+			String fileName = GetterUtil.getString(
+				properties.get("felix.fileinstall.filename"));
+
+			if (fileName.endsWith("-default.config")) {
+				return configuration;
+			}
+		}
+
+		return null;
+	}
+
+	private void _setDefaultConfigurationActivePropertyToFalse()
+		throws Exception {
+
+		Configuration elasticsearchConnectionConfiguration =
+			_getDefaultConfiguration(
+				ElasticsearchConnectionConfiguration.class.getName());
+
+		if (elasticsearchConnectionConfiguration == null) {
+			return;
+		}
+
+		Dictionary<String, Object>
+			elasticsearchConnectionConfigurationProperties =
+				elasticsearchConnectionConfiguration.getProperties();
+
+		elasticsearchConnectionConfigurationProperties.put("active", false);
+
+		elasticsearchConnectionConfiguration.update(
+			elasticsearchConnectionConfigurationProperties);
 	}
 
 	private final ConfigurationAdmin _configurationAdmin;

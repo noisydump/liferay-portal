@@ -22,7 +22,8 @@ let config = {};
 
 try {
 	config = require('liferay-npm-scripts/src/config/eslint.config');
-} catch (error) {
+}
+catch (error) {
 	throw new Error(
 		'liferay-npm-scripts is not installed; please run "ant setup-sdk"'
 	);
@@ -32,17 +33,17 @@ config = {
 	...config,
 	globals: {
 		...config.globals,
-		MODULE_PATH: true
+		MODULE_PATH: true,
 	},
 	rules: {
 		'no-empty': ['error', {allowEmptyCatch: true}],
 		'notice/notice': [
 			'error',
 			{
-				templateFile: path.join(__dirname, 'copyright.js')
-			}
-		]
-	}
+				templateFile: path.join(__dirname, 'copyright.js'),
+			},
+		],
+	},
 };
 
 module.exports = config;

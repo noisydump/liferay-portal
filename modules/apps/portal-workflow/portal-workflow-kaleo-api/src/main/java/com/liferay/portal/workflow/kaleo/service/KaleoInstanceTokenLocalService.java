@@ -78,8 +78,9 @@ public interface KaleoInstanceTokenLocalService
 
 	@Indexable(type = IndexableType.REINDEX)
 	public KaleoInstanceToken addKaleoInstanceToken(
-			long currentKaleoNodeId, long kaleoDefinitionVersionId,
-			long kaleoInstanceId, long parentKaleoInstanceTokenId,
+			long currentKaleoNodeId, long kaleoDefinitionId,
+			long kaleoDefinitionVersionId, long kaleoInstanceId,
+			long parentKaleoInstanceTokenId,
 			Map<String, Serializable> workflowContext,
 			ServiceContext serviceContext)
 		throws PortalException;
@@ -104,6 +105,12 @@ public interface KaleoInstanceTokenLocalService
 	@Transactional(enabled = false)
 	public KaleoInstanceToken createKaleoInstanceToken(
 		long kaleoInstanceTokenId);
+
+	/**
+	 * @throws PortalException
+	 */
+	public PersistedModel createPersistedModel(Serializable primaryKeyObj)
+		throws PortalException;
 
 	public void deleteCompanyKaleoInstanceTokens(long companyId);
 
@@ -275,6 +282,9 @@ public interface KaleoInstanceTokenLocalService
 	 */
 	public String getOSGiServiceIdentifier();
 
+	/**
+	 * @throws PortalException
+	 */
 	@Override
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public PersistedModel getPersistedModel(Serializable primaryKeyObj)

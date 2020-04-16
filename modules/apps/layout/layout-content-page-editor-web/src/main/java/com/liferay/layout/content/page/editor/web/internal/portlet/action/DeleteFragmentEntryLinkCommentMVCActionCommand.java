@@ -20,7 +20,8 @@ import com.liferay.portal.kernel.comment.Comment;
 import com.liferay.portal.kernel.comment.CommentManager;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.portlet.bridges.mvc.BaseMVCActionCommand;
+import com.liferay.portal.kernel.json.JSONObject;
+import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
 import com.liferay.portal.kernel.security.auth.PrincipalException;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
@@ -50,10 +51,10 @@ import org.osgi.service.component.annotations.Reference;
 	service = MVCActionCommand.class
 )
 public class DeleteFragmentEntryLinkCommentMVCActionCommand
-	extends BaseMVCActionCommand {
+	extends BaseContentPageEditorTransactionalMVCActionCommand {
 
 	@Override
-	protected void doProcessAction(
+	protected JSONObject doTransactionalCommand(
 			ActionRequest actionRequest, ActionResponse actionResponse)
 		throws Exception {
 
@@ -68,11 +69,17 @@ public class DeleteFragmentEntryLinkCommentMVCActionCommand
 
 		Comment comment = _commentManager.fetchComment(commentId);
 
-		if (comment.getUserId() != themeDisplay.getUserId()) {
-			throw new PrincipalException();
+		if ((comment == null) ||
+			(comment.getUserId() != themeDisplay.getUserId())) {
+
+			throw new PrincipalException.MustHavePermission(
+				themeDisplay.getPermissionChecker(), Comment.class.getName(),
+				commentId, ActionKeys.DELETE);
 		}
 
 		WorkflowUtil.withoutWorkflow(() -> _deleteComment(commentId));
+
+		return JSONUtil.put("deletedCommentId", commentId);
 	}
 
 	private void _deleteComment(long commentId) throws PortalException {

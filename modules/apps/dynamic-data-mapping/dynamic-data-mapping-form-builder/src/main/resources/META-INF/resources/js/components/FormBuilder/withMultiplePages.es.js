@@ -22,8 +22,8 @@ import {ClayActionsDropdown} from 'clay-dropdown';
 import Component from 'metal-jsx';
 import {Config} from 'metal-state';
 
-import {focusedFieldStructure, pageStructure} from '../../util/config.es';
 import {setValue} from '../../util/i18n.es';
+import formBuilderProps from './props.es';
 
 const withMultiplePages = ChildComponent => {
 	class MultiplePages extends Component {
@@ -38,15 +38,15 @@ const withMultiplePages = ChildComponent => {
 						contentRenderer: 'success',
 						paginationItemRenderer: `${paginationMode}_success`,
 						rows: [],
-						successPageSettings
-					}
+						successPageSettings,
+					},
 				];
 			}
 
 			return pages.map(page => {
 				return {
 					...page,
-					enabled: true
+					enabled: true,
 				};
 			});
 		}
@@ -84,7 +84,7 @@ const withMultiplePages = ChildComponent => {
 								),
 								itemClicked: this._handleDropdownItemClicked.bind(
 									this
-								)
+								),
 							}}
 							expanded={dropdownExpanded}
 							items={this._getPageSettingsItems()}
@@ -110,7 +110,7 @@ const withMultiplePages = ChildComponent => {
 					'your-information-was-successfully-received-thanks-for-fill-out'
 				),
 				enabled: true,
-				title: Liferay.Language.get('done')
+				title: Liferay.Language.get('done'),
 			});
 
 			dispatch('activePageUpdated', pages.length);
@@ -126,37 +126,43 @@ const withMultiplePages = ChildComponent => {
 			const {dispatch} = this.context;
 
 			this._updateSuccessPage({
-				enabled: false
+				enabled: false,
 			});
 
 			dispatch('activePageUpdated', this.props.pages.length - 1);
 		}
 
 		_getPageSettingsItems() {
-			const {pages, paginationMode, successPageSettings} = this.props;
+			const {
+				allowSuccessPage,
+				pages,
+				paginationMode,
+				successPageSettings,
+			} = this.props;
 			const pageSettingsItems = [
 				{
 					label: Liferay.Language.get('add-new-page'),
-					settingsItem: 'add-page'
-				}
+					settingsItem: 'add-page',
+				},
 			];
 
 			if (this.getPages().length === 1) {
 				pageSettingsItems.push({
 					label: Liferay.Language.get('reset-page'),
-					settingsItem: 'reset-page'
+					settingsItem: 'reset-page',
 				});
-			} else {
+			}
+			else {
 				pageSettingsItems.push({
 					label: Liferay.Language.get('delete-current-page'),
-					settingsItem: 'delete-page'
+					settingsItem: 'delete-page',
 				});
 			}
 
-			if (!successPageSettings.enabled) {
+			if (allowSuccessPage && !successPageSettings.enabled) {
 				pageSettingsItems.push({
 					label: Liferay.Language.get('add-success-page'),
-					settingsItem: 'add-success-page'
+					settingsItem: 'add-success-page',
 				});
 			}
 
@@ -169,7 +175,7 @@ const withMultiplePages = ChildComponent => {
 
 				pageSettingsItems.push({
 					label,
-					settingsItem: 'switch-pagination-mode'
+					settingsItem: 'switch-pagination-mode',
 				});
 			}
 
@@ -181,32 +187,37 @@ const withMultiplePages = ChildComponent => {
 			const {settingsItem} = data.item;
 
 			this.setState({
-				dropdownExpanded: false
+				dropdownExpanded: false,
 			});
 
 			if (settingsItem == 'add-page') {
 				this._addPage();
-			} else if (settingsItem === 'reset-page') {
+			}
+			else if (settingsItem === 'reset-page') {
 				this._resetPage();
-			} else if (settingsItem === 'delete-page') {
+			}
+			else if (settingsItem === 'delete-page') {
 				if (
 					successPageSettings.enabled &&
 					activePage == this.getPages().length - 1
 				) {
 					this._deleteSuccessPage();
-				} else {
+				}
+				else {
 					this._deletePage();
 				}
-			} else if (settingsItem == 'switch-pagination-mode') {
+			}
+			else if (settingsItem == 'switch-pagination-mode') {
 				this._switchPaginationMode();
-			} else if (settingsItem == 'add-success-page') {
+			}
+			else if (settingsItem == 'add-success-page') {
 				this._addSuccessPage();
 			}
 		}
 
 		_handleExpandedChanged({newVal}) {
 			this.setState({
-				dropdownExpanded: newVal
+				dropdownExpanded: newVal,
 			});
 		}
 
@@ -228,7 +239,7 @@ const withMultiplePages = ChildComponent => {
 			const successPageSettings = {
 				body: {},
 				enabled,
-				title: {}
+				title: {},
 			};
 
 			setValue(successPageSettings, editingLanguageId, 'body', body);
@@ -240,122 +251,14 @@ const withMultiplePages = ChildComponent => {
 
 	MultiplePages.PROPS = {
 		/**
-		 * @default
 		 * @instance
-		 * @memberof FormBuilder
-		 * @type {?number}
+		 * @memberof LayoutProvider
+		 * @type {boolean}
 		 */
 
-		activePage: Config.number().value(0),
+		allowSuccessPage: Config.bool().value(true),
 
-		/**
-		 * @default undefined
-		 * @instance
-		 * @memberof FormBuilder
-		 * @type {?string}
-		 */
-
-		defaultLanguageId: Config.string(),
-
-		/**
-		 * @default undefined
-		 * @instance
-		 * @memberof FormBuilder
-		 * @type {?string}
-		 */
-
-		editingLanguageId: Config.string(),
-
-		/**
-		 * @default undefined
-		 * @instance
-		 * @memberof FormBuilder
-		 * @type {?string}
-		 */
-
-		fieldSetDefinitionURL: Config.string(),
-
-		/**
-		 * @default []
-		 * @instance
-		 * @memberof FormBuilder
-		 * @type {?(array|undefined)}
-		 */
-
-		fieldSets: Config.array().value([]),
-
-		/**
-		 * @default []
-		 * @instance
-		 * @memberof FormBuilder
-		 * @type {?(array|undefined)}
-		 */
-
-		fieldTypes: Config.array().value([]),
-
-		/**
-		 * @default {}
-		 * @instance
-		 * @memberof FormBuilder
-		 * @type {?object}
-		 */
-
-		focusedField: focusedFieldStructure.value({}),
-
-		/**
-		 * @default []
-		 * @instance
-		 * @memberof FormBuilder
-		 * @type {?array<object>}
-		 */
-
-		pages: Config.arrayOf(pageStructure).value([]),
-
-		/**
-		 * @instance
-		 * @memberof FormBuilder
-		 * @type {string}
-		 */
-
-		paginationMode: Config.string().required(),
-
-		/**
-		 * @instance
-		 * @memberof FormBuilder
-		 * @type {string}
-		 */
-
-		portletNamespace: Config.string().required(),
-
-		/**
-		 * @default undefined
-		 * @instance
-		 * @memberof FormBuilder
-		 * @type {!string}
-		 */
-
-		spritemap: Config.string().required(),
-
-		/**
-		 * @instance
-		 * @memberof FormBuilder
-		 * @type {object}
-		 */
-
-		successPageSettings: Config.shapeOf({
-			body: Config.object(),
-			enabled: Config.bool(),
-			title: Config.object()
-		}).value({}),
-
-		/**
-		 * @default undefined
-		 * @instance
-		 * @memberof FormBuilder
-		 * @type {?string}
-		 */
-
-		view: Config.string()
+		...formBuilderProps,
 	};
 
 	MultiplePages.STATE = {
@@ -368,7 +271,7 @@ const withMultiplePages = ChildComponent => {
 
 		dropdownExpanded: Config.bool()
 			.value(false)
-			.internal()
+			.internal(),
 	};
 
 	return MultiplePages;

@@ -16,16 +16,31 @@ const webpack = require('webpack');
 const buildFolder = `${__dirname}/build`;
 const buildName = 'analytics-all-min.js';
 
-module.exports = {
+const devConfig = {
+	devtool: 'inline-source-map',
+	mode: 'development',
+	optimization: {
+		minimize: false,
+	},
+	watch: true,
+};
+
+const prodConfig = {
+	mode: 'production',
+	optimization: {
+		minimize: true,
+	},
+};
+
+const config = {
 	entry: [
 		'core-js/fn/array/from',
 		'core-js/fn/array/find',
 		'core-js/es6/symbol',
 		'core-js/fn/promise',
 		'whatwg-fetch',
-		'./src/analytics.js'
+		'./src/analytics.js',
 	],
-	mode: 'production',
 	module: {
 		rules: [
 			{
@@ -34,18 +49,27 @@ module.exports = {
 				use: {
 					loader: 'babel-loader',
 					options: {
-						compact: false
-					}
-				}
-			}
-		]
-	},
-	optimization: {
-		minimize: true
+						compact: false,
+					},
+				},
+			},
+		],
 	},
 	output: {
 		filename: buildName,
-		path: buildFolder
+		path: buildFolder,
 	},
-	plugins: [new webpack.optimize.ModuleConcatenationPlugin()]
+	plugins: [new webpack.optimize.ModuleConcatenationPlugin()],
+};
+
+module.exports = env => {
+	return env === 'development'
+		? {
+				...config,
+				...devConfig,
+		  }
+		: {
+				...config,
+				...prodConfig,
+		  };
 };

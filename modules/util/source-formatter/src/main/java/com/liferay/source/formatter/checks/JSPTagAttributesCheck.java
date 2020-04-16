@@ -40,6 +40,8 @@ import java.io.IOException;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -52,7 +54,7 @@ import org.dom4j.Element;
 /**
  * @author Hugo Huijser
  */
-public class JSPTagAttributesCheck extends TagAttributesCheck {
+public class JSPTagAttributesCheck extends BaseTagAttributesCheck {
 
 	@Override
 	public void setAllFileNames(List<String> allFileNames) {
@@ -96,10 +98,33 @@ public class JSPTagAttributesCheck extends TagAttributesCheck {
 
 		Map<String, String> attributesMap = tag.getAttributesMap();
 
-		for (Map.Entry<String, String> entry : attributesMap.entrySet()) {
-			String attributeValue = entry.getValue();
+		Set<Map.Entry<String, String>> entrySet = attributesMap.entrySet();
+
+		Iterator<Map.Entry<String, String>> iterator = entrySet.iterator();
+
+		while (iterator.hasNext()) {
+			Map.Entry<String, String> entry = iterator.next();
 
 			String attributeName = entry.getKey();
+			String attributeValue = entry.getValue();
+
+			String tagName = tag.getName();
+
+			if (tagName.equals("aui:button") && attributeName.equals("type") &&
+				attributeValue.equals("button")) {
+
+				iterator.remove();
+
+				continue;
+			}
+
+			if (attributeName.equals("style") &&
+				(!tagName.contains(StringPool.COLON) ||
+				 tagName.startsWith("aui:"))) {
+
+				tag.putAttribute(
+					attributeName, _formatStyleAttributeValue(attributeValue));
+			}
 
 			if (attributeValue.matches("<%= Boolean\\.(FALSE|TRUE) %>")) {
 				attributeValue = StringUtil.replace(
@@ -208,6 +233,86 @@ public class JSPTagAttributesCheck extends TagAttributesCheck {
 		}
 
 		return content;
+	}
+
+	private String _formatStyleAttributeAttributeValue(
+		String styleAttributeAttributeValue) {
+
+		styleAttributeAttributeValue = StringUtil.trim(
+			styleAttributeAttributeValue);
+
+		if (styleAttributeAttributeValue.endsWith(_JAVA_SOURCE_REPLACEMENT) ||
+			styleAttributeAttributeValue.endsWith(StringPool.SEMICOLON)) {
+
+			return styleAttributeAttributeValue;
+		}
+
+		return styleAttributeAttributeValue + StringPool.SEMICOLON;
+	}
+
+	private String _formatStyleAttributeValue(String attributeValue) {
+		List<String> javaSourceList = new ArrayList<>();
+
+		Matcher matcher = _javaSourceInsideTagPattern.matcher(attributeValue);
+
+		while (matcher.find()) {
+			javaSourceList.add(matcher.group());
+		}
+
+		String newAttributeValue = matcher.replaceAll(_JAVA_SOURCE_REPLACEMENT);
+
+		if (newAttributeValue.contains(StringPool.LESS_THAN)) {
+			return attributeValue;
+		}
+
+		Map<String, String> styleAttributesMap = new LinkedHashMap<>();
+
+		String styleAttributeAttributeName = null;
+		int x = -1;
+
+		matcher = _styleAttributePattern.matcher(newAttributeValue);
+
+		while (matcher.find()) {
+			if (styleAttributeAttributeName != null) {
+				styleAttributesMap.put(
+					styleAttributeAttributeName,
+					_formatStyleAttributeAttributeValue(
+						newAttributeValue.substring(x, matcher.start(2))));
+			}
+
+			x = matcher.end();
+
+			styleAttributeAttributeName = matcher.group(2);
+		}
+
+		if (styleAttributeAttributeName != null) {
+			styleAttributesMap.put(
+				styleAttributeAttributeName,
+				_formatStyleAttributeAttributeValue(
+					newAttributeValue.substring(x)));
+		}
+
+		if (styleAttributesMap.isEmpty()) {
+			return attributeValue;
+		}
+
+		StringBundler sb = new StringBundler(styleAttributesMap.size() * 4);
+
+		for (Map.Entry<String, String> entry : styleAttributesMap.entrySet()) {
+			sb.append(entry.getKey());
+			sb.append(": ");
+			sb.append(entry.getValue());
+			sb.append(StringPool.SPACE);
+		}
+
+		newAttributeValue = StringUtil.trim(sb.toString());
+
+		for (String javaSource : javaSourceList) {
+			newAttributeValue = StringUtil.replaceFirst(
+				newAttributeValue, _JAVA_SOURCE_REPLACEMENT, javaSource);
+		}
+
+		return newAttributeValue;
 	}
 
 	private List<String> _getJSPTag(String line) {
@@ -444,6 +549,8 @@ public class JSPTagAttributesCheck extends TagAttributesCheck {
 		return false;
 	}
 
+	private static final String _JAVA_SOURCE_REPLACEMENT = "__JAVA_SOURCE__";
+
 	private static final String[] _SINGLE_LINE_TAG_WHITELIST = {
 		"liferay-frontend:defineObjects", "liferay-portlet:actionURL",
 		"liferay-portlet:param", "liferay-portlet:renderURL",
@@ -454,8 +561,12 @@ public class JSPTagAttributesCheck extends TagAttributesCheck {
 		"liferay-util:include", "liferay-util:param"
 	};
 
+	private static final Pattern _javaSourceInsideTagPattern = Pattern.compile(
+		"<%.*?%>");
 	private static final Pattern _jspTaglibPattern = Pattern.compile(
 		"\t*<[-\\w]+:[-\\w]+ .");
+	private static final Pattern _styleAttributePattern = Pattern.compile(
+		"(\\A|\\W)([a-z\\-]+)\\s*:");
 
 	private List<String> _allFileNames;
 	private final Map<String, Map<String, String>> _classSetMethodsMap =

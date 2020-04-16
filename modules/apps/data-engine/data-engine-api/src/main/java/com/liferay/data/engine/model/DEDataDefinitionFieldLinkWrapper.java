@@ -14,9 +14,11 @@
 
 package com.liferay.data.engine.model;
 
+import com.liferay.exportimport.kernel.lar.StagedModelType;
 import com.liferay.portal.kernel.model.ModelWrapper;
 import com.liferay.portal.kernel.model.wrapper.BaseModelWrapper;
 
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -49,10 +51,13 @@ public class DEDataDefinitionFieldLinkWrapper
 			"deDataDefinitionFieldLinkId", getDeDataDefinitionFieldLinkId());
 		attributes.put("groupId", getGroupId());
 		attributes.put("companyId", getCompanyId());
+		attributes.put("createDate", getCreateDate());
+		attributes.put("modifiedDate", getModifiedDate());
 		attributes.put("classNameId", getClassNameId());
 		attributes.put("classPK", getClassPK());
 		attributes.put("ddmStructureId", getDdmStructureId());
 		attributes.put("fieldName", getFieldName());
+		attributes.put("lastPublishDate", getLastPublishDate());
 
 		return attributes;
 	}
@@ -84,6 +89,18 @@ public class DEDataDefinitionFieldLinkWrapper
 			setCompanyId(companyId);
 		}
 
+		Date createDate = (Date)attributes.get("createDate");
+
+		if (createDate != null) {
+			setCreateDate(createDate);
+		}
+
+		Date modifiedDate = (Date)attributes.get("modifiedDate");
+
+		if (modifiedDate != null) {
+			setModifiedDate(modifiedDate);
+		}
+
 		Long classNameId = (Long)attributes.get("classNameId");
 
 		if (classNameId != null) {
@@ -106,6 +123,12 @@ public class DEDataDefinitionFieldLinkWrapper
 
 		if (fieldName != null) {
 			setFieldName(fieldName);
+		}
+
+		Date lastPublishDate = (Date)attributes.get("lastPublishDate");
+
+		if (lastPublishDate != null) {
+			setLastPublishDate(lastPublishDate);
 		}
 	}
 
@@ -150,6 +173,16 @@ public class DEDataDefinitionFieldLinkWrapper
 	}
 
 	/**
+	 * Returns the create date of this de data definition field link.
+	 *
+	 * @return the create date of this de data definition field link
+	 */
+	@Override
+	public Date getCreateDate() {
+		return model.getCreateDate();
+	}
+
+	/**
 	 * Returns the ddm structure ID of this de data definition field link.
 	 *
 	 * @return the ddm structure ID of this de data definition field link
@@ -187,6 +220,26 @@ public class DEDataDefinitionFieldLinkWrapper
 	@Override
 	public long getGroupId() {
 		return model.getGroupId();
+	}
+
+	/**
+	 * Returns the last publish date of this de data definition field link.
+	 *
+	 * @return the last publish date of this de data definition field link
+	 */
+	@Override
+	public Date getLastPublishDate() {
+		return model.getLastPublishDate();
+	}
+
+	/**
+	 * Returns the modified date of this de data definition field link.
+	 *
+	 * @return the modified date of this de data definition field link
+	 */
+	@Override
+	public Date getModifiedDate() {
+		return model.getModifiedDate();
 	}
 
 	/**
@@ -250,6 +303,16 @@ public class DEDataDefinitionFieldLinkWrapper
 	}
 
 	/**
+	 * Sets the create date of this de data definition field link.
+	 *
+	 * @param createDate the create date of this de data definition field link
+	 */
+	@Override
+	public void setCreateDate(Date createDate) {
+		model.setCreateDate(createDate);
+	}
+
+	/**
 	 * Sets the ddm structure ID of this de data definition field link.
 	 *
 	 * @param ddmStructureId the ddm structure ID of this de data definition field link
@@ -292,6 +355,26 @@ public class DEDataDefinitionFieldLinkWrapper
 	}
 
 	/**
+	 * Sets the last publish date of this de data definition field link.
+	 *
+	 * @param lastPublishDate the last publish date of this de data definition field link
+	 */
+	@Override
+	public void setLastPublishDate(Date lastPublishDate) {
+		model.setLastPublishDate(lastPublishDate);
+	}
+
+	/**
+	 * Sets the modified date of this de data definition field link.
+	 *
+	 * @param modifiedDate the modified date of this de data definition field link
+	 */
+	@Override
+	public void setModifiedDate(Date modifiedDate) {
+		model.setModifiedDate(modifiedDate);
+	}
+
+	/**
 	 * Sets the primary key of this de data definition field link.
 	 *
 	 * @param primaryKey the primary key of this de data definition field link
@@ -309,6 +392,11 @@ public class DEDataDefinitionFieldLinkWrapper
 	@Override
 	public void setUuid(String uuid) {
 		model.setUuid(uuid);
+	}
+
+	@Override
+	public StagedModelType getStagedModelType() {
+		return model.getStagedModelType();
 	}
 
 	@Override

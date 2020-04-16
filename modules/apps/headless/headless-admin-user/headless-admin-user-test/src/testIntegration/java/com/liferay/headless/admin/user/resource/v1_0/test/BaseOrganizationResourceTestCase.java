@@ -371,9 +371,11 @@ public abstract class BaseOrganizationResourceTestCase {
 				}
 				else {
 					BeanUtils.setProperty(
-						organization1, entityField.getName(), "Aaa");
+						organization1, entityField.getName(),
+						"Aaa" + RandomTestUtil.randomString());
 					BeanUtils.setProperty(
-						organization2, entityField.getName(), "Bbb");
+						organization2, entityField.getName(),
+						"Bbb" + RandomTestUtil.randomString());
 				}
 			});
 	}
@@ -504,6 +506,7 @@ public abstract class BaseOrganizationResourceTestCase {
 
 	@Test
 	public void testDeleteOrganization() throws Exception {
+		@SuppressWarnings("PMD.UnusedLocalVariable")
 		Organization organization = testDeleteOrganization_addOrganization();
 
 		assertHttpResponseStatusCode(
@@ -633,8 +636,7 @@ public abstract class BaseOrganizationResourceTestCase {
 		Organization patchOrganization = organizationResource.patchOrganization(
 			postOrganization.getId(), randomPatchOrganization);
 
-		Organization expectedPatchOrganization =
-			(Organization)BeanUtils.cloneBean(postOrganization);
+		Organization expectedPatchOrganization = postOrganization.clone();
 
 		_beanUtilsBean.copyProperties(
 			expectedPatchOrganization, randomPatchOrganization);
@@ -906,9 +908,11 @@ public abstract class BaseOrganizationResourceTestCase {
 				}
 				else {
 					BeanUtils.setProperty(
-						organization1, entityField.getName(), "Aaa");
+						organization1, entityField.getName(),
+						"Aaa" + RandomTestUtil.randomString());
 					BeanUtils.setProperty(
-						organization2, entityField.getName(), "Bbb");
+						organization2, entityField.getName(),
+						"Bbb" + RandomTestUtil.randomString());
 				}
 			});
 	}
@@ -1081,6 +1085,14 @@ public abstract class BaseOrganizationResourceTestCase {
 		for (String additionalAssertFieldName :
 				getAdditionalAssertFieldNames()) {
 
+			if (Objects.equals("actions", additionalAssertFieldName)) {
+				if (organization.getActions() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
 			if (Objects.equals("comment", additionalAssertFieldName)) {
 				if (organization.getComment() == null) {
 					valid = false;
@@ -1222,6 +1234,17 @@ public abstract class BaseOrganizationResourceTestCase {
 
 		for (String additionalAssertFieldName :
 				getAdditionalAssertFieldNames()) {
+
+			if (Objects.equals("actions", additionalAssertFieldName)) {
+				if (!equals(
+						(Map)organization1.getActions(),
+						(Map)organization2.getActions())) {
+
+					return false;
+				}
+
+				continue;
+			}
 
 			if (Objects.equals("comment", additionalAssertFieldName)) {
 				if (!Objects.deepEquals(
@@ -1378,6 +1401,30 @@ public abstract class BaseOrganizationResourceTestCase {
 		return true;
 	}
 
+	protected boolean equals(
+		Map<String, Object> map1, Map<String, Object> map2) {
+
+		if (Objects.equals(map1.keySet(), map2.keySet())) {
+			for (Map.Entry<String, Object> entry : map1.entrySet()) {
+				if (entry.getValue() instanceof Map) {
+					if (!equals(
+							(Map)entry.getValue(),
+							(Map)map2.get(entry.getKey()))) {
+
+						return false;
+					}
+				}
+				else if (!Objects.deepEquals(
+							entry.getValue(), map2.get(entry.getKey()))) {
+
+					return false;
+				}
+			}
+		}
+
+		return true;
+	}
+
 	protected boolean equalsJSONObject(
 		Organization organization, JSONObject jsonObject) {
 
@@ -1491,6 +1538,11 @@ public abstract class BaseOrganizationResourceTestCase {
 		sb.append(" ");
 		sb.append(operator);
 		sb.append(" ");
+
+		if (entityFieldName.equals("actions")) {
+			throw new IllegalArgumentException(
+				"Invalid entity field " + entityFieldName);
+		}
 
 		if (entityFieldName.equals("comment")) {
 			sb.append("'");

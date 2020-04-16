@@ -154,10 +154,10 @@ public class EditLayoutMVCActionCommand extends BaseMVCActionCommand {
 
 		themeDisplay.clearLayoutFriendlyURL(layout);
 
-		UnicodeProperties layoutTypeSettingsProperties =
+		UnicodeProperties layoutTypeSettingsUnicodeProperties =
 			layout.getTypeSettingsProperties();
 
-		UnicodeProperties formTypeSettingsProperties =
+		UnicodeProperties formTypeSettingsUnicodeProperties =
 			PropertiesParamUtil.getProperties(
 				actionRequest, "TypeSettingsProperties--");
 
@@ -168,7 +168,7 @@ public class EditLayoutMVCActionCommand extends BaseMVCActionCommand {
 			Layout linkToLayout = _layoutService.getLayoutByUuidAndGroupId(
 				linkToLayoutUuid, groupId, privateLayout);
 
-			formTypeSettingsProperties.put(
+			formTypeSettingsUnicodeProperties.put(
 				"linkToLayoutId", String.valueOf(linkToLayout.getLayoutId()));
 		}
 
@@ -183,20 +183,21 @@ public class EditLayoutMVCActionCommand extends BaseMVCActionCommand {
 			layoutTypePortlet.setLayoutTemplateId(
 				themeDisplay.getUserId(), layoutTemplateId);
 
-			layoutTypeSettingsProperties.putAll(formTypeSettingsProperties);
+			layoutTypeSettingsUnicodeProperties.putAll(
+				formTypeSettingsUnicodeProperties);
 
 			boolean layoutCustomizable = GetterUtil.getBoolean(
-				layoutTypeSettingsProperties.get(
+				layoutTypeSettingsUnicodeProperties.get(
 					LayoutConstants.CUSTOMIZABLE_LAYOUT));
 
 			if (!layoutCustomizable) {
 				layoutTypePortlet.removeCustomization(
-					layoutTypeSettingsProperties);
+					layoutTypeSettingsUnicodeProperties);
 			}
 
 			layout = _layoutService.updateLayout(
 				groupId, privateLayout, layoutId,
-				layoutTypeSettingsProperties.toString());
+				layoutTypeSettingsUnicodeProperties.toString());
 
 			if (!currentType.equals(LayoutConstants.TYPE_PORTLET)) {
 				_portletPreferencesLocalService.deletePortletPreferences(
@@ -204,14 +205,15 @@ public class EditLayoutMVCActionCommand extends BaseMVCActionCommand {
 			}
 		}
 		else {
-			layoutTypeSettingsProperties.putAll(formTypeSettingsProperties);
+			layoutTypeSettingsUnicodeProperties.putAll(
+				formTypeSettingsUnicodeProperties);
 
-			layoutTypeSettingsProperties.putAll(
+			layoutTypeSettingsUnicodeProperties.putAll(
 				layout.getTypeSettingsProperties());
 
 			layout = _layoutService.updateLayout(
 				groupId, privateLayout, layoutId,
-				layoutTypeSettingsProperties.toString());
+				layoutTypeSettingsUnicodeProperties.toString());
 		}
 
 		EventsProcessorUtil.process(
@@ -220,7 +222,7 @@ public class EditLayoutMVCActionCommand extends BaseMVCActionCommand {
 			uploadPortletRequest,
 			_portal.getHttpServletResponse(actionResponse));
 
-		_actionUtil.updateLookAndFeel(
+		ActionUtil.updateLookAndFeel(
 			actionRequest, themeDisplay.getCompanyId(), liveGroupId,
 			stagingGroupId, privateLayout, layout.getLayoutId(),
 			layout.getTypeSettingsProperties());
@@ -242,9 +244,6 @@ public class EditLayoutMVCActionCommand extends BaseMVCActionCommand {
 
 		actionRequest.setAttribute(WebKeys.REDIRECT, redirect);
 	}
-
-	@Reference
-	private ActionUtil _actionUtil;
 
 	@Reference
 	private DLAppLocalService _dlAppLocalService;

@@ -306,6 +306,33 @@ public class KaleoDefinitionValidationException extends WorkflowException {
 
 	}
 
+	public static class MustSetValidNodeNameLength
+		extends KaleoDefinitionValidationException {
+
+		public MustSetValidNodeNameLength(int length, String node) {
+			super(
+				String.format(
+					"The %s node name exceeds the length limit of %s " +
+						"characters",
+					node, length));
+
+			_length = length;
+			_node = node;
+		}
+
+		public int getLength() {
+			return _length;
+		}
+
+		public String getNode() {
+			return _node;
+		}
+
+		private final int _length;
+		private final String _node;
+
+	}
+
 	public static class UnbalancedForkAndJoinNode
 		extends KaleoDefinitionValidationException {
 

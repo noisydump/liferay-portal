@@ -525,6 +525,14 @@ public class LayoutServiceWrapper
 		_layoutService.deleteTempFileEntry(groupId, folderName, fileName);
 	}
 
+	@Override
+	public Layout fetchLayout(
+			long groupId, boolean privateLayout, long layoutId)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _layoutService.fetchLayout(groupId, privateLayout, layoutId);
+	}
+
 	/**
 	 * Returns all the ancestor layouts of the layout.
 	 *
@@ -705,6 +713,17 @@ public class LayoutServiceWrapper
 	}
 
 	@Override
+	public java.util.List<Layout> getLayouts(
+			long groupId, boolean privateLayout, String keywords,
+			String[] types, int start, int end,
+			com.liferay.portal.kernel.util.OrderByComparator<Layout> obc)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _layoutService.getLayouts(
+			groupId, privateLayout, keywords, types, start, end, obc);
+	}
+
+	@Override
 	public java.util.List<Layout> getLayouts(long groupId, String type) {
 		return _layoutService.getLayouts(groupId, type);
 	}
@@ -736,6 +755,16 @@ public class LayoutServiceWrapper
 
 		return _layoutService.getLayoutsCount(
 			groupId, privateLayout, parentLayoutId, priority);
+	}
+
+	@Override
+	public int getLayoutsCount(
+			long groupId, boolean privateLayout, String keywords,
+			String[] types)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _layoutService.getLayoutsCount(
+			groupId, privateLayout, keywords, types);
 	}
 
 	@Override

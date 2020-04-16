@@ -82,6 +82,12 @@ public interface DepotAppCustomizationLocalService
 		long depotAppCustomizationId);
 
 	/**
+	 * @throws PortalException
+	 */
+	public PersistedModel createPersistedModel(Serializable primaryKeyObj)
+		throws PortalException;
+
+	/**
 	 * Deletes the depot app customization from the database. Also notifies the appropriate model listeners.
 	 *
 	 * @param depotAppCustomization the depot app customization
@@ -223,6 +229,10 @@ public interface DepotAppCustomizationLocalService
 	public int getDepotAppCustomizationsCount();
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public int getDepotAppCustomizationsCount(
+		long depotEntryId, boolean enabled);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public IndexableActionableDynamicQuery getIndexableActionableDynamicQuery();
 
 	/**
@@ -232,6 +242,9 @@ public interface DepotAppCustomizationLocalService
 	 */
 	public String getOSGiServiceIdentifier();
 
+	/**
+	 * @throws PortalException
+	 */
 	@Override
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public PersistedModel getPersistedModel(Serializable primaryKeyObj)

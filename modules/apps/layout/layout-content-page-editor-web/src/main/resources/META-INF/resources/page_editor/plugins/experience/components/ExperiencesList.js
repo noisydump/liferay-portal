@@ -13,9 +13,8 @@
  */
 
 import PropTypes from 'prop-types';
-import React, {useContext} from 'react';
+import React from 'react';
 
-import {ConfigContext} from '../../../app/config/index';
 import {useDispatch} from '../../../app/store/index';
 import selectExperience from '../thunks/selectExperience';
 import {ExperienceType} from '../types';
@@ -29,13 +28,11 @@ const ExperiencesList = ({
 	onDeleteExperience,
 	onEditExperience,
 	onPriorityDecrease,
-	onPriorityIncrease
+	onPriorityIncrease,
 }) => {
-	const config = useContext(ConfigContext);
 	const dispatch = useDispatch();
 
-	const handleExperienceSelection = id =>
-		dispatch(selectExperience(id, config));
+	const handleExperienceSelection = id => dispatch(selectExperience(id));
 
 	return (
 		<ul className="list-unstyled mt-4" role="list">
@@ -78,7 +75,7 @@ ExperiencesList.propTypes = {
 	onDeleteExperience: PropTypes.func.isRequired,
 	onEditExperience: PropTypes.func.isRequired,
 	onPriorityDecrease: PropTypes.func.isRequired,
-	onPriorityIncrease: PropTypes.func.isRequired
+	onPriorityIncrease: PropTypes.func.isRequired,
 };
 
 export default ExperiencesList;

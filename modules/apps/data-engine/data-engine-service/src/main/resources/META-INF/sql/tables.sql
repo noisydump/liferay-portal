@@ -3,10 +3,13 @@ create table DEDataDefinitionFieldLink (
 	deDataDefinitionFieldLinkId LONG not null primary key,
 	groupId LONG,
 	companyId LONG,
+	createDate DATE null,
+	modifiedDate DATE null,
 	classNameId LONG,
 	classPK LONG,
 	ddmStructureId LONG,
-	fieldName VARCHAR(75) null
+	fieldName VARCHAR(75) null,
+	lastPublishDate DATE null
 );
 
 create table DEDataListView (

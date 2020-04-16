@@ -10,63 +10,40 @@
  * distribution rights of the Software.
  */
 
+import ClayIcon from '@clayui/icon';
 import {ClayTooltipProvider} from '@clayui/tooltip';
-import React, {useContext, useEffect, useMemo} from 'react';
+import React, {useMemo} from 'react';
 
-import Icon from '../../../shared/components/Icon.es';
 import Panel from '../../../shared/components/Panel.es';
-import EmptyState from '../../../shared/components/empty-state/EmptyState.es';
+import ContentView from '../../../shared/components/content-view/ContentView.es';
 import ReloadButton from '../../../shared/components/list/ReloadButton.es';
-import LoadingState from '../../../shared/components/loading/LoadingState.es';
 import PromisesResolver from '../../../shared/components/promises-resolver/PromisesResolver.es';
 import {useFetch} from '../../../shared/hooks/useFetch.es';
-import {AppContext} from '../../AppContext.es';
-import {isValidDate} from '../../filter/util/timeRangeUtil.es';
+import {usePageTitle} from '../../../shared/hooks/usePageTitle.es';
 import PANELS from './Panels.es';
 import SummaryCard from './SummaryCard.es';
 
-function ProcessItemsCard({
+const ProcessItemsCard = ({
 	children,
 	completed,
 	description,
 	processId,
 	timeRange,
-	title
-}) {
-	const {setTitle} = useContext(AppContext);
-
-	const {dateEnd, dateStart} = timeRange || {};
-
-	let timeRangeParams = {};
-	if (isValidDate(dateEnd) && isValidDate(dateStart)) {
-		timeRangeParams = {
-			dateEnd: dateEnd.toISOString(),
-			dateStart: dateStart.toISOString()
-		};
-	}
+	title,
+}) => {
+	const timeRangeParams = timeRange || {};
 
 	const {data, fetchData} = useFetch({
 		params: {
 			completed,
-			...timeRangeParams
+			...timeRangeParams,
 		},
-		url: `/processes/${processId}`
+		url: `/processes/${processId}/metrics`,
 	});
 
-	useEffect(() => {
-		setTitle(data.title);
-	}, [data.title]);
+	usePageTitle(data.title);
 
-	const promises = useMemo(() => {
-		if (
-			!timeRange ||
-			(timeRangeParams.dateEnd && timeRangeParams.dateStart)
-		) {
-			return [fetchData()];
-		}
-
-		return [new Promise(() => {})];
-	}, [fetchData, timeRangeParams.dateEnd, timeRangeParams.dateStart]);
+	const promises = useMemo(() => [fetchData()], [fetchData]);
 
 	return (
 		<PromisesResolver promises={promises}>
@@ -88,14 +65,27 @@ function ProcessItemsCard({
 			</Panel>
 		</PromisesResolver>
 	);
-}
+};
 
 const Body = ({completed = false, data, processId, timeRange}) => {
+	const statesProps = {
+		errorProps: {
+			actionButton: <ReloadButton />,
+			className: 'mt-2 pb-5 pt-4',
+			hideAnimation: true,
+			message: Liferay.Language.get(
+				'there-was-a-problem-retrieving-data-please-try-reloading-the-page'
+			),
+			messageClassName: 'small',
+		},
+		loadingProps: {className: 'mt-2 pb-5 pt-4'},
+	};
+
 	return (
 		<Panel.Body>
-			<PromisesResolver.Resolved>
+			<ContentView {...statesProps}>
 				{data ? (
-					<div className={'d-flex pb-4 pt-1'}>
+					<div className="d-flex pb-3">
 						{PANELS.map((panel, index) => (
 							<SummaryCard
 								{...panel}
@@ -111,23 +101,10 @@ const Body = ({completed = false, data, processId, timeRange}) => {
 							/>
 						))}
 					</div>
-				) : null}
-			</PromisesResolver.Resolved>
-
-			<PromisesResolver.Rejected>
-				<EmptyState
-					actionButton={<ReloadButton />}
-					className="border-0 mt-7"
-					hideAnimation={true}
-					message={Liferay.Language.get(
-						'there-was-a-problem-retrieving-data-please-try-reloading-the-page'
-					)}
-				/>
-			</PromisesResolver.Rejected>
-
-			<PromisesResolver.Pending>
-				<LoadingState className="pb-6 pt-5" />
-			</PromisesResolver.Pending>
+				) : (
+					<></>
+				)}
+			</ContentView>
 		</Panel.Body>
 	);
 };
@@ -147,7 +124,7 @@ const Header = ({children, data, description, title}) => (
 							data-tooltip-align={'right'}
 							title={description}
 						>
-							<Icon iconName={'question-circle-full'} />
+							<ClayIcon symbol="question-circle-full" />
 						</span>
 					</span>
 				</ClayTooltipProvider>

@@ -55,9 +55,9 @@ public class ViewDiffMVCRenderCommand implements MVCRenderCommand {
 			RenderRequest renderRequest, RenderResponse renderResponse)
 		throws PortletException {
 
-		long ctEntryId = ParamUtil.getLong(renderRequest, "ctEntryId");
-
 		try {
+			long ctEntryId = ParamUtil.getLong(renderRequest, "ctEntryId");
+
 			CTEntry ctEntry = _ctEntryLocalService.getCTEntry(ctEntryId);
 
 			CTCollection ctCollection =
@@ -77,12 +77,12 @@ public class ViewDiffMVCRenderCommand implements MVCRenderCommand {
 
 			renderRequest.setAttribute(
 				CTWebKeys.CT_ENTRY_DIFF_DISPLAY, ctEntryDiffDisplay);
+
+			return "/change_lists/view_diff.jsp";
 		}
 		catch (PortalException portalException) {
 			throw new PortletException(portalException);
 		}
-
-		return "/change_lists/diff.jsp";
 	}
 
 	@Reference

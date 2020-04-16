@@ -12,11 +12,13 @@
  * details.
  */
 
+import classNames from 'classnames';
 import FormBuilderWithLayoutProvider from 'dynamic-data-mapping-form-builder';
 import {PagesVisitor} from 'dynamic-data-mapping-form-renderer';
 import core from 'metal';
 import React from 'react';
 
+import {getDataDefinitionField} from '../utils/dataDefinition.es';
 import EventEmitter from './EventEmitter.es';
 import saveDefinitionAndLayout from './saveDefinitionAndLayout.es';
 
@@ -30,30 +32,19 @@ class DataLayoutBuilder extends React.Component {
 
 		this.containerRef = React.createRef();
 		this.eventEmitter = new EventEmitter();
+		this.state = {};
 	}
 
 	componentDidMount() {
 		const {
+			config,
 			dataLayoutBuilderId,
-			defaultLanguageId,
-			editingLanguageId,
 			fieldTypes,
 			localizable,
 			portletNamespace,
-			spritemap
 		} = this.props;
 
 		const context = this._setContext(this.props.context);
-
-		const layoutProviderProps = {
-			...this.props,
-			context,
-			defaultLanguageId,
-			editingLanguageId,
-			initialPages: context.pages,
-			initialPaginationMode: context.paginationMode,
-			ref: 'layoutProvider'
-		};
 
 		this.formBuilderWithLayoutProvider = new FormBuilderWithLayoutProvider(
 			{
@@ -62,59 +53,49 @@ class DataLayoutBuilder extends React.Component {
 						this.props.onLoad(this);
 
 						Liferay.component(dataLayoutBuilderId, this);
-					}
+					},
 				},
 				formBuilderProps: {
-					defaultLanguageId,
-					editingLanguageId,
 					fieldTypes,
-					paginationMode: 'wizard',
 					portletNamespace,
 					ref: 'builder',
-					spritemap
 				},
-				layoutProviderProps
+				layoutProviderProps: {
+					...this.props,
+					allowMultiplePages: config.allowMultiplePages,
+					allowSuccessPage: config.allowSuccessPage,
+					context,
+					defaultLanguageId: themeDisplay.getDefaultLanguageId(),
+					editingLanguageId: themeDisplay.getDefaultLanguageId(),
+					initialPages: context.pages,
+					ref: 'layoutProvider',
+					rules: context.rules,
+				},
 			},
 			this.containerRef.current
 		);
 
 		if (localizable) {
-			Liferay.componentReady('translationManager').then(
-				translationManager => {
-					this._translationManagerHandles = [
-						translationManager.on(
-							'availableLocales',
-							({newValue}) => {
-								this.props.availableLanguageIds = [
-									...newValue.keys()
-								];
-							}
-						),
-						translationManager.on('editingLocale', ({newValue}) => {
-							// this.props.editingLanguageId = newValue;
-
-							// const {
-							// 	editingLanguageId
-							// } = this.props;
-
-							this.setState({
-								editingLanguageId: newValue
-							});
-
-							// metalFormBuilder.props.editg = mewLa
-
-							// useEffect(() => {
-							// 	metal.props.editingLocale = editingLanguageId
-							// }, [editingLanguageId])
-						}),
-						translationManager.on(
-							'availableLocales',
-							this.onAvailableLocalesRemoved.bind(this)
-						)
-					];
-				}
+			this._localeChangedHandler = Liferay.after(
+				'inputLocalized:localeChanged',
+				this._onLocaleChange.bind(this)
 			);
 		}
+	}
+
+	componentWillUnmount() {
+		const {dataLayoutBuilderId} = this.props;
+		const {formBuilderWithLayoutProvider} = this;
+
+		if (formBuilderWithLayoutProvider) {
+			formBuilderWithLayoutProvider.dispose();
+		}
+
+		if (this._localeChangedHandler) {
+			this._localeChangedHandler.detach();
+		}
+
+		Liferay.destroyComponent(dataLayoutBuilderId);
 	}
 
 	dispatch(event, payload) {
@@ -134,11 +115,277 @@ class DataLayoutBuilder extends React.Component {
 		}
 	}
 
+	emit(event, payload, error = false) {
+		this.eventEmitter.emit(event, payload, error);
+	}
+
+	getDataDefinitionAndDataLayout(pages) {
+		const {
+			defaultLanguageId = themeDisplay.getDefaultLanguageId(),
+		} = this.props;
+		const availableLanguageIds = this.state.availableLanguageIds ||
+			this.props.availableLanguageIds || [
+				themeDisplay.getDefaultLanguageId(),
+			];
+		const fieldDefinitions = [];
+		const pagesVisitor = new PagesVisitor(pages);
+
+		const newPages = pagesVisitor.mapFields(field => {
+			fieldDefinitions.push(this.getDataDefinitionField(field));
+
+			return field.fieldName;
+		}, false);
+
+		return {
+			definition: {
+				availableLanguageIds,
+				dataDefinitionFields: fieldDefinitions,
+				defaultLanguageId,
+			},
+			layout: {
+				dataLayoutPages: newPages.map(page => {
+					const rows = page.rows.map(row => {
+						const columns = row.columns.map(column => {
+							return {
+								columnSize: column.size,
+								fieldNames: column.fields,
+							};
+						});
+
+						return {
+							dataLayoutColumns: columns,
+						};
+					});
+
+					return {
+						dataLayoutRows: rows,
+						description: page.localizedDescription,
+						title: page.localizedTitle,
+					};
+				}),
+				paginationMode: 'wizard',
+			},
+		};
+	}
+
+	getDataDefinitionField({nestedFields = [], settingsContext}) {
+		const fieldConfig = {
+			customProperties: {},
+			nestedDataDefinitionFields: nestedFields.map(nestedField =>
+				this.getDataDefinitionField(nestedField)
+			),
+		};
+		const settingsContextVisitor = new PagesVisitor(settingsContext.pages);
+
+		settingsContextVisitor.mapFields(
+			({dataType, fieldName, localizable, localizedValue, value}) => {
+				if (fieldName === 'predefinedValue') {
+					fieldName = 'defaultValue';
+				}
+				else if (fieldName === 'type') {
+					fieldName = 'fieldType';
+				}
+
+				if (localizable) {
+					if (this._isCustomProperty(fieldName)) {
+						fieldConfig.customProperties[
+							fieldName
+						] = localizedValue;
+					}
+					else {
+						fieldConfig[fieldName] = localizedValue;
+					}
+				}
+				else {
+					if (this._isCustomProperty(fieldName)) {
+						fieldConfig.customProperties[
+							fieldName
+						] = this.getDataDefinitionFieldFormattedValue(
+							dataType,
+							value
+						);
+					}
+					else {
+						fieldConfig[
+							fieldName
+						] = this.getDataDefinitionFieldFormattedValue(
+							dataType,
+							value
+						);
+					}
+				}
+			},
+			false
+		);
+
+		return fieldConfig;
+	}
+
+	getDataDefinitionFieldFormattedValue(dataType, value) {
+		if (dataType === 'json' && typeof value !== 'string') {
+			return JSON.stringify(value);
+		}
+
+		return value;
+	}
+
+	getDDMForm(
+		dataDefinition,
+		dataLayout = this.getDefaultDataLayout(dataDefinition)
+	) {
+		const {editingLanguageId = themeDisplay.getLanguageId()} = this.props;
+
+		return {
+			description: dataDefinition.description[editingLanguageId],
+			id: dataDefinition.id,
+			localizedDescription: dataDefinition.description,
+			localizedTitle: dataDefinition.name,
+			pages: dataLayout.dataLayoutPages.map(dataLayoutPage => ({
+				rows: dataLayoutPage.dataLayoutRows.map(dataLayoutRow => ({
+					columns: dataLayoutRow.dataLayoutColumns.map(
+						({columnSize, fieldNames}) => ({
+							fields: fieldNames.map(fieldName =>
+								this.getDDMFormField(dataDefinition, fieldName)
+							),
+							size: columnSize,
+						})
+					),
+				})),
+			})),
+			title: dataDefinition.name[editingLanguageId],
+		};
+	}
+
+	getDDMFormField(dataDefinition, fieldName) {
+		const dataDefinitionField = getDataDefinitionField(
+			dataDefinition,
+			fieldName
+		);
+
+		if (dataDefinitionField.fieldType === 'ddm-text-html') {
+			dataDefinitionField.fieldType = 'rich_text';
+		}
+
+		const {editingLanguageId = themeDisplay.getLanguageId()} = this.props;
+		const settingsContext = this.getDDMFormFieldSettingsContext(
+			dataDefinitionField
+		);
+
+		const ddmFormField = {settingsContext};
+		const visitor = new PagesVisitor(settingsContext.pages);
+
+		visitor.mapFields(field => {
+			const {fieldName} = field;
+			let {value} = field;
+
+			if (fieldName === 'options' && value) {
+				value = value[editingLanguageId];
+			}
+			else if (fieldName === 'name') {
+				ddmFormField.fieldName = value;
+			}
+
+			ddmFormField[fieldName] = value;
+		});
+
+		return ddmFormField;
+	}
+
+	getDDMFormFieldSettingsContext(dataDefinitionField) {
+		const {editingLanguageId = themeDisplay.getLanguageId()} = this.props;
+		const fieldTypes = this.getFieldTypes();
+		const {settingsContext} = fieldTypes.find(({name}) => {
+			return name === dataDefinitionField.fieldType;
+		});
+		const visitor = new PagesVisitor(settingsContext.pages);
+
+		return {
+			...settingsContext,
+			pages: visitor.mapFields(field => {
+				const {fieldName, localizable} = field;
+				const propertyValue = this._getDataDefinitionfieldPropertyValue(
+					dataDefinitionField,
+					this._fromDDMFormToDataDefinitionPropertyName(fieldName)
+				);
+
+				let value = propertyValue || field.value;
+
+				if (
+					localizable &&
+					propertyValue &&
+					Object.prototype.hasOwnProperty.call(
+						propertyValue,
+						editingLanguageId
+					)
+				) {
+					value = propertyValue[editingLanguageId];
+				}
+
+				let localizedValue = {};
+
+				if (localizable) {
+					localizedValue = {...propertyValue};
+				}
+
+				return {
+					...field,
+					localizedValue,
+					value,
+				};
+			}),
+		};
+	}
+
+	getDefaultDataLayout(dataDefinition) {
+		const {dataDefinitionFields} = dataDefinition;
+
+		return {
+			dataLayoutPages: [
+				{
+					dataLayoutRows: dataDefinitionFields.map(({name}) => ({
+						dataLayoutColumns: [
+							{
+								columnSize: 12,
+								fieldNames: [name],
+							},
+						],
+					})),
+				},
+			],
+		};
+	}
+
+	getFieldTypes() {
+		const {fieldTypes} = this.props;
+
+		return fieldTypes;
+	}
+
+	getFormData() {
+		const {pages} = this.getStore();
+
+		return this.getDataDefinitionAndDataLayout(pages);
+	}
+
+	getLayoutProvider() {
+		const {layoutProvider} = this.formBuilderWithLayoutProvider.refs;
+
+		return layoutProvider;
+	}
+
 	getState() {
 		const {appContext} = this.props;
 		const [state] = appContext;
 
 		return state;
+	}
+
+	getStore() {
+		const layoutProvider = this.getLayoutProvider();
+
+		return {
+			...layoutProvider.state,
+		};
 	}
 
 	on(eventName, listener) {
@@ -149,187 +396,16 @@ class DataLayoutBuilder extends React.Component {
 		this.eventEmitter.removeListener(eventName, listener);
 	}
 
-	emit(event, payload, error = false) {
-		this.eventEmitter.emit(event, payload, error);
-	}
-
-	componentWillUnmount() {
-		const {dataLayoutBuilderId} = this.props;
-		const {formBuilderWithLayoutProvider} = this;
-
-		if (formBuilderWithLayoutProvider) {
-			formBuilderWithLayoutProvider.dispose();
-		}
-
-		if (this._translationManagerHandles) {
-			this._translationManagerHandles.forEach(handle => handle.detach());
-		}
-
-		Liferay.destroyComponent(dataLayoutBuilderId);
-	}
-
-	getDefinitionField({settingsContext}) {
-		const fieldConfig = {
-			customProperties: {}
-		};
-		const settingsContextVisitor = new PagesVisitor(settingsContext.pages);
-
-		settingsContextVisitor.mapFields(
-			({fieldName, localizable, localizedValue, value}) => {
-				if (fieldName === 'predefinedValue') {
-					fieldName = 'defaultValue';
-				} else if (fieldName === 'type') {
-					fieldName = 'fieldType';
-				}
-
-				if (localizable) {
-					if (this._isCustomProperty(fieldName)) {
-						fieldConfig.customProperties[
-							fieldName
-						] = localizedValue;
-					} else {
-						fieldConfig[fieldName] = localizedValue;
-					}
-				} else {
-					if (this._isCustomProperty(fieldName)) {
-						fieldConfig.customProperties[fieldName] = value;
-					} else {
-						fieldConfig[fieldName] = value;
-					}
-				}
-			},
-			false
-		);
-
-		return fieldConfig;
-	}
-
-	getDefinitionAndLayout(pages) {
-		const {availableLanguageIds, defaultLanguageId} = this.props;
-		const fieldDefinitions = [];
-		const pagesVisitor = new PagesVisitor(pages);
-
-		const newPages = pagesVisitor.mapFields(field => {
-			fieldDefinitions.push(this.getDefinitionField(field));
-
-			return field.fieldName;
-		}, false);
-
-		return {
-			definition: {
-				availableLanguageIds,
-				dataDefinitionFields: fieldDefinitions,
-				defaultLanguageId
-			},
-			layout: {
-				dataLayoutPages: newPages.map(page => {
-					const rows = page.rows.map(row => {
-						const columns = row.columns.map(column => {
-							return {
-								columnSize: column.size,
-								fieldNames: column.fields
-							};
-						});
-
-						return {
-							dataLayoutColumns: columns
-						};
-					});
-
-					return {
-						dataLayoutRows: rows,
-						description: page.localizedDescription,
-						title: page.localizedTitle
-					};
-				}),
-				paginationMode: 'wizard'
-			}
-		};
-	}
-
-	getFieldSettingsContext(dataDefinitionField) {
-		const fieldTypes = this.getFieldTypes();
-		const fieldType = fieldTypes.find(({name}) => {
-			return name === dataDefinitionField.fieldType;
-		});
-		const {settingsContext} = fieldType;
-		const visitor = new PagesVisitor(settingsContext.pages);
-
-		return {
-			...settingsContext,
-			pages: visitor.mapFields(field => {
-				const {fieldName, localizable} = field;
-				const propertyName = this._getDataDefinitionFieldPropertyName(
-					fieldName
-				);
-				let propertyValue = this._getDataDefinitionFieldPropertyValue(
-					dataDefinitionField,
-					propertyName
-				);
-
-				if (
-					localizable &&
-					propertyValue &&
-					Object.prototype.hasOwnProperty.call(
-						propertyValue,
-						themeDisplay.getLanguageId()
-					)
-				) {
-					propertyValue = propertyValue[themeDisplay.getLanguageId()];
-				}
-
-				return {
-					...field,
-					localizedValue: {
-						...field.localizedValue,
-						[themeDisplay.getLanguageId()]: propertyValue
-					},
-					value: propertyValue
-				};
-			})
-		};
-	}
-
-	getFieldTypes() {
-		const {fieldTypes} = this.props;
-
-		return fieldTypes;
-	}
-
-	getLayoutProvider() {
-		const {layoutProvider} = this.formBuilderWithLayoutProvider.refs;
-
-		return layoutProvider;
-	}
-
-	getStore() {
-		const layoutProvider = this.getLayoutProvider();
-
-		return {
-			...layoutProvider.state
-		};
-	}
-
-	onAvailableLocalesRemoved({newValue, previousValue}) {
-		const removedItems = new Map();
-
-		previousValue.forEach((value, key) => {
-			if (!newValue.has(key)) {
-				removedItems.set(key, value);
-			}
-		});
-
-		if (removedItems.size > 0) {
-			this.dispatch(
-				'languageIdDeleted',
-				removedItems.values().next().value
-			);
-		}
-	}
-
 	render() {
+		const {sidebarOpen = false} = this.getState();
+
 		return (
-			<div className={'ddm-form-builder'} ref={this.containerRef}></div>
+			<div
+				className={classNames('ddm-form-builder', {
+					'ddm-form-builder--sidebar-open': sidebarOpen,
+				})}
+				ref={this.containerRef}
+			></div>
 		);
 	}
 
@@ -338,13 +414,12 @@ class DataLayoutBuilder extends React.Component {
 			contentType,
 			dataDefinitionId,
 			dataLayoutId,
-			groupId
+			groupId,
 		} = this.props;
-		const {pages} = this.getStore();
 		const {
 			definition: dataDefinition,
-			layout: dataLayout
-		} = this.getDefinitionAndLayout(pages);
+			layout: dataLayout,
+		} = this.getFormData();
 
 		return saveDefinitionAndLayout({
 			contentType,
@@ -353,17 +428,49 @@ class DataLayoutBuilder extends React.Component {
 			dataLayout,
 			dataLayoutId,
 			groupId,
-			params
+			params,
 		});
 	}
 
 	serialize(pages) {
-		const {definition, layout} = this.getDefinitionAndLayout(pages);
+		const {definition, layout} = this.getDataDefinitionAndDataLayout(pages);
 
 		return {
 			definition: JSON.stringify(definition),
-			layout: JSON.stringify(layout)
+			layout: JSON.stringify(layout),
 		};
+	}
+
+	_fromDataDefinitionToDDMFormPropertyName(propertyName) {
+		const map = {
+			defaultValue: 'predefinedValue',
+			fieldType: 'type',
+			name: 'fieldName',
+			nestedDataDefinitionFields: 'nestedFields',
+		};
+
+		return map[propertyName] || propertyName;
+	}
+
+	_fromDDMFormToDataDefinitionPropertyName(propertyName) {
+		const map = {
+			fieldName: 'name',
+			nestedFields: 'nestedDataDefinitionFields',
+			predefinedValue: 'defaultValue',
+			type: 'fieldType',
+		};
+
+		return map[propertyName] || propertyName;
+	}
+
+	_getDataDefinitionfieldPropertyValue(dataDefinitionField, propertyName) {
+		const {customProperties} = dataDefinitionField;
+
+		if (customProperties && this._isCustomProperty(propertyName)) {
+			return customProperties[propertyName];
+		}
+
+		return dataDefinitionField[propertyName];
 	}
 
 	_isCustomProperty(name) {
@@ -379,37 +486,36 @@ class DataLayoutBuilder extends React.Component {
 			'repeatable',
 			'required',
 			'showLabel',
-			'tip'
+			'tip',
 		];
 
 		return fields.indexOf(name) === -1;
 	}
 
-	_getDataDefinitionFieldPropertyName(propertyName) {
-		const map = {
-			fieldName: 'name',
-			predefinedValue: 'defaultValue',
-			type: 'fieldType'
+	_onLocaleChange(event) {
+		const selectedLanguageId = event.item.getAttribute('data-value');
+		let {availableLanguageIds = []} = this.props;
+
+		availableLanguageIds = [
+			...new Set([...availableLanguageIds, selectedLanguageId]),
+		];
+
+		this.setState({
+			availableLanguageIds,
+		});
+
+		this.formBuilderWithLayoutProvider.props.layoutProviderProps = {
+			...this.formBuilderWithLayoutProvider.props.layoutProviderProps,
+			availableLanguageIds,
+			editingLanguageId: selectedLanguageId,
 		};
-
-		return map[propertyName] || propertyName;
-	}
-
-	_getDataDefinitionFieldPropertyValue(dataDefinitionField, propertyName) {
-		const {customProperties} = dataDefinitionField;
-
-		if (customProperties && this._isCustomProperty(propertyName)) {
-			return customProperties[propertyName];
-		}
-
-		return dataDefinitionField[propertyName];
 	}
 
 	_setContext(context) {
-		const {defaultLanguageId} = this.props;
+		const {config, defaultLanguageId} = this.props;
 
 		const emptyLocalizableValue = {
-			[defaultLanguageId]: ''
+			[defaultLanguageId]: '',
 		};
 
 		const pages = context.pages || [];
@@ -427,16 +533,16 @@ class DataLayoutBuilder extends React.Component {
 								columns: [
 									{
 										fields: [],
-										size: 12
-									}
-								]
-							}
+										size: 12,
+									},
+								],
+							},
 						],
-						title: ''
-					}
+						title: '',
+					},
 				],
-				paginationMode: 'wizard',
-				rules: context.rules || []
+				paginationMode: config.paginationMode || 'wizard',
+				rules: context.rules || [],
 			};
 		}
 
@@ -447,20 +553,20 @@ class DataLayoutBuilder extends React.Component {
 					description,
 					localizedDescription,
 					localizedTitle,
-					title
+					title,
 				} = page;
 
 				if (!core.isString(description)) {
 					description = description[defaultLanguageId];
 					localizedDescription = {
-						[defaultLanguageId]: description
+						[defaultLanguageId]: description,
 					};
 				}
 
 				if (!core.isString(title)) {
 					title = title[defaultLanguageId];
 					localizedTitle = {
-						[defaultLanguageId]: title
+						[defaultLanguageId]: title,
 					};
 				}
 
@@ -469,10 +575,10 @@ class DataLayoutBuilder extends React.Component {
 					description,
 					localizedDescription,
 					localizedTitle,
-					title
+					title,
 				};
 			}),
-			rules: context.rules || []
+			rules: context.rules || [],
 		};
 	}
 }

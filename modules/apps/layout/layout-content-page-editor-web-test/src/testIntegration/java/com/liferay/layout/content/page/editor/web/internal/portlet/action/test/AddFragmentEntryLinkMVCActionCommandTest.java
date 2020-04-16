@@ -97,7 +97,7 @@ public class AddFragmentEntryLinkMVCActionCommandTest {
 		MockLiferayPortletActionRequest actionRequest = _getMockActionRequest();
 
 		actionRequest.addParameter(
-			"fragmentKey", fragmentEntry.getFragmentEntryKey());
+			"fragmentEntryKey", fragmentEntry.getFragmentEntryKey());
 
 		FragmentEntryLink fragmentEntryLink = ReflectionTestUtil.invoke(
 			_mvcActionCommand, "addFragmentEntryLink",
@@ -145,7 +145,7 @@ public class AddFragmentEntryLinkMVCActionCommandTest {
 		MockLiferayPortletActionRequest actionRequest = _getMockActionRequest();
 
 		actionRequest.addParameter(
-			"fragmentKey", fragmentEntry.getFragmentEntryKey());
+			"fragmentEntryKey", fragmentEntry.getFragmentEntryKey());
 
 		ReflectionTestUtil.invoke(
 			_mvcActionCommand, "addFragmentEntryLink",
@@ -168,7 +168,7 @@ public class AddFragmentEntryLinkMVCActionCommandTest {
 		MockLiferayPortletActionRequest actionRequest = _getMockActionRequest();
 
 		actionRequest.addParameter(
-			"fragmentKey", RandomTestUtil.randomString());
+			"fragmentEntryKey", RandomTestUtil.randomString());
 
 		ReflectionTestUtil.invoke(
 			_mvcActionCommand, "addFragmentEntryLink",
@@ -201,11 +201,6 @@ public class AddFragmentEntryLinkMVCActionCommandTest {
 			WebKeys.THEME_DISPLAY, _getThemeDisplay());
 
 		mockActionRequest.addParameter(
-			"classNameId",
-			String.valueOf(PortalUtil.getClassNameId(Layout.class.getName())));
-		mockActionRequest.addParameter(
-			"classPK", String.valueOf(_layout.getPlid()));
-		mockActionRequest.addParameter(
 			"groupId", String.valueOf(_group.getGroupId()));
 
 		return mockActionRequest;
@@ -219,6 +214,7 @@ public class AddFragmentEntryLinkMVCActionCommandTest {
 		themeDisplay.setLayoutSet(_layout.getLayoutSet());
 		themeDisplay.setPermissionChecker(
 			PermissionThreadLocal.getPermissionChecker());
+		themeDisplay.setPlid(_layout.getPlid());
 		themeDisplay.setScopeGroupId(_group.getGroupId());
 		themeDisplay.setSiteGroupId(_group.getGroupId());
 		themeDisplay.setUser(TestPropsValues.getUser());

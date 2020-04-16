@@ -57,7 +57,8 @@ public class KaleoNotificationRecipientLocalServiceUtil {
 	public static
 		com.liferay.portal.workflow.kaleo.model.KaleoNotificationRecipient
 				addKaleoNotificationRecipient(
-					long kaleoDefinitionVersionId, long kaleoNotificationId,
+					long kaleoDefinitionId, long kaleoDefinitionVersionId,
+					long kaleoNotificationId,
 					com.liferay.portal.workflow.kaleo.definition.Recipient
 						recipient,
 					com.liferay.portal.kernel.service.ServiceContext
@@ -65,8 +66,8 @@ public class KaleoNotificationRecipientLocalServiceUtil {
 			throws com.liferay.portal.kernel.exception.PortalException {
 
 		return getService().addKaleoNotificationRecipient(
-			kaleoDefinitionVersionId, kaleoNotificationId, recipient,
-			serviceContext);
+			kaleoDefinitionId, kaleoDefinitionVersionId, kaleoNotificationId,
+			recipient, serviceContext);
 	}
 
 	/**
@@ -82,6 +83,16 @@ public class KaleoNotificationRecipientLocalServiceUtil {
 
 		return getService().createKaleoNotificationRecipient(
 			kaleoNotificationRecipientId);
+	}
+
+	/**
+	 * @throws PortalException
+	 */
+	public static com.liferay.portal.kernel.model.PersistedModel
+			createPersistedModel(java.io.Serializable primaryKeyObj)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return getService().createPersistedModel(primaryKeyObj);
 	}
 
 	public static void deleteCompanyKaleoNotificationRecipients(
@@ -306,6 +317,9 @@ public class KaleoNotificationRecipientLocalServiceUtil {
 		return getService().getOSGiServiceIdentifier();
 	}
 
+	/**
+	 * @throws PortalException
+	 */
 	public static com.liferay.portal.kernel.model.PersistedModel
 			getPersistedModel(java.io.Serializable primaryKeyObj)
 		throws com.liferay.portal.kernel.exception.PortalException {

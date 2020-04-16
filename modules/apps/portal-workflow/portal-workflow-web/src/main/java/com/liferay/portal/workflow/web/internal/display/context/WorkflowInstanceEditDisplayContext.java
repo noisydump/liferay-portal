@@ -108,7 +108,7 @@ public class WorkflowInstanceEditDisplayContext
 
 		User user = _getUser(workflowLog.getUserId());
 
-		if (user.isMale()) {
+		if ((user == null) || user.isMale()) {
 			return "x-assigned-the-task-to-himself";
 		}
 
@@ -121,7 +121,8 @@ public class WorkflowInstanceEditDisplayContext
 		return new Object[] {
 			HtmlUtil.escape(
 				PortalUtil.getUserName(
-					workflowLog.getAuditUserId(), StringPool.BLANK)),
+					workflowLog.getAuditUserId(),
+					String.valueOf(workflowLog.getAuditUserId()))),
 			HtmlUtil.escape(_getActorName(workflowLog))
 		};
 	}
@@ -151,7 +152,8 @@ public class WorkflowInstanceEditDisplayContext
 	public Object getPreviousAssigneeMessageArguments(WorkflowLog workflowLog) {
 		return HtmlUtil.escape(
 			PortalUtil.getUserName(
-				workflowLog.getPreviousUserId(), StringPool.BLANK));
+				workflowLog.getPreviousUserId(),
+				String.valueOf(workflowLog.getPreviousUserId())));
 	}
 
 	public String getTaskCompleted(WorkflowTask workflowTask) {
@@ -168,8 +170,12 @@ public class WorkflowInstanceEditDisplayContext
 		return new Object[] {
 			HtmlUtil.escape(
 				PortalUtil.getUserName(
-					workflowLog.getAuditUserId(), StringPool.BLANK)),
-			HtmlUtil.escape(workflowLog.getState())
+					workflowLog.getAuditUserId(),
+					String.valueOf(workflowLog.getAuditUserId()))),
+			HtmlUtil.escape(
+				LanguageUtil.get(
+					workflowInstanceRequestHelper.getRequest(),
+					workflowLog.getState()))
 		};
 	}
 
@@ -202,22 +208,36 @@ public class WorkflowInstanceEditDisplayContext
 		return HtmlUtil.escape(workflowTask.getName());
 	}
 
-	public Object getTaskUpdateMessageArguments(WorkflowLog workflowLog) {
-		return HtmlUtil.escape(_getActorName(workflowLog));
+	public String getTaskUpdateMessageArguments(WorkflowLog workflowLog) {
+		return HtmlUtil.escape(
+			PortalUtil.getUserName(
+				workflowLog.getAuditUserId(),
+				String.valueOf(workflowLog.getAuditUserId())));
 	}
 
 	public Object getTransitionMessageArguments(WorkflowLog workflowLog) {
 		return new Object[] {
-			HtmlUtil.escape(_getActorName(workflowLog)),
-			HtmlUtil.escape(workflowLog.getPreviousState()),
-			HtmlUtil.escape(workflowLog.getState())
+			HtmlUtil.escape(
+				PortalUtil.getUserName(
+					workflowLog.getAuditUserId(),
+					String.valueOf(workflowLog.getAuditUserId()))),
+			HtmlUtil.escape(
+				LanguageUtil.get(
+					workflowInstanceRequestHelper.getRequest(),
+					workflowLog.getPreviousState())),
+			HtmlUtil.escape(
+				LanguageUtil.get(
+					workflowInstanceRequestHelper.getRequest(),
+					workflowLog.getState()))
 		};
 	}
 
-	public String getUserFullName(WorkflowLog workflowLog)
-		throws PortalException {
-
+	public String getUserFullName(WorkflowLog workflowLog) {
 		User user = _getUser(workflowLog.getUserId());
+
+		if (user == null) {
+			return String.valueOf(workflowLog.getUserId());
+		}
 
 		return HtmlUtil.escape(user.getFullName());
 	}

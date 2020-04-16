@@ -22,10 +22,15 @@ import com.liferay.portal.kernel.template.TemplateResourceCache;
 import com.liferay.portal.template.BaseTemplate;
 import com.liferay.portal.template.TemplateContextHelper;
 import com.liferay.portal.template.TemplateResourceThreadLocal;
+import com.liferay.taglib.util.VelocityTaglib;
+import com.liferay.taglib.util.VelocityTaglibImpl;
 
 import java.io.Writer;
 
 import java.util.Map;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
@@ -45,14 +50,31 @@ public class VelocityTemplate extends BaseTemplate {
 
 		super(templateResource, context, templateContextHelper, restricted);
 
-		_velocityContext = new VelocityContext(super.context);
 		_velocityEngine = velocityEngine;
 		_templateResourceCache = templateResourceCache;
 		_restricted = restricted;
 
+		_velocityContext = new VelocityContext(super.context);
+
 		if (templateResourceCache.isEnabled()) {
 			cacheTemplateResource(templateResourceCache, templateResource);
 		}
+	}
+
+	@Override
+	public void prepareTaglib(
+		HttpServletRequest httpServletRequest,
+		HttpServletResponse httpServletResponse) {
+
+		VelocityTaglib velocityTaglib = new VelocityTaglibImpl(
+			httpServletRequest.getServletContext(), httpServletRequest,
+			httpServletResponse, context);
+
+		context.put("taglibLiferay", velocityTaglib);
+
+		// Legacy support
+
+		context.put("theme", velocityTaglib);
 	}
 
 	@Override

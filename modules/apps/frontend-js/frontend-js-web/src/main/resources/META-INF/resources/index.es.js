@@ -18,13 +18,17 @@
 
 export {default as AOP} from './liferay/aop/AOP.es';
 
+// AutoSize API
+
+export {default as autoSize} from './liferay/autosize/autosize.es';
+
 // Debounce API
 
 export {cancelDebounce, debounce} from './liferay/debounce/debounce.es';
 
 // Form API
 
-export {default as objectToFormData} from './liferay/util/form/object_to_form_data.es.js';
+export {default as objectToFormData} from './liferay/util/form/object_to_form_data.es';
 
 // Liferay API
 
@@ -35,6 +39,8 @@ export {default as ItemSelectorDialog} from './liferay/ItemSelectorDialog.es';
 export {default as PortletBase} from './liferay/PortletBase.es';
 
 // Modal API
+
+export {openModal} from './liferay/modal/Modal.es';
 
 export {default as openSimpleInputModal} from './liferay/modal/commands/OpenSimpleInputModal.es';
 

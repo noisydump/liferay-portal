@@ -218,6 +218,8 @@ public interface LiferaySelenium {
 
 	public String getTestDependenciesDirName();
 
+	public String getTestName();
+
 	public String getText(String locator) throws Exception;
 
 	public String getTitle();
@@ -355,6 +357,10 @@ public interface LiferaySelenium {
 
 	public void replyToEmail(String to, String body) throws Exception;
 
+	public void robotType(String script);
+
+	public void robotTypeShortcut(String script);
+
 	public void runScript(String script);
 
 	public void saveScreenshot() throws Exception;
@@ -455,6 +461,9 @@ public interface LiferaySelenium {
 	public void typeAlloyEditor(String locator, String value);
 
 	public void typeCKEditor(String locator, String value);
+
+	public void typeCodeMirrorEditor(String locator, String value)
+		throws Exception;
 
 	public void typeEditor(String locator, String value);
 

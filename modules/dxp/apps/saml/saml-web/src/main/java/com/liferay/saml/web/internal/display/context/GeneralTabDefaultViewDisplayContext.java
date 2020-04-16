@@ -16,6 +16,7 @@ package com.liferay.saml.web.internal.display.context;
 
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.saml.runtime.configuration.SamlConfiguration;
 import com.liferay.saml.runtime.metadata.LocalEntityManager;
 
 import java.security.KeyStoreException;
@@ -31,9 +32,11 @@ import java.util.Map;
 public class GeneralTabDefaultViewDisplayContext {
 
 	public GeneralTabDefaultViewDisplayContext(
-		LocalEntityManager localEntityManager) {
+		LocalEntityManager localEntityManager,
+		SamlConfiguration samlConfiguration) {
 
 		_localEntityManager = localEntityManager;
+		_samlConfiguration = samlConfiguration;
 	}
 
 	public X509CertificateStatus getX509CertificateStatus() {
@@ -69,9 +72,7 @@ public class GeneralTabDefaultViewDisplayContext {
 			X509CertificateStatus.Status status;
 
 			if (cause != null) {
-				Throwable unrecoverableKeyException;
-
-				unrecoverableKeyException = _getCause(
+				Throwable unrecoverableKeyException = _getCause(
 					cause, UnrecoverableKeyException.class);
 
 				if (unrecoverableKeyException != null) {
@@ -137,6 +138,10 @@ public class GeneralTabDefaultViewDisplayContext {
 		return x509CertificateStatus;
 	}
 
+	public boolean isRoleIdPAvailable() {
+		return _samlConfiguration.idpRoleConfigurationEnabled();
+	}
+
 	public static class X509CertificateStatus {
 
 		public X509CertificateStatus(
@@ -188,6 +193,7 @@ public class GeneralTabDefaultViewDisplayContext {
 		GeneralTabDefaultViewDisplayContext.class);
 
 	private final LocalEntityManager _localEntityManager;
+	private final SamlConfiguration _samlConfiguration;
 	private Map<LocalEntityManager.CertificateUsage, X509CertificateStatus>
 		_x509CertificateStatuses = new HashMap<>();
 

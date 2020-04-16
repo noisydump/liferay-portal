@@ -12,39 +12,39 @@
  * details.
  */
 
-import moment from 'moment';
 import React from 'react';
 import {Link} from 'react-router-dom';
 
 import Button from '../../components/button/Button.es';
 import ListView from '../../components/list-view/ListView.es';
 import {confirmDelete} from '../../utils/client.es';
+import {fromNow} from '../../utils/time.es';
 
 const COLUMNS = [
 	{
 		key: 'name',
 		sortable: true,
-		value: Liferay.Language.get('name')
+		value: Liferay.Language.get('name'),
 	},
 	{
 		key: 'dateCreated',
 		sortable: true,
-		value: Liferay.Language.get('create-date')
+		value: Liferay.Language.get('create-date'),
 	},
 	{
 		asc: false,
 		key: 'dateModified',
 		sortable: true,
-		value: Liferay.Language.get('modified-date')
-	}
+		value: Liferay.Language.get('modified-date'),
+	},
 ];
 
 export default ({
 	history,
 	match: {
 		params: {dataDefinitionId},
-		url
-	}
+		url,
+	},
 }) => {
 	return (
 		<ListView
@@ -52,18 +52,18 @@ export default ({
 				{
 					action: item =>
 						Promise.resolve(history.push(`${url}/${item.id}`)),
-					name: Liferay.Language.get('edit')
+					name: Liferay.Language.get('edit'),
 				},
 				{
 					action: confirmDelete(
 						'/o/data-engine/v2.0/data-list-views/'
 					),
-					name: Liferay.Language.get('delete')
-				}
+					name: Liferay.Language.get('delete'),
+				},
 			]}
 			addButton={() => (
 				<Button
-					className="nav-btn nav-btn-monospaced navbar-breakpoint-down-d-none"
+					className="nav-btn nav-btn-monospaced"
 					href={`${url}/add`}
 					symbol="plus"
 					tooltip={Liferay.Language.get('new-table-view')}
@@ -79,15 +79,15 @@ export default ({
 				description: Liferay.Language.get(
 					'create-one-or-more-tables-to-display-the-data-held-in-your-data-object'
 				),
-				title: Liferay.Language.get('there-are-no-table-views-yet')
+				title: Liferay.Language.get('there-are-no-table-views-yet'),
 			}}
 			endpoint={`/o/data-engine/v2.0/data-definitions/${dataDefinitionId}/data-list-views`}
 		>
 			{item => ({
 				...item,
-				dateCreated: moment(item.dateCreated).fromNow(),
-				dateModified: moment(item.dateModified).fromNow(),
-				name: <Link to={`${url}/${item.id}`}>{item.name.en_US}</Link>
+				dateCreated: fromNow(item.dateCreated),
+				dateModified: fromNow(item.dateModified),
+				name: <Link to={`${url}/${item.id}`}>{item.name.en_US}</Link>,
 			})}
 		</ListView>
 	);

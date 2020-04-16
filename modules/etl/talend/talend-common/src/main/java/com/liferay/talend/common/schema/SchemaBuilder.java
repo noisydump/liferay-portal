@@ -101,10 +101,7 @@ public class SchemaBuilder {
 		JsonObject schemaJsonObject = _jsonFinder.getDescendantJsonObject(
 			jsonFinderPath, oasJsonObject);
 
-		schemaName = _stripSchemaName(
-			schemaJsonObject.getString(OASConstants.REF));
-
-		return schemaName;
+		return _stripSchemaName(schemaJsonObject.getString(OASConstants.REF));
 	}
 
 	public Schema getEntitySchema(String entityName, JsonObject oasJsonObject) {
@@ -314,6 +311,14 @@ public class SchemaBuilder {
 			apiSpecJsonObject);
 	}
 
+	private boolean _isExtensionField(String name) {
+		if (name.startsWith("x-")) {
+			return true;
+		}
+
+		return false;
+	}
+
 	private void _processSchemaJsonObject(
 		String parentPropertyName, JsonObject schemaJsonObject,
 		AtomicInteger index, Set<String> previousFieldNames,
@@ -355,6 +360,10 @@ public class SchemaBuilder {
 
 			String fieldName = NameUtil.correct(
 				propertyEntry.getKey(), index.get(), previousFieldNames);
+
+			if (_isExtensionField(fieldName)) {
+				continue;
+			}
 
 			if (parentPropertyName != null) {
 				fieldName = NameUtil.correct(

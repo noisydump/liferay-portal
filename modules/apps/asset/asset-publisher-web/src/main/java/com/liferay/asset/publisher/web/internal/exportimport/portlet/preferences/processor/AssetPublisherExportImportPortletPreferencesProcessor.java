@@ -28,7 +28,7 @@ import com.liferay.asset.list.service.AssetListEntryLocalService;
 import com.liferay.asset.publisher.constants.AssetPublisherPortletKeys;
 import com.liferay.asset.publisher.util.AssetPublisherHelper;
 import com.liferay.asset.publisher.web.internal.configuration.AssetPublisherWebConfiguration;
-import com.liferay.asset.publisher.web.internal.util.AssetPublisherWebUtil;
+import com.liferay.asset.publisher.web.internal.helper.AssetPublisherWebHelper;
 import com.liferay.document.library.kernel.model.DLFileEntry;
 import com.liferay.document.library.kernel.model.DLFileEntryType;
 import com.liferay.document.library.kernel.service.DLFileEntryTypeLocalService;
@@ -288,9 +288,13 @@ public class AssetPublisherExportImportPortletPreferencesProcessor
 				continue;
 			}
 
-			StagedModelDataHandlerUtil.exportReferenceStagedModel(
-				portletDataContext, portletDataContext.getPortletId(),
-				(StagedModel)assetRenderer.getAssetObject());
+			if (!portletDataContext.addPrimaryKey(
+					AssetEntry.class, assetRenderer.getUuid())) {
+
+				StagedModelDataHandlerUtil.exportReferenceStagedModel(
+					portletDataContext, portletDataContext.getPortletId(),
+					(StagedModel)assetRenderer.getAssetObject());
+			}
 		}
 	}
 
@@ -1200,7 +1204,7 @@ public class AssetPublisherExportImportPortletPreferencesProcessor
 			}
 
 			try {
-				if (!assetPublisherWebUtil.isScopeIdSelectable(
+				if (!assetPublisherWebHelper.isScopeIdSelectable(
 						PermissionThreadLocal.getPermissionChecker(), newValue,
 						companyGroupId, layout, false)) {
 
@@ -1258,7 +1262,7 @@ public class AssetPublisherExportImportPortletPreferencesProcessor
 	protected AssetPublisherHelper assetPublisherHelper;
 
 	@Reference
-	protected AssetPublisherWebUtil assetPublisherWebUtil;
+	protected AssetPublisherWebHelper assetPublisherWebHelper;
 
 	@Reference
 	protected AssetVocabularyLocalService assetVocabularyLocalService;
@@ -1340,9 +1344,36 @@ public class AssetPublisherExportImportPortletPreferencesProcessor
 			return value;
 		}
 
-		long groupId = assetPublisherHelper.getGroupIdFromScopeId(
-			value, portletDataContext.getGroupId(),
-			portletDataContext.isPrivateLayout());
+		long groupId = GroupConstants.DEFAULT_LIVE_GROUP_ID;
+
+		try {
+			groupId = assetPublisherHelper.getGroupIdFromScopeId(
+				value, portletDataContext.getGroupId(),
+				portletDataContext.isPrivateLayout());
+		}
+		catch (NoSuchGroupException noSuchGroupException) {
+			if (_log.isInfoEnabled()) {
+				_log.info(
+					StringBundler.concat(
+						"Ignoring scope ", value, " because the referenced ",
+						"group was not found"),
+					noSuchGroupException);
+			}
+
+			return value;
+		}
+		catch (PrincipalException principalException) {
+			if (_log.isInfoEnabled()) {
+				_log.info(
+					StringBundler.concat(
+						"Ignoring scope ", value, " because the referenced ",
+						"parent group no longer allows sharing content with ",
+						"child sites"),
+					principalException);
+			}
+
+			return value;
+		}
 
 		Group group = groupLocalService.fetchGroup(groupId);
 

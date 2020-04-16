@@ -1,6 +1,8 @@
 {
 	"dependencies": {
-		"@clayui/progress-bar": "3.0.2",
+		"@clayui/button": "3.3.0",
+		"@clayui/icon": "3.0.4",
+		"@clayui/progress-bar": "3.0.4",
 		"frontend-js-react-web": "*",
 		"frontend-js-web": "*",
 		"metal": "2.16.8",
@@ -14,5 +16,5 @@
 		"checkFormat": "liferay-npm-scripts check",
 		"format": "liferay-npm-scripts fix"
 	},
-	"version": "4.0.6"
+	"version": "4.0.15"
 }

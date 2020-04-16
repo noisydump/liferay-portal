@@ -9,36 +9,33 @@
  * distribution rights of the Software.
  */
 
-import {buildFallbackItems} from '../../../shared/components/filter/util/filterEvents.es';
+import {
+	defaultDateFormat,
+	formatDate,
+	getLocaleDateFormat,
+	isValidDate,
+} from '../../../shared/util/date.es';
 import moment from '../../../shared/util/moment.es';
 
-const buildFallbackTimeRange = (fallbackKeys, queryDateEnd, queryDateStart) => {
-	const fallbackItems = buildFallbackItems(fallbackKeys);
-
-	if (fallbackItems && fallbackItems.length) {
-		return {
-			...fallbackItems[0],
-			dateEnd: parseQueryDate(queryDateEnd, true),
-			dateStart: parseQueryDate(queryDateStart)
-		};
-	}
-
-	return null;
+const convertQueryDate = (date = '', format = 'L') => {
+	return moment.utc(decodeURIComponent(date), null, 'en').format(format);
 };
 
-const formatDate = (date, locale) => {
-	if (locale) {
-		return moment.utc(date, null, locale).format('L');
-	}
+const formatDateTime = (date, format, isEndDate) => {
+	let dateTime = parseDateMoment(date, format || 'L');
 
-	return moment.utc(date).format('L');
+	dateTime = isEndDate ? dateTime.endOf('day') : dateTime.startOf('day');
+
+	return dateTime.format(defaultDateFormat);
 };
 
-const formatDateEnLocale = date => formatDate(date, 'en');
-
-const formatDescriptionDate = date => moment.utc(date).format('ll');
-
-const formatQueryDate = date => parseDateMoment(date).format('YYYY-MM-DD');
+const formatDescriptionDate = date => {
+	return formatDate(
+		decodeURIComponent(date),
+		getLocaleDateFormat('ll'),
+		defaultDateFormat
+	);
+};
 
 const formatTimeRange = (timeRange, isAmPm) => {
 	const {dateEnd, dateStart} = timeRange;
@@ -64,11 +61,11 @@ const formatTimeRange = (timeRange, isAmPm) => {
 const getCustomTimeRange = (dateEnd, dateStart) => {
 	const customTimeRange = {
 		active: false,
-		dateEnd: parseQueryDate(dateEnd, true),
-		dateStart: parseQueryDate(dateStart),
+		dateEnd: decodeURIComponent(dateEnd),
+		dateStart: decodeURIComponent(dateStart),
 		dividerAfter: true,
-		key: 'custom',
-		name: Liferay.Language.get('custom-range')
+		id: 'custom',
+		name: Liferay.Language.get('custom-range'),
 	};
 
 	customTimeRange.resultName = `${formatDescriptionDate(
@@ -84,10 +81,12 @@ const getFormatPattern = (dateEndMoment, dateStartMoment, isAmPm) => {
 	if (dateEndMoment.diff(dateStartMoment, 'days') <= 1) {
 		if (isAmPm) {
 			dateStartPattern = Liferay.Language.get('mmm-dd-hh-mm-a');
-		} else {
+		}
+		else {
 			dateStartPattern = Liferay.Language.get('mmm-dd-hh-mm');
 		}
-	} else if (dateEndMoment.diff(dateStartMoment, 'years') < 1) {
+	}
+	else if (dateEndMoment.diff(dateStartMoment, 'years') < 1) {
 		dateStartPattern = Liferay.Language.get('mmm-dd');
 	}
 
@@ -99,37 +98,40 @@ const getFormatPattern = (dateEndMoment, dateStartMoment, isAmPm) => {
 
 	return {
 		dateEndPattern,
-		dateStartPattern
+		dateStartPattern,
 	};
 };
 
-const isValidDate = date => date && moment(date).isValid();
+const getTimeRangeParams = (dateStartEncoded = '', dateEndEncoded = '') => {
+	let params = {};
 
-const parseDate = (date, format, isEndDate, locale) => {
-	let utcDate = parseDateMoment(date, format, locale);
+	const dateEnd = decodeURIComponent(dateEndEncoded);
+	const dateStart = decodeURIComponent(dateStartEncoded);
 
-	if (isEndDate) {
-		utcDate = utcDate
-			.hours(23)
-			.minutes(59)
-			.seconds(59);
-	} else {
-		utcDate = utcDate.hours(0);
+	if (
+		isValidDate(dateEnd, defaultDateFormat) &&
+		isValidDate(dateStart, defaultDateFormat)
+	) {
+		params = {
+			dateEnd,
+			dateStart,
+		};
 	}
 
-	return utcDate.toDate();
+	return params;
 };
 
-const parseDateMoment = (date, format = 'L', locale) =>
-	moment.utc(date, format, locale, true);
+const parseDateMoment = (date, format = 'L') => {
+	return moment.utc(date, format, 'en');
+};
 
-const parseDateItems = isAmPm => items =>
-	items.map(item => {
+const parseDateItems = isAmPm => items => {
+	return items.map(item => {
 		const parsedItem = {
 			...item,
-			dateEnd: new Date(item.dateEnd),
-			dateStart: new Date(item.dateStart),
-			key: item.key
+			dateEnd: item.dateEnd,
+			dateStart: item.dateStart,
+			key: item.key,
 		};
 
 		if (parsedItem.key !== 'custom') {
@@ -138,29 +140,16 @@ const parseDateItems = isAmPm => items =>
 
 		return parsedItem;
 	});
-
-const parseDateMomentEnLocale = (date, format = 'L') =>
-	parseDateMoment(date, format, 'en');
-
-const parseDateEnLocale = (date, isEndDate, format = 'L') =>
-	parseDate(date, format, isEndDate, 'en');
-
-const parseQueryDate = (date, isEndDate) =>
-	parseDate(date, 'YYYY-MM-DD', isEndDate, 'en');
+};
 
 export {
-	buildFallbackTimeRange,
-	formatDate,
-	formatDateEnLocale,
+	convertQueryDate,
+	formatDateTime,
 	formatDescriptionDate,
-	formatQueryDate,
 	formatTimeRange,
 	getCustomTimeRange,
+	getTimeRangeParams,
 	isValidDate,
-	parseDate,
 	parseDateMoment,
 	parseDateItems,
-	parseDateMomentEnLocale,
-	parseDateEnLocale,
-	parseQueryDate
 };

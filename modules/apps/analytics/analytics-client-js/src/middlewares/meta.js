@@ -12,11 +12,13 @@
  * details.
  */
 
+import {getTimezoneOffsetHour} from '../utils/date';
+
 /**
  * Generates a local helper function to fetch information from DOM elements
  * @param {string} selector A CSS selector query string
  * @param {string} attribute The element attribute to get
- * @return {string} Value of the specified attribute
+ * @returns {string} Value of the specified attribute
  */
 function getAttribute(selector, attribute) {
 	const tag = document.querySelector(selector) || {};
@@ -26,8 +28,8 @@ function getAttribute(selector, attribute) {
 
 /**
  * Updates context with general page information
- * @param {object} request Request object to alter
- * @return {object} The updated request object
+ * @param {Object} request Request object to alter
+ * @returns {Object} The updated request object
  */
 function meta(request) {
 	request.context = {
@@ -37,10 +39,11 @@ function meta(request) {
 		keywords: getAttribute('meta[name="keywords"]', 'content'),
 		languageId: navigator.language,
 		referrer: document.referrer,
+		timezoneOffset: getTimezoneOffsetHour(),
 		title: getAttribute('title', 'textContent'),
 		url: location.href,
 		userAgent: navigator.userAgent,
-		...request.context
+		...request.context,
 	};
 
 	return request;

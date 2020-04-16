@@ -36,13 +36,7 @@ public class JavaTestMethodAnnotationsCheck extends BaseJavaTermCheck {
 		String fileName, String absolutePath, JavaTerm javaTerm,
 		String fileContent) {
 
-		if (!fileName.endsWith("Test.java")) {
-			return javaTerm.getContent();
-		}
-
-		String accessModifier = javaTerm.getAccessModifier();
-
-		if (!accessModifier.equals(JavaTerm.ACCESS_MODIFIER_PUBLIC)) {
+		if (!javaTerm.isPublic() || !fileName.endsWith("Test.java")) {
 			return javaTerm.getContent();
 		}
 
@@ -83,13 +77,11 @@ public class JavaTestMethodAnnotationsCheck extends BaseJavaTermCheck {
 		if (javaTerm.hasAnnotation(annotation)) {
 			if (!matcher.find()) {
 				addMessage(
-					fileName, "Incorrect method name '" + methodName + "'",
-					"test_method_naming.markdown");
+					fileName, "Incorrect method name '" + methodName + "'");
 			}
 			else if (javaTerm.isStatic() != staticRequired) {
 				addMessage(
-					fileName, "Incorrect method type for '" + methodName + "'",
-					"test_method_naming.markdown");
+					fileName, "Incorrect method type for '" + methodName + "'");
 			}
 		}
 		else if (matcher.find() && !javaTerm.hasAnnotation("Override")) {
@@ -97,8 +89,7 @@ public class JavaTestMethodAnnotationsCheck extends BaseJavaTermCheck {
 				fileName,
 				StringBundler.concat(
 					"Annotation @", annotation, " required for '", methodName,
-					"'"),
-				"test_method_naming.markdown");
+					"'"));
 		}
 	}
 

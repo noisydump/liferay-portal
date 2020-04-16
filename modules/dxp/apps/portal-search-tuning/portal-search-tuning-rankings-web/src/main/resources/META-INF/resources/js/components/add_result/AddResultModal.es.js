@@ -14,7 +14,7 @@ import {useResource} from '@clayui/data-provider';
 import {ClayCheckbox} from '@clayui/form';
 import ClayIcon from '@clayui/icon';
 import ClayLoadingIndicator from '@clayui/loading-indicator';
-import ClayModal, {useModal} from '@clayui/modal';
+import ClayModal from '@clayui/modal';
 import {ClayPaginationBarWithBasicItems} from '@clayui/pagination-bar';
 import {ClayTooltipProvider} from '@clayui/tooltip';
 import getCN from 'classnames';
@@ -24,10 +24,10 @@ import React, {useContext, useEffect, useState} from 'react';
 
 import ThemeContext from '../../ThemeContext.es';
 import {
-	DELTAS,
 	DEFAULT_DELTA,
+	DELTAS,
 	FETCH_OPTIONS,
-	KEY_CODES
+	KEY_CODES,
 } from '../../utils/constants.es';
 import {getPluralMessage} from '../../utils/language.es';
 import {buildUrl, resultsDataToMap, toggleListItem} from '../../utils/util.es';
@@ -40,8 +40,9 @@ import AddResultSearchBar from './AddResultSearchBar.es';
  */
 function AddResultModal({
 	fetchDocumentsSearchUrl,
+	observer,
 	onAddResultSubmit,
-	onCloseModal
+	onClose,
 }) {
 	const {companyId, namespace, spritemap} = useContext(ThemeContext);
 
@@ -51,7 +52,7 @@ function AddResultModal({
 	 */
 	const [resourceState, setResourceState] = useState(() => ({
 		error: false,
-		loading: false
+		loading: false,
 	}));
 
 	const {error, loading} = resourceState;
@@ -72,23 +73,19 @@ function AddResultModal({
 	 */
 	const [dataMap, setDataMap] = useState(false);
 
-	const {observer, onClose} = useModal({
-		onClose: _handleCloseModal
-	});
-
 	const {refetch, resource} = useResource({
 		fetchOptions: FETCH_OPTIONS,
 		link: buildUrl(fetchDocumentsSearchUrl, {
 			[`${namespace}companyId`]: companyId,
 			[`${namespace}from`]: page * delta - delta,
 			[`${namespace}keywords`]: searchQuery,
-			[`${namespace}size`]: delta
+			[`${namespace}size`]: delta,
 		}),
 		onNetworkStatusChange: status =>
 			setResourceState({
 				error: status === 5,
-				loading: status < 4
-			})
+				loading: status < 4,
+			}),
 	});
 
 	/**
@@ -148,7 +145,8 @@ function AddResultModal({
 	function _handleAllCheckbox() {
 		if (_getCurrentResultSelectedIds().length > 0) {
 			_deselectAll();
-		} else {
+		}
+		else {
 			_selectAll();
 		}
 	}
@@ -158,14 +156,6 @@ function AddResultModal({
 	 */
 	function _handleClearAllSelected() {
 		setSelectedIds([]);
-	}
-
-	/**
-	 * Closes the modal and reverts back to initial state for the next time the
-	 * modal is opened.
-	 */
-	function _handleCloseModal() {
-		onCloseModal();
 	}
 
 	/**
@@ -289,7 +279,8 @@ function AddResultModal({
 					title={Liferay.Language.get('search-the-engine')}
 				/>
 			);
-		} else if (error) {
+		}
+		else if (error) {
 			emptyState = (
 				<ClayEmptyState
 					actionLabel={Liferay.Language.get('try-again')}
@@ -382,6 +373,7 @@ function AddResultModal({
 								author={result.author}
 								clicks={result.clicks}
 								date={result.date}
+								description={result.description}
 								hidden={result.hidden}
 								icon={result.icon}
 								id={result.id}
@@ -407,7 +399,7 @@ function AddResultModal({
 								'showing-x-to-x-of-x-entries'
 							),
 							perPageItems: Liferay.Language.get('x-items'),
-							selectPerPageItems: Liferay.Language.get('x-items')
+							selectPerPageItems: Liferay.Language.get('x-items'),
 						}}
 						onDeltaChange={_handleDeltaChange}
 						onPageChange={_handlePageChange}
@@ -421,7 +413,7 @@ function AddResultModal({
 
 	return (
 		<ClayModal
-			className="modal-full-screen-sm-down result-ranking-modal-root"
+			className="result-ranking-modal-root"
 			observer={observer}
 			size="lg"
 		>
@@ -456,7 +448,7 @@ function AddResultModal({
 						searchQuery={searchQuery}
 					/>
 
-					<div className="add-result-scroller inline-scroller">
+					<div className="add-result-scroller">
 						{loading && (
 							<div className="add-result-sheet sheet">
 								<div className="sheet-title">
@@ -502,7 +494,7 @@ function AddResultModal({
 AddResultModal.propTypes = {
 	fetchDocumentsSearchUrl: PropTypes.string.isRequired,
 	onAddResultSubmit: PropTypes.func.isRequired,
-	onCloseModal: PropTypes.func.isRequired
+	onClose: PropTypes.func.isRequired,
 };
 
 export default AddResultModal;

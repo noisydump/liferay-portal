@@ -12,18 +12,39 @@
  * details.
  */
 
-import {TYPES} from '../actions/index';
+import {
+	ADD_FRAGMENT_ENTRY_LINKS,
+	ADD_FRAGMENT_ENTRY_LINK_COMMENT,
+	DELETE_FRAGMENT_ENTRY_LINK_COMMENT,
+	EDIT_FRAGMENT_ENTRY_LINK_COMMENT,
+	UPDATE_EDITABLE_VALUES,
+	UPDATE_FRAGMENT_ENTRY_LINK_CONTENT,
+	UPDATE_LAYOUT_DATA,
+} from '../actions/types';
 
-export default function fragmentEntryLinksReducer(fragmentEntryLinks, action) {
+export const INITIAL_STATE = {};
+
+export default function fragmentEntryLinksReducer(
+	fragmentEntryLinks = INITIAL_STATE,
+	action
+) {
 	switch (action.type) {
-		case TYPES.ADD_FRAGMENT_ENTRY_LINK:
+		case ADD_FRAGMENT_ENTRY_LINKS: {
+			const newFragmentEntryLinks = {};
+
+			action.fragmentEntryLinks.forEach(fragmentEntryLink => {
+				newFragmentEntryLinks[
+					fragmentEntryLink.fragmentEntryLinkId
+				] = fragmentEntryLink;
+			});
+
 			return {
 				...fragmentEntryLinks,
-				[action.fragmentEntryLink.fragmentEntryLinkId]:
-					action.fragmentEntryLink
+				...newFragmentEntryLinks,
 			};
+		}
 
-		case TYPES.ADD_FRAGMENT_ENTRY_LINK_COMMENT: {
+		case ADD_FRAGMENT_ENTRY_LINK_COMMENT: {
 			const fragmentEntryLink =
 				fragmentEntryLinks[action.fragmentEntryLinkId];
 
@@ -38,12 +59,13 @@ export default function fragmentEntryLinksReducer(fragmentEntryLinks, action) {
 								...comment,
 								children: [
 									...(comment.children || []),
-									action.fragmentEntryLinkComment
-								]
+									action.fragmentEntryLinkComment,
+								],
 						  }
 						: comment
 				);
-			} else {
+			}
+			else {
 				nextComments = [...comments, action.fragmentEntryLinkComment];
 			}
 
@@ -51,12 +73,12 @@ export default function fragmentEntryLinksReducer(fragmentEntryLinks, action) {
 				...fragmentEntryLinks,
 				[action.fragmentEntryLinkId]: {
 					...fragmentEntryLink,
-					comments: nextComments
-				}
+					comments: nextComments,
+				},
 			};
 		}
 
-		case TYPES.DELETE_FRAGMENT_ENTRY_LINK_COMMENT: {
+		case DELETE_FRAGMENT_ENTRY_LINK_COMMENT: {
 			const fragmentEntryLink =
 				fragmentEntryLinks[action.fragmentEntryLinkId];
 
@@ -73,11 +95,12 @@ export default function fragmentEntryLinksReducer(fragmentEntryLinks, action) {
 									childComment =>
 										childComment.commentId !==
 										action.commentId
-								)
+								),
 						  }
 						: comment
 				);
-			} else {
+			}
+			else {
 				nextComments = comments.filter(
 					comment => comment.commentId !== action.commentId
 				);
@@ -87,12 +110,12 @@ export default function fragmentEntryLinksReducer(fragmentEntryLinks, action) {
 				...fragmentEntryLinks,
 				[action.fragmentEntryLinkId]: {
 					...fragmentEntryLink,
-					comments: nextComments
-				}
+					comments: nextComments,
+				},
 			};
 		}
 
-		case TYPES.EDIT_FRAGMENT_ENTRY_LINK_COMMENT: {
+		case EDIT_FRAGMENT_ENTRY_LINK_COMMENT: {
 			const fragmentEntryLink =
 				fragmentEntryLinks[action.fragmentEntryLinkId];
 
@@ -110,11 +133,12 @@ export default function fragmentEntryLinksReducer(fragmentEntryLinks, action) {
 									action.fragmentEntryLinkComment.commentId
 										? action.fragmentEntryLinkComment
 										: childComment
-								)
+								),
 						  }
 						: comment
 				);
-			} else {
+			}
+			else {
 				nextComments = comments.map(comment =>
 					comment.commentId ===
 					action.fragmentEntryLinkComment.commentId
@@ -127,21 +151,30 @@ export default function fragmentEntryLinksReducer(fragmentEntryLinks, action) {
 				...fragmentEntryLinks,
 				[action.fragmentEntryLinkId]: {
 					...fragmentEntryLink,
-					comments: nextComments
-				}
+					comments: nextComments,
+				},
 			};
 		}
 
-		case TYPES.UPDATE_EDITABLE_VALUES:
+		case UPDATE_EDITABLE_VALUES:
 			return {
 				...fragmentEntryLinks,
 				[action.fragmentEntryLinkId]: {
 					...fragmentEntryLinks[action.fragmentEntryLinkId],
-					editableValues: action.editableValues
-				}
+					editableValues: action.editableValues,
+				},
 			};
 
-		case TYPES.UPDATE_LAYOUT_DATA: {
+		case UPDATE_FRAGMENT_ENTRY_LINK_CONTENT:
+			return {
+				...fragmentEntryLinks,
+				[action.fragmentEntryLinkId]: {
+					...fragmentEntryLinks[action.fragmentEntryLinkId],
+					content: action.content,
+				},
+			};
+
+		case UPDATE_LAYOUT_DATA: {
 			const nextFragmentEntryLinks = {...fragmentEntryLinks};
 
 			action.deletedFragmentEntryLinkIds.forEach(fragmentEntryLinkId => {
@@ -156,15 +189,6 @@ export default function fragmentEntryLinksReducer(fragmentEntryLinks, action) {
 
 			return nextFragmentEntryLinks;
 		}
-
-		case TYPES.UPDATE_FRAGMENT_ENTRY_LINK_CONTENT:
-			return {
-				...fragmentEntryLinks,
-				[action.fragmentEntryLinkId]: {
-					...fragmentEntryLinks[action.fragmentEntryLinkId],
-					content: action.content
-				}
-			};
 
 		default:
 			return fragmentEntryLinks;

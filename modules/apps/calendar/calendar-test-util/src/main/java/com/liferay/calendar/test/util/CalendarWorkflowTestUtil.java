@@ -51,17 +51,9 @@ public class CalendarWorkflowTestUtil {
 	public static void completeWorkflow(Group group) throws Exception {
 		try (CaptureAppender captureAppender =
 				Log4JLoggerTestUtil.configureLog4JLogger(
-					"com.liferay.util.mail.MailEngine", Level.OFF)) {
+					"com.liferay.petra.mail.MailEngine", Level.OFF)) {
 
-			List<WorkflowTask> workflowTasks =
-				WorkflowTaskManagerUtil.getWorkflowTasksByUserRoles(
-					TestPropsValues.getCompanyId(), TestPropsValues.getUserId(),
-					false, QueryUtil.ALL_POS, QueryUtil.ALL_POS, null);
-
-			Assert.assertEquals(
-				workflowTasks.toString(), 1, workflowTasks.size());
-
-			WorkflowTask workflowTask = workflowTasks.get(0);
+			WorkflowTask workflowTask = _getWorkflowTask();
 
 			PermissionChecker userPermissionChecker =
 				PermissionCheckerFactoryUtil.create(TestPropsValues.getUser());
@@ -78,6 +70,17 @@ public class CalendarWorkflowTestUtil {
 				workflowTask.getWorkflowTaskId(), Constants.APPROVE,
 				StringPool.BLANK, null);
 		}
+	}
+
+	private static WorkflowTask _getWorkflowTask() throws Exception {
+		List<WorkflowTask> workflowTasks =
+			WorkflowTaskManagerUtil.getWorkflowTasksByUserRoles(
+				TestPropsValues.getCompanyId(), TestPropsValues.getUserId(),
+				false, QueryUtil.ALL_POS, QueryUtil.ALL_POS, null);
+
+		Assert.assertEquals(workflowTasks.toString(), 1, workflowTasks.size());
+
+		return workflowTasks.get(0);
 	}
 
 }

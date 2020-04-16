@@ -9,7 +9,7 @@
  * distribution rights of the Software.
  */
 
-import {cleanup, render, fireEvent, findByTestId} from '@testing-library/react';
+import {cleanup, findByTestId, fireEvent, render} from '@testing-library/react';
 import React from 'react';
 
 import Filter from '../../../../src/main/resources/META-INF/resources/js/shared/components/filter/Filter.es';
@@ -24,7 +24,7 @@ describe('The filter component should', () => {
 		items = [
 			{active: false, key: 'overdue', name: 'Overdue'},
 			{active: false, key: 'onTime', name: 'OnTime'},
-			{active: false, key: 'untracked', name: 'Untracked'}
+			{active: false, key: 'untracked', name: 'Untracked'},
 		];
 	});
 
@@ -92,7 +92,7 @@ describe('The filter component should', () => {
 			mappedItems.push({
 				active: false,
 				key: `${i}`,
-				name: `${i}test${i}`
+				name: `${i}test${i}`,
 			});
 		}
 
@@ -168,8 +168,6 @@ describe('The filter component should', () => {
 		expect(filterItems[0].className.includes('active')).toBe(true);
 		expect(filterItems[1].className.includes('active')).toBe(true);
 		expect(filterItems[2].className.includes('active')).toBe(true);
-
-		expect(filterBtn.getAttribute('aria-expanded')).toBe('true');
 
 		await fireEvent.click(filterInputs[2]);
 

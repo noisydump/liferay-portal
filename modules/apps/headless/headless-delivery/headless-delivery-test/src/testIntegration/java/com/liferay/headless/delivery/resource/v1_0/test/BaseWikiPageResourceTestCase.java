@@ -396,9 +396,11 @@ public abstract class BaseWikiPageResourceTestCase {
 				}
 				else {
 					BeanUtils.setProperty(
-						wikiPage1, entityField.getName(), "Aaa");
+						wikiPage1, entityField.getName(),
+						"Aaa" + RandomTestUtil.randomString());
 					BeanUtils.setProperty(
-						wikiPage2, entityField.getName(), "Bbb");
+						wikiPage2, entityField.getName(),
+						"Bbb" + RandomTestUtil.randomString());
 				}
 			});
 	}
@@ -576,6 +578,7 @@ public abstract class BaseWikiPageResourceTestCase {
 
 	@Test
 	public void testDeleteWikiPage() throws Exception {
+		@SuppressWarnings("PMD.UnusedLocalVariable")
 		WikiPage wikiPage = testDeleteWikiPage_addWikiPage();
 
 		assertHttpResponseStatusCode(
@@ -957,9 +960,9 @@ public abstract class BaseWikiPageResourceTestCase {
 			}
 
 			if (Objects.equals(
-					"taxonomyCategories", additionalAssertFieldName)) {
+					"taxonomyCategoryBriefs", additionalAssertFieldName)) {
 
-				if (wikiPage.getTaxonomyCategories() == null) {
+				if (wikiPage.getTaxonomyCategoryBriefs() == null) {
 					valid = false;
 				}
 
@@ -1042,8 +1045,9 @@ public abstract class BaseWikiPageResourceTestCase {
 				getAdditionalAssertFieldNames()) {
 
 			if (Objects.equals("actions", additionalAssertFieldName)) {
-				if (!Objects.deepEquals(
-						wikiPage1.getActions(), wikiPage2.getActions())) {
+				if (!equals(
+						(Map)wikiPage1.getActions(),
+						(Map)wikiPage2.getActions())) {
 
 					return false;
 				}
@@ -1224,11 +1228,11 @@ public abstract class BaseWikiPageResourceTestCase {
 			}
 
 			if (Objects.equals(
-					"taxonomyCategories", additionalAssertFieldName)) {
+					"taxonomyCategoryBriefs", additionalAssertFieldName)) {
 
 				if (!Objects.deepEquals(
-						wikiPage1.getTaxonomyCategories(),
-						wikiPage2.getTaxonomyCategories())) {
+						wikiPage1.getTaxonomyCategoryBriefs(),
+						wikiPage2.getTaxonomyCategoryBriefs())) {
 
 					return false;
 				}
@@ -1262,6 +1266,30 @@ public abstract class BaseWikiPageResourceTestCase {
 			throw new IllegalArgumentException(
 				"Invalid additional assert field name " +
 					additionalAssertFieldName);
+		}
+
+		return true;
+	}
+
+	protected boolean equals(
+		Map<String, Object> map1, Map<String, Object> map2) {
+
+		if (Objects.equals(map1.keySet(), map2.keySet())) {
+			for (Map.Entry<String, Object> entry : map1.entrySet()) {
+				if (entry.getValue() instanceof Map) {
+					if (!equals(
+							(Map)entry.getValue(),
+							(Map)map2.get(entry.getKey()))) {
+
+						return false;
+					}
+				}
+				else if (!Objects.deepEquals(
+							entry.getValue(), map2.get(entry.getKey()))) {
+
+					return false;
+				}
+			}
 		}
 
 		return true;
@@ -1580,7 +1608,7 @@ public abstract class BaseWikiPageResourceTestCase {
 				"Invalid entity field " + entityFieldName);
 		}
 
-		if (entityFieldName.equals("taxonomyCategories")) {
+		if (entityFieldName.equals("taxonomyCategoryBriefs")) {
 			throw new IllegalArgumentException(
 				"Invalid entity field " + entityFieldName);
 		}

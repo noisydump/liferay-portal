@@ -140,6 +140,12 @@ definition {
 		AssertConsoleTextNotPresent(value1 = "javax.portlet.PortletException: java.lang.NullPointerException");
 	}
 
+	macro addCustomPublication {
+		Pause(locator1 = "3000");
+
+		LexiconEntry.gotoAdd();
+	}
+
 	macro addEventRepeatDaily {
 		Click(locator1 = "Staging#STAGING_PUBLISH_TO_LIVE_BUTTON");
 
@@ -228,7 +234,7 @@ definition {
 	}
 
 	macro addSitePagesVariationPG {
-		Click(locator1 = "Icon#STAGING_BAR_VERTICAL_ELLIPSIS");
+		Click.waitForMenuToggleJSClick(locator1 = "Icon#STAGING_BAR_VERTICAL_ELLIPSIS");
 
 		Click(locator1 = "Staging#MANAGE_VARIATIONS");
 
@@ -315,7 +321,9 @@ definition {
 	macro changePageVariationPG {
 		var key_pageVariationName = "${pageVariationName}";
 
-		Click(locator1 = "Staging#PAGE_VARIATION_DROPDOWN");
+		AssertClick(
+			locator1 = "Staging#PAGE_VARIATION_DROPDOWN",
+			value1 = "${pageVariationName}");
 
 		var key_pageVariationName = "${pageVariationNameMenulistName}";
 
@@ -329,7 +337,9 @@ definition {
 
 		Refresh();
 
-		Click(locator1 = "Staging#SITE_PAGES_VARIATION_DROPDOWN");
+		AssertClick(
+			locator1 = "Staging#SITE_PAGES_VARIATION_DROPDOWN",
+			value1 = "${sitePagesVariationName}");
 
 		var key_sitePagesVariationName = "${sitePagesVariationMenulistName}";
 
@@ -693,9 +703,7 @@ definition {
 	}
 
 	macro publishCustomPublication {
-		Pause(locator1 = "3000");
-
-		LexiconEntry.gotoAdd();
+		Staging.addCustomPublication();
 
 		if ("${rangeAll}" == "true") {
 			Click(locator1 = "Radio#CHOOSE_CONTENT_ALL_CHANGE");
@@ -704,10 +712,10 @@ definition {
 		}
 
 		if ("${remoteStaging}" == "true") {
-			Click(locator1 = "Staging#STAGING_PUBLISH_TO_REMOTE_LIVE_BUTTON");
+			ClickNoError(locator1 = "Staging#STAGING_PUBLISH_TO_REMOTE_LIVE_BUTTON");
 		}
 		else {
-			Click(locator1 = "Staging#STAGING_PUBLISH_TO_LIVE_BUTTON");
+			ClickNoError(locator1 = "Staging#STAGING_PUBLISH_TO_LIVE_CUSTOM_PUBLICATION");
 		}
 
 		Pause(locator1 = "30000");
@@ -729,9 +737,12 @@ definition {
 			PortletEntry.inputName(name = "${publicationName}");
 		}
 
-		AssertClickNoError.assertPartialTextClickAt(
-			locator1 = "Button#SUBMIT",
-			value1 = "Publish");
+		if ("${remoteStaging}" == "true") {
+			ClickNoError(locator1 = "Staging#STAGING_PUBLISH_TO_REMOTE_LIVE_BUTTON");
+		}
+		else {
+			ClickNoError(locator1 = "Staging#STAGING_PUBLISH_TO_LIVE_BUTTON");
+		}
 
 		Pause(locator1 = "5000");
 
@@ -750,11 +761,17 @@ definition {
 			Staging.viewValidationError(validateErrorMessage = "${validateErrorMessage}");
 		}
 
-		IFrame.closeFrame();
+		SelectFrameTop();
+
+		if (IsElementPresent(locator1 = "IFrame#DIALOG")) {
+			IFrame.closeFrame();
+		}
 	}
 
 	macro publishToLiveNowViaPortletCP {
 		LexiconEntry.gotoHeaderMenuItem(menuItem = "Staging");
+
+		Pause(locator1 = "3000");
 
 		SelectFrame(locator1 = "IFrame#CONFIGURATION_DIALOG");
 
@@ -764,11 +781,9 @@ definition {
 			Click(locator1 = "Staging#REPLICATE_INDIVIDUAL_DELETIONS");
 		}
 
-		AssertClickNoError(
-			locator1 = "Staging#STAGING_PUBLISH_TO_LIVE_BUTTON",
-			value1 = "Publish to Live");
+		ClickNoError(locator1 = "Staging#STAGING_PUBLISH_TO_LIVE_BUTTON");
 
-		AssertConfirm(value1 = "Are you sure you want to publish to live and update the existing application data?");
+		Confirm(value1 = "Are you sure you want to publish to live and update the existing application data?");
 
 		Pause(locator1 = "5000");
 
@@ -1156,6 +1171,14 @@ definition {
 			locator1 = "Select#DATE_RANGE_END_DATE_VALUE");
 	}
 
+	macro viewDefaultConfiguration {
+		for (var configurationName : list "${configurationNameList}") {
+			var key_checkboxName = "${configurationName}";
+
+			AssertChecked(locator1 = "StagingPublishToLive#STAGING_CONFIGURATION_CHECKBOX");
+		}
+	}
+
 	macro viewEditedSitePagesVariationPG {
 		var key_sitePagesVariationName = "${sitePagesVariationName}";
 
@@ -1332,6 +1355,18 @@ definition {
 		AssertTextEquals(
 			locator1 = "StagingPublishToLive#PUBLISH_TEMPLATES_TABLE_DESCRIPTION",
 			value1 = "${publishTemplateDescription}");
+
+		if (isSet(uncheckContentNameList)) {
+			AssertClick(
+				locator1 = "StagingPublishToLive#PUBLISH_TEMPLATES_TABLE_NAME",
+				value1 = "${publishTemplateName}");
+
+			for (var contentName : list "${uncheckContentNameList}") {
+				AssertNotChecked(
+					key_contentName = "${contentName}",
+					locator1 = "PagesConfiguration#CONTENT_CHOOSE_CONTENT_CHECKBOX_LABEL");
+			}
+		}
 	}
 
 	macro viewSitePagesVariationPG {

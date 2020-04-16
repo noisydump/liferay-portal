@@ -74,7 +74,7 @@ public interface KaleoActionLocalService
 
 	@Indexable(type = IndexableType.REINDEX)
 	public KaleoAction addKaleoAction(
-			String kaleoClassName, long kaleoClassPK,
+			String kaleoClassName, long kaleoClassPK, long kaleoDefinitionId,
 			long kaleoDefinitionVersionId, String kaleoNodeName, Action action,
 			ServiceContext serviceContext)
 		throws PortalException;
@@ -87,6 +87,12 @@ public interface KaleoActionLocalService
 	 */
 	@Transactional(enabled = false)
 	public KaleoAction createKaleoAction(long kaleoActionId);
+
+	/**
+	 * @throws PortalException
+	 */
+	public PersistedModel createPersistedModel(Serializable primaryKeyObj)
+		throws PortalException;
 
 	public void deleteCompanyKaleoActions(long companyId);
 
@@ -262,6 +268,9 @@ public interface KaleoActionLocalService
 	 */
 	public String getOSGiServiceIdentifier();
 
+	/**
+	 * @throws PortalException
+	 */
 	@Override
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public PersistedModel getPersistedModel(Serializable primaryKeyObj)

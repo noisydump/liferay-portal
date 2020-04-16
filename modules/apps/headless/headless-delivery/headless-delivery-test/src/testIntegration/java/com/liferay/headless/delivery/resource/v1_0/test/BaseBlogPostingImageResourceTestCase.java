@@ -209,6 +209,7 @@ public abstract class BaseBlogPostingImageResourceTestCase {
 
 	@Test
 	public void testDeleteBlogPostingImage() throws Exception {
+		@SuppressWarnings("PMD.UnusedLocalVariable")
 		BlogPostingImage blogPostingImage =
 			testDeleteBlogPostingImage_addBlogPostingImage();
 
@@ -554,9 +555,11 @@ public abstract class BaseBlogPostingImageResourceTestCase {
 				}
 				else {
 					BeanUtils.setProperty(
-						blogPostingImage1, entityField.getName(), "Aaa");
+						blogPostingImage1, entityField.getName(),
+						"Aaa" + RandomTestUtil.randomString());
 					BeanUtils.setProperty(
-						blogPostingImage2, entityField.getName(), "Bbb");
+						blogPostingImage2, entityField.getName(),
+						"Bbb" + RandomTestUtil.randomString());
 				}
 			});
 	}
@@ -1165,6 +1168,30 @@ public abstract class BaseBlogPostingImageResourceTestCase {
 			throw new IllegalArgumentException(
 				"Invalid additional assert field name " +
 					additionalAssertFieldName);
+		}
+
+		return true;
+	}
+
+	protected boolean equals(
+		Map<String, Object> map1, Map<String, Object> map2) {
+
+		if (Objects.equals(map1.keySet(), map2.keySet())) {
+			for (Map.Entry<String, Object> entry : map1.entrySet()) {
+				if (entry.getValue() instanceof Map) {
+					if (!equals(
+							(Map)entry.getValue(),
+							(Map)map2.get(entry.getKey()))) {
+
+						return false;
+					}
+				}
+				else if (!Objects.deepEquals(
+							entry.getValue(), map2.get(entry.getKey()))) {
+
+					return false;
+				}
+			}
 		}
 
 		return true;

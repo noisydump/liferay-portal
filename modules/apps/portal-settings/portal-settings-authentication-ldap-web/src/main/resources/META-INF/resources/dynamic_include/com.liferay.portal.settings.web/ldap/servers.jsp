@@ -159,7 +159,8 @@ boolean ldapAuthEnabled = ldapAuthConfiguration.enabled();
 
 				if (action === 'raise') {
 					parentNode.insertBefore(ldapServer, swapLdapServer);
-				} else {
+				}
+				else {
 					parentNode.insertBefore(swapLdapServer, ldapServer);
 				}
 			}
@@ -190,7 +191,7 @@ boolean ldapAuthEnabled = ldapAuthConfiguration.enabled();
 		Liferay.Util.setFormValues(document.<portlet:namespace />fm, {
 			'ldap--<%= LDAPConstants.AUTH_SERVER_PRIORITY %>--': ldapServerIds.join(
 				','
-			)
+			),
 		});
 	}
 

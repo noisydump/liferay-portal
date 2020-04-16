@@ -23,7 +23,7 @@ const ContainerProps = ({children, initialPage = 1, initialPageSize = 20}) => {
 	const stateProps = {page, pageSize, setPage, setPageSize};
 
 	return (
-		<MockRouter withRouterProps={false}>
+		<MockRouter withoutRouterProps>
 			{cloneElement(children, stateProps)}
 		</MockRouter>
 	);
@@ -34,7 +34,7 @@ describe('The PaginationBar component should', () => {
 
 	test('Render with initial params and change pageSize and page using state', () => {
 		const {baseElement} = render(
-			<PaginationBar routing={false} totalCount={20} />,
+			<PaginationBar totalCount={20} withoutRouting />,
 			{wrapper: ContainerProps}
 		);
 
@@ -83,7 +83,7 @@ describe('The PaginationBar component should', () => {
 
 	test('Render with initial params and change pageSize and page using route params', () => {
 		const {baseElement} = render(<PaginationBar totalCount={50} />, {
-			wrapper: MockRouter
+			wrapper: MockRouter,
 		});
 
 		const pageSizeBtn = baseElement.querySelector('button.dropdown-toggle');
@@ -134,7 +134,7 @@ describe('The PaginationBar component should', () => {
 
 	test('Render with insufficient total count to pagination', () => {
 		const {container} = render(<PaginationBar totalCount={4} />, {
-			wrapper: MockRouter
+			wrapper: MockRouter,
 		});
 
 		expect(container.innerHTML).toEqual('');

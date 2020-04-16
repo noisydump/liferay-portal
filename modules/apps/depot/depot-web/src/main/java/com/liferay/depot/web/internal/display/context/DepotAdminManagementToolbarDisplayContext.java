@@ -16,13 +16,14 @@ package com.liferay.depot.web.internal.display.context;
 
 import com.liferay.depot.constants.DepotActionKeys;
 import com.liferay.depot.model.DepotEntry;
-import com.liferay.depot.web.internal.resource.DepotEntryPermission;
-import com.liferay.depot.web.internal.resource.DepotPermission;
+import com.liferay.depot.web.internal.roles.admin.group.type.contributor.DepotEntryPermission;
+import com.liferay.depot.web.internal.security.permission.resource.DepotPermission;
 import com.liferay.depot.web.internal.util.DepotEntryURLUtil;
 import com.liferay.frontend.taglib.clay.servlet.taglib.display.context.SearchContainerManagementToolbarDisplayContext;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.CreationMenu;
+import com.liferay.frontend.taglib.clay.servlet.taglib.util.CreationMenuBuilder;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem;
-import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemList;
+import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemListBuilder;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.LanguageUtil;
@@ -65,19 +66,14 @@ public class DepotAdminManagementToolbarDisplayContext
 
 	@Override
 	public List<DropdownItem> getActionDropdownItems() {
-		return new DropdownItemList() {
-			{
-				add(
-					dropdownItem -> {
-						dropdownItem.putData(
-							"action", "deleteSelectedDepotEntries");
-						dropdownItem.setIcon("times-circle");
-						dropdownItem.setLabel(
-							LanguageUtil.get(request, "delete"));
-						dropdownItem.setQuickAction(true);
-					});
+		return DropdownItemListBuilder.add(
+			dropdownItem -> {
+				dropdownItem.putData("action", "deleteSelectedDepotEntries");
+				dropdownItem.setIcon("times-circle");
+				dropdownItem.setLabel(LanguageUtil.get(request, "delete"));
+				dropdownItem.setQuickAction(true);
 			}
-		};
+		).build();
 	}
 
 	@Override
@@ -99,7 +95,7 @@ public class DepotAdminManagementToolbarDisplayContext
 					liferayPortletResponse.createActionURL();
 
 				deleteDepotEntries.setParameter(
-					ActionRequest.ACTION_NAME, "/depot_entry/delete");
+					ActionRequest.ACTION_NAME, "/depot/delete_depot_entry");
 
 				return deleteDepotEntries.toString();
 			}
@@ -113,27 +109,26 @@ public class DepotAdminManagementToolbarDisplayContext
 
 	@Override
 	public CreationMenu getCreationMenu() {
-		ThemeDisplay themeDisplay = (ThemeDisplay)request.getAttribute(
-			WebKeys.THEME_DISPLAY);
-
 		try {
-			PortletURL addDepotEntryURL =
-				DepotEntryURLUtil.getAddDepotEntryActionURL(
-					themeDisplay.getURLCurrent(), liferayPortletResponse);
+			return CreationMenuBuilder.addPrimaryDropdownItem(
+				dropdownItem -> {
+					dropdownItem.putData("action", "addDepotEntry");
 
-			return new CreationMenu() {
-				{
-					addPrimaryDropdownItem(
-						dropdownItem -> {
-							dropdownItem.putData("action", "addDepotEntry");
-							dropdownItem.putData(
-								"addDepotEntryURL",
-								addDepotEntryURL.toString());
-							dropdownItem.setLabel(
-								LanguageUtil.get(request, "add"));
-						});
+					ThemeDisplay themeDisplay =
+						(ThemeDisplay)request.getAttribute(
+							WebKeys.THEME_DISPLAY);
+
+					PortletURL addDepotEntryURL =
+						DepotEntryURLUtil.getAddDepotEntryActionURL(
+							themeDisplay.getURLCurrent(),
+							liferayPortletResponse);
+
+					dropdownItem.putData(
+						"addDepotEntryURL", addDepotEntryURL.toString());
+
+					dropdownItem.setLabel(LanguageUtil.get(request, "add"));
 				}
-			};
+			).build();
 		}
 		catch (Exception exception) {
 		}

@@ -76,6 +76,9 @@ public class PropsValues {
 
 	public static final String PORTAL_URL = PropsUtil.get("portal.url");
 
+	public static final int POSHI_FILE_READ_THREAD_POOL = GetterUtil.getInteger(
+		PropsUtil.get("poshi.file.read.thread.pool"));
+
 	public static final String PRINT_JAVA_PROCESS_ON_FAIL = PropsUtil.get(
 		"print.java.process.on.fail");
 
@@ -135,14 +138,8 @@ public class PropsValues {
 	public static final int TEST_BATCH_MAX_SUBGROUP_SIZE =
 		GetterUtil.getInteger(PropsUtil.get("test.batch.max.subgroup.size"));
 
-	public static final String[] TEST_BATCH_PROPERTY_NAMES = StringUtil.split(
-		PropsUtil.get("test.batch.property.names"));
-
 	public static final String TEST_BATCH_PROPERTY_QUERY = PropsUtil.get(
 		"test.batch.property.query");
-
-	public static final String[] TEST_BATCH_PROPERTY_VALUES = StringUtil.split(
-		PropsUtil.get("test.batch.property.values"));
 
 	public static final String TEST_BATCH_RUN_TYPE = PropsUtil.get(
 		"test.batch.run.type");
@@ -168,6 +165,9 @@ public class PropsValues {
 	public static final String[] TEST_INCLUDE_DIR_NAMES = StringUtil.split(
 		PropsUtil.get("test.include.dir.names"));
 
+	public static final int TEST_JVM_MAX_RETRIES = GetterUtil.getInteger(
+		PropsUtil.get("test.jvm.max.retries"));
+
 	public static final String TEST_NAME = PropsUtil.get("test.name");
 
 	public static final boolean TEST_POSHI_SCRIPT_VALIDATION =
@@ -190,6 +190,9 @@ public class PropsValues {
 
 	public static final String[] TEST_SUBREPO_DIRS = StringUtil.split(
 		PropsUtil.get("test.subrepo.dirs"));
+
+	public static final int TEST_TESTCASE_MAX_RETRIES = GetterUtil.getInteger(
+		PropsUtil.get("test.testcase.max.retries"));
 
 	public static final int TIMEOUT_EXPLICIT_WAIT = GetterUtil.getInteger(
 		PropsUtil.get("timeout.explicit.wait"));

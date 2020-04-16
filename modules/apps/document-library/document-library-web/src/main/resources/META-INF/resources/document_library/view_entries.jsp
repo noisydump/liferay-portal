@@ -44,7 +44,7 @@ entriesChecker.setCssClass("entry-selector");
 
 entriesChecker.setRememberCheckBoxStateURLRegex(dlAdminDisplayContext.getRememberCheckBoxStateURLRegex());
 
-EntriesMover entriesMover = new EntriesMover(dlTrashUtil.isTrashEnabled(scopeGroupId, repositoryId));
+EntriesMover entriesMover = new EntriesMover(dlTrashHelper.isTrashEnabled(scopeGroupId, repositoryId));
 
 String[] entryColumns = dlPortletInstanceSettingsHelper.getEntryColumns();
 
@@ -99,11 +99,13 @@ if (portletTitleBasedNavigation && (folderId != DLFolderConstants.DEFAULT_PARENT
 						dlSearchContainer.setRowChecker(entriesChecker);
 					}
 
-					Map<String, Object> rowData = new HashMap<String, Object>();
-
-					rowData.put("actions", StringUtil.merge(dlAdminManagementToolbarDisplayContext.getAvailableActions(fileEntry)));
-					rowData.put("draggable", draggable);
-					rowData.put("title", fileEntry.getTitle());
+					Map<String, Object> rowData = HashMapBuilder.<String, Object>put(
+						"actions", StringUtil.merge(dlAdminManagementToolbarDisplayContext.getAvailableActions(fileEntry))
+					).put(
+						"draggable", draggable
+					).put(
+						"title", fileEntry.getTitle()
+					).build();
 
 					row.setData(rowData);
 
@@ -244,7 +246,7 @@ if (portletTitleBasedNavigation && (folderId != DLFolderConstants.DEFAULT_PARENT
 
 								<liferay-ui:search-container-column-text
 									cssClass="table-cell-expand table-cell-minw-200 table-title"
-									name="title"
+									name="name"
 								>
 									<liferay-document-library:mime-type-sticker
 										cssClass="sticker-secondary"
@@ -254,11 +256,21 @@ if (portletTitleBasedNavigation && (folderId != DLFolderConstants.DEFAULT_PARENT
 									<aui:a href="<%= rowURL.toString() %>"><%= latestFileVersion.getTitle() %></aui:a>
 
 									<c:if test="<%= fileEntry.hasLock() || fileEntry.isCheckedOut() %>">
-										<aui:icon cssClass="inline-item inline-item-after" image="lock" markupView="lexicon" message="locked" />
+										<span class="inline-item inline-item-after state-icon">
+											<aui:icon image="lock" markupView="lexicon" message="locked" />
+										</span>
+									</c:if>
+
+									<c:if test="<%= dlViewFileVersionDisplayContext.isShared() %>">
+										<span class="inline-item inline-item-after lfr-portal-tooltip state-icon" title="<%= LanguageUtil.get(request, "shared") %>">
+											<aui:icon image="users" markupView="lexicon" message="shared" />
+										</span>
 									</c:if>
 
 									<c:if test="<%= fileShortcut != null %>">
-										<aui:icon cssClass="inline-item inline-item-after" image="shortcut" markupView="lexicon" message="shortcut" />
+										<span class="inline-item inline-item-after state-icon">
+											<aui:icon image="shortcut" markupView="lexicon" message="shortcut" />
+										</span>
 									</c:if>
 								</liferay-ui:search-container-column-text>
 							</c:if>
@@ -301,7 +313,7 @@ if (portletTitleBasedNavigation && (folderId != DLFolderConstants.DEFAULT_PARENT
 								<liferay-ui:search-container-column-text
 									cssClass="table-cell-expand-smallest"
 									name="size"
-									value="<%= TextFormatter.formatStorageSize(latestFileVersion.getSize(), locale) %>"
+									value="<%= LanguageUtil.formatStorageSize(latestFileVersion.getSize(), locale) %>"
 								/>
 							</c:if>
 
@@ -362,13 +374,17 @@ if (portletTitleBasedNavigation && (folderId != DLFolderConstants.DEFAULT_PARENT
 						}
 					}
 
-					Map<String, Object> rowData = new HashMap<String, Object>();
-
-					rowData.put("actions", StringUtil.merge(dlAdminManagementToolbarDisplayContext.getAvailableActions(curFolder)));
-					rowData.put("draggable", draggable);
-					rowData.put("folder", true);
-					rowData.put("folder-id", curFolder.getFolderId());
-					rowData.put("title", curFolder.getName());
+					Map<String, Object> rowData = HashMapBuilder.<String, Object>put(
+						"actions", StringUtil.merge(dlAdminManagementToolbarDisplayContext.getAvailableActions(curFolder))
+					).put(
+						"draggable", draggable
+					).put(
+						"folder", true
+					).put(
+						"folder-id", curFolder.getFolderId()
+					).put(
+						"title", curFolder.getName()
+					).build();
 
 					row.setData(rowData);
 
@@ -435,7 +451,7 @@ if (portletTitleBasedNavigation && (folderId != DLFolderConstants.DEFAULT_PARENT
 
 								<liferay-ui:search-container-column-text
 									cssClass="table-cell-expand table-cell-minw-200 table-title"
-									name="title"
+									name="name"
 								>
 									<div class="sticker sticker-document sticker-secondary">
 										<clay:icon

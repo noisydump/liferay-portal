@@ -396,9 +396,11 @@ public class SourceFormatter {
 			(!_sourceFormatterMessages.isEmpty() ||
 			 !_sourceMismatchExceptions.isEmpty())) {
 
-			StringBundler sb = new StringBundler(
-				(_sourceFormatterMessages.size() +
-					_sourceMismatchExceptions.size()) * 4);
+			int size =
+				_sourceFormatterMessages.size() +
+					_sourceMismatchExceptions.size();
+
+			StringBundler sb = new StringBundler(size * 4);
 
 			int index = 1;
 
@@ -488,7 +490,7 @@ public class SourceFormatter {
 
 		for (String recentChangesFileName : recentChangesFileNames) {
 			if (!buildPropertiesAdded &&
-				recentChangesFileName.contains("/module/")) {
+				recentChangesFileName.contains("/modules/")) {
 
 				File file = new File(
 					_sourceFormatterArgs.getBaseDirName() + "build.properties");
@@ -794,12 +796,11 @@ public class SourceFormatter {
 
 		List<File> suppressionsFiles = SourceFormatterUtil.getSuppressionsFiles(
 			_sourceFormatterArgs.getBaseDirName(), _allFileNames,
-			_sourceFormatterExcludes, "checkstyle-suppressions.xml",
-			"source-formatter-suppressions.xml",
-			"sourcechecks-suppressions.xml");
+			_sourceFormatterExcludes);
 
 		_sourceFormatterSuppressions = SuppressionsLoader.loadSuppressions(
-			_sourceFormatterArgs.getBaseDirName(), suppressionsFiles);
+			_sourceFormatterArgs.getBaseDirName(), suppressionsFiles,
+			_propertiesMap);
 
 		_sourceFormatterConfiguration = ConfigurationLoader.loadConfiguration(
 			"sourcechecks.xml");

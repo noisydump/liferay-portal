@@ -28,18 +28,19 @@ import javax.annotation.Generated;
  * @generated
  */
 @Generated("")
-public class Rating {
+public class Rating implements Cloneable {
 
-	public Map<String, Map> getActions() {
+	public Map<String, Map<String, String>> getActions() {
 		return actions;
 	}
 
-	public void setActions(Map<String, Map> actions) {
+	public void setActions(Map<String, Map<String, String>> actions) {
 		this.actions = actions;
 	}
 
 	public void setActions(
-		UnsafeSupplier<Map<String, Map>, Exception> actionsUnsafeSupplier) {
+		UnsafeSupplier<Map<String, Map<String, String>>, Exception>
+			actionsUnsafeSupplier) {
 
 		try {
 			actions = actionsUnsafeSupplier.get();
@@ -49,7 +50,7 @@ public class Rating {
 		}
 	}
 
-	protected Map<String, Map> actions;
+	protected Map<String, Map<String, String>> actions;
 
 	public Double getBestRating() {
 		return bestRating;
@@ -195,6 +196,11 @@ public class Rating {
 	}
 
 	protected Double worstRating;
+
+	@Override
+	public Rating clone() throws CloneNotSupportedException {
+		return (Rating)super.clone();
+	}
 
 	@Override
 	public boolean equals(Object object) {

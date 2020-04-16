@@ -24,7 +24,47 @@ definition {
 		}
 	}
 
+	@description = "This is a use case for LPS-92222."
 	@priority = "5"
+	test AddFormWithSpanishAsOnlyLocale {
+		property custom.properties = "locales=es_ES";
+		property custom.properties = "locales.enabled=es_ES";
+		property custom.properties = "company.default.locale=es_ES";
+		property test.name.skip.portal.instance = "Locale#AddFormWithSpanishAsOnlyLocale";
+
+		User.firstLoginPG(
+			localization = "ES",
+			localizedAgree = "Acepto",
+			localizedAnswer = "Respuesta",
+			localizedSaveButton = "Guardar");
+
+		ProductMenu.gotoPortlet(
+			category = "Contenido",
+			panel = "Site Administration",
+			portlet = "Formularios");
+
+		FormsAdminNavigator.gotoAddForm();
+
+		Form.editName();
+
+		Form.editDescription();
+
+		Form.gotoAddField(
+			fieldType = "Campo de texto",
+			localeBasic = "Básico",
+			localeElements = "Elementos");
+
+		Form.editFieldLabelMetal(
+			fieldValue = "label",
+			localeAdvanced = "Avanzado",
+			localeBasic = "Básico");
+
+		Form.closeSidebar();
+
+		Form.save(localeSaveForm = "Guardar formulario");
+	}
+
+	@priority = "4"
 	test ChangesToInstanceTimeZoneDoNotPropagateToExistingUsers {
 		property portal.acceptance = "true";
 		property custom.properties = "company.default.time.zone=America/Los_Angeles";
@@ -42,9 +82,7 @@ definition {
 			configurationScope = "Virtual Instance Scope");
 
 		task ("Assert current time displays in user's selected time zone by asserting time zone specific label") {
-			AssertSelectedLabel(
-				locator1 = "Select#TIME_ZONE",
-				value1 = "(UTC -08:00) Pacific Standard Time");
+			Calendar.viewSelectedTimeZone(timeZone = "(UTC -08:00) Pacific Standard Time");
 		}
 
 		JSONUser.addUser(
@@ -63,9 +101,7 @@ definition {
 		UserNavigator.gotoDisplaySettings();
 
 		task ("Assert current time displays in user's selected time zone by asserting time zone specific label") {
-			AssertSelectedLabel(
-				locator1 = "Select#TIME_ZONE",
-				value1 = "(UTC -08:00) Pacific Standard Time");
+			Calendar.viewSelectedTimeZone(timeZone = "(UTC -08:00) Pacific Standard Time");
 		}
 
 		PortalSettings.gotoConfiguration(
@@ -85,9 +121,7 @@ definition {
 		UserNavigator.gotoDisplaySettings();
 
 		task ("Assert current time displays in user's selected time zone by asserting time zone specific label") {
-			AssertSelectedLabel(
-				locator1 = "Select#TIME_ZONE",
-				value1 = "(UTC -08:00) Pacific Standard Time");
+			Calendar.viewSelectedTimeZone(timeZone = "(UTC -08:00) Pacific Standard Time");
 		}
 	}
 
@@ -103,11 +137,10 @@ definition {
 			groupName = "Test Site Name",
 			layoutName = "Test Page");
 
-		Navigator.gotoSitePage(
-			pageName = "Test Page",
-			siteName = "Test Site Name");
-
-		Portlet.addPG(portletName = "Hello World");
+		JSONLayout.addWidgetToPublicLayout(
+			groupName = "Test Site Name",
+			layoutName = "Test Page",
+			widgetName = "Hello World");
 
 		Site.openSiteSettingsAdmin(siteURLKey = "test-site-name");
 
@@ -159,6 +192,7 @@ definition {
 	test RestrictDefaultLocale {
 		property portal.acceptance = "true";
 		property custom.properties = "company.default.locale=es_ES";
+		property test.name.skip.portal.instance = "Locale#RestrictDefaultLocale";
 
 		User.firstLoginPG(
 			localization = "ES",
@@ -215,6 +249,7 @@ definition {
 	test VerifyFriendlyURLRedirectToEnableDefualtLocale {
 		property custom.properties = "locales.enabled=en_US,zh_CN,fr_FR${line.separator}locale.use.default.if.not.available=true";
 		property custom.system.properties = "user.country=US${line.separator}user.language=en";
+		property test.name.skip.portal.instance = "Locale#VerifyFriendlyURLRedirectToEnableDefualtLocale";
 
 		User.firstLoginPG();
 
@@ -332,12 +367,13 @@ definition {
 
 		User.firstLoginPG();
 
-		ProductMenu.gotoPortlet(
-			category = "Sites",
-			panel = "Control Panel",
-			portlet = "Sites");
+		JSONGroup.addGroup(groupName = "Site Name");
 
-		Site.addBlankCP(siteName = "Site Name");
+		JSONLayout.addPublicLayout(
+			groupName = "Site Name",
+			layoutName = "Test Page");
+
+		Navigator.openSiteURL(siteName = "Site Name");
 
 		ProductMenu.gotoPortlet(
 			category = "Configuration",
@@ -368,14 +404,9 @@ definition {
 			userEmailAddress = "userea@liferay.com",
 			userScreenName = "usersn");
 
-		ProductMenu.gotoPortlet(
-			category = "Users",
-			panel = "Control Panel",
-			portlet = "Users and Organizations");
-
-		User.editUserSiteCP(
-			siteName = "Site Name",
-			userScreenName = "usersn");
+		JSONUser.addUserToSite(
+			groupName = "Site Name",
+			userEmailAddress = "userea@liferay.com");
 
 		ProductMenu.gotoPortlet(
 			category = "Users",

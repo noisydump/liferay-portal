@@ -128,15 +128,15 @@ PortalUtil.addPortletBreadcrumbEntry(request, editContactInformationDisplayConte
 				selectDesc: 'nameCurrentValue',
 				selectId: 'countryId',
 				selectSort: '<%= true %>',
-				selectVal: '<%= countryId %>'
+				selectVal: '<%= countryId %>',
 			},
 			{
 				select: '<portlet:namespace />addressRegionId',
 				selectData: Liferay.Address.getRegions,
 				selectDesc: 'name',
 				selectId: 'regionId',
-				selectVal: '<%= regionId %>'
-			}
+				selectVal: '<%= regionId %>',
+			},
 		]);
 	</aui:script>
 </aui:form>
@@ -150,12 +150,13 @@ PortalUtil.addPortletBreadcrumbEntry(request, editContactInformationDisplayConte
 		Liferay.Service(
 			'/country/get-country',
 			{
-				countryId: countryId
+				countryId: countryId,
 			},
 			function(response, err) {
 				if (err) {
 					console.error(err);
-				} else {
+				}
+				else {
 					updateAddressZipRequired(response.zipRequired);
 				}
 			}
@@ -167,7 +168,8 @@ PortalUtil.addPortletBreadcrumbEntry(request, editContactInformationDisplayConte
 
 		if (value > 0) {
 			checkCountry(value);
-		} else {
+		}
+		else {
 			updateAddressZipRequired(false);
 		}
 	}
@@ -183,7 +185,8 @@ PortalUtil.addPortletBreadcrumbEntry(request, editContactInformationDisplayConte
 
 		if (required) {
 			addressZipRequiredWrapper.removeAttribute('hidden');
-		} else {
+		}
+		else {
 			addressZipRequiredWrapper.setAttribute('hidden', true);
 		}
 

@@ -22,6 +22,7 @@ import {Config} from 'metal-state';
 
 import withDispatch from '../util/withDispatch.es';
 import templates from './FieldBase.soy';
+import withLocale from './withLocale.es';
 import withRepetitionControls from './withRepetitionControls.es';
 
 class FieldBase extends Component {
@@ -31,7 +32,7 @@ class FieldBase extends Component {
 		return {
 			...state,
 			showRepeatableAddButton: this.repeatable,
-			showRepeatableRemoveButton: this.repeatable && repeatedIndex > 0
+			showRepeatableRemoveButton: this.repeatable && repeatedIndex > 0,
 		};
 	}
 }
@@ -123,10 +124,14 @@ FieldBase.STATE = {
 	 * @type {?(string|undefined)}
 	 */
 
-	tooltip: Config.string()
+	tooltip: Config.string(),
 };
 
-const composed = compose(withDispatch, withRepetitionControls)(FieldBase);
+const composed = compose(
+	withDispatch,
+	withRepetitionControls,
+	withLocale
+)(FieldBase);
 
 Soy.register(composed, templates);
 

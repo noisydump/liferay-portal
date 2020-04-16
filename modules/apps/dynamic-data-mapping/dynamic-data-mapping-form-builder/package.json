@@ -1,13 +1,13 @@
 {
 	"dependencies": {
 		"classnames": "2.2.6",
-		"clay-alert": "2.20.2",
-		"clay-checkbox": "2.20.2",
-		"clay-dropdown": "2.20.2",
-		"clay-icon": "2.20.2",
-		"clay-management-toolbar": "2.20.2",
-		"clay-modal": "2.20.2",
-		"clay-radio": "2.20.2",
+		"clay-alert": "2.21.0",
+		"clay-checkbox": "2.21.0",
+		"clay-dropdown": "2.21.0",
+		"clay-icon": "2.21.0",
+		"clay-management-toolbar": "2.21.0",
+		"clay-modal": "2.21.0",
+		"clay-radio": "2.21.0",
 		"metal-dom": "2.16.8",
 		"metal-drag-drop": "3.3.1",
 		"metal-events": "2.16.8",
@@ -16,8 +16,17 @@
 		"metal-state": "2.16.8"
 	},
 	"jest": {
+		"collectCoverageFrom": [
+			"src/main/resources/META-INF/resources/js/**/*.es.js"
+		],
+		"moduleNameMapper": {
+			"^./liferay/modal/Modal.es$": "<rootDir>/test/js/__mock__/Modal.es.js"
+		},
 		"modulePathIgnorePatterns": [
 			"/__mock__/"
+		],
+		"setupFiles": [
+			"<rootDir>/jest-setup.config.js"
 		],
 		"snapshotSerializers": [
 			"metal-jest-serializer"
@@ -26,12 +35,12 @@
 			"Evaluator",
 			"FormBuilder",
 			"FormRenderer",
-			"LayoutProvider",
+			"LayoutProvider/handlers/fieldDeletedHandler",
+			"LayoutProvider/handlers/fieldSetAddedHandler",
+			"LayoutProvider/util",
 			"PageRenderer",
 			"RuleBuilder",
-			"RuleEditor",
-			"RuleList",
-			"Sidebar"
+			"RuleEditor"
 		]
 	},
 	"main": "js/index.es.js",
@@ -42,5 +51,5 @@
 		"format": "liferay-npm-scripts fix",
 		"test": "metalsoy -s \"test/**/*.soy\" -d \"test\" && liferay-npm-scripts test"
 	},
-	"version": "3.0.8"
+	"version": "3.0.23"
 }

@@ -26,7 +26,7 @@ import javax.annotation.Generated;
  * @generated
  */
 @Generated("")
-public class Account {
+public class Account implements Cloneable {
 
 	public String getDescription() {
 		return description;
@@ -108,6 +108,27 @@ public class Account {
 
 	protected String name;
 
+	public Long[] getOrganizationIds() {
+		return organizationIds;
+	}
+
+	public void setOrganizationIds(Long[] organizationIds) {
+		this.organizationIds = organizationIds;
+	}
+
+	public void setOrganizationIds(
+		UnsafeSupplier<Long[], Exception> organizationIdsUnsafeSupplier) {
+
+		try {
+			organizationIds = organizationIdsUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected Long[] organizationIds;
+
 	public Long getParentAccountId() {
 		return parentAccountId;
 	}
@@ -149,6 +170,11 @@ public class Account {
 	}
 
 	protected Integer status;
+
+	@Override
+	public Account clone() throws CloneNotSupportedException {
+		return (Account)super.clone();
+	}
 
 	@Override
 	public boolean equals(Object object) {

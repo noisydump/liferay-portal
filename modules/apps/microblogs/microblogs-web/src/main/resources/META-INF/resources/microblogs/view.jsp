@@ -172,7 +172,7 @@ portletURL.setParameter("tabs1", tabs1);
 			baseActionURL:
 				'<%= PortletURLFactoryUtil.create(request, portletDisplay.getId(), PortletRequest.ACTION_PHASE) %>',
 			microblogsEntriesURL:
-				'<portlet:renderURL windowState="<%= LiferayWindowState.EXCLUSIVE.toString() %>"><portlet:param name="mvcPath" value="/microblogs/view.jsp" /><portlet:param name="tabs1" value="timeline" /></portlet:renderURL>'
+				'<portlet:renderURL windowState="<%= LiferayWindowState.EXCLUSIVE.toString() %>"><portlet:param name="mvcPath" value="/microblogs/view.jsp" /><portlet:param name="tabs1" value="timeline" /></portlet:renderURL>',
 		});
 
 		Liferay.Microblogs.updateViewCount(<%= parentMicroblogsEntryId %>);
@@ -204,7 +204,7 @@ portletURL.setParameter("tabs1", tabs1);
 			if (!commentsContainer.io) {
 				commentsContainer.plug(A.Plugin.IO, {
 					autoLoad: false,
-					method: 'POST'
+					method: 'POST',
 				});
 			}
 
@@ -257,13 +257,14 @@ portletURL.setParameter("tabs1", tabs1);
 				if (!editContainer.io) {
 					editContainer.plug(A.Plugin.IO, {
 						autoLoad: false,
-						method: 'GET'
+						method: 'GET',
 					});
 				}
 
 				editContainer.io.set('uri', uri);
 				editContainer.io.start();
-			} else {
+			}
+			else {
 				editForm.toggle();
 			}
 
@@ -281,7 +282,7 @@ portletURL.setParameter("tabs1", tabs1);
 
 			if (confirm('Are you sure you want to delete this post?')) {
 				Liferay.Util.fetch(event.currentTarget.getAttribute('href'), {
-					method: 'POST'
+					method: 'POST',
 				}).then(function() {
 					var updateContainer = A.one(
 						'#p_p_id<portlet:namespace /> .portlet-body'

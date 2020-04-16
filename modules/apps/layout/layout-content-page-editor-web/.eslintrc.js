@@ -15,9 +15,8 @@
 module.exports = {
 	globals: {
 		AlloyEditor: true,
-		process: true
 	},
 	rules: {
-		'react/no-string-refs': 'off'
-	}
+		'react/no-string-refs': 'off',
+	},
 };

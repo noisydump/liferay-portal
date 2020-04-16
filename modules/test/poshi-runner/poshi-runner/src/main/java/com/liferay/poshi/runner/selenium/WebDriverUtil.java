@@ -81,7 +81,7 @@ public class WebDriverUtil extends PropsValues {
 		try {
 			url = new URL("http://0.0.0.0:4723/wd/hub/");
 		}
-		catch (MalformedURLException murle) {
+		catch (MalformedURLException malformedURLException) {
 		}
 
 		return new AndroidDriver(url, desiredCapabilities);
@@ -103,7 +103,7 @@ public class WebDriverUtil extends PropsValues {
 		try {
 			url = new URL("http://0.0.0.0:4723/wd/hub/");
 		}
-		catch (MalformedURLException murle) {
+		catch (MalformedURLException malformedURLException) {
 		}
 
 		return new AndroidDriver(url, desiredCapabilities);
@@ -125,7 +125,7 @@ public class WebDriverUtil extends PropsValues {
 
 			outputDirName = file.getCanonicalPath();
 		}
-		catch (IOException ioe) {
+		catch (IOException ioException) {
 			System.out.println(
 				"Unable to get canonical path for " + outputDirName);
 		}
@@ -155,6 +155,16 @@ public class WebDriverUtil extends PropsValues {
 		return new ChromeDriver(chromeOptions);
 	}
 
+	private InternetExplorerOptions _getDefaultInternetExplorerOptions() {
+		InternetExplorerOptions internetExplorerOptions =
+			new InternetExplorerOptions();
+
+		internetExplorerOptions.destructivelyEnsureCleanSession();
+		internetExplorerOptions.introduceFlakinessByIgnoringSecurityDomains();
+
+		return internetExplorerOptions;
+	}
+
 	private WebDriver _getEdgeDriver() {
 		return new EdgeDriver();
 	}
@@ -170,7 +180,7 @@ public class WebDriverUtil extends PropsValues {
 			url = new URL(
 				PropsValues.SELENIUM_REMOTE_DRIVER_HUB + ":4444/wd/hub");
 		}
-		catch (MalformedURLException murle) {
+		catch (MalformedURLException malformedURLException) {
 		}
 
 		return new RemoteWebDriver(url, edgeOptions);
@@ -224,7 +234,7 @@ public class WebDriverUtil extends PropsValues {
 
 			firefoxOptions.setProfile(firefoxProfile);
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 			System.out.println(
 				"Unable to add the jserrorcollector.xpi extension to the " +
 					"Firefox profile.");
@@ -234,25 +244,13 @@ public class WebDriverUtil extends PropsValues {
 	}
 
 	private WebDriver _getInternetExplorerDriver() {
-		InternetExplorerOptions internetExplorerOptions =
-			new InternetExplorerOptions();
-
-		internetExplorerOptions.setCapability(
-			InternetExplorerDriver.
-				INTRODUCE_FLAKINESS_BY_IGNORING_SECURITY_DOMAINS,
-			true);
-
-		return new InternetExplorerDriver(internetExplorerOptions);
+		return new InternetExplorerDriver(_getDefaultInternetExplorerOptions());
 	}
 
 	private WebDriver _getInternetExplorerRemoteDriver() {
 		InternetExplorerOptions internetExplorerOptions =
-			new InternetExplorerOptions();
+			_getDefaultInternetExplorerOptions();
 
-		internetExplorerOptions.setCapability(
-			InternetExplorerDriver.
-				INTRODUCE_FLAKINESS_BY_IGNORING_SECURITY_DOMAINS,
-			true);
 		internetExplorerOptions.setCapability(
 			"platform", PropsValues.SELENIUM_DESIRED_CAPABILITIES_PLATFORM);
 		internetExplorerOptions.setCapability(
@@ -264,7 +262,7 @@ public class WebDriverUtil extends PropsValues {
 			url = new URL(
 				PropsValues.SELENIUM_REMOTE_DRIVER_HUB + ":4444/wd/hub");
 		}
-		catch (MalformedURLException murle) {
+		catch (MalformedURLException malformedURLException) {
 		}
 
 		return new RemoteWebDriver(url, internetExplorerOptions);
@@ -286,7 +284,7 @@ public class WebDriverUtil extends PropsValues {
 		try {
 			url = new URL("http://0.0.0.0:4723/wd/hub/");
 		}
-		catch (Exception e) {
+		catch (Exception exception) {
 		}
 
 		return new IOSDriver(url, desiredCapabilities);

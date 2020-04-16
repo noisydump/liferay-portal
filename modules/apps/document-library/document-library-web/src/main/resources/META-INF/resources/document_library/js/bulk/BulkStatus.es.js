@@ -29,7 +29,7 @@ function BulkStatus({
 	bulkStatusUrl = '/bulk/v1.0/status',
 	intervalSpeed = 1000,
 	pathModule,
-	waitingTime = 1000
+	waitingTime = 1000,
 }) {
 	const delay = useTimeout();
 
@@ -47,7 +47,8 @@ function BulkStatus({
 				.then(response => {
 					if (response.actionInProgress) {
 						dispatch({type: 'check'});
-					} else {
+					}
+					else {
 						dispatch({type: 'success'});
 					}
 				})
@@ -65,9 +66,11 @@ function BulkStatus({
 				() => dispatch({type: 'initialDelayCompleted'}),
 				waitingTime
 			);
-		} else if (state.current === STATES.LONG_POLLING) {
+		}
+		else if (state.current === STATES.LONG_POLLING) {
 			statusCallback();
-		} else if (state.current === STATES.NOTIFY) {
+		}
+		else if (state.current === STATES.NOTIFY) {
 			openToast(state.toast);
 
 			dispatch({type: 'notificationCompleted'});
@@ -82,10 +85,10 @@ function BulkStatus({
 			{
 				startWatch: () => {
 					dispatch({type: 'start'});
-				}
+				},
 			},
 			{
-				destroyOnNavigate: true
+				destroyOnNavigate: true,
 			}
 		);
 	}
@@ -108,7 +111,7 @@ BulkStatus.propTypes = {
 	bulkStatusUrl: PropTypes.string,
 	intervalSpeed: PropTypes.number,
 	pathModule: PropTypes.string.isRequired,
-	waitingTime: PropTypes.number
+	waitingTime: PropTypes.number,
 };
 
-export default props => <BulkStatus {...props} />;
+export default BulkStatus;

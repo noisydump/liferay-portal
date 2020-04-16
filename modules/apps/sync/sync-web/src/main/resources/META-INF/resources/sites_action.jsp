@@ -33,15 +33,10 @@ String groupId = String.valueOf(group.getGroupId());
 >
 	<c:choose>
 		<c:when test='<%= GetterUtil.getBoolean(group.getTypeSettingsProperty("syncEnabled"), !group.isCompany()) %>'>
-
-			<%
-			String editDefaultFilePermissionsDialogURL = "javascript:" + renderResponse.getNamespace() + "editDefaultFilePermissions(" + groupId + ");";
-			%>
-
 			<liferay-ui:icon
 				label="<%= true %>"
 				message="default-file-permissions"
-				url="<%= editDefaultFilePermissionsDialogURL %>"
+				url='<%= "javascript:" + renderResponse.getNamespace() + "editDefaultFilePermissions(" + groupId + ");" %>'
 			/>
 
 			<portlet:actionURL name="updateSites" var="disableSiteURL">
@@ -83,8 +78,8 @@ String groupId = String.valueOf(group.getGroupId());
 				on: {
 					destroy: function() {
 						Liferay.Portlet.refresh('#p_p_id<portlet:namespace />');
-					}
-				}
+					},
+				},
 			},
 			id: '<portlet:namespace />editDefaultFilePermissionsDialog',
 			title: '<liferay-ui:message key="default-file-permissions" />',
@@ -97,9 +92,9 @@ String groupId = String.valueOf(group.getGroupId());
 			uri: A.Lang.sub(
 				decodeURIComponent('<%= editDefaultFilePermissionsURL %>'),
 				{
-					groupId: groupId
+					groupId: groupId,
 				}
-			)
+			),
 		});
 	}
 </aui:script>

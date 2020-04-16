@@ -56,9 +56,9 @@ Group ddmTemplateGroup = GroupLocalServiceUtil.getGroup(ddmTemplateGroupId);
 					continue;
 				}
 
-						Map<String, Object> data = new HashMap<String, Object>();
-
-						data.put("displaystylegroupid", curDDMTemplate.getGroupId());
+						Map<String, Object> data = HashMapBuilder.<String, Object>put(
+							"displaystylegroupid", curDDMTemplate.getGroupId()
+						).build();
 			%>
 
 				<aui:option data="<%= data %>" label="<%= HtmlUtil.escape(curDDMTemplate.getName(locale)) %>" selected="<%= (portletDisplayDDMTemplate != null) && (curDDMTemplate.getTemplateId() == portletDisplayDDMTemplate.getTemplateId()) %>" value="<%= PortletDisplayTemplate.DISPLAY_STYLE_PREFIX + HtmlUtil.escape(curDDMTemplate.getTemplateKey()) %>" />
@@ -100,7 +100,7 @@ Group ddmTemplateGroup = GroupLocalServiceUtil.getGroup(ddmTemplateGroupId);
 					basePortletURL: '<%= basePortletURL %>',
 					classNameId: '<%= classNameId %>',
 					dialog: {
-						width: 1024
+						width: 1024,
 					},
 					eventName: '<portlet:namespace />saveTemplate',
 					groupId: <%= ddmTemplateGroupId %>,
@@ -109,7 +109,7 @@ Group ddmTemplateGroup = GroupLocalServiceUtil.getGroup(ddmTemplateGroupId);
 					refererPortletName:
 						'<%= PortletKeys.PORTLET_DISPLAY_TEMPLATE %>',
 					title:
-						'<%= UnicodeLanguageUtil.get(request, "widget-templates") %>'
+						'<%= UnicodeLanguageUtil.get(request, "widget-templates") %>',
 				},
 				function(event) {
 					if (!event.newVal) {

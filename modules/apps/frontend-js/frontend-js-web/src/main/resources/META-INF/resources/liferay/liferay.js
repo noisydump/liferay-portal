@@ -14,7 +14,7 @@
 
 Liferay = window.Liferay || {};
 
-(function($, Liferay) {
+(function(Liferay) {
 	var isFunction = function(val) {
 		return typeof val === 'function';
 	};
@@ -39,22 +39,13 @@ Liferay = window.Liferay || {};
 		for (var part; parts.length && (part = parts.shift()); ) {
 			if (obj[part] && obj[part] !== Object.prototype[part]) {
 				obj = obj[part];
-			} else {
+			}
+			else {
 				obj = obj[part] = {};
 			}
 		}
 
 		return obj;
-	};
-
-	var jqueryInit = $.prototype.init;
-
-	$.prototype.init = function(selector, context, root) {
-		if (selector === '#') {
-			selector = '';
-		}
-
-		return new jqueryInit(selector, context, root);
 	};
 
 	/**
@@ -138,7 +129,8 @@ Liferay = window.Liferay || {};
 					if (callbackSuccess) {
 						callbackSuccess.call(this, response);
 					}
-				} else if (callbackException) {
+				}
+				else if (callbackException) {
 					var exception = response
 						? response.exception
 						: 'The server returned an empty response';
@@ -204,9 +196,9 @@ Liferay = window.Liferay || {};
 		return Liferay.Util.fetch(instance.URL_INVOKE, {
 			body: data,
 			headers: {
-				contentType: ioConfig.contentType
+				contentType: ioConfig.contentType,
 			},
-			method: 'POST'
+			method: 'POST',
 		})
 			.then(response => response.json())
 			.then(ioConfig.complete)
@@ -235,19 +227,6 @@ Liferay = window.Liferay || {};
 
 	Liferay.Template = {
 		PORTLET:
-			'<div class="portlet"><div class="portlet-topper"><div class="portlet-title"></div></div><div class="portlet-content"></div><div class="forbidden-action"></div></div>'
+			'<div class="portlet"><div class="portlet-topper"><div class="portlet-title"></div></div><div class="portlet-content"></div><div class="forbidden-action"></div></div>',
 	};
-})(AUI.$, Liferay);
-
-(function(A, Liferay) {
-	A.mix(
-		A.namespace('config.io'),
-		{
-			method: 'POST',
-			uriFormatter(value) {
-				return Liferay.Util.getURLWithSessionId(value);
-			}
-		},
-		true
-	);
-})(AUI(), Liferay);
+})(Liferay);

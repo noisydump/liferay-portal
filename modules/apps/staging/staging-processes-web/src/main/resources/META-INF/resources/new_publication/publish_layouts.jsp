@@ -152,10 +152,12 @@
 				confirm(
 					'<%= UnicodeLanguageUtil.get(request, "delete-application-data-before-importing-confirmation") %>'
 				) && submitForm(form);
-			} else {
+			}
+			else {
 				submitForm(form);
 			}
-		} else {
+		}
+		else {
 			exportImport.showNotification(dateChecker);
 		}
 	}
@@ -182,7 +184,7 @@
 	);
 	Liferay.Util.toggleRadio('<portlet:namespace />rangeAll', '', [
 		'<portlet:namespace />startEndDate',
-		'<portlet:namespace />rangeLastInputs'
+		'<portlet:namespace />rangeLastInputs',
 	]);
 	Liferay.Util.toggleRadio(
 		'<portlet:namespace />rangeDateRange',
@@ -191,7 +193,7 @@
 	);
 	Liferay.Util.toggleRadio('<portlet:namespace />rangeLastPublish', '', [
 		'<portlet:namespace />startEndDate',
-		'<portlet:namespace />rangeLastInputs'
+		'<portlet:namespace />rangeLastInputs',
 	]);
 	Liferay.Util.toggleRadio(
 		'<portlet:namespace />rangeLast',
@@ -219,7 +221,7 @@
 		setupNode: '#<%= PortletDataHandlerKeys.PORTLET_SETUP_ALL %>',
 		timeZoneOffset: <%= timeZoneOffset %>,
 		userPreferencesNode:
-			'#<%= PortletDataHandlerKeys.PORTLET_USER_PREFERENCES_ALL %>'
+			'#<%= PortletDataHandlerKeys.PORTLET_USER_PREFERENCES_ALL %>',
 	});
 
 	Liferay.component('<portlet:namespace />ExportImportComponent', exportImport);
@@ -242,7 +244,8 @@
 			savedConfigurations.hide();
 
 			customConfiguration.show();
-		} else if (dataValue === 'saved') {
+		}
+		else if (dataValue === 'saved') {
 			customConfiguration.hide();
 
 			savedConfigurations.show();

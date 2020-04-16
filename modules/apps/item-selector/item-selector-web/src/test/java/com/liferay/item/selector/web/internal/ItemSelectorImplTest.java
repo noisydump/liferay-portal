@@ -21,6 +21,9 @@ import com.liferay.item.selector.ItemSelectorView;
 import com.liferay.item.selector.ItemSelectorViewRenderer;
 import com.liferay.item.selector.constants.ItemSelectorPortletKeys;
 import com.liferay.item.selector.web.internal.util.ItemSelectorCriterionSerializerImpl;
+import com.liferay.item.selector.web.internal.util.ItemSelectorKeyUtil;
+import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMap;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.json.JSONFactoryImpl;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.model.Group;
@@ -30,6 +33,7 @@ import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.HttpUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
+import com.liferay.portal.kernel.util.ProxyFactory;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.model.impl.GroupImpl;
 import com.liferay.portal.util.HttpImpl;
@@ -75,6 +79,9 @@ public class ItemSelectorImplTest extends PowerMockito {
 			_itemSelectorImpl, "_http", new HttpImpl());
 		ReflectionTestUtil.setFieldValue(
 			_itemSelectorImpl, "_portal", new PortalImpl());
+		ReflectionTestUtil.setFieldValue(
+			_itemSelectorImpl, "_serviceTrackerMap",
+			ProxyFactory.newDummyInstance(ServiceTrackerMap.class));
 
 		_mediaItemSelectorCriterion = new MediaItemSelectorCriterion();
 
@@ -160,10 +167,19 @@ public class ItemSelectorImplTest extends PowerMockito {
 			"itemSelectedEventName",
 			parameters.get(ItemSelectorImpl.PARAMETER_ITEM_SELECTED_EVENT_NAME)
 				[0]);
+
+		String mediaItemSelectorCriterionKey =
+			ItemSelectorKeyUtil.getItemSelectorCriterionKey(
+				MediaItemSelectorCriterion.class);
+		String flickrItemSelectorCriterionKey =
+			ItemSelectorKeyUtil.getItemSelectorCriterionKey(
+				FlickrItemSelectorCriterion.class);
+
 		Assert.assertEquals(
-			MediaItemSelectorCriterion.class.getName() + "," +
-				FlickrItemSelectorCriterion.class.getName(),
+			mediaItemSelectorCriterionKey + StringPool.COMMA +
+				flickrItemSelectorCriterionKey,
 			parameters.get(ItemSelectorImpl.PARAMETER_CRITERIA)[0]);
+
 		Assert.assertNull(parameters.get("0_desiredItemSelectorReturnTypes"));
 		Assert.assertNotNull(parameters.get("0_json")[0]);
 		Assert.assertNotNull(parameters.get("1_json")[0]);

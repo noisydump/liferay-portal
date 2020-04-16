@@ -109,20 +109,20 @@ public class DLOpenerFileEntryReferencePersistenceImpl
 			fetchByFileEntryId(fileEntryId);
 
 		if (dlOpenerFileEntryReference == null) {
-			StringBundler msg = new StringBundler(4);
+			StringBundler sb = new StringBundler(4);
 
-			msg.append(_NO_SUCH_ENTITY_WITH_KEY);
+			sb.append(_NO_SUCH_ENTITY_WITH_KEY);
 
-			msg.append("fileEntryId=");
-			msg.append(fileEntryId);
+			sb.append("fileEntryId=");
+			sb.append(fileEntryId);
 
-			msg.append("}");
+			sb.append("}");
 
 			if (_log.isDebugEnabled()) {
-				_log.debug(msg.toString());
+				_log.debug(sb.toString());
 			}
 
-			throw new NoSuchFileEntryReferenceException(msg.toString());
+			throw new NoSuchFileEntryReferenceException(sb.toString());
 		}
 
 		return dlOpenerFileEntryReference;
@@ -173,26 +173,26 @@ public class DLOpenerFileEntryReferencePersistenceImpl
 		}
 
 		if (result == null) {
-			StringBundler query = new StringBundler(3);
+			StringBundler sb = new StringBundler(3);
 
-			query.append(_SQL_SELECT_DLOPENERFILEENTRYREFERENCE_WHERE);
+			sb.append(_SQL_SELECT_DLOPENERFILEENTRYREFERENCE_WHERE);
 
-			query.append(_FINDER_COLUMN_FILEENTRYID_FILEENTRYID_2);
+			sb.append(_FINDER_COLUMN_FILEENTRYID_FILEENTRYID_2);
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
-				qPos.add(fileEntryId);
+				queryPos.add(fileEntryId);
 
-				List<DLOpenerFileEntryReference> list = q.list();
+				List<DLOpenerFileEntryReference> list = query.list();
 
 				if (list.isEmpty()) {
 					if (useFinderCache) {
@@ -261,26 +261,26 @@ public class DLOpenerFileEntryReferencePersistenceImpl
 		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
 
 		if (count == null) {
-			StringBundler query = new StringBundler(2);
+			StringBundler sb = new StringBundler(2);
 
-			query.append(_SQL_COUNT_DLOPENERFILEENTRYREFERENCE_WHERE);
+			sb.append(_SQL_COUNT_DLOPENERFILEENTRYREFERENCE_WHERE);
 
-			query.append(_FINDER_COLUMN_FILEENTRYID_FILEENTRYID_2);
+			sb.append(_FINDER_COLUMN_FILEENTRYID_FILEENTRYID_2);
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
-				qPos.add(fileEntryId);
+				queryPos.add(fileEntryId);
 
-				count = (Long)q.uniqueResult();
+				count = (Long)query.uniqueResult();
 
 				finderCache.putResult(finderPath, finderArgs, count);
 			}
@@ -320,23 +320,23 @@ public class DLOpenerFileEntryReferencePersistenceImpl
 			referenceType, fileEntryId);
 
 		if (dlOpenerFileEntryReference == null) {
-			StringBundler msg = new StringBundler(6);
+			StringBundler sb = new StringBundler(6);
 
-			msg.append(_NO_SUCH_ENTITY_WITH_KEY);
+			sb.append(_NO_SUCH_ENTITY_WITH_KEY);
 
-			msg.append("referenceType=");
-			msg.append(referenceType);
+			sb.append("referenceType=");
+			sb.append(referenceType);
 
-			msg.append(", fileEntryId=");
-			msg.append(fileEntryId);
+			sb.append(", fileEntryId=");
+			sb.append(fileEntryId);
 
-			msg.append("}");
+			sb.append("}");
 
 			if (_log.isDebugEnabled()) {
-				_log.debug(msg.toString());
+				_log.debug(sb.toString());
 			}
 
-			throw new NoSuchFileEntryReferenceException(msg.toString());
+			throw new NoSuchFileEntryReferenceException(sb.toString());
 		}
 
 		return dlOpenerFileEntryReference;
@@ -397,41 +397,41 @@ public class DLOpenerFileEntryReferencePersistenceImpl
 		}
 
 		if (result == null) {
-			StringBundler query = new StringBundler(4);
+			StringBundler sb = new StringBundler(4);
 
-			query.append(_SQL_SELECT_DLOPENERFILEENTRYREFERENCE_WHERE);
+			sb.append(_SQL_SELECT_DLOPENERFILEENTRYREFERENCE_WHERE);
 
 			boolean bindReferenceType = false;
 
 			if (referenceType.isEmpty()) {
-				query.append(_FINDER_COLUMN_R_F_REFERENCETYPE_3);
+				sb.append(_FINDER_COLUMN_R_F_REFERENCETYPE_3);
 			}
 			else {
 				bindReferenceType = true;
 
-				query.append(_FINDER_COLUMN_R_F_REFERENCETYPE_2);
+				sb.append(_FINDER_COLUMN_R_F_REFERENCETYPE_2);
 			}
 
-			query.append(_FINDER_COLUMN_R_F_FILEENTRYID_2);
+			sb.append(_FINDER_COLUMN_R_F_FILEENTRYID_2);
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
 				if (bindReferenceType) {
-					qPos.add(referenceType);
+					queryPos.add(referenceType);
 				}
 
-				qPos.add(fileEntryId);
+				queryPos.add(fileEntryId);
 
-				List<DLOpenerFileEntryReference> list = q.list();
+				List<DLOpenerFileEntryReference> list = query.list();
 
 				if (list.isEmpty()) {
 					if (useFinderCache) {
@@ -504,41 +504,41 @@ public class DLOpenerFileEntryReferencePersistenceImpl
 		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
 
 		if (count == null) {
-			StringBundler query = new StringBundler(3);
+			StringBundler sb = new StringBundler(3);
 
-			query.append(_SQL_COUNT_DLOPENERFILEENTRYREFERENCE_WHERE);
+			sb.append(_SQL_COUNT_DLOPENERFILEENTRYREFERENCE_WHERE);
 
 			boolean bindReferenceType = false;
 
 			if (referenceType.isEmpty()) {
-				query.append(_FINDER_COLUMN_R_F_REFERENCETYPE_3);
+				sb.append(_FINDER_COLUMN_R_F_REFERENCETYPE_3);
 			}
 			else {
 				bindReferenceType = true;
 
-				query.append(_FINDER_COLUMN_R_F_REFERENCETYPE_2);
+				sb.append(_FINDER_COLUMN_R_F_REFERENCETYPE_2);
 			}
 
-			query.append(_FINDER_COLUMN_R_F_FILEENTRYID_2);
+			sb.append(_FINDER_COLUMN_R_F_FILEENTRYID_2);
 
-			String sql = query.toString();
+			String sql = sb.toString();
 
 			Session session = null;
 
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
-				QueryPos qPos = QueryPos.getInstance(q);
+				QueryPos queryPos = QueryPos.getInstance(query);
 
 				if (bindReferenceType) {
-					qPos.add(referenceType);
+					queryPos.add(referenceType);
 				}
 
-				qPos.add(fileEntryId);
+				queryPos.add(fileEntryId);
 
-				count = (Long)q.uniqueResult();
+				count = (Long)query.uniqueResult();
 
 				finderCache.putResult(finderPath, finderArgs, count);
 			}
@@ -1132,19 +1132,19 @@ public class DLOpenerFileEntryReferencePersistenceImpl
 		}
 
 		if (list == null) {
-			StringBundler query = null;
+			StringBundler sb = null;
 			String sql = null;
 
 			if (orderByComparator != null) {
-				query = new StringBundler(
+				sb = new StringBundler(
 					2 + (orderByComparator.getOrderByFields().length * 2));
 
-				query.append(_SQL_SELECT_DLOPENERFILEENTRYREFERENCE);
+				sb.append(_SQL_SELECT_DLOPENERFILEENTRYREFERENCE);
 
 				appendOrderByComparator(
-					query, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
+					sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
 
-				sql = query.toString();
+				sql = sb.toString();
 			}
 			else {
 				sql = _SQL_SELECT_DLOPENERFILEENTRYREFERENCE;
@@ -1158,10 +1158,10 @@ public class DLOpenerFileEntryReferencePersistenceImpl
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(sql);
+				Query query = session.createQuery(sql);
 
 				list = (List<DLOpenerFileEntryReference>)QueryUtil.list(
-					q, getDialect(), start, end);
+					query, getDialect(), start, end);
 
 				cacheResult(list);
 
@@ -1213,10 +1213,10 @@ public class DLOpenerFileEntryReferencePersistenceImpl
 			try {
 				session = openSession();
 
-				Query q = session.createQuery(
+				Query query = session.createQuery(
 					_SQL_COUNT_DLOPENERFILEENTRYREFERENCE);
 
-				count = (Long)q.uniqueResult();
+				count = (Long)query.uniqueResult();
 
 				finderCache.putResult(
 					_finderPathCountAll, FINDER_ARGS_EMPTY, count);

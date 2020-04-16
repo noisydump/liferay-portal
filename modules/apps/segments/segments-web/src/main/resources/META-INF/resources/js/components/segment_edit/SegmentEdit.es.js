@@ -14,7 +14,7 @@
 
 import ClayButton from '@clayui/button';
 import {FieldArray, withFormik} from 'formik';
-import {debounce, fetch} from 'frontend-js-web';
+import {debounce, fetch, openModal} from 'frontend-js-web';
 import PropTypes from 'prop-types';
 import React, {Component} from 'react';
 
@@ -23,12 +23,12 @@ import {
 	SOURCES,
 	SUPPORTED_CONJUNCTIONS,
 	SUPPORTED_OPERATORS,
-	SUPPORTED_PROPERTY_TYPES
+	SUPPORTED_PROPERTY_TYPES,
 } from '../../utils/constants.es';
 import {
 	applyConjunctionChangeToContributor,
 	applyCriteriaChangeToContributors,
-	initialContributorsToContributors
+	initialContributorsToContributors,
 } from '../../utils/contributors.es';
 import {initialContributorShape} from '../../utils/types.es';
 import {sub} from '../../utils/utils.es';
@@ -63,7 +63,7 @@ class SegmentEdit extends Component {
 		showInEditMode: PropTypes.bool,
 		source: PropTypes.string,
 		validateForm: PropTypes.func,
-		values: PropTypes.object
+		values: PropTypes.object,
 	};
 
 	static defaultProps = {
@@ -72,7 +72,7 @@ class SegmentEdit extends Component {
 		initialSegmentActive: true,
 		initialSegmentName: {},
 		portletNamespace: '',
-		showInEditMode: false
+		showInEditMode: false,
 	};
 
 	constructor(props) {
@@ -83,7 +83,7 @@ class SegmentEdit extends Component {
 			initialMembersCount,
 			propertyGroups,
 			showInEditMode,
-			values
+			values,
 		} = props;
 
 		const contributors = initialContributorsToContributors(
@@ -97,7 +97,7 @@ class SegmentEdit extends Component {
 			editing: showInEditMode,
 			hasChanged: false,
 			membersCount: initialMembersCount,
-			validTitle: !!values.name[props.defaultLanguageId]
+			validTitle: !!values.name[props.defaultLanguageId],
 		};
 
 		this._debouncedFetchMembersCount = debounce(
@@ -108,7 +108,7 @@ class SegmentEdit extends Component {
 
 	_handleCriteriaEdit = () => {
 		this.setState({
-			editing: !this.state.editing
+			editing: !this.state.editing,
 		});
 	};
 
@@ -116,7 +116,7 @@ class SegmentEdit extends Component {
 		this.props.setFieldValue('name', newValues);
 		this.setState({
 			hasChanged: true,
-			validTitle: !invalid
+			validTitle: !invalid,
 		});
 	};
 
@@ -127,13 +127,13 @@ class SegmentEdit extends Component {
 
 		fetch(this.props.requestMembersCountURL, {
 			body: formData,
-			method: 'POST'
+			method: 'POST',
 		})
 			.then(response => response.json())
 			.then(membersCount => {
 				this.setState({
 					membersCount,
-					membersCountLoading: false
+					membersCountLoading: false,
 				});
 			})
 			.catch(() => {
@@ -144,7 +144,7 @@ class SegmentEdit extends Component {
 						'an-unexpected-error-occurred'
 					),
 					title: Liferay.Language.get('error'),
-					type: 'danger'
+					type: 'danger',
 				});
 			});
 	};
@@ -155,7 +155,7 @@ class SegmentEdit extends Component {
 				prevState.contributors,
 				{
 					criteriaChange,
-					propertyKey: index
+					propertyKey: index,
 				}
 			);
 
@@ -163,7 +163,7 @@ class SegmentEdit extends Component {
 				contributors,
 				disabledSave: this._isQueryEmpty(contributors),
 				hasChanged: true,
-				membersCountLoading: true
+				membersCountLoading: true,
 			};
 		}, this._debouncedFetchMembersCount);
 	};
@@ -172,15 +172,6 @@ class SegmentEdit extends Component {
 		const {handleBlur} = this.props;
 
 		handleBlur(event);
-	};
-
-	_handleSourceIconMouseOver = event => {
-		const message =
-			this.props.source === SOURCES.ASAH_FARO_BACKEND.name
-				? SOURCES.ASAH_FARO_BACKEND.label
-				: SOURCES.DEFAULT.label;
-
-		Liferay.Portal.ToolTip.show(event.currentTarget, message);
 	};
 
 	_handleConjunctionChange = conjunctionName => {
@@ -193,7 +184,7 @@ class SegmentEdit extends Component {
 			return {
 				contributors,
 				hasChanged: true,
-				membersCountLoading: true
+				membersCountLoading: true,
 			};
 		}, this._debouncedFetchMembersCount);
 	};
@@ -210,14 +201,14 @@ class SegmentEdit extends Component {
 			locale,
 			propertyGroups,
 			requestMembersCountURL,
-			values
+			values,
 		} = this.props;
 
 		const {
 			contributors,
 			editing,
 			membersCount,
-			membersCountLoading
+			membersCountLoading,
 		} = this.state;
 
 		const emptyContributors = this._isQueryEmpty(contributors);
@@ -260,7 +251,8 @@ class SegmentEdit extends Component {
 			if (confirmed) {
 				this._redirect();
 			}
-		} else {
+		}
+		else {
 			this._redirect();
 		}
 	};
@@ -284,15 +276,13 @@ class SegmentEdit extends Component {
 		const {name} = values;
 		const segmentLocalizedName = name[locale];
 
-		Liferay.Util.openWindow({
-			dialog: {
-				destroyOnHide: true
-			},
+		openModal({
 			id: 'segment-members-dialog',
+			size: 'full-screen',
 			title: sub(Liferay.Language.get('x-members'), [
-				Liferay.Util.escape(segmentLocalizedName)
+				Liferay.Util.escape(segmentLocalizedName),
 			]),
-			uri: previewMembersURL
+			url: previewMembersURL,
 		});
 	};
 
@@ -322,7 +312,7 @@ class SegmentEdit extends Component {
 					Liferay.Util.openToast({
 						message,
 						title: Liferay.Language.get('error'),
-						type: 'danger'
+						type: 'danger',
 					});
 				});
 			}
@@ -361,7 +351,8 @@ class SegmentEdit extends Component {
 						/>
 					</React.Fragment>
 				);
-			} else {
+			}
+			else {
 				returnVal = (
 					<React.Fragment key={key}>
 						<input
@@ -373,6 +364,7 @@ class SegmentEdit extends Component {
 					</React.Fragment>
 				);
 			}
+
 			return returnVal;
 		});
 	};
@@ -384,7 +376,7 @@ class SegmentEdit extends Component {
 			hasUpdatePermission,
 			portletNamespace,
 			source,
-			values
+			values,
 		} = this.props;
 
 		const {contributors, disabledSave, editing, validTitle} = this.state;
@@ -424,13 +416,17 @@ class SegmentEdit extends Component {
 							/>
 
 							<img
-								className="source-icon"
+								className="lfr-portal-tooltip source-icon"
 								data-testid="source-icon"
-								onMouseOver={this._handleSourceIconMouseOver}
 								src={
 									source === SOURCES.ASAH_FARO_BACKEND.name
 										? `${assetsPath}${SOURCES.ASAH_FARO_BACKEND.icon}`
 										: `${assetsPath}${SOURCES.DEFAULT.icon}`
+								}
+								title={
+									source === SOURCES.ASAH_FARO_BACKEND.name
+										? SOURCES.ASAH_FARO_BACKEND.label
+										: SOURCES.DEFAULT.label
 								}
 							/>
 						</div>
@@ -495,7 +491,7 @@ export default withFormik({
 	mapPropsToValues: props => ({
 		active: props.initialSegmentActive || true,
 		contributors: props.contributors || [],
-		name: props.initialSegmentName || {}
+		name: props.initialSegmentName || {},
 	}),
 	validate: values => {
 		const errors = {};
@@ -505,5 +501,5 @@ export default withFormik({
 		}
 
 		return errors;
-	}
+	},
 })(SegmentEdit);

@@ -12,16 +12,19 @@
  * details.
  */
 
-import {DragTypes, FieldType, FieldTypeList, Sidebar} from 'data-engine-taglib';
-import React, {useState, useContext} from 'react';
+import ClayForm from '@clayui/form';
+import {
+	DataDefinitionUtils,
+	DragTypes,
+	FieldType,
+	FieldTypeList,
+	Sidebar,
+} from 'data-engine-taglib';
+import React, {useContext, useState} from 'react';
 
 import Button from '../../components/button/Button.es';
-import {
-	getFieldLabel,
-	getDataDefinitionField
-} from '../../utils/dataDefinition.es';
 import EditTableViewContext, {
-	UPDATE_FOCUSED_COLUMN
+	UPDATE_FOCUSED_COLUMN,
 } from './EditTableViewContext.es';
 import TableViewFiltersList from './TableViewFilters.es';
 import {getFieldTypeLabel} from './utils.es';
@@ -35,7 +38,10 @@ const FiltersSidebarHeader = () => {
 		dispatch({payload: {fieldName: null}, type: UPDATE_FOCUSED_COLUMN});
 	};
 
-	const {fieldType} = getDataDefinitionField(dataDefinition, focusedColumn);
+	const {fieldType} = DataDefinitionUtils.getDataDefinitionField(
+		dataDefinition,
+		focusedColumn
+	);
 
 	return (
 		<Sidebar.Header className="d-flex table-view-filters-sidebar-header">
@@ -55,7 +61,10 @@ const FiltersSidebarHeader = () => {
 						dragAlignment="none"
 						draggable={false}
 						icon={fieldType}
-						label={getFieldLabel(dataDefinition, focusedColumn)}
+						label={DataDefinitionUtils.getFieldLabel(
+							dataDefinition,
+							focusedColumn
+						)}
 						name={focusedColumn}
 					/>
 				</div>
@@ -69,8 +78,8 @@ const FieldsTabContent = ({keywords, onAddFieldName}) => {
 		{
 			dataDefinition: {dataDefinitionFields},
 			dataListView: {fieldNames},
-			fieldTypes
-		}
+			fieldTypes,
+		},
 	] = useContext(EditTableViewContext);
 
 	return (
@@ -82,7 +91,7 @@ const FieldsTabContent = ({keywords, onAddFieldName}) => {
 					disabled: fieldNames.some(fieldName => fieldName === name),
 					icon: fieldType,
 					label,
-					name
+					name,
 				})
 			)}
 			keywords={keywords}
@@ -91,76 +100,54 @@ const FieldsTabContent = ({keywords, onAddFieldName}) => {
 	);
 };
 
-const SidebarContent = ({activeTabIndex, keywords, onAddFieldName}) => {
-	switch (activeTabIndex) {
-		case 0:
-			return (
-				<FieldsTabContent
-					keywords={keywords}
-					onAddFieldName={onAddFieldName}
-				/>
-			);
-		case 1:
-			return <TableViewFiltersList />;
-		default:
-			return null;
-	}
-};
-
-export default ({onAddFieldName, onClose}) => {
+export default ({onAddFieldName}) => {
 	const [{focusedColumn}] = useContext(EditTableViewContext);
-
-	const [activeTabIndex, setActiveTabIndex] = useState(0);
 	const [keywords, setKeywords] = useState('');
-	const [sidebarClosed, setSidebarClosed] = useState(false);
-
-	const onClickTab = tabIndex => setActiveTabIndex(tabIndex);
-
-	const onSidebarToggle = closed => {
-		setSidebarClosed(closed);
-		onClose(closed);
-	};
 
 	const displayFieldFilters = !!focusedColumn;
 
 	return (
-		<Sidebar
-			className="app-builder-sidebar"
-			closeable={!displayFieldFilters || sidebarClosed}
-			closed={sidebarClosed}
-			onSearch={displayFieldFilters ? false : setKeywords}
-			onToggle={onSidebarToggle}
-		>
-			{displayFieldFilters && <FiltersSidebarHeader />}
+		<Sidebar className="app-builder-sidebar main">
+			{displayFieldFilters ? (
+				<>
+					<FiltersSidebarHeader />
+					<Sidebar.Body>
+						<TableViewFiltersList />
+					</Sidebar.Body>
+				</>
+			) : (
+				<>
+					<Sidebar.Header>
+						<ClayForm onSubmit={event => event.preventDefault()}>
+							<Sidebar.SearchInput
+								onSearch={keywords => setKeywords(keywords)}
+							/>
+						</ClayForm>
+					</Sidebar.Header>
 
-			<Sidebar.Body>
-				{!displayFieldFilters && (
-					<Sidebar.Tab
-						tabs={[
-							{
-								active: activeTabIndex === 0,
-								label: Liferay.Language.get('columns'),
-								onClick: onClickTab
-							},
-							{
-								active: activeTabIndex === 1,
-								label: Liferay.Language.get('filters'),
-								onClick: onClickTab
-							}
-						]}
-					/>
-				)}
-
-				<Sidebar.TabContent>
-					<SidebarContent
-						activeTabIndex={
-							displayFieldFilters ? 1 : activeTabIndex
-						}
-						keywords={keywords}
-						onAddFieldName={onAddFieldName}
-					/>
-				</Sidebar.TabContent>
-			</Sidebar.Body>
+					<Sidebar.Body>
+						{!displayFieldFilters && (
+							<Sidebar.Tabs
+								tabs={[
+									{
+										label: Liferay.Language.get('columns'),
+										render: () => (
+											<FieldsTabContent
+												keywords={keywords}
+												onAddFieldName={onAddFieldName}
+											/>
+										),
+									},
+									{
+										label: Liferay.Language.get('filters'),
+										render: () => <TableViewFiltersList />,
+									},
+								]}
+							/>
+						)}
+					</Sidebar.Body>
+				</>
+			)}
 		</Sidebar>
 	);
 };

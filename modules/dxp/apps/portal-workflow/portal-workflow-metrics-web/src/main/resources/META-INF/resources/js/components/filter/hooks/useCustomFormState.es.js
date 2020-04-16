@@ -13,34 +13,29 @@ import {useCallback, useState} from 'react';
 
 const isCustomFilter = filter => filter.key === 'custom';
 
-const onChangeFilter = selectedFilter => {
-	const preventDefault = isCustomFilter(selectedFilter);
-
-	return preventDefault;
-};
-
 const useCustomFormState = () => {
 	const [formVisible, setFormVisible] = useState(false);
 
-	const onClickFilter = useCallback(currentItem => {
-		if (isCustomFilter(currentItem)) {
-			setFormVisible(true);
-
-			if (currentItem.active) {
-				document.dispatchEvent(new Event('mousedown'));
+	const onClickFilter = useCallback(
+		handleClick => currentItem => {
+			if (isCustomFilter(currentItem)) {
+				setFormVisible(true);
 			}
-		} else {
-			setFormVisible(false);
-		}
+			else {
+				handleClick(currentItem);
+			}
 
-		return true;
-	}, []);
+			document.dispatchEvent(new Event('mousedown'));
+
+			return true;
+		},
+		[]
+	);
 
 	return {
 		formVisible,
-		onChangeFilter,
 		onClickFilter,
-		setFormVisible
+		setFormVisible,
 	};
 };
 

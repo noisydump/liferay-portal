@@ -211,10 +211,15 @@ public abstract class Base${schemaName}ResourceTestCase {
 			parameters = freeMarkerTool.getResourceTestCaseParameters(javaMethodSignature.javaMethodParameters, openAPIYAML, javaMethodSignature.operation, false)
 		/>
 
+		<#if stringUtil.endsWith(javaMethodSignature.methodName, schemaName + "Batch")>
+			<#continue>
+		</#if>
+
 		<#if freeMarkerTool.hasHTTPMethod(javaMethodSignature, "delete")>
 			@Test
 			public void test${javaMethodSignature.methodName?cap_first}() throws Exception {
 				<#if properties?keys?seq_contains("id")>
+					@SuppressWarnings("PMD.UnusedLocalVariable")
 					${schemaName} ${schemaVarName} = test${javaMethodSignature.methodName?cap_first}_add${schemaName}();
 
 					assertHttpResponseStatusCode(204, ${schemaVarName}Resource.${javaMethodSignature.methodName}HttpResponse(
@@ -227,6 +232,8 @@ public abstract class Base${schemaName}ResourceTestCase {
 						<#if freeMarkerTool.isPathParameter(javaMethodParameter, javaMethodSignature.operation)>
 							<#if stringUtil.equals(javaMethodParameter.parameterName, schemaVarName + "Id")>
 								${schemaVarName}.getId()
+							<#elseif properties?keys?seq_contains(javaMethodParameter.parameterName)>
+								${schemaVarName}.get${javaMethodParameter.parameterName?cap_first}()
 							<#else>
 								null
 							</#if>
@@ -240,9 +247,15 @@ public abstract class Base${schemaName}ResourceTestCase {
 					<#if freeMarkerTool.hasJavaMethodSignature(javaMethodSignatures, "get" + javaMethodSignature.methodName?remove_beginning("delete"))>
 						assertHttpResponseStatusCode(404, ${schemaVarName}Resource.get${javaMethodSignature.methodName?remove_beginning("delete")}HttpResponse(
 
-						<#list javaMethodSignature.javaMethodParameters as javaMethodParameter>
+						<#assign
+							getJavaMethodSignature = freeMarkerTool.getJavaMethodSignature(javaMethodSignatures, "get" + javaMethodSignature.methodName?remove_beginning("delete"))
+						/>
+
+						<#list getJavaMethodSignature.javaMethodParameters as javaMethodParameter>
 							<#if freeMarkerTool.isPathParameter(javaMethodParameter, javaMethodSignature.operation) && stringUtil.equals(javaMethodParameter.parameterName, schemaVarName + "Id")>
 								${schemaVarName}.getId()
+							<#elseif freeMarkerTool.isPathParameter(javaMethodParameter, javaMethodSignature.operation) && properties?keys?seq_contains(javaMethodParameter.parameterName)>
+								${schemaVarName}.get${javaMethodParameter.parameterName?cap_first}()
 							<#else>
 								null
 							</#if>
@@ -253,7 +266,7 @@ public abstract class Base${schemaName}ResourceTestCase {
 
 						assertHttpResponseStatusCode(404, ${schemaVarName}Resource.get${javaMethodSignature.methodName?remove_beginning("delete")}HttpResponse(
 
-						<#list javaMethodSignature.javaMethodParameters as javaMethodParameter>
+						<#list getJavaMethodSignature.javaMethodParameters as javaMethodParameter>
 							<#if freeMarkerTool.isPathParameter(javaMethodParameter, javaMethodSignature.operation) && stringUtil.equals(javaMethodParameter.parameterName, schemaVarName + "Id")>
 								<#if stringUtil.equals(javaMethodParameter.parameterType, "java.lang.Double")>
 									0D
@@ -266,6 +279,8 @@ public abstract class Base${schemaName}ResourceTestCase {
 								<#else>
 									null
 								</#if>
+							<#elseif freeMarkerTool.isPathParameter(javaMethodParameter, javaMethodSignature.operation) && properties?keys?seq_contains(javaMethodParameter.parameterName)>
+								${schemaVarName}.get${javaMethodParameter.parameterName?cap_first}()
 							<#else>
 								null
 							</#if>
@@ -689,8 +704,8 @@ public abstract class Base${schemaName}ResourceTestCase {
 									BeanUtils.setProperty(${schemaVarName}2, entityField.getName(), Collections.singletonMap("Bbb", "Bbb"));
 								}
 								else {
-									BeanUtils.setProperty(${schemaVarName}1, entityField.getName(), "Aaa");
-									BeanUtils.setProperty(${schemaVarName}2, entityField.getName(), "Bbb");
+									BeanUtils.setProperty(${schemaVarName}1, entityField.getName(), "Aaa" + RandomTestUtil.randomString());
+									BeanUtils.setProperty(${schemaVarName}2, entityField.getName(), "Bbb" + RandomTestUtil.randomString());
 								}
 							});
 					}
@@ -906,7 +921,7 @@ public abstract class Base${schemaName}ResourceTestCase {
 
 					);
 
-					${schemaName} expectedPatch${schemaName} = (${schemaName})BeanUtils.cloneBean(post${schemaName});
+					${schemaName} expectedPatch${schemaName} = post${schemaName}.clone();
 
 					_beanUtilsBean.copyProperties(expectedPatch${schemaName}, randomPatch${schemaName});
 
@@ -1009,7 +1024,20 @@ public abstract class Base${schemaName}ResourceTestCase {
 						Map<String, File> multipartFiles = getMultipartFiles();
 					</#if>
 
-					${schemaName} put${schemaName} = ${schemaVarName}Resource.put${schemaName}(post${schemaName}.getId(), random${schemaName}
+					${schemaName} put${schemaName} = ${schemaVarName}Resource.${javaMethodSignature.methodName}(
+
+					<#list javaMethodSignature.javaMethodParameters as javaMethodParameter>
+						<#if freeMarkerTool.isPathParameter(javaMethodParameter, javaMethodSignature.operation) && stringUtil.equals(javaMethodParameter.parameterName, schemaVarName + "Id")>
+							post${schemaName}.getId()
+						<#elseif freeMarkerTool.isPathParameter(javaMethodParameter, javaMethodSignature.operation) && properties?keys?seq_contains(javaMethodParameter.parameterName)>
+							post${schemaName}.get${javaMethodParameter.parameterName?cap_first}()
+						<#elseif stringUtil.equals(javaMethodParameter.parameterName, "multipartBody") || stringUtil.equals(javaMethodParameter.parameterName, schemaVarName)>
+							random${schemaName}
+						<#else>
+							null
+						</#if>
+						<#sep>, </#sep>
+					</#list>
 
 					<#if freeMarkerTool.hasRequestBodyMediaType(javaMethodSignature, "multipart/form-data")>
 						, multipartFiles
@@ -1020,7 +1048,17 @@ public abstract class Base${schemaName}ResourceTestCase {
 					assertEquals(random${schemaName}, put${schemaName});
 					assertValid(put${schemaName});
 
-					${schemaName} get${schemaName} = ${schemaVarName}Resource.get${schemaName}(put${schemaName}.getId());
+					${schemaName} get${schemaName} = ${schemaVarName}Resource.${javaMethodSignature.methodName?replace("put", "get")}(
+						<#list javaMethodSignature.pathJavaMethodParameters as javaMethodParameter>
+							<#if freeMarkerTool.isPathParameter(javaMethodParameter, javaMethodSignature.operation) && stringUtil.equals(javaMethodParameter.parameterName, schemaVarName + "Id")>
+								put${schemaName}.getId()
+							<#elseif freeMarkerTool.isPathParameter(javaMethodParameter, javaMethodSignature.operation) && properties?keys?seq_contains(javaMethodParameter.parameterName)>
+								put${schemaName}.get${javaMethodParameter.parameterName?cap_first}()
+							</#if>
+
+							<#sep>, </#sep>
+						</#list>
+					);
 
 					assertEquals(random${schemaName}, get${schemaName});
 					assertValid(get${schemaName});
@@ -1060,8 +1098,12 @@ public abstract class Base${schemaName}ResourceTestCase {
 						<#list javaMethodSignature.javaMethodParameters as javaMethodParameter>
 							<#if freeMarkerTool.isPathParameter(javaMethodParameter, javaMethodSignature.operation) && stringUtil.equals(javaMethodParameter.parameterName, schemaVarName + "Id")>
 								${schemaVarName}.getId()
+							<#elseif freeMarkerTool.isPathParameter(javaMethodParameter, javaMethodSignature.operation) && properties?keys?seq_contains(javaMethodParameter.parameterName)>
+								${schemaVarName}.get${javaMethodParameter.parameterName?cap_first}()
 							<#elseif stringUtil.equals(javaMethodParameter.parameterName, "siteId")>
 								testGroup.getGroupId()
+							<#elseif stringUtil.equals(javaMethodParameter.parameterName, schemaVarName)>
+								${schemaVarName}
 							<#elseif stringUtil.equals(javaMethodParameter.parameterType, "[Lcom.liferay.portal.vulcan.permission.Permission;")>
 								new Permission[] {
 									new Permission() {
@@ -1094,8 +1136,12 @@ public abstract class Base${schemaName}ResourceTestCase {
 								<#else>
 									null
 								</#if>
+							<#elseif freeMarkerTool.isPathParameter(javaMethodParameter, javaMethodSignature.operation) && properties?keys?seq_contains(javaMethodParameter.parameterName)>
+								${schemaVarName}.get${javaMethodParameter.parameterName?cap_first}()
 							<#elseif stringUtil.equals(javaMethodParameter.parameterName, "siteId")>
 								testGroup.getGroupId()
+							<#elseif stringUtil.equals(javaMethodParameter.parameterName, schemaVarName)>
+								${schemaVarName}
 						 	<#elseif stringUtil.startsWith(javaMethodParameter.parameterType, "[Lcom.liferay.portal.vulcan.permission.Permission;")>
 								new Permission[]{
 									new Permission() {
@@ -1697,15 +1743,38 @@ public abstract class Base${schemaName}ResourceTestCase {
 						<#assign capitalizedPropertyName = properties[propertyName] />
 					</#if>
 
-					if (!Objects.deepEquals(${schemaVarName}1.get${capitalizedPropertyName}(), ${schemaVarName}2.get${capitalizedPropertyName}())) {
-						return false;
-					}
+					<#if stringUtil.startsWith(properties[propertyName], "Map<")>
+						if (!equals((Map)${schemaVarName}1.get${capitalizedPropertyName}(), (Map)${schemaVarName}2.get${capitalizedPropertyName}())) {
+							return false;
+						}
+					<#else>
+						if (!Objects.deepEquals(${schemaVarName}1.get${capitalizedPropertyName}(), ${schemaVarName}2.get${capitalizedPropertyName}())) {
+							return false;
+						}
+					</#if>
 
 					continue;
 				}
 			</#list>
 
 			throw new IllegalArgumentException("Invalid additional assert field name " + additionalAssertFieldName);
+		}
+
+		return true;
+	}
+
+	protected boolean equals(Map<String, Object> map1, Map<String, Object> map2) {
+		if (Objects.equals(map1.keySet(), map2.keySet())) {
+			for (Map.Entry<String, Object> entry : map1.entrySet()) {
+				if (entry.getValue() instanceof Map) {
+					if (!equals((Map)entry.getValue(), (Map)map2.get(entry.getKey()))) {
+						return false;
+					}
+				}
+				else if (!Objects.deepEquals(entry.getValue(), map2.get(entry.getKey()))){
+					return false;
+				}
+			}
 		}
 
 		return true;

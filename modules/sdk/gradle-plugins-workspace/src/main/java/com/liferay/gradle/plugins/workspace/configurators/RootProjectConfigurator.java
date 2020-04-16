@@ -438,6 +438,7 @@ public class RootProjectConfigurator implements Plugin<Project> {
 
 		File dockerDir = workspaceExtension.getDockerDir();
 
+		File deployDir = new File(dockerDir, "deploy");
 		File workDir = new File(dockerDir, "work");
 
 		String dockerPath = dockerDir.getAbsolutePath();
@@ -458,7 +459,7 @@ public class RootProjectConfigurator implements Plugin<Project> {
 
 		Map<String, String> binds = new HashMap<>();
 
-		binds.put(dockerPath, "/mnt/liferay");
+		binds.put(deployDir.getAbsolutePath(), "/mnt/liferay/deploy");
 		binds.put(workPath, "/opt/liferay/work");
 
 		dockerCreateContainer.setBinds(binds);
@@ -533,6 +534,8 @@ public class RootProjectConfigurator implements Plugin<Project> {
 		dockerfile.instruction(
 			"COPY --chown=liferay:liferay deploy /mnt/liferay/deploy");
 		dockerfile.instruction(
+			"COPY --chown=liferay:liferay patching /mnt/liferay/patching");
+		dockerfile.instruction(
 			"COPY --chown=liferay:liferay scripts /mnt/liferay/scripts");
 		dockerfile.instruction(
 			"COPY --chown=liferay:liferay " + _LIFERAY_CONFIGS_DIR_NAME +
@@ -556,6 +559,7 @@ public class RootProjectConfigurator implements Plugin<Project> {
 						File destinationDir = workspaceExtension.getDockerDir();
 
 						_createTouchFile(new File(destinationDir, "deploy"));
+						_createTouchFile(new File(destinationDir, "patching"));
 						_createTouchFile(new File(destinationDir, "scripts"));
 						_createTouchFile(new File(destinationDir, "work"));
 
@@ -749,25 +753,6 @@ public class RootProjectConfigurator implements Plugin<Project> {
 			List<String> commonConfigDirNames = Arrays.asList(
 				"common", "docker");
 
-			copy.from(
-				new Callable<File>() {
-
-					@Override
-					public File call() throws Exception {
-						return configsDir;
-					}
-
-				},
-				new Closure<Void>(project) {
-
-					@SuppressWarnings("unused")
-					public void doCall(CopySpec copySpec) {
-						copySpec.exclude(commonConfigDirNames);
-						copySpec.into(_LIFERAY_CONFIGS_DIR_NAME);
-					}
-
-				});
-
 			File[] configDirs = configsDir.listFiles(
 				(dir, name) -> {
 					File file = new File(dir, name);
@@ -813,6 +798,25 @@ public class RootProjectConfigurator implements Plugin<Project> {
 						});
 				}
 			}
+
+			copy.from(
+				new Callable<File>() {
+
+					@Override
+					public File call() throws Exception {
+						return configsDir;
+					}
+
+				},
+				new Closure<Void>(project) {
+
+					@SuppressWarnings("unused")
+					public void doCall(CopySpec copySpec) {
+						copySpec.exclude(commonConfigDirNames);
+						copySpec.into(_LIFERAY_CONFIGS_DIR_NAME);
+					}
+
+				});
 		}
 
 		Task deployTask = GradleUtil.addTask(

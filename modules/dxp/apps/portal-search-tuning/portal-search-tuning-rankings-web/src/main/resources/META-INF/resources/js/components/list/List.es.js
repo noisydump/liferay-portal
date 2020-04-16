@@ -13,7 +13,7 @@ import ClayButton from '@clayui/button';
 import ClayLoadingIndicator from '@clayui/loading-indicator';
 import {PropTypes} from 'prop-types';
 import React, {PureComponent} from 'react';
-import {DragDropContext as dragDropContext} from 'react-dnd';
+import {DndProvider} from 'react-dnd';
 import HTML5Backend from 'react-dnd-html5-backend';
 
 import {KEY_CODES} from '../../utils/constants.es';
@@ -37,18 +37,18 @@ class List extends PureComponent {
 		onMove: PropTypes.func,
 		resultIds: PropTypes.arrayOf(Number),
 		resultIdsPinned: PropTypes.arrayOf(Number),
-		showLoadMore: PropTypes.bool
+		showLoadMore: PropTypes.bool,
 	};
 
 	static defaultProps = {
 		dataLoading: false,
-		resultIds: []
+		resultIds: [],
 	};
 
 	state = {
 		focusIndex: null,
 		reorder: false,
-		selectedIds: []
+		selectedIds: [],
 	};
 
 	_handleItemBlur = () => {
@@ -85,7 +85,8 @@ class List extends PureComponent {
 			event.preventDefault();
 
 			this._handleReorder(!reorder && focusIndex < pinLength);
-		} else if (event.key === KEY_CODES.ARROW_DOWN) {
+		}
+		else if (event.key === KEY_CODES.ARROW_DOWN) {
 			event.preventDefault();
 
 			if (focusIndex + 1 < resultIds.length) {
@@ -97,7 +98,8 @@ class List extends PureComponent {
 					this._handleItemFocus(focusIndex + 1);
 				}
 			}
-		} else if (event.key === KEY_CODES.ARROW_UP) {
+		}
+		else if (event.key === KEY_CODES.ARROW_UP) {
 			event.preventDefault();
 
 			if (focusIndex > 0) {
@@ -120,7 +122,7 @@ class List extends PureComponent {
 	 */
 	_handleRemoveSelect = ids => {
 		this.setState(state => ({
-			selectedIds: state.selectedIds.filter(id => !ids.includes(id))
+			selectedIds: state.selectedIds.filter(id => !ids.includes(id)),
 		}));
 	};
 
@@ -130,7 +132,7 @@ class List extends PureComponent {
 
 	_handleSelect = id => {
 		this.setState(state => ({
-			selectedIds: toggleListItem(state.selectedIds, id)
+			selectedIds: toggleListItem(state.selectedIds, id),
 		}));
 	};
 
@@ -222,87 +224,93 @@ class List extends PureComponent {
 			onClickHide,
 			onClickPin,
 			resultIds,
-			showLoadMore
+			showLoadMore,
 		} = this.props;
 
 		const {selectedIds} = this.state;
 
 		return (
-			<div className="result-ranking-list-root">
-				<ItemDragLayer />
+			<DndProvider backend={HTML5Backend}>
+				<div className="result-ranking-list-root">
+					<ItemDragLayer />
 
-				<SearchBar
-					dataMap={dataMap}
-					fetchDocumentsSearchUrl={fetchDocumentsSearchUrl}
-					onAddResultSubmit={onAddResultSubmit}
-					onClickHide={onClickHide}
-					onClickPin={onClickPin}
-					onRemoveSelect={this._handleRemoveSelect}
-					onSelectAll={this._handleSelectAll}
-					onSelectClear={this._handleSelectClear}
-					resultIds={resultIds}
-					selectedIds={selectedIds}
-				/>
+					<SearchBar
+						dataMap={dataMap}
+						fetchDocumentsSearchUrl={fetchDocumentsSearchUrl}
+						onAddResultSubmit={onAddResultSubmit}
+						onClickHide={onClickHide}
+						onClickPin={onClickPin}
+						onRemoveSelect={this._handleRemoveSelect}
+						onSelectAll={this._handleSelectAll}
+						onSelectClear={this._handleSelectClear}
+						resultIds={resultIds}
+						selectedIds={selectedIds}
+					/>
 
-				<ErrorBoundary toast>
-					{!!resultIds.length && (
-						<ul
-							className="list-group show-quick-actions-on-hover"
-							onKeyDown={this._handleKeyDown}
-						>
-							{resultIds.map((id, index, arr) =>
-								this._renderItem(id, index, arr)
-							)}
-						</ul>
-					)}
+					<ErrorBoundary toast>
+						{!!resultIds.length && (
+							<ul
+								className="list-group show-quick-actions-on-hover"
+								onKeyDown={this._handleKeyDown}
+							>
+								{resultIds.map((id, index, arr) =>
+									this._renderItem(id, index, arr)
+								)}
+							</ul>
+						)}
 
-					{dataLoading && (
-						<div className="load-more-container">
-							<ClayLoadingIndicator />
-						</div>
-					)}
+						{dataLoading && (
+							<div className="load-more-container">
+								<ClayLoadingIndicator />
+							</div>
+						)}
 
-					{!dataLoading && (
-						<>
-							{!displayError && !resultIds.length && (
-								<ClayEmptyState />
-							)}
+						{!dataLoading && (
+							<>
+								{!displayError && !resultIds.length && (
+									<ClayEmptyState />
+								)}
 
-							{displayError && (
-								<ClayEmptyState
-									actionLabel={Liferay.Language.get(
-										'try-again'
-									)}
-									description={Liferay.Language.get(
-										'an-error-has-occurred-and-we-were-unable-to-load-the-results'
-									)}
-									displayState={DISPLAY_STATES.EMPTY}
-									onClickAction={this._handleLoadMoreResults}
-									title={Liferay.Language.get(
-										'unable-to-load-content'
-									)}
-								/>
-							)}
-
-							{showLoadMore && (
-								<div className="load-more-container">
-									<ClayButton
-										className="load-more-button"
-										displayType="secondary"
-										onClick={this._handleLoadMoreResults}
-									>
-										{Liferay.Language.get(
-											'load-more-results'
+								{displayError && (
+									<ClayEmptyState
+										actionLabel={Liferay.Language.get(
+											'try-again'
 										)}
-									</ClayButton>
-								</div>
-							)}
-						</>
-					)}
-				</ErrorBoundary>
-			</div>
+										description={Liferay.Language.get(
+											'an-error-has-occurred-and-we-were-unable-to-load-the-results'
+										)}
+										displayState={DISPLAY_STATES.EMPTY}
+										onClickAction={
+											this._handleLoadMoreResults
+										}
+										title={Liferay.Language.get(
+											'unable-to-load-content'
+										)}
+									/>
+								)}
+
+								{showLoadMore && (
+									<div className="load-more-container">
+										<ClayButton
+											className="load-more-button"
+											displayType="secondary"
+											onClick={
+												this._handleLoadMoreResults
+											}
+										>
+											{Liferay.Language.get(
+												'load-more-results'
+											)}
+										</ClayButton>
+									</div>
+								)}
+							</>
+						)}
+					</ErrorBoundary>
+				</div>
+			</DndProvider>
 		);
 	}
 }
 
-export default dragDropContext(HTML5Backend)(List);
+export default List;

@@ -38,7 +38,7 @@ function AssetVocabulariesCategoriesSelector({
 	selectedItems = [],
 	singleSelect,
 	sourceItemsVocabularyIds = [],
-	useFallbackInput
+	useFallbackInput,
 }) {
 	const [inputValue, setInputValue] = useState('');
 
@@ -54,17 +54,17 @@ function AssetVocabulariesCategoriesSelector({
 						groupIds,
 						name: `%${inputValue.toLowerCase()}%`,
 						start: 0,
-						vocabularyIds: sourceItemsVocabularyIds
-					}
+						vocabularyIds: sourceItemsVocabularyIds,
+					},
 				}),
-				p_auth: Liferay.authToken
+				p_auth: Liferay.authToken,
 			}),
 			credentials: 'include',
 			method: 'POST',
-			'x-csrf-token': Liferay.authToken
+			'x-csrf-token': Liferay.authToken,
 		},
 		link: `${window.location.origin}${themeDisplay.getPathContext()}
-				/api/jsonws/invoke`
+				/api/jsonws/invoke`,
 	});
 
 	const previousInputValue = usePrevious(inputValue);
@@ -108,7 +108,8 @@ function AssetVocabulariesCategoriesSelector({
 				)
 			) {
 				validAddedItems.push(item);
-			} else {
+			}
+			else {
 				invalidAddedItems.push(item);
 			}
 		});
@@ -134,15 +135,15 @@ function AssetVocabulariesCategoriesSelector({
 		const sub = (str, obj) => str.replace(/\{([^}]+)\}/g, (_, m) => obj[m]);
 
 		const url = sub(decodeURIComponent(portletURL), {
-			selectedCategories: selectedItems.map(item => item.value).join(),
+			selectedCategoryIds: selectedItems.map(item => item.value).join(),
 			singleSelect,
-			vocabularyIds: sourceItemsVocabularyIds.concat()
+			vocabularyIds: sourceItemsVocabularyIds.concat(),
 		});
 
 		const itemSelectorDialog = new ItemSelectorDialog({
 			eventName,
 			title: Liferay.Language.get('select-categories'),
-			url
+			url,
 		});
 
 		itemSelectorDialog.open();
@@ -157,9 +158,10 @@ function AssetVocabulariesCategoriesSelector({
 						if (!item.unchecked) {
 							acc.push({
 								label: item.value,
-								value: item.categoryId
+								value: item.categoryId,
 							});
 						}
+
 						return acc;
 					},
 					[]
@@ -175,7 +177,7 @@ function AssetVocabulariesCategoriesSelector({
 			<ClayForm.Group
 				className={classNames({
 					'has-error':
-						(invalidItems && invalidItems.length > 0) || !isValid
+						(invalidItems && invalidItems.length > 0) || !isValid,
 				})}
 				id={id}
 			>
@@ -217,7 +219,7 @@ function AssetVocabulariesCategoriesSelector({
 											return {
 												label:
 													category.titleCurrentValue,
-												value: category.categoryId
+												value: category.categoryId,
 											};
 									  })
 									: []
@@ -236,7 +238,7 @@ function AssetVocabulariesCategoriesSelector({
 										[
 											invalidItems
 												.map(item => item.label)
-												.join(',')
+												.join(','),
 										]
 									)}
 								</ClayForm.FeedbackItem>
@@ -283,7 +285,7 @@ AssetVocabulariesCategoriesSelector.propTypes = {
 	selectedItems: PropTypes.array,
 	singleSelect: PropTypes.bool,
 	sourceItemsVocabularyIds: PropTypes.array,
-	useFallbackInput: PropTypes.bool
+	useFallbackInput: PropTypes.bool,
 };
 
 export default AssetVocabulariesCategoriesSelector;

@@ -214,6 +214,7 @@ public abstract class BaseKnowledgeBaseArticleResourceTestCase {
 
 	@Test
 	public void testDeleteKnowledgeBaseArticle() throws Exception {
+		@SuppressWarnings("PMD.UnusedLocalVariable")
 		KnowledgeBaseArticle knowledgeBaseArticle =
 			testDeleteKnowledgeBaseArticle_addKnowledgeBaseArticle();
 
@@ -359,7 +360,7 @@ public abstract class BaseKnowledgeBaseArticleResourceTestCase {
 				randomPatchKnowledgeBaseArticle);
 
 		KnowledgeBaseArticle expectedPatchKnowledgeBaseArticle =
-			(KnowledgeBaseArticle)BeanUtils.cloneBean(postKnowledgeBaseArticle);
+			postKnowledgeBaseArticle.clone();
 
 		_beanUtilsBean.copyProperties(
 			expectedPatchKnowledgeBaseArticle, randomPatchKnowledgeBaseArticle);
@@ -414,6 +415,7 @@ public abstract class BaseKnowledgeBaseArticleResourceTestCase {
 
 	@Test
 	public void testDeleteKnowledgeBaseArticleMyRating() throws Exception {
+		@SuppressWarnings("PMD.UnusedLocalVariable")
 		KnowledgeBaseArticle knowledgeBaseArticle =
 			testDeleteKnowledgeBaseArticleMyRating_addKnowledgeBaseArticle();
 
@@ -747,9 +749,11 @@ public abstract class BaseKnowledgeBaseArticleResourceTestCase {
 				}
 				else {
 					BeanUtils.setProperty(
-						knowledgeBaseArticle1, entityField.getName(), "Aaa");
+						knowledgeBaseArticle1, entityField.getName(),
+						"Aaa" + RandomTestUtil.randomString());
 					BeanUtils.setProperty(
-						knowledgeBaseArticle2, entityField.getName(), "Bbb");
+						knowledgeBaseArticle2, entityField.getName(),
+						"Bbb" + RandomTestUtil.randomString());
 				}
 			});
 	}
@@ -1115,9 +1119,11 @@ public abstract class BaseKnowledgeBaseArticleResourceTestCase {
 				}
 				else {
 					BeanUtils.setProperty(
-						knowledgeBaseArticle1, entityField.getName(), "Aaa");
+						knowledgeBaseArticle1, entityField.getName(),
+						"Aaa" + RandomTestUtil.randomString());
 					BeanUtils.setProperty(
-						knowledgeBaseArticle2, entityField.getName(), "Bbb");
+						knowledgeBaseArticle2, entityField.getName(),
+						"Bbb" + RandomTestUtil.randomString());
 				}
 			});
 	}
@@ -1461,9 +1467,11 @@ public abstract class BaseKnowledgeBaseArticleResourceTestCase {
 				}
 				else {
 					BeanUtils.setProperty(
-						knowledgeBaseArticle1, entityField.getName(), "Aaa");
+						knowledgeBaseArticle1, entityField.getName(),
+						"Aaa" + RandomTestUtil.randomString());
 					BeanUtils.setProperty(
-						knowledgeBaseArticle2, entityField.getName(), "Bbb");
+						knowledgeBaseArticle2, entityField.getName(),
+						"Bbb" + RandomTestUtil.randomString());
 				}
 			});
 	}
@@ -1650,13 +1658,13 @@ public abstract class BaseKnowledgeBaseArticleResourceTestCase {
 			204,
 			knowledgeBaseArticleResource.
 				putSiteKnowledgeBaseArticleSubscribeHttpResponse(
-					testGroup.getGroupId()));
+					knowledgeBaseArticle.getSiteId()));
 
 		assertHttpResponseStatusCode(
 			404,
 			knowledgeBaseArticleResource.
 				putSiteKnowledgeBaseArticleSubscribeHttpResponse(
-					testGroup.getGroupId()));
+					knowledgeBaseArticle.getSiteId()));
 	}
 
 	protected KnowledgeBaseArticle
@@ -1677,13 +1685,13 @@ public abstract class BaseKnowledgeBaseArticleResourceTestCase {
 			204,
 			knowledgeBaseArticleResource.
 				putSiteKnowledgeBaseArticleUnsubscribeHttpResponse(
-					testGroup.getGroupId()));
+					knowledgeBaseArticle.getSiteId()));
 
 		assertHttpResponseStatusCode(
 			404,
 			knowledgeBaseArticleResource.
 				putSiteKnowledgeBaseArticleUnsubscribeHttpResponse(
-					testGroup.getGroupId()));
+					knowledgeBaseArticle.getSiteId()));
 	}
 
 	protected KnowledgeBaseArticle
@@ -2260,9 +2268,9 @@ public abstract class BaseKnowledgeBaseArticleResourceTestCase {
 			}
 
 			if (Objects.equals(
-					"taxonomyCategories", additionalAssertFieldName)) {
+					"taxonomyCategoryBriefs", additionalAssertFieldName)) {
 
-				if (knowledgeBaseArticle.getTaxonomyCategories() == null) {
+				if (knowledgeBaseArticle.getTaxonomyCategoryBriefs() == null) {
 					valid = false;
 				}
 
@@ -2430,9 +2438,9 @@ public abstract class BaseKnowledgeBaseArticleResourceTestCase {
 				getAdditionalAssertFieldNames()) {
 
 			if (Objects.equals("actions", additionalAssertFieldName)) {
-				if (!Objects.deepEquals(
-						knowledgeBaseArticle1.getActions(),
-						knowledgeBaseArticle2.getActions())) {
+				if (!equals(
+						(Map)knowledgeBaseArticle1.getActions(),
+						(Map)knowledgeBaseArticle2.getActions())) {
 
 					return false;
 				}
@@ -2640,11 +2648,11 @@ public abstract class BaseKnowledgeBaseArticleResourceTestCase {
 			}
 
 			if (Objects.equals(
-					"taxonomyCategories", additionalAssertFieldName)) {
+					"taxonomyCategoryBriefs", additionalAssertFieldName)) {
 
 				if (!Objects.deepEquals(
-						knowledgeBaseArticle1.getTaxonomyCategories(),
-						knowledgeBaseArticle2.getTaxonomyCategories())) {
+						knowledgeBaseArticle1.getTaxonomyCategoryBriefs(),
+						knowledgeBaseArticle2.getTaxonomyCategoryBriefs())) {
 
 					return false;
 				}
@@ -2690,6 +2698,30 @@ public abstract class BaseKnowledgeBaseArticleResourceTestCase {
 			throw new IllegalArgumentException(
 				"Invalid additional assert field name " +
 					additionalAssertFieldName);
+		}
+
+		return true;
+	}
+
+	protected boolean equals(
+		Map<String, Object> map1, Map<String, Object> map2) {
+
+		if (Objects.equals(map1.keySet(), map2.keySet())) {
+			for (Map.Entry<String, Object> entry : map1.entrySet()) {
+				if (entry.getValue() instanceof Map) {
+					if (!equals(
+							(Map)entry.getValue(),
+							(Map)map2.get(entry.getKey()))) {
+
+						return false;
+					}
+				}
+				else if (!Objects.deepEquals(
+							entry.getValue(), map2.get(entry.getKey()))) {
+
+					return false;
+				}
+			}
 		}
 
 		return true;
@@ -3127,7 +3159,7 @@ public abstract class BaseKnowledgeBaseArticleResourceTestCase {
 				"Invalid entity field " + entityFieldName);
 		}
 
-		if (entityFieldName.equals("taxonomyCategories")) {
+		if (entityFieldName.equals("taxonomyCategoryBriefs")) {
 			throw new IllegalArgumentException(
 				"Invalid entity field " + entityFieldName);
 		}

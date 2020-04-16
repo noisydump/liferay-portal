@@ -14,19 +14,15 @@
 
 package com.liferay.mule.internal.connection;
 
-import com.liferay.mule.internal.config.OAuth2AuthenticationConfig;
-
-import javax.inject.Inject;
+import com.liferay.mule.internal.connection.config.OAuth2AuthenticationConfig;
 
 import org.mule.runtime.api.connection.ConnectionException;
-import org.mule.runtime.api.meta.ExpressionSupport;
 import org.mule.runtime.extension.api.annotation.Alias;
-import org.mule.runtime.extension.api.annotation.Expression;
-import org.mule.runtime.extension.api.annotation.param.Parameter;
 import org.mule.runtime.extension.api.annotation.param.ParameterGroup;
 import org.mule.runtime.extension.api.annotation.param.display.DisplayName;
-import org.mule.runtime.extension.api.annotation.param.display.Placement;
-import org.mule.runtime.http.api.HttpService;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author Matija Petanjek
@@ -38,24 +34,26 @@ public class OAuth2CachedConnectionProvider
 
 	@Override
 	public LiferayConnection connect() throws ConnectionException {
+		logger.debug(
+			"Initializing connection to Liferay Portal instance using OAuth " +
+				"2.0 authorization");
+
 		return LiferayConnection.withOAuth2Authentication(
-			_httpService, _openApiSpecPath,
-			_oAuth2AuthenticationConfig.getConsumerKey(),
-			_oAuth2AuthenticationConfig.getConsumerSecret(),
+			httpService, oAuth2AuthenticationConfig.getOpenApiSpecPath(),
+			oAuth2AuthenticationConfig.getConsumerKey(),
+			oAuth2AuthenticationConfig.getConsumerSecret(),
 			liferayProxyConfig.getProxyConfig());
 	}
 
-	@Inject
-	private HttpService _httpService;
+	@Override
+	protected Logger getLogger() {
+		return logger;
+	}
 
-	@ParameterGroup(name = "Connection config")
-	@Placement(order = 1)
-	private OAuth2AuthenticationConfig _oAuth2AuthenticationConfig;
+	private static final Logger logger = LoggerFactory.getLogger(
+		OAuth2CachedConnectionProvider.class);
 
-	@DisplayName("OpenAPI Spec URL")
-	@Expression(ExpressionSupport.NOT_SUPPORTED)
-	@Parameter
-	@Placement(order = 2)
-	private String _openApiSpecPath;
+	@ParameterGroup(name = ParameterGroup.CONNECTION)
+	private OAuth2AuthenticationConfig oAuth2AuthenticationConfig;
 
 }

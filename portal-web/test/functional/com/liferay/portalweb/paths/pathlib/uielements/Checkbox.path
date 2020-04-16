@@ -64,6 +64,11 @@
 	<td></td>
 </tr>
 <tr>
+	<td>ANY_CHECKBOX_CHECKED</td>
+	<td>//label[contains(.,'${checkboxName}')]/input[@type='checkbox' and @checked]</td>
+	<td></td>
+</tr>
+<tr>
 	<td>BLOGS_ENTRY</td>
 	<td>//input[contains(@id,'BlogsEntry')]</td>
 	<td></td>
@@ -86,6 +91,21 @@
 <tr>
 	<td>DELETIONS</td>
 	<td>//label[contains(.,'Deletions')]/input[contains(@id,'DELETIONS')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>DEPOT_LANGUAGE_CHECKBOX</td>
+	<td>//div[contains(@class,'custom-control') and contains(.,'${key_language}')]//input[@type='checkbox']</td>
+	<td></td>
+</tr>
+<tr>
+	<td>DEPOT_LANGUAGE_CHECKBOX_CHECKED</td>
+	<td>//div[contains(@class,'custom-control') and contains(.,'${key_language}')]//input[@type='checkbox' and @checked]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>DEPOT_DEFAULT_LANGUAGE_CHECKBOX_DISABLED</td>
+	<td>//div[contains(@class,'custom-control') and contains(.,'${key_language}')]//input[@disabled and @checked]</td>
 	<td></td>
 </tr>
 <tr>
@@ -146,6 +166,11 @@
 <tr>
 	<td>ENABLE_CONVERSION_TXT</td>
 	<td>//label[contains(.,'TXT')]/input[@type='checkbox']</td>
+	<td></td>
+</tr>
+<tr>
+	<td>ENABLE_DIRECTORY_INDEXING</td>
+	<td>//label[contains(.,'Enable Directory Indexing')]/input[@type='checkbox']</td>
 	<td></td>
 </tr>
 <tr>
@@ -334,6 +359,16 @@
 	<td></td>
 </tr>
 <tr>
+	<td>ALL_FRAGMENTS</td>
+	<td>//label[contains(.,'All Fragments')]/input[@type='checkbox']</td>
+	<td></td>
+</tr>
+<tr>
+	<td>ALLOWED_FRAGMENT</td>
+	<td>//label[contains(.,'${key_fragmentName}')]/input[@type='checkbox']</td>
+	<td></td>
+</tr>
+<tr>
 	<td>RANK_BY_PARTICIPATION</td>
 	<td>//label[contains(.,'Rank by Participation')]/input[@type='checkbox']</td>
 	<td></td>
@@ -448,7 +483,11 @@
 	<td>//label[contains(.,'${key_checkboxOption}')]/input[@type='checkbox']/../span</td>
 	<td></td>
 </tr>
-
+<tr>
+	<td>UPLOAD_FILE_ENTRY</td>
+	<td>//li[contains(@class,'upload-file')]//input[@type='checkbox' and contains(@data-title,'${key_fileName}')]</td>
+	<td></td>
+</tr>
 </tbody>
 </table>
 </body>

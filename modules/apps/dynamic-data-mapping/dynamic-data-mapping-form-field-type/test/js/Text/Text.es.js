@@ -12,15 +12,20 @@
  * details.
  */
 
+import {fireEvent} from '@testing-library/react';
+
 import Text from '../../../src/main/resources/META-INF/resources/Text/Text.es';
+import withContextMock from '../__mocks__/withContextMock.es';
 
 let component;
 const spritemap = 'icons.svg';
 
 const defaultTextConfig = {
 	name: 'textField',
-	spritemap
+	spritemap,
 };
+
+const TextWithContextMock = withContextMock(Text);
 
 describe('Field Text', () => {
 	afterEach(() => {
@@ -30,79 +35,79 @@ describe('Field Text', () => {
 	});
 
 	it('is not readOnly', () => {
-		component = new Text({
+		component = new TextWithContextMock({
 			...defaultTextConfig,
-			readOnly: false
+			readOnly: false,
 		});
 
 		expect(component).toMatchSnapshot();
 	});
 
 	it('has a helptext', () => {
-		component = new Text({
+		component = new TextWithContextMock({
 			...defaultTextConfig,
-			tip: 'Type something'
+			tip: 'Type something',
 		});
 
 		expect(component).toMatchSnapshot();
 	});
 
 	it('has an id', () => {
-		component = new Text({
+		component = new TextWithContextMock({
 			...defaultTextConfig,
-			id: 'ID'
+			id: 'ID',
 		});
 
 		expect(component).toMatchSnapshot();
 	});
 
 	it('has a label', () => {
-		component = new Text({
+		component = new TextWithContextMock({
 			...defaultTextConfig,
-			label: 'label'
+			label: 'label',
 		});
 
 		expect(component).toMatchSnapshot();
 	});
 
 	it('has a placeholder', () => {
-		component = new Text({
+		component = new TextWithContextMock({
 			...defaultTextConfig,
-			placeholder: 'Placeholder'
+			placeholder: 'Placeholder',
 		});
 
 		expect(component).toMatchSnapshot();
 	});
 
 	it('is not required', () => {
-		component = new Text({
+		component = new TextWithContextMock({
 			...defaultTextConfig,
-			required: false
+			required: false,
 		});
 
 		expect(component).toMatchSnapshot();
 	});
 
 	it('renders Label if showLabel is true', () => {
-		component = new Text({
+		component = new TextWithContextMock({
 			...defaultTextConfig,
 			label: 'text',
-			showLabel: true
+			showLabel: true,
 		});
 
 		expect(component).toMatchSnapshot();
 	});
 
 	it('has a spritemap', () => {
-		component = new Text(defaultTextConfig);
+		component = new TextWithContextMock(defaultTextConfig);
 
 		expect(component).toMatchSnapshot();
 	});
 
 	it('has a value', () => {
-		component = new Text({
+		component = new TextWithContextMock({
 			...defaultTextConfig,
-			value: 'value'
+			value: 'value',
 		});
 
 		expect(component).toMatchSnapshot();
@@ -112,9 +117,9 @@ describe('Field Text', () => {
 		const handleFieldEdited = data => {
 			expect(data).toEqual(
 				expect.objectContaining({
-					fieldInstance: component,
+					fieldInstance: expect.any(Object),
 					originalEvent: expect.any(Object),
-					value: expect.any(String)
+					value: expect.any(String),
 				})
 			);
 			done();
@@ -122,16 +127,18 @@ describe('Field Text', () => {
 
 		const events = {fieldEdited: handleFieldEdited};
 
-		component = new Text({
+		component = new TextWithContextMock({
 			...defaultTextConfig,
 			events,
-			key: 'input'
+			key: 'input',
 		});
 
-		component._handleFieldChanged({
+		const input = component.element.querySelector('input');
+
+		fireEvent.change(input, {
 			target: {
-				value: 'test'
-			}
+				value: 'test',
+			},
 		});
 	});
 });

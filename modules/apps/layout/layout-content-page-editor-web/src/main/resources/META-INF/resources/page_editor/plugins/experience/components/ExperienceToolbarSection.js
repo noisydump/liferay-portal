@@ -12,10 +12,11 @@
  * details.
  */
 
-import React, {useContext, useMemo} from 'react';
+import React, {useEffect, useMemo} from 'react';
 
-import {ConfigContext} from '../../../app/config/index';
-import {useSelector} from '../../../app/store/index';
+import togglePermissions from '../../../app/actions/togglePermission';
+import {config} from '../../../app/config/index';
+import {useDispatch, useSelector} from '../../../app/store/index';
 import ExperienceSelector from './ExperienceSelector';
 
 // TODO: show how to colocate CSS with plugins (may use loaders)
@@ -23,16 +24,11 @@ export default function ExperienceToolbarSection({selectId}) {
 	const availableSegmentsExperiences = useSelector(
 		state => state.availableSegmentsExperiences
 	);
+	const dispatch = useDispatch();
 
 	const segmentsExperienceId = useSelector(
 		state => state.segmentsExperienceId
 	);
-
-	const {
-		availableSegmentsEntries,
-		defaultSegmentsEntryId,
-		editSegmentsEntryURL
-	} = useContext(ConfigContext);
 
 	const experiences = useMemo(
 		() =>
@@ -40,31 +36,44 @@ export default function ExperienceToolbarSection({selectId}) {
 				.sort((a, b) => b.priority - a.priority)
 				.map(experience => {
 					const segmentsEntryName =
-						availableSegmentsEntries[experience.segmentsEntryId]
-							.name;
+						config.availableSegmentsEntries[
+							experience.segmentsEntryId
+						].name;
 
 					return {
 						...experience,
-						segmentsEntryName
+						segmentsEntryName,
 					};
 				}),
-		[availableSegmentsExperiences, availableSegmentsEntries]
+		[availableSegmentsExperiences]
 	);
-	const segments = useMemo(() => Object.values(availableSegmentsEntries), [
-		availableSegmentsEntries
-	]).filter(segment => segment.segmentsEntryId !== defaultSegmentsEntryId);
+	const segments = useMemo(
+		() => Object.values(config.availableSegmentsEntries),
+		[]
+	).filter(
+		segment => segment.segmentsEntryId !== config.defaultSegmentsEntryId
+	);
 
 	const selectedExperience =
 		availableSegmentsExperiences[segmentsExperienceId];
 
+	useEffect(() => {
+		dispatch(
+			togglePermissions(
+				'LOCKED_SEGMENTS_EXPERIMENT',
+				selectedExperience.hasLockedSegmentsExperiment
+			)
+		);
+	}, [dispatch, selectedExperience.hasLockedSegmentsExperiment]);
+
 	return (
-		<div className="mr-2 page-editor-toolbar-experience">
-			<label className="mr-2" htmlFor={selectId}>
+		<div className="mr-2 page-editor__toolbar-experience">
+			<label className="d-lg-block d-none mr-2" htmlFor={selectId}>
 				{Liferay.Language.get('experience')}
 			</label>
 
 			<ExperienceSelector
-				editSegmentsEntryURL={editSegmentsEntryURL}
+				editSegmentsEntryURL={config.editSegmentsEntryURL}
 				experiences={experiences}
 				segments={segments}
 				selectedExperience={selectedExperience}

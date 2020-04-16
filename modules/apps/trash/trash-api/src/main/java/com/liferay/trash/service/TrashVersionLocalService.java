@@ -63,7 +63,7 @@ public interface TrashVersionLocalService
 	 */
 	public TrashVersion addTrashVersion(
 		long trashEntryId, String className, long classPK, int status,
-		UnicodeProperties typeSettingsProperties);
+		UnicodeProperties typeSettingsUnicodeProperties);
 
 	/**
 	 * Adds the trash version to the database. Also notifies the appropriate model listeners.
@@ -73,6 +73,12 @@ public interface TrashVersionLocalService
 	 */
 	@Indexable(type = IndexableType.REINDEX)
 	public TrashVersion addTrashVersion(TrashVersion trashVersion);
+
+	/**
+	 * @throws PortalException
+	 */
+	public PersistedModel createPersistedModel(Serializable primaryKeyObj)
+		throws PortalException;
 
 	/**
 	 * Creates a new trash version with the primary key. Does not add the trash version to the database.
@@ -197,6 +203,9 @@ public interface TrashVersionLocalService
 	 */
 	public String getOSGiServiceIdentifier();
 
+	/**
+	 * @throws PortalException
+	 */
 	@Override
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public PersistedModel getPersistedModel(Serializable primaryKeyObj)

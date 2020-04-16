@@ -25,6 +25,10 @@ AUI.add(
 
 		var INSTANCE_ID_PREFIX = '_INSTANCE_';
 
+		var INTEGER_MIN_VALUE = 0;
+
+		var INTEGER_MAX_VALUE = 2147483647;
+
 		var SELECTOR_REPEAT_BUTTONS =
 			'.lfr-ddm-repeatable-add-button, .lfr-ddm-repeatable-delete-button';
 
@@ -108,31 +112,31 @@ AUI.add(
 
 			p_l_id: {},
 
-			portletNamespace: {}
+			portletNamespace: {},
 		};
 
 		var FieldsSupport = function() {};
 
 		FieldsSupport.ATTRS = {
 			container: {
-				setter: A.one
+				setter: A.one,
 			},
 
 			definition: {},
 
 			displayLocale: {
-				valueFn: '_valueDisplayLocale'
+				valueFn: '_valueDisplayLocale',
 			},
 
 			fields: {
-				valueFn: '_valueFields'
+				valueFn: '_valueFields',
 			},
 
 			mode: {},
 
 			values: {
-				value: {}
-			}
+				value: {},
+			},
 		};
 
 		FieldsSupport.prototype = {
@@ -168,7 +172,7 @@ AUI.add(
 							instanceId: fieldInstanceId,
 							name: fieldName,
 							parent: instance,
-							values: instance.get('values')
+							values: instance.get('values'),
 						}
 					)
 				);
@@ -193,7 +197,7 @@ AUI.add(
 
 				Liferay.Util.fetch(instance._getTemplateResourceURL(), {
 					body: data,
-					method: 'POST'
+					method: 'POST',
 				})
 					.then(response => {
 						return response.text();
@@ -222,7 +226,7 @@ AUI.add(
 					p_p_resource_id: 'renderStructureField',
 					p_p_state: 'pop_up',
 					portletNamespace: instance.get('portletNamespace'),
-					readOnly: instance.get('readOnly')
+					readOnly: instance.get('readOnly'),
 				};
 
 				var templateResourceURL = Liferay.Util.PortletURL.createResourceURL(
@@ -311,7 +315,8 @@ AUI.add(
 
 					if (next[key] === value) {
 						fieldInfo = next;
-					} else {
+					}
+					else {
 						var children =
 							next.fields ||
 							next.nestedFields ||
@@ -352,7 +357,8 @@ AUI.add(
 
 				if (instance.get('readOnly')) {
 					retVal = true;
-				} else {
+				}
+				else {
 					var form = instance.getForm();
 
 					if (
@@ -364,42 +370,42 @@ AUI.add(
 				}
 
 				return retVal;
-			}
+			},
 		};
 
 		var Field = A.Component.create({
 			ATTRS: {
 				container: {
-					setter: A.one
+					setter: A.one,
 				},
 
 				dataType: {},
 
 				definition: {
-					validator: Lang.isObject
+					validator: Lang.isObject,
 				},
 
 				formNode: {
-					valueFn: '_valueFormNode'
+					valueFn: '_valueFormNode',
 				},
 
 				instanceId: {},
 
 				liferayForm: {
-					valueFn: '_valueLiferayForm'
+					valueFn: '_valueLiferayForm',
 				},
 
 				localizable: {
 					getter: '_getLocalizable',
-					readOnly: true
+					readOnly: true,
 				},
 
 				localizationMap: {
-					valueFn: '_valueLocalizationMap'
+					valueFn: '_valueLocalizationMap',
 				},
 
 				name: {
-					validator: Lang.isString
+					validator: Lang.isString,
 				},
 
 				node: {},
@@ -410,8 +416,8 @@ AUI.add(
 
 				repeatable: {
 					getter: '_getRepeatable',
-					readOnly: true
-				}
+					readOnly: true,
+				},
 			},
 
 			AUGMENTS: [DDMPortletSupport, FieldsSupport],
@@ -426,7 +432,7 @@ AUI.add(
 
 					instance.fire('liferay-ddm-field:repeat', {
 						field: newField,
-						originalField
+						originalField,
 					});
 
 					newField.get('fields').forEach(item => {
@@ -474,6 +480,8 @@ AUI.add(
 					if (event.formName === formNode.attr('name')) {
 						instance.set('liferayForm', event.form);
 					}
+
+					instance.addIntegerRangeRule();
 				},
 
 				_getLocalizable() {
@@ -499,7 +507,8 @@ AUI.add(
 						currentTarget.hasClass('lfr-ddm-repeatable-add-button')
 					) {
 						instance.repeat();
-					} else if (
+					}
+					else if (
 						currentTarget.hasClass(
 							'lfr-ddm-repeatable-delete-button'
 						)
@@ -535,7 +544,7 @@ AUI.add(
 					});
 
 					instance.fire('liferay-ddm-field:remove', {
-						field
+						field,
 					});
 				},
 
@@ -581,6 +590,43 @@ AUI.add(
 					}
 
 					return localizationMap;
+				},
+
+				addIntegerRangeRule() {
+					var instance = this;
+
+					var dataType = instance.get('dataType');
+
+					if (dataType && dataType === 'integer') {
+						var liferayForm = instance.get('liferayForm');
+
+						if (liferayForm) {
+							var node = instance.getInputNode();
+
+							var fieldName = node.get('name');
+
+							var errorMessage = Liferay.Util.sub(
+								Liferay.Language.get(
+									'please-enter-a-valid-integer-value-between-x-and-x'
+								),
+								INTEGER_MIN_VALUE,
+								INTEGER_MAX_VALUE
+							);
+
+							liferayForm.addRule(
+								fieldName,
+								'integerRange_custom',
+								errorMessage,
+								val => {
+									return (
+										val >= INTEGER_MIN_VALUE &&
+										val <= INTEGER_MAX_VALUE
+									);
+								},
+								true
+							);
+						}
+					}
 				},
 
 				bindUI() {
@@ -719,7 +765,7 @@ AUI.add(
 						.concat([
 							instance.get('name'),
 							INSTANCE_ID_PREFIX,
-							instance.get('instanceId')
+							instance.get('instanceId'),
 						])
 						.join('');
 				},
@@ -842,12 +888,22 @@ AUI.add(
 
 					var container = instance.get('container');
 
-					var containerLabel = container._node.children[0];
+					var fieldDefinition = instance.getFieldDefinition();
 
-					containerLabel.insertAdjacentHTML(
-						'afterbegin',
-						TPL_REPEATABLE_ICON
-					);
+					if (fieldDefinition && fieldDefinition.dataType == 'html') {
+						container._node.insertAdjacentHTML(
+							'afterbegin',
+							TPL_REPEATABLE_ICON
+						);
+					}
+					else {
+						var containerLabel = container._node.children[0];
+
+						containerLabel.insertAdjacentHTML(
+							'afterbegin',
+							TPL_REPEATABLE_ICON
+						);
+					}
 
 					container.append(TPL_REPEATABLE_ADD);
 					container.append(TPL_REPEATABLE_DELETE);
@@ -875,7 +931,7 @@ AUI.add(
 					AArray.invoke(instance.get('fields'), 'renderUI');
 
 					instance.fire('liferay-ddm-field:render', {
-						field: instance
+						field: instance,
 					});
 				},
 
@@ -897,7 +953,8 @@ AUI.add(
 
 						if (instance.originalField) {
 							field.originalField = instance.originalField;
-						} else {
+						}
+						else {
 							field.originalField = instance;
 						}
 
@@ -956,7 +1013,8 @@ AUI.add(
 						instance.setLabel(
 							fieldDefinition.label[instance.getDefaultLocale()]
 						);
-					} else {
+					}
+					else {
 						instance.setLabel(fieldDefinition.label[locale]);
 					}
 				},
@@ -1053,12 +1111,14 @@ AUI.add(
 
 					var fieldJSON = {
 						instanceId: instance.get('instanceId'),
-						name: instance.get('name')
+						name: instance.get('name'),
 					};
 
 					var dataType = instance.get('dataType');
 
-					if (dataType) {
+					var fields = instance.get('fields');
+
+					if (dataType || fields.length) {
 						instance.updateLocalizationMap(
 							instance.get('displayLocale')
 						);
@@ -1073,8 +1133,6 @@ AUI.add(
 							);
 						}
 					}
-
-					var fields = instance.get('fields');
 
 					if (fields.length) {
 						fieldJSON.nestedFieldValues = AArray.invoke(
@@ -1103,13 +1161,20 @@ AUI.add(
 						) {
 							localizationMap[locale] = value;
 						}
-					} else {
+
+						for (var key in localizationMap) {
+							if (!localizationMap[key]) {
+								localizationMap[key] = '';
+							}
+						}
+					}
+					else {
 						localizationMap = value;
 					}
 
 					instance.set('localizationMap', localizationMap);
-				}
-			}
+				},
+			},
 		});
 
 		var CheckboxField = A.Component.create({
@@ -1156,8 +1221,8 @@ AUI.add(
 					var instance = this;
 
 					instance.getInputNode().attr('checked', value === 'true');
-				}
-			}
+				},
+			},
 		});
 
 		FieldTypes.checkbox = CheckboxField;
@@ -1186,7 +1251,7 @@ AUI.add(
 					var colorPicker = new A.ColorPickerPopover({
 						position: 'bottom',
 						trigger: selectorInput,
-						zIndex: 65535
+						zIndex: 65535,
 					}).render();
 
 					colorPicker.on('select', event => {
@@ -1204,7 +1269,7 @@ AUI.add(
 					});
 
 					colorPicker.set('color', valueField.val(), {
-						trigger: selectorInput
+						trigger: selectorInput,
 					});
 
 					instance.set('colorPicker', colorPicker);
@@ -1241,8 +1306,8 @@ AUI.add(
 							formValidator.validateField(valueField);
 						}
 					}
-				}
-			}
+				},
+			},
 		});
 
 		FieldTypes['ddm-color'] = ColorField;
@@ -1331,11 +1396,12 @@ AUI.add(
 						);
 
 						datePicker.selectDates(date);
-					} else {
+					}
+					else {
 						datePicker.selectDates('');
 					}
-				}
-			}
+				},
+			},
 		});
 
 		FieldTypes['ddm-date'] = DateField;
@@ -1343,8 +1409,8 @@ AUI.add(
 		var DocumentLibraryField = A.Component.create({
 			ATTRS: {
 				acceptedFileFormats: {
-					value: ['*']
-				}
+					value: ['*'],
+				},
 			},
 
 			EXTENDS: Field,
@@ -1358,7 +1424,8 @@ AUI.add(
 
 						if (currentTarget.test('.select-button')) {
 							instance._handleSelectButtonClick(event);
-						} else if (currentTarget.test('.clear-button')) {
+						}
+						else if (currentTarget.test('.clear-button')) {
 							instance._handleClearButtonClick(event);
 						}
 					}
@@ -1384,7 +1451,7 @@ AUI.add(
 										portletNamespace +
 										'selectDocumentLibrary',
 									singleSelect: true,
-									url: instance.getDocumentLibrarySelectorURL()
+									url: instance.getDocumentLibrarySelectorURL(),
 								}
 							);
 
@@ -1403,7 +1470,7 @@ AUI.add(
 											groupId: itemValue.groupId,
 											title: itemValue.title,
 											type: itemValue.type,
-											uuid: itemValue.uuid
+											uuid: itemValue.uuid,
 										});
 									}
 								}
@@ -1457,13 +1524,13 @@ AUI.add(
 
 					var criterionJSON = {
 						desiredItemSelectorReturnTypes:
-							'com.liferay.item.selector.criteria.FileEntryItemSelectorReturnType,com.liferay.item.selector.criteria.FileEntryItemSelectorReturnType'
+							'com.liferay.item.selector.criteria.FileEntryItemSelectorReturnType,com.liferay.item.selector.criteria.FileEntryItemSelectorReturnType',
 					};
 
 					var uploadCriterionJSON = {
 						URL: instance.getUploadURL(),
 						desiredItemSelectorReturnTypes:
-							'com.liferay.item.selector.criteria.FileEntryItemSelectorReturnType,com.liferay.item.selector.criteria.FileEntryItemSelectorReturnType'
+							'com.liferay.item.selector.criteria.FileEntryItemSelectorReturnType,com.liferay.item.selector.criteria.FileEntryItemSelectorReturnType',
 					};
 
 					var documentLibraryParameters = {
@@ -1476,7 +1543,7 @@ AUI.add(
 						p_p_auth: container.getData('itemSelectorAuthToken'),
 						p_p_id: Liferay.PortletKeys.ITEM_SELECTOR,
 						p_p_mode: 'view',
-						p_p_state: 'pop_up'
+						p_p_state: 'pop_up',
 					};
 
 					var documentLibraryURL = Liferay.Util.PortletURL.createPortletURL(
@@ -1491,7 +1558,8 @@ AUI.add(
 					if (Lang.isString(value)) {
 						if (value !== '') {
 							value = JSON.parse(value);
-						} else {
+						}
+						else {
 							value = {};
 						}
 					}
@@ -1513,7 +1581,7 @@ AUI.add(
 						'javax.portlet.action':
 							'/document_library/upload_file_entry',
 						p_auth: Liferay.authToken,
-						p_p_id: Liferay.PortletKeys.DOCUMENT_LIBRARY
+						p_p_id: Liferay.PortletKeys.DOCUMENT_LIBRARY,
 					};
 
 					var uploadURL = Liferay.Util.PortletURL.createActionURL(
@@ -1544,7 +1612,8 @@ AUI.add(
 
 					if (!parsedValue.title && !parsedValue.uuid) {
 						value = '';
-					} else {
+					}
+					else {
 						value = JSON.stringify(parsedValue);
 					}
 
@@ -1604,8 +1673,8 @@ AUI.add(
 					);
 
 					clearButtonNode.toggle(!!parsedValue.uuid);
-				}
-			}
+				},
+			},
 		});
 
 		FieldTypes['ddm-documentlibrary'] = DocumentLibraryField;
@@ -1639,7 +1708,7 @@ AUI.add(
 
 					var criterionJSON = {
 						desiredItemSelectorReturnTypes:
-							'com.liferay.item.selector.criteria.JournalArticleItemSelectorReturnType'
+							'com.liferay.item.selector.criteria.JournalArticleItemSelectorReturnType',
 					};
 
 					var webContentParameters = {
@@ -1650,7 +1719,7 @@ AUI.add(
 						p_p_auth: container.getData('itemSelectorAuthToken'),
 						p_p_id: Liferay.PortletKeys.ITEM_SELECTOR,
 						p_p_mode: 'view',
-						p_p_state: 'pop_up'
+						p_p_state: 'pop_up',
 					};
 
 					var webContentURL = Liferay.Util.PortletURL.createPortletURL(
@@ -1669,7 +1738,8 @@ AUI.add(
 
 						if (currentTarget.test('.select-button')) {
 							instance._handleSelectButtonClick(event);
-						} else if (currentTarget.test('.clear-button')) {
+						}
+						else if (currentTarget.test('.clear-button')) {
 							instance._handleClearButtonClick(event);
 						}
 					}
@@ -1699,7 +1769,7 @@ AUI.add(
 									title: Liferay.Language.get(
 										'journal-article'
 									),
-									url: instance._getWebContentSelectorURL()
+									url: instance._getWebContentSelectorURL(),
 								}
 							);
 
@@ -1716,7 +1786,7 @@ AUI.add(
 										instance.setValue({
 											className: itemValue.className,
 											classPK: itemValue.classPK,
-											title: itemValue.title || ''
+											title: itemValue.title || '',
 										});
 
 										instance._hideMessage();
@@ -1767,7 +1837,8 @@ AUI.add(
 					if (Lang.isString(value)) {
 						if (value !== '') {
 							value = JSON.parse(value);
-						} else {
+						}
+						else {
 							value = {};
 						}
 					}
@@ -1803,7 +1874,8 @@ AUI.add(
 
 					if (!parsedValue.className && !parsedValue.classPK) {
 						value = '';
-					} else {
+					}
+					else {
 						value = JSON.stringify(parsedValue);
 					}
 
@@ -1821,7 +1893,7 @@ AUI.add(
 					if (!instance.notice) {
 						instance.notice = new Liferay.Notice({
 							toggleText: false,
-							type: 'warning'
+							type: 'warning',
 						}).hide();
 					}
 
@@ -1882,8 +1954,8 @@ AUI.add(
 					);
 
 					clearButtonNode.toggle(!!parsedValue.classPK);
-				}
-			}
+				},
+			},
 		});
 
 		FieldTypes['ddm-journal-article'] = JournalArticleField;
@@ -1891,7 +1963,7 @@ AUI.add(
 		var LinkToPageField = A.Component.create({
 			ATTRS: {
 				delta: {
-					value: 10
+					value: 10,
 				},
 
 				selectedLayout: {
@@ -1909,7 +1981,7 @@ AUI.add(
 						}
 
 						return retVal;
-					}
+					},
 				},
 
 				selectedLayoutPath: {
@@ -1937,12 +2009,12 @@ AUI.add(
 							groupId,
 							label: Liferay.Language.get('all'),
 							layoutId: 0,
-							privateLayout
+							privateLayout,
 						};
 
 						return [layoutsRoot];
-					}
-				}
+					},
+				},
 			},
 
 			EXTENDS: Field,
@@ -1960,7 +2032,7 @@ AUI.add(
 							groupId,
 							label,
 							layoutId,
-							privateLayout
+							privateLayout,
 						})
 					);
 
@@ -1976,13 +2048,14 @@ AUI.add(
 							layoutId: layout.layoutId,
 							nodeType: layout.hasChildren ? 'root' : 'leaf',
 							pageTitle: layout.name,
-							privateLayout: layout.privateLayout
+							privateLayout: layout.privateLayout,
 						})
 					);
 
 					if (prepend) {
 						container.prepend(entryNode);
-					} else {
+					}
+					else {
 						container.append(entryNode);
 					}
 
@@ -2059,7 +2132,7 @@ AUI.add(
 							on: {
 								destroy() {
 									instance.set('selectedLayout', null);
-								}
+								},
 							},
 							resizable: false,
 							toolbars: {
@@ -2074,8 +2147,8 @@ AUI.add(
 											click: A.bind(
 												instance._handleChooseButtonClick,
 												instance
-											)
-										}
+											),
+										},
 									},
 									{
 										cssClass: 'btn-link',
@@ -2084,9 +2157,9 @@ AUI.add(
 											click: A.bind(
 												instance._handleCancelButtonClick,
 												instance
-											)
-										}
-									}
+											),
+										},
+									},
 								],
 								header: [
 									{
@@ -2099,14 +2172,14 @@ AUI.add(
 											click: A.bind(
 												instance._handleCancelButtonClick,
 												instance
-											)
-										}
-									}
-								]
+											),
+										},
+									},
+								],
 							},
-							width: 400
+							width: 400,
 						},
-						title: Liferay.Language.get('select-layout')
+						title: Liferay.Language.get('select-layout'),
 					};
 				},
 
@@ -2140,7 +2213,8 @@ AUI.add(
 
 								lastLayout =
 									selectedLayoutPath[lastLayoutIndex];
-							} else {
+							}
+							else {
 								clickedLastElement = true;
 
 								var groupId = lastLayout.groupId;
@@ -2213,7 +2287,8 @@ AUI.add(
 
 						if (currentTarget.test('.select-button')) {
 							instance._handleSelectButtonClick(event);
-						} else {
+						}
+						else {
 							instance._handleClearButtonClick(event);
 						}
 					}
@@ -2252,7 +2327,7 @@ AUI.add(
 								groupId,
 								label,
 								layoutId,
-								privateLayout
+								privateLayout,
 							});
 
 							instance.set(
@@ -2272,7 +2347,8 @@ AUI.add(
 								privateLayout,
 								instance._renderLayouts
 							);
-						} else if (
+						}
+						else if (
 							currentTarget.getData('nodeType') === 'leaf'
 						) {
 							var inputRadioNode = currentTarget
@@ -2286,16 +2362,17 @@ AUI.add(
 								label,
 								layoutId,
 								path: instance.get('selectedLayoutPath'),
-								privateLayout
+								privateLayout,
 							});
 						}
-					} else if (event.target.hasClass('lfr-ddm-page-radio')) {
+					}
+					else if (event.target.hasClass('lfr-ddm-page-radio')) {
 						instance.set('selectedLayout', {
 							groupId,
 							label,
 							layoutId,
 							path: instance.get('selectedLayoutPath'),
-							privateLayout
+							privateLayout,
 						});
 					}
 				},
@@ -2363,7 +2440,8 @@ AUI.add(
 									)
 								);
 							}
-						} else if (
+						}
+						else if (
 							scrollHeight - (scrollTop + innerHeight) <=
 							1
 						) {
@@ -2504,7 +2582,8 @@ AUI.add(
 							instance._handleModalScroll,
 							instance
 						);
-					} else if (instance._clearedModal) {
+					}
+					else if (instance._clearedModal) {
 						instance._navbar.one('.active').removeClass('active');
 
 						var activeClass = privateLayout
@@ -2602,7 +2681,8 @@ AUI.add(
 						) {
 							listNode.set('scrollTop', 60);
 						}
-					} else {
+					}
+					else {
 						for (index = 0; index < total; index++) {
 							instance._addListElement(
 								layouts[index],
@@ -2644,7 +2724,7 @@ AUI.add(
 								var key = [
 									instance._currentParentLayoutId,
 									groupId,
-									privateLayout
+									privateLayout,
 								].join('-');
 
 								var cache = instance._getCache(key);
@@ -2666,7 +2746,8 @@ AUI.add(
 								instance._hideLoader();
 							}
 						);
-					} else {
+					}
+					else {
 						listNode.addClass('top-ended');
 
 						instance._requestInitialLayouts(
@@ -2689,7 +2770,9 @@ AUI.add(
 								privateLayoutClass: privateLayout
 									? 'active'
 									: '',
-								publicLayoutClass: privateLayout ? '' : 'active'
+								publicLayoutClass: privateLayout
+									? ''
+									: 'active',
 							})
 						);
 
@@ -2755,7 +2838,7 @@ AUI.add(
 								paginate: true,
 								parentLayoutId,
 								privateLayout,
-								start
+								start,
 							});
 
 							Liferay.Util.fetch(
@@ -2763,7 +2846,7 @@ AUI.add(
 									'/portal/get_layouts',
 								{
 									body: data,
-									method: 'POST'
+									method: 'POST',
 								}
 							)
 								.then(response => {
@@ -2784,7 +2867,8 @@ AUI.add(
 										callback.call(instance, layouts);
 									}
 								});
-						} else if (cache) {
+						}
+						else if (cache) {
 							callback.call(instance, cache.layouts);
 						}
 					}
@@ -2805,7 +2889,7 @@ AUI.add(
 						var key = [
 							parentLayout.layoutId,
 							parentLayout.groupId,
-							parentLayout.privateLayout
+							parentLayout.privateLayout,
 						].join('-');
 
 						cache = instance._getCache(key);
@@ -2813,7 +2897,8 @@ AUI.add(
 
 					if (cache) {
 						callback.call(instance, cache.layouts);
-					} else {
+					}
+					else {
 						var selectedLayout = instance.get('selectedLayout');
 
 						const data = new URLSearchParams({
@@ -2824,14 +2909,14 @@ AUI.add(
 							max: instance.get('delta'),
 							p_auth: Liferay.authToken,
 							paginate: true,
-							privateLayout
+							privateLayout,
 						});
 
 						Liferay.Util.fetch(
 							themeDisplay.getPathMain() + '/portal/get_layouts',
 							{
 								body: data,
-								method: 'POST'
+								method: 'POST',
 							}
 						)
 							.then(response => {
@@ -2847,7 +2932,7 @@ AUI.add(
 									var key = [
 										parentLayoutId,
 										groupId,
-										privateLayout
+										privateLayout,
 									].join('-');
 
 									var start = response.start;
@@ -2911,7 +2996,7 @@ AUI.add(
 
 					if (ancestorLayoutIds) {
 						var selectedLayoutPath = [
-							instance.get('selectedLayoutPath')[0]
+							instance.get('selectedLayoutPath')[0],
 						];
 
 						var ancestorLayoutNames = response.ancestorLayoutNames;
@@ -2925,7 +3010,7 @@ AUI.add(
 								groupId,
 								label: ancestorLayoutNames[index],
 								layoutId: ancestorLayoutIds[index],
-								privateLayout
+								privateLayout,
 							});
 						}
 
@@ -2969,11 +3054,12 @@ AUI.add(
 							oldStart: 0,
 							path: path.slice(),
 							start,
-							total
+							total,
 						};
 
 						instance._cache[key] = cache;
-					} else {
+					}
+					else {
 						var cachedLayouts = cache.layouts || [];
 
 						if (cache.start > start) {
@@ -3010,7 +3096,8 @@ AUI.add(
 					if (Lang.isString(value)) {
 						if (value) {
 							value = JSON.parse(value);
-						} else {
+						}
+						else {
 							value = {};
 						}
 					}
@@ -3074,7 +3161,8 @@ AUI.add(
 						}
 
 						value = JSON.stringify(parsedValue);
-					} else {
+					}
+					else {
 						layoutNameNode.val('');
 
 						value = '';
@@ -3109,8 +3197,8 @@ AUI.add(
 					);
 
 					clearButtonNode.attr('disabled', readOnly);
-				}
-			}
+				},
+			},
 		});
 
 		FieldTypes['ddm-link-to-page'] = LinkToPageField;
@@ -3127,8 +3215,8 @@ AUI.add(
 					return instance
 						.get('container')
 						.all('> fieldset > div > .field-wrapper');
-				}
-			}
+				},
+			},
 		});
 
 		FieldTypes.fieldset = FieldsetField;
@@ -3136,8 +3224,13 @@ AUI.add(
 		var ImageField = A.Component.create({
 			ATTRS: {
 				acceptedFileFormats: {
-					value: ['image/gif', 'image/jpeg', 'image/jpg', 'image/png']
-				}
+					value: [
+						'image/gif',
+						'image/jpeg',
+						'image/jpg',
+						'image/png',
+					],
+				},
 			},
 
 			EXTENDS: DocumentLibraryField,
@@ -3153,12 +3246,13 @@ AUI.add(
 					if (value.data) {
 						imagePreviewURL =
 							themeDisplay.getPathContext() + value.data;
-					} else if (value.uuid) {
+					}
+					else if (value.uuid) {
 						imagePreviewURL = [
 							themeDisplay.getPathContext(),
 							'documents',
 							value.groupId,
-							value.uuid
+							value.uuid,
 						].join('/');
 					}
 
@@ -3191,7 +3285,7 @@ AUI.add(
 								instance.getInputName() +
 								'PreviewContainer a',
 							preloadAllImages: false,
-							zIndex: Liferay.zIndex.OVERLAY
+							zIndex: Liferay.zIndex.OVERLAY,
 						});
 
 						instance.viewer.TPL_CLOSE = instance.viewer.TPL_CLOSE.replace(
@@ -3223,7 +3317,8 @@ AUI.add(
 						instance.viewer._syncPlaying = function() {
 							if (this.get('playing')) {
 								this._player.setHTML(TPL_PLAYER_PAUSE);
-							} else {
+							}
+							else {
 								this._player.setHTML(TPL_PLAYER_PLAY);
 							}
 						};
@@ -3298,12 +3393,12 @@ AUI.add(
 					var journalCriterionJSON = {
 						desiredItemSelectorReturnTypes:
 							'com.liferay.item.selector.criteria.FileEntryItemSelectorReturnType,com.liferay.item.selector.criteria.FileEntryItemSelectorReturnType',
-						resourcePrimKey: parsedValue.resourcePrimKey
+						resourcePrimKey: parsedValue.resourcePrimKey,
 					};
 
 					var imageCriterionJSON = {
 						desiredItemSelectorReturnTypes:
-							'com.liferay.item.selector.criteria.FileEntryItemSelectorReturnType,com.liferay.item.selector.criteria.FileEntryItemSelectorReturnType'
+							'com.liferay.item.selector.criteria.FileEntryItemSelectorReturnType,com.liferay.item.selector.criteria.FileEntryItemSelectorReturnType',
 					};
 
 					var documentLibraryParameters = {
@@ -3315,7 +3410,7 @@ AUI.add(
 						p_p_auth: container.getData('itemSelectorAuthToken'),
 						p_p_id: Liferay.PortletKeys.ITEM_SELECTOR,
 						p_p_mode: 'view',
-						p_p_state: 'pop_up'
+						p_p_state: 'pop_up',
 					};
 
 					var documentLibraryURL = Liferay.Util.PortletURL.createPortletURL(
@@ -3346,7 +3441,8 @@ AUI.add(
 						parsedValue.alt = altNode.val();
 
 						value = JSON.stringify(parsedValue);
-					} else {
+					}
+					else {
 						value = '';
 					}
 
@@ -3388,7 +3484,8 @@ AUI.add(
 						altNode.val(parsedValue.alt);
 
 						value = JSON.stringify(parsedValue);
-					} else {
+					}
+					else {
 						value = '';
 					}
 
@@ -3420,7 +3517,8 @@ AUI.add(
 					if (notEmpty) {
 						altNode.val(parsedValue.alt || '');
 						titleNode.val(parsedValue.title || '');
-					} else {
+					}
+					else {
 						altNode.val('');
 						titleNode.val('');
 					}
@@ -3439,8 +3537,8 @@ AUI.add(
 					);
 
 					previewButtonNode.toggle(notEmpty);
-				}
-			}
+				},
+			},
 		});
 
 		FieldTypes['ddm-image'] = ImageField;
@@ -3473,15 +3571,15 @@ AUI.add(
 					instance.setValue(
 						JSON.stringify({
 							latitude: location.lat,
-							longitude: location.lng
+							longitude: location.lng,
 						})
 					);
 
 					var locationNode = A.one('#' + inputName + 'Location');
 
 					locationNode.html(event.newVal.address);
-				}
-			}
+				},
+			},
 		});
 
 		FieldTypes['ddm-geolocation'] = GeolocationField;
@@ -3526,7 +3624,7 @@ AUI.add(
 					);
 
 					instance.after({
-						render: instance._afterRenderTextHTMLField
+						render: instance._afterRenderTextHTMLField,
 					});
 				},
 
@@ -3544,7 +3642,8 @@ AUI.add(
 								instance,
 								arguments
 							);
-						} else {
+						}
+						else {
 							var localizationMap = instance.get(
 								'localizationMap'
 							);
@@ -3575,8 +3674,8 @@ AUI.add(
 					instance.readOnlyText.toggle(readOnly);
 
 					instance.get('container').toggle(!readOnly);
-				}
-			}
+				},
+			},
 		});
 
 		FieldTypes['ddm-text-html'] = TextHTMLField;
@@ -3669,8 +3768,8 @@ AUI.add(
 					var radioNodes = instance.getRadioNodes();
 
 					radioNodes.attr('disabled', readOnly);
-				}
-			}
+				},
+			},
 		});
 
 		FieldTypes.radio = RadioField;
@@ -3691,7 +3790,8 @@ AUI.add(
 							var displayLocale = instance.get('displayLocale');
 
 							fieldOptions[0].label[displayLocale] = '';
-						} else {
+						}
+						else {
 							fieldOptions.unshift(
 								instance._getPlaceholderOption()
 							);
@@ -3709,7 +3809,7 @@ AUI.add(
 
 					return {
 						label,
-						value: ''
+						value: '',
 					};
 				},
 
@@ -3736,7 +3836,8 @@ AUI.add(
 						selectedItems._nodes.length > 0
 					) {
 						value = selectedItems.val();
-					} else {
+					}
+					else {
 						value = [];
 					}
 
@@ -3773,7 +3874,8 @@ AUI.add(
 					if (Lang.isString(value)) {
 						if (value !== '') {
 							value = JSON.parse(value);
-						} else {
+						}
+						else {
 							value = [''];
 						}
 					}
@@ -3787,8 +3889,8 @@ AUI.add(
 								value.indexOf(item.val()) > -1
 							);
 						});
-				}
-			}
+				},
+			},
 		});
 
 		FieldTypes.select = SelectField;
@@ -3799,8 +3901,8 @@ AUI.add(
 			prototype: {
 				getValue() {
 					return '';
-				}
-			}
+				},
+			},
 		});
 
 		FieldTypes['ddm-separator'] = SeparatorField;
@@ -3808,11 +3910,11 @@ AUI.add(
 		var Form = A.Component.create({
 			ATTRS: {
 				availableLanguageIds: {
-					value: []
+					value: [],
 				},
 
 				ddmFormValuesInput: {
-					setter: A.one
+					setter: A.one,
 				},
 
 				defaultEditLocale: {},
@@ -3820,28 +3922,28 @@ AUI.add(
 				documentLibrarySelectorURL: {},
 
 				formNode: {
-					valueFn: '_valueFormNode'
+					valueFn: '_valueFormNode',
 				},
 
 				imageSelectorURL: {},
 
 				liferayForm: {
-					valueFn: '_valueLiferayForm'
+					valueFn: '_valueLiferayForm',
 				},
 
 				repeatable: {
 					validator: Lang.isBoolean,
-					value: false
+					value: false,
 				},
 
 				requestedLocale: {
-					validator: Lang.isString
+					validator: Lang.isString,
 				},
 
 				synchronousFormSubmission: {
 					validator: Lang.isBoolean,
-					value: true
-				}
+					value: true,
+				},
 			},
 
 			AUGMENTS: [DDMPortletSupport, FieldsSupport],
@@ -3927,7 +4029,8 @@ AUI.add(
 									field.getRuleInputName()
 								] = originalFieldRules;
 							}
-						} else if (event.type === 'liferay-ddm-field:remove') {
+						}
+						else if (event.type === 'liferay-ddm-field:remove') {
 							delete validatorRules[field.getRuleInputName()];
 
 							var inputNode = field.getInputNode();
@@ -3969,16 +4072,6 @@ AUI.add(
 
 				_onSubmitForm() {
 					var instance = this;
-
-					instance.toJSON();
-
-					instance.fillEmptyLocales(
-						instance,
-						instance.get('fields'),
-						instance.get('availableLanguageIds')
-					);
-
-					instance.finalizeRepeatableFieldLocalizations();
 
 					instance.updateDDMFormInputValue();
 				},
@@ -4034,7 +4127,7 @@ AUI.add(
 							instance.after(
 								[
 									'liferay-ddm-field:repeat',
-									'liferay-ddm-field:remove'
+									'liferay-ddm-field:remove',
 								],
 								instance._afterUpdateRepeatableFields,
 								instance
@@ -4187,7 +4280,8 @@ AUI.add(
 							if (newFieldLocalizations[defaultLocale]) {
 								localizationValue =
 									newFieldLocalizations[defaultLocale];
-							} else if (
+							}
+							else if (
 								defaultLocale ===
 									repeatedField.get('displayLocale') &&
 								repeatedField.getValue()
@@ -4294,22 +4388,23 @@ AUI.add(
 
 						if (Liferay.Util.getTop() === A.config.win) {
 							ddPlugins.push({
-								fn: A.Plugin.DDWinScroll
+								fn: A.Plugin.DDWinScroll,
 							});
-						} else {
+						}
+						else {
 							ddPlugins.push(
 								{
 									cfg: {
-										constrain: '.lfr-ddm-container'
+										constrain: '.lfr-ddm-container',
 									},
-									fn: A.Plugin.DDConstrained
+									fn: A.Plugin.DDConstrained,
 								},
 								{
 									cfg: {
 										horizontal: false,
-										node: '.lfr-ddm-container'
+										node: '.lfr-ddm-container',
 									},
-									fn: A.Plugin.DDNodeScroll
+									fn: A.Plugin.DDNodeScroll,
 								}
 							);
 						}
@@ -4317,7 +4412,7 @@ AUI.add(
 						repeatableInstance = new Liferay.DDM.RepeatableSortableList(
 							{
 								dd: {
-									plugins: ddPlugins
+									plugins: ddPlugins,
 								},
 								dropOn: '#' + parentNode.attr('id'),
 								helper: A.Node.create(TPL_REPEATABLE_HELPER),
@@ -4351,7 +4446,7 @@ AUI.add(
 									}
 
 									return retVal;
-								}
+								},
 							}
 						);
 
@@ -4372,7 +4467,8 @@ AUI.add(
 						instance.repeatableInstances[
 							treeName
 						] = repeatableInstance;
-					} else {
+					}
+					else {
 						repeatableInstance.add(fieldContainer);
 					}
 
@@ -4410,7 +4506,7 @@ AUI.add(
 						defaultLanguageId:
 							definition.defaultLanguageId ||
 							themeDisplay.getDefaultLanguageId(),
-						fieldValues
+						fieldValues,
 					};
 				},
 
@@ -4421,11 +4517,21 @@ AUI.add(
 				updateDDMFormInputValue() {
 					var instance = this;
 
+					instance.toJSON();
+
+					instance.fillEmptyLocales(
+						instance,
+						instance.get('fields'),
+						instance.get('availableLanguageIds')
+					);
+
+					instance.finalizeRepeatableFieldLocalizations();
+
 					var ddmFormValuesInput = instance.get('ddmFormValuesInput');
 
 					ddmFormValuesInput.val(JSON.stringify(instance.toJSON()));
-				}
-			}
+				},
+			},
 		});
 
 		Liferay.DDM.RepeatableSortableList = A.Component.create({
@@ -4441,7 +4547,7 @@ AUI.add(
 						var dragOptions = {
 							bubbleTargets: instance,
 							node,
-							target: true
+							target: true,
 						};
 
 						var proxyOptions = instance.get('proxy');
@@ -4454,8 +4560,8 @@ AUI.add(
 							A.mix(dragOptions, instance.get('dd'))
 						).plug(A.Plugin.DDProxy, proxyOptions);
 					}
-				}
-			}
+				},
+			},
 		});
 
 		Liferay.DDM.Form = Form;
@@ -4478,7 +4584,7 @@ AUI.add(
 			'liferay-layouts-tree-selectable',
 			'liferay-map-base',
 			'liferay-notice',
-			'liferay-translation-manager'
-		]
+			'liferay-translation-manager',
+		],
 	}
 );

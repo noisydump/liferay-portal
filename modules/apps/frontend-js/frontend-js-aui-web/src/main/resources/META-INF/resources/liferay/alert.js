@@ -21,7 +21,7 @@ AUI.add(
 			ATTRS: {
 				animated: {
 					validator: Lang.isBoolean,
-					value: true
+					value: true,
 				},
 
 				closeableNode: {
@@ -33,27 +33,27 @@ AUI.add(
 								Liferay.Util.getLexiconIconTpl('times') +
 								'</button>'
 						);
-					}
+					},
 				},
 
 				icon: {
 					validator: Lang.isString,
-					value: 'info-circle'
+					value: 'info-circle',
 				},
 
 				message: {
 					validator: Lang.isString,
-					value: ''
+					value: '',
 				},
 
 				title: {
-					validator: Lang.isString
+					validator: Lang.isString,
 				},
 
 				type: {
 					validator: Lang.isString,
-					value: 'info'
-				}
+					value: 'info',
+				},
 			},
 
 			AUGMENTS: [Liferay.PortletBase],
@@ -100,14 +100,16 @@ AUI.add(
 
 							if (targetNode) {
 								targetNode.prepend(alertsContainer);
-							} else {
+							}
+							else {
 								var navbar = rootNode.one(
 									'.portlet-body > .navbar'
 								);
 
 								if (navbar) {
 									navbar.placeAfter(alertsContainer);
-								} else {
+								}
+								else {
 									var prependTarget =
 										rootNode.one('.portlet-body') ||
 										rootNode;
@@ -149,7 +151,8 @@ AUI.add(
 					if (instance._ignoreHideDelay) {
 						instance._prepareTransition(false);
 						instance._transition(false);
-					} else {
+					}
+					else {
 						Alert.superclass._maybeHide.call(this);
 					}
 				},
@@ -203,7 +206,7 @@ AUI.add(
 										? instance
 												.get('boundingBox')
 												.outerHeight() + 'px'
-										: 0
+										: 0,
 								},
 								() => {
 									parentNode.toggleClass('in', visible);
@@ -214,12 +217,14 @@ AUI.add(
 
 									if (visible && delay.hide) {
 										instance.hide();
-									} else if (instance.get('destroyOnHide')) {
+									}
+									else if (instance.get('destroyOnHide')) {
 										A.soon(A.bind('destroy', instance));
 									}
 								}
 							);
-						} catch (error) {}
+						}
+						catch (error) {}
 					}
 				},
 
@@ -230,7 +235,7 @@ AUI.add(
 						icon: instance.get('icon'),
 						message: instance.get('message'),
 						pathThemeImages: themeDisplay.getPathThemeImages(),
-						title: instance.get('title') || ''
+						title: instance.get('title') || '',
 					});
 
 					instance.set('bodyContent', bodyContent);
@@ -275,7 +280,7 @@ AUI.add(
 							'mouseleave',
 							instance._onMouseLeave,
 							instance
-						)
+						),
 					];
 
 					boundingBox.attr('role', 'alert');
@@ -295,8 +300,8 @@ AUI.add(
 						this,
 						this._getParentNode(parentNode)
 					);
-				}
-			}
+				},
+			},
 		});
 
 		Liferay.Alert = Alert;
@@ -308,7 +313,7 @@ AUI.add(
 			'aui-component',
 			'event-mouseenter',
 			'liferay-portlet-base',
-			'timers'
-		]
+			'timers',
+		],
 	}
 );

@@ -82,16 +82,16 @@ public class ResourcePermissionFinderImpl
 
 			sql = StringUtil.replace(sql, "[$SCOPE$]", getScopes(scopes));
 
-			SQLQuery q = session.createSynchronizedSQLQuery(sql);
+			SQLQuery sqlQuery = session.createSynchronizedSQLQuery(sql);
 
-			q.addScalar(COUNT_COLUMN_NAME, Type.LONG);
+			sqlQuery.addScalar(COUNT_COLUMN_NAME, Type.LONG);
 
-			QueryPos qPos = QueryPos.getInstance(q);
+			QueryPos queryPos = QueryPos.getInstance(sqlQuery);
 
-			qPos.add(roleId);
-			qPos.add(scopes);
+			queryPos.add(roleId);
+			queryPos.add(scopes);
 
-			Iterator<Long> itr = q.iterate();
+			Iterator<Long> itr = sqlQuery.iterate();
 
 			if (itr.hasNext()) {
 				Long count = itr.next();
@@ -149,21 +149,21 @@ public class ResourcePermissionFinderImpl
 					sql, "ResourcePermission.roleId = ?", sb.toString());
 			}
 
-			SQLQuery q = session.createSynchronizedSQLQuery(sql);
+			SQLQuery sqlQuery = session.createSynchronizedSQLQuery(sql);
 
-			q.addScalar(COUNT_COLUMN_NAME, Type.LONG);
+			sqlQuery.addScalar(COUNT_COLUMN_NAME, Type.LONG);
 
-			QueryPos qPos = QueryPos.getInstance(q);
+			QueryPos queryPos = QueryPos.getInstance(sqlQuery);
 
-			qPos.add(companyId);
-			qPos.add(name);
-			qPos.add(scope);
-			qPos.add(primKey);
-			qPos.add(roleIds);
-			qPos.add(actionId);
-			qPos.add(actionId);
+			queryPos.add(companyId);
+			queryPos.add(name);
+			queryPos.add(scope);
+			queryPos.add(primKey);
+			queryPos.add(roleIds);
+			queryPos.add(actionId);
+			queryPos.add(actionId);
 
-			count = (Long)q.uniqueResult();
+			count = (Long)sqlQuery.uniqueResult();
 		}
 		catch (Exception exception) {
 			throw new SystemException(exception);
@@ -200,19 +200,20 @@ public class ResourcePermissionFinderImpl
 
 			String sql = CustomSQLUtil.get(FIND_BY_RESOURCE);
 
-			SQLQuery q = session.createSynchronizedSQLQuery(sql);
+			SQLQuery sqlQuery = session.createSynchronizedSQLQuery(sql);
 
-			q.addEntity("ResourcePermission", ResourcePermissionImpl.class);
+			sqlQuery.addEntity(
+				"ResourcePermission", ResourcePermissionImpl.class);
 
-			QueryPos qPos = QueryPos.getInstance(q);
+			QueryPos queryPos = QueryPos.getInstance(sqlQuery);
 
-			qPos.add(companyId);
-			qPos.add(name);
-			qPos.add(primKey);
-			qPos.add(String.valueOf(groupId));
+			queryPos.add(companyId);
+			queryPos.add(name);
+			queryPos.add(primKey);
+			queryPos.add(String.valueOf(groupId));
 
 			return (List<ResourcePermission>)QueryUtil.list(
-				q, getDialect(), QueryUtil.ALL_POS, QueryUtil.ALL_POS);
+				sqlQuery, getDialect(), QueryUtil.ALL_POS, QueryUtil.ALL_POS);
 		}
 		catch (Exception exception) {
 			throw new SystemException(exception);
@@ -235,17 +236,18 @@ public class ResourcePermissionFinderImpl
 
 			sql = StringUtil.replace(sql, "[$SCOPE$]", getScopes(scopes));
 
-			SQLQuery q = session.createSynchronizedSQLQuery(sql);
+			SQLQuery sqlQuery = session.createSynchronizedSQLQuery(sql);
 
-			q.addEntity("ResourcePermission", ResourcePermissionImpl.class);
+			sqlQuery.addEntity(
+				"ResourcePermission", ResourcePermissionImpl.class);
 
-			QueryPos qPos = QueryPos.getInstance(q);
+			QueryPos queryPos = QueryPos.getInstance(sqlQuery);
 
-			qPos.add(roleId);
-			qPos.add(scopes);
+			queryPos.add(roleId);
+			queryPos.add(scopes);
 
 			return (List<ResourcePermission>)QueryUtil.list(
-				q, getDialect(), start, end);
+				sqlQuery, getDialect(), start, end);
 		}
 		catch (Exception exception) {
 			throw new SystemException(exception);

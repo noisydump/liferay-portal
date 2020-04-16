@@ -73,6 +73,12 @@ definition {
 
 		Navigator.gotoPage(pageName = "Documents and Media Page");
 
+		LexiconEntry.changeDisplayStyle(displayStyle = "Cards");
+
+		AssertVisible(
+			key_dmDocumentTitle = "DM Document Title 1",
+			locator1 = "DocumentsAndMedia#DESCRIPTIVE_LIST_DOCUMENT_SHARED");
+
 		DMDocumentSharing.addDocumentWithOnlyOwnerPermissions(
 			dmDocumentDescription = "DM Document Description",
 			dmDocumentFile = "Document_1.png",
@@ -87,6 +93,12 @@ definition {
 
 		Navigator.gotoPage(pageName = "Documents and Media Page");
 
+		LexiconEntry.changeDisplayStyle(displayStyle = "list");
+
+		AssertVisible(
+			key_dmDocumentTitle = "DM Document Title 2",
+			locator1 = "DocumentsAndMedia#DESCRIPTIVE_LIST_DOCUMENT_SHARED");
+
 		DMDocumentSharing.addDocumentWithOnlyOwnerPermissions(
 			dmDocumentDescription = "DM Document Description",
 			dmDocumentFile = "Document_1.odt",
@@ -98,6 +110,14 @@ definition {
 			sharingPermissions = "Comment",
 			userEmailAddress = "userea@liferay.com",
 			userName = "userfn userln");
+
+		Navigator.gotoPage(pageName = "Documents and Media Page");
+
+		LexiconEntry.changeDisplayStyle(displayStyle = "table");
+
+		AssertVisible(
+			key_dmDocumentTitle = "DM Document Title 3",
+			locator1 = "DocumentsAndMedia#TABLE_DOCUMENT_SHARED");
 
 		User.logoutPG();
 
@@ -270,6 +290,8 @@ definition {
 
 		UserBar.gotoDropdownItem(dropdownItem = "Shared Content");
 
+		DMDocumentSharing.viewSharedFlag();
+
 		var key_contentTitle = "DM Document Title";
 
 		AssertTextEquals(
@@ -332,10 +354,14 @@ definition {
 			userLastName = "userln1",
 			userScreenName = "usersn1");
 
-		JSONUser.setFirstPassword(
-			agreeToTermsAndAnswerReminderQuery = "true",
-			requireReset = "false",
-			userEmailAddress = PropsUtil.get("email.address.3"));
+		ProductMenu.gotoPortlet(
+			category = "Users",
+			panel = "Control Panel",
+			portlet = "Users and Organizations");
+
+		User.editPasswordCP(
+			userEmailAddress = PropsUtil.get("email.address.3"),
+			userScreenName = "usersn1");
 
 		Navigator.gotoPage(pageName = "Documents and Media Page");
 
@@ -370,7 +396,7 @@ definition {
 			locator1 = "Sharing#EMAIL_VIEW_DOCUMENT_BUTTON",
 			value1 = "View Document");
 
-		SelectWindow(locator1 = "title=- ${siteName}");
+		SelectWindow(locator1 = "title=- Control Panel - ${siteName}");
 
 		DMDocumentSharing.viewDocumentViaSharedContent(
 			contentSharingPermission = "View",
@@ -415,6 +441,8 @@ definition {
 	@description = "This test covers LPS-94294. It ensures that sharing a document to a user, and changing its sharing permissions via Manage Collaborators. This test also covers permissions and making sure users only have access to sharing permissions assigned to him."
 	@priority = "5"
 	test ManageCollaborators {
+		property portal.acceptance = "true";
+
 		DMDocumentSharing.addDocumentWithOnlyOwnerPermissions(
 			dmDocumentDescription = "DM Document Description",
 			dmDocumentFile = "Document_1.doc",
@@ -715,7 +743,7 @@ definition {
 			panel = "Control Panel",
 			portlet = "Users and Organizations");
 
-		User.UnassignRegularRoleCP(
+		User.unassignRegularRoleCP(
 			regularRoleName = "Administrator",
 			userScreenName = "usersn");
 
@@ -768,6 +796,8 @@ definition {
 	@description = "This test share an content to a user and disable the sharing option. This test asserts that a collaborator without sharing permissions will not be able to share this content."
 	@priority = "5"
 	test ShareWithNoSharingPermissions {
+		property portal.acceptance = "true";
+
 		JSONUser.addUser(
 			userEmailAddress = "userea1@liferay.com",
 			userFirstName = "userfn1",

@@ -97,12 +97,12 @@ class MBPortlet extends PortletBase {
 								if (!event.newVal) {
 									this.updateRemovedAttachments_();
 								}
-							}
-						}
+							},
+						},
 					},
 					id: this.namespace + 'openRemovedPageAttachments',
 					title: Liferay.Language.get('removed-attachments'),
-					uri: this.viewTrashAttachmentsURL
+					uri: this.viewTrashAttachmentsURL,
 				});
 			});
 		}
@@ -173,7 +173,8 @@ class MBPortlet extends PortletBase {
 
 				this.submitForm_();
 			}
-		} else {
+		}
+		else {
 			this.submitForm_();
 		}
 	}
@@ -233,7 +234,7 @@ class MBPortlet extends PortletBase {
 										attachment.deleteURL
 									}" href="javascript:;">${Liferay.Language.get(
 										'move-to-recycle-bin'
-									)}</a>`
+									)}</a>`,
 								],
 								attachment.id.toString()
 							);
@@ -258,7 +259,8 @@ class MBPortlet extends PortletBase {
 							),
 							attachments.deleted.length
 						) + ' &raquo';
-				} else {
+				}
+				else {
 					deletedAttachmentsElement.style.display = 'none';
 				}
 			});
@@ -315,7 +317,8 @@ class MBPortlet extends PortletBase {
 			submitForm(
 				document[this.ns('addQuickReplyFm' + this.replyToMessageId)]
 			);
-		} else {
+		}
+		else {
 			this.one('#body').value = window[this.ns('bodyEditor')].getHTML();
 
 			submitForm(document[this.ns('fm')]);
@@ -350,7 +353,7 @@ MBPortlet.STATE = {
 	 */
 
 	constants: {
-		validator: core.isObject
+		validator: core.isObject,
 	},
 
 	/**
@@ -362,7 +365,7 @@ MBPortlet.STATE = {
 	 */
 
 	currentAction: {
-		validator: core.isString
+		validator: core.isString,
 	},
 
 	/**
@@ -373,7 +376,7 @@ MBPortlet.STATE = {
 	 */
 
 	getAttachmentsURL: {
-		validator: core.isString
+		validator: core.isString,
 	},
 
 	/**
@@ -385,7 +388,7 @@ MBPortlet.STATE = {
 	 */
 
 	replyToMessageId: {
-		validator: core.isString
+		validator: core.isString,
 	},
 
 	/**
@@ -400,8 +403,8 @@ MBPortlet.STATE = {
 		value: {
 			confirmDiscardImages: Liferay.Language.get(
 				'uploads-are-in-progress-confirmation'
-			)
-		}
+			),
+		},
 	},
 
 	/**
@@ -412,8 +415,8 @@ MBPortlet.STATE = {
 	 */
 
 	viewTrashAttachmentsURL: {
-		validator: core.isString
-	}
+		validator: core.isString,
+	},
 };
 
 export default MBPortlet;

@@ -64,6 +64,10 @@ public class ServiceBuilderArgs {
 		return _implDirName;
 	}
 
+	public String[] getIncubationFeatures() {
+		return _incubationFeatures;
+	}
+
 	public String getInputFileName() {
 		return _inputFileName;
 	}
@@ -188,6 +192,14 @@ public class ServiceBuilderArgs {
 
 	public void setImplDirName(String implDirName) {
 		_implDirName = implDirName;
+	}
+
+	public void setIncubationFeatures(String incubationFeatures) {
+		setIncubationFeatures(_split(incubationFeatures));
+	}
+
+	public void setIncubationFeatures(String[] incubationFeatures) {
+		_incubationFeatures = incubationFeatures;
 	}
 
 	public void setInputFileName(String inputFileName) {
@@ -372,6 +384,7 @@ public class ServiceBuilderArgs {
 	private int _databaseNameMaxLength = 30;
 	private String _hbmFileName = "src/META-INF/portal-hbm.xml";
 	private String _implDirName = "src";
+	private String[] _incubationFeatures = {};
 	private String _inputFileName = "service.xml";
 	private String[] _modelHintsConfigs = MODEL_HINTS_CONFIGS;
 	private boolean _modelHintsConfigsSet;

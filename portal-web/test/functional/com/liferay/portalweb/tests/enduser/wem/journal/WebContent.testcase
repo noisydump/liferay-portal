@@ -294,7 +294,7 @@ definition {
 
 	@priority = "5"
 	test EditWebContentViaArticleTitle {
-		property portal.acceptance = "true";
+		property portal.acceptance = "quarantine";
 		property testray.component.names = "Web Content Administration";
 
 		JSONWebcontent.addWebContent(
@@ -462,6 +462,7 @@ definition {
 
 	@priority = "4"
 	test MoveMultipleWebContentToFolder {
+		property portal.upstream = "quarantine";
 		property testray.component.names = "Web Content Administration";
 
 		JSONWebcontent.addFolder(
@@ -852,9 +853,9 @@ definition {
 
 		Role.openRolesAdmin();
 
-		Role.assignRegRoleCP(
+		JSONRole.assignRoleToUser(
 			roleTitle = "Web Content Administrator Role",
-			userScreenName = "usersn");
+			userEmailAddress = "userea@liferay.com");
 
 		Site.openSiteMembershipsAdmin(siteURLKey = "test-site-name");
 
@@ -892,6 +893,11 @@ definition {
 		WebContentNavigator.gotoAddCP();
 
 		WebContent.addNullCP(webContentContent = "WC WebContent Content");
+
+		AssertTextEquals(
+			key_editor = "content",
+			locator1 = "AlloyEditor#EDITOR",
+			value1 = "WC WebContent Content");
 	}
 
 	@priority = "3"
@@ -1196,12 +1202,12 @@ definition {
 
 		WebContent.paginateRelatedAssets(
 			assetType = "Basic Web Content",
-			itemsPerPage = "5",
+			itemsPerPage = "4",
 			webContentTitle = "WC WebContent 3 Title");
 
 		WebContent.viewPaginateRelatedAssets(
-			itemsPerPage = "5 Entries",
-			numberOfPages = "Showing 1 to 5 of 6 entries.");
+			itemsPerPage = "4 Entries",
+			numberOfPages = "Showing 1 to 4 of 6 entries.");
 
 		WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name");
 

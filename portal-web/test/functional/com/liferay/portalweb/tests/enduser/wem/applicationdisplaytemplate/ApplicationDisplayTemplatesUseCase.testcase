@@ -39,16 +39,14 @@ definition {
 	@priority = "5"
 	test AddRSSADTViaPortletConfiguration {
 		property portal.acceptance = "true";
+		property portal.upstream = "quarantine";
 		property testray.component.names = "Content and Application Templates,RSS";
-
-		JSONLayout.addWidgetToPublicLayout(
-			groupName = "Test Site Name",
-			layoutName = "ADT Test Page",
-			widgetName = "RSS Publisher");
 
 		Navigator.gotoSitePage(
 			pageName = "ADT Test Page",
 			siteName = "Test Site Name");
+
+		Portlet.addPG(portletName = "RSS Publisher");
 
 		Portlet.gotoPortletOptions(
 			portletName = "RSS Publisher",
@@ -91,16 +89,14 @@ definition {
 
 	@priority = "3"
 	test AddRSSADTWithCorruptScript {
+		property portal.upstream = "quarantine";
 		property testray.component.names = "Content and Application Templates,RSS";
-
-		JSONLayout.addWidgetToPublicLayout(
-			groupName = "Test Site Name",
-			layoutName = "ADT Test Page",
-			widgetName = "RSS Publisher");
 
 		Navigator.gotoSitePage(
 			pageName = "ADT Test Page",
 			siteName = "Test Site Name");
+
+		Portlet.addPG(portletName = "RSS Publisher");
 
 		Portlet.gotoPortletOptions(
 			portletName = "RSS Publisher",
@@ -138,16 +134,14 @@ definition {
 
 	@priority = "3"
 	test AddRSSADTWithScript {
+		property portal.upstream = "quarantine";
 		property testray.component.names = "Content and Application Templates,RSS";
-
-		JSONLayout.addWidgetToPublicLayout(
-			groupName = "Test Site Name",
-			layoutName = "ADT Test Page",
-			widgetName = "RSS Publisher");
 
 		Navigator.gotoSitePage(
 			pageName = "ADT Test Page",
 			siteName = "Test Site Name");
+
+		Portlet.addPG(portletName = "RSS Publisher");
 
 		Portlet.gotoPortletOptions(
 			portletName = "RSS Publisher",
@@ -241,7 +235,11 @@ definition {
 
 	@priority = "5"
 	test ADTBreadcrumb {
+
+		// Quarantine test for LRQA-54932
+
 		property portal.acceptance = "true";
+		property portal.upstream = "quarantine";
 		property testray.component.names = "Breadcrumb,Content and Application Templates";
 
 		JSONLayout.addWidgetToPublicLayout(
@@ -271,6 +269,7 @@ definition {
 	@priority = "5"
 	test ADTCategoriesNavigation {
 		property portal.acceptance = "true";
+		property portal.upstream = "quarantine";
 		property testray.component.names = "Categories,Content and Application Templates";
 
 		JSONCategory.addVocabulary(
@@ -296,6 +295,7 @@ definition {
 			vocabularyName = "Vocabulary Name 2");
 
 		JSONLayout.addWidgetToPublicLayout(
+			column = "1",
 			groupName = "Test Site Name",
 			layoutName = "ADT Test Page",
 			widgetName = "Categories Navigation");
@@ -483,7 +483,11 @@ definition {
 
 	@priority = "5"
 	test ADTTagsNavigationPortlet {
+
+		// Quarantine test until LRQA-54932 is resolved
+
 		property portal.acceptance = "true";
+		property portal.upstream = "quarantine";
 		property testray.component.names = "Content and Application Templates,Tags";
 
 		JSONLayout.addWidgetToPublicLayout(

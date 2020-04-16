@@ -22,10 +22,13 @@ import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.dao.orm.SQLQuery;
 import com.liferay.portal.kernel.dao.orm.Session;
 import com.liferay.portal.kernel.dao.orm.Type;
+import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.model.Organization;
+import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
+import com.liferay.portal.kernel.service.permission.OrganizationPermissionUtil;
 import com.liferay.portal.kernel.service.persistence.OrganizationFinder;
 import com.liferay.portal.kernel.service.persistence.OrganizationUtil;
 import com.liferay.portal.kernel.service.persistence.UserUtil;
@@ -266,44 +269,44 @@ public class OrganizationFinderImpl
 
 			sql = CustomSQLUtil.replaceAndOperator(sql, andOperator);
 
-			SQLQuery q = session.createSynchronizedSQLQuery(sql);
+			SQLQuery sqlQuery = session.createSynchronizedSQLQuery(sql);
 
-			q.addScalar(COUNT_COLUMN_NAME, Type.LONG);
+			sqlQuery.addScalar(COUNT_COLUMN_NAME, Type.LONG);
 
-			QueryPos qPos = QueryPos.getInstance(q);
+			QueryPos queryPos = QueryPos.getInstance(sqlQuery);
 
 			if (doUnion) {
-				qPos.add(groupOrganization);
+				queryPos.add(groupOrganization);
 			}
 
-			setJoin(qPos, params);
+			setJoin(queryPos, params);
 
-			qPos.add(companyId);
-			qPos.add(parentOrganizationId);
+			queryPos.add(companyId);
+			queryPos.add(parentOrganizationId);
 
 			if (Validator.isNotNull(type)) {
-				qPos.add(type);
+				queryPos.add(type);
 			}
 
-			qPos.add(names, 2);
-			qPos.add(streets, 6);
+			queryPos.add(names, 2);
+			queryPos.add(streets, 6);
 
 			if (regionId != null) {
-				qPos.add(regionId);
-				qPos.add(regionId);
+				queryPos.add(regionId);
+				queryPos.add(regionId);
 			}
 
 			if (countryId != null) {
-				qPos.add(countryId);
-				qPos.add(countryId);
+				queryPos.add(countryId);
+				queryPos.add(countryId);
 			}
 
-			qPos.add(cities, 2);
-			qPos.add(zips, 2);
+			queryPos.add(cities, 2);
+			queryPos.add(zips, 2);
 
 			int count = 0;
 
-			Iterator<Long> itr = q.iterate();
+			Iterator<Long> itr = sqlQuery.iterate();
 
 			while (itr.hasNext()) {
 				Long l = itr.next();
@@ -341,27 +344,28 @@ public class OrganizationFinderImpl
 			sb.append(getUsersSQL(COUNT_U_BY_C_S_O, queryDefinition));
 			sb.append(StringPool.CLOSE_PARENTHESIS);
 
-			SQLQuery q = session.createSynchronizedSQLQuery(sb.toString());
+			SQLQuery sqlQuery = session.createSynchronizedSQLQuery(
+				sb.toString());
 
-			q.addScalar(COUNT_COLUMN_NAME, Type.LONG);
+			sqlQuery.addScalar(COUNT_COLUMN_NAME, Type.LONG);
 
-			QueryPos qPos = QueryPos.getInstance(q);
+			QueryPos queryPos = QueryPos.getInstance(sqlQuery);
 
-			qPos.add(companyId);
-			qPos.add(parentOrganizationId);
-			qPos.add(companyId);
+			queryPos.add(companyId);
+			queryPos.add(parentOrganizationId);
+			queryPos.add(companyId);
 
 			int status = queryDefinition.getStatus();
 
 			if (status != WorkflowConstants.STATUS_ANY) {
-				qPos.add(status);
+				queryPos.add(status);
 			}
 
-			qPos.add(parentOrganizationId);
+			queryPos.add(parentOrganizationId);
 
 			int count = 0;
 
-			Iterator<Long> itr = q.iterate();
+			Iterator<Long> itr = sqlQuery.iterate();
 
 			while (itr.hasNext()) {
 				Long l = itr.next();
@@ -419,15 +423,16 @@ public class OrganizationFinderImpl
 
 			String sql = CustomSQLUtil.get(FIND_O_BY_NO_ASSETS);
 
-			SQLQuery q = session.createSynchronizedSQLQuery(sql);
+			SQLQuery sqlQuery = session.createSynchronizedSQLQuery(sql);
 
-			q.addEntity("Organization_", OrganizationImpl.class);
+			sqlQuery.addEntity("Organization_", OrganizationImpl.class);
 
-			QueryPos qPos = QueryPos.getInstance(q);
+			QueryPos queryPos = QueryPos.getInstance(sqlQuery);
 
-			qPos.add(PortalUtil.getClassNameId(Organization.class.getName()));
+			queryPos.add(
+				PortalUtil.getClassNameId(Organization.class.getName()));
 
-			return q.list(true);
+			return sqlQuery.list(true);
 		}
 		catch (Exception exception) {
 			throw new SystemException(exception);
@@ -454,20 +459,20 @@ public class OrganizationFinderImpl
 					sql, "(organizationId > ?) AND");
 			}
 
-			SQLQuery q = session.createSynchronizedSQLQuery(sql);
+			SQLQuery sqlQuery = session.createSynchronizedSQLQuery(sql);
 
-			q.addScalar("organizationId", Type.LONG);
+			sqlQuery.addScalar("organizationId", Type.LONG);
 
-			QueryPos qPos = QueryPos.getInstance(q);
+			QueryPos queryPos = QueryPos.getInstance(sqlQuery);
 
 			if (previousOrganizationId > 0) {
-				qPos.add(previousOrganizationId);
+				queryPos.add(previousOrganizationId);
 			}
 
-			qPos.add(companyId);
-			qPos.add(parentOrganizationId);
+			queryPos.add(companyId);
+			queryPos.add(parentOrganizationId);
 
-			return (List<Long>)QueryUtil.list(q, getDialect(), 0, size);
+			return (List<Long>)QueryUtil.list(sqlQuery, getDialect(), 0, size);
 		}
 		catch (Exception exception) {
 			throw new SystemException(exception);
@@ -578,45 +583,45 @@ public class OrganizationFinderImpl
 		try {
 			session = openSession();
 
-			SQLQuery q = session.createSynchronizedSQLQuery(sql);
+			SQLQuery sqlQuery = session.createSynchronizedSQLQuery(sql);
 
-			q.addScalar("orgId", Type.LONG);
+			sqlQuery.addScalar("orgId", Type.LONG);
 
-			QueryPos qPos = QueryPos.getInstance(q);
+			QueryPos queryPos = QueryPos.getInstance(sqlQuery);
 
 			if (doUnion) {
-				qPos.add(groupOrganization);
+				queryPos.add(groupOrganization);
 			}
 
-			setJoin(qPos, params);
+			setJoin(queryPos, params);
 
-			qPos.add(companyId);
-			qPos.add(parentOrganizationId);
+			queryPos.add(companyId);
+			queryPos.add(parentOrganizationId);
 
 			if (Validator.isNotNull(type)) {
-				qPos.add(type);
+				queryPos.add(type);
 			}
 
-			qPos.add(names, 2);
-			qPos.add(streets, 6);
+			queryPos.add(names, 2);
+			queryPos.add(streets, 6);
 
 			if (regionId != null) {
-				qPos.add(regionId);
-				qPos.add(regionId);
+				queryPos.add(regionId);
+				queryPos.add(regionId);
 			}
 
 			if (countryId != null) {
-				qPos.add(countryId);
-				qPos.add(countryId);
+				queryPos.add(countryId);
+				queryPos.add(countryId);
 			}
 
-			qPos.add(cities, 2);
-			qPos.add(zips, 2);
+			queryPos.add(cities, 2);
+			queryPos.add(zips, 2);
 
 			List<Organization> organizations = new ArrayList<>();
 
 			Iterator<Long> itr = (Iterator<Long>)QueryUtil.iterate(
-				q, getDialect(), start, end);
+				sqlQuery, getDialect(), start, end);
 
 			while (itr.hasNext()) {
 				Long organizationId = itr.next();
@@ -658,29 +663,29 @@ public class OrganizationFinderImpl
 			String sql = CustomSQLUtil.replaceOrderBy(
 				sb.toString(), queryDefinition.getOrderByComparator());
 
-			SQLQuery q = session.createSynchronizedSQLQuery(sql);
+			SQLQuery sqlQuery = session.createSynchronizedSQLQuery(sql);
 
-			q.addScalar("organizationId", Type.LONG);
-			q.addScalar("userId", Type.LONG);
+			sqlQuery.addScalar("organizationId", Type.LONG);
+			sqlQuery.addScalar("userId", Type.LONG);
 
-			QueryPos qPos = QueryPos.getInstance(q);
+			QueryPos queryPos = QueryPos.getInstance(sqlQuery);
 
-			qPos.add(companyId);
-			qPos.add(parentOrganizationId);
-			qPos.add(companyId);
+			queryPos.add(companyId);
+			queryPos.add(parentOrganizationId);
+			queryPos.add(companyId);
 
 			int status = queryDefinition.getStatus();
 
 			if (status != WorkflowConstants.STATUS_ANY) {
-				qPos.add(status);
+				queryPos.add(status);
 			}
 
-			qPos.add(parentOrganizationId);
+			queryPos.add(parentOrganizationId);
 
 			List<Object> models = new ArrayList<>();
 
 			Iterator<Object[]> itr = (Iterator<Object[]>)QueryUtil.iterate(
-				q, getDialect(), queryDefinition.getStart(),
+				sqlQuery, getDialect(), queryDefinition.getStart(),
 				queryDefinition.getEnd());
 
 			while (itr.hasNext()) {
@@ -713,25 +718,26 @@ public class OrganizationFinderImpl
 	}
 
 	protected int countO_ByOrganizationId(
-		Session session, long organizationId,
-		LinkedHashMap<String, Object> params) {
+			Session session, long organizationId,
+			LinkedHashMap<String, Object> params)
+		throws PortalException {
 
 		String sql = CustomSQLUtil.get(COUNT_O_BY_ORGANIZATION_ID);
 
 		sql = StringUtil.replace(sql, "[$JOIN$]", getJoin(params));
 		sql = StringUtil.replace(sql, "[$WHERE$]", getWhere(params));
 
-		SQLQuery q = session.createSynchronizedSQLQuery(sql);
+		SQLQuery sqlQuery = session.createSynchronizedSQLQuery(sql);
 
-		q.addScalar(COUNT_COLUMN_NAME, Type.LONG);
+		sqlQuery.addScalar(COUNT_COLUMN_NAME, Type.LONG);
 
-		QueryPos qPos = QueryPos.getInstance(q);
+		QueryPos queryPos = QueryPos.getInstance(sqlQuery);
 
-		setJoin(qPos, params);
+		setJoin(queryPos, params);
 
-		qPos.add(organizationId);
+		queryPos.add(organizationId);
 
-		Iterator<Long> itr = q.iterate();
+		Iterator<Long> itr = sqlQuery.iterate();
 
 		if (itr.hasNext()) {
 			Long count = itr.next();
@@ -952,7 +958,8 @@ public class OrganizationFinderImpl
 	}
 
 	protected void setJoin(
-		QueryPos qPos, LinkedHashMap<String, Object> params) {
+			QueryPos queryPos, LinkedHashMap<String, Object> params)
+		throws PortalException {
 
 		if (params == null) {
 			return;
@@ -989,12 +996,15 @@ public class OrganizationFinderImpl
 							(permissionChecker.isOrganizationAdmin(
 								organization.getOrganizationId()) ||
 							 permissionChecker.isOrganizationOwner(
-								 organization.getOrganizationId()))) {
+								 organization.getOrganizationId()) ||
+							 OrganizationPermissionUtil.contains(
+								 permissionChecker, organization,
+								 ActionKeys.MANAGE_SUBORGANIZATIONS))) {
 
 							sb.append(StringPool.PERCENT);
 						}
 
-						qPos.add(sb.toString());
+						queryPos.add(sb.toString());
 					}
 				}
 			}
@@ -1002,7 +1012,7 @@ public class OrganizationFinderImpl
 				Long valueLong = (Long)value;
 
 				if (Validator.isNotNull(valueLong)) {
-					qPos.add(valueLong);
+					queryPos.add(valueLong);
 				}
 			}
 			else if (value instanceof Long[]) {
@@ -1010,7 +1020,7 @@ public class OrganizationFinderImpl
 
 				for (Long element : valueArray) {
 					if (Validator.isNotNull(element)) {
-						qPos.add(element);
+						queryPos.add(element);
 					}
 				}
 			}
@@ -1019,7 +1029,7 @@ public class OrganizationFinderImpl
 
 				for (Long[] valueArray : valueDoubleArray) {
 					for (Long valueLong : valueArray) {
-						qPos.add(valueLong);
+						queryPos.add(valueLong);
 					}
 				}
 			}
@@ -1027,7 +1037,7 @@ public class OrganizationFinderImpl
 				String valueString = (String)value;
 
 				if (Validator.isNotNull(valueString)) {
-					qPos.add(valueString);
+					queryPos.add(valueString);
 				}
 			}
 		}

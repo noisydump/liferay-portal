@@ -1,7 +1,7 @@
 @component-name = "portal-document-management"
 definition {
 
-	property portal.release = "false";
+	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.main.component.name = "Depot";
 
@@ -31,16 +31,10 @@ definition {
 			depotDescription = "This is the description of a depot",
 			depotName = "Test Depot Name");
 
-		DepotNavigator.openDepotAdmin();
-
-		DepotNavigator.gotoDepot(
-			depotName = "Test Depot Name",
-			portlet = "Documents and Media");
-
-		DMDocument.addCP(
+		JSONDocument.addFile(
 			dmDocumentDescription = "DM Document Description",
-			dmDocumentFile = "Document_1.jpg",
-			dmDocumentTitle = "DM Document Title");
+			dmDocumentTitle = "DM Document Title",
+			groupName = "Test Depot Name");
 
 		DepotNavigator.openDepotAdmin();
 
@@ -66,6 +60,8 @@ definition {
 	@description = "This ensures that a user can redirect to the repository via Space icon."
 	@priority = "5"
 	test AccessViaSiteNavigation {
+		property portal.acceptance = "true";
+
 		JSONDepot.addDepot(
 			depotDescription = "This is the description of a depot",
 			depotName = "Test Depot Name");
@@ -96,6 +92,10 @@ definition {
 
 		Button.clickAdd();
 
+		if (IsElementNotPresent(locator1 = "IFrame#SELECT_SITES")) {
+			Button.clickAdd();
+		}
+
 		SelectFrame(locator1 = "IFrame#SELECT_SITES");
 
 		AssertVisible(
@@ -109,7 +109,7 @@ definition {
 			value1 = "My Sites");
 
 		AssertElementNotPresent(
-			key_navItem = "Repositories",
+			key_navItem = "Asset Libraries",
 			locator1 = "NavBar#NAV_ITEM_LINK");
 	}
 

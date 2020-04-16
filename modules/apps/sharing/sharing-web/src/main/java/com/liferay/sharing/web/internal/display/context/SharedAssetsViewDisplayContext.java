@@ -15,8 +15,9 @@
 package com.liferay.sharing.web.internal.display.context;
 
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem;
-import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemList;
+import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemListBuilder;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.NavigationItemList;
+import com.liferay.frontend.taglib.clay.servlet.taglib.util.NavigationItemListBuilder;
 import com.liferay.item.selector.ItemSelector;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.search.SearchContainer;
@@ -124,64 +125,55 @@ public class SharedAssetsViewDisplayContext {
 	}
 
 	public List<DropdownItem> getFilterDropdownItems() {
-		return new DropdownItemList() {
-			{
-				addGroup(
-					dropdownGroupItem -> {
-						dropdownGroupItem.setDropdownItems(
-							_getFilterNavigationDropdownItems());
-						dropdownGroupItem.setLabel(
-							LanguageUtil.get(
-								_httpServletRequest, "filter-by-navigation"));
-					});
-				addGroup(
-					dropdownGroupItem -> {
-						dropdownGroupItem.setDropdownItems(
-							_getOrderByDropdownItems());
-						dropdownGroupItem.setLabel(
-							LanguageUtil.get(_httpServletRequest, "order-by"));
-					});
+		return DropdownItemListBuilder.addGroup(
+			dropdownGroupItem -> {
+				dropdownGroupItem.setDropdownItems(
+					_getFilterNavigationDropdownItems());
+				dropdownGroupItem.setLabel(
+					LanguageUtil.get(
+						_httpServletRequest, "filter-by-navigation"));
 			}
-		};
+		).addGroup(
+			dropdownGroupItem -> {
+				dropdownGroupItem.setDropdownItems(_getOrderByDropdownItems());
+				dropdownGroupItem.setLabel(
+					LanguageUtil.get(_httpServletRequest, "order-by"));
+			}
+		).build();
 	}
 
 	public NavigationItemList getNavigationItems() {
-		return new NavigationItemList() {
-			{
-				add(
-					navigationItem -> {
-						navigationItem.setActive(_isIncoming());
+		return NavigationItemListBuilder.add(
+			navigationItem -> {
+				navigationItem.setActive(_isIncoming());
 
-						PortletURL sharedWithMeURL =
-							_liferayPortletResponse.createRenderURL();
+				PortletURL sharedWithMeURL =
+					_liferayPortletResponse.createRenderURL();
 
-						sharedWithMeURL.setParameter(
-							"incoming", Boolean.TRUE.toString());
+				sharedWithMeURL.setParameter(
+					"incoming", Boolean.TRUE.toString());
 
-						navigationItem.setHref(sharedWithMeURL);
+				navigationItem.setHref(sharedWithMeURL);
 
-						navigationItem.setLabel(
-							LanguageUtil.get(
-								_httpServletRequest, "shared-with-me"));
-					});
-				add(
-					navigationItem -> {
-						navigationItem.setActive(!_isIncoming());
-
-						PortletURL sharedByMeURL =
-							_liferayPortletResponse.createRenderURL();
-
-						sharedByMeURL.setParameter(
-							"incoming", Boolean.FALSE.toString());
-
-						navigationItem.setHref(sharedByMeURL);
-
-						navigationItem.setLabel(
-							LanguageUtil.get(
-								_httpServletRequest, "shared-by-me"));
-					});
+				navigationItem.setLabel(
+					LanguageUtil.get(_httpServletRequest, "shared-with-me"));
 			}
-		};
+		).add(
+			navigationItem -> {
+				navigationItem.setActive(!_isIncoming());
+
+				PortletURL sharedByMeURL =
+					_liferayPortletResponse.createRenderURL();
+
+				sharedByMeURL.setParameter(
+					"incoming", Boolean.FALSE.toString());
+
+				navigationItem.setHref(sharedByMeURL);
+
+				navigationItem.setLabel(
+					LanguageUtil.get(_httpServletRequest, "shared-by-me"));
+			}
+		).build();
 	}
 
 	public PortletURL getSelectAssetTypeURL() {
@@ -366,79 +358,69 @@ public class SharedAssetsViewDisplayContext {
 		return urlMenuItem;
 	}
 
+	private String _getClassNameLabel(String className) {
+		if (Validator.isNotNull(className)) {
+			SharedAssetsFilterItem sharedAssetsFilterItem =
+				_sharedAssetsFilterItemTracker.getSharedAssetsFilterItem(
+					className);
+
+			if (sharedAssetsFilterItem != null) {
+				return sharedAssetsFilterItem.getLabel(
+					_themeDisplay.getLocale());
+			}
+		}
+
+		return LanguageUtil.get(_httpServletRequest, "asset-types");
+	}
+
 	private PortletURL _getCurrentSortingURL() throws PortletException {
 		return PortletURLUtil.clone(_currentURLObj, _liferayPortletResponse);
 	}
 
 	private List<DropdownItem> _getFilterNavigationDropdownItems() {
-		return new DropdownItemList() {
-			{
-				String className = ParamUtil.getString(
-					_httpServletRequest, "className");
+		String className = ParamUtil.getString(
+			_httpServletRequest, "className");
 
-				add(
-					dropdownItem -> {
-						dropdownItem.setActive(Validator.isNull(className));
+		return DropdownItemListBuilder.add(
+			dropdownItem -> {
+				dropdownItem.setActive(Validator.isNull(className));
 
-						PortletURL viewAllClassNamesURL = PortletURLUtil.clone(
-							_currentURLObj, _liferayPortletResponse);
+				PortletURL viewAllClassNamesURL = PortletURLUtil.clone(
+					_currentURLObj, _liferayPortletResponse);
 
-						viewAllClassNamesURL.setParameter(
-							"mvcRenderCommandName", "/shared_assets/view");
-						viewAllClassNamesURL.setParameter(
-							"className", (String)null);
+				viewAllClassNamesURL.setParameter(
+					"mvcRenderCommandName", "/shared_assets/view");
+				viewAllClassNamesURL.setParameter("className", (String)null);
 
-						dropdownItem.setHref(viewAllClassNamesURL);
+				dropdownItem.setHref(viewAllClassNamesURL);
 
-						dropdownItem.setLabel(
-							LanguageUtil.get(_httpServletRequest, "all"));
-					});
-				add(
-					dropdownItem -> {
-						dropdownItem.putData(
-							"action", "openAssetTypesSelector");
-						dropdownItem.setActive(Validator.isNotNull(className));
-						dropdownItem.setLabel(_getClassNameLabel(className));
-					});
+				dropdownItem.setLabel(
+					LanguageUtil.get(_httpServletRequest, "all"));
 			}
-
-			private String _getClassNameLabel(String className) {
-				if (Validator.isNotNull(className)) {
-					SharedAssetsFilterItem sharedAssetsFilterItem =
-						_sharedAssetsFilterItemTracker.
-							getSharedAssetsFilterItem(className);
-
-					if (sharedAssetsFilterItem != null) {
-						return sharedAssetsFilterItem.getLabel(
-							_themeDisplay.getLocale());
-					}
-				}
-
-				return LanguageUtil.get(_httpServletRequest, "asset-types");
+		).add(
+			dropdownItem -> {
+				dropdownItem.putData("action", "openAssetTypesSelector");
+				dropdownItem.setActive(Validator.isNotNull(className));
+				dropdownItem.setLabel(_getClassNameLabel(className));
 			}
-
-		};
+		).build();
 	}
 
 	private List<DropdownItem> _getOrderByDropdownItems() {
-		String orderByCol = ParamUtil.getString(
-			_httpServletRequest, "orderByCol", "sharedDate");
+		return DropdownItemListBuilder.add(
+			dropdownItem -> {
+				String orderByCol = ParamUtil.getString(
+					_httpServletRequest, "orderByCol", "sharedDate");
 
-		return new DropdownItemList() {
-			{
-				add(
-					dropdownItem -> {
-						dropdownItem.setActive(
-							Objects.equals(orderByCol, "sharedDate"));
-						dropdownItem.setHref(
-							_getCurrentSortingURL(), "orderByCol",
-							"sharedDate");
-						dropdownItem.setLabel(
-							LanguageUtil.get(
-								_httpServletRequest, "shared-date"));
-					});
+				dropdownItem.setActive(
+					Objects.equals(orderByCol, "sharedDate"));
+
+				dropdownItem.setHref(
+					_getCurrentSortingURL(), "orderByCol", "sharedDate");
+				dropdownItem.setLabel(
+					LanguageUtil.get(_httpServletRequest, "shared-date"));
 			}
-		};
+		).build();
 	}
 
 	private PortletURL _getURLEdit(

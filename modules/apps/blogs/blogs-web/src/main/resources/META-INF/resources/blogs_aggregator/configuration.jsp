@@ -75,7 +75,7 @@ if (organizationId > 0) {
 										dialog: {
 											constrain: true,
 											destroyOnHide: true,
-											modal: true
+											modal: true,
 										},
 
 										<%
@@ -94,7 +94,7 @@ if (organizationId > 0) {
 										selectOrganizationURL.setWindowState(LiferayWindowState.POP_UP);
 										%>
 
-										uri: '<%= selectOrganizationURL.toString() %>'
+										uri: '<%= selectOrganizationURL.toString() %>',
 									},
 									function(event) {
 										var form = document.getElementById(
@@ -158,7 +158,8 @@ if (organizationId > 0) {
 
 								if (showUsersSelectionOptions) {
 									dom.addClasses(usersSelectionOptions, 'hide');
-								} else {
+								}
+								else {
 									dom.removeClasses(usersSelectionOptions, 'hide');
 								}
 							}

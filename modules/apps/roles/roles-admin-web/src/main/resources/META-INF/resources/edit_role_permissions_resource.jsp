@@ -45,7 +45,7 @@ headerNames.add("action");
 boolean showScope = _isShowScope(request, role, curModelResource, curPortletId);
 
 if (showScope) {
-	headerNames.add("sites");
+	headerNames.add("scope");
 }
 
 SearchContainer searchContainer = new SearchContainer(liferayPortletRequest, null, null, SearchContainer.DEFAULT_CUR_PARAM, SearchContainer.DEFAULT_DELTA, liferayPortletResponse.createRenderURL(), headerNames, "there-are-no-actions");
@@ -115,13 +115,13 @@ for (int i = 0; i < results.size(); i++) {
 			supportsFilterByGroup = true;
 		}
 
-		LinkedHashMap<String, Object> groupParams = new LinkedHashMap<String, Object>();
-
 		RolePermissions rolePermissions = new RolePermissions(curResource, ResourceConstants.SCOPE_GROUP, actionId, role.getRoleId());
 
-		groupParams.put("rolePermissions", rolePermissions);
+		LinkedHashMap<String, Object> groupParams = LinkedHashMapBuilder.<String, Object>put(
+			"rolePermissions", rolePermissions
+		).build();
 
-		groups = GroupLocalServiceUtil.search(company.getCompanyId(), new long[] {PortalUtil.getClassNameId(Company.class), PortalUtil.getClassNameId(Group.class), PortalUtil.getClassNameId(Organization.class), PortalUtil.getClassNameId(UserPersonalSite.class)}, null, null, groupParams, true, QueryUtil.ALL_POS, QueryUtil.ALL_POS);
+		groups = GroupLocalServiceUtil.search(company.getCompanyId(), GroupTypeContributorUtil.getClassNameIds(), null, null, groupParams, true, QueryUtil.ALL_POS, QueryUtil.ALL_POS);
 
 		groupIdsArray = new long[groups.size()];
 
@@ -141,7 +141,7 @@ for (int i = 0; i < results.size(); i++) {
 		scope = ResourceConstants.SCOPE_GROUP_TEMPLATE;
 	}
 
-	ResultRow row = new ResultRow(new Object[] {role, actionId, curResource, target, scope, supportsFilterByGroup, groups, groupIdsArray, groupNames}, target, i);
+	ResultRow row = new ResultRow(new Object[] {role, actionId, curResource, target, scope, supportsFilterByGroup, groups, groupIdsArray, groupNames, curPortletId}, target, i);
 
 	row.addText(_getActionLabel(request, themeDisplay, curResource, actionId));
 

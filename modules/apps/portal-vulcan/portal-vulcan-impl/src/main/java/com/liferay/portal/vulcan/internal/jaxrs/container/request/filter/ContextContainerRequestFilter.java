@@ -23,6 +23,7 @@ import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
 import com.liferay.portal.kernel.service.RoleLocalService;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.vulcan.accept.language.AcceptLanguage;
+import com.liferay.portal.vulcan.batch.engine.resource.VulcanBatchEngineImportTaskResource;
 import com.liferay.portal.vulcan.internal.accept.language.AcceptLanguageImpl;
 import com.liferay.portal.vulcan.internal.jaxrs.context.provider.ContextProviderUtil;
 
@@ -54,7 +55,9 @@ public class ContextContainerRequestFilter implements ContainerRequestFilter {
 		GroupLocalService groupLocalService, Language language, Portal portal,
 		ResourceActionLocalService resourceActionLocalService,
 		ResourcePermissionLocalService resourcePermissionLocalService,
-		RoleLocalService roleLocalService, Object scopeChecker) {
+		RoleLocalService roleLocalService, Object scopeChecker,
+		VulcanBatchEngineImportTaskResource
+			vulcanBatchEngineImportTaskResource) {
 
 		_groupLocalService = groupLocalService;
 		_language = language;
@@ -63,6 +66,8 @@ public class ContextContainerRequestFilter implements ContainerRequestFilter {
 		_resourcePermissionLocalService = resourcePermissionLocalService;
 		_roleLocalService = roleLocalService;
 		_scopeChecker = scopeChecker;
+		_vulcanBatchEngineImportTaskResource =
+			vulcanBatchEngineImportTaskResource;
 	}
 
 	@Override
@@ -170,6 +175,13 @@ public class ContextContainerRequestFilter implements ContainerRequestFilter {
 
 				field.set(instance, _portal.getUser(httpServletRequest));
 			}
+			else if (fieldClass.isAssignableFrom(
+						VulcanBatchEngineImportTaskResource.class)) {
+
+				field.setAccessible(true);
+
+				field.set(instance, _vulcanBatchEngineImportTaskResource);
+			}
 		}
 	}
 
@@ -181,5 +193,7 @@ public class ContextContainerRequestFilter implements ContainerRequestFilter {
 		_resourcePermissionLocalService;
 	private final RoleLocalService _roleLocalService;
 	private final Object _scopeChecker;
+	private final VulcanBatchEngineImportTaskResource
+		_vulcanBatchEngineImportTaskResource;
 
 }

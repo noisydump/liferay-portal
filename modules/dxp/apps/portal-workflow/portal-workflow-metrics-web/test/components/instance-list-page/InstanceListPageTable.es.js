@@ -12,9 +12,10 @@
 import {cleanup, render} from '@testing-library/react';
 import React from 'react';
 
+import {InstanceListContext} from '../../../src/main/resources/META-INF/resources/js/components/instance-list-page/InstanceListPageProvider.es';
 import {Table} from '../../../src/main/resources/META-INF/resources/js/components/instance-list-page/InstanceListPageTable.es';
-import {ModalContext} from '../../../src/main/resources/META-INF/resources/js/components/instance-list-page/modal/ModalContext.es';
-import {InstanceListContext} from '../../../src/main/resources/META-INF/resources/js/components/instance-list-page/store/InstanceListPageStore.es';
+import {ModalContext} from '../../../src/main/resources/META-INF/resources/js/components/instance-list-page/modal/ModalProvider.es';
+import {MockRouter} from '../../mock/MockRouter.es';
 
 const instances = [
 	{
@@ -22,18 +23,18 @@ const instances = [
 		assetType: 'Blog',
 		dateCreated: new Date('2019-01-01'),
 		id: 1,
-		taskNames: []
+		taskNames: [],
 	},
 	{
 		assetTitle: 'New Post 2',
 		assetType: 'Blog',
-		creatorUser: {
-			name: 'User 1'
+		creator: {
+			name: 'User 1',
 		},
 		dateCreated: new Date('2019-01-03'),
 		id: 1,
-		taskNames: ['Update']
-	}
+		taskNames: ['Update'],
+	},
 ];
 
 describe('The instance list table should', () => {
@@ -41,13 +42,17 @@ describe('The instance list table should', () => {
 
 	test('Be rendered with two items', () => {
 		const {getAllByTestId} = render(
-			<InstanceListContext.Provider value={{setInstanceId: jest.fn()}}>
-				<ModalContext.Provider
-					value={{setSingleModal: () => {}, singleModal: false}}
+			<MockRouter>
+				<InstanceListContext.Provider
+					value={{setInstanceId: jest.fn()}}
 				>
-					<Table items={instances} />
-				</ModalContext.Provider>
-			</InstanceListContext.Provider>
+					<ModalContext.Provider
+						value={{setSingleModal: () => {}, singleModal: false}}
+					>
+						<Table items={instances} />
+					</ModalContext.Provider>
+				</InstanceListContext.Provider>
+			</MockRouter>
 		);
 
 		const instanceRows = getAllByTestId('instanceRow');

@@ -22,7 +22,7 @@ function AddMenu({dropdownItems, portletId}) {
 
 	const handleItemClick = useCallback(
 		event => {
-			event.currentTarget = event.target;
+			event.currentTarget = event.target.element || event.target;
 
 			const uri = event.data
 				? event.data.item.href
@@ -30,14 +30,14 @@ function AddMenu({dropdownItems, portletId}) {
 
 			Liferay.Util.openInDialog(event.nativeEvent || event, {
 				dialog: {
-					destroyOnHide: true
+					destroyOnHide: true,
 				},
 				dialogIframe: {
-					bodyCssClass: 'dialog-with-footer'
+					bodyCssClass: 'dialog-with-footer',
 				},
 				id: `_${portletId}_addMenuItem`,
 				title: event.target.title || event.target.innerText,
-				uri
+				uri,
 			});
 		},
 		[portletId]
@@ -56,7 +56,7 @@ function AddMenu({dropdownItems, portletId}) {
 			addMenuDefaultEventHandlerId,
 			new AddMenuDefaultEventHandler(),
 			{
-				destroyOnNavigate: true
+				destroyOnNavigate: true,
 			}
 		);
 	}
@@ -90,6 +90,4 @@ function AddMenu({dropdownItems, portletId}) {
 	);
 }
 
-export default function(props) {
-	return <AddMenu {...props} />;
-}
+export default AddMenu;

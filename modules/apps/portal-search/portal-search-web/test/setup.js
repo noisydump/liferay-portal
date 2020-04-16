@@ -31,7 +31,8 @@ function walk(dir, callback) {
 
 		if (entry.isDirectory()) {
 			walk(entryPath, callback);
-		} else if (filter(entryPath)) {
+		}
+		else if (filter(entryPath)) {
 			callback(entryPath);
 		}
 	});
@@ -65,6 +66,6 @@ beforeEach(() => {
 			Liferay[name] = {};
 
 			return Liferay[name];
-		}
+		},
 	};
 });

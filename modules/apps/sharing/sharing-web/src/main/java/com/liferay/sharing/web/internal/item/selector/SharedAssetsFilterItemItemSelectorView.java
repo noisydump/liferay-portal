@@ -20,7 +20,6 @@ import com.liferay.item.selector.ItemSelectorViewDescriptor;
 import com.liferay.item.selector.ItemSelectorViewDescriptorRenderer;
 import com.liferay.portal.kernel.dao.search.SearchContainer;
 import com.liferay.portal.kernel.language.Language;
-import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.JavaConstants;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.sharing.filter.SharedAssetsFilterItem;
@@ -70,11 +69,6 @@ public class SharedAssetsFilterItemItemSelectorView
 	}
 
 	@Override
-	public boolean isVisible(ThemeDisplay themeDisplay) {
-		return true;
-	}
-
-	@Override
 	public void renderHTML(
 			ServletRequest servletRequest, ServletResponse servletResponse,
 			SharedAssetsFilterItemItemSelectorCriterion
@@ -110,14 +104,13 @@ public class SharedAssetsFilterItemItemSelectorView
 						}
 
 						@Override
-						public String getSubtitle() {
+						public String getSubtitle(Locale locale) {
 							return null;
 						}
 
 						@Override
-						public String getTitle() {
-							return sharedAssetsFilterItem.getLabel(
-								servletRequest.getLocale());
+						public String getTitle(Locale locale) {
+							return sharedAssetsFilterItem.getLabel(locale);
 						}
 
 						@Override

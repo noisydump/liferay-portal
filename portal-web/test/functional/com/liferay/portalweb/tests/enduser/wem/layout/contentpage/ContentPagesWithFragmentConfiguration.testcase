@@ -46,15 +46,15 @@ definition {
 			collectionName = "Basic Components",
 			fragmentName = "Button");
 
-		PageEditor.clickFragmentTopper(fragmentName = "Button");
-
-		AssertVisible(locator1 = "PageEditor#EDITABLE_FIELD_TOOLBAR_CONFIGURATION_BUTTON");
+		AssertVisible(
+			key_elementType = "Fragment",
+			locator1 = "PageEditor#FRAGMENT_BODY_TOOLBAR_CONFIGURATION_BUTTON");
 	}
 
 	@description = "This is a test for LPS-99377. User can change checkbox fragment configuration."
 	@priority = "5"
 	test AddCheckboxConfigurationFragmentToContentPage {
-		property portal.acceptance = "true";
+		property portal.upstream = "quarantine";
 
 		task ("Add a section fragment to the fragment collection via JSON") {
 			var htmlSnippet = FragmentsAPI.getFragmentFileContent(fileName = "checkbox_configuration.html");
@@ -101,7 +101,7 @@ definition {
 
 	@description = "This is a test for LPS-97179. User can change colorPalette fragment configuration."
 	@priority = "5"
-	test AddColorPlatteConfigurationFragmentToContentPage {
+	test AddColorPaletteConfigurationFragmentToContentPage {
 
 		task ("Add a section fragment to the fragment collection via JSON") {
 			var htmlSnippet = FragmentsAPI.getFragmentFileContent(fileName = "colorPalette_configuration.html");
@@ -181,11 +181,9 @@ definition {
 			collectionName = "Collection Name",
 			fragmentName = "Text Fragment Example");
 
-		Click(
-			fragment_name = "Text Fragment Example",
-			locator1 = "PageEditor#SECTION_NAME");
-
-		PageEditorConfiguration._toggleConfigurationFloatingToolbar();
+		Click.clickNoMouseOver(
+			key_elementType = "Fragment",
+			locator1 = "PageEditor#FRAGMENT_BODY_TOOLBAR_CONFIGURATION_BUTTON");
 
 		task ("Assert placeholder is exist") {
 			AssertVisible(locator1 = "FragmentEditor#FRAGMENTS_EDITOR_FLOATING_CONFIGURATION_PANEL");
@@ -193,6 +191,7 @@ definition {
 	}
 
 	@description = "This is a test for LPS-96685. User can change select fragment configuration."
+	@priority = "5"
 	test AddSelectConfigurationFragmentToContentPage {
 		property portal.acceptance = "true";
 
@@ -235,6 +234,7 @@ definition {
 	@priority = "5"
 	test AddTextConfigurationFragmentToContentPage {
 		property portal.acceptance = "true";
+		property portal.upstream = "quarantine";
 
 		task ("Add a section fragment to the fragment collection via JSON") {
 			var htmlSnippet = FragmentsAPI.getFragmentFileContent(fileName = "text_configuration.html");
@@ -312,6 +312,7 @@ definition {
 			fragmentName = "itemSelector Fragment Example");
 
 		PageEditor.editContentDisplay(
+			fragmentName = "itemSelector Fragment Example",
 			webcontent = "true",
 			webContentContent = "WC WebContent Content 2",
 			webContentTitle = "WebContent Title 2");
@@ -334,7 +335,6 @@ definition {
 	@description = "This is a test for LPS-96685. User can restore and change fragment configuration value."
 	@priority = "5"
 	test RestoreAndChangeConfigurationFragmentToContentPage {
-
 		property portal.acceptance = "true";
 
 		task ("Add a section fragment to the fragment collection via JSON") {

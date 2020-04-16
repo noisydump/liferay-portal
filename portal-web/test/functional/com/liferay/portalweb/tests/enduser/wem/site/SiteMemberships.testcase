@@ -377,6 +377,7 @@ definition {
 	@priority = "5"
 	test OrganizationsView {
 		property portal.acceptance = "true";
+		property portal.upstream = "quarantine";
 		property test.name.skip.portal.instance = "SiteMemberships#OrganizationsView";
 		property testray.component.names = "Site Administration,Users and Organizations";
 
@@ -454,16 +455,9 @@ definition {
 			userName = "Test Test",
 			userScreenName = "test");
 
-		ProductMenu.gotoPortlet(
-			category = "Users",
-			panel = "Control Panel",
-			portlet = "Users and Organizations");
+		Site.openSiteSettingsAdmin(siteURLKey = "organization-name-1");
 
-		UsersAndOrganizationsNavigator.gotoOrganizations();
-
-		Organization.manageMembershipOptionsInSites(
-			allowManualMembershipManagement = "true",
-			orgName = "Organization Name 1");
+		Site.manageMembershipOptions(allowManualMembershipManagement = "true");
 
 		SitePages.openPagesAdmin(siteURLKey = "Organization Name 1");
 
@@ -662,12 +656,13 @@ definition {
 	test SiteMembershipsPagination {
 		property testray.component.names = "Site Administration,Users and Organizations";
 
-		ProductMenu.gotoPortlet(
-			category = "Users",
-			panel = "Control Panel",
-			portlet = "Users and Organizations");
-
-		User.addMultipleCP(usersEmailsList = "userfn1@liferay.com,userfn2@liferay.com,userfn3@liferay.com,userfn4@liferay.com,userfn5@liferay.com,userfn6@liferay.com,userfn7@liferay.com,userfn8@liferay.com,userfn9@liferay.com,userfn10@liferay.com");
+		for (var screenName : list "userfn1,userfn2,userfn3,userfn4,userfn5,userfn6,userfn7,userfn8,userfn9,userfn10") {
+			JSONUser.addUser(
+				userEmailAddress = "${screenName}@liferay.com",
+				userFirstName = "${screenName}",
+				userLastName = "${screenName}",
+				userScreenName = "${screenName}");
+		}
 
 		ProductMenu.gotoPortlet(
 			category = "Sites",
@@ -703,35 +698,31 @@ definition {
 			locator1 = "Pagination#ITEMS_PER_PAGE_SELECT",
 			value1 = "20 Entries");
 
-		Click(locator1 = "Pagination#FIVE_ITEMS_PER_PAGE");
+		MenuItem.click(menuItem = "4");
 
 		AssertTextEquals(
 			locator1 = "Pagination#CURRENT_PAGE_SELECT",
-			value1 = "Showing 1 to 5 of 11 entries.");
+			value1 = "Showing 1 to 4 of 11 entries.");
 
 		Click(locator1 = "Pagination#NEXT_LINK");
 
 		AssertTextEquals(
 			locator1 = "Pagination#CURRENT_PAGE_SELECT",
-			value1 = "Showing 6 to 10 of 11 entries.");
+			value1 = "Showing 5 to 8 of 11 entries.");
 
-		Site.assertMemberListNotVisibleCP(usersEmailsList = "userfn1@liferay.com,userfn2@liferay.com,userfn3@liferay.com,userfn10@liferay.com");
+		Site.assertMemberListNotVisibleCP(usersEmailsList = "userfn1@liferay.com,userfn2@liferay.com,userfn7@liferay.com,userfn8@liferay.com,userfn9@liferay.com,userfn10@liferay.com");
 
-		Site.viewMemberListCP(usersEmailsList = "userfn4@liferay.com,userfn5@liferay.com,userfn6@liferay.com,userfn7@liferay.com,userfn8@liferay.com");
-
-		Site.assertMemberListNotVisibleCP(usersEmailsList = "userfn9@liferay.com");
+		Site.viewMemberListCP(usersEmailsList = "userfn3@liferay.com,userfn4@liferay.com,userfn5@liferay.com,userfn6@liferay.com");
 
 		Click(locator1 = "Pagination#FIRST_LINK");
 
 		AssertTextEquals(
 			locator1 = "Pagination#CURRENT_PAGE_SELECT",
-			value1 = "Showing 1 to 5 of 11 entries.");
+			value1 = "Showing 1 to 4 of 11 entries.");
 
-		Site.viewMemberListCP(usersEmailsList = "userfn1@liferay.com,userfn2@liferay.com,userfn3@liferay.com,userfn10@liferay.com");
+		Site.viewMemberListCP(usersEmailsList = "userfn1@liferay.com,userfn2@liferay.com,userfn10@liferay.com");
 
-		Site.assertMemberListNotVisibleCP(usersEmailsList = "userfn4@liferay.com,userfn5@liferay.com,userfn6@liferay.com,userfn7@liferay.com,userfn8@liferay.com");
-
-		Site.assertMemberListNotVisibleCP(usersEmailsList = "userfn9@liferay.com");
+		Site.assertMemberListNotVisibleCP(usersEmailsList = "userfn3@liferay.com,userfn4@liferay.com,userfn5@liferay.com,userfn6@liferay.com,userfn7@liferay.com,userfn8@liferay.com,userfn9@liferay.com");
 
 		Site.viewMemberCP(
 			userFirstName = "Test",
@@ -742,25 +733,21 @@ definition {
 
 		AssertTextEquals(
 			locator1 = "Pagination#CURRENT_PAGE_SELECT",
-			value1 = "Showing 11 to 11 of 11 entries.");
+			value1 = "Showing 9 to 11 of 11 entries.");
 
-		Site.assertMemberListNotVisibleCP(usersEmailsList = "userfn1@liferay.com,userfn2@liferay.com,userfn3@liferay.com,userfn10@liferay.com");
+		Site.assertMemberListNotVisibleCP(usersEmailsList = "userfn1@liferay.com,userfn2@liferay.com,userfn3@liferay.com,userfn4@liferay.com,userfn5@liferay.com,userfn6@liferay.com,userfn10@liferay.com");
 
-		Site.assertMemberListNotVisibleCP(usersEmailsList = "userfn4@liferay.com,userfn5@liferay.com,userfn6@liferay.com,userfn7@liferay.com,userfn8@liferay.com");
-
-		Site.viewMemberListCP(usersEmailsList = "userfn9@liferay.com");
+		Site.viewMemberListCP(usersEmailsList = "userfn7@liferay.com,userfn8@liferay.com,userfn9@liferay.com");
 
 		Click(locator1 = "Pagination#PREVIOUS_LINK");
 
 		AssertTextEquals(
 			locator1 = "Pagination#CURRENT_PAGE_SELECT",
-			value1 = "Showing 6 to 10 of 11 entries.");
+			value1 = "Showing 5 to 8 of 11 entries.");
 
-		Site.assertMemberListNotVisibleCP(usersEmailsList = "userfn1@liferay.com,userfn2@liferay.com,userfn3@liferay.com,userfn10@liferay.com");
+		Site.assertMemberListNotVisibleCP(usersEmailsList = "userfn1@liferay.com,userfn2@liferay.com,userfn7@liferay.com,userfn8@liferay.com,userfn9@liferay.com,userfn10@liferay.com");
 
-		Site.viewMemberListCP(usersEmailsList = "userfn4@liferay.com,userfn5@liferay.com,userfn6@liferay.com,userfn7@liferay.com,userfn8@liferay.com");
-
-		Site.assertMemberListNotVisibleCP(usersEmailsList = "userfn9@liferay.com");
+		Site.viewMemberListCP(usersEmailsList = "userfn3@liferay.com,userfn4@liferay.com,userfn5@liferay.com,userfn6@liferay.com");
 	}
 
 	@priority = "4"
@@ -1026,28 +1013,32 @@ definition {
 
 	@priority = "3"
 	test ViewNoManualMembershipManagement {
+		property portal.upstream = "quarantine";
 		property testray.component.names = "Site Administration";
-
-		var siteName = TestCase.getSiteName(siteName = "${siteName}");
 
 		Site.manageMembershipOptions(allowManualMembershipManagement = "true");
 
 		Navigator.openURL();
 
-		ProductMenu.gotoPortlet(
-			category = "People",
-			panel = "Site Administration",
-			portlet = "Memberships");
+		ProductMenuHelper.expandPanel(panel = "Site Administration");
+
+		ProductMenuHelper.expandCategory(category = "People");
+
+		AssertVisible(
+			key_portlet = "Memberships",
+			locator1 = "ProductMenu#PORTLET");
 
 		Site.manageMembershipOptions(allowManualMembershipManagement = "false");
 
 		Navigator.openURL();
 
-		SitePages.openPagesAdmin(siteURLKey = "${siteName}");
+		ProductMenuHelper.expandPanel(panel = "Site Administration");
 
-		AssertNotVisible(
-			locator1 = "ControlMenu#ADMIN_SITE_ADMINISTRATION_USERS",
-			value1 = "Users");
+		ProductMenuHelper.expandCategory(category = "People");
+
+		AssertElementNotPresent(
+			key_portlet = "Memberships",
+			locator1 = "ProductMenu#PORTLET");
 	}
 
 }

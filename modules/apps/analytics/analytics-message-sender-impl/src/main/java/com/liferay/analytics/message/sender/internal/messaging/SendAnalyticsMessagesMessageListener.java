@@ -19,9 +19,12 @@ import com.liferay.analytics.message.sender.constants.AnalyticsMessagesDestinati
 import com.liferay.analytics.message.sender.constants.AnalyticsMessagesProcessorCommand;
 import com.liferay.analytics.message.storage.model.AnalyticsMessage;
 import com.liferay.analytics.message.storage.service.AnalyticsMessageLocalService;
+import com.liferay.analytics.settings.configuration.AnalyticsConfigurationTracker;
 import com.liferay.petra.io.StreamUtil;
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.messaging.BaseMessageListener;
 import com.liferay.portal.kernel.messaging.DestinationNames;
 import com.liferay.portal.kernel.messaging.Message;
@@ -78,6 +81,10 @@ public class SendAnalyticsMessagesMessageListener extends BaseMessageListener {
 
 	@Override
 	protected void doReceive(Message message) throws Exception {
+		if (!_analyticsConfigurationTracker.isActive()) {
+			return;
+		}
+
 		AnalyticsMessagesProcessorCommand analyticsMessagesProcessorCommand =
 			(AnalyticsMessagesProcessorCommand)message.get("command");
 
@@ -115,6 +122,10 @@ public class SendAnalyticsMessagesMessageListener extends BaseMessageListener {
 					companyId, 0, _BATCH_SIZE);
 
 			if (analyticsMessages.isEmpty()) {
+				if (_log.isInfoEnabled()) {
+					_log.info("Finished processing analytics messages");
+				}
+
 				return;
 			}
 
@@ -130,14 +141,40 @@ public class SendAnalyticsMessagesMessageListener extends BaseMessageListener {
 				jsonArray.put(JSONFactoryUtil.createJSONObject(json));
 			}
 
-			_analyticsMessageSenderClient.send(jsonArray.toString(), companyId);
+			try {
+				_analyticsMessageSenderClient.send(
+					jsonArray.toString(), companyId);
+
+				if (_log.isInfoEnabled()) {
+					_log.info(
+						"Sent " + jsonArray.length() + " analytics messages");
+				}
+			}
+			catch (Exception exception) {
+				_log.error(
+					"Unable to send analytics messages for company " +
+						companyId,
+					exception);
+			}
 
 			_analyticsMessageLocalService.deleteAnalyticsMessages(
 				analyticsMessages);
+
+			if (_log.isInfoEnabled()) {
+				_log.info(
+					"Deleted " + analyticsMessages.size() +
+						" analytics messages");
+			}
 		}
 	}
 
 	private static final int _BATCH_SIZE = 100;
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		SendAnalyticsMessagesMessageListener.class);
+
+	@Reference
+	private AnalyticsConfigurationTracker _analyticsConfigurationTracker;
 
 	@Reference
 	private AnalyticsMessageLocalService _analyticsMessageLocalService;

@@ -42,7 +42,7 @@ describe('Blogs Plugin', () => {
 		// Force attaching DOM Content Loaded event
 		Object.defineProperty(document, 'readyState', {
 			value: 'loading',
-			writable: false
+			writable: false,
 		});
 
 		fetchMock.mock('*', () => 200);
@@ -65,7 +65,7 @@ describe('Blogs Plugin', () => {
 
 			document.dispatchEvent(domContentLoaded);
 
-			const events = Analytics.events.filter(
+			const events = Analytics.getEvents().filter(
 				({eventId}) => eventId === 'blogViewed'
 			);
 
@@ -76,8 +76,8 @@ describe('Blogs Plugin', () => {
 					applicationId,
 					eventId: 'blogViewed',
 					properties: expect.objectContaining({
-						entryId: 'assetId'
-					})
+						entryId: 'assetId',
+					}),
 				})
 			);
 
@@ -97,16 +97,16 @@ describe('Blogs Plugin', () => {
 
 			dom.triggerEvent(imageInsideBlog, 'click');
 
-			expect(Analytics.events).toEqual([
+			expect(Analytics.getEvents()).toEqual([
 				expect.objectContaining({
 					applicationId,
 					eventId: 'blogClicked',
 					properties: expect.objectContaining({
 						entryId: 'assetId',
 						src: googleUrl,
-						tagName: 'img'
-					})
-				})
+						tagName: 'img',
+					}),
+				}),
 			]);
 
 			document.body.removeChild(blogElement);
@@ -127,7 +127,7 @@ describe('Blogs Plugin', () => {
 
 			dom.triggerEvent(linkInsideBlog, 'click');
 
-			expect(Analytics.events).toEqual([
+			expect(Analytics.getEvents()).toEqual([
 				expect.objectContaining({
 					applicationId,
 					eventId: 'blogClicked',
@@ -135,9 +135,9 @@ describe('Blogs Plugin', () => {
 						entryId: 'assetId',
 						href: googleUrl,
 						tagName: 'a',
-						text
-					})
-				})
+						text,
+					}),
+				}),
 			]);
 
 			document.body.removeChild(blogElement);
@@ -156,15 +156,15 @@ describe('Blogs Plugin', () => {
 
 			dom.triggerEvent(paragraphInsideBlog, 'click');
 
-			expect(Analytics.events).toEqual([
+			expect(Analytics.getEvents()).toEqual([
 				expect.objectContaining({
 					applicationId,
 					eventId: 'blogClicked',
 					properties: expect.objectContaining({
 						entryId: 'assetId',
-						tagName: 'p'
-					})
-				})
+						tagName: 'p',
+					}),
+				}),
 			]);
 
 			document.body.removeChild(blogElement);

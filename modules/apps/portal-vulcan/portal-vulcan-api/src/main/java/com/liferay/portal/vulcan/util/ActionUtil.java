@@ -26,6 +26,7 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -42,37 +43,84 @@ public class ActionUtil {
 		String actionName, Class clazz, GroupedModel groupedModel,
 		String methodName, Object object, UriInfo uriInfo) {
 
-		Class<? extends GroupedModel> groupedModelClass =
-			groupedModel.getClass();
+		return addAction(
+			actionName, clazz, (Long)groupedModel.getPrimaryKeyObj(),
+			methodName, object, groupedModel.getUserId(),
+			groupedModel.getModelClassName(), groupedModel.getGroupId(),
+			uriInfo);
+	}
 
-		Class<?> superClass = groupedModelClass.getSuperclass();
-
-		Class<?>[] interfaceClasses = superClass.getInterfaces();
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #addAction(String, Class, Long, String, Object, Long, String,
+	 *             Long, UriInfo)}
+	 */
+	@Deprecated
+	public static Map<String, String> addAction(
+		String actionName, Class clazz, GroupedModel groupedModel,
+		String methodName, UriInfo uriInfo) {
 
 		return addAction(
 			actionName, clazz, (Long)groupedModel.getPrimaryKeyObj(),
-			methodName, interfaceClasses[0].getName(), object,
-			groupedModel.getGroupId(), uriInfo);
+			methodName, null, groupedModel.getUserId(),
+			groupedModel.getModelClassName(), groupedModel.getGroupId(),
+			uriInfo);
 	}
 
 	public static Map<String, String> addAction(
 		String actionName, Class clazz, Long id, String methodName,
-		String permissionName, Object object, Long siteId, UriInfo uriInfo) {
+		Object object, Long ownerId, String permissionName, Long siteId,
+		UriInfo uriInfo) {
 
 		try {
 			return _addAction(
-				actionName, clazz, id, methodName, permissionName, object,
-				siteId, uriInfo);
+				actionName, clazz, id, methodName, object, ownerId,
+				permissionName, siteId, uriInfo);
 		}
 		catch (Exception exception) {
 			throw new RuntimeException(exception);
 		}
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #addAction(String, Class, Long, String, Object, Long, String,
+	 *             Long, UriInfo)}
+	 */
+	@Deprecated
+	public static Map<String, String> addAction(
+		String actionName, Class clazz, Long id, String methodName,
+		String permissionName, Long siteId, UriInfo uriInfo) {
+
+		return addAction(
+			actionName, clazz, id, methodName, null, null, permissionName,
+			siteId, uriInfo);
+	}
+
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #addAction(String, Class, Long, String, Object, Long, String,
+	 *             Long, UriInfo)}
+	 */
+	@Deprecated
+	public static Map<String, String> addAction(
+		String actionName, Class clazz, Long id, String methodName,
+		String permissionName, Object object, Long siteId, UriInfo uriInfo) {
+
+		return addAction(
+			actionName, clazz, id, methodName, object, null, permissionName,
+			siteId, uriInfo);
+	}
+
 	private static Map<String, String> _addAction(
 			String actionName, Class clazz, Long id, String methodName,
-			String permissionName, Object object, Long siteId, UriInfo uriInfo)
+			Object object, Long ownerId, String permissionName, Long siteId,
+			UriInfo uriInfo)
 		throws Exception {
+
+		if (uriInfo == null) {
+			return new HashMap<>();
+		}
 
 		MultivaluedMap<String, String> queryParameters =
 			uriInfo.getQueryParameters();
@@ -90,23 +138,22 @@ public class ActionUtil {
 		List<String> modelResourceActions =
 			ResourceActionsUtil.getModelResourceActions(permissionName);
 
-		PermissionChecker permissionChecker =
-			PermissionThreadLocal.getPermissionChecker();
-
 		if (!modelResourceActions.contains(actionName) ||
-			!permissionChecker.hasPermission(
-				siteId, permissionName, id, actionName)) {
+			!_hasPermission(
+				actionName, id, ownerId,
+				PermissionThreadLocal.getPermissionChecker(), permissionName,
+				siteId)) {
 
 			return null;
 		}
 
-		if (object != null) {
+		if ((object != null) &&
+			OAuth2ProviderScopeLiferayAccessControlContext.
+				isOAuth2AuthVerified()) {
+
 			ScopeChecker scopeChecker = (ScopeChecker)object;
 
-			if (OAuth2ProviderScopeLiferayAccessControlContext.
-					isOAuth2AuthVerified() &&
-				!scopeChecker.checkScope(methodName)) {
-
+			if (!scopeChecker.checkScope(methodName)) {
 				return null;
 			}
 		}
@@ -161,6 +208,24 @@ public class ActionUtil {
 		}
 
 		return null;
+	}
+
+	private static boolean _hasPermission(
+		String actionName, Long id, Long ownerId,
+		PermissionChecker permissionChecker, String permissionName,
+		Long siteId) {
+
+		if (((ownerId != null) &&
+			 permissionChecker.hasOwnerPermission(
+				 permissionChecker.getCompanyId(), permissionName, id, ownerId,
+				 actionName)) ||
+			permissionChecker.hasPermission(
+				siteId, permissionName, id, actionName)) {
+
+			return true;
+		}
+
+		return false;
 	}
 
 }

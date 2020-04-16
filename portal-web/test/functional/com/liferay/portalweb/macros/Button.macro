@@ -18,6 +18,10 @@ definition {
 		Button.click(button = "Apply");
 	}
 
+	macro clickAssign {
+		Button.click(button = "Assign");
+	}
+
 	macro clickCancel {
 		Button.click(button = "Cancel");
 	}
@@ -106,6 +110,10 @@ definition {
 			locator1 = "Button#ANY");
 
 		Button.click(button = "Update");
+	}
+
+	macro clickVerifyButton {
+		Click(locator1 = "Button#VERIFY");
 	}
 
 	macro viewNotPresent {

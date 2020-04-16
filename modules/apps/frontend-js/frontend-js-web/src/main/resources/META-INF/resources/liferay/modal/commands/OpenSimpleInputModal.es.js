@@ -21,7 +21,7 @@ import SimpleInputModal from '../components/SimpleInputModal.es';
 const DEFAULT_MODAL_CONTAINER_ID = 'modalContainer';
 
 const DEFAULT_RENDER_DATA = {
-	portletId: 'UNKNOWN_PORTLET_ID'
+	portletId: 'UNKNOWN_PORTLET_ID',
 };
 
 function getDefaultModalContainer() {
@@ -40,7 +40,7 @@ function dispose() {
 	unmountComponentAtNode(getDefaultModalContainer());
 }
 
-function SimpleInputModalComponent({
+function openSimpleInputModalImplementation({
 	alert,
 	checkboxFieldLabel,
 	checkboxFieldName,
@@ -53,9 +53,11 @@ function SimpleInputModalComponent({
 	mainFieldName,
 	namespace,
 	onFormSuccess,
-	placeholder
+	placeholder,
 }) {
-	return (
+	dispose();
+
+	render(
 		<SimpleInputModal
 			alert={alert}
 			checkboxFieldLabel={checkboxFieldLabel}
@@ -72,18 +74,8 @@ function SimpleInputModalComponent({
 			namespace={namespace}
 			onFormSuccess={onFormSuccess}
 			placeholder={placeholder}
-		/>
-	);
-}
-
-function openSimpleInputModalImplementation(data) {
-	dispose();
-
-	const renderData = DEFAULT_RENDER_DATA;
-
-	render(
-		SimpleInputModalComponent,
-		{...data, ...renderData},
+		/>,
+		DEFAULT_RENDER_DATA,
 		getDefaultModalContainer()
 	);
 }

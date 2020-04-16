@@ -14,27 +14,27 @@
 
 import {
 	PagesVisitor,
-	normalizeFieldName
+	normalizeFieldName,
 } from 'dynamic-data-mapping-form-renderer';
-import {findFieldByName} from 'dynamic-data-mapping-form-renderer/js/components/FormRenderer/FormSupport.es';
+import {findFieldByFieldName} from 'dynamic-data-mapping-form-renderer/js/components/FormRenderer/FormSupport.es';
 
 export const generateFieldName = (pages, desiredName, currentName = null) => {
 	let counter = 0;
-	let name = normalizeFieldName(desiredName);
+	let fieldName = normalizeFieldName(desiredName);
 
-	let existingField = findFieldByName(pages, name);
+	let existingField = findFieldByFieldName(pages, fieldName);
 
 	while (existingField && existingField.fieldName !== currentName) {
 		if (counter > 0) {
-			name = normalizeFieldName(desiredName) + counter;
+			fieldName = normalizeFieldName(desiredName) + counter;
 		}
 
-		existingField = findFieldByName(pages, name);
+		existingField = findFieldByFieldName(pages, fieldName);
 
 		counter++;
 	}
 
-	return normalizeFieldName(name);
+	return normalizeFieldName(fieldName);
 };
 
 export const getFieldValue = (pages, fieldName) => {
@@ -104,12 +104,12 @@ export const updateFieldValidationProperty = (
 				...field,
 				validation: {
 					...field.validation,
-					[propertyName]: propertyValue
+					[propertyName]: propertyValue,
 				},
 				value: {
 					...field.value,
-					expression
-				}
+					expression,
+				},
 			};
 		}
 

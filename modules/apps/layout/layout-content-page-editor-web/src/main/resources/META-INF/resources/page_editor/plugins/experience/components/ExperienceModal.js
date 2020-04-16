@@ -20,9 +20,9 @@ import ClayModal from '@clayui/modal';
 import classNames from 'classnames';
 import {useIsMounted} from 'frontend-js-react-web';
 import PropTypes from 'prop-types';
-import React, {useContext, useState} from 'react';
+import React, {useState} from 'react';
 
-import {ConfigContext} from '../../../app/config/index';
+import {config} from '../../../app/config/index';
 import Button from '../../../common/components/Button';
 
 const ExperienceModal = ({
@@ -36,9 +36,8 @@ const ExperienceModal = ({
 	onNewSegmentClick,
 	onSubmit,
 	segmentId,
-	segments = []
+	segments = [],
 }) => {
-	const {portletNamespace} = useContext(ConfigContext);
 	const [selectedSegmentId, setSelectedSegmentId] = useState(
 		segmentId !== undefined
 			? segmentId
@@ -59,15 +58,20 @@ const ExperienceModal = ({
 		const validSegmentId = _getValidValue(selectedSegmentId);
 
 		if (!validName || !validSegmentId) {
-			if (!validName) setRequiredNameError(true);
-			if (!validSegmentId) setRequiredSegmentError(true);
-		} else {
+			if (!validName) {
+				setRequiredNameError(true);
+			}
+			if (!validSegmentId) {
+				setRequiredSegmentError(true);
+			}
+		}
+		else {
 			setLoading(true);
 
 			onSubmit({
 				name,
 				segmentsEntryId: selectedSegmentId,
-				segmentsExperienceId: experienceId
+				segmentsExperienceId: experienceId,
 			}).finally(() => {
 				if (isMounted()) {
 					setLoading(false);
@@ -80,7 +84,8 @@ const ExperienceModal = ({
 
 		if (!_getValidValue(value)) {
 			setRequiredNameError(true);
-		} else {
+		}
+		else {
 			setRequiredNameError(false);
 		}
 
@@ -91,7 +96,8 @@ const ExperienceModal = ({
 
 		if (!_getValidValue(value)) {
 			setRequiredSegmentError(true);
-		} else {
+		}
+		else {
 			setRequiredSegmentError(false);
 		}
 
@@ -103,18 +109,18 @@ const ExperienceModal = ({
 		onNewSegmentClick({
 			experienceId,
 			experienceName: name,
-			segmentId: selectedSegmentId
+			segmentId: selectedSegmentId,
 		});
 	};
 
-	const nameInputId = portletNamespace + 'segmentsExperienceName';
-	const segmentSelectId = portletNamespace + 'segmentsExperienceSegment';
+	const nameInputId = `${config.portletNamespace}segmentsExperienceName`;
+	const segmentSelectId = `${config.portletNamespace}segmentsExperienceSegment`;
 
 	const nameGroupClassName = classNames('my-2', {
-		'has-error': requiredNameError
+		'has-error': requiredNameError,
 	});
 	const segmentGroupClassName = classNames('my-2', {
-		'has-error': requiredSegmentError
+		'has-error': requiredSegmentError,
 	});
 
 	const modalTitle = experienceId
@@ -276,7 +282,7 @@ ExperienceModal.propTypes = {
 	onNewSegmentClick: PropTypes.func.isRequired,
 	onSubmit: PropTypes.func.isRequired,
 	segmentId: PropTypes.string,
-	segments: PropTypes.array.isRequired
+	segments: PropTypes.array.isRequired,
 };
 
 function _getValidValue(value) {

@@ -49,8 +49,8 @@ class FormRenderer extends Component {
 		this.emit('fieldBlurred', event);
 	}
 
-	_handleFieldClicked(index) {
-		this.emit('fieldClicked', index);
+	_handleFieldClicked(event) {
+		this.emit('fieldClicked', event);
 	}
 
 	_handleFieldEdited(event) {
@@ -132,7 +132,7 @@ FormRenderer.STATE = {
 	 * @type {!string}
 	 */
 
-	spritemap: Config.string().required()
+	spritemap: Config.string().required(),
 };
 
 Soy.register(FormRenderer, templates);

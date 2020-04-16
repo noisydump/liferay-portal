@@ -1,0 +1,41 @@
+{
+	"pageElement": {
+		"pageElements": [
+			{
+				"definition": {
+					"fragmentSettings": {
+						"allowedFragments": [
+							{
+								"key": "BASIC_COMPONENT-button"
+							},
+							{
+								"key": "BASIC_COMPONENT-card"
+							},
+							{
+								"key": "FEATURED_CONTENT-banner-center"
+							},
+							{
+								"key": "com.liferay.fragment.internal.renderer.ContentObjectFragmentRenderer"
+							},
+							{
+								"key": "content-display"
+							}
+						]
+					}
+				},
+				"type": "DropZone"
+			}
+		],
+		"type": "Root"
+	},
+	"settings": {
+		"colorSchemeName": "01",
+		"themeName": "Classic",
+		"themeSettings": {
+			"lfr-theme:regular:show-footer": "false",
+			"lfr-theme:regular:show-header": "false",
+			"lfr-theme:regular:show-header-search": "false",
+			"lfr-theme:regular:wrap-widget-page-content": "false"
+		}
+	}
+}

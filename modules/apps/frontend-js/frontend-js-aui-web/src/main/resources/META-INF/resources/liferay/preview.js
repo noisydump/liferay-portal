@@ -67,40 +67,40 @@ AUI.add(
 			'<span class="lfr-preview-file-image-overlay-controls"></span>';
 
 		var MAP_EVENT_SCROLLER = {
-			src: STR_SCROLLER
+			src: STR_SCROLLER,
 		};
 
 		var Preview = A.Component.create({
 			ATTRS: {
 				actionContent: {
-					setter: A.one
+					setter: A.one,
 				},
 				activeThumb: {
-					value: null
+					value: null,
 				},
 				baseImageURL: {
-					value: null
+					value: null,
 				},
 				currentIndex: {
 					setter: '_setCurrentIndex',
-					value: 0
+					value: 0,
 				},
 				currentPreviewImage: {
-					setter: A.one
+					setter: A.one,
 				},
 				imageListContent: {
-					setter: A.one
+					setter: A.one,
 				},
 				maxIndex: {
 					validator: Lang.isNumber,
-					value: 0
+					value: 0,
 				},
 				previewFileIndexNode: {
-					setter: A.one
+					setter: A.one,
 				},
 				toolbar: {
-					setter: A.one
-				}
+					setter: A.one,
+				},
 			},
 
 			NAME: 'liferaypreview',
@@ -138,7 +138,7 @@ AUI.add(
 					if (!loadingIndicator) {
 						loadingIndicator = A.Node.create(
 							A.Lang.sub(TPL_LOADING_INDICATOR, [
-								Liferay.Language.get('loading')
+								Liferay.Language.get('loading'),
 							])
 						);
 
@@ -171,13 +171,13 @@ AUI.add(
 								},
 								visibleChange(event) {
 									maxOverlayMask.set('visible', event.newVal);
-								}
+								},
 							},
 							centered: true,
 							cssClass: 'lfr-preview-file-image-overlay',
 							height: '90vh',
 							plugins: [Liferay.WidgetZIndex],
-							width: '85vw'
+							width: '85vw',
 						}).render();
 
 						maxOverlay
@@ -201,7 +201,7 @@ AUI.add(
 
 					if (!maxOverlayMask) {
 						maxOverlayMask = new A.OverlayMask({
-							visible: true
+							visible: true,
 						});
 
 						instance._maxOverlayMask = maxOverlayMask;
@@ -281,7 +281,7 @@ AUI.add(
 					var imageIndex = previewImage.attr(ATTR_DATA_IMAGE_INDEX);
 
 					instance.set(STR_CURRENT_INDEX, imageIndex, {
-						src: 'scroller'
+						src: 'scroller',
 					});
 				},
 
@@ -347,7 +347,8 @@ AUI.add(
 					if (target.hasClass('lfr-preview-file-arrow')) {
 						if (target.hasClass('right')) {
 							instance._updateIndex(1);
-						} else if (target.hasClass('left')) {
+						}
+						else if (target.hasClass('left')) {
 							instance._updateIndex(-1);
 						}
 
@@ -403,7 +404,8 @@ AUI.add(
 
 						if (!instance._nodeList) {
 							instance._nodeList = nodeList;
-						} else {
+						}
+						else {
 							instance._nodeList = instance._nodeList.concat(
 								nodeList
 							);
@@ -431,8 +433,8 @@ AUI.add(
 											'_updateIndex',
 											instance,
 											-1
-										)
-									}
+										),
+									},
 								},
 								{
 									icon: 'icon-zoom-in',
@@ -440,8 +442,8 @@ AUI.add(
 										click: A.bind(
 											'_maximizePreview',
 											instance
-										)
-									}
+										),
+									},
 								},
 								{
 									icon: 'icon-circle-arrow-right',
@@ -450,11 +452,11 @@ AUI.add(
 											'_updateIndex',
 											instance,
 											1
-										)
-									}
-								}
-							]
-						]
+										),
+									},
+								},
+							],
+						],
 					}).render();
 				},
 
@@ -465,7 +467,8 @@ AUI.add(
 
 					if (isNaN(value)) {
 						value = A.Attribute.INVALID_VALUE;
-					} else {
+					}
+					else {
 						value = Math.min(
 							Math.max(value, 0),
 							instance.get(STR_MAX_INDEX) - 1
@@ -575,8 +578,8 @@ AUI.add(
 					instance._renderImages();
 
 					instance._actionContent.show();
-				}
-			}
+				},
+			},
 		});
 
 		Liferay.Preview = Preview;
@@ -588,7 +591,7 @@ AUI.add(
 			'aui-modal',
 			'aui-overlay-mask-deprecated',
 			'aui-toolbar',
-			'liferay-widget-zindex'
-		]
+			'liferay-widget-zindex',
+		],
 	}
 );

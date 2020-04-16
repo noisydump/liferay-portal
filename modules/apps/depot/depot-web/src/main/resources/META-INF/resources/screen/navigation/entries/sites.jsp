@@ -70,7 +70,7 @@ List<DepotEntryGroupRel> depotEntryGroupRels = depotAdminSitesDisplayContext.get
 
 			<liferay-ui:search-container-column-text
 				cssClass="table-cell-content"
-				helpMessage="shows-the-repository-content-in-search-results"
+				helpMessage="shows-the-asset-library-content-in-search-results"
 				name="searchable-content"
 			>
 				<liferay-ui:message key='<%= depotEntryGroupRel.isSearchable() ? "yes" : "no" %>' />
@@ -108,14 +108,14 @@ List<DepotEntryGroupRel> depotEntryGroupRels = depotAdminSitesDisplayContext.get
 					dialog: {
 						constrain: true,
 						destroyOnHide: true,
-						modal: true
+						modal: true,
 					},
 					eventName:
 						'<%= liferayPortletResponse.getNamespace() + "selectSite" %>',
 					id: '<portlet:namespace />selectSite',
 					title: '<liferay-ui:message key="select-site" />',
 					uri:
-						'<%= String.valueOf(depotAdminSitesDisplayContext.getItemSelectorURL()) %>'
+						'<%= String.valueOf(depotAdminSitesDisplayContext.getItemSelectorURL()) %>',
 				},
 				function(event) {
 					var toGroupIdInput = document.querySelector(

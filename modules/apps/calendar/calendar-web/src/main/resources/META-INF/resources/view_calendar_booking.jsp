@@ -149,7 +149,7 @@ AssetEntry layoutAssetEntry = AssetEntryLocalServiceUtil.getEntry(CalendarBookin
 
 			<c:if test="<%= calendar.isEnableRatings() %>">
 				<div class="entry-ratings">
-					<liferay-ui:ratings
+					<liferay-ratings:ratings
 						className="<%= CalendarBooking.class.getName() %>"
 						classPK="<%= calendarBooking.getCalendarBookingId() %>"
 						inTrash="<%= calendarBooking.isInTrash() %>"
@@ -221,7 +221,7 @@ AssetEntry layoutAssetEntry = AssetEntryLocalServiceUtil.getEntry(CalendarBookin
 					positionalWeekday = {
 						month: <%= startTimeJCalendar.get(java.util.Calendar.MONTH) %>,
 						position: <%= positionalWeekday.getPosition() %>,
-						weekday: '<%= positionalWeekday.getWeekday() %>'
+						weekday: '<%= positionalWeekday.getWeekday() %>',
 					};
 				</c:if>
 
@@ -232,7 +232,7 @@ AssetEntry layoutAssetEntry = AssetEntryLocalServiceUtil.getEntry(CalendarBookin
 					interval: <%= recurrence.getInterval() %>,
 					positionalWeekday: positionalWeekday,
 					untilDate: untilDate,
-					weekdays: <%= jsonSerializer.serialize(weekdayValues) %>
+					weekdays: <%= jsonSerializer.serialize(weekdayValues) %>,
 				};
 
 				var recurrenceSummary = Liferay.RecurrenceUtil.getSummary(recurrence);
@@ -300,7 +300,8 @@ AssetEntry layoutAssetEntry = AssetEntryLocalServiceUtil.getEntry(CalendarBookin
 						submitForm(document.<portlet:namespace />fm);
 					}
 				);
-			} else {
+			}
+			else {
 				submitForm(document.<portlet:namespace />fm);
 			}
 		}

@@ -242,7 +242,8 @@ if (WebFormUtil.getTableRowsCount(company.getCompanyId(), databaseTableName) > 0
 			if (value === 'options' || value === 'radio') {
 				optionsDiv.all('label').show();
 				optionsDiv.show();
-			} else {
+			}
+			else {
 				optionsDiv.hide();
 			}
 
@@ -309,7 +310,7 @@ if (WebFormUtil.getTableRowsCount(company.getCompanyId(), databaseTableName) > 0
 				<portlet:param name="<%= Constants.CMD %>" value="<%= Constants.ADD %>" />
 			</liferay-portlet:renderURL>
 
-			url: '<%= editFieldURL %>'
+			url: '<%= editFieldURL %>',
 		}).render();
 	</aui:script>
 </c:if>

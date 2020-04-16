@@ -8,7 +8,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.liferay</groupId>
 	<artifactId>com.liferay.mule</artifactId>
-	<version>1.0.0-SNAPSHOT</version>
+	<version>1.0.0</version>
 	<packaging>mule-extension</packaging>
 	<name>Liferay Connector</name>
 	<dependencies>
@@ -72,7 +72,7 @@
 			<plugin>
 				<groupId>com.liferay</groupId>
 				<artifactId>com.liferay.source.formatter</artifactId>
-				<version>1.0.957</version>
+				<version>1.0.966</version>
 			</plugin>
 			<plugin>
 				<groupId>com.liferay</groupId>
@@ -103,4 +103,10 @@
 			<url>https://repository-master.mulesoft.org/nexus/content/repositories/releases/</url>
 		</repository>
 	</repositories>
+	<scm>
+		<connection>scm:git:git://github.com/liferay/liferay-etl-mulesoft</connection>
+		<developerConnection>scm:svn:https://github.com/liferay/liferay-etl-mulesoft/tree/master</developerConnection>
+		<tag>etl-mulesoft-1.0.0</tag>
+		<url>https://github.com/liferay/liferay-etl-mulesoft/tree/master</url>
+	</scm>
 </project>

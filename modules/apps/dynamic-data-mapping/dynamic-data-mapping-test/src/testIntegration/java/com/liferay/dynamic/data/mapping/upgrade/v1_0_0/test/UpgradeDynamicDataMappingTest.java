@@ -76,8 +76,8 @@ import java.util.Objects;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.ClassRule;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -88,7 +88,6 @@ import org.skyscreamer.jsonassert.JSONAssert;
  * @author Marcellus Tavares
  * @author Inácio Nery
  */
-@Ignore
 @RunWith(Arquillian.class)
 public class UpgradeDynamicDataMappingTest {
 
@@ -96,6 +95,11 @@ public class UpgradeDynamicDataMappingTest {
 	@Rule
 	public static final AggregateTestRule aggregateTestRule =
 		new LiferayIntegrationTestRule();
+
+	@BeforeClass
+	public static void setUpClass() throws Exception {
+		setUpDDMStructureTable();
+	}
 
 	@Before
 	public void setUp() throws Exception {
@@ -1224,6 +1228,12 @@ public class UpgradeDynamicDataMappingTest {
 		String actualData = getContentData(_contentId);
 
 		JSONAssert.assertEquals(expectedData, actualData, false);
+	}
+
+	protected static void setUpDDMStructureTable() throws Exception {
+		DB db = DBManagerUtil.getDB();
+
+		db.runSQL("delete from DDMStructure where userName is NOT NULL");
 	}
 
 	protected void addContent(long contentId, String data) throws Exception {

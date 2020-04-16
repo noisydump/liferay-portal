@@ -73,6 +73,11 @@ public class WikiNodeResourceImpl
 		throws Exception {
 
 		return SearchUtil.search(
+			HashMapBuilder.<String, Map<String, String>>put(
+				"create",
+				addAction(
+					"ADD_NODE", "postSiteWikiNode", "com.liferay.wiki", siteId)
+			).build(),
 			booleanQuery -> {
 				BooleanFilter booleanFilter =
 					booleanQuery.getPreBooleanFilter();
@@ -86,10 +91,10 @@ public class WikiNodeResourceImpl
 				Field.ENTRY_CLASS_PK),
 			searchContext -> searchContext.setCompanyId(
 				contextCompany.getCompanyId()),
+			sorts,
 			document -> _toWikiNode(
 				_wikiNodeService.getNode(
-					GetterUtil.getLong(document.get(Field.ENTRY_CLASS_PK)))),
-			sorts, (Map)_getActions(siteId));
+					GetterUtil.getLong(document.get(Field.ENTRY_CLASS_PK)))));
 	}
 
 	@Override
@@ -132,38 +137,24 @@ public class WikiNodeResourceImpl
 		_wikiNodeService.unsubscribeNode(wikiNodeId);
 	}
 
-	private Map<String, Map<String, String>> _getActions(
-		com.liferay.wiki.model.WikiNode wikiNode) {
-
-		return HashMapBuilder.<String, Map<String, String>>put(
-			"delete", addAction("DELETE", wikiNode, "deleteWikiNode")
-		).put(
-			"get", addAction("VIEW", wikiNode, "getWikiNode")
-		).put(
-			"replace", addAction("UPDATE", wikiNode, "putWikiNode")
-		).put(
-			"subscribe",
-			addAction("SUBSCRIBE", wikiNode, "putWikiNodeSubscribe")
-		).put(
-			"unsubscribe",
-			addAction("SUBSCRIBE", wikiNode, "putWikiNodeUnsubscribe")
-		).build();
-	}
-
-	private Map<String, Map<String, String>> _getActions(Long siteId) {
-		return HashMapBuilder.<String, Map<String, String>>put(
-			"create",
-			addAction(
-				"ADD_NODE", "postSiteWikiNode", "com.liferay.wiki", siteId)
-		).build();
-	}
-
 	private WikiNode _toWikiNode(com.liferay.wiki.model.WikiNode wikiNode)
 		throws Exception {
 
 		return new WikiNode() {
 			{
-				actions = (Map)_getActions(wikiNode);
+				actions = HashMapBuilder.<String, Map<String, String>>put(
+					"delete", addAction("DELETE", wikiNode, "deleteWikiNode")
+				).put(
+					"get", addAction("VIEW", wikiNode, "getWikiNode")
+				).put(
+					"replace", addAction("UPDATE", wikiNode, "putWikiNode")
+				).put(
+					"subscribe",
+					addAction("SUBSCRIBE", wikiNode, "putWikiNodeSubscribe")
+				).put(
+					"unsubscribe",
+					addAction("SUBSCRIBE", wikiNode, "putWikiNodeUnsubscribe")
+				).build();
 				creator = CreatorUtil.toCreator(
 					_portal,
 					_userLocalService.getUserById(wikiNode.getUserId()));

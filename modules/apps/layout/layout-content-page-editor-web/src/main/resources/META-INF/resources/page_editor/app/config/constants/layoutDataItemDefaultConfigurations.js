@@ -12,11 +12,18 @@
  * details.
  */
 
+import {CONTAINER_TYPES} from './containerTypes';
 import {LAYOUT_DATA_ITEM_TYPES} from './layoutDataItemTypes';
 
 export const LAYOUT_DATA_ITEM_DEFAULT_CONFIGURATIONS = {
+	[LAYOUT_DATA_ITEM_TYPES.collection]: {
+		collection: {},
+		numberOfColumns: 1,
+		numberOfItems: 5,
+	},
+
 	[LAYOUT_DATA_ITEM_TYPES.column]: {
-		size: 0
+		size: 0,
 	},
 
 	[LAYOUT_DATA_ITEM_TYPES.container]: {
@@ -25,17 +32,17 @@ export const LAYOUT_DATA_ITEM_DEFAULT_CONFIGURATIONS = {
 		paddingBottom: 3,
 		paddingHorizontal: 3,
 		paddingTop: 3,
-		type: 'fluid'
+		type: CONTAINER_TYPES.fixed,
 	},
 
 	[LAYOUT_DATA_ITEM_TYPES.fragment]: {
-		fragmentEntryLinkId: ''
+		fragmentEntryLinkId: '',
 	},
 
 	[LAYOUT_DATA_ITEM_TYPES.root]: {},
 
 	[LAYOUT_DATA_ITEM_TYPES.row]: {
 		gutters: true,
-		numberOfColumns: 3
-	}
+		numberOfColumns: 3,
+	},
 };

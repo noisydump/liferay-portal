@@ -45,8 +45,8 @@ AUI.add(
 			ATTRS: {
 				default: {
 					setter: A.DataType.Boolean.parse,
-					value: false
-				}
+					value: false,
+				},
 			},
 
 			EXTENDS: A.Connector,
@@ -70,13 +70,13 @@ AUI.add(
 						{
 							attributeName: 'default',
 							editor: new A.RadioCellEditor({
-								options: ['true', 'false']
+								options: ['true', 'false'],
 							}),
-							name: KaleoDesignerStrings.default
-						}
+							name: KaleoDesignerStrings.default,
+						},
 					]);
-				}
-			}
+				},
+			},
 		});
 
 		var DiagramNodeState = A.Component.create({
@@ -84,30 +84,30 @@ AUI.add(
 				actions: {},
 
 				iconClass: {
-					value: 'circle'
+					value: 'circle',
 				},
 
 				initial: {
 					setter: A.DataType.Boolean.parse,
-					value: false
+					value: false,
 				},
 
 				metadata: {
 					validator: isObject,
-					value: {}
+					value: {},
 				},
 
 				notifications: {},
 
 				strings: {
-					value: KaleoDesignerStrings
+					value: KaleoDesignerStrings,
 				},
 
 				taskTimers: {},
 
 				xmlType: {
-					value: 'state'
-				}
+					value: 'state',
+				},
 			},
 
 			AUGMENTS: [A.WidgetCssClass],
@@ -150,7 +150,8 @@ AUI.add(
 							'transform',
 							'matrix(1,0,0,1,2,2)'
 						);
-					} else {
+					}
+					else {
 						icon.setAttribute('height', '34px');
 						icon.setAttribute('width', '34px');
 						instance.boundary.set(
@@ -202,13 +203,13 @@ AUI.add(
 						'script',
 						'scriptLanguage',
 						'taskTimers',
-						'xmlType'
+						'xmlType',
 					]
 				),
 
 				getConnectionNode() {
 					var node = new Liferay.KaleoDesignerNodes.DiagramNodeTask({
-						xy: [100, 100]
+						xy: [100, 100],
 					});
 
 					return node;
@@ -230,29 +231,29 @@ AUI.add(
 						{
 							attributeName: 'actions',
 							editor: new KaleoDesignerEditors.ActionsEditor({
-								builder
+								builder,
 							}),
 							formatter: PropertyListFormatter.names,
-							name: strings.actions
+							name: strings.actions,
 						},
 						{
 							attributeName: 'notifications',
 							editor: new KaleoDesignerEditors.NotificationsEditor(
 								{
-									builder
+									builder,
 								}
 							),
 							formatter: PropertyListFormatter.names,
-							name: strings.notifications
+							name: strings.notifications,
 						},
 						{
 							attributeName: 'taskTimers',
 							editor: new KaleoDesignerEditors.TaskTimersEditor({
-								builder
+								builder,
 							}),
 							formatter: PropertyListFormatter.names,
-							name: strings.timers
-						}
+							name: strings.timers,
+						},
 					]);
 
 					var typeModel = availablePropertyModels[type];
@@ -271,7 +272,8 @@ AUI.add(
 							parentModel,
 							arguments
 						);
-					} else {
+					}
+					else {
 						returnValue = model.concat(parentModel);
 					}
 
@@ -294,8 +296,8 @@ AUI.add(
 					metadata[key] = value;
 
 					instance.set('metadata', metadata);
-				}
-			}
+				},
+			},
 		});
 
 		DiagramBuilderTypes.state = DiagramNodeState;
@@ -303,36 +305,36 @@ AUI.add(
 		var DiagramNodeCondition = A.Component.create({
 			ATTRS: {
 				height: {
-					value: 60
+					value: 60,
 				},
 
 				iconClass: {
-					value: 'diamond'
+					value: 'diamond',
 				},
 
 				script: {
 					validator: isString,
-					value: 'returnValue = "Transition Name";'
+					value: 'returnValue = "Transition Name";',
 				},
 
 				scriptLanguage: {
 					validator: isString,
-					value: 'groovy'
+					value: 'groovy',
 				},
 
 				type: {
 					validator: isString,
-					value: 'condition'
+					value: 'condition',
 				},
 
 				width: {
-					value: 60
+					value: 60,
 				},
 
 				xmlType: {
 					validator: isString,
-					value: 'condition'
-				}
+					value: 'condition',
+				},
 			},
 
 			EXTENDS: DiagramNodeState,
@@ -367,15 +369,15 @@ AUI.add(
 							attributeName: 'script',
 							editor: new KaleoDesignerEditors.ScriptEditor(),
 							formatter: PropertyListFormatter.script,
-							name: strings.script
+							name: strings.script,
 						},
 						{
 							attributeName: 'scriptLanguage',
 							editor: new A.DropDownCellEditor({
-								options: instance.getScriptLanguageOptions()
+								options: instance.getScriptLanguageOptions(),
 							}),
-							name: strings.scriptLanguage
-						}
+							name: strings.scriptLanguage,
+						},
 					]);
 
 					var typeModel = availablePropertyModels[type];
@@ -394,7 +396,8 @@ AUI.add(
 							parentModel,
 							arguments
 						);
-					} else {
+					}
+					else {
 						returnValue = model.concat(parentModel);
 					}
 
@@ -433,8 +436,8 @@ AUI.add(
 
 				hotPoints: A.DiagramNode.DIAMOND_POINTS,
 
-				renderShapeBoundary
-			}
+				renderShapeBoundary,
+			},
 		});
 
 		DiagramBuilderTypes.condition = DiagramNodeCondition;
@@ -442,26 +445,26 @@ AUI.add(
 		var DiagramNodeJoin = A.Component.create({
 			ATTRS: {
 				height: {
-					value: 60
+					value: 60,
 				},
 
 				iconClass: {
-					value: 'arrow-join'
+					value: 'arrow-join',
 				},
 
 				type: {
 					validator: isString,
-					value: 'join'
+					value: 'join',
 				},
 
 				width: {
-					value: 60
+					value: 60,
 				},
 
 				xmlType: {
 					validator: isString,
-					value: 'join'
-				}
+					value: 'join',
+				},
 			},
 
 			EXTENDS: DiagramNodeState,
@@ -480,8 +483,8 @@ AUI.add(
 
 				hotPoints: A.DiagramNode.DIAMOND_POINTS,
 
-				renderShapeBoundary
-			}
+				renderShapeBoundary,
+			},
 		});
 
 		DiagramBuilderTypes.join = DiagramNodeJoin;
@@ -489,18 +492,18 @@ AUI.add(
 		var DiagramNodeJoinXOR = A.Component.create({
 			ATTRS: {
 				iconClass: {
-					value: 'arrow-xor'
+					value: 'arrow-xor',
 				},
 
 				type: {
 					validator: isString,
-					value: 'join-xor'
+					value: 'join-xor',
 				},
 
 				xmlType: {
 					validator: isString,
-					value: 'join-xor'
-				}
+					value: 'join-xor',
+				},
 			},
 
 			EXTENDS: DiagramNodeJoin,
@@ -517,8 +520,8 @@ AUI.add(
 					return shape;
 				},
 
-				renderShapeBoundary
-			}
+				renderShapeBoundary,
+			},
 		});
 
 		DiagramBuilderTypes['join-xor'] = DiagramNodeJoinXOR;
@@ -526,26 +529,26 @@ AUI.add(
 		var DiagramNodeFork = A.Component.create({
 			ATTRS: {
 				height: {
-					value: 60
+					value: 60,
 				},
 
 				iconClass: {
-					value: 'arrow-split'
+					value: 'arrow-split',
 				},
 
 				type: {
 					validator: isString,
-					value: 'fork'
+					value: 'fork',
 				},
 
 				width: {
-					value: 60
+					value: 60,
 				},
 
 				xmlType: {
 					validator: isString,
-					value: 'fork'
-				}
+					value: 'fork',
+				},
 			},
 
 			EXTENDS: DiagramNodeState,
@@ -564,7 +567,7 @@ AUI.add(
 
 				getConnectionNode() {
 					var node = new DiagramNodeJoin({
-						xy: [100, 100]
+						xy: [100, 100],
 					});
 
 					return node;
@@ -572,8 +575,8 @@ AUI.add(
 
 				hotPoints: A.DiagramNode.DIAMOND_POINTS,
 
-				renderShapeBoundary
-			}
+				renderShapeBoundary,
+			},
 		});
 
 		DiagramBuilderTypes.fork = DiagramNodeFork;
@@ -581,22 +584,22 @@ AUI.add(
 		var DiagramNodeStart = A.Component.create({
 			ATTRS: {
 				iconClass: {
-					value: 'arrow-start'
+					value: 'arrow-start',
 				},
 
 				initial: {
-					value: true
+					value: true,
 				},
 
 				maxFields: {
 					validator: isNumber,
-					value: 1
+					value: 1,
 				},
 
 				type: {
 					validator: isString,
-					value: 'start'
-				}
+					value: 'start',
+				},
 			},
 
 			EXTENDS: DiagramNodeState,
@@ -614,14 +617,14 @@ AUI.add(
 
 				getConnectionNode() {
 					var node = new DiagramNodeCondition({
-						xy: [100, 100]
+						xy: [100, 100],
 					});
 
 					return node;
 				},
 
-				renderShapeBoundary
-			}
+				renderShapeBoundary,
+			},
 		});
 
 		DiagramBuilderTypes.start = DiagramNodeStart;
@@ -629,19 +632,19 @@ AUI.add(
 		var DiagramNodeEnd = A.Component.create({
 			ATTRS: {
 				iconClass: {
-					value: 'arrow-end'
+					value: 'arrow-end',
 				},
 
 				metadata: {
 					value: {
-						terminal: true
-					}
+						terminal: true,
+					},
 				},
 
 				type: {
 					validator: isString,
-					value: 'end'
-				}
+					value: 'end',
+				},
 			},
 
 			EXTENDS: DiagramNodeState,
@@ -653,7 +656,7 @@ AUI.add(
 					var instance = this;
 
 					instance.addField({
-						maxTargets: 0
+						maxTargets: 0,
 					});
 				},
 
@@ -680,8 +683,8 @@ AUI.add(
 					return shape;
 				},
 
-				renderShapeBoundary
-			}
+				renderShapeBoundary,
+			},
 		});
 
 		DiagramBuilderTypes.end = DiagramNodeEnd;
@@ -690,37 +693,37 @@ AUI.add(
 			ATTRS: {
 				assignments: {
 					validator: isObject,
-					value: {}
+					value: {},
 				},
 
 				forms: {
 					value: {
 						templateId: [0],
-						templateName: [STR_BLANK]
-					}
+						templateName: [STR_BLANK],
+					},
 				},
 
 				height: {
-					value: 70
+					value: 70,
 				},
 
 				iconClass: {
-					value: 'square'
+					value: 'square',
 				},
 
 				type: {
 					validator: isString,
-					value: 'task'
+					value: 'task',
 				},
 
 				width: {
-					value: 70
+					value: 70,
 				},
 
 				xmlType: {
 					validator: isString,
-					value: 'task'
-				}
+					value: 'task',
+				},
 			},
 
 			EXTENDS: DiagramNodeState,
@@ -743,8 +746,8 @@ AUI.add(
 
 				hotPoints: A.DiagramNode.SQUARE_POINTS,
 
-				renderShapeBoundary
-			}
+				renderShapeBoundary,
+			},
 		});
 
 		DiagramBuilderTypes.task = DiagramNodeTask;
@@ -760,7 +763,7 @@ AUI.add(
 			DiagramNodeJoin,
 			DiagramNodeStart,
 			DiagramNodeState,
-			DiagramNodeTask
+			DiagramNodeTask,
 		};
 	},
 	'',
@@ -771,7 +774,7 @@ AUI.add(
 			'aui-diagram-builder',
 			'liferay-kaleo-designer-editors',
 			'liferay-kaleo-designer-remote-services',
-			'liferay-kaleo-designer-utils'
-		]
+			'liferay-kaleo-designer-utils',
+		],
 	}
 );

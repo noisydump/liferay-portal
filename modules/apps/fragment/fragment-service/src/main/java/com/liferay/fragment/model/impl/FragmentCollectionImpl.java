@@ -16,7 +16,9 @@ package com.liferay.fragment.model.impl;
 
 import com.liferay.fragment.constants.FragmentExportImportConstants;
 import com.liferay.fragment.constants.FragmentPortletKeys;
+import com.liferay.fragment.model.FragmentComposition;
 import com.liferay.fragment.model.FragmentEntry;
+import com.liferay.fragment.service.FragmentCompositionLocalServiceUtil;
 import com.liferay.fragment.service.FragmentEntryLocalServiceUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
@@ -24,11 +26,13 @@ import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
+import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.Repository;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.portletfilerepository.PortletFileRepositoryUtil;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.repository.model.Folder;
+import com.liferay.portal.kernel.service.CompanyLocalServiceUtil;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.UserLocalServiceUtil;
 import com.liferay.portal.kernel.zip.ZipWriter;
@@ -42,8 +46,17 @@ public class FragmentCollectionImpl extends FragmentCollectionBaseImpl {
 
 	@Override
 	public List<FileEntry> getResources() throws PortalException {
+		long groupId = getGroupId();
+
+		if (groupId == 0) {
+			Company company = CompanyLocalServiceUtil.getCompany(
+				getCompanyId());
+
+			groupId = company.getGroupId();
+		}
+
 		return PortletFileRepositoryUtil.getPortletFileEntries(
-			getGroupId(), getResourcesFolderId());
+			groupId, getResourcesFolderId());
 	}
 
 	@Override
@@ -135,8 +148,17 @@ public class FragmentCollectionImpl extends FragmentCollectionBaseImpl {
 
 		zipWriter.addEntry(
 			path + StringPool.SLASH +
-				FragmentExportImportConstants.FILE_NAME_COLLECTION_CONFIG,
+				FragmentExportImportConstants.FILE_NAME_COLLECTION,
 			jsonObject.toString());
+
+		List<FragmentComposition> fragmentCompositions =
+			FragmentCompositionLocalServiceUtil.getFragmentCompositions(
+				getFragmentCollectionId());
+
+		for (FragmentComposition fragmentComposition : fragmentCompositions) {
+			fragmentComposition.populateZipWriter(
+				zipWriter, path + "/fragments");
+		}
 
 		List<FragmentEntry> fragmentEntries =
 			FragmentEntryLocalServiceUtil.getFragmentEntries(

@@ -12,15 +12,15 @@
 import {ClayButtonWithIcon} from '@clayui/button';
 import {ClayInput} from '@clayui/form';
 import ClayManagementToolbar from '@clayui/management-toolbar';
-import React, {useState, useEffect} from 'react';
+import React, {useEffect, useState} from 'react';
 
 import {useRouter} from '../../hooks/useRouter.es';
-import {pushToHistory} from '../filter/util/filterUtil.es';
+import {replaceHistory} from '../filter/util/filterUtil.es';
 import {parse, stringify} from '../router/queryString.es';
 
 const SearchField = ({
 	disabled,
-	placeholder = Liferay.Language.get('search-for')
+	placeholder = Liferay.Language.get('search-for'),
 }) => {
 	const routerProps = useRouter();
 
@@ -42,7 +42,7 @@ const SearchField = ({
 
 		query.search = searchValue;
 
-		pushToHistory(stringify(query), routerProps);
+		replaceHistory(stringify(query), routerProps);
 	};
 
 	return (

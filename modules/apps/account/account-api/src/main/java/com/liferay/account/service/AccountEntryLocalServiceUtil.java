@@ -90,6 +90,16 @@ public class AccountEntryLocalServiceUtil {
 		return getService().createAccountEntry(accountEntryId);
 	}
 
+	/**
+	 * @throws PortalException
+	 */
+	public static com.liferay.portal.kernel.model.PersistedModel
+			createPersistedModel(java.io.Serializable primaryKeyObj)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return getService().createPersistedModel(primaryKeyObj);
+	}
+
 	public static void deactivateAccountEntries(long[] accountEntryIds)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
@@ -113,6 +123,10 @@ public class AccountEntryLocalServiceUtil {
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		getService().deleteAccountEntries(accountEntryIds);
+	}
+
+	public static void deleteAccountEntriesByCompanyId(long companyId) {
+		getService().deleteAccountEntriesByCompanyId(companyId);
 	}
 
 	/**
@@ -321,6 +335,9 @@ public class AccountEntryLocalServiceUtil {
 		return getService().getOSGiServiceIdentifier();
 	}
 
+	/**
+	 * @throws PortalException
+	 */
 	public static com.liferay.portal.kernel.model.PersistedModel
 			getPersistedModel(java.io.Serializable primaryKeyObj)
 		throws com.liferay.portal.kernel.exception.PortalException {

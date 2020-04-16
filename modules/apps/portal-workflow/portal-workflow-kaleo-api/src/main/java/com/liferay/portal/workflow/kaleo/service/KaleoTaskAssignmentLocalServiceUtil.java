@@ -55,15 +55,15 @@ public class KaleoTaskAssignmentLocalServiceUtil {
 	public static com.liferay.portal.workflow.kaleo.model.KaleoTaskAssignment
 			addKaleoTaskAssignment(
 				String kaleoClassName, long kaleoClassPK,
-				long kaleoDefinitionVersionId,
+				long kaleoDefinitionId, long kaleoDefinitionVersionId,
 				com.liferay.portal.workflow.kaleo.definition.Assignment
 					assignment,
 				com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return getService().addKaleoTaskAssignment(
-			kaleoClassName, kaleoClassPK, kaleoDefinitionVersionId, assignment,
-			serviceContext);
+			kaleoClassName, kaleoClassPK, kaleoDefinitionId,
+			kaleoDefinitionVersionId, assignment, serviceContext);
 	}
 
 	/**
@@ -76,6 +76,16 @@ public class KaleoTaskAssignmentLocalServiceUtil {
 		createKaleoTaskAssignment(long kaleoTaskAssignmentId) {
 
 		return getService().createKaleoTaskAssignment(kaleoTaskAssignmentId);
+	}
+
+	/**
+	 * @throws PortalException
+	 */
+	public static com.liferay.portal.kernel.model.PersistedModel
+			createPersistedModel(java.io.Serializable primaryKeyObj)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return getService().createPersistedModel(primaryKeyObj);
 	}
 
 	public static void deleteCompanyKaleoTaskAssignments(long companyId) {
@@ -317,6 +327,9 @@ public class KaleoTaskAssignmentLocalServiceUtil {
 		return getService().getOSGiServiceIdentifier();
 	}
 
+	/**
+	 * @throws PortalException
+	 */
 	public static com.liferay.portal.kernel.model.PersistedModel
 			getPersistedModel(java.io.Serializable primaryKeyObj)
 		throws com.liferay.portal.kernel.exception.PortalException {

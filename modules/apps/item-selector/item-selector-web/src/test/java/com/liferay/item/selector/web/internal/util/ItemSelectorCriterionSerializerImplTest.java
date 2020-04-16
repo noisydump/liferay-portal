@@ -63,13 +63,13 @@ public class ItemSelectorCriterionSerializerImplTest {
 		String json = _stubItemSelectorCriterionSerializerImpl.serialize(
 			_flickrItemSelectorCriterion);
 
-		Class<? extends ItemSelectorReturnType>
-			testURLItemSelectorReturnTypeClass =
-				_testURLItemSelectorReturnType.getClass();
+		String itemSelectorReturnTypeKey =
+			ItemSelectorKeyUtil.getItemSelectorReturnTypeKey(
+				TestURLItemSelectorReturnType.class);
 
 		json = _assert(
 			"\"desiredItemSelectorReturnTypes\":\"" +
-				testURLItemSelectorReturnTypeClass.getName() + "\"",
+				itemSelectorReturnTypeKey + "\"",
 			json);
 
 		json = _assert("\"tags\":[\"me\",\"photo\",\"picture\"]", json);

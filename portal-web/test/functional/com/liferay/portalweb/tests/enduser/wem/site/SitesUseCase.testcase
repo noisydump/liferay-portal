@@ -130,7 +130,8 @@ definition {
 
 	@priority = "5"
 	test AddOrganizationSitesAndDeactivate {
-		property test.name.skip.portal.instance = "SitesUsecase#AddOrganizationSitesAndDeactivate";
+		property portal.upstream = "quarantine";
+		property test.name.skip.portal.instance = "SitesUseCase#AddOrganizationSitesAndDeactivate";
 		property testray.component.names = "Site Administration,Training,Users and Organizations";
 
 		ProductMenu.gotoPortlet(
@@ -167,17 +168,11 @@ definition {
 			organizationSite = "Community Site",
 			orgName = "Organization Name 1");
 
-		ProductMenu.gotoPortlet(
-			category = "Users",
-			panel = "Control Panel",
-			portlet = "Users and Organizations");
+		Site.openSiteSettingsAdmin(siteURLKey = "organization-name-1");
 
-		UsersAndOrganizationsNavigator.gotoOrganizations();
-
-		Organization.manageMembershipOptionsInSites(
+		Site.manageMembershipOptions(
 			allowManualMembershipManagement = "true",
 			membershipType = "Open",
-			orgName = "Organization Name 1",
 			selectMembershipType = "true");
 
 		ProductMenu.gotoPortlet(
@@ -209,17 +204,11 @@ definition {
 			organizationSite = "Intranet Site",
 			orgName = "Organization Name 2");
 
-		ProductMenu.gotoPortlet(
-			category = "Users",
-			panel = "Control Panel",
-			portlet = "Users and Organizations");
+		Site.openSiteSettingsAdmin(siteURLKey = "organization-name-2");
 
-		UsersAndOrganizationsNavigator.gotoOrganizations();
-
-		Organization.manageMembershipOptionsInSites(
+		Site.manageMembershipOptions(
 			allowManualMembershipManagement = "true",
 			membershipType = "Open",
-			orgName = "Organization Name 2",
 			selectMembershipType = "true");
 
 		ProductMenu.gotoPortlet(
@@ -274,9 +263,9 @@ definition {
 			panel = "Control Panel",
 			portlet = "Roles");
 
-		Role.assignRegRoleCP(
+		JSONRole.assignRoleToUser(
 			roleTitle = "Administrator",
-			userScreenName = "usersn");
+			userEmailAddress = "userea@liferay.com");
 
 		User.firstLoginPG(userEmailAddress = "userea@liferay.com");
 
@@ -445,9 +434,9 @@ definition {
 			panel = "Control Panel",
 			portlet = "Roles");
 
-		Role.assignRegRoleCP(
+		JSONRole.assignRoleToUser(
 			roleTitle = "Roles Regrole Name",
-			userScreenName = "usersn");
+			userEmailAddress = "userea@liferay.com");
 
 		User.logoutAndLoginPG(
 			userLoginEmailAddress = "userea@liferay.com",
@@ -560,6 +549,7 @@ definition {
 	@priority = "3"
 	test ReturnWrongLayoutForSignedInUserWithVirtualHostsConfigured {
 		property custom.properties = "layout.default.template.id=2_columns_iii${line.separator}layout.user.private.layouts.enabled=false${line.separator}layout.user.private.layouts.auto.create=false${line.separator}layout.user.private.layouts.power.user.required=true${line.separator}layout.user.public.layouts.enabled=false${line.separator}layout.user.public.layouts.auto.create=false${line.separator}layout.user.public.layouts.power.user.required=true";
+		property portal.upstream = "quarantine";
 		property test.name.skip.portal.instance = "SitesUsecase#ReturnWrongLayoutForSignedInUserWithVirtualHostsConfigured";
 		property testray.component.names = "Site Administration";
 
@@ -607,8 +597,8 @@ definition {
 			portlet = "Server Administration");
 
 		ServerAdministration.configureMailServerSettings(
-			userName = PropsUtil.get("email.address.1"),
-			userPassword = PropsUtil.get("email.password.1"));
+			userName = PropsUtil.get("email.address.2"),
+			userPassword = PropsUtil.get("email.password.2"));
 
 		Navigator.openSpecificURL(url = "http://www.able.com:8080/");
 
@@ -618,7 +608,7 @@ definition {
 
 		User.addCreateAccountPG(
 			newPassword = "password",
-			userEmailAddress = PropsUtil.get("email.address.2"),
+			userEmailAddress = PropsUtil.get("email.address.3"),
 			userFirstName = "userfn",
 			userLastName = "userln",
 			userScreenName = "usersn");
@@ -626,8 +616,8 @@ definition {
 		Pause(locator1 = "30000");
 
 		Gmail.login(
-			userEmailAddress = PropsUtil.get("email.address.2"),
-			userPassword = PropsUtil.get("email.password.2"));
+			userEmailAddress = PropsUtil.get("email.address.3"),
+			userPassword = PropsUtil.get("email.password.3"));
 
 		Gmail.gotoHtmlMode();
 
@@ -647,7 +637,7 @@ definition {
 		User.signInPG(
 			emailPassword = "password",
 			emailVerification = "${emailVerification}",
-			userEmailAddress = PropsUtil.get("email.address.2"));
+			userEmailAddress = PropsUtil.get("email.address.3"));
 
 		User.firstLoginPG(
 			password = "test",
@@ -662,11 +652,11 @@ definition {
 
 		Navigator.openSpecificURL(url = "http://www.baker.com:8080/");
 
-		User.editEmailViaMyAccount(userEmailAddress = PropsUtil.get("email.address.3"));
+		User.editEmailViaMyAccount(userEmailAddress = PropsUtil.get("email.address.4"));
 
 		Gmail.logoutAndLogin(
-			userEmailAddress = PropsUtil.get("email.address.3"),
-			userPassword = PropsUtil.get("email.password.3"));
+			userEmailAddress = PropsUtil.get("email.address.4"),
+			userPassword = PropsUtil.get("email.password.4"));
 
 		Gmail.gotoHtmlMode();
 
@@ -897,10 +887,13 @@ definition {
 
 	@priority = "4"
 	test SitesDemoSiteManagement {
-		property portal.release = "false";
+		property portal.release = "true";
+		property portal.upstream = "quarantine";
 		property test.name.skip.portal.instance = "SitesUsecase#SitesDemoSiteManagement";
 		property testray.component.names = "Site Administration,Site Pages Administration";
 		var portalURL = PropsUtil.get("portal.url");
+
+		// Quarantine for LRQA-56385
 
 		ProductMenu.gotoPortlet(
 			category = "Sites",
@@ -1288,6 +1281,44 @@ definition {
 		AssertHTMLSourceTextNotPresent(value1 = "${actualScript}");
 
 		AssertHTMLSourceTextPresent(value1 = "${escapedScript}");
+	}
+
+	@description = "This ensures that the custom site logo can be viewed in cards and list views."
+	@priority = "4"
+	test ViewSiteLogo {
+		property portal.upstream = "quarantine";
+		JSONGroup.addGroup(groupName = "Site Name");
+
+		JSONLayout.addPublicLayout(
+			groupName = "Site Name",
+			layoutName = "Site Page");
+
+		JSONGroup.addChildSite(
+			groupName = "Child SiteName",
+			parentGroupName = "Site Name");
+
+		JSONLayout.addPublicLayout(
+			groupName = "Child SiteName",
+			layoutName = "Site Page",
+			parentGroupName = "Site Name");
+
+		Navigator.openSiteURL(siteName = "Site Name");
+
+		Site.changeSiteLogo(
+			logoFile = "Document_2.png",
+			pageName = "Public Pages");
+
+		Navigator.openSiteURL(siteName = "Child SiteName");
+
+		Site.changeSiteLogo(
+			logoFile = "Document_3.png",
+			pageName = "Public Pages");
+
+		Site.viewCustomSiteLogoInDifferentViews(site = "Site Name");
+
+		IFrame.closeFrame();
+
+		Site.viewCustomSiteLogoInDifferentViews(site = "Child SiteName");
 	}
 
 }

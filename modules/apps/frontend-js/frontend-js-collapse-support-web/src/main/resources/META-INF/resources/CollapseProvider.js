@@ -18,16 +18,16 @@ const CssClass = {
 	COLLAPSE: 'collapse',
 	COLLAPSED: 'collapsed',
 	COLLAPSING: 'collapsing',
-	SHOW: 'show'
+	SHOW: 'show',
 };
 
 const Dimension = {
 	HEIGHT: 'height',
-	WIDTH: 'width'
+	WIDTH: 'width',
 };
 
 const Selector = {
-	TRIGGER: '[data-toggle="liferay-collapse"]'
+	TRIGGER: '[data-toggle="liferay-collapse"]',
 };
 
 class CollapseProvider {
@@ -175,7 +175,7 @@ class CollapseProvider {
 	}
 
 	_getTrigger(panel) {
-		return document.querySelector(`[href="${panel.getAttribute('id')}"]`);
+		return document.querySelector(`[href="#${panel.getAttribute('id')}"]`);
 	}
 
 	_onTriggerClick = event => {
@@ -190,7 +190,8 @@ class CollapseProvider {
 		if (panel) {
 			if (panel.classList.contains(CssClass.SHOW)) {
 				this.hide({panel, trigger});
-			} else {
+			}
+			else {
 				this.show({panel, trigger});
 			}
 		}
@@ -203,7 +204,7 @@ class CollapseProvider {
 			MozTransition: 'transitionend',
 			OTransition: 'oTransitionEnd otransitionend',
 			WebkitTransition: 'webkitTransitionEnd',
-			transition: 'transitionend'
+			transition: 'transitionend',
 		};
 
 		let eventName = false;
@@ -211,6 +212,7 @@ class CollapseProvider {
 		Object.keys(transitionEndEvents).some(name => {
 			if (sampleElement.style[name] !== undefined) {
 				eventName = transitionEndEvents[name];
+
 				return true;
 			}
 		});

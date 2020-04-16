@@ -99,12 +99,13 @@ navigationURL.setParameter(SearchContainer.DEFAULT_CUR_PARAM, "0");
 				>
 
 					<%
-					Map<String, Object> rowData = new HashMap<String, Object>();
-
 					UserNotificationFeedEntry userNotificationFeedEntry = UserNotificationManagerUtil.interpret(StringPool.BLANK, userNotificationEvent, ServiceContextFactory.getInstance(request));
 
-					rowData.put("actions", StringUtil.merge(notificationsManagementToolbarDisplayContext.getAvailableActions(userNotificationEvent, userNotificationFeedEntry)));
-					rowData.put("userNotificationFeedEntry", userNotificationFeedEntry);
+					Map<String, Object> rowData = HashMapBuilder.<String, Object>put(
+						"actions", StringUtil.merge(notificationsManagementToolbarDisplayContext.getAvailableActions(userNotificationEvent, userNotificationFeedEntry))
+					).put(
+						"userNotificationFeedEntry", userNotificationFeedEntry
+					).build();
 
 					row.setData(rowData);
 					%>
@@ -158,7 +159,7 @@ navigationURL.setParameter(SearchContainer.DEFAULT_CUR_PARAM, "0");
 	var ACTIONS = {
 		deleteNotifications: deleteNotifications,
 		markNotificationsAsRead: markNotificationsAsRead,
-		markNotificationsAsUnread: markNotificationsAsUnread
+		markNotificationsAsUnread: markNotificationsAsUnread,
 	};
 
 	Liferay.componentReady('notificationsManagementToolbar').then(function(
@@ -185,7 +186,7 @@ navigationURL.setParameter(SearchContainer.DEFAULT_CUR_PARAM, "0");
 			var currentTarget = event.currentTarget;
 
 			Liferay.Util.fetch(currentTarget.attr('href'), {
-				method: 'POST'
+				method: 'POST',
 			})
 				.then(function(response) {
 					return response.json();
@@ -207,7 +208,8 @@ navigationURL.setParameter(SearchContainer.DEFAULT_CUR_PARAM, "0");
 
 							notificationContainer.remove();
 						}
-					} else {
+					}
+					else {
 						getNotice().show();
 					}
 				});
@@ -228,7 +230,7 @@ navigationURL.setParameter(SearchContainer.DEFAULT_CUR_PARAM, "0");
 				timeout: 5000,
 				toggleText: false,
 				type: 'warning',
-				useAnimation: false
+				useAnimation: false,
 			});
 		}
 

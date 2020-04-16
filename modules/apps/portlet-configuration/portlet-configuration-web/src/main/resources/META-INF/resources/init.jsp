@@ -59,7 +59,6 @@ page import="com.liferay.portal.kernel.util.LocaleUtil" %><%@
 page import="com.liferay.portal.kernel.util.ParamUtil" %><%@
 page import="com.liferay.portal.kernel.util.PortalUtil" %><%@
 page import="com.liferay.portal.kernel.util.PrefsParamUtil" %><%@
-page import="com.liferay.portal.kernel.util.TextFormatter" %><%@
 page import="com.liferay.portal.kernel.util.Validator" %><%@
 page import="com.liferay.portal.kernel.util.WebKeys" %><%@
 page import="com.liferay.portal.util.PropsValues" %><%@
@@ -72,6 +71,9 @@ page import="com.liferay.portlet.configuration.web.internal.display.context.Port
 page import="com.liferay.portlet.configuration.web.internal.servlet.taglib.clay.ArchivedSettingsVerticalCard" %><%@
 page import="com.liferay.portlet.portletconfiguration.action.ActionUtil" %><%@
 page import="com.liferay.portlet.portletconfiguration.util.PublicRenderParameterConfiguration" %><%@
+page import="com.liferay.roles.admin.constants.RolesAdminWebKeys" %><%@
+page import="com.liferay.roles.admin.role.type.contributor.RoleTypeContributor" %><%@
+page import="com.liferay.roles.admin.role.type.contributor.provider.RoleTypeContributorProvider" %><%@
 page import="com.liferay.taglib.servlet.PipingServletResponse" %>
 
 <%@ page import="java.util.ArrayList" %><%@

@@ -18,24 +18,22 @@ import FragmentService from '../services/FragmentService';
 export default function editFragmentComment({
 	body,
 	commentId,
-	config,
 	fragmentEntryLinkId,
 	parentCommentId,
-	resolved = false
+	resolved = false,
 }) {
 	return dispatch => {
 		return FragmentService.editComment({
 			body,
 			commentId,
-			config,
 			onNetworkStatus: dispatch,
-			resolved
+			resolved,
 		}).then(fragmentEntryLinkComment => {
 			dispatch(
 				editFragmentEntryLinkComment({
 					fragmentEntryLinkComment,
 					fragmentEntryLinkId,
-					parentCommentId
+					parentCommentId,
 				})
 			);
 		});

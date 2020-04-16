@@ -37,6 +37,7 @@ import com.liferay.dynamic.data.mapping.model.DDMStructure;
 import com.liferay.dynamic.data.mapping.model.DDMStructureVersion;
 import com.liferay.dynamic.data.mapping.service.DDMStorageLinkLocalService;
 import com.liferay.dynamic.data.mapping.service.DDMStructureLocalService;
+import com.liferay.dynamic.data.mapping.spi.converter.SPIDDMFormRuleConverter;
 import com.liferay.dynamic.data.mapping.util.DDMIndexer;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
@@ -66,6 +67,7 @@ import com.liferay.portal.vulcan.resource.EntityModelResource;
 import com.liferay.portal.vulcan.util.SearchUtil;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -153,7 +155,8 @@ public class DataRecordResourceImpl
 			dataRecordCollectionId, DataActionKeys.EXPORT_DATA_RECORDS);
 
 		DataRecordExporter dataRecordExporter = new DataRecordExporter(
-			_ddlRecordSetLocalService, _ddmFormFieldTypeServicesTracker);
+			_ddlRecordSetLocalService, _ddmFormFieldTypeServicesTracker,
+			_spiDDMFormRuleConverter);
 
 		return dataRecordExporter.export(
 			transform(
@@ -184,6 +187,7 @@ public class DataRecordResourceImpl
 			dataRecordCollectionId);
 
 		return SearchUtil.search(
+			Collections.emptyMap(),
 			booleanQuery -> {
 			},
 			_getBooleanFilter(dataListViewId, ddlRecordSet), DDLRecord.class,
@@ -198,10 +202,10 @@ public class DataRecordResourceImpl
 				searchContext.setCompanyId(contextCompany.getCompanyId());
 				searchContext.setUserId(0);
 			},
+			sorts,
 			document -> _toDataRecord(
 				_ddlRecordLocalService.getRecord(
-					GetterUtil.getLong(document.get(Field.ENTRY_CLASS_PK)))),
-			sorts);
+					GetterUtil.getLong(document.get(Field.ENTRY_CLASS_PK)))));
 	}
 
 	@Override
@@ -271,7 +275,8 @@ public class DataRecordResourceImpl
 
 		_validate(
 			DataDefinitionUtil.toDataDefinition(
-				_ddmFormFieldTypeServicesTracker, ddmStructure),
+				_ddmFormFieldTypeServicesTracker, ddmStructure,
+				_spiDDMFormRuleConverter),
 			dataRecord);
 
 		DataStorage dataStorage = _getDataStorage(
@@ -295,7 +300,7 @@ public class DataRecordResourceImpl
 			_ddlRecordLocalService.addRecord(
 				PrincipalThreadLocal.getUserId(), ddlRecordSet.getGroupId(),
 				ddmStorageId, dataRecord.getDataRecordCollectionId(),
-				new ServiceContext()));
+				StringPool.BLANK, 0, new ServiceContext()));
 	}
 
 	@Override
@@ -318,7 +323,8 @@ public class DataRecordResourceImpl
 
 		_validate(
 			DataDefinitionUtil.toDataDefinition(
-				_ddmFormFieldTypeServicesTracker, ddmStructure),
+				_ddmFormFieldTypeServicesTracker, ddmStructure,
+				_spiDDMFormRuleConverter),
 			dataRecord);
 
 		DataStorage dataStorage = _getDataStorage(
@@ -327,6 +333,16 @@ public class DataRecordResourceImpl
 		long ddmStorageId = dataStorage.save(
 			ddlRecordSet.getRecordSetId(), dataRecord.getDataRecordValues(),
 			ddlRecord.getGroupId());
+
+		DDLRecordSetVersion ddlRecordSetVersion =
+			ddlRecordSet.getRecordSetVersion();
+
+		DDMStructureVersion ddmStructureVersion =
+			ddlRecordSetVersion.getDDMStructureVersion();
+
+		_ddmStorageLinkLocalService.addStorageLink(
+			_portal.getClassNameId(DataRecord.class.getName()), ddmStorageId,
+			ddmStructureVersion.getStructureVersionId(), new ServiceContext());
 
 		_ddlRecordLocalService.updateRecord(
 			PrincipalThreadLocal.getUserId(), dataRecordId, ddmStorageId,
@@ -508,5 +524,8 @@ public class DataRecordResourceImpl
 
 	@Reference
 	private Portal _portal;
+
+	@Reference
+	private SPIDDMFormRuleConverter _spiDDMFormRuleConverter;
 
 }

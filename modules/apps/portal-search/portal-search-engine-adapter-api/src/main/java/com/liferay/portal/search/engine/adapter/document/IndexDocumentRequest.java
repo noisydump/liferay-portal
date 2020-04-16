@@ -50,12 +50,13 @@ public class IndexDocumentRequest
 	@Deprecated
 	public IndexDocumentRequest(
 		String indexName, String uid,
-		com.liferay.portal.kernel.search.Document document) {
+		com.liferay.portal.kernel.search.Document legacyDocument) {
 
 		_indexName = indexName;
 		_uid = uid;
+		_legacyDocument = legacyDocument;
+
 		_document = null;
-		_legacyDocument = document;
 	}
 
 	public IndexDocumentRequest(
@@ -64,6 +65,7 @@ public class IndexDocumentRequest
 		_indexName = indexName;
 		_uid = uid;
 		_document = document;
+
 		_legacyDocument = null;
 	}
 

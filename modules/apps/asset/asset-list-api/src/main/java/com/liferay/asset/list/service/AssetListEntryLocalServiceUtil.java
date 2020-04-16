@@ -118,6 +118,16 @@ public class AssetListEntryLocalServiceUtil {
 		return getService().createAssetListEntry(assetListEntryId);
 	}
 
+	/**
+	 * @throws PortalException
+	 */
+	public static com.liferay.portal.kernel.model.PersistedModel
+			createPersistedModel(java.io.Serializable primaryKeyObj)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return getService().createPersistedModel(primaryKeyObj);
+	}
+
 	public static void deleteAssetEntrySelection(
 			long assetListEntryId, long segmentsEntryId, int position)
 		throws com.liferay.portal.kernel.exception.PortalException {
@@ -131,10 +141,12 @@ public class AssetListEntryLocalServiceUtil {
 	 *
 	 * @param assetListEntry the asset list entry
 	 * @return the asset list entry that was removed
+	 * @throws PortalException
 	 */
 	public static com.liferay.asset.list.model.AssetListEntry
-		deleteAssetListEntry(
-			com.liferay.asset.list.model.AssetListEntry assetListEntry) {
+			deleteAssetListEntry(
+				com.liferay.asset.list.model.AssetListEntry assetListEntry)
+		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return getService().deleteAssetListEntry(assetListEntry);
 	}
@@ -409,6 +421,9 @@ public class AssetListEntryLocalServiceUtil {
 		return getService().getOSGiServiceIdentifier();
 	}
 
+	/**
+	 * @throws PortalException
+	 */
 	public static com.liferay.portal.kernel.model.PersistedModel
 			getPersistedModel(java.io.Serializable primaryKeyObj)
 		throws com.liferay.portal.kernel.exception.PortalException {

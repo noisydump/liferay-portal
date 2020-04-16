@@ -59,6 +59,7 @@ Hits hits = searchDisplayContext.getHits();
 				searchResultSummaryDisplayBuilder.setCurrentURL(currentURL);
 				searchResultSummaryDisplayBuilder.setDocument(document);
 				searchResultSummaryDisplayBuilder.setFastDateFormatFactory(com.liferay.portal.kernel.util.FastDateFormatFactoryUtil.getFastDateFormatFactory());
+				searchResultSummaryDisplayBuilder.setGroupLocalService(com.liferay.portal.kernel.service.GroupLocalServiceUtil.getService());
 				searchResultSummaryDisplayBuilder.setHighlightEnabled(searchDisplayContext.isHighlightEnabled());
 				searchResultSummaryDisplayBuilder.setLanguage(com.liferay.portal.kernel.language.LanguageUtil.getLanguage());
 				searchResultSummaryDisplayBuilder.setLocale(locale);
@@ -144,8 +145,8 @@ Hits hits = searchDisplayContext.getHits();
 
 					Liferay.Util.postForm(form, {
 						data: {
-							<%= SearchContainer.DEFAULT_CUR_PARAM %>: 1
-						}
+							<%= SearchContainer.DEFAULT_CUR_PARAM %>: 1,
+						},
 					});
 				}
 			}
@@ -175,7 +176,8 @@ Hits hits = searchDisplayContext.getHits();
 			targetSiblings.forEach(function(sibling) {
 				if (sibling.classList.contains('hide')) {
 					sibling.classList.remove('hide');
-				} else {
+				}
+				else {
 					sibling.classList.add('hide');
 				}
 			});

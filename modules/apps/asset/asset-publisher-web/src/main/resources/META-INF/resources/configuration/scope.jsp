@@ -114,7 +114,7 @@ List<Group> selectedGroups = GroupLocalServiceUtil.getGroups(assetPublisherDispl
 	<liferay-ui:icon
 		cssClass="highlited scope-selector"
 		id="selectManageableGroup"
-		message='<%= LanguageUtil.get(request, "other-site") + StringPool.TRIPLE_PERIOD %>'
+		message='<%= LanguageUtil.get(request, "other-site-or-asset-library") + StringPool.TRIPLE_PERIOD %>'
 		method="get"
 		url="javascript:;"
 	/>
@@ -123,7 +123,7 @@ List<Group> selectedGroups = GroupLocalServiceUtil.getGroups(assetPublisherDispl
 <%
 ItemSelector itemSelector = (ItemSelector)request.getAttribute(AssetPublisherWebKeys.ITEM_SELECTOR);
 
-ItemSelectorCriterion itemSelectorCriterion = new GroupItemSelectorCriterion();
+ItemSelectorCriterion itemSelectorCriterion = new GroupItemSelectorCriterion(layout.isPrivateLayout());
 
 itemSelectorCriterion.setDesiredItemSelectorReturnTypes(new GroupItemSelectorReturnType());
 
@@ -131,7 +131,6 @@ PortletURL itemSelectorURL = itemSelector.getItemSelectorURL(RequestBackedPortle
 
 itemSelectorURL.setParameter("plid", String.valueOf(layout.getPlid()));
 itemSelectorURL.setParameter("groupId", String.valueOf(layout.getGroupId()));
-itemSelectorURL.setParameter("privateLayout", String.valueOf(layout.isPrivateLayout()));
 itemSelectorURL.setParameter("portletResource", assetPublisherDisplayContext.getPortletResource());
 %>
 
@@ -154,7 +153,8 @@ itemSelectorURL.setParameter("portletResource", assetPublisherDisplayContext.get
 
 			if (!searchContainerData.length) {
 				searchContainerData = [];
-			} else {
+			}
+			else {
 				searchContainerData = searchContainerData.split(',');
 			}
 
@@ -163,20 +163,20 @@ itemSelectorURL.setParameter("portletResource", assetPublisherDisplayContext.get
 					dialog: {
 						constrain: true,
 						destroyOnHide: true,
-						modal: true
+						modal: true,
 					},
 					eventName: '<%= eventName %>',
 					id: '<%= eventName %>' + event.currentTarget.id,
 					selectedData: searchContainerData,
 					title: '<liferay-ui:message key="scopes" />',
-					uri: '<%= itemSelectorURL.toString() %>'
+					uri: '<%= itemSelectorURL.toString() %>',
 				},
 				function(event) {
 					Liferay.Util.postForm(form, {
 						data: {
 							cmd: 'add-scope',
-							groupId: event.groupid
-						}
+							groupId: event.groupid,
+						},
 					});
 				}
 			);

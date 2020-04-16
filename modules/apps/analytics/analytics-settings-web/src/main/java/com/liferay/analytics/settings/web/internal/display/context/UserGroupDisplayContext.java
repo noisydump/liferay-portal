@@ -44,11 +44,12 @@ public class UserGroupDisplayContext {
 	public UserGroupDisplayContext(
 		RenderRequest renderRequest, RenderResponse renderResponse) {
 
+		_renderRequest = renderRequest;
+		_renderResponse = renderResponse;
+
 		_analyticsConfiguration =
 			(AnalyticsConfiguration)renderRequest.getAttribute(
 				AnalyticsSettingsWebKeys.ANALYTICS_CONFIGURATION);
-		_renderRequest = renderRequest;
-		_renderResponse = renderResponse;
 	}
 
 	public String getOrderByType() {
@@ -66,9 +67,8 @@ public class UserGroupDisplayContext {
 		PortletURL portletURL = _renderResponse.createRenderURL();
 
 		portletURL.setParameter(
-			"mvcRenderCommandName", "/view_configuration_screen");
-		portletURL.setParameter(
-			"configurationScreenKey", "synced-contacts-groups");
+			"mvcRenderCommandName",
+			"/analytics_settings/edit_synced_contacts_groups");
 
 		return portletURL;
 	}

@@ -16,12 +16,20 @@
  * FloatingToolbar panels
  */
 export const LAYOUT_DATA_FLOATING_TOOLBAR_BUTTONS = {
+	collectionConfiguration: {
+		icon: 'cog',
+		id: 'collection_configuration',
+		panelId: 'collection_configuration',
+		title: Liferay.Language.get('collection-display-configuration'),
+		type: 'panel',
+	},
+
 	containerConfiguration: {
 		icon: 'cog',
 		id: 'container_configuration',
 		panelId: 'container_configuration',
-		title: Liferay.Language.get('container-configuration'),
-		type: 'panel'
+		title: Liferay.Language.get('section-configuration'),
+		type: 'panel',
 	},
 
 	duplicateItem: {
@@ -29,7 +37,7 @@ export const LAYOUT_DATA_FLOATING_TOOLBAR_BUTTONS = {
 		id: 'duplicate_item',
 		panelId: '',
 		title: Liferay.Language.get('duplicate'),
-		type: 'panel'
+		type: 'panel',
 	},
 
 	fragmentBackgroundImage: {
@@ -37,7 +45,7 @@ export const LAYOUT_DATA_FLOATING_TOOLBAR_BUTTONS = {
 		id: 'fragment_background_image',
 		panelId: 'fragment_background_image',
 		title: Liferay.Language.get('fragment-background-image'),
-		type: 'panel'
+		type: 'panel',
 	},
 
 	fragmentConfiguration: {
@@ -45,7 +53,7 @@ export const LAYOUT_DATA_FLOATING_TOOLBAR_BUTTONS = {
 		id: 'fragment_configuration',
 		panelId: 'fragment_configuration',
 		title: Liferay.Language.get('fragment-configuration'),
-		type: 'panel'
+		type: 'panel',
 	},
 
 	rowConfiguration: {
@@ -53,6 +61,14 @@ export const LAYOUT_DATA_FLOATING_TOOLBAR_BUTTONS = {
 		id: 'row_configuration',
 		panelId: 'row_configuration',
 		title: Liferay.Language.get('row-configuration'),
-		type: 'panel'
-	}
+		type: 'panel',
+	},
+
+	saveFragmentComposition: {
+		icon: 'download',
+		id: 'save_fragment_composition',
+		panelId: 'save_fragment_compositionn',
+		title: Liferay.Language.get('save-as-fragment'),
+		type: 'panel',
+	},
 };

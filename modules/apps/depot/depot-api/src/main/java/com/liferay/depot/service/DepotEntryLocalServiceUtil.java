@@ -73,6 +73,16 @@ public class DepotEntryLocalServiceUtil {
 	}
 
 	/**
+	 * @throws PortalException
+	 */
+	public static com.liferay.portal.kernel.model.PersistedModel
+			createPersistedModel(java.io.Serializable primaryKeyObj)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return getService().createPersistedModel(primaryKeyObj);
+	}
+
+	/**
 	 * Deletes the depot entry from the database. Also notifies the appropriate model listeners.
 	 *
 	 * @param depotEntry the depot entry
@@ -321,6 +331,17 @@ public class DepotEntryLocalServiceUtil {
 		return getService().getExportActionableDynamicQuery(portletDataContext);
 	}
 
+	public static java.util.List<com.liferay.depot.model.DepotEntry>
+			getGroupConnectedDepotEntries(long groupId, int start, int end)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return getService().getGroupConnectedDepotEntries(groupId, start, end);
+	}
+
+	public static int getGroupConnectedDepotEntriesCount(long groupId) {
+		return getService().getGroupConnectedDepotEntriesCount(groupId);
+	}
+
 	public static com.liferay.depot.model.DepotEntry getGroupDepotEntry(
 			long groupId)
 		throws com.liferay.portal.kernel.exception.PortalException {
@@ -344,6 +365,9 @@ public class DepotEntryLocalServiceUtil {
 		return getService().getOSGiServiceIdentifier();
 	}
 
+	/**
+	 * @throws PortalException
+	 */
 	public static com.liferay.portal.kernel.model.PersistedModel
 			getPersistedModel(java.io.Serializable primaryKeyObj)
 		throws com.liferay.portal.kernel.exception.PortalException {
@@ -368,13 +392,13 @@ public class DepotEntryLocalServiceUtil {
 			java.util.Map<java.util.Locale, String> descriptionMap,
 			java.util.Map<String, Boolean> depotAppCustomizationMap,
 			com.liferay.portal.kernel.util.UnicodeProperties
-				typeSettingsProperties,
+				typeSettingsUnicodeProperties,
 			com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return getService().updateDepotEntry(
 			depotEntryId, nameMap, descriptionMap, depotAppCustomizationMap,
-			typeSettingsProperties, serviceContext);
+			typeSettingsUnicodeProperties, serviceContext);
 	}
 
 	public static DepotEntryLocalService getService() {

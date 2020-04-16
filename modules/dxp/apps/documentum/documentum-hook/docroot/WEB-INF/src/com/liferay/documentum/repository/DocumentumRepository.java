@@ -59,6 +59,7 @@ import com.liferay.documentum.repository.model.DocumentumFolder;
 import com.liferay.documentum.repository.model.DocumentumObject;
 import com.liferay.documentum.repository.model.DocumentumVersionNumber;
 import com.liferay.documentum.repository.search.DQLQueryBuilder;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.InvalidRepositoryException;
@@ -74,7 +75,6 @@ import com.liferay.portal.kernel.security.auth.PrincipalException;
 import com.liferay.portal.kernel.util.FileUtil;
 import com.liferay.portal.kernel.util.MimeTypesUtil;
 import com.liferay.portal.kernel.util.PwdGenerator;
-import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.SystemProperties;
 import com.liferay.portal.kernel.util.UnicodeProperties;
@@ -768,17 +768,17 @@ public class DocumentumRepository
 
 	@Override
 	public void initRepository(
-			UnicodeProperties typeSettingsProperties,
+			UnicodeProperties typeSettingsUnicodeProperties,
 			CredentialsProvider credentialsProvider)
 		throws InvalidRepositoryException, PrincipalException {
 
-		_cabinet = typeSettingsProperties.getProperty(_CABINET);
+		_cabinet = typeSettingsUnicodeProperties.getProperty(_CABINET);
 
 		if (Validator.isNull(_cabinet)) {
 			throw new InvalidRepositoryException();
 		}
 
-		_repository = typeSettingsProperties.getProperty(_REPOSITORY);
+		_repository = typeSettingsUnicodeProperties.getProperty(_REPOSITORY);
 
 		if (Validator.isNull(_repository)) {
 			throw new InvalidRepositoryException();

@@ -21,7 +21,16 @@ DepotAdminDetailsDisplayContext depotAdminDetailsDisplayContext = (DepotAdminDet
 %>
 
 <liferay-ui:error exception="<%= DuplicateGroupException.class %>" message="please-enter-a-unique-name" />
-<liferay-ui:error exception="<%= GroupKeyException.class %>" message="please-enter-a-valid-name" />
+
+<liferay-ui:error exception="<%= GroupKeyException.class %>">
+	<p>
+		<liferay-ui:message arguments="<%= new String[] {DepotEntryConstants.NAME_LABEL, DepotEntryConstants.getNameGeneralRestrictions(locale), DepotEntryConstants.NAME_RESERVED_WORDS} %>" key="the-x-cannot-be-x-or-a-reserved-word-such-as-x" />
+	</p>
+
+	<p>
+		<liferay-ui:message arguments="<%= new String[] {DepotEntryConstants.NAME_LABEL, DepotEntryConstants.NAME_INVALID_CHARACTERS} %>" key="the-x-cannot-contain-the-following-invalid-characters-x" />
+	</p>
+</liferay-ui:error>
 
 <liferay-frontend:fieldset-group>
 	<liferay-frontend:fieldset
@@ -30,7 +39,7 @@ DepotAdminDetailsDisplayContext depotAdminDetailsDisplayContext = (DepotAdminDet
 	>
 		<aui:model-context bean="<%= depotAdminDetailsDisplayContext.getGroup() %>" model="<%= Group.class %>" />
 
-		<aui:input name="repositoryId" type="resource" value="<%= String.valueOf(depotAdminDetailsDisplayContext.getDepotEntryId()) %>" />
+		<aui:input name="assetLibraryId" type="resource" value="<%= String.valueOf(depotAdminDetailsDisplayContext.getDepotEntryId()) %>" />
 
 		<aui:input name="name" placeholder="name" required="<%= true %>" value="<%= depotAdminDetailsDisplayContext.getDepotName(locale) %>" />
 
@@ -43,7 +52,7 @@ DepotAdminDetailsDisplayContext depotAdminDetailsDisplayContext = (DepotAdminDet
 		label='<%= LanguageUtil.get(request, "applications") %>'
 	>
 		<p class="text-muted">
-			<liferay-ui:message key="repository-applications-description" />
+			<liferay-ui:message key="asset-library-applications-description" />
 		</p>
 
 		<div class="row">
@@ -64,35 +73,11 @@ DepotAdminDetailsDisplayContext depotAdminDetailsDisplayContext = (DepotAdminDet
 
 	</liferay-frontend:fieldset>
 
-	<liferay-frontend:fieldset
-		collapsible="true"
-		cssClass="panel-group-flush"
-		label='<%= LanguageUtil.get(request, "sharing") %>'
-	>
-		<liferay-util:include page="/screen/navigation/entries/sharing.jsp" servletContext="<%= application %>" />
-	</liferay-frontend:fieldset>
+	<liferay-util:include page="/screen/navigation/entries/sharing.jsp" servletContext="<%= application %>" />
 
-	<liferay-frontend:fieldset
-		collapsible="true"
-		cssClass="panel-group-flush"
-		label='<%= LanguageUtil.get(request, "asset-auto-tagging") %>'
-	>
-		<liferay-util:include page="/screen/navigation/entries/asset_auto_tagger.jsp" servletContext="<%= application %>" />
-	</liferay-frontend:fieldset>
+	<liferay-util:include page="/screen/navigation/entries/asset_auto_tagger.jsp" servletContext="<%= application %>" />
 
-	<liferay-frontend:fieldset
-		collapsible="true"
-		cssClass="panel-group-flush"
-		label='<%= LanguageUtil.get(request, "documents-and-media") %>'
-	>
-		<liferay-util:include page="/screen/navigation/entries/documents_and_media.jsp" servletContext="<%= application %>" />
-	</liferay-frontend:fieldset>
+	<liferay-util:include page="/screen/navigation/entries/documents_and_media.jsp" servletContext="<%= application %>" />
 
-	<liferay-frontend:fieldset
-		collapsible="true"
-		cssClass="panel-group-flush"
-		label='<%= LanguageUtil.get(request, "recycle-bin") %>'
-	>
-		<liferay-util:include page="/screen/navigation/entries/recycle_bin.jsp" servletContext="<%= application %>" />
-	</liferay-frontend:fieldset>
+	<liferay-util:include page="/screen/navigation/entries/recycle_bin.jsp" servletContext="<%= application %>" />
 </liferay-frontend:fieldset-group>

@@ -18,6 +18,8 @@ import com.liferay.headless.batch.engine.dto.v1_0.ImportTask;
 import com.liferay.portal.vulcan.accept.language.AcceptLanguage;
 import com.liferay.portal.vulcan.multipart.MultipartBody;
 
+import java.util.Locale;
+
 import javax.annotation.Generated;
 
 import javax.servlet.http.HttpServletRequest;
@@ -39,30 +41,38 @@ import org.osgi.annotation.versioning.ProviderType;
 @ProviderType
 public interface ImportTaskResource {
 
-	public ImportTask deleteImportTask(
-			String className, String callbackURL, Object object)
-		throws Exception;
+	public static Builder builder() {
+		return FactoryHolder.factory.create();
+	}
 
 	public ImportTask deleteImportTask(
-			String className, String callbackURL, MultipartBody multipartBody)
-		throws Exception;
-
-	public ImportTask postImportTask(
-			String className, String callbackURL, String fieldNameMapping,
+			String className, String callbackURL, String taskItemDelegateName,
 			Object object)
 		throws Exception;
 
-	public ImportTask postImportTask(
-			String className, String callbackURL, String fieldNameMapping,
+	public ImportTask deleteImportTask(
+			String className, String callbackURL, String taskItemDelegateName,
 			MultipartBody multipartBody)
 		throws Exception;
 
-	public ImportTask putImportTask(
-			String className, String callbackURL, Object object)
+	public ImportTask postImportTask(
+			String className, String callbackURL, String fieldNameMapping,
+			String taskItemDelegateName, Object object)
+		throws Exception;
+
+	public ImportTask postImportTask(
+			String className, String callbackURL, String fieldNameMapping,
+			String taskItemDelegateName, MultipartBody multipartBody)
 		throws Exception;
 
 	public ImportTask putImportTask(
-			String className, String callbackURL, MultipartBody multipartBody)
+			String className, String callbackURL, String taskItemDelegateName,
+			Object object)
+		throws Exception;
+
+	public ImportTask putImportTask(
+			String className, String callbackURL, String taskItemDelegateName,
+			MultipartBody multipartBody)
 		throws Exception;
 
 	public ImportTask getImportTask(Long importTaskId) throws Exception;
@@ -87,5 +97,34 @@ public interface ImportTaskResource {
 
 	public void setContextUser(
 		com.liferay.portal.kernel.model.User contextUser);
+
+	public static class FactoryHolder {
+
+		public static volatile Factory factory;
+
+	}
+
+	@ProviderType
+	public interface Builder {
+
+		public ImportTaskResource build();
+
+		public Builder checkPermissions(boolean checkPermissions);
+
+		public Builder httpServletRequest(
+			HttpServletRequest httpServletRequest);
+
+		public Builder preferredLocale(Locale preferredLocale);
+
+		public Builder user(com.liferay.portal.kernel.model.User user);
+
+	}
+
+	@ProviderType
+	public interface Factory {
+
+		public Builder create();
+
+	}
 
 }

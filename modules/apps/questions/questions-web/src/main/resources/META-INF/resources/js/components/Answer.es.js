@@ -14,137 +14,173 @@
 
 import ClayButton from '@clayui/button';
 import ClayIcon from '@clayui/icon';
-import parser from 'bbcode-to-react';
 import classnames from 'classnames';
 import React, {useCallback, useEffect, useState} from 'react';
-import {Link} from 'react-router-dom';
+import {withRouter} from 'react-router-dom';
 
 import {
 	deleteMessage,
-	markAsAnswerMessageBoardMessage
+	markAsAnswerMessageBoardMessage,
 } from '../utils/client.es';
+import ArticleBodyRenderer from './ArticleBodyRenderer.es';
 import Comments from './Comments.es';
+import Link from './Link.es';
 import Rating from './Rating.es';
 import UserRow from './UserRow.es';
 
-export default ({answer, answerChange, deleteAnswer}) => {
-	const [comments, setComments] = useState(answer.messageBoardMessages.items);
-	const [showAsAnswer, setShowAsAnswer] = useState(answer.showAsAnswer);
-	const [showNewComment, setShowNewComment] = useState(false);
+export default withRouter(
+	({answer, answerChange, deleteAnswer, match: {url}}) => {
+		const [comments, setComments] = useState(
+			answer.messageBoardMessages.items
+		);
+		const [showAsAnswer, setShowAsAnswer] = useState(answer.showAsAnswer);
+		const [showNewComment, setShowNewComment] = useState(false);
 
-	const _deleteAnswer = () =>
-		deleteMessage(answer).then(() => deleteAnswer(answer));
+		const _deleteAnswer = () =>
+			deleteMessage(answer).then(() => deleteAnswer(answer));
 
-	const _commentsChange = useCallback(comments => {
-		setComments([...comments]);
-	}, []);
+		const _commentsChange = useCallback(comments => {
+			setComments([...comments]);
+		}, []);
 
-	const _answerChange = () =>
-		markAsAnswerMessageBoardMessage(answer.id, !showAsAnswer).then(() => {
-			setShowAsAnswer(!showAsAnswer);
-			if (answerChange) {
-				answerChange(answer.id);
-			}
-		});
+		const _answerChange = () =>
+			markAsAnswerMessageBoardMessage(answer.id, !showAsAnswer).then(
+				() => {
+					setShowAsAnswer(!showAsAnswer);
+					if (answerChange) {
+						answerChange(answer.id);
+					}
+				}
+			);
 
-	const _ratingChange = useCallback(
-		ratingValue => {
-			answer.aggregateRating = {...answer.aggregateRating, ratingValue};
-		},
-		[answer]
-	);
+		const _ratingChange = useCallback(
+			ratingValue => {
+				answer.aggregateRating = {
+					...answer.aggregateRating,
+					ratingValue,
+				};
+			},
+			[answer]
+		);
 
-	useEffect(() => {
-		setShowAsAnswer(answer.showAsAnswer);
-	}, [answer.showAsAnswer]);
+		useEffect(() => {
+			setShowAsAnswer(answer.showAsAnswer);
+		}, [answer.showAsAnswer]);
 
-	return (
-		<>
-			<div
-				className={classnames(
-					'autofit-row',
-					'autofit-padded',
-					'question-answer',
-					{'question-accepted-answer': showAsAnswer}
-				)}
-			>
-				<div className="autofit-col">
-					<Rating
-						aggregateRating={answer.aggregateRating}
-						entityId={answer.id}
-						myRating={
-							answer.myRating && answer.myRating.ratingValue
-						}
-						ratingChange={_ratingChange}
-						type={'Message'}
-					/>
-				</div>
+		return (
+			<>
+				<div
+					className={classnames('questions-answer c-p-3', {
+						'questions-answer-success': showAsAnswer,
+					})}
+				>
+					<div className="align-items-center align-items-md-start row">
+						<div className="col-6 col-md-1 order-1 order-md-0 text-md-center text-right">
+							<Rating
+								aggregateRating={answer.aggregateRating}
+								entityId={answer.id}
+								myRating={
+									answer.myRating &&
+									answer.myRating.ratingValue
+								}
+								ratingChange={_ratingChange}
+								type={'Message'}
+							/>
+						</div>
 
-				<div className="autofit-col autofit-col-expand">
-					<div className="autofit-section">
-						{showAsAnswer && (
-							<p className="question-accepted-message">
-								<ClayIcon symbol="check-circle-full" />{' '}
-								<strong>
-									{Liferay.Language.get('chosen-answer')}
-								</strong>
-							</p>
-						)}
+						<div className="c-mb-4 c-mb-md-0 col-lg-9 col-md-8">
+							{showAsAnswer && (
+								<p className="c-mb-0 font-weight-bold text-success">
+									<ClayIcon symbol="check-circle-full" />
 
-						<p>{parser.toReact(answer.articleBody)}</p>
-
-						<ClayButton.Group spaced={true}>
-							{answer.actions.create && (
-								<ClayButton
-									displayType="unstyled"
-									onClick={() => setShowNewComment(true)}
-								>
-									{Liferay.Language.get('reply')}
-								</ClayButton>
+									<span className="c-ml-3">
+										{Liferay.Language.get('chosen-answer')}
+									</span>
+								</p>
 							)}
-							{answer.actions.delete && (
-								<ClayButton
-									displayType="unstyled"
-									onClick={_deleteAnswer}
-								>
-									{Liferay.Language.get('delete')}
-								</ClayButton>
-							)}
-							{answer.actions.replace && (
-								<>
+
+							<div className="c-mt-2">
+								<ArticleBodyRenderer {...answer} />
+							</div>
+
+							<ClayButton.Group
+								className="font-weight-bold text-secondary"
+								spaced={true}
+							>
+								{answer.actions['reply-to-message'] && (
 									<ClayButton
+										className="text-reset"
+										displayType="unstyled"
+										onClick={() => setShowNewComment(true)}
+									>
+										{Liferay.Language.get('reply')}
+									</ClayButton>
+								)}
+
+								{answer.actions.delete && (
+									<ClayButton
+										className="text-reset"
+										displayType="unstyled"
+										onClick={_deleteAnswer}
+									>
+										{Liferay.Language.get('delete')}
+									</ClayButton>
+								)}
+
+								{answer.actions.replace && (
+									<ClayButton
+										className="text-reset"
 										displayType="unstyled"
 										onClick={_answerChange}
 									>
 										{Liferay.Language.get(
 											showAsAnswer
-												? 'unmark as answer'
-												: 'mark as answer'
+												? 'Unmark as answer'
+												: 'Mark as answer'
 										)}
 									</ClayButton>
-									<ClayButton displayType="unstyled">
-										<Link to={`/answers/${answer.id}/edit`}>
-											<span>
-												{Liferay.Language.get('edit')}
-											</span>
+								)}
+
+								{/* this is an extra double check, remove it without creating 2 clay-group-item */}
+								{answer.actions.replace && (
+									<ClayButton
+										className="text-reset"
+										displayType="unstyled"
+									>
+										<Link
+											className="text-reset"
+											to={`${url}/answers/${answer.friendlyUrlPath}/edit`}
+										>
+											{Liferay.Language.get('edit')}
 										</Link>
 									</ClayButton>
-								</>
-							)}
-						</ClayButton.Group>
+								)}
+							</ClayButton.Group>
+						</div>
+
+						<div className="col-6 col-lg-2 col-md-3">
+							<UserRow
+								creator={answer.creator}
+								statistics={answer.creatorStatistics}
+							/>
+						</div>
 					</div>
 				</div>
-				<div className="autofit-col">
-					<UserRow creator={answer.creator} />
+
+				<div className="row">
+					<div className="col-md-9 offset-md-1">
+						<Comments
+							comments={comments}
+							commentsChange={_commentsChange}
+							entityId={answer.id}
+							showNewComment={showNewComment}
+							showNewCommentChange={value =>
+								setShowNewComment(value)
+							}
+						/>
+					</div>
 				</div>
-			</div>
-			<Comments
-				comments={comments}
-				commentsChange={_commentsChange}
-				entityId={answer.id}
-				showNewComment={showNewComment}
-				showNewCommentChange={value => setShowNewComment(value)}
-			/>
-		</>
-	);
-};
+			</>
+		);
+	}
+);

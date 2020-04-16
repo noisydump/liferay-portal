@@ -53,6 +53,7 @@ import com.liferay.portal.kernel.model.LayoutSet;
 import com.liferay.portal.kernel.model.LayoutSetPrototype;
 import com.liferay.portal.kernel.model.MembershipRequest;
 import com.liferay.portal.kernel.model.MembershipRequestConstants;
+import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.portlet.JSONPortletResponseUtil;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCPortlet;
 import com.liferay.portal.kernel.security.auth.AuthException;
@@ -830,20 +831,21 @@ public class SiteAdminPortlet extends MVCPortlet {
 
 		// Settings
 
-		UnicodeProperties typeSettingsProperties =
+		UnicodeProperties typeSettingsUnicodeProperties =
 			liveGroup.getTypeSettingsProperties();
 
 		String customJspServletContextName = ParamUtil.getString(
 			actionRequest, "customJspServletContextName",
-			typeSettingsProperties.getProperty("customJspServletContextName"));
+			typeSettingsUnicodeProperties.getProperty(
+				"customJspServletContextName"));
 
-		typeSettingsProperties.setProperty(
+		typeSettingsUnicodeProperties.setProperty(
 			"customJspServletContextName", customJspServletContextName);
 
-		typeSettingsProperties.setProperty(
+		typeSettingsUnicodeProperties.setProperty(
 			"defaultSiteRoleIds",
 			ListUtil.toString(getRoleIds(actionRequest), StringPool.BLANK));
-		typeSettingsProperties.setProperty(
+		typeSettingsUnicodeProperties.setProperty(
 			"defaultTeamIds",
 			ListUtil.toString(getTeamIds(actionRequest), StringPool.BLANK));
 
@@ -853,28 +855,40 @@ public class SiteAdminPortlet extends MVCPortlet {
 
 		for (String analyticsType : analyticsTypes) {
 			if (StringUtil.equalsIgnoreCase(analyticsType, "google")) {
+				String googleAnalyticsCreateCustomConfiguration =
+					ParamUtil.getString(
+						actionRequest,
+						"googleAnalyticsCreateCustomConfiguration",
+						typeSettingsUnicodeProperties.getProperty(
+							"googleAnalyticsCreateCustomConfiguration"));
+
+				typeSettingsUnicodeProperties.setProperty(
+					"googleAnalyticsCreateCustomConfiguration",
+					googleAnalyticsCreateCustomConfiguration);
+
 				String googleAnalyticsCustomConfiguration = ParamUtil.getString(
 					actionRequest, "googleAnalyticsCustomConfiguration",
-					typeSettingsProperties.getProperty(
+					typeSettingsUnicodeProperties.getProperty(
 						"googleAnalyticsCustomConfiguration"));
 
-				typeSettingsProperties.setProperty(
+				typeSettingsUnicodeProperties.setProperty(
 					"googleAnalyticsCustomConfiguration",
 					googleAnalyticsCustomConfiguration);
 
 				String googleAnalyticsId = ParamUtil.getString(
 					actionRequest, "googleAnalyticsId",
-					typeSettingsProperties.getProperty("googleAnalyticsId"));
+					typeSettingsUnicodeProperties.getProperty(
+						"googleAnalyticsId"));
 
-				typeSettingsProperties.setProperty(
+				typeSettingsUnicodeProperties.setProperty(
 					"googleAnalyticsId", googleAnalyticsId);
 			}
 			else {
 				String analyticsScript = ParamUtil.getString(
 					actionRequest, Sites.ANALYTICS_PREFIX + analyticsType,
-					typeSettingsProperties.getProperty(analyticsType));
+					typeSettingsUnicodeProperties.getProperty(analyticsType));
 
-				typeSettingsProperties.setProperty(
+				typeSettingsUnicodeProperties.setProperty(
 					Sites.ANALYTICS_PREFIX + analyticsType, analyticsScript);
 			}
 		}
@@ -882,9 +896,10 @@ public class SiteAdminPortlet extends MVCPortlet {
 		boolean trashEnabled = ParamUtil.getBoolean(
 			actionRequest, "trashEnabled",
 			GetterUtil.getBoolean(
-				typeSettingsProperties.getProperty("trashEnabled"), true));
+				typeSettingsUnicodeProperties.getProperty("trashEnabled"),
+				true));
 
-		typeSettingsProperties.setProperty(
+		typeSettingsUnicodeProperties.setProperty(
 			"trashEnabled", String.valueOf(trashEnabled));
 
 		int trashEntriesMaxAgeCompany = PrefsPropsUtil.getInteger(
@@ -895,69 +910,76 @@ public class SiteAdminPortlet extends MVCPortlet {
 
 		if (trashEntriesMaxAgeGroup <= 0) {
 			trashEntriesMaxAgeGroup = GetterUtil.getInteger(
-				typeSettingsProperties.getProperty("trashEntriesMaxAge"),
+				typeSettingsUnicodeProperties.getProperty("trashEntriesMaxAge"),
 				trashEntriesMaxAgeCompany);
 		}
 
 		if (trashEntriesMaxAgeGroup != trashEntriesMaxAgeCompany) {
-			typeSettingsProperties.setProperty(
+			typeSettingsUnicodeProperties.setProperty(
 				"trashEntriesMaxAge",
 				String.valueOf(GetterUtil.getInteger(trashEntriesMaxAgeGroup)));
 		}
 		else {
-			typeSettingsProperties.remove("trashEntriesMaxAge");
+			typeSettingsUnicodeProperties.remove("trashEntriesMaxAge");
 		}
 
 		int contentSharingWithChildrenEnabled = ParamUtil.getInteger(
 			actionRequest, "contentSharingWithChildrenEnabled",
 			GetterUtil.getInteger(
-				typeSettingsProperties.getProperty(
+				typeSettingsUnicodeProperties.getProperty(
 					"contentSharingWithChildrenEnabled"),
 				Sites.CONTENT_SHARING_WITH_CHILDREN_DEFAULT_VALUE));
 
-		typeSettingsProperties.setProperty(
+		typeSettingsUnicodeProperties.setProperty(
 			"contentSharingWithChildrenEnabled",
 			String.valueOf(contentSharingWithChildrenEnabled));
 
-		UnicodeProperties formTypeSettingsProperties =
+		UnicodeProperties formTypeSettingsUnicodeProperties =
 			PropertiesParamUtil.getProperties(
 				actionRequest, "TypeSettingsProperties--");
 
 		boolean inheritLocales = GetterUtil.getBoolean(
-			typeSettingsProperties.getProperty("inheritLocales"));
+			typeSettingsUnicodeProperties.getProperty("inheritLocales"));
 
-		if (formTypeSettingsProperties.containsKey("inheritLocales")) {
+		if (formTypeSettingsUnicodeProperties.containsKey("inheritLocales")) {
 			inheritLocales = GetterUtil.getBoolean(
-				formTypeSettingsProperties.getProperty("inheritLocales"));
+				formTypeSettingsUnicodeProperties.getProperty(
+					"inheritLocales"));
 		}
 
 		if (inheritLocales) {
-			formTypeSettingsProperties.setProperty(
+			formTypeSettingsUnicodeProperties.setProperty(
 				PropsKeys.LOCALES,
 				StringUtil.merge(
 					LocaleUtil.toLanguageIds(
 						LanguageUtil.getAvailableLocales())));
+
+			User user = themeDisplay.getDefaultUser();
+
+			formTypeSettingsUnicodeProperties.setProperty(
+				"languageId", user.getLanguageId());
 		}
 
-		if (formTypeSettingsProperties.containsKey(PropsKeys.LOCALES) &&
+		if (formTypeSettingsUnicodeProperties.containsKey(PropsKeys.LOCALES) &&
 			Validator.isNull(
-				formTypeSettingsProperties.getProperty(PropsKeys.LOCALES))) {
+				formTypeSettingsUnicodeProperties.getProperty(
+					PropsKeys.LOCALES))) {
 
 			throw new LocaleException(
 				LocaleException.TYPE_DEFAULT,
 				"Must have at least one valid locale for site " + liveGroupId);
 		}
 
-		typeSettingsProperties.putAll(formTypeSettingsProperties);
+		typeSettingsUnicodeProperties.putAll(formTypeSettingsUnicodeProperties);
 
-		UnicodeProperties ratingsTypeProperties =
+		UnicodeProperties ratingsTypeUnicodeProperties =
 			PropertiesParamUtil.getProperties(actionRequest, "RatingsType--");
 
-		for (String propertyKey : ratingsTypeProperties.keySet()) {
-			String newRatingsType = ratingsTypeProperties.getProperty(
+		for (String propertyKey : ratingsTypeUnicodeProperties.keySet()) {
+			String newRatingsType = ratingsTypeUnicodeProperties.getProperty(
 				propertyKey);
 
-			String oldRatingsType = typeSettingsProperties.getProperty(
+			String oldRatingsType = typeSettingsUnicodeProperties.getProperty(
 				propertyKey);
 
 			if (newRatingsType.equals(oldRatingsType)) {
@@ -965,10 +987,10 @@ public class SiteAdminPortlet extends MVCPortlet {
 			}
 
 			if (RatingsType.isValid(newRatingsType)) {
-				typeSettingsProperties.put(propertyKey, newRatingsType);
+				typeSettingsUnicodeProperties.put(propertyKey, newRatingsType);
 			}
 			else {
-				typeSettingsProperties.remove(propertyKey);
+				typeSettingsUnicodeProperties.remove(propertyKey);
 			}
 		}
 
@@ -1013,19 +1035,19 @@ public class SiteAdminPortlet extends MVCPortlet {
 					actionRequest, "stagingPrivateVirtualHost",
 					availableLocales));
 
-			UnicodeProperties stagedGroupTypeSettingsProperties =
+			UnicodeProperties stagedGroupTypeSettingsUnicodeProperties =
 				stagingGroup.getTypeSettingsProperties();
 
-			stagedGroupTypeSettingsProperties.putAll(
-				formTypeSettingsProperties);
+			stagedGroupTypeSettingsUnicodeProperties.putAll(
+				formTypeSettingsUnicodeProperties);
 
 			groupService.updateGroup(
 				stagingGroup.getGroupId(),
-				stagedGroupTypeSettingsProperties.toString());
+				stagedGroupTypeSettingsUnicodeProperties.toString());
 		}
 
 		liveGroup = groupService.updateGroup(
-			liveGroup.getGroupId(), typeSettingsProperties.toString());
+			liveGroup.getGroupId(), typeSettingsUnicodeProperties.toString());
 
 		String creationType = ParamUtil.getString(
 			actionRequest, "creationType");

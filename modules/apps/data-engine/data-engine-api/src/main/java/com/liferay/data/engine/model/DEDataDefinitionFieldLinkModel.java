@@ -18,6 +18,9 @@ import com.liferay.portal.kernel.bean.AutoEscape;
 import com.liferay.portal.kernel.model.AttachedModel;
 import com.liferay.portal.kernel.model.BaseModel;
 import com.liferay.portal.kernel.model.ShardedModel;
+import com.liferay.portal.kernel.model.StagedModel;
+
+import java.util.Date;
 
 import org.osgi.annotation.versioning.ProviderType;
 
@@ -34,7 +37,8 @@ import org.osgi.annotation.versioning.ProviderType;
  */
 @ProviderType
 public interface DEDataDefinitionFieldLinkModel
-	extends AttachedModel, BaseModel<DEDataDefinitionFieldLink>, ShardedModel {
+	extends AttachedModel, BaseModel<DEDataDefinitionFieldLink>, ShardedModel,
+			StagedModel {
 
 	/*
 	 * NOTE FOR DEVELOPERS:
@@ -62,6 +66,7 @@ public interface DEDataDefinitionFieldLinkModel
 	 * @return the uuid of this de data definition field link
 	 */
 	@AutoEscape
+	@Override
 	public String getUuid();
 
 	/**
@@ -69,6 +74,7 @@ public interface DEDataDefinitionFieldLinkModel
 	 *
 	 * @param uuid the uuid of this de data definition field link
 	 */
+	@Override
 	public void setUuid(String uuid);
 
 	/**
@@ -115,6 +121,38 @@ public interface DEDataDefinitionFieldLinkModel
 	 */
 	@Override
 	public void setCompanyId(long companyId);
+
+	/**
+	 * Returns the create date of this de data definition field link.
+	 *
+	 * @return the create date of this de data definition field link
+	 */
+	@Override
+	public Date getCreateDate();
+
+	/**
+	 * Sets the create date of this de data definition field link.
+	 *
+	 * @param createDate the create date of this de data definition field link
+	 */
+	@Override
+	public void setCreateDate(Date createDate);
+
+	/**
+	 * Returns the modified date of this de data definition field link.
+	 *
+	 * @return the modified date of this de data definition field link
+	 */
+	@Override
+	public Date getModifiedDate();
+
+	/**
+	 * Sets the modified date of this de data definition field link.
+	 *
+	 * @param modifiedDate the modified date of this de data definition field link
+	 */
+	@Override
+	public void setModifiedDate(Date modifiedDate);
 
 	/**
 	 * Returns the fully qualified class name of this de data definition field link.
@@ -186,5 +224,19 @@ public interface DEDataDefinitionFieldLinkModel
 	 * @param fieldName the field name of this de data definition field link
 	 */
 	public void setFieldName(String fieldName);
+
+	/**
+	 * Returns the last publish date of this de data definition field link.
+	 *
+	 * @return the last publish date of this de data definition field link
+	 */
+	public Date getLastPublishDate();
+
+	/**
+	 * Sets the last publish date of this de data definition field link.
+	 *
+	 * @param lastPublishDate the last publish date of this de data definition field link
+	 */
+	public void setLastPublishDate(Date lastPublishDate);
 
 }

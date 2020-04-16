@@ -17,14 +17,14 @@ import {fetch} from 'frontend-js-web';
 const HEADERS = {
 	Accept: 'application/json',
 	'Accept-Language': Liferay.ThemeDisplay.getBCP47LanguageId(),
-	'Content-Type': 'application/json'
+	'Content-Type': 'application/json',
 };
 
 export const addItem = (endpoint, item) => {
 	return fetch(getURL(endpoint), {
 		body: JSON.stringify(item),
 		headers: HEADERS,
-		method: 'POST'
+		method: 'POST',
 	}).then(response => response.json());
 };
 
@@ -38,27 +38,28 @@ export const confirmDelete = endpoint => item =>
 			deleteItem(endpoint + item.id)
 				.then(() => resolve(true))
 				.catch(error => reject(error));
-		} else {
+		}
+		else {
 			resolve(false);
 		}
 	});
 
 export const deleteItem = endpoint => {
 	return fetch(getURL(endpoint), {
-		method: 'DELETE'
+		method: 'DELETE',
 	});
 };
 
 export const request = (endpoint, method = 'GET') =>
 	fetch(getURL(endpoint), {
 		headers: HEADERS,
-		method
+		method,
 	});
 
 export const getItem = endpoint => {
 	return fetch(getURL(endpoint), {
 		headers: HEADERS,
-		method: 'GET'
+		method: 'GET',
 	}).then(response => response.json());
 };
 
@@ -66,7 +67,7 @@ export const getURL = (path, params) => {
 	params = {
 		['p_auth']: Liferay.authToken,
 		t: Date.now(),
-		...params
+		...params,
 	};
 
 	const uri = new URL(`${window.location.origin}${path}`);
@@ -81,7 +82,7 @@ export const updateItem = (endpoint, item, params) => {
 	return fetch(getURL(endpoint, params), {
 		body: JSON.stringify(item),
 		headers: HEADERS,
-		method: 'PUT'
+		method: 'PUT',
 	})
 		.then(response => response.text())
 		.then(text => (text ? JSON.parse(text) : {}));

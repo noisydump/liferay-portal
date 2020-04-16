@@ -24,7 +24,7 @@ Set<String> groupTypes = groupSelectorDisplayContext.getGroupTypes();
 
 <c:if test="<%= groupTypes.size() > 1 %>">
 	<div class="container-fluid-1280">
-		<div class="btn-group" role="group">
+		<div class="btn-group btn-group-sm my-3" role="group">
 
 			<%
 			for (String curGroupType : groupTypes) {
@@ -54,14 +54,24 @@ Set<String> groupTypes = groupSelectorDisplayContext.getGroupTypes();
 				colspan="<%= 3 %>"
 			>
 				<liferay-frontend:horizontal-card
-					cardCssClass="card-interactive card-interactive-primary"
 					text="<%= curGroup.getDescriptiveName(locale) %>"
 					url="<%= groupSelectorDisplayContext.getViewGroupURL(curGroup) %>"
 				>
 					<liferay-frontend:horizontal-card-col>
-						<liferay-frontend:horizontal-card-icon
-							icon="<%= groupSelectorDisplayContext.getGroupItemSelectorIcon() %>"
-						/>
+						<c:choose>
+							<c:when test="<%= Validator.isNotNull(curGroup.getLogoURL(themeDisplay, false)) %>">
+								<span class="sticker sticker-rounded">
+									<span class="sticker-overlay">
+										<img alt="" class="sticker-img" src="<%= curGroup.getLogoURL(themeDisplay, false) %>" />
+									</span>
+								</span>
+							</c:when>
+							<c:otherwise>
+								<liferay-frontend:horizontal-card-icon
+									icon="<%= groupSelectorDisplayContext.getGroupItemSelectorIcon() %>"
+								/>
+							</c:otherwise>
+						</c:choose>
 					</liferay-frontend:horizontal-card-col>
 				</liferay-frontend:horizontal-card>
 			</liferay-ui:search-container-column-text>

@@ -23,6 +23,7 @@ import com.liferay.headless.admin.workflow.resource.v1_0.WorkflowInstanceResourc
 import com.liferay.headless.admin.workflow.resource.v1_0.WorkflowLogResource;
 import com.liferay.headless.admin.workflow.resource.v1_0.WorkflowTaskAssignableUsersResource;
 import com.liferay.headless.admin.workflow.resource.v1_0.WorkflowTaskResource;
+import com.liferay.headless.admin.workflow.resource.v1_0.WorkflowTaskTransitionsResource;
 import com.liferay.portal.vulcan.graphql.servlet.ServletData;
 
 import javax.annotation.Generated;
@@ -50,6 +51,8 @@ public class ServletDataImpl implements ServletData {
 			_workflowInstanceResourceComponentServiceObjects);
 		Mutation.setWorkflowTaskResourceComponentServiceObjects(
 			_workflowTaskResourceComponentServiceObjects);
+		Mutation.setWorkflowTaskAssignableUsersResourceComponentServiceObjects(
+			_workflowTaskAssignableUsersResourceComponentServiceObjects);
 
 		Query.setAssigneeResourceComponentServiceObjects(
 			_assigneeResourceComponentServiceObjects);
@@ -63,8 +66,8 @@ public class ServletDataImpl implements ServletData {
 			_workflowLogResourceComponentServiceObjects);
 		Query.setWorkflowTaskResourceComponentServiceObjects(
 			_workflowTaskResourceComponentServiceObjects);
-		Query.setWorkflowTaskAssignableUsersResourceComponentServiceObjects(
-			_workflowTaskAssignableUsersResourceComponentServiceObjects);
+		Query.setWorkflowTaskTransitionsResourceComponentServiceObjects(
+			_workflowTaskTransitionsResourceComponentServiceObjects);
 	}
 
 	@Override
@@ -95,6 +98,10 @@ public class ServletDataImpl implements ServletData {
 		_workflowTaskResourceComponentServiceObjects;
 
 	@Reference(scope = ReferenceScope.PROTOTYPE_REQUIRED)
+	private ComponentServiceObjects<WorkflowTaskAssignableUsersResource>
+		_workflowTaskAssignableUsersResourceComponentServiceObjects;
+
+	@Reference(scope = ReferenceScope.PROTOTYPE_REQUIRED)
 	private ComponentServiceObjects<AssigneeResource>
 		_assigneeResourceComponentServiceObjects;
 
@@ -107,7 +114,7 @@ public class ServletDataImpl implements ServletData {
 		_workflowLogResourceComponentServiceObjects;
 
 	@Reference(scope = ReferenceScope.PROTOTYPE_REQUIRED)
-	private ComponentServiceObjects<WorkflowTaskAssignableUsersResource>
-		_workflowTaskAssignableUsersResourceComponentServiceObjects;
+	private ComponentServiceObjects<WorkflowTaskTransitionsResource>
+		_workflowTaskTransitionsResourceComponentServiceObjects;
 
 }

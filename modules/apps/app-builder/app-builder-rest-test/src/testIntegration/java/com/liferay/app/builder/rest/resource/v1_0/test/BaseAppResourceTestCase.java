@@ -199,6 +199,7 @@ public abstract class BaseAppResourceTestCase {
 
 	@Test
 	public void testDeleteApp() throws Exception {
+		@SuppressWarnings("PMD.UnusedLocalVariable")
 		App app = testDeleteApp_addApp();
 
 		assertHttpResponseStatusCode(
@@ -460,8 +461,12 @@ public abstract class BaseAppResourceTestCase {
 						Collections.singletonMap("Bbb", "Bbb"));
 				}
 				else {
-					BeanUtils.setProperty(app1, entityField.getName(), "Aaa");
-					BeanUtils.setProperty(app2, entityField.getName(), "Bbb");
+					BeanUtils.setProperty(
+						app1, entityField.getName(),
+						"Aaa" + RandomTestUtil.randomString());
+					BeanUtils.setProperty(
+						app2, entityField.getName(),
+						"Bbb" + RandomTestUtil.randomString());
 				}
 			});
 	}
@@ -663,8 +668,12 @@ public abstract class BaseAppResourceTestCase {
 						Collections.singletonMap("Bbb", "Bbb"));
 				}
 				else {
-					BeanUtils.setProperty(app1, entityField.getName(), "Aaa");
-					BeanUtils.setProperty(app2, entityField.getName(), "Bbb");
+					BeanUtils.setProperty(
+						app1, entityField.getName(),
+						"Aaa" + RandomTestUtil.randomString());
+					BeanUtils.setProperty(
+						app2, entityField.getName(),
+						"Bbb" + RandomTestUtil.randomString());
 				}
 			});
 	}
@@ -1044,7 +1053,7 @@ public abstract class BaseAppResourceTestCase {
 			}
 
 			if (Objects.equals("name", additionalAssertFieldName)) {
-				if (!Objects.deepEquals(app1.getName(), app2.getName())) {
+				if (!equals((Map)app1.getName(), (Map)app2.getName())) {
 					return false;
 				}
 
@@ -1070,6 +1079,30 @@ public abstract class BaseAppResourceTestCase {
 			throw new IllegalArgumentException(
 				"Invalid additional assert field name " +
 					additionalAssertFieldName);
+		}
+
+		return true;
+	}
+
+	protected boolean equals(
+		Map<String, Object> map1, Map<String, Object> map2) {
+
+		if (Objects.equals(map1.keySet(), map2.keySet())) {
+			for (Map.Entry<String, Object> entry : map1.entrySet()) {
+				if (entry.getValue() instanceof Map) {
+					if (!equals(
+							(Map)entry.getValue(),
+							(Map)map2.get(entry.getKey()))) {
+
+						return false;
+					}
+				}
+				else if (!Objects.deepEquals(
+							entry.getValue(), map2.get(entry.getKey()))) {
+
+					return false;
+				}
+			}
 		}
 
 		return true;

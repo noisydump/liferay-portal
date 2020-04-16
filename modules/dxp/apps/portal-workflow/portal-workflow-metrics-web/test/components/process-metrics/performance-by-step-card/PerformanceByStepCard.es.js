@@ -9,42 +9,52 @@
  * distribution rights of the Software.
  */
 
-import {cleanup, render, findByTestId} from '@testing-library/react';
+import {cleanup, findByTestId, render} from '@testing-library/react';
 import React from 'react';
 
 import PerformanceByStepCard from '../../../../src/main/resources/META-INF/resources/js/components/process-metrics/performance-by-step-card/PerformanceByStepCard.es';
+import {stringify} from '../../../../src/main/resources/META-INF/resources/js/shared/components/router/queryString.es';
 import {jsonSessionStorage} from '../../../../src/main/resources/META-INF/resources/js/shared/util/storage.es';
 import {MockRouter} from '../../../mock/MockRouter.es';
 
 import '@testing-library/jest-dom/extend-expect';
 
-const {processId, query} = {
+const {filters, processId} = {
+	filters: {
+		stepDateEnd: '2019-12-09T00:00:00Z',
+		stepDateStart: '2019-12-03T00:00:00Z',
+		stepTimeRange: ['7'],
+	},
 	processId: 12345,
-	query: '?filters.steptimeRange%5B0%5D=7'
 };
-
 const items = [
 	{
 		breachedInstanceCount: 3,
 		breachedInstancePercentage: 30,
 		durationAvg: 10800000,
-		name: 'Review'
+		node: {
+			name: 'Review',
+		},
 	},
 	{
 		breachedInstanceCount: 7,
 		breachedInstancePercentage: 22.5806,
 		durationAvg: 475200000,
-		name: 'Update'
+		node: {
+			name: 'Update',
+		},
 	},
 	{
 		breachedInstanceCount: 0,
 		breachedInstancePercentage: 0,
 		durationAvg: 0,
-		name: 'Translate'
-	}
+		node: {
+			name: 'Translate',
+		},
+	},
 ];
 const data = {items, totalCount: items.length};
-
+const query = stringify({filters});
 const timeRangeData = {
 	items: [
 		{
@@ -52,17 +62,17 @@ const timeRangeData = {
 			dateStart: '2019-12-03T00:00:00Z',
 			defaultTimeRange: false,
 			id: 7,
-			name: 'Last 7 Days'
+			name: 'Last 7 Days',
 		},
 		{
 			dateEnd: '2019-12-09T00:00:00Z',
 			dateStart: '2019-11-10T00:00:00Z',
 			defaultTimeRange: true,
 			id: 30,
-			name: 'Last 30 Days'
-		}
+			name: 'Last 30 Days',
+		},
 	],
-	totalCount: 2
+	totalCount: 2,
 };
 
 describe('The performance by step card component should', () => {
@@ -75,7 +85,7 @@ describe('The performance by step card component should', () => {
 	describe('Be rendered with results', () => {
 		beforeAll(() => {
 			const clientMock = {
-				get: jest.fn().mockResolvedValue({data})
+				get: jest.fn().mockResolvedValue({data}),
 			};
 
 			const wrapper = ({children}) => (
@@ -115,7 +125,7 @@ describe('The performance by step card component should', () => {
 
 			expect(viewAllSteps).toHaveTextContent('view-all-steps (3)');
 			expect(viewAllSteps.parentNode.getAttribute('href')).toContain(
-				'filters.dateEnd=2019-12-09&filters.dateStart=2019-12-03&filters.timeRange%5B0%5D=7'
+				'filters.dateEnd=2019-12-09T00%3A00%3A00Z&filters.dateStart=2019-12-03T00%3A00%3A00Z&filters.timeRange%5B0%5D=7'
 			);
 		});
 	});
@@ -127,7 +137,7 @@ describe('The performance by step card component should', () => {
 			const clientMock = {
 				get: jest
 					.fn()
-					.mockResolvedValue({data: {items: [], totalCount: 0}})
+					.mockResolvedValue({data: {items: [], totalCount: 0}}),
 			};
 
 			const wrapper = ({children}) => (

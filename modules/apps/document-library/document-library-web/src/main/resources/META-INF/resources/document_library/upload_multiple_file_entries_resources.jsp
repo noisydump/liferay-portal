@@ -194,9 +194,10 @@ else {
 										classNameId="<%= PortalUtil.getClassNameId(com.liferay.dynamic.data.mapping.model.DDMStructure.class) %>"
 										classPK="<%= ddmStructure.getPrimaryKey() %>"
 										ddmFormValues="<%= ddmFormValues %>"
+										defaultEditLocale="<%= LocaleUtil.fromLanguageId(themeDisplay.getLanguageId()) %>"
 										fieldsNamespace="<%= String.valueOf(ddmStructure.getPrimaryKey()) %>"
 										groupId="<%= groupId %>"
-										localizable="<%= false %>"
+										localizable="<%= true %>"
 										requestedLocale="<%= locale %>"
 										synchronousFormSubmission="<%= false %>"
 									/>
@@ -259,7 +260,8 @@ else {
 											if (selectedFilesCount === fileNodes.length) {
 												selectedFilesText =
 													'<%= UnicodeLanguageUtil.get(request, "all-files-selected") %>';
-											} else {
+											}
+											else {
 												selectedFilesText = Liferay.Util.sub(
 													'<%= UnicodeLanguageUtil.get(request, "x-files-selected") %>',
 													selectedFilesCount
@@ -342,13 +344,21 @@ else {
 				</aui:fieldset>
 			</liferay-ui:panel>
 		</c:if>
-	</liferay-ui:panel-container>
 
-	<aui:field-wrapper cssClass="upload-multiple-file-permissions" label="permissions">
-		<liferay-ui:input-permissions
-			modelName="<%= DLFileEntryConstants.getClassName() %>"
-		/>
-	</aui:field-wrapper>
+		<liferay-ui:panel
+			cssClass="mb-3"
+			defaultState="closed"
+			extended="<%= true %>"
+			id="dlFileEntryPermissionsPanel"
+			markupView="lexicon"
+			persistState="<%= true %>"
+			title="permissions"
+		>
+			<liferay-ui:input-permissions
+				modelName="<%= DLFileEntryConstants.getClassName() %>"
+			/>
+		</liferay-ui:panel>
+	</liferay-ui:panel-container>
 
 	<span id="<portlet:namespace />selectedFileNameContainer"></span>
 

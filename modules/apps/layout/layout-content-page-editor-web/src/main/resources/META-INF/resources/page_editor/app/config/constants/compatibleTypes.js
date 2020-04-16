@@ -21,6 +21,8 @@
  */
 
 export const COMPATIBLE_TYPES = {
+	'background-image': ['ddm-image', 'image'],
+
 	html: [
 		'ddm-date',
 		'ddm-decimal',
@@ -29,7 +31,7 @@ export const COMPATIBLE_TYPES = {
 		'ddm-text-html',
 		'text',
 		'textarea',
-		'url'
+		'url',
 	],
 
 	image: ['ddm-image', 'image'],
@@ -42,7 +44,7 @@ export const COMPATIBLE_TYPES = {
 		'ddm-text-html',
 		'text',
 		'textarea',
-		'url'
+		'url',
 	],
 
 	'rich-text': [
@@ -53,7 +55,7 @@ export const COMPATIBLE_TYPES = {
 		'ddm-text-html',
 		'text',
 		'textarea',
-		'url'
+		'url',
 	],
 
 	text: [
@@ -63,6 +65,6 @@ export const COMPATIBLE_TYPES = {
 		'ddm-number',
 		'text',
 		'textarea',
-		'url'
-	]
+		'url',
+	],
 };

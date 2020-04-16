@@ -13,12 +13,34 @@
  */
 
 import updateLayoutData from '../../../../src/main/resources/META-INF/resources/page_editor/app/actions/updateLayoutData';
+import updatePageContents from '../../../../src/main/resources/META-INF/resources/page_editor/app/actions/updatePageContents';
 import LayoutService from '../../../../src/main/resources/META-INF/resources/page_editor/app/services/LayoutService';
 import updateItemConfig from '../../../../src/main/resources/META-INF/resources/page_editor/app/thunks/updateItemConfig';
 
 jest.mock(
 	'../../../../src/main/resources/META-INF/resources/page_editor/app/actions/updateLayoutData',
 	() => jest.fn()
+);
+
+jest.mock(
+	'../../../../src/main/resources/META-INF/resources/page_editor/app/actions/updatePageContents',
+	() => jest.fn()
+);
+
+jest.mock(
+	'../../../../src/main/resources/META-INF/resources/page_editor/app/services/InfoItemService',
+	() => ({
+		getPageContents: jest.fn(() =>
+			Promise.resolve([
+				{
+					classPK: 'pk',
+					name: 'contents',
+					title: 'title',
+					usagesCount: 1,
+				},
+			])
+		),
+	})
 );
 
 jest.mock(
@@ -37,7 +59,7 @@ describe('updateItemConfig', () => {
 			config: {},
 			itemConfig: {},
 			itemId: '0',
-			segmentsExperienceId: '0'
+			segmentsExperienceId: '0',
 		})(() => {});
 
 	it('calls LayoutService.updateItemConfig with the given information', () => {
@@ -49,11 +71,11 @@ describe('updateItemConfig', () => {
 		expect(LayoutService.updateItemConfig).toHaveBeenCalled();
 	});
 
-	it('dispatch updateLayoutData action when the promise if resolved', async () => {
+	it('dispatches updateLayoutData and updatePageContents actions', async () => {
 		LayoutService.updateItemConfig.mockImplementation(() =>
 			Promise.resolve({
 				items: {},
-				version: 1
+				version: 1,
 			})
 		);
 
@@ -62,8 +84,19 @@ describe('updateItemConfig', () => {
 		expect(updateLayoutData).toHaveBeenCalledWith({
 			layoutData: {
 				items: {},
-				version: 1
-			}
+				version: 1,
+			},
+		});
+
+		expect(updatePageContents).toHaveBeenCalledWith({
+			pageContents: [
+				{
+					classPK: 'pk',
+					name: 'contents',
+					title: 'title',
+					usagesCount: 1,
+				},
+			],
 		});
 	});
 });

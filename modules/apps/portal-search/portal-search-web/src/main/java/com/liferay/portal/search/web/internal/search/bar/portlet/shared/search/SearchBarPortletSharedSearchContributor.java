@@ -77,6 +77,9 @@ public class SearchBarPortletSharedSearchContributor
 			searchRequestBuilder, searchBarPortletPreferences,
 			portletSharedSearchSettings);
 
+		setScopeParameterName(
+			searchBarPortletPreferences, portletSharedSearchSettings);
+
 		filterByThisSite(
 			searchRequestBuilder, searchBarPortletPreferences,
 			portletSharedSearchSettings);
@@ -90,13 +93,26 @@ public class SearchBarPortletSharedSearchContributor
 		SearchScope searchScope = getSearchScope(
 			searchBarPortletPreferences, portletSharedSearchSettings);
 
-		if (searchScope != SearchScope.THIS_SITE) {
+		if (searchScope == SearchScope.THIS_SITE) {
+			searchRequestBuilder.withSearchContext(
+				searchContext -> searchContext.setGroupIds(
+					getGroupIds(portletSharedSearchSettings)));
+
 			return;
 		}
 
-		searchRequestBuilder.withSearchContext(
-			searchContext -> searchContext.setGroupIds(
-				getGroupIds(portletSharedSearchSettings)));
+		ThemeDisplay themeDisplay =
+			portletSharedSearchSettings.getThemeDisplay();
+
+		Group group = groupLocalService.fetchGroup(
+			themeDisplay.getScopeGroupId());
+
+		if (!searchBarPortletPreferences.isShowStagedResults() ||
+			!group.isStagingGroup()) {
+
+			searchRequestBuilder.withSearchContext(
+				searchContext -> searchContext.setIncludeStagingGroups(false));
+		}
 	}
 
 	protected Optional<Portlet> findTopSearchBarPortletOptional(
@@ -285,6 +301,14 @@ public class SearchBarPortletSharedSearchContributor
 			searchContext -> searchContext.setAttribute(
 				SearchContextAttributes.ATTRIBUTE_KEY_LUCENE_SYNTAX,
 				Boolean.TRUE));
+	}
+
+	protected void setScopeParameterName(
+		SearchBarPortletPreferences searchBarPortletPreferences,
+		PortletSharedSearchSettings portletSharedSearchSettings) {
+
+		portletSharedSearchSettings.setScopeParameterName(
+			searchBarPortletPreferences.getScopeParameterName());
 	}
 
 	protected boolean shouldContributeToCurrentPageSearch(

@@ -26,7 +26,7 @@ import javax.annotation.Generated;
  * @generated
  */
 @Generated("")
-public class ChangeTransition {
+public class ChangeTransition implements Cloneable {
 
 	public String getComment() {
 		return comment;
@@ -69,6 +69,32 @@ public class ChangeTransition {
 	}
 
 	protected String transitionName;
+
+	public Long getWorkflowTaskId() {
+		return workflowTaskId;
+	}
+
+	public void setWorkflowTaskId(Long workflowTaskId) {
+		this.workflowTaskId = workflowTaskId;
+	}
+
+	public void setWorkflowTaskId(
+		UnsafeSupplier<Long, Exception> workflowTaskIdUnsafeSupplier) {
+
+		try {
+			workflowTaskId = workflowTaskIdUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected Long workflowTaskId;
+
+	@Override
+	public ChangeTransition clone() throws CloneNotSupportedException {
+		return (ChangeTransition)super.clone();
+	}
 
 	@Override
 	public boolean equals(Object object) {

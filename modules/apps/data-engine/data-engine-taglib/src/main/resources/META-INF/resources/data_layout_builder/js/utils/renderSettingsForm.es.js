@@ -15,58 +15,15 @@
 import {PagesVisitor} from 'dynamic-data-mapping-form-renderer';
 import Form from 'dynamic-data-mapping-form-renderer/js/containers/Form/Form.es';
 
-const UNIMPLEMENTED_PROPERTIES = [
-	'fieldNamespace',
-	'indexType',
-	'localizable',
-	'readOnly',
-	'type',
-	'validation',
-	'visibilityExpression'
-];
-
-export const getFilteredSettingsContext = settingsContext => {
-	const visitor = new PagesVisitor(settingsContext.pages);
-
-	return {
-		...settingsContext,
-		pages: visitor.mapColumns(column => {
-			return {
-				...column,
-				fields: column.fields
-					.filter(
-						({fieldName}) =>
-							UNIMPLEMENTED_PROPERTIES.indexOf(fieldName) === -1
-					)
-					.map(field => {
-						if (field.fieldName === 'dataSourceType') {
-							field = {
-								...field,
-								predefinedValue: '["manual"]',
-								readOnly: true
-							};
-						}
-
-						return {
-							...field,
-							defaultLanguageId: themeDisplay.getLanguageId(),
-							editingLanguageId: themeDisplay.getLanguageId()
-						};
-					})
-			};
-		})
-	};
-};
-
-export default ({dispatchEvent, settingsContext}, container) => {
+export const getEvents = (dispatchEvent, settingsContext) => {
 	const handleFieldBlurred = ({fieldInstance, value}) => {
 		if (fieldInstance && !fieldInstance.isDisposed()) {
 			const {fieldName} = fieldInstance;
 
 			dispatchEvent('fieldBlurred', {
-				editingLanguageId: themeDisplay.getLanguageId(),
+				editingLanguageId: settingsContext.editingLanguageId,
 				propertyName: fieldName,
-				propertyValue: value
+				propertyValue: value,
 			});
 		}
 	};
@@ -76,9 +33,9 @@ export default ({dispatchEvent, settingsContext}, container) => {
 			const {fieldName} = fieldInstance;
 
 			dispatchEvent('fieldEdited', {
-				editingLanguageId: themeDisplay.getLanguageId(),
+				editingLanguageId: settingsContext.editingLanguageId,
 				propertyName: fieldName,
-				propertyValue: value
+				propertyValue: value,
 			});
 		}
 	};
@@ -87,18 +44,62 @@ export default ({dispatchEvent, settingsContext}, container) => {
 		this.evaluate();
 	};
 
+	return {
+		attached: handleFormAttached,
+		fieldBlurred: handleFieldBlurred,
+		fieldEdited: handleFieldEdited,
+	};
+};
+
+export const getFilteredSettingsContext = ({config, settingsContext}) => {
+	const unsupportedTabs = [...config.disabledTabs];
+
+	const pages = settingsContext.pages.filter(
+		page => !unsupportedTabs.includes(page.title)
+	);
+
+	const visitor = new PagesVisitor(pages);
+
+	const unsupportedProperties = [
+		...config.unimplementedProperties,
+		...config.disabledProperties,
+	];
+
+	return {
+		...settingsContext,
+		pages: visitor.mapColumns(column => {
+			return {
+				...column,
+				fields: column.fields
+					.filter(
+						({fieldName}) =>
+							!unsupportedProperties.includes(fieldName)
+					)
+					.map(field => {
+						if (field.fieldName === 'dataSourceType') {
+							field = {
+								...field,
+								predefinedValue: '["manual"]',
+								readOnly: true,
+							};
+						}
+
+						return field;
+					}),
+			};
+		}),
+	};
+};
+
+export default (events, settingsContext, container) => {
 	const spritemap = `${Liferay.ThemeDisplay.getPathThemeImages()}/lexicon/icons.svg`;
 
 	return new Form(
 		{
 			...settingsContext,
 			editable: true,
-			events: {
-				attached: handleFormAttached,
-				fieldBlurred: handleFieldBlurred,
-				fieldEdited: handleFieldEdited
-			},
-			spritemap
+			events,
+			spritemap,
 		},
 		container
 	);

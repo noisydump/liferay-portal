@@ -32,13 +32,14 @@
 			if (extraParams) {
 				if (typeof extraParams == 'string') {
 					url += extraParams;
-				} else if (Array.isArray(extraParams)) {
+				}
+				else if (Array.isArray(extraParams)) {
 					url += extraParams.join('/');
 				}
 			}
 
 			var headers = {
-				'X-CSRF-Token': Liferay.authToken
+				'X-CSRF-Token': Liferay.authToken,
 			};
 
 			var value = '';
@@ -49,9 +50,9 @@
 				on: {
 					complete(i, o) {
 						value = o.responseText;
-					}
+					},
 				},
-				sync: true
+				sync: true,
 			});
 
 			return value;

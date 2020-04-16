@@ -16,24 +16,27 @@ import updateLayoutData from '../actions/updateLayoutData';
 import LayoutService from '../services/LayoutService';
 
 export default function addItem({
-	config,
 	itemType,
 	parentItemId,
 	position,
-	store
+	selectItem = () => {},
+	store,
 }) {
 	return dispatch => {
 		const {segmentsExperienceId} = store;
 
 		LayoutService.addItem({
-			config,
 			itemType,
 			onNetworkStatus: dispatch,
 			parentItemId,
 			position,
-			segmentsExperienceId
-		}).then(layoutData => {
+			segmentsExperienceId,
+		}).then(({addedItemId, layoutData}) => {
 			dispatch(updateLayoutData({layoutData}));
+
+			if (addedItemId) {
+				selectItem(addedItemId);
+			}
 		});
 	};
 }

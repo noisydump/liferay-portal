@@ -934,7 +934,7 @@ public class CalendarPortlet extends MVCPortlet {
 	protected String getNotificationTypeSettings(
 		ActionRequest actionRequest, NotificationType notificationType) {
 
-		UnicodeProperties notificationTypeSettingsProperties =
+		UnicodeProperties notificationTypeSettingsUnicodeProperties =
 			new UnicodeProperties(true);
 
 		if (notificationType == NotificationType.EMAIL) {
@@ -942,15 +942,15 @@ public class CalendarPortlet extends MVCPortlet {
 				actionRequest, "fromAddress");
 			String fromName = ParamUtil.getString(actionRequest, "fromName");
 
-			notificationTypeSettingsProperties.put(
+			notificationTypeSettingsUnicodeProperties.put(
 				CalendarNotificationTemplateConstants.PROPERTY_FROM_ADDRESS,
 				fromAddress);
-			notificationTypeSettingsProperties.put(
+			notificationTypeSettingsUnicodeProperties.put(
 				CalendarNotificationTemplateConstants.PROPERTY_FROM_NAME,
 				fromName);
 		}
 
-		return notificationTypeSettingsProperties.toString();
+		return notificationTypeSettingsUnicodeProperties.toString();
 	}
 
 	protected long getOffset(
@@ -1434,7 +1434,11 @@ public class CalendarPortlet extends MVCPortlet {
 			long calendarId = GetterUtil.getLong(
 				document.get(Field.ENTRY_CLASS_PK));
 
-			Calendar calendar = _calendarService.getCalendar(calendarId);
+			Calendar calendar = _calendarService.fetchCalendar(calendarId);
+
+			if (calendar == null) {
+				continue;
+			}
 
 			CalendarResource calendarResource = calendar.getCalendarResource();
 

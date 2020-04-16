@@ -50,29 +50,30 @@ AUI.add(
 			ATTRS: {
 				closeCaption: {
 					validator: Lang.isString,
-					value: ''
+					value: '',
 				},
 				editItemURL: {
 					validator: Lang.isString,
-					value: ''
+					value: '',
 				},
 				maxFileSize: {
 					setter: Lang.toInt,
 					value:
-						Liferay.PropsValues.UPLOAD_SERVLET_REQUEST_IMPL_MAX_SIZE
+						Liferay.PropsValues
+							.UPLOAD_SERVLET_REQUEST_IMPL_MAX_SIZE,
 				},
 				uploadItemReturnType: {
 					validator: Lang.isString,
-					value: ''
+					value: '',
 				},
 				uploadItemURL: {
 					validator: Lang.isString,
-					value: ''
+					value: '',
 				},
 				validExtensions: {
 					validator: Lang.isString,
-					value: '*'
-				}
+					value: '*',
+				},
 			},
 
 			AUGMENTS: [Liferay.PortletBase],
@@ -116,7 +117,7 @@ AUI.add(
 							STR_VISIBLE_CHANGE,
 							instance._afterVisibleChange,
 							instance
-						)
+						),
 					];
 
 					var uploadItemURL = instance.get('uploadItemURL');
@@ -195,7 +196,8 @@ AUI.add(
 
 							if (type === STR_DRAG_OVER) {
 								rootNode.addClass(CSS_DROP_ACTIVE);
-							} else if (type === STR_DRAG_LEAVE || eventDrop) {
+							}
+							else if (type === STR_DRAG_LEAVE || eventDrop) {
 								rootNode.removeClass(CSS_DROP_ACTIVE);
 
 								if (eventDrop) {
@@ -225,7 +227,8 @@ AUI.add(
 							if (error.message) {
 								message = error.message;
 							}
-						} else if (
+						}
+						else if (
 							errorType ===
 							STATUS_CODE.SC_FILE_EXTENSION_EXCEPTION
 						) {
@@ -236,20 +239,23 @@ AUI.add(
 									),
 									[error.message]
 								);
-							} else {
+							}
+							else {
 								message = Lang.sub(
 									Liferay.Language.get(
 										'please-enter-a-file-with-a-valid-file-type'
 									)
 								);
 							}
-						} else if (
+						}
+						else if (
 							errorType === STATUS_CODE.SC_FILE_NAME_EXCEPTION
 						) {
 							message = Liferay.Language.get(
 								'please-enter-a-file-with-a-valid-file-name'
 							);
-						} else if (
+						}
+						else if (
 							errorType === STATUS_CODE.SC_FILE_SIZE_EXCEPTION ||
 							errorType ===
 								STATUS_CODE.SC_UPLOAD_REQUEST_CONTENT_LENGTH_EXCEPTION
@@ -261,10 +267,11 @@ AUI.add(
 								[
 									Liferay.Util.formatStorage(
 										instance.get('maxFileSize')
-									)
+									),
 								]
 							);
-						} else if (
+						}
+						else if (
 							errorType ===
 							STATUS_CODE.SC_UPLOAD_REQUEST_SIZE_EXCEPTION
 						) {
@@ -279,7 +286,7 @@ AUI.add(
 								[
 									Liferay.Util.formatStorage(
 										maxUploadRequestSize
-									)
+									),
 								]
 							);
 						}
@@ -295,22 +302,22 @@ AUI.add(
 								data: [
 									{
 										key: Liferay.Language.get('format'),
-										value: file.type
+										value: file.type,
 									},
 									{
 										key: Liferay.Language.get('size'),
 										value: Liferay.Util.formatStorage(
 											file.size
-										)
+										),
 									},
 									{
 										key: Liferay.Language.get('name'),
-										value: file.name
-									}
+										value: file.name,
+									},
 								],
-								title: Liferay.Language.get('file-info')
-							}
-						]
+								title: Liferay.Language.get('file-info'),
+							},
+						],
 					};
 				},
 
@@ -332,8 +339,8 @@ AUI.add(
 					instance.fire(STR_SELECTED_ITEM, {
 						data: {
 							returnType: link.getData('returntype'),
-							value: link.getData('value')
-						}
+							value: link.getData('value'),
+						},
 					});
 				},
 
@@ -395,12 +402,12 @@ AUI.add(
 						closeable: true,
 						delay: {
 							hide: 5000,
-							show: 0
+							show: 0,
 						},
 						duration: 250,
 						icon: 'exclamation-full',
 						message,
-						type: 'danger'
+						type: 'danger',
 					}).render(instance.rootNode);
 				},
 
@@ -420,7 +427,7 @@ AUI.add(
 							preview,
 							returnType,
 							title: file.name,
-							value: preview
+							value: preview,
 						})
 					);
 
@@ -461,7 +468,8 @@ AUI.add(
 
 						if (file.size <= maxFileSize) {
 							instance._previewFile(file);
-						} else {
+						}
+						else {
 							errorMessage = Lang.sub(
 								Liferay.Language.get(
 									'please-enter-a-file-with-a-valid-file-size-no-larger-than-x'
@@ -469,11 +477,12 @@ AUI.add(
 								[
 									Liferay.Util.formatStorage(
 										instance.get('maxFileSize')
-									)
+									),
 								]
 							);
 						}
-					} else {
+					}
+					else {
 						errorMessage = Lang.sub(
 							Liferay.Language.get(
 								'please-enter-a-file-with-a-valid-extension-x'
@@ -510,25 +519,25 @@ AUI.add(
 						btnCloseCaption: instance.get('closeCaption'),
 						editItemURL: instance.get('editItemURL'),
 						links: instance.all('.item-preview'),
-						uploadItemURL: instance.get('uploadItemURL')
+						uploadItemURL: instance.get('uploadItemURL'),
 					});
 
 					instance._uploadItemViewer = new A.LiferayItemViewer({
 						btnCloseCaption: instance.get('closeCaption'),
 						links: '',
-						uploadItemURL: instance.get('uploadItemURL')
+						uploadItemURL: instance.get('uploadItemURL'),
 					});
 
 					instance._itemSelectorUploader = new A.LiferayItemSelectorUploader(
 						{
-							rootNode: instance.rootNode
+							rootNode: instance.rootNode,
 						}
 					);
 
 					instance._bindUI();
 					instance._renderUI();
-				}
-			}
+				},
+			},
 		});
 
 		Liferay.ItemSelectorRepositoryEntryBrowser = ItemSelectorRepositoryEntryBrowser;
@@ -539,7 +548,7 @@ AUI.add(
 			'liferay-alert',
 			'liferay-item-selector-uploader',
 			'liferay-item-viewer',
-			'liferay-portlet-base'
-		]
+			'liferay-portlet-base',
+		],
 	}
 );

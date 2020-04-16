@@ -175,7 +175,7 @@ String clientSecret = (oAuth2Application == null) ? "" : oAuth2Application.getCl
 			</div>
 
 			<div class="padlock" id="<portlet:namespace />clientIdPadlock">
-				<div class="open" style="display:none">
+				<div class="open" style="display: none;">
 					<clay:icon symbol="unlock" /><liferay-ui:message key="changed" />
 				</div>
 
@@ -205,7 +205,7 @@ String clientSecret = (oAuth2Application == null) ? "" : oAuth2Application.getCl
 			</div>
 
 			<div class="padlock" id="<portlet:namespace />clientSecretPadlock">
-				<div class="open" style="display:none">
+				<div class="open" style="display: none;">
 					<clay:icon symbol="unlock" /><liferay-ui:message key="changed" />
 				</div>
 
@@ -230,7 +230,7 @@ String clientSecret = (oAuth2Application == null) ? "" : oAuth2Application.getCl
 		Liferay.Util.fetch(
 			'<liferay-portlet:resourceURL copyCurrentRenderParameters="<%= false %>" id="/admin/generate_random_secret" />',
 			{
-				method: 'POST'
+				method: 'POST',
 			}
 		)
 			.then(function(response) {
@@ -300,7 +300,8 @@ String clientSecret = (oAuth2Application == null) ? "" : oAuth2Application.getCl
 
 			if (grantTypeNode.hasAttribute('hidden')) {
 				continue;
-			} else {
+			}
+			else {
 				grantTypeToggleElement = grantTypeNode.children[0].children[0];
 
 				if (
@@ -377,7 +378,7 @@ String clientSecret = (oAuth2Application == null) ? "" : oAuth2Application.getCl
 			footerContent: footerContent,
 			headerContent: title,
 			modal: true,
-			plugins: [Liferay.WidgetZIndex]
+			plugins: [Liferay.WidgetZIndex],
 		}).render();
 
 		modal.on('render', function(event) {
@@ -395,8 +396,8 @@ String clientSecret = (oAuth2Application == null) ? "" : oAuth2Application.getCl
 						);
 
 						modal.hide();
-					}
-				}
+					},
+				},
 			},
 			{
 				cssClass: 'btn-primary',
@@ -409,9 +410,9 @@ String clientSecret = (oAuth2Application == null) ? "" : oAuth2Application.getCl
 						);
 
 						modal.hide();
-					}
-				}
-			}
+					},
+				},
+			},
 		]);
 
 		modal.show();
@@ -440,7 +441,8 @@ String clientSecret = (oAuth2Application == null) ? "" : oAuth2Application.getCl
 			clientCredentialsSection.show();
 			allowedGrantTypesSection.addClass('col-lg-7');
 			allowedGrantTypesSection.removeClass('col-lg-12');
-		} else {
+		}
+		else {
 			clientCredentialsSection.hide();
 			allowedGrantTypesSection.addClass('col-lg-12');
 			allowedGrantTypesSection.removeClass('col-lg-7');
@@ -462,7 +464,8 @@ String clientSecret = (oAuth2Application == null) ? "" : oAuth2Application.getCl
 		if (newValue != originalValue) {
 			padlock.one('div.closed').hide();
 			padlock.one('div.open').show();
-		} else {
+		}
+		else {
 			padlock.one('div.open').hide();
 			padlock.one('div.closed').show();
 		}
@@ -480,7 +483,8 @@ String clientSecret = (oAuth2Application == null) ? "" : oAuth2Application.getCl
 			if (lexiconIconParent) {
 				if (required) {
 					lexiconIconParent.style = 'visibility:visible;';
-				} else {
+				}
+				else {
 					lexiconIconParent.style = 'visibility:hidden;';
 				}
 			}
@@ -510,7 +514,7 @@ String clientSecret = (oAuth2Application == null) ? "" : oAuth2Application.getCl
 			},
 			custom: false,
 			fieldName: '<portlet:namespace />clientSecret',
-			validatorName: 'required'
+			validatorName: 'required',
 		},
 		{
 			body: function(val, fieldNode, ruleValue) {
@@ -518,8 +522,8 @@ String clientSecret = (oAuth2Application == null) ? "" : oAuth2Application.getCl
 			},
 			custom: false,
 			fieldName: '<portlet:namespace />redirectURIs',
-			validatorName: 'required'
-		}
+			validatorName: 'required',
+		},
 	];
 
 	var fieldRules = oldFieldRules.concat(newFieldRules);

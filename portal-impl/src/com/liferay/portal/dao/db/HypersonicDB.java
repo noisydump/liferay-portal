@@ -15,10 +15,12 @@
 package com.liferay.portal.dao.db;
 
 import com.liferay.petra.string.StringBundler;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.db.DBType;
 import com.liferay.portal.kernel.io.unsync.UnsyncBufferedReader;
 import com.liferay.portal.kernel.io.unsync.UnsyncStringReader;
 import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.kernel.util.Validator;
 
 import java.io.IOException;
 
@@ -37,8 +39,7 @@ public class HypersonicDB extends BaseDB {
 
 	@Override
 	public String buildSQL(String template) throws IOException {
-		template = convertTimestamp(template);
-		template = replaceTemplate(template, getTemplate());
+		template = replaceTemplate(template);
 
 		template = reword(template);
 		template = StringUtil.replace(template, "\\'", "''");
@@ -47,15 +48,13 @@ public class HypersonicDB extends BaseDB {
 	}
 
 	@Override
-	protected String buildCreateFileContent(
-		String sqlDir, String databaseName, int population) {
-
-		return null;
+	public String getPopulateSQL(String databaseName, String sqlContent) {
+		return StringPool.BLANK;
 	}
 
 	@Override
-	protected String getServerName() {
-		return "hypersonic";
+	public String getRecreateSQL(String databaseName) {
+		return StringPool.BLANK;
 	}
 
 	@Override
@@ -93,11 +92,15 @@ public class HypersonicDB extends BaseDB {
 						"alter table @table@ alter column @old-column@ @type@;",
 						REWORD_TEMPLATE, template);
 
-					line = line.concat(
-						StringUtil.replace(
-							"alter table @table@ alter column @old-column@ " +
-								"set @nullable@;",
-							REWORD_TEMPLATE, template));
+					String nullable = template[template.length - 1];
+
+					if (!Validator.isBlank(nullable)) {
+						line = line.concat(
+							StringUtil.replace(
+								"alter table @table@ alter column " +
+									"@old-column@ set @nullable@;",
+								REWORD_TEMPLATE, template));
+					}
 				}
 				else if (line.startsWith(ALTER_TABLE_NAME)) {
 					String[] template = buildTableNameTokens(line);

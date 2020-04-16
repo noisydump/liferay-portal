@@ -1,7 +1,7 @@
 @component-name = "portal-document-management"
 definition {
 
-	property portal.release = "false";
+	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.main.component.name = "Depot";
 
@@ -99,7 +99,6 @@ definition {
 	}
 
 	@description = "This ensures that users cannot create the same name as another translated repository name."
-	@ignore = "true"
 	@priority = "4"
 	test AddNameThatDuplicatesTranslation {
 		JSONDepot.addDepot(
@@ -112,19 +111,22 @@ definition {
 
 		DepotNavigator.gotoLanguages(depotName = "Test Depot Name");
 
-		Click(
-			key_languagesOption = "Define a custom default language and additional available languages for this repository.",
+		Pause(locator1 = "3000");
+
+		Click.clickNoMouseOverNoWaitForVisible(
+			key_languagesOption = "Define a custom default language and additional active languages for this asset library.",
 			locator1 = "Radio#DEPOT_LANGUAGES_OPTION");
 
-		PortalSettings.configureCurrentLanguagesCP(
-			currentPortalLanguages = "Spanish (Spain)",
-			defaultPortalLanguage = "Spanish (Spain)");
+		Depot.configureDefaultLanguage(
+			defaultDepotLanguage = "Spanish (Spain)",
+			locale = "es_ES");
 
 		DepotNavigator.openDepotAdmin();
 
 		Depot.editDepot(
 			depotName = "Test Depot Name",
-			depotNameEdit = "título");
+			depotNameEdit = "título",
+			language = "es-ES");
 
 		DepotNavigator.openDepotAdmin();
 
@@ -179,11 +181,7 @@ definition {
 			depotDescription = "This is the description of a depot",
 			depotName = "Test Depot Name");
 
-		DepotNavigator.openDepotAdmin();
-
-		DepotNavigator.gotoDepot(
-			depotName = "Test Depot Name",
-			portlet = "Documents and Media");
+		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "test-depot-name");
 
 		DMFolder.addCP(dmFolderName = "DM Folder Name");
 
@@ -201,11 +199,7 @@ definition {
 			depotDescription = "This is the description of a depot",
 			depotName = "Test Depot Name");
 
-		DepotNavigator.openDepotAdmin();
-
-		DepotNavigator.gotoDepot(
-			depotName = "Test Depot Name",
-			portlet = "Documents and Media");
+		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "test-depot-name");
 
 		DMDocument.addMultipleCP(dmDocumentFileList = "Document_1.doc,Document_2.jpg,Document_3.xls");
 
@@ -482,9 +476,9 @@ definition {
 		property portal.acceptance = "true";
 
 		ProductMenu.gotoPortlet(
-			category = "Repositories",
+			category = "Asset Libraries",
 			panel = "Control Panel",
-			portlet = "Repositories");
+			portlet = "Asset Libraries");
 
 		Depot.addDepot(
 			depotDescription = "This is the description of a depot",

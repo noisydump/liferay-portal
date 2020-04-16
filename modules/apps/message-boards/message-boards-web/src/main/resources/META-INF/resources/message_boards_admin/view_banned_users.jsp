@@ -67,9 +67,9 @@ int totalBannedUsers = MBBanLocalServiceUtil.getBansCount(scopeGroupId);
 			>
 
 				<%
-				Map<String, Object> rowData = new HashMap<String, Object>();
-
-				rowData.put("actions", StringUtil.merge(mbBannedUsersManagementToolbarDisplayContext.getAvailableActions(ban)));
+				Map<String, Object> rowData = HashMapBuilder.<String, Object>put(
+					"actions", StringUtil.merge(mbBannedUsersManagementToolbarDisplayContext.getAvailableActions(ban))
+				).build();
 
 				row.setData(rowData);
 				%>
@@ -141,14 +141,14 @@ PortalUtil.setPageSubtitle(LanguageUtil.get(request, "banned-users"), request);
 	var unbanUser = function() {
 		Liferay.Util.postForm(document.<portlet:namespace />fm, {
 			data: {
-				<%= Constants.CMD %>: 'unban'
+				<%= Constants.CMD %>: 'unban',
 			},
-			url: '<portlet:actionURL name="/message_boards/ban_user" />'
+			url: '<portlet:actionURL name="/message_boards/ban_user" />',
 		});
 	};
 
 	var ACTIONS = {
-		unbanUser: unbanUser
+		unbanUser: unbanUser,
 	};
 
 	Liferay.componentReady('mbBannedUsersManagementToolbar').then(function(

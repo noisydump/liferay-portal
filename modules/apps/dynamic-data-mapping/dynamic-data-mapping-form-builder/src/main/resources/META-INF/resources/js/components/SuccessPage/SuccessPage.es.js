@@ -21,16 +21,23 @@ import templates from './SuccessPage.soy';
 
 class SuccessPage extends Component {
 	prepareStateForRender(state) {
-		const {store} = this.context;
-		const {editingLanguageId} = store.props;
-		const {successPageSettings} = this;
+		const {editingLanguageId, successPageSettings} = this;
 		const {body, title} = successPageSettings;
 
 		return {
 			...state,
 			body: (body && body[editingLanguageId]) || '',
-			title: (title && title[editingLanguageId]) || ''
+			title: (title && title[editingLanguageId]) || '',
 		};
+	}
+
+	shouldUpdate(changes) {
+		const {editingLanguageId} = changes;
+
+		return (
+			editingLanguageId &&
+			editingLanguageId.newVal !== editingLanguageId.prevVal
+		);
 	}
 
 	_handleSuccessPageUpdated(event) {
@@ -39,7 +46,7 @@ class SuccessPage extends Component {
 		const {delegateTarget} = event;
 		const {
 			dataset: {setting},
-			value
+			value,
 		} = delegateTarget;
 		const {successPageSettings} = this;
 
@@ -51,6 +58,8 @@ class SuccessPage extends Component {
 }
 
 SuccessPage.STATE = {
+	editingLanguageId: Config.string(),
+
 	/**
 	 * @instance
 	 * @memberof SuccessPage
@@ -59,8 +68,8 @@ SuccessPage.STATE = {
 
 	successPageSettings: Config.object().value({
 		body: {},
-		title: {}
-	})
+		title: {},
+	}),
 };
 
 Soy.register(SuccessPage, templates);

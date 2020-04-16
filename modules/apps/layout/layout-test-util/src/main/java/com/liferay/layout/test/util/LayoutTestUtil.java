@@ -191,13 +191,9 @@ public class LayoutTestUtil {
 		String friendlyURL =
 			StringPool.SLASH + FriendlyURLNormalizerUtil.normalize(name);
 
-		Layout layout = null;
-
 		try {
-			layout = LayoutLocalServiceUtil.getFriendlyURLLayout(
+			return LayoutLocalServiceUtil.getFriendlyURLLayout(
 				groupId, false, friendlyURL);
-
-			return layout;
 		}
 		catch (NoSuchLayoutException noSuchLayoutException) {
 		}
@@ -323,10 +319,10 @@ public class LayoutTestUtil {
 
 		Layout layout = addLayout(groupId, false);
 
-		UnicodeProperties typeSettingsProperties =
+		UnicodeProperties typeSettingsUnicodeProperties =
 			layout.getTypeSettingsProperties();
 
-		typeSettingsProperties.setProperty(
+		typeSettingsUnicodeProperties.setProperty(
 			"linkToLayoutId", String.valueOf(linkedToLayoutId));
 
 		layout.setType(LayoutConstants.TYPE_LINK_TO_LAYOUT);

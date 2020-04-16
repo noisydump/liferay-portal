@@ -147,7 +147,7 @@ portletURL.setParameter("eventName", eventName);
 
 		Liferay.Util.fetch(form.action, {
 			body: new FormData(form),
-			method: 'POST'
+			method: 'POST',
 		})
 			.then(function(response) {
 				return response.json();
@@ -169,7 +169,8 @@ portletURL.setParameter("eventName", eventName);
 					);
 
 					Util.getWindow().destroy();
-				} else {
+				}
+				else {
 					message.show();
 				}
 			});

@@ -47,7 +47,7 @@
 </tr>
 <tr>
 	<td>VERTICAL_ELLIPSIS_BUTTON</td>
-	<td>//tr[contains(@data-testid,'item')][descendant::a[contains(.,'${key_itemName}')]]//button[contains(@class,'dropdown-toggle')]</td>
+	<td>//p[contains(.,'${key_itemName}')]/ancestor::tr//button[contains(@class,'dropdown-toggle')]</td>
 	<td></td>
 </tr>
 
@@ -129,9 +129,88 @@
 </tr>
 
 <!--APP_CREATION_SCREEN-->
+
 <tr>
 	<td>DEPLOY_APP_TOGGLE</td>
-	<td>//div[contains(@class,'autofit-row ')][descendant::h3[contains(.,'${key_deployOption}')]]//input[contains(@class,'toggle-switch-check')]</td>
+	<td>//div[contains(@class,'autofit-row')][descendant::h3[contains(.,'${key_deployOption}')]]//input[contains(@class,'toggle-switch-check')]</td>
+	<td></td>
+</tr>
+
+<tr>
+	<td>UNDEPLOY_APP_BUTTON</td>
+	<td>//button[@class='btn btn-primary']</td>
+	<td></td>
+</tr>
+
+<tr>
+	<td>UNDEPLOY_APP_STATUS</td>
+	<td>//span[@class='label-item label-item-expand']</td>
+	<td></td>
+</tr>
+
+<tr>
+	<td>DEPLOYED_AS</td>
+	<td>//td[contains(text(),'${value1}')]</td>
+	<td></td>
+</tr>
+
+<tr>
+	<td>PRODUCT_MENU_DEPLOYED</td>
+	<td>//span[@class='control-menu-level-1-heading text-truncate']</td>
+	<td></td>
+</tr>
+
+<tr>
+	<td>STANDALONE_DEPLOYED</td>
+	<td>//h1[contains(@class,'app-builder-standalone-name')]</td>
+	<td></td>
+</tr>
+
+<tr>
+	<td>PORTLET_UNDEPLOYED</td>
+	<td>//div[@class='alert alert-info']</td>
+	<td></td>
+</tr>
+
+<tr>
+	<td>WIDGET_DEPLOYED</td>
+	<td>//*[contains(@class,'portlet-title-text')]</td>
+	<td></td>
+</tr>
+
+<tr>
+	<td>DEPLOY_APP_STATUS</td>
+	<td>//span[contains(@class, 'label-item label-item-expand')]</td>
+	<td></td>
+</tr>
+
+<tr>
+	<td>PRODUCT_MENU_PLACE_IT_DROPDOWN</td>
+	<td>//select[@id='scope']</td>
+	<td></td>
+</tr>
+
+<tr>
+	<td>PRODUCT_MENU_PLACE_IT_DROPDOWN_OPTION</td>
+	<td>//option[text()='${key_dropdownOption}']</td>
+	<td></td>
+</tr>
+
+<tr>
+	<td>PRODUCT_MENU_SITE_DROPDOWN</td>
+	<td>//button[@id='site']</td>
+	<td></td>
+</tr>
+
+<tr>
+	<td>PRODUCT_MENU_SITE_DROPDOWN_OPTION</td>
+	<td>//span[text()='${key_dropdownOption}']</td>
+	<td></td>
+</tr>
+
+<tr>
+	<td>DEPLOY_BUTTON</td>
+	<td>//button[contains(@class,'btn-primary') and contains(text(),'Deploy')]</td>
 	<td></td>
 </tr>
 
@@ -175,7 +254,7 @@
 
 <tr>
 	<td>VALIDATE_LIST_TITLE_NAME_AT_ROW</td>
-	<td>//tr[@data-testid='item'][${key_RowNumber}]//a</td>
+	<td>//tr[${key_RowNumber}]//a</td>
 	<td></td>
 </tr>
 
@@ -196,6 +275,53 @@
 	<td>//*[contains(@class,'lexicon-icon-order-arrow')]</td>
 	<td></td>
 </tr>
+
+<tr>
+ 	<td>ENTRY_SUCCESS_MESSAGE</td>
+ 	<td>//div[contains(text(),'An entry was added.')]</td>
+ 	<td></td>
+</tr>
+
+ <!--CONFIGURATION_PERMISSIONS-->
+<tr>
+	<td>CONFIGURATION_PERMISSIONS_ADD_ENTRY</td>
+	<td>//td[contains(@class,'text-left')]//p[text()='${key_roleTitle}']/parent::td/following-sibling::td//input[@name='ADD_DATA_RECORD']</td>
+	<td></td>
+</tr>
+
+<tr>
+	<td>CONFIGURATION_PERMISSIONS_DELETE_ENTRY</td>
+	<td>//td[contains(@class,'text-left')]//p[text()='${key_roleTitle}']/parent::td/following-sibling::td//input[@name='DELETE_DATA_RECORD']</td>
+	<td></td>
+</tr>
+
+<tr>
+	<td>CONFIGURATION_PERMISSIONS_UPDATE_ENTRY</td>
+	<td>//td[contains(@class,'text-left')]//p[text()='${key_roleTitle}']/parent::td/following-sibling::td//input[@name='UPDATE_DATA_RECORD']</td>
+	<td></td>
+</tr>
+
+<tr>
+	<td>CONFIGURATION_PERMISSIONS_VIEW_ENTRY</td>
+	<td>//td[contains(@class,'text-left')]//p[text()='${key_roleTitle}']/parent::td/following-sibling::td//input[@name='VIEW_DATA_RECORD']</td>
+	<td></td>
+</tr>
+
+<!-- NAVBAR -->
+<tr>
+	<td>NAVBAR</td>
+	<td>//div[contains(@class,'navbar-collapse')]</td>
+	<td></td>
+</tr>
+
+<!--HOMEPAGE_TABLE_VIEW-->
+
+<tr>
+	<td>FIELD_LABEL_IN_TABLE</td>
+	<td>//*[contains(.,'(Table View)')]//thead//tr//th[contains(text(),'${key_fieldLabel}')]</td>
+	<td></td>
+</tr>
+
 
 </tbody>
 </table>

@@ -1,11 +1,11 @@
 {
 	"dependencies": {
-		"@clayui/alert": "3.1.0",
-		"@clayui/form": "3.3.0",
-		"@clayui/icon": "3.0.2",
-		"@clayui/modal": "3.1.4",
+		"@clayui/alert": "3.3.0",
+		"@clayui/form": "3.7.0",
+		"@clayui/icon": "3.0.4",
+		"@clayui/modal": "3.4.0",
 		"clay": "2.18.1",
-		"clay-alert": "2.20.2",
+		"clay-alert": "2.21.0",
 		"liferay-amd-loader": "4.2.0",
 		"lodash.escape": "4.0.1",
 		"lodash.groupby": "4.6.0",
@@ -30,7 +30,6 @@
 			"<rootDir>/test/liferay/portlet/mock/setup.es.js"
 		],
 		"testPathIgnorePatterns": [
-			"<rootDir>/test/liferay/portlet/mock/portlet_data.es.js",
 			"<rootDir>/test/liferay/portlet/mock/setup.es.js"
 		]
 	},
@@ -43,5 +42,5 @@
 		"test": "liferay-npm-scripts test",
 		"watch": "liferay-npm-scripts webpack --watch"
 	},
-	"version": "4.0.5"
+	"version": "4.0.13"
 }

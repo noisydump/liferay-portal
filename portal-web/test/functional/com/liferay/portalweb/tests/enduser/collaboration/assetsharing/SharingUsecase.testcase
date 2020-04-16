@@ -298,6 +298,7 @@ definition {
 	@description = "This test ensures that users can Order By Shared Date in the Shared Content app."
 	@priority = "3"
 	test OrderBySharedDate {
+		property portal.upstream = "quarantine";
 		property test.name.skip.portal.instance = "SharingUsecase#OrderBySharedDate";
 
 		JSONLayout.addWidgetToPublicLayout(
@@ -317,9 +318,12 @@ definition {
 
 		LexiconEntry.changeDisplayStyle(displayStyle = "list");
 
-		DMDocument.addMultiplePG(
-			dmDocumentFileList = "Document_1.jpeg,Document_2.docx",
-			viewableBy = "Owner");
+		for (var dmDocumentFile : list "Document_1.jpeg,Document_2.docx") {
+			DMDocument.addPG(
+				dmDocumentFile = "${dmDocumentFile}",
+				dmDocumentTitle = "${dmDocumentFile}",
+				viewableBy = "Owner");
+		}
 
 		DMNavigator.gotoShare(dmDocumentTitle = "Document_1.jpeg");
 

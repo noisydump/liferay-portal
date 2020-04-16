@@ -101,7 +101,7 @@ if (entryId > 0) {
 
 		Liferay.Util.fetch(url, {
 			body: new FormData(form.getDOM()),
-			method: 'POST'
+			method: 'POST',
 		})
 			.then(function(response) {
 				return response.json();
@@ -115,7 +115,8 @@ if (entryId > 0) {
 
 						message.html(data.message);
 					}
-				} else {
+				}
+				else {
 					Liferay.component('contactsCenter').renderEntry(data);
 
 					Liferay.component('contactsCenter').closePopup();

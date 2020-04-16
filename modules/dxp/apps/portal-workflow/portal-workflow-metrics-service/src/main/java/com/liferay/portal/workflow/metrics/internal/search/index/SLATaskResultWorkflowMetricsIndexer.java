@@ -14,96 +14,129 @@
 
 package com.liferay.portal.workflow.metrics.internal.search.index;
 
-import com.liferay.portal.kernel.search.Document;
-import com.liferay.portal.kernel.search.DocumentImpl;
+import com.liferay.portal.search.document.Document;
+import com.liferay.portal.search.document.DocumentBuilder;
 import com.liferay.portal.workflow.metrics.internal.sla.processor.WorkflowMetricsSLATaskResult;
+import com.liferay.portal.workflow.metrics.search.index.name.WorkflowMetricsIndexNameBuilder;
 import com.liferay.portal.workflow.metrics.sla.processor.WorkflowMetricsSLAStatus;
 
-import java.sql.Timestamp;
-
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Inácio Nery
  */
 @Component(
-	immediate = true, service = SLATaskResultWorkflowMetricsIndexer.class
+	immediate = true,
+	property = "workflow.metrics.index.entity.name=sla-task-result",
+	service = {
+		SLATaskResultWorkflowMetricsIndexer.class, WorkflowMetricsIndex.class
+	}
 )
 public class SLATaskResultWorkflowMetricsIndexer
 	extends BaseSLAWorkflowMetricsIndexer {
 
+	public Document creatDefaultDocument(
+		long companyId, long nodeId, long processId, String taskName) {
+
+		WorkflowMetricsSLATaskResult workflowMetricsSLATaskResult =
+			new WorkflowMetricsSLATaskResult();
+
+		workflowMetricsSLATaskResult.setCompanyId(companyId);
+		workflowMetricsSLATaskResult.setNodeId(nodeId);
+		workflowMetricsSLATaskResult.setProcessId(processId);
+		workflowMetricsSLATaskResult.setTaskName(taskName);
+
+		return createDocument(workflowMetricsSLATaskResult);
+	}
+
 	public Document createDocument(
 		WorkflowMetricsSLATaskResult workflowMetricsSLATaskResult) {
 
-		Document document = new DocumentImpl();
+		DocumentBuilder documentBuilder = documentBuilderFactory.builder();
 
-		document.addUID(
-			"WorkflowMetricsSLATaskResult",
-			digest(
-				workflowMetricsSLATaskResult.getCompanyId(),
-				workflowMetricsSLATaskResult.getInstanceId(),
-				workflowMetricsSLATaskResult.getProcessId(),
-				workflowMetricsSLATaskResult.getSLADefinitionId(),
-				workflowMetricsSLATaskResult.getTaskId(),
-				workflowMetricsSLATaskResult.getTokenId()));
-
-		if (workflowMetricsSLATaskResult.getAssigneeId() != null) {
-			document.addKeyword(
-				"assigneeId", workflowMetricsSLATaskResult.getAssigneeId());
+		if (workflowMetricsSLATaskResult.getAssigneeIds() != null) {
+			documentBuilder.setLongs(
+				"assigneeIds", workflowMetricsSLATaskResult.getAssigneeIds());
+			documentBuilder.setString(
+				"assigneeType", workflowMetricsSLATaskResult.getAssigneeType());
 		}
 
-		document.addKeyword(
-			"breached", workflowMetricsSLATaskResult.isBreached());
-		document.addKeyword(
-			"companyId", workflowMetricsSLATaskResult.getCompanyId());
+		documentBuilder.setValue(
+			"breached", workflowMetricsSLATaskResult.isBreached()
+		).setLong(
+			"companyId", workflowMetricsSLATaskResult.getCompanyId()
+		);
 
 		if (workflowMetricsSLATaskResult.getCompletionLocalDateTime() != null) {
-			document.addDateSortable(
+			documentBuilder.setDate(
 				"completionDate",
-				Timestamp.valueOf(
+				formatLocalDateTime(
 					workflowMetricsSLATaskResult.getCompletionLocalDateTime()));
 		}
 
 		if (workflowMetricsSLATaskResult.getCompletionUserId() != null) {
-			document.addKeyword(
+			documentBuilder.setLong(
 				"completionUserId",
 				workflowMetricsSLATaskResult.getCompletionUserId());
 		}
 
-		document.addKeyword("deleted", false);
-		document.addKeyword(
+		documentBuilder.setValue(
+			"deleted", false
+		).setValue(
 			"instanceCompleted",
-			workflowMetricsSLATaskResult.isInstanceCompleted());
-		document.addKeyword(
-			"instanceId", workflowMetricsSLATaskResult.getInstanceId());
-		document.addDateSortable(
-			"lastCheckDate",
-			Timestamp.valueOf(
-				workflowMetricsSLATaskResult.getLastCheckLocalDateTime()));
-		document.addKeyword("onTime", workflowMetricsSLATaskResult.isOnTime());
-		document.addKeyword(
-			"processId", workflowMetricsSLATaskResult.getProcessId());
-		document.addKeyword(
-			"slaDefinitionId",
-			workflowMetricsSLATaskResult.getSLADefinitionId());
+			workflowMetricsSLATaskResult.isInstanceCompleted()
+		).setLong(
+			"instanceId", workflowMetricsSLATaskResult.getInstanceId()
+		);
+
+		if (workflowMetricsSLATaskResult.getLastCheckLocalDateTime() != null) {
+			documentBuilder.setDate(
+				"lastCheckDate",
+				formatLocalDateTime(
+					workflowMetricsSLATaskResult.getLastCheckLocalDateTime()));
+		}
+
+		documentBuilder.setLong(
+			"nodeId", workflowMetricsSLATaskResult.getNodeId()
+		).setValue(
+			"onTime", workflowMetricsSLATaskResult.isOnTime()
+		).setLong(
+			"processId", workflowMetricsSLATaskResult.getProcessId()
+		).setLong(
+			"slaDefinitionId", workflowMetricsSLATaskResult.getSLADefinitionId()
+		);
 
 		WorkflowMetricsSLAStatus workflowMetricsSLAStatus =
 			workflowMetricsSLATaskResult.getWorkflowMetricsSLAStatus();
 
-		document.addKeyword("status", workflowMetricsSLAStatus.name());
+		if (workflowMetricsSLAStatus != null) {
+			documentBuilder.setString(
+				"status", workflowMetricsSLAStatus.name());
+		}
 
-		document.addKeyword("taskId", workflowMetricsSLATaskResult.getTaskId());
-		document.addKeyword(
-			"taskName", workflowMetricsSLATaskResult.getTaskName());
-		document.addKeyword(
-			"tokenId", workflowMetricsSLATaskResult.getTokenId());
+		documentBuilder.setLong(
+			"taskId", workflowMetricsSLATaskResult.getTaskId()
+		).setString(
+			"taskName", workflowMetricsSLATaskResult.getTaskName()
+		).setString(
+			"uid",
+			digest(
+				workflowMetricsSLATaskResult.getCompanyId(),
+				workflowMetricsSLATaskResult.getInstanceId(),
+				workflowMetricsSLATaskResult.getNodeId(),
+				workflowMetricsSLATaskResult.getProcessId(),
+				workflowMetricsSLATaskResult.getSLADefinitionId(),
+				workflowMetricsSLATaskResult.getTaskId())
+		);
 
-		return document;
+		return documentBuilder.build();
 	}
 
 	@Override
-	public String getIndexName() {
-		return "workflow-metrics-sla-task-results";
+	public String getIndexName(long companyId) {
+		return _slaTaskResultWorkflowMetricsIndexNameBuilder.getIndexName(
+			companyId);
 	}
 
 	@Override
@@ -111,8 +144,8 @@ public class SLATaskResultWorkflowMetricsIndexer
 		return "WorkflowMetricsSLATaskResultType";
 	}
 
-	@Override
-	public void reindex(long companyId) {
-	}
+	@Reference(target = "(workflow.metrics.index.entity.name=sla-task-result)")
+	private WorkflowMetricsIndexNameBuilder
+		_slaTaskResultWorkflowMetricsIndexNameBuilder;
 
 }

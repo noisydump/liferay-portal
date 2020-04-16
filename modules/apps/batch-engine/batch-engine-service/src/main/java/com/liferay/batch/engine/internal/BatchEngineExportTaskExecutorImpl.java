@@ -23,6 +23,7 @@ import com.liferay.batch.engine.internal.item.BatchEngineTaskItemDelegateExecuto
 import com.liferay.batch.engine.internal.writer.BatchEngineExportTaskItemWriter;
 import com.liferay.batch.engine.internal.writer.BatchEngineExportTaskItemWriterFactory;
 import com.liferay.batch.engine.model.BatchEngineExportTask;
+import com.liferay.batch.engine.pagination.Page;
 import com.liferay.batch.engine.service.BatchEngineExportTaskLocalService;
 import com.liferay.petra.io.unsync.UnsyncByteArrayInputStream;
 import com.liferay.petra.io.unsync.UnsyncByteArrayOutputStream;
@@ -32,13 +33,13 @@ import com.liferay.portal.kernel.dao.jdbc.OutputBlob;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.search.filter.Filter;
+import com.liferay.portal.kernel.service.CompanyLocalService;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.odata.filter.ExpressionConvert;
 import com.liferay.portal.odata.filter.FilterParserProvider;
 import com.liferay.portal.odata.sort.SortParserProvider;
-import com.liferay.portal.vulcan.pagination.Page;
 
 import java.io.IOException;
 
@@ -112,7 +113,7 @@ public class BatchEngineExportTaskExecutorImpl
 		_batchEngineTaskItemDelegateExecutorFactory =
 			new BatchEngineTaskItemDelegateExecutorFactory(
 				_batchEngineTaskMethodRegistry, _expressionConvert,
-				_filterParserProvider, _sortParserProvider, _userLocalService);
+				_filterParserProvider, _sortParserProvider);
 	}
 
 	private void _exportItems(BatchEngineExportTask batchEngineExportTask)
@@ -124,9 +125,13 @@ public class BatchEngineExportTaskExecutorImpl
 		try (BatchEngineTaskItemDelegateExecutor
 				batchEngineTaskItemDelegateExecutor =
 					_batchEngineTaskItemDelegateExecutorFactory.create(
+						batchEngineExportTask.getTaskItemDelegateName(),
 						batchEngineExportTask.getClassName(),
+						_companyLocalService.getCompany(
+							batchEngineExportTask.getCompanyId()),
 						batchEngineExportTask.getParameters(),
-						batchEngineExportTask.getUserId());
+						_userLocalService.getUser(
+							batchEngineExportTask.getUserId()));
 			ZipOutputStream zipOutputStream = _getZipOutputStream(
 				batchEngineExportTask.getContentType(),
 				unsyncByteArrayOutputStream);
@@ -226,6 +231,9 @@ public class BatchEngineExportTaskExecutorImpl
 	private BatchEngineTaskMethodRegistry _batchEngineTaskMethodRegistry;
 
 	private int _batchSize;
+
+	@Reference
+	private CompanyLocalService _companyLocalService;
 
 	@Reference(
 		target = "(result.class.name=com.liferay.portal.kernel.search.filter.Filter)"

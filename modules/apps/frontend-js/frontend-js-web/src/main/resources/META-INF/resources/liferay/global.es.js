@@ -24,9 +24,19 @@ import {
 	destroyComponents,
 	destroyUnfulfilledPromises,
 	getComponentCache,
-	initComponentCache
+	initComponentCache,
 } from './component.es';
-import portlet from './portlet/portlet.es';
+import {
+	getLayoutIcons,
+	hideLayoutPane,
+	proposeLayout,
+	publishToLive,
+	showLayoutPane,
+	toggleLayoutDetails,
+} from './layout_exporter.es';
+import {showTab} from './portal/tabs.es';
+import {showTooltip} from './portal/tooltip.es';
+import portlet, {minimizePortlet} from './portlet/portlet.es';
 import SideNavigation from './side_navigation.es';
 import getCountries from './util/address/get_countries.es';
 import getRegions from './util/address/get_regions.es';
@@ -49,6 +59,8 @@ import createResourceURL from './util/portlet_url/create_resource_url.es';
 import {getSessionValue, setSessionValue} from './util/session.es';
 import toCharCode from './util/to_char_code.es';
 
+Liferay = window.Liferay || {};
+
 Liferay.component = component;
 Liferay.componentReady = componentReady;
 Liferay.destroyComponent = destroyComponent;
@@ -59,10 +71,34 @@ Liferay.initComponentCache = initComponentCache;
 
 Liferay.Address = {
 	getCountries,
-	getRegions
+	getRegions,
 };
 
+Liferay.LayoutExporter = {
+	all: hideLayoutPane,
+	details: toggleLayoutDetails,
+	icons: getLayoutIcons(),
+	proposeLayout,
+	publishToLive,
+	selected: showLayoutPane,
+};
+
+Liferay.Portal = {
+	Tabs: {
+		show: showTab,
+	},
+	ToolTip: {
+		show: showTooltip,
+	},
+};
+
+Liferay.Portlet = Liferay.Portlet || {};
+
+Liferay.Portlet.minimize = minimizePortlet;
+
 Liferay.SideNavigation = SideNavigation;
+
+Liferay.Util = Liferay.Util || {};
 
 Liferay.Util.escape = escape;
 Liferay.Util.fetch = fetch;
@@ -82,7 +118,7 @@ Liferay.Util.PortletURL = {
 	createActionURL,
 	createPortletURL,
 	createRenderURL,
-	createResourceURL
+	createResourceURL,
 };
 
 Liferay.Util.postForm = postForm;
@@ -100,7 +136,7 @@ Liferay.Util.openToast = (...args) => {
 
 Liferay.Util.Session = {
 	get: getSessionValue,
-	set: setSessionValue
+	set: setSessionValue,
 };
 
 Liferay.Util.unescape = unescape;

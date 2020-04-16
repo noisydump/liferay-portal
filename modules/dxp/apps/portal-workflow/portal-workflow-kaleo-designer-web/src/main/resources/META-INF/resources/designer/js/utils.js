@@ -62,7 +62,7 @@ AUI.add(
 
 			script() {
 				return STR_ELLIPSIS;
-			}
+			},
 		};
 
 		KaleoDesignerUtils.PropertyListFormatter = PropertyListFormatter;
@@ -82,7 +82,8 @@ AUI.add(
 
 			try {
 				jsonObj = JSON.parse(val);
-			} catch (e) {}
+			}
+			catch (e) {}
 
 			return jsonObj;
 		};
@@ -94,7 +95,8 @@ AUI.add(
 
 			try {
 				jsonString = JSON.stringify(val);
-			} catch (e) {}
+			}
+			catch (e) {}
 
 			return jsonString;
 		};
@@ -130,7 +132,7 @@ AUI.add(
 
 							item.all('option:selected').each(option => {
 								value.push({
-									notificationType: option.val()
+									notificationType: option.val(),
 								});
 							});
 						}
@@ -165,8 +167,8 @@ AUI.add(
 								on: {
 									click() {
 										dialog.destroy();
-									}
-								}
+									},
+								},
 							},
 							{
 								cssClass: 'btn btn-primary',
@@ -175,9 +177,9 @@ AUI.add(
 								on: {
 									click() {
 										window.location.assign(actionUrl);
-									}
-								}
-							}
+									},
+								},
+							},
 						],
 						header: [
 							{
@@ -194,14 +196,14 @@ AUI.add(
 										dialog.destroy();
 
 										event.domEvent.stopPropagation();
-									}
-								}
-							}
-						]
-					}
+									},
+								},
+							},
+						],
+					},
 				},
 				title,
-				uri: renderUrl
+				uri: renderUrl,
 			});
 		};
 
@@ -296,7 +298,7 @@ AUI.add(
 			userNotification: Liferay.Language.get('user-notification'),
 			velocity: Liferay.Language.get('velocity'),
 			week: Liferay.Language.get('week'),
-			year: Liferay.Language.get('year')
+			year: Liferay.Language.get('year'),
 		};
 
 		Liferay.KaleoDesignerStrings = KaleoDesignerStrings;

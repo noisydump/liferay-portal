@@ -33,7 +33,7 @@ definition {
 		property database.types = "db2,hypersonic,mariadb,mysql,oracle,postgresql,sqlserver,sybase";
 		property environment.acceptance = "false";
 		property operating.system.types = "centos";
-		property portal.acceptance = "true";
+		property portal.upstream = "quarantine";
 		property test.name.skip.portal.instance = "LDAP#ImportLDAPUserWithBlankPassword";
 
 		PortalSettings.addLDAPServer(LDAPServerName = "ApacheDS Server");
@@ -82,6 +82,7 @@ definition {
 	test ResetFieldsValueForImportedLDAPUser {
 		property apacheds.enabled = "true";
 		property custom.properties = "field.enable.com.liferay.portal.kernel.model.Contact.male=true";
+		property portal.upstream = "quarantine";
 		property test.name.skip.portal.instance = "LDAP#ResetFieldsValueForImportedLDAPUser";
 
 		PortalSettings.addLDAPServer(LDAPServerName = "ApacheDS Server");
@@ -128,13 +129,19 @@ definition {
 			userGender = "Female",
 			userName = "ldapusergivenname ldapusersn");
 
+		Navigator.gotoBack();
+
 		User.editUserJobTitleCP(
 			userJobTitle = "QA",
 			userName = "ldapusergivenname ldapusersn");
 
+		Navigator.gotoBack();
+
 		User.editUserSuffixCP(
 			userName = "ldapusergivenname ldapusersn",
 			userSuffix = "Phd");
+
+		Navigator.gotoBack();
 
 		User.editPasswordCP(
 			userEmailAddress = "ldapuseremail@liferay.com",

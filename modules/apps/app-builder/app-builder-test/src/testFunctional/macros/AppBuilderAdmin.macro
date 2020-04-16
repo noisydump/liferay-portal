@@ -4,7 +4,22 @@ definition {
 		Click(locator1 = "AppBuilder#BUTTON_ADD");
 	}
 
+	macro addAllPermissionsFromRoles() {
+		for (var roleTitle : list "${roleList}") {
+
+			var key_roleTitle = "${roleTitle}";
+			Check(locator1 = "AppBuilder#CONFIGURATION_PERMISSIONS_ADD_ENTRY");
+			Check(locator1 = "AppBuilder#CONFIGURATION_PERMISSIONS_DELETE_ENTRY");
+			Check(locator1 = "AppBuilder#CONFIGURATION_PERMISSIONS_UPDATE_ENTRY");
+			Check(locator1 = "AppBuilder#CONFIGURATION_PERMISSIONS_VIEW_ENTRY");
+		}
+
+		Button.clickSave();
+	}
+
 	macro addCustomObject {
+
+		ProductMenuHelper.closeProductMenu();
 
 		if ("${isCreatingViaPlusIcon}" == "false") {
 			AppBuilderAdmin.gotoAddItemViaNewButton();
@@ -22,6 +37,59 @@ definition {
 		}
 
 		AppBuilderAdmin.continueNewCustomObject();
+
+		AppBuilderAdmin.waitForContinueButtonNotVisible();
+	}
+
+	macro addEntry {
+
+		AppBuilderAdmin.add();
+		AppBuilderAdmin.waitForSaveButtonVisible();
+	}
+
+	macro addOrRemovePermissionFromRoles {
+		for (var roleTitle : list "${roleList}") {
+			var key_roleTitle = "${roleTitle}";
+
+			if ("${permission}" == "ADD") {
+
+				if ("${addOrRemovePermission}" == "ADD") {
+					Check(locator1 = "AppBuilder#CONFIGURATION_PERMISSIONS_ADD_ENTRY");
+				}
+				else if ("${addOrRemovePermission}" == "REMOVE") {
+					Uncheck(locator1 = "AppBuilder#CONFIGURATION_PERMISSIONS_ADD_ENTRY");
+				}
+			}
+			else if ("${permission}" == "DELETE") {
+
+				if ("${addOrRemovePermission}" == "ADD") {
+					Check(locator1 = "AppBuilder#CONFIGURATION_PERMISSIONS_DELETE_ENTRY");
+				}
+				else if ("${addOrRemovePermission}" == "REMOVE") {
+					Uncheck(locator1 = "AppBuilder#CONFIGURATION_PERMISSIONS_DELETE_ENTRY");
+				}
+			}
+			else if ("${permission}" == "UPDATE") {
+
+				if ("${addOrRemovePermission}" == "ADD") {
+					Check(locator1 = "AppBuilder#CONFIGURATION_PERMISSIONS_UPDATE_ENTRY");
+				}
+				else if ("${addOrRemovePermission}" == "REMOVE") {
+					Uncheck(locator1 = "AppBuilder#CONFIGURATION_PERMISSIONS_UPDATE_ENTRY");
+				}
+			}
+			else if ("${permission}" == "VIEW") {
+
+				if ("${addOrRemovePermission}" == "ADD") {
+					Check(locator1 = "AppBuilder#CONFIGURATION_PERMISSIONS_VIEW_ENTRY");
+				}
+				else if ("${addOrRemovePermission}" == "REMOVE") {
+					Uncheck(locator1 = "AppBuilder#CONFIGURATION_PERMISSIONS_VIEW_ENTRY");
+				}
+			}
+		}
+
+		Button.clickSave();
 	}
 
 	macro assertNewButtonIsVisible {
@@ -60,6 +128,20 @@ definition {
 			tableViewName = "${tableViewName}");
 	}
 
+	macro deleteApp {
+		Click(
+			key_itemName = "${itemName}",
+			locator1 = "AppBuilder#VERTICAL_ELLIPSIS_BUTTON");
+
+		MenuItem.clickNoError(menuItem = "Delete");
+
+		AssertConfirm(value1 = "Are you sure you want to delete this? It will be deleted immediately.");
+
+		AssertElementNotPresent(
+			locator1 = "AppBuilder#ITEM_ON_THE_TABLE",
+			value1 = "${key_itemName}");
+	}
+
 	macro deleteEntry {
 		Click(
 			key_itemName = "${itemName}",
@@ -74,6 +156,34 @@ definition {
 		AssertElementNotPresent(
 			locator1 = "AppBuilder#ITEM_ON_THE_TABLE",
 			value1 = "${key_itemName}");
+	}
+
+	macro deployApp {
+		AssertTextEquals(
+			deployStatus = "Undeployed",
+			locator1 = "AppBuilder#DEPLOY_APP_STATUS",
+			value1 = "Undeployed");
+
+		Click(
+			key_itemName = "${itemName}",
+			locator1 = "AppBuilder#VERTICAL_ELLIPSIS_BUTTON");
+
+		MenuItem.clickNoError(menuItem = "Deploy");
+
+		AssertTextEquals(
+			deployStatus = "Deployed",
+			locator1 = "AppBuilder#DEPLOY_APP_STATUS",
+			value1 = "Deployed");
+	}
+
+	macro editAppName {
+		AppBuilderAdmin.setName(title = "${appTitle}");
+
+		Button.clickNext();
+
+		Button.clickNext();
+
+		App.saveApp();
 	}
 
 	macro editCustomObjectNameAtPopover {
@@ -110,6 +220,8 @@ definition {
 	}
 
 	macro gotoCustomAppCP {
+		Refresh();
+
 		ProductMenuHelper.expandPanel(panel = "${panel}");
 
 		Click(
@@ -134,8 +246,73 @@ definition {
 		MenuItem.clickNoError(menuItem = "Open Standalone App");
 	}
 
+	macro performCustomObjectCRUD {
+		AppBuilderAdmin.addCustomObject(
+			customObjectName = "my custom object",
+			isCreatingFormView = "true",
+			isCreatingViaPlusIcon = "true");
+
+		FormViewBuilder.addFormView(
+			fieldType = "Text",
+			formViewName = "Form View");
+
+		TableViewBuilder.addBasicTableView(
+			fieldType = "Text",
+			tableViewName = "Table View");
+
+		App.add(
+			appTitle = "App",
+			deployOption = "Product Menu",
+			formViewName = "Form View",
+			tableViewName = "Table View");
+
+		AppBuilderAdmin.gotoBack();
+		AppBuilderAdmin.validateItemNameOnTable(itemName = "my custom object");
+
+		LexiconEntry.gotoVerticalEllipsisMenuItemNoError(menuItem = "Form Views");
+
+		AppBuilderAdmin.validateItemNameOnTable(itemName = "Form View");
+		AppBuilderAdmin.editItem(itemName = "Form View");
+		FormViewBuilder.setName(formViewName = "Edited Form");
+		FormViewBuilder.save();
+		AppBuilderAdmin.validateItemNameOnTable(itemName = "Edited Form");
+
+		AppBuilderAdmin.switchTab(tabName = "Table Views");
+
+		AppBuilderAdmin.validateItemNameOnTable(itemName = "Table View");
+		AppBuilderAdmin.editItem(itemName = "Table View");
+		TableViewBuilder.setName(tableViewName = "Edited Table");
+		TableViewBuilder.save();
+		AppBuilderAdmin.validateItemNameOnTable(itemName = "Edited Table");
+
+		AppBuilderAdmin.switchTab(tabName = "Apps");
+
+		AppBuilderAdmin.undeployApp(itemName = "App");
+
+		AppBuilderAdmin.gotoBack();
+
+		LexiconEntry.gotoVerticalEllipsisMenuItemNoError(menuItem = "Delete");
+		AssertConfirm(value1 = "Are you sure you want to delete this? It will be deleted immediately.");
+		AppBuilderAdmin.assertNewButtonIsVisible(buttonValue = "New Custom Object");
+	}
+
+	macro removeAllPermissionsFromRoles() {
+		for (var roleTitle : list "${roleList}") {
+
+			var key_roleTitle = "${roleTitle}";
+			Uncheck(locator1 = "AppBuilder#CONFIGURATION_PERMISSIONS_ADD_ENTRY");
+			Uncheck(locator1 = "AppBuilder#CONFIGURATION_PERMISSIONS_DELETE_ENTRY");
+			Uncheck(locator1 = "AppBuilder#CONFIGURATION_PERMISSIONS_UPDATE_ENTRY");
+			Uncheck(locator1 = "AppBuilder#CONFIGURATION_PERMISSIONS_VIEW_ENTRY");
+		}
+
+		Button.clickSave();
+	}
+
 	macro save {
 		Click(locator1 = "AppBuilder#SAVE_BUTTON");
+
+		AppBuilderAdmin.waitForSaveButtonNotVisible();
 	}
 
 	macro searchByItem {
@@ -157,14 +334,21 @@ definition {
 	}
 
 	macro teardownAppBuilder {
+		Navigator.openURL();
+
+		ProductMenu.gotoPortlet(
+			category = "App Builder",
+			panel = "Control Panel",
+			portlet = "Custom Objects");
+
+		Pause(locator1 = "2000");
+
 		while (IsElementPresent(locator1 = "Icon#VERTICAL_ELLIPSIS_BUTTON")) {
 			LexiconEntry.gotoVerticalEllipsisMenuItemNoError(menuItem = "Delete");
 
 			AssertConfirm(value1 = "Are you sure you want to delete this? It will be deleted immediately.");
 
-			// TODO: Remove this comment to validade Success Messages when implemented on App Builder
-			// Alert.viewSuccessMessage();
-
+			Alert.viewSuccessMessage();
 		}
 	}
 
@@ -172,6 +356,40 @@ definition {
 		Click(
 			key_checkboxOption = "${checkboxOption}",
 			locator1 = "AppBuilder#CHECKBOX_OPTION_LABEL");
+	}
+
+	macro undeployApp {
+		Click(
+			key_itemName = "${itemName}",
+			locator1 = "AppBuilder#VERTICAL_ELLIPSIS_BUTTON");
+
+		MenuItem.clickNoError(menuItem = "Undeploy");
+
+		Click(locator1 = "AppBuilder#UNDEPLOY_APP_BUTTON");
+
+		AssertTextEquals(
+			locator1 = "AppBuilder#UNDEPLOY_APP_STATUS",
+			value1 = "UNDEPLOYED");
+	}
+
+	macro validateAppIsNotPresentOnControlPanel {
+		Navigator.openURL();
+
+		ProductMenuHelper.expandPanel(panel = "Control Panel");
+
+		AssertElementNotPresent(
+			key_portlet = "${portlet}",
+			locator1 = "AppBuilder#CUSTOM_PORTLET");
+	}
+
+	macro validateAppIsNotPresentOnSite {
+		ProductMenuHelper.expandPanel(panel = "Site Administration");
+
+		ProductMenuHelper.expandCategory(category = "Content & Data");
+
+		AssertElementNotPresent(
+			key_portlet = "${portlet}",
+			locator1 = "ProductMenu#PORTLET");
 	}
 
 	macro validateCustomObjectNameOnHeader {
@@ -188,6 +406,12 @@ definition {
 		AssertTextEquals(
 			locator1 = "AppBuilder#MESSAGE_DESCRIPTION_EMPTY_LIST",
 			value1 = "${description}");
+	}
+
+	macro validateFieldIsOnTable {
+		AssertElementPresent(
+			key_fieldLabel = "${fieldLabel}",
+			locator1 = "AppBuilder#FIELD_LABEL_IN_TABLE");
 	}
 
 	macro validateIfSearchItemIsFound {
@@ -212,6 +436,12 @@ definition {
 			value1 = "${itemName}");
 	}
 
+	macro validateItemNameOnTableNotPresent {
+		AssertElementNotPresent(
+			locator1 = "AppBuilder#ITEM_ON_THE_TABLE",
+			value1 = "${itemName}");
+	}
+
 	macro validateListTitleAtRow {
 		AssertTextEquals(
 			key_RowNumber = "${rowNumber}",
@@ -219,11 +449,80 @@ definition {
 			value1 = "${title}");
 	}
 
-	macro validateRequiredValidNameMessage {
+	macro validateNewButtonIconIsNotPresent {
+		AssertElementNotPresent(locator1 = "AppBuilder#BUTTON_ADD");
+	}
 
+	macro validateNewButtonIsNotPresent {
+		AssertElementNotPresent(
+			locator1 = "AppBuilder#BUTTON_ADD_NEW_ITEM",
+			value1 = "${buttonValue}");
+	}
+
+	macro validatePermissionsFromRolesAreChecked() {
+		for (var roleTitle : list "${roleList}") {
+
+			var key_roleTitle = "${roleTitle}";
+
+			AssertChecked(locator1 = "AppBuilder#CONFIGURATION_PERMISSIONS_ADD_ENTRY");
+			AssertChecked(locator1 = "AppBuilder#CONFIGURATION_PERMISSIONS_DELETE_ENTRY");
+			AssertChecked(locator1 = "AppBuilder#CONFIGURATION_PERMISSIONS_UPDATE_ENTRY");
+			AssertChecked(locator1 = "AppBuilder#CONFIGURATION_PERMISSIONS_VIEW_ENTRY");
+		}
+	}
+
+	macro validatePermissionsFromRolesAreNotChecked() {
+		for (var roleTitle : list "${roleList}") {
+
+			var key_roleTitle = "${roleTitle}";
+
+			AssertNotChecked(locator1 = "AppBuilder#CONFIGURATION_PERMISSIONS_ADD_ENTRY");
+			AssertNotChecked(locator1 = "AppBuilder#CONFIGURATION_PERMISSIONS_DELETE_ENTRY");
+			AssertNotChecked(locator1 = "AppBuilder#CONFIGURATION_PERMISSIONS_UPDATE_ENTRY");
+			AssertNotChecked(locator1 = "AppBuilder#CONFIGURATION_PERMISSIONS_VIEW_ENTRY");
+		}
+	}
+
+	macro validateProductMenuApp {
+		AssertTextEquals(
+			locator1 = "AppBuilder#PRODUCT_MENU_DEPLOYED",
+			value1 = "${appName}");
+	}
+
+	macro validateRequiredValidNameMessage {
 		AssertTextEquals(
 			locator1 = "AppBuilder#MESSAGE_EXCLAMATION_REQUIRED_FIELD",
 			value1 = "This field is required.");
+	}
+
+	macro validateStandAlone404 {
+		AssertElementNotPresent(locator1 = "AppBuilder#STANDALONE_DEPLOYED");
+	}
+
+	macro validateStandAloneApp {
+		AssertElementPresent(locator1 = "AppBuilder#STANDALONE_DEPLOYED");
+	}
+
+	macro validateSuccessMessage {
+		AssertElementPresent(locator1 = "AppBuilder#ENTRY_SUCCESS_MESSAGE");
+	}
+
+	macro validateTextBox {
+		AssertElementPresent(
+			key_fieldName = "${fieldName}",
+			locator1 = "FormViewBuilder#TEXT_BOX_FIELD");
+	}
+
+	macro validateUndeployedApp {
+		AssertTextEquals(
+			locator1 = "AppBuilder#PORTLET_UNDEPLOYED",
+			value1 = "This portlet could not be found. Please redeploy it or remove it from the page.");
+	}
+
+	macro validateWidgetApp {
+		AssertTextEquals(
+			locator1 = "AppBuilder#WIDGET_DEPLOYED",
+			value1 = "${appName}");
 	}
 
 	macro viewCheckboxChecked {
@@ -233,6 +532,26 @@ definition {
 	macro viewItem {
 		AppBuilderAdmin.openActionMenu(itemName = "${itemName}");
 		MenuItem.clickNoError(menuItem = "View");
+	}
+
+	macro waitForContinueButtonNotVisible {
+		while (IsElementPresent(locator1 = "AppBuilder#BUTTON_CONTINUE")) {
+			Pause(locator1 = "1000");
+		}
+		Pause(locator1 = "1000");
+	}
+
+	macro waitForSaveButtonNotVisible {
+		while (IsElementPresent(locator1 = "AppBuilder#SAVE_BUTTON")) {
+			Pause(locator1 = "1000");
+		}
+		Pause(locator1 = "1000");
+	}
+
+	macro waitForSaveButtonVisible {
+		while (IsElementNotPresent(locator1 = "AppBuilder#SAVE_BUTTON")) {
+			Pause(locator1 = "1000");
+		}
 	}
 
 }

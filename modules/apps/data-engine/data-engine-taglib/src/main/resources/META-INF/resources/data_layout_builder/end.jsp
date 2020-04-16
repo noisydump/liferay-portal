@@ -16,26 +16,43 @@
 
 <%@ include file="/data_layout_builder/init.jsp" %>
 
-<div id="<%= componentId + "container" %>"></div>
-
 <portlet:renderURL var="basePortletURL" />
 
 <%
-Map<String, Object> data = new HashMap<>();
-
-data.put("contentType", contentType);
-data.put("context", dataLayoutJSONObject);
-data.put("dataDefinitionId", dataDefinitionId);
-data.put("dataLayoutBuilderElementId", renderResponse.getNamespace() + "-data-layout-builder");
-data.put("dataLayoutBuilderId", componentId);
-data.put("dataLayoutId", dataLayoutId);
-data.put("fieldTypes", fieldTypesJSONArray);
-data.put("fieldTypesModules", fieldTypesModules);
-data.put("groupId", groupId);
-data.put("spritemap", themeDisplay.getPathThemeImages() + "/lexicon/icons.svg");
+Map<String, Object> data = HashMapBuilder.<String, Object>put(
+	"availableLanguageIds", availableLanguageIds
+).put(
+	"config", configJSONObject
+).put(
+	"contentType", contentType
+).put(
+	"context", dataLayoutJSONObject
+).put(
+	"dataDefinitionId", dataDefinitionId
+).put(
+	"dataLayoutBuilderElementId", renderResponse.getNamespace() + "-data-layout-builder"
+).put(
+	"dataLayoutBuilderId", componentId
+).put(
+	"dataLayoutId", dataLayoutId
+).put(
+	"fieldTypes", fieldTypesJSONArray
+).put(
+	"fieldTypesModules", fieldTypesModules
+).put(
+	"groupId", groupId
+).put(
+	"localizable", localizable
+).put(
+	"sidebarPanels", sidebarPanels
+).put(
+	"spritemap", themeDisplay.getPathThemeImages() + "/lexicon/icons.svg"
+).build();
 %>
 
-<react:component
-	data="<%= data %>"
-	module="data_layout_builder/js/App.es"
-/>
+<div id="<%= componentId + "container" %>">
+	<react:component
+		data="<%= data %>"
+		module="data_layout_builder/js/App.es"
+	/>
+</div>

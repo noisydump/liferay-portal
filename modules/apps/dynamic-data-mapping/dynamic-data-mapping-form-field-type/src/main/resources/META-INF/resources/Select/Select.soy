@@ -9,10 +9,12 @@
 	{@param? _handleLabelClosed: any}
 	{@param? dataSourceType: string}
 	{@param? displayErrors: bool}
+	{@param? emptyOptionLabel: string}
 	{@param? errorMessage: string}
 	{@param? expanded: bool}
 	{@param? id: string}
 	{@param? label: string}
+	{@param? localizedValue: ?}
 	{@param? multiple: bool}
 	{@param? options: list<?>}
 	{@param? predefinedValue: ?}
@@ -34,6 +36,7 @@
 				{param _handleLabelClosed: $_handleLabelClosed /}
 				{param dataSourceType: $dataSourceType /}
 				{param displayValues: $displayValues /}
+				{param emptyOptionLabel: $emptyOptionLabel /}
 				{param expanded: $expanded /}
 				{param id: $id /}
 				{param multiple: $multiple /}
@@ -47,6 +50,7 @@
 		{param displayErrors: $displayErrors /}
 		{param errorMessage: $errorMessage /}
 		{param label: $label /}
+		{param localizedValue: $localizedValue /}
 		{param name: $name /}
 		{param readOnly: $readOnly /}
 		{param ref: 'base' /}
@@ -68,6 +72,7 @@
 	{@param? _handleExpandedChanged: any}
 	{@param? _handleItemClicked: any}
 	{@param? _handleLabelClosed: any}
+	{@param? emptyOptionLabel: string}
 	{@param? expanded: bool}
 	{@param? id: string}
 	{@param? multiple: bool}
@@ -123,25 +128,26 @@
 											]/}
 											{param label: $option.label /}
 											{param spritemap: $spritemap /}
+											{param truncate: true /}
 										{/call}
 									</li>
 								{else}
-									<div class="option-selected">{$option.label}</div>
+									{call SingleSelectedOption.render}
+										{param label: $option.label /}
+									{/call}
 								{/if}
 							{/if}
 						{/foreach}
 
 						{ifempty}
 							<div class="option-selected option-selected-placeholder">
-								{if $multiple}
-									{msg desc=""}choose-options{/msg}
-								{else}
-									{msg desc=""}choose-an-option{/msg}
+								{if $emptyOptionLabel != null}
+									{$emptyOptionLabel}
 								{/if}
 							</div>
 					{/foreach}
 
-					<a class="select-arrow-down-container" href="javascript:;">
+					<a class="select-arrow-down-container">
 						{if $spritemap}
 							{call ClayIcon.render}
 								{param spritemap: $spritemap /}
@@ -180,32 +186,9 @@
 	{@param options: list<?>}
 	{@param? multiple: bool}
 
-	<select class="form-control hide" id="{$name}" name="{$name}" {if $multiple}multiple size="{length($options)}"{/if}>
-		<option disabled {if length($displayValues) == 0}selected{/if} value=""></option>
-
-		{foreach $option in $options}
-			{call .select_hidden_options}
-				{param option: $option /}
-				{param values: $displayValues /}
-			{/call}
+	<select aria-label="select" class="form-control hide" id="{$name}" name="{$name}" {if $multiple}multiple size="{length($options)}"{/if}>
+		{foreach $currentValue in $displayValues}
+			<option selected="selected" value="{$currentValue}">{$currentValue}</option>
 		{/foreach}
 	</select>
-{/template}
-
-/**
- * Prints the DDM form hidden select options.
- */
-{template .select_hidden_options}
-	{@param option: [label: string, value: string]}
-	{@param values: ?}
-
-	{let $selected kind="attributes"}
-		{foreach $currentValue in $values}
-			{if $currentValue == $option.value}
-				selected
-			{/if}
-		{/foreach}
-	{/let}
-
-	<option {$selected} value="{$option.value}">{$option.label}</option>
 {/template}

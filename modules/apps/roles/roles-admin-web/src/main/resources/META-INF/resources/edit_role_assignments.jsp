@@ -130,7 +130,7 @@ renderResponse.setTitle(role.getTitle(locale));
 				<portlet:param name="displayStyle" value="<%= displayStyle %>" />
 			</portlet:renderURL>
 
-			url: '<%= selectAssigneesURL %>'
+			url: '<%= selectAssigneesURL %>',
 		});
 
 		itemSelectorDialog.on('selectedItemChange', function(event) {
@@ -140,25 +140,27 @@ renderResponse.setTitle(role.getTitle(locale));
 				var assignmentsRedirect = Liferay.Util.PortletURL.createPortletURL(
 					'<%= portletURL.toString() %>',
 					{
-						tabs2: selectedItem.type
+						tabs2: selectedItem.type,
 					}
 				);
 
 				var data = {
-					redirect: assignmentsRedirect.toString()
+					redirect: assignmentsRedirect.toString(),
 				};
 
 				if (selectedItem.type == 'segments') {
 					data.addSegmentsEntryIds = selectedItem.value;
-				} else if (selectedItem.type === 'users') {
+				}
+				else if (selectedItem.type === 'users') {
 					data.addUserIds = selectedItem.value;
-				} else {
+				}
+				else {
 					data.addGroupIds = selectedItem.value;
 				}
 
 				Liferay.Util.postForm(form, {
 					data: data,
-					url: '<%= editRoleAssignmentsURL %>'
+					url: '<%= editRoleAssignmentsURL %>',
 				});
 			}
 		});
@@ -174,20 +176,22 @@ renderResponse.setTitle(role.getTitle(locale));
 		);
 
 		var data = {
-			assignmentsRedirect: '<%= portletURL.toString() %>'
+			assignmentsRedirect: '<%= portletURL.toString() %>',
 		};
 
-		if (assigneeType === 'users') {
-			data.removeUserIds = ids;
-		} else if (assigneeType == 'segments') {
+		if (assigneeType == 'segments') {
 			data.removeSegmentsEntryIds = ids;
-		} else {
+		}
+		else if (assigneeType === 'users') {
+			data.removeUserIds = ids;
+		}
+		else {
 			data.removeGroupIds = ids;
 		}
 
 		Liferay.Util.postForm(form, {
 			data: data,
-			url: '<%= editRoleAssignmentsURL %>'
+			url: '<%= editRoleAssignmentsURL %>',
 		});
 	};
 

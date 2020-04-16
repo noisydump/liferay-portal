@@ -14,6 +14,8 @@
 
 package com.liferay.change.tracking.internal.upgrade;
 
+import com.liferay.change.tracking.internal.upgrade.v2_2_0.UpgradeCTPreferences;
+import com.liferay.change.tracking.internal.upgrade.v2_3_0.UpgradeCompanyId;
 import com.liferay.portal.upgrade.registry.UpgradeStepRegistrator;
 
 import org.osgi.service.component.annotations.Component;
@@ -35,6 +37,15 @@ public class ChangeTrackingServiceUpgrade implements UpgradeStepRegistrator {
 			"1.0.1", "2.0.0",
 			new com.liferay.change.tracking.internal.upgrade.v2_0_0.
 				UpgradeSchema());
+
+		registry.register(
+			"2.0.0", "2.1.0",
+			new com.liferay.change.tracking.internal.upgrade.v2_1_0.
+				UpgradeSchema());
+
+		registry.register("2.1.0", "2.2.0", new UpgradeCTPreferences());
+
+		registry.register("2.2.0", "2.3.0", new UpgradeCompanyId());
 	}
 
 }

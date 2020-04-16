@@ -37,12 +37,12 @@ const DOCUMENT_CSS_CLASS_COLOR_MAP = {
 	'document-pdf': 'file-icon-color-3',
 	'document-presentation': 'file-icon-color-4',
 	'document-table': 'file-icon-color-2',
-	'document-text': 'file-icon-color-6'
+	'document-text': 'file-icon-color-6',
 };
 
 const HOVER_TYPES = {
 	BOTTOM: 'bottom',
-	TOP: 'top'
+	TOP: 'top',
 };
 
 const ROOT_CLASS = 'list-item-root';
@@ -85,7 +85,7 @@ function beginDrag({
 	pinned,
 	selected,
 	title,
-	type
+	type,
 }) {
 	onBlur();
 
@@ -100,7 +100,7 @@ function beginDrag({
 		pinned,
 		selected,
 		title,
-		type
+		type,
 	};
 }
 
@@ -134,7 +134,7 @@ function drop({index}, monitor, component) {
 
 	return {
 		hoverPosition: decoratedComponent.state.hoverPosition,
-		index
+		index,
 	};
 }
 
@@ -163,7 +163,8 @@ function endDrag(props, monitor) {
 		}
 
 		onFocus(hoverPosition !== null ? focusIndex : dragIndex);
-	} else {
+	}
+	else {
 		onFocus(dragIndex);
 	}
 }
@@ -190,9 +191,11 @@ function hover(props, monitor, component) {
 
 	if (dragIndex === destIndex) {
 		component.setState({hoverPosition: null});
-	} else if (hoverAbove) {
+	}
+	else if (hoverAbove) {
 		component.setState({hoverPosition: HOVER_TYPES.TOP});
-	} else {
+	}
+	else {
 		component.setState({hoverPosition: HOVER_TYPES.BOTTOM});
 	}
 }
@@ -225,7 +228,7 @@ const DND_PROPS = {
 	connectDragPreview: PropTypes.func,
 	connectDragSource: PropTypes.func,
 	connectDropTarget: PropTypes.func,
-	dragging: PropTypes.bool
+	dragging: PropTypes.bool,
 };
 
 class Item extends PureComponent {
@@ -255,7 +258,7 @@ class Item extends PureComponent {
 		selected: PropTypes.bool,
 		title: PropTypes.string,
 		type: PropTypes.string,
-		url: PropTypes.string
+		url: PropTypes.string,
 	};
 
 	static defaultProps = {
@@ -270,13 +273,13 @@ class Item extends PureComponent {
 		onRemoveSelect: () => {},
 		onSelect: () => {},
 		title: '-',
-		type: ''
+		type: '',
 	};
 
 	rootRef = React.createRef();
 
 	state = {
-		hoverPosition: null
+		hoverPosition: null,
 	};
 
 	/**
@@ -292,7 +295,7 @@ class Item extends PureComponent {
 
 		if (connectDragPreview) {
 			connectDragPreview(getEmptyImage(), {
-				captureDraggingState: true
+				captureDraggingState: true,
 			});
 		}
 	}
@@ -341,9 +344,11 @@ class Item extends PureComponent {
 		if (focus) {
 			if (event.key === KEY_CODES.S) {
 				this._handleSelect();
-			} else if (event.key === KEY_CODES.P) {
+			}
+			else if (event.key === KEY_CODES.P) {
 				this._handlePin();
-			} else if (event.key === KEY_CODES.H) {
+			}
+			else if (event.key === KEY_CODES.H) {
 				this._handleHide();
 			}
 		}
@@ -355,7 +360,7 @@ class Item extends PureComponent {
 			id,
 			onClickPin,
 			onRemoveSelect,
-			pinned
+			pinned,
 		} = this.props;
 
 		if (addedResult) {
@@ -394,7 +399,7 @@ class Item extends PureComponent {
 			style,
 			title,
 			type,
-			url
+			url,
 		} = this.props;
 
 		const {hoverPosition} = this.state;
@@ -419,7 +424,7 @@ class Item extends PureComponent {
 				'result-ranking-item-focus': focus,
 				'result-ranking-item-hidden': hidden,
 				'result-ranking-item-pinned': pinned,
-				'result-ranking-item-reorder': reorder
+				'result-ranking-item-reorder': reorder,
 			}
 		);
 
@@ -559,12 +564,12 @@ const ItemWithDrag = dragSource(
 	DRAG_TYPES.LIST_ITEM,
 	{
 		beginDrag,
-		endDrag
+		endDrag,
 	},
 	(connect, monitor) => ({
 		connectDragPreview: connect.dragPreview(),
 		connectDragSource: connect.dragSource(),
-		dragging: monitor.isDragging()
+		dragging: monitor.isDragging(),
 	})
 )(Item);
 
@@ -573,11 +578,11 @@ export default dropTarget(
 	{
 		canDrop,
 		drop,
-		hover
+		hover,
 	},
 	(connect, monitor) => ({
 		canDrop: monitor.canDrop(),
 		connectDropTarget: connect.dropTarget(),
-		over: monitor.isOver()
+		over: monitor.isOver(),
 	})
 )(ItemWithDrag);

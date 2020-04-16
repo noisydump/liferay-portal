@@ -27,6 +27,7 @@ import 'clay-dropdown';
 import 'clay-modal';
 import core from 'metal';
 import Component from 'metal-component';
+import dom from 'metal-dom';
 import Soy from 'metal-soy';
 import {Config} from 'metal-state';
 
@@ -40,13 +41,13 @@ class PageRenderer extends Component {
 		if (core.isObject(page.description)) {
 			page = {
 				...page,
-				description: page.description[editingLanguageId]
+				description: page.description[editingLanguageId],
 			};
 		}
 		if (core.isObject(page.title)) {
 			page = {
 				...page,
-				title: page.title[editingLanguageId]
+				title: page.title[editingLanguageId],
 			};
 		}
 
@@ -58,15 +59,18 @@ class PageRenderer extends Component {
 
 		if (!rows || !rows.length) {
 			empty = true;
-		} else {
+		}
+		else {
 			empty = !rows.some(({columns}) => {
 				let hasFields = true;
 
 				if (!columns) {
 					hasFields = false;
-				} else {
+				}
+				else {
 					hasFields = columns.some(column => column.fields.length);
 				}
+
 				return hasFields;
 			});
 		}
@@ -78,7 +82,7 @@ class PageRenderer extends Component {
 		return {
 			...states,
 			empty: this.isEmptyPage(states.page),
-			page: this.getPage(states.page)
+			page: this.getPage(states.page),
 		};
 	}
 
@@ -86,12 +90,16 @@ class PageRenderer extends Component {
 		this.emit('fieldBlurred', event);
 	}
 
-	_handleFieldClicked({delegateTarget}) {
-		const fieldNode = delegateTarget.parentElement.parentElement;
-		const indexes = FormSupport.getIndexes(fieldNode);
+	_handleFieldClicked(event) {
+		const {delegateTarget} = event;
+		const {fieldName} = delegateTarget.dataset;
+
+		event.stopPropagation();
 
 		this.emit('fieldClicked', {
-			...indexes
+			...FormSupport.getIndexes(dom.closest(delegateTarget, '.col-ddm')),
+			fieldName,
+			originalEvent: event,
 		});
 	}
 
@@ -145,7 +153,7 @@ PageRenderer.STATE = {
 	 * @type {!string}
 	 */
 
-	spritemap: Config.string().required()
+	spritemap: Config.string().required(),
 };
 
 Soy.register(PageRenderer, templates);

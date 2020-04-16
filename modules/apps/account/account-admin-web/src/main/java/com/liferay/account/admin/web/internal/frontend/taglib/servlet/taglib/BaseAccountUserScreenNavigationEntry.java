@@ -80,19 +80,20 @@ public abstract class BaseAccountUserScreenNavigationEntry
 		httpServletRequest.setAttribute(
 			AccountWebKeys.SHOW_TITLE, isShowTitle());
 
-		PortletURL redirect = portal.getControlPanelPortletURL(
+		PortletURL redirectURL = portal.getControlPanelPortletURL(
 			httpServletRequest, AccountPortletKeys.ACCOUNT_USERS_ADMIN,
 			PortletRequest.RENDER_PHASE);
 
-		redirect.setParameter(
+		redirectURL.setParameter(
 			"p_u_i_d", ParamUtil.getString(httpServletRequest, "p_u_i_d"));
-		redirect.setParameter(
+		redirectURL.setParameter(
 			"mvcPath", "/account_users_admin/edit_account_user.jsp");
 
 		DynamicServletRequest dynamicServletRequest = new DynamicServletRequest(
 			httpServletRequest);
 
-		dynamicServletRequest.appendParameter("redirect", redirect.toString());
+		dynamicServletRequest.appendParameter(
+			"redirect", redirectURL.toString());
 
 		jspRenderer.renderJSP(
 			servletContext, dynamicServletRequest, httpServletResponse,

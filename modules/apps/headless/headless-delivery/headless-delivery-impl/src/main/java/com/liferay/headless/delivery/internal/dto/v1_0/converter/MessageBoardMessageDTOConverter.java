@@ -20,6 +20,7 @@ import com.liferay.asset.kernel.service.AssetLinkLocalService;
 import com.liferay.asset.kernel.service.AssetTagLocalService;
 import com.liferay.headless.delivery.dto.v1_0.MessageBoardMessage;
 import com.liferay.headless.delivery.internal.dto.v1_0.util.AggregateRatingUtil;
+import com.liferay.headless.delivery.internal.dto.v1_0.util.CreatorStatisticsUtil;
 import com.liferay.headless.delivery.internal.dto.v1_0.util.CreatorUtil;
 import com.liferay.headless.delivery.internal.dto.v1_0.util.CustomFieldsUtil;
 import com.liferay.headless.delivery.internal.dto.v1_0.util.RelatedContentUtil;
@@ -27,6 +28,8 @@ import com.liferay.message.boards.model.MBMessage;
 import com.liferay.message.boards.model.MBThread;
 import com.liferay.message.boards.service.MBMessageLocalService;
 import com.liferay.message.boards.service.MBMessageService;
+import com.liferay.message.boards.service.MBStatsUserLocalService;
+import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.Portal;
@@ -61,6 +64,8 @@ public class MessageBoardMessageDTOConverter
 		MBMessage mbMessage = _mbMessageService.getMessage(
 			(Long)dtoConverterContext.getId());
 
+		User user = _userLocalService.getUserById(mbMessage.getUserId());
+
 		return new MessageBoardMessage() {
 			{
 				actions = dtoConverterContext.getActions();
@@ -76,12 +81,14 @@ public class MessageBoardMessageDTOConverter
 				dateCreated = mbMessage.getCreateDate();
 				dateModified = mbMessage.getModifiedDate();
 				encodingFormat = mbMessage.getFormat();
+				friendlyUrlPath = mbMessage.getUrlSubject();
 				headline = mbMessage.getSubject();
 				id = mbMessage.getMessageId();
 				keywords = ListUtil.toArray(
 					_assetTagLocalService.getTags(
 						MBMessage.class.getName(), mbMessage.getMessageId()),
 					AssetTag.NAME_ACCESSOR);
+				messageBoardSectionId = mbMessage.getCategoryId();
 				numberOfMessageBoardAttachments =
 					mbMessage.getAttachmentsFileEntriesCount();
 				numberOfMessageBoardMessages =
@@ -105,10 +112,20 @@ public class MessageBoardMessageDTOConverter
 							return null;
 						}
 
-						return CreatorUtil.toCreator(
-							_portal,
-							_userLocalService.getUserById(
-								mbMessage.getUserId()));
+						return CreatorUtil.toCreator(_portal, user);
+					});
+				setCreatorStatistics(
+					() -> {
+						if (mbMessage.isAnonymous() || (user == null) ||
+							user.isDefaultUser()) {
+
+							return null;
+						}
+
+						return CreatorStatisticsUtil.toCreatorStatistics(
+							_mbStatsUserLocalService,
+							String.valueOf(dtoConverterContext.getLocale()),
+							user);
 					});
 				setParentMessageBoardMessageId(
 					() -> {
@@ -136,6 +153,9 @@ public class MessageBoardMessageDTOConverter
 
 	@Reference
 	private MBMessageService _mbMessageService;
+
+	@Reference
+	private MBStatsUserLocalService _mbStatsUserLocalService;
 
 	@Reference
 	private Portal _portal;

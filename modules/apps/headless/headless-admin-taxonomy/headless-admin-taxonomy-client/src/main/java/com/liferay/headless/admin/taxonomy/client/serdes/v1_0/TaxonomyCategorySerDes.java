@@ -61,6 +61,16 @@ public class TaxonomyCategorySerDes {
 		DateFormat liferayToJSONDateFormat = new SimpleDateFormat(
 			"yyyy-MM-dd'T'HH:mm:ss'Z'");
 
+		if (taxonomyCategory.getActions() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"actions\": ");
+
+			sb.append(_toJSON(taxonomyCategory.getActions()));
+		}
+
 		if (taxonomyCategory.getAvailableLanguages() != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -237,6 +247,16 @@ public class TaxonomyCategorySerDes {
 				String.valueOf(taxonomyCategory.getParentTaxonomyVocabulary()));
 		}
 
+		if (taxonomyCategory.getTaxonomyCategoryUsageCount() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"taxonomyCategoryUsageCount\": ");
+
+			sb.append(taxonomyCategory.getTaxonomyCategoryUsageCount());
+		}
+
 		if (taxonomyCategory.getViewableBy() != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -272,6 +292,13 @@ public class TaxonomyCategorySerDes {
 
 		DateFormat liferayToJSONDateFormat = new SimpleDateFormat(
 			"yyyy-MM-dd'T'HH:mm:ss'Z'");
+
+		if (taxonomyCategory.getActions() == null) {
+			map.put("actions", null);
+		}
+		else {
+			map.put("actions", String.valueOf(taxonomyCategory.getActions()));
+		}
 
 		if (taxonomyCategory.getAvailableLanguages() == null) {
 			map.put("availableLanguages", null);
@@ -374,6 +401,16 @@ public class TaxonomyCategorySerDes {
 				String.valueOf(taxonomyCategory.getParentTaxonomyVocabulary()));
 		}
 
+		if (taxonomyCategory.getTaxonomyCategoryUsageCount() == null) {
+			map.put("taxonomyCategoryUsageCount", null);
+		}
+		else {
+			map.put(
+				"taxonomyCategoryUsageCount",
+				String.valueOf(
+					taxonomyCategory.getTaxonomyCategoryUsageCount()));
+		}
+
 		if (taxonomyCategory.getViewableBy() == null) {
 			map.put("viewableBy", null);
 		}
@@ -403,7 +440,16 @@ public class TaxonomyCategorySerDes {
 			TaxonomyCategory taxonomyCategory, String jsonParserFieldName,
 			Object jsonParserFieldValue) {
 
-			if (Objects.equals(jsonParserFieldName, "availableLanguages")) {
+			if (Objects.equals(jsonParserFieldName, "actions")) {
+				if (jsonParserFieldValue != null) {
+					taxonomyCategory.setActions(
+						(Map)TaxonomyCategorySerDes.toMap(
+							(String)jsonParserFieldValue));
+				}
+			}
+			else if (Objects.equals(
+						jsonParserFieldName, "availableLanguages")) {
+
 				if (jsonParserFieldValue != null) {
 					taxonomyCategory.setAvailableLanguages(
 						toStrings((Object[])jsonParserFieldValue));
@@ -491,6 +537,14 @@ public class TaxonomyCategorySerDes {
 							(String)jsonParserFieldValue));
 				}
 			}
+			else if (Objects.equals(
+						jsonParserFieldName, "taxonomyCategoryUsageCount")) {
+
+				if (jsonParserFieldValue != null) {
+					taxonomyCategory.setTaxonomyCategoryUsageCount(
+						Integer.valueOf((String)jsonParserFieldValue));
+				}
+			}
 			else if (Objects.equals(jsonParserFieldName, "viewableBy")) {
 				if (jsonParserFieldValue != null) {
 					taxonomyCategory.setViewableBy(
@@ -556,10 +610,13 @@ public class TaxonomyCategorySerDes {
 
 				sb.append("]");
 			}
-			else {
+			else if (value instanceof String) {
 				sb.append("\"");
 				sb.append(_escape(entry.getValue()));
 				sb.append("\"");
+			}
+			else {
+				sb.append(String.valueOf(entry.getValue()));
 			}
 
 			if (iterator.hasNext()) {

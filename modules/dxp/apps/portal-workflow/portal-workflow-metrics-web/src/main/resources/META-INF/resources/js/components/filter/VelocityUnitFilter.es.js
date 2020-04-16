@@ -18,39 +18,40 @@ import filterConstants from '../../shared/components/filter/util/filterConstants
 import {getVelocityUnits} from './util/velocityUnitUtil.es';
 
 const VelocityUnitFilter = ({
+	disabled,
 	className,
-	dispatch,
 	filterKey = filterConstants.velocityUnit.key,
 	options = {},
 	prefixKey = '',
-	timeRange
+	timeRange,
 }) => {
 	const defaultOptions = {
 		hideControl: true,
 		multiple: false,
 		position: 'right',
-		withSelectionTitle: true
+		withSelectionTitle: true,
+		withoutRouteParams: false,
 	};
 	// eslint-disable-next-line react-hooks/exhaustive-deps
 	options = useMemo(() => ({...defaultOptions, ...options}), [options]);
 
 	const velocityUnits = useMemo(() => getVelocityUnits(timeRange), [
-		timeRange
+		timeRange,
 	]);
 
-	const {items, selectedItems} = useFilterStatic(
-		dispatch,
+	const {items, selectedItems} = useFilterStatic({
 		filterKey,
 		prefixKey,
-		velocityUnits
-	);
+		staticItems: velocityUnits,
+		withoutRouteParams: options.withoutRouteParams,
+	});
 
 	const defaultItem = useMemo(
 		() => items.find(item => item.defaultVelocityUnit) || items[0],
 		[items]
 	);
 
-	if (defaultItem && !selectedItems.length) {
+	if (defaultItem && options.withSelectionTitle && !selectedItems.length) {
 		selectedItems[0] = defaultItem;
 	}
 
@@ -63,8 +64,9 @@ const VelocityUnitFilter = ({
 
 	return (
 		<Filter
-			dataTestId="velocityUnitFilter"
+			data-testid="velocityUnitFilter"
 			defaultItem={defaultItem}
+			disabled={disabled}
 			elementClasses={className}
 			filterKey={filterKey}
 			items={items}

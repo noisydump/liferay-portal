@@ -20,24 +20,23 @@ export default endpoint => {
 	const [state, setState] = useState({
 		error: null,
 		isLoading: true,
-		response: {}
+		response: {},
 	});
 
 	useEffect(() => {
 		request(endpoint)
-			.then(response => response.json())
 			.then(response => {
 				setState({
 					error: null,
 					isLoading: false,
-					response
+					response,
 				});
 			})
 			.catch(error => {
 				setState({
 					error,
 					isLoading: false,
-					response: {}
+					response: {},
 				});
 			});
 	}, [endpoint]);

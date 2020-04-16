@@ -30,6 +30,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -43,10 +44,6 @@ import org.dom4j.Node;
  * @author Kenji Heigel
  */
 public abstract class PoshiNodeFactory {
-
-	public static boolean getValidatePoshiScript() {
-		return _validatePoshiScript;
-	}
 
 	public static PoshiNode<?, ?> newPoshiNode(Node node) {
 		PoshiNode<?, ?> newPoshiNode = null;
@@ -68,7 +65,7 @@ public abstract class PoshiNodeFactory {
 		try {
 			nodeContent = Dom4JUtil.format(node);
 		}
-		catch (IOException ioe) {
+		catch (IOException ioException) {
 			nodeContent = node.toString();
 		}
 
@@ -79,9 +76,7 @@ public abstract class PoshiNodeFactory {
 			PoshiNode<?, ?> parentPoshiNode, String poshiScript)
 		throws PoshiScriptParserException {
 
-		PoshiNode<?, ?> newPoshiNode = null;
-
-		newPoshiNode = _newPoshiComment(poshiScript);
+		PoshiNode<?, ?> newPoshiNode = _newPoshiComment(poshiScript);
 
 		if (newPoshiNode != null) {
 			return newPoshiNode;
@@ -98,7 +93,9 @@ public abstract class PoshiNodeFactory {
 			"Invalid Poshi Script syntax", poshiScript, parentPoshiNode);
 	}
 
-	public static PoshiNode<?, ?> newPoshiNode(String content, URL url) {
+	public static PoshiNode<?, ?> newPoshiNode(String content, URL url)
+		throws PoshiScriptParserException {
+
 		try {
 			content = content.trim();
 
@@ -113,71 +110,39 @@ public abstract class PoshiNodeFactory {
 				return _definitionPoshiElement.clone(content, url);
 			}
 		}
-		catch (DocumentException de) {
+		catch (DocumentException documentException) {
 			throw new RuntimeException(
 				"Unable to parse Poshi XML file: " + url.getFile(),
-				de.getCause());
+				documentException.getCause());
 		}
-		catch (PoshiScriptParserException pspe) {
-			if (pspe instanceof UnbalancedCodeException) {
-				pspe.setFilePath(url.getFile());
+		catch (PoshiScriptParserException poshiScriptParserException) {
+			if (poshiScriptParserException instanceof UnbalancedCodeException) {
+				poshiScriptParserException.setFilePath(url.getFile());
 			}
 
-			System.out.println(pspe.getMessage());
+			throw poshiScriptParserException;
 		}
 
 		return null;
 	}
 
-	public static PoshiNode<?, ?> newPoshiNodeFromFile(URL url) {
+	public static PoshiNode<?, ?> newPoshiNodeFromFile(URL url)
+		throws PoshiScriptParserException {
+
 		try {
 			String content = FileUtil.read(url);
 
 			return newPoshiNode(content, url);
 		}
-		catch (IOException ioe) {
+		catch (IOException ioException) {
 			throw new RuntimeException(
-				"Unable to read file: " + url.getFile(), ioe.getCause());
+				"Unable to read file: " + url.getFile(),
+				ioException.getCause());
 		}
 	}
 
-	public static void setValidatePoshiScript(boolean validate) {
-		_validatePoshiScript = validate;
-	}
-
-	protected static boolean hasPoshiScriptParserException(URL url) {
-		Set<String> failingFilePaths =
-			PoshiScriptParserException.getUniqueErrorPaths();
-
-		return failingFilePaths.contains(url.getFile());
-	}
-
-	protected static void validatePoshiScriptContent(
-			PoshiElement poshiElement, URL url)
-		throws DocumentException, IOException, PoshiScriptParserException {
-
-		if (!_validatePoshiScript) {
-			return;
-		}
-
-		String poshiXMLString = Dom4JUtil.format(poshiElement);
-
-		PoshiNode newPoshiElement = newPoshiNode(poshiXMLString, url);
-
-		String newPoshiScript = newPoshiElement.toPoshiScript();
-
-		String poshiScript = FileUtil.read(url);
-
-		poshiScript = poshiScript.replaceAll("\\s+", "");
-
-		if (!poshiScript.equals(newPoshiScript.replaceAll("\\s+", ""))) {
-			PoshiScriptParserException pspe = new PoshiScriptParserException(
-				"Data loss has occurred while parsing Poshi Script",
-				newPoshiElement);
-
-			throw pspe;
-		}
-	}
+	protected static final Set<URL> validationInitialized =
+		Collections.synchronizedSet(new HashSet<>());
 
 	private static DefinitionPoshiElement _getDefinitionPoshiElement() {
 		for (PoshiElement poshiElement : _poshiElements) {
@@ -246,7 +211,6 @@ public abstract class PoshiNodeFactory {
 	private static final DefinitionPoshiElement _definitionPoshiElement;
 	private static final List<PoshiComment> _poshiComments = new ArrayList<>();
 	private static final List<PoshiElement> _poshiElements = new ArrayList<>();
-	private static boolean _validatePoshiScript = true;
 
 	static {
 		try {
@@ -301,9 +265,9 @@ public abstract class PoshiNodeFactory {
 			_definitionPoshiElement = _getDefinitionPoshiElement();
 		}
 		catch (IllegalAccessException | InstantiationException | IOException
-					e) {
+					exception) {
 
-			throw new RuntimeException(e);
+			throw new RuntimeException(exception);
 		}
 	}
 

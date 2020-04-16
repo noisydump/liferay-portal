@@ -38,18 +38,18 @@ AUI.add(
 			ATTRS: {
 				portletNamespace: {
 					validator: Lang.isString,
-					value: STR_EMPTY
+					value: STR_EMPTY,
 				},
 
 				recordsetId: {
 					validator: isNumber,
-					value: 0
+					value: 0,
 				},
 
 				structure: {
 					validator: isArray,
-					value: []
-				}
+					value: [],
+				},
 			},
 
 			CSS_PREFIX: 'table',
@@ -57,7 +57,7 @@ AUI.add(
 			DATATYPE_VALIDATOR: {
 				double: 'number',
 				integer: 'digits',
-				long: 'digits'
+				long: 'digits',
 			},
 
 			EXTENDS: A.DataTable,
@@ -81,7 +81,7 @@ AUI.add(
 				radio: A.RadioCellEditor,
 				select: A.DropDownCellEditor,
 				text: A.TextCellEditor,
-				textarea: A.TextAreaCellEditor
+				textarea: A.TextAreaCellEditor,
 			},
 
 			addRecord(recordsetId, displayIndex, fieldsMap, callback) {
@@ -99,8 +99,8 @@ AUI.add(
 						serviceContext: JSON.stringify({
 							scopeGroupId: themeDisplay.getScopeGroupId(),
 							userId: themeDisplay.getUserId(),
-							workflowAction: Liferay.Workflow.ACTION_PUBLISH
-						})
+							workflowAction: Liferay.Workflow.ACTION_PUBLISH,
+						}),
 					},
 					callback
 				);
@@ -125,11 +125,11 @@ AUI.add(
 						strings: {
 							cancel: Liferay.Language.get('cancel'),
 							edit: Liferay.Language.get('edit'),
-							save: Liferay.Language.get('save')
+							save: Liferay.Language.get('save'),
 						},
 						validator: {
-							rules: {}
-						}
+							rules: {},
+						},
 					};
 
 					var required = item.required;
@@ -146,7 +146,7 @@ AUI.add(
 
 					if (type === 'checkbox') {
 						config.options = {
-							true: Liferay.Language.get('true')
+							true: Liferay.Language.get('true'),
 						};
 
 						config.inputFormatter = function(value) {
@@ -170,13 +170,15 @@ AUI.add(
 
 							if (value === 'true') {
 								value = Liferay.Language.get('true');
-							} else if (value === 'false') {
+							}
+							else if (value === 'false') {
 								value = Liferay.Language.get('false');
 							}
 
 							return value;
 						};
-					} else if (type === 'ddm-date') {
+					}
+					else if (type === 'ddm-date') {
 						config.inputFormatter = function(val) {
 							return val.map(item => {
 								return A.DataType.Date.format(item);
@@ -189,7 +191,8 @@ AUI.add(
 
 								if (item !== STR_EMPTY) {
 									date = A.DataType.Date.parse(item);
-								} else {
+								}
+								else {
 									date = new Date();
 								}
 
@@ -214,7 +217,8 @@ AUI.add(
 
 							return value;
 						};
-					} else if (
+					}
+					else if (
 						type === 'ddm-decimal' ||
 						type === 'ddm-integer' ||
 						type === 'ddm-number'
@@ -242,7 +246,8 @@ AUI.add(
 
 							return value;
 						};
-					} else if (type === 'ddm-documentlibrary') {
+					}
+					else if (type === 'ddm-documentlibrary') {
 						item.formatter = function(obj) {
 							var data = obj.data;
 
@@ -261,7 +266,8 @@ AUI.add(
 
 							return label;
 						};
-					} else if (type === 'ddm-link-to-page') {
+					}
+					else if (type === 'ddm-link-to-page') {
 						item.formatter = function(obj) {
 							var data = obj.data;
 
@@ -280,7 +286,8 @@ AUI.add(
 
 							return label;
 						};
-					} else if (type === 'radio') {
+					}
+					else if (type === 'radio') {
 						structureField = instance.findStructureFieldByAttribute(
 							structure,
 							'name',
@@ -292,7 +299,8 @@ AUI.add(
 							structureField.options,
 							locale
 						);
-					} else if (type === 'select') {
+					}
+					else if (type === 'select') {
 						structureField = instance.findStructureFieldByAttribute(
 							structure,
 							'name',
@@ -325,7 +333,8 @@ AUI.add(
 						config.inputFormatter = AArray;
 						config.multiple = multiple;
 						config.options = options;
-					} else if (type === 'textarea') {
+					}
+					else if (type === 'textarea') {
 						item.allowHTML = true;
 
 						item.formatter = function(obj) {
@@ -348,7 +357,7 @@ AUI.add(
 
 					validatorRules[name] = A.mix(
 						{
-							required
+							required,
 						},
 						validatorRules[name]
 					);
@@ -391,7 +400,8 @@ AUI.add(
 
 					if (item[attributeName] === attributeValue) {
 						structureField = item;
-					} else if (nestedFieldsArray) {
+					}
+					else if (nestedFieldsArray) {
 						structureField = instance.findStructureFieldByAttribute(
 							nestedFieldsArray,
 							attributeName,
@@ -460,7 +470,8 @@ AUI.add(
 
 					if (scrollLeft + scrollableWidth < activeCellOffsetRight) {
 						scrollTo = activeCellOffsetRight - scrollableWidth;
-					} else if (activeCellOffsetLeft < scrollLeft) {
+					}
+					else if (activeCellOffsetLeft < scrollLeft) {
 						scrollTo = activeCellOffsetLeft;
 					}
 
@@ -506,7 +517,8 @@ AUI.add(
 						delete value.name;
 
 						value = JSON.stringify(value);
-					} else if (type === 'select') {
+					}
+					else if (type === 'select') {
 						if (!isArray(value)) {
 							value = AArray(value);
 						}
@@ -600,7 +612,7 @@ AUI.add(
 							record,
 							recordsetId,
 							structure,
-							zIndex: Liferay.zIndex.OVERLAY
+							zIndex: Liferay.zIndex.OVERLAY,
 						});
 					}
 				},
@@ -632,7 +644,8 @@ AUI.add(
 								fieldsMap,
 								true
 							);
-						} else {
+						}
+						else {
 							SpreadSheet.addRecord(
 								recordsetId,
 								recordIndex,
@@ -640,7 +653,7 @@ AUI.add(
 								json => {
 									if (json.recordId > 0) {
 										record.set('recordId', json.recordId, {
-											silent: true
+											silent: true,
 										});
 									}
 								}
@@ -671,12 +684,13 @@ AUI.add(
 
 							var facade = A.merge(options, {
 								models,
-								src: 'sort'
+								src: 'sort',
 							});
 
 							if (options.silent) {
 								this._defResetFn(facade);
-							} else {
+							}
+							else {
 								this.fire('reset', facade);
 							}
 						}
@@ -724,12 +738,12 @@ AUI.add(
 							recordSetId: recordsetId,
 							serviceContext: JSON.stringify({
 								scopeGroupId: themeDisplay.getScopeGroupId(),
-								userId: themeDisplay.getUserId()
-							})
+								userId: themeDisplay.getUserId(),
+							}),
 						},
 						callback
 					);
-				}
+				},
 			},
 
 			updateRecord(recordId, displayIndex, fieldsMap, merge, callback) {
@@ -747,12 +761,12 @@ AUI.add(
 						serviceContext: JSON.stringify({
 							scopeGroupId: themeDisplay.getScopeGroupId(),
 							userId: themeDisplay.getUserId(),
-							workflowAction: Liferay.Workflow.ACTION_PUBLISH
-						})
+							workflowAction: Liferay.Workflow.ACTION_PUBLISH,
+						}),
 					},
 					callback
 				);
-			}
+			},
 		});
 
 		Liferay.SpreadSheet = SpreadSheet;
@@ -766,20 +780,21 @@ AUI.add(
 				if (!previewDialog) {
 					previewDialog = Liferay.Util.Window.getWindow({
 						dialog: {
-							bodyContent: content
+							bodyContent: content,
 						},
-						title: Liferay.Language.get('preview')
+						title: Liferay.Language.get('preview'),
 					});
 
 					instance.previewDialog = previewDialog;
-				} else {
+				}
+				else {
 					previewDialog.show();
 
 					previewDialog.set('bodyContent', content);
 				}
 			},
 
-			previewDialog: null
+			previewDialog: null,
 		};
 
 		Liferay.DDLUtil = DDLUtil;
@@ -793,7 +808,7 @@ AUI.add(
 			'json',
 			'liferay-portlet-dynamic-data-mapping-custom-fields',
 			'liferay-portlet-url',
-			'liferay-util-window'
-		]
+			'liferay-util-window',
+		],
 	}
 );

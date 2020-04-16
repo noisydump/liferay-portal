@@ -120,6 +120,13 @@ components:
                 Represents an organization. Organizations can contain other organizations (suborganizations). Properties
                 follow the [Organization](https://schema.org/Organization) specification.
             properties:
+                actions:
+                    additionalProperties:
+                        additionalProperties:
+                            type: string
+                        type: object
+                    readOnly: true
+                    type: object
                 comment:
                     description:
                         The text of a comment associated with the organization.
@@ -143,7 +150,6 @@ components:
                 id:
                     description:
                         The organization's ID.
-                    readOnly: true
                     type: string
                 image:
                     description:
@@ -602,6 +608,13 @@ components:
             description:
                 Represents a user.
             properties:
+                actions:
+                    additionalProperties:
+                        additionalProperties:
+                            type: string
+                        type: object
+                    readOnly: true
+                    type: object
                 additionalName:
                     description:
                         The user's additional name (e.g., middle name).
@@ -808,7 +821,7 @@ components:
             type: object
 info:
     description:
-        ""
+        "A Java client JAR is available for use with the group ID 'com.liferay', artifact ID 'com.liferay.headless.admin.user.client', and version '2.0.1'."
     license:
         name: "Apache 2.0"
         url: "http://www.apache.org/licenses/LICENSE-2.0.html"

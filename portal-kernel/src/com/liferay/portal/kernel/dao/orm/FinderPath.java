@@ -72,9 +72,13 @@ public class FinderPath {
 		}
 
 		_initCacheKeyPrefix(methodName, params);
-		_initLocalCacheKeyPrefix();
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #encodeCacheKey(
+	 *             Object[])}
+	 */
+	@Deprecated
 	public String encodeArguments(Object[] arguments) {
 		String[] keys = new String[arguments.length * 2];
 
@@ -88,13 +92,53 @@ public class FinderPath {
 		return StringUtil.toHexString(_getCacheKey(keys));
 	}
 
+	public Serializable encodeCacheKey(Object[] arguments) {
+		CacheKeyGenerator cacheKeyGenerator = _cacheKeyGenerator;
+
+		if (cacheKeyGenerator == null) {
+			cacheKeyGenerator = CacheKeyGeneratorUtil.getCacheKeyGenerator(
+				_cacheKeyGeneratorCacheName);
+		}
+
+		String[] keys = new String[arguments.length * 2];
+
+		for (int i = 0; i < arguments.length; i++) {
+			int index = i * 2;
+
+			keys[index] = StringPool.PERIOD;
+			keys[index + 1] = StringUtil.toHexString(arguments[i]);
+		}
+
+		return cacheKeyGenerator.getCacheKey(
+			new String[] {
+				_cacheKeyPrefix,
+				StringUtil.toHexString(cacheKeyGenerator.getCacheKey(keys))
+			});
+	}
+
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #encodeCacheKey(
+	 *             Object[])}
+	 */
+	@Deprecated
 	public Serializable encodeCacheKey(String encodedArguments) {
 		return _getCacheKey(new String[] {_cacheKeyPrefix, encodedArguments});
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
 	public Serializable encodeLocalCacheKey(String encodedArguments) {
 		return _getCacheKey(
-			new String[] {_localCacheKeyPrefix, encodedArguments});
+			new String[] {
+				_cacheName.concat(
+					StringPool.PERIOD
+				).concat(
+					_cacheKeyPrefix
+				),
+				encodedArguments
+			});
 	}
 
 	public String getCacheName() {
@@ -109,6 +153,10 @@ public class FinderPath {
 		return _resultClass;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
 	public boolean isEntityCacheEnabled() {
 		return _entityCacheEnabled;
 	}
@@ -166,14 +214,6 @@ public class FinderPath {
 		_cacheKeyPrefix = sb.toString();
 	}
 
-	private void _initLocalCacheKeyPrefix() {
-		_localCacheKeyPrefix = _cacheName.concat(
-			StringPool.PERIOD
-		).concat(
-			_cacheKeyPrefix
-		);
-	}
-
 	private static final String _ARGS_SEPARATOR = "_A_";
 
 	private static final String _BASE_MODEL_CACHE_KEY_GENERATOR_NAME =
@@ -190,7 +230,6 @@ public class FinderPath {
 	private final long _columnBitmask;
 	private final boolean _entityCacheEnabled;
 	private final boolean _finderCacheEnabled;
-	private String _localCacheKeyPrefix;
 	private final Class<?> _resultClass;
 
 }

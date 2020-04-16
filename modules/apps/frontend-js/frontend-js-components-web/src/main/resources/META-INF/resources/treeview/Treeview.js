@@ -38,7 +38,7 @@ function addLinks(nodes, parentId = null) {
 			children,
 			nextSiblingId: next != null ? next.id : null,
 			parentId,
-			previousSiblingId: previous != null ? previous.id : null
+			previousSiblingId: previous != null ? previous.id : null,
 		};
 	});
 }
@@ -64,7 +64,8 @@ function computeParentSelection(nodeId, selectedNodeIds, nodes) {
 		nextSelectedNodeIds = selectedNodeIds.has(nodeId)
 			? selectedNodeIds
 			: new Set([...selectedNodeIds, nodeId]);
-	} else {
+	}
+	else {
 		nextSelectedNodeIds = selectedNodeIds.has(nodeId)
 			? new Set([...selectedNodeIds].filter(id => id !== nodeId))
 			: selectedNodeIds;
@@ -86,7 +87,7 @@ function filterNodes(nodes, filterQuery) {
 		if (node.name.toLowerCase().indexOf(filterQuery) !== -1) {
 			filteredNodes.push({
 				...node,
-				children: []
+				children: [],
 			});
 		}
 
@@ -117,7 +118,8 @@ function getLastVisible(node) {
 
 	if (!node.expanded || !childCount) {
 		return node;
-	} else {
+	}
+	else {
 		return getLastVisible(node.children[childCount - 1]);
 	}
 }
@@ -130,7 +132,7 @@ function init({
 	inheritSelection,
 	initialNodes,
 	initialSelectedNodeIds,
-	multiSelection
+	multiSelection,
 }) {
 	const selectedNodeIds = new Set(initialSelectedNodeIds);
 
@@ -151,7 +153,7 @@ function init({
 				return {
 					...node,
 					expanded,
-					selected
+					selected,
 				};
 			},
 			nodeMap
@@ -167,7 +169,7 @@ function init({
 		multiSelection,
 		nodeMap,
 		nodes,
-		selectedNodeIds
+		selectedNodeIds,
 	};
 }
 
@@ -200,7 +202,7 @@ function updateNode(state, id, callback) {
 			...parent,
 			children: parent.children.map(child => {
 				return child.id === node.id ? node : child;
-			})
+			}),
 		};
 
 		nodeMap[node.id] = node;
@@ -227,14 +229,14 @@ function reducer(state, action) {
 			return {
 				...state,
 				active: true,
-				focusedNodeId
+				focusedNodeId,
 			};
 		}
 
 		case 'DEACTIVATE':
 			return {
 				...state,
-				active: false
+				active: false,
 			};
 
 		case 'COLLAPSE':
@@ -246,10 +248,10 @@ function reducer(state, action) {
 						return node.expanded
 							? {
 									...node,
-									expanded: false
+									expanded: false,
 							  }
 							: node;
-					})
+					}),
 				};
 			}
 			break;
@@ -261,7 +263,7 @@ function reducer(state, action) {
 				if (state.focusedNodeId !== rootId) {
 					return {
 						...state,
-						focusedNodeId: rootId
+						focusedNodeId: rootId,
 					};
 				}
 			}
@@ -278,7 +280,8 @@ function reducer(state, action) {
 							break;
 						}
 					}
-				} else {
+				}
+				else {
 					while (node) {
 						if (node.id !== action.nodeId) {
 							// Not the first iteration and we found a match: done.
@@ -316,7 +319,7 @@ function reducer(state, action) {
 				if (node) {
 					return {
 						...state,
-						focusedNodeId: node.id
+						focusedNodeId: node.id,
 					};
 				}
 			}
@@ -333,7 +336,8 @@ function reducer(state, action) {
 							break;
 						}
 					}
-				} else {
+				}
+				else {
 					while (node) {
 						if (node.id !== action.nodeId) {
 							break;
@@ -345,7 +349,8 @@ function reducer(state, action) {
 							);
 
 							break;
-						} else {
+						}
+						else {
 							// Go to parent.
 							node = nodeMap[node.parentId];
 							break;
@@ -356,7 +361,7 @@ function reducer(state, action) {
 				if (node) {
 					return {
 						...state,
-						focusedNodeId: node.id
+						focusedNodeId: node.id,
 					};
 				}
 			}
@@ -370,13 +375,15 @@ function reducer(state, action) {
 
 				if (filteredNodes) {
 					lastId = nodes[lastIndex] && nodes[lastIndex].id;
-				} else {
+				}
+				else {
 					let node = nodes[lastIndex];
 
 					while (node) {
 						if (node.children.length && node.expanded) {
 							node = node.children[node.children.length - 1];
-						} else {
+						}
+						else {
 							break;
 						}
 					}
@@ -387,7 +394,7 @@ function reducer(state, action) {
 				if (lastId && state.focusedNodeId !== lastId) {
 					return {
 						...state,
-						focusedNodeId: lastId
+						focusedNodeId: lastId,
 					};
 				}
 			}
@@ -402,9 +409,9 @@ function reducer(state, action) {
 					nodes: updateNode(state, action.nodeId, node => {
 						return {
 							...node,
-							expanded: !node.expanded
+							expanded: !node.expanded,
 						};
-					})
+					}),
 				};
 			}
 			break;
@@ -419,7 +426,7 @@ function reducer(state, action) {
 								!node.expanded
 									? {
 											...node,
-											expanded: true
+											expanded: true,
 									  }
 									: node,
 							nodeMap
@@ -428,7 +435,7 @@ function reducer(state, action) {
 
 					return {
 						...state,
-						nodes
+						nodes,
 					};
 				}
 			}
@@ -439,14 +446,14 @@ function reducer(state, action) {
 				...state,
 				filterQuery: action.filterQuery,
 				filteredNodes: filterNodes(state.nodes, action.filterQuery),
-				focusedNodeId: null
+				focusedNodeId: null,
 			};
 
 		case 'FOCUS':
 			if (action.nodeId !== state.focusedNodeId) {
 				return {
 					...state,
-					focusedNodeId: action.nodeId
+					focusedNodeId: action.nodeId,
 				};
 			}
 			break;
@@ -465,14 +472,15 @@ function reducer(state, action) {
 							nodes: updateNode(state, action.nodeId, node => {
 								return {
 									...node,
-									expanded: false
+									expanded: false,
 								};
-							})
+							}),
 						};
-					} else if (node.parentId) {
+					}
+					else if (node.parentId) {
 						return {
 							...state,
-							focusedNodeId: node.parentId
+							focusedNodeId: node.parentId,
 						};
 					}
 				}
@@ -492,14 +500,15 @@ function reducer(state, action) {
 							nodes: updateNode(state, action.nodeId, node => {
 								return {
 									...node,
-									expanded: true
+									expanded: true,
 								};
-							})
+							}),
 						};
-					} else if (node.children.length) {
+					}
+					else if (node.children.length) {
 						return {
 							...state,
-							focusedNodeId: node.children[0].id
+							focusedNodeId: node.children[0].id,
 						};
 					}
 				}
@@ -519,7 +528,7 @@ function reducer(state, action) {
 
 					const parentAndChildrenIds = [
 						id,
-						...getChildrenIds(selectedNode)
+						...getChildrenIds(selectedNode),
 					];
 
 					let nextSelectedNodeIds;
@@ -531,10 +540,11 @@ function reducer(state, action) {
 									!parentAndChildrenIds.includes(selectedId)
 							)
 						);
-					} else {
+					}
+					else {
 						nextSelectedNodeIds = new Set([
 							...selectedNodeIds,
-							...parentAndChildrenIds
+							...parentAndChildrenIds,
 						]);
 					}
 
@@ -543,16 +553,19 @@ function reducer(state, action) {
 						nextSelectedNodeIds,
 						nodeMap
 					);
-				} else {
+				}
+				else {
 					if (selectedNodeIds.has(id)) {
 						selectedNodeIds = new Set(
 							[...selectedNodeIds].filter(
 								selectedId => selectedId !== id
 							)
 						);
-					} else if (multiSelection) {
+					}
+					else if (multiSelection) {
 						selectedNodeIds = new Set([...selectedNodeIds, id]);
-					} else {
+					}
+					else {
 						selectedNodeIds = new Set([id]);
 					}
 				}
@@ -572,7 +585,7 @@ function reducer(state, action) {
 							nodeMap
 						)
 					),
-					selectedNodeIds
+					selectedNodeIds,
 				};
 			}
 			break;
@@ -588,7 +601,7 @@ function reducer(state, action) {
 					node,
 					node => {
 						const {selectedNodeIds} = state;
-						const oldNode = nodeMap[node.id];
+						const oldNode = nodeMap[node.id] || {};
 
 						const expanded =
 							oldNode.expanded ||
@@ -603,7 +616,7 @@ function reducer(state, action) {
 						return {
 							...node,
 							expanded,
-							selected
+							selected,
 						};
 					},
 					nodeMap
@@ -612,7 +625,7 @@ function reducer(state, action) {
 
 			return {
 				...state,
-				nodes
+				nodes,
 			};
 		}
 
@@ -634,9 +647,10 @@ function toggleNode(node, selectedNodeIds) {
 	if (node.selected !== selectedNodeIds.has(node.id)) {
 		return {
 			...node,
-			selected: !node.selected
+			selected: !node.selected,
 		};
-	} else {
+	}
+	else {
 		return node;
 	}
 }
@@ -659,7 +673,8 @@ function visit(node, callback, nodeMap) {
 
 		if (nextChildren) {
 			nextChildren.push(updated);
-		} else if (updated !== child) {
+		}
+		else if (updated !== child) {
 			nextChildren = children.slice(0, i).concat([updated]);
 		}
 	}
@@ -682,7 +697,7 @@ function Treeview({
 	initialSelectedNodeIds,
 	multiSelection,
 	nodes: initialNodes,
-	onSelectedNodesChange
+	onSelectedNodesChange,
 }) {
 	const delay = useTimeout();
 
@@ -697,7 +712,7 @@ function Treeview({
 			inheritSelection,
 			initialNodes,
 			initialSelectedNodeIds,
-			multiSelection
+			multiSelection,
 		},
 		init
 	);
@@ -771,7 +786,7 @@ function Treeview({
 
 Treeview.defaultProps = {
 	NodeComponent: TreeviewLabel,
-	multiSelection: true
+	multiSelection: true,
 };
 
 Treeview.propTypes = {
@@ -782,10 +797,10 @@ Treeview.propTypes = {
 		PropTypes.shape({
 			children: PropTypes.array,
 			expanded: PropTypes.bool,
-			id: PropTypes.string.isRequired
+			id: PropTypes.string.isRequired,
 		})
 	).isRequired,
-	onSelectedNodesChange: PropTypes.func
+	onSelectedNodesChange: PropTypes.func,
 };
 
 Treeview.Card = TreeviewCard;

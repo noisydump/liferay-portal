@@ -13,16 +13,17 @@
  */
 
 import {
+	DataDefinitionUtils,
 	DataLayoutBuilderActions,
 	DataLayoutVisitor,
 	DragTypes,
-	FieldTypeList
+	FieldTypeList,
 } from 'data-engine-taglib';
 import React, {useContext} from 'react';
 
+import useDoubleClick from '../../hooks/useDoubleClick.es';
 import DataLayoutBuilderContext from './DataLayoutBuilderInstanceContext.es';
 import FormViewContext from './FormViewContext.es';
-import {dropCustomObjectField} from './actions.es';
 import useDeleteDefinitionField from './useDeleteDefinitionField.es';
 import useDeleteDefinitionFieldModal from './useDeleteDefinitionFieldModal.es';
 
@@ -30,28 +31,40 @@ const getFieldTypes = ({
 	dataDefinition,
 	dataLayout,
 	fieldTypes,
-	focusedCustomObjectField
+	focusedCustomObjectField,
 }) => {
-	const {dataDefinitionFields} = dataDefinition;
+	const dataDefinitionFields = [];
 	const {dataLayoutPages} = dataLayout;
 
-	return dataDefinitionFields.map(({fieldType, label, name}) => {
-		const fieldTypeSettings = fieldTypes.find(({name}) => {
-			return name === fieldType;
-		});
+	DataDefinitionUtils.forEachDataDefinitionField(
+		dataDefinition,
+		({fieldType, label, name}) => {
+			if (fieldType === 'section') {
+				return;
+			}
 
-		return {
-			active: name === focusedCustomObjectField.name,
-			className: 'custom-object-field',
-			description: fieldTypeSettings.label,
-			disabled: DataLayoutVisitor.containsField(dataLayoutPages, name),
-			dragAlignment: 'right',
-			dragType: DragTypes.DRAG_DATA_DEFINITION_FIELD,
-			icon: fieldTypeSettings.icon,
-			label: label.en_US,
-			name
-		};
-	});
+			const fieldTypeSettings = fieldTypes.find(({name}) => {
+				return name === fieldType;
+			});
+
+			dataDefinitionFields.push({
+				active: name === focusedCustomObjectField.name,
+				className: 'custom-object-field',
+				description: fieldTypeSettings.label,
+				disabled: DataLayoutVisitor.containsField(
+					dataLayoutPages,
+					name
+				),
+				dragAlignment: 'right',
+				dragType: DragTypes.DRAG_DATA_DEFINITION_FIELD,
+				icon: fieldTypeSettings.icon,
+				label: label.en_US,
+				name,
+			});
+		}
+	);
+
+	return dataDefinitionFields;
 };
 
 export default ({keywords}) => {
@@ -67,7 +80,7 @@ export default ({keywords}) => {
 
 		dispatch({
 			payload: {dataDefinitionField},
-			type: DataLayoutBuilderActions.UPDATE_FOCUSED_CUSTOM_OBJECT_FIELD
+			type: DataLayoutBuilderActions.UPDATE_FOCUSED_CUSTOM_OBJECT_FIELD,
 		});
 	};
 	const onDoubleClick = ({name}) => {
@@ -75,7 +88,7 @@ export default ({keywords}) => {
 
 		dataLayoutBuilder.dispatch(
 			'fieldAdded',
-			dropCustomObjectField({
+			DataLayoutBuilderActions.dropCustomObjectField({
 				addedToPlaceholder: true,
 				dataDefinition,
 				dataDefinitionFieldName: name,
@@ -83,12 +96,16 @@ export default ({keywords}) => {
 				indexes: {
 					columnIndex: 0,
 					pageIndex: activePage,
-					rowIndex: pages[activePage].rows.length
+					rowIndex: pages[activePage].rows.length,
 				},
-				skipFieldNameGeneration: true
 			})
 		);
 	};
+
+	const [handleOnClick, handleOnDoubleClick] = useDoubleClick(
+		onClick,
+		onDoubleClick
+	);
 
 	const deleteField = useDeleteDefinitionField({dataLayoutBuilder});
 
@@ -101,9 +118,9 @@ export default ({keywords}) => {
 			deleteLabel={Liferay.Language.get('delete-from-object')}
 			fieldTypes={fieldTypes}
 			keywords={keywords}
-			onClick={onClick}
+			onClick={handleOnClick}
 			onDelete={onDeleteDefinitionField}
-			onDoubleClick={onDoubleClick}
+			onDoubleClick={handleOnDoubleClick}
 		/>
 	);
 };

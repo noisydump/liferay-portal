@@ -58,10 +58,11 @@ if (print) {
 
 String viewInContextURL = assetRenderer.getURLViewInContext(liferayPortletRequest, liferayPortletResponse, HttpUtil.setParameter(viewFullContentURL.toString(), "redirect", currentURL));
 
-Map<String, Object> fragmentsEditorData = new HashMap<>();
-
-fragmentsEditorData.put("fragments-editor-item-id", PortalUtil.getClassNameId(assetRenderer.getClassName()) + "-" + assetRenderer.getClassPK());
-fragmentsEditorData.put("fragments-editor-item-type", "fragments-editor-mapped-item");
+Map<String, Object> fragmentsEditorData = HashMapBuilder.<String, Object>put(
+	"fragments-editor-item-id", PortalUtil.getClassNameId(assetRenderer.getClassName()) + "-" + assetRenderer.getClassPK()
+).put(
+	"fragments-editor-item-type", "fragments-editor-mapped-item"
+).build();
 %>
 
 <div class="asset-full-content clearfix mb-5 <%= assetPublisherDisplayContext.isDefaultAssetPublisher() ? "default-asset-publisher" : StringPool.BLANK %> <%= assetPublisherDisplayContext.isShowAssetTitle() ? "show-asset-title" : "no-title" %> <%= ((previewClassNameId == assetEntry.getClassNameId()) && (previewClassPK == assetEntry.getClassPK())) ? "p-1 preview-asset-entry" : StringPool.BLANK %>" <%= AUIUtil.buildData(fragmentsEditorData) %>>
@@ -117,9 +118,11 @@ fragmentsEditorData.put("fragments-editor-item-type", "fragments-editor-mapped-i
 			<div class="autofit-col autofit-col-expand">
 				<div class="autofit-row">
 					<div class="autofit-col autofit-col-expand">
-						<div class="text-truncate-inline">
-							<span class="text-truncate user-info"><strong><%= HtmlUtil.escape(AssetRendererUtil.getAssetRendererUserFullName(assetRenderer, request)) %></strong></span>
-						</div>
+						<c:if test="<%= assetPublisherDisplayContext.isShowAuthor() %>">
+							<div class="text-truncate-inline">
+								<span class="text-truncate user-info"><strong><%= HtmlUtil.escape(AssetRendererUtil.getAssetRendererUserFullName(assetRenderer, request)) %></strong></span>
+							</div>
+						</c:if>
 
 						<%
 						StringBundler sb = new StringBundler(13);
@@ -246,7 +249,7 @@ fragmentsEditorData.put("fragments-editor-item-type", "fragments-editor-mapped-i
 
 			<c:if test="<%= showRatings %>">
 				<div class="asset-ratings autofit-col mr-3">
-					<liferay-ui:ratings
+					<liferay-ratings:ratings
 						className="<%= assetEntry.getClassName() %>"
 						classPK="<%= assetEntry.getClassPK() %>"
 					/>
@@ -347,7 +350,7 @@ fragmentsEditorData.put("fragments-editor-item-type", "fragments-editor-mapped-i
 
 	<%
 	boolean showConversions = assetPublisherDisplayContext.isEnableConversions() && assetRenderer.isConvertible() && !print;
-	boolean showLocalization = (assetPublisherDisplayContext.isShowAvailableLocales() && assetRenderer.isLocalizable() && !print);
+	boolean showLocalization = assetPublisherDisplayContext.isShowAvailableLocales() && assetRenderer.isLocalizable() && !print;
 	%>
 
 	<c:if test="<%= showConversions || showLocalization %>">
@@ -387,11 +390,11 @@ fragmentsEditorData.put("fragments-editor-item-type", "fragments-editor-mapped-i
 				exportAssetURL.setWindowState(LiferayWindowState.EXCLUSIVE);
 
 				for (String extension : assetPublisherDisplayContext.getExtensions(assetRenderer)) {
-					Map<String, Object> data = new HashMap<>();
-
 					exportAssetURL.setParameter("targetExtension", extension);
 
-					data.put("resource-href", exportAssetURL.toString());
+					Map<String, Object> data = HashMapBuilder.<String, Object>put(
+						"resource-href", exportAssetURL.toString()
+					).build();
 				%>
 
 					<div class="autofit-col component-subtitle export-action">

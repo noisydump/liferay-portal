@@ -1,4 +1,4 @@
-@component-name = "portal-application-standards"
+@component-name = "portal-wcm"
 @ignore = "true"
 definition {
 

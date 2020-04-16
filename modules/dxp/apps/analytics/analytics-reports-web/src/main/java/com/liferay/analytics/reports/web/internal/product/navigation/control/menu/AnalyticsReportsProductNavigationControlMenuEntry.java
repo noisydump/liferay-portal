@@ -239,8 +239,8 @@ public class AnalyticsReportsProductNavigationControlMenuEntry
 			portalPreferences.getValue(
 				AnalyticsReportsPortletKeys.ANALYTICS_REPORTS, "hide-panel"));
 
-		if (!AnalyticsReportsUtil.isAnalyticsEnabled(
-				themeDisplay.getCompanyId(), themeDisplay.getScopeGroupId()) &&
+		if (!AnalyticsReportsUtil.isAnalyticsConnected(
+				themeDisplay.getCompanyId()) &&
 			hidePanel) {
 
 			return false;
@@ -301,7 +301,7 @@ public class AnalyticsReportsProductNavigationControlMenuEntry
 
 			jspWriter.write(
 				StringBundler.concat(
-					"hidden-print lfr-admin-panel lfr-product-menu-panel ",
+					"d-print-none lfr-admin-panel lfr-product-menu-panel ",
 					"lfr-analytics-reports-panel sidenav-fixed ",
 					"sidenav-menu-slider sidenav-right\" id=\""));
 

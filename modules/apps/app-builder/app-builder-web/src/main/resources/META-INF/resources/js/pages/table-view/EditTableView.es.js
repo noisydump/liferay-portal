@@ -13,23 +13,20 @@
  */
 
 import classNames from 'classnames';
-import React, {useState, useContext} from 'react';
+import React, {useContext, useState} from 'react';
 import {withRouter} from 'react-router-dom';
 
 import ControlMenu from '../../components/control-menu/ControlMenu.es';
 import DragLayer from '../../components/drag-and-drop/DragLayer.es';
 import {Loading} from '../../components/loading/Loading.es';
-import {
-	ToastContext,
-	ToastContextProvider
-} from '../../components/toast/ToastContext.es';
 import UpperToolbar from '../../components/upper-toolbar/UpperToolbar.es';
 import {addItem, updateItem} from '../../utils/client.es';
+import {errorToast, successToast} from '../../utils/toast.es';
 import DropZone from './DropZone.es';
 import EditTableViewContext, {
 	ADD_DATA_LIST_VIEW_FIELD,
 	REMOVE_DATA_LIST_VIEW_FIELD,
-	UPDATE_DATA_LIST_VIEW_NAME
+	UPDATE_DATA_LIST_VIEW_NAME,
 } from './EditTableViewContext.es';
 import EditTableViewContextProvider from './EditTableViewContextProvider.es';
 import TableViewSidebar from './TableViewSidebar.es';
@@ -39,8 +36,6 @@ const EditTableView = withRouter(({history}) => {
 		EditTableViewContext
 	);
 
-	const {addToast} = useContext(ToastContext);
-
 	let title = Liferay.Language.get('new-table-view');
 
 	if (dataListView.id) {
@@ -48,18 +43,15 @@ const EditTableView = withRouter(({history}) => {
 	}
 
 	const onError = error => {
-		const {title: message = ''} = error;
+		const {title = ''} = error;
+		errorToast(`${title}.`);
+	};
 
-		addToast({
-			displayType: 'danger',
-			message: (
-				<>
-					{message}
-					{'.'}
-				</>
-			),
-			title: `${Liferay.Language.get('error')}:`
-		});
+	const onSuccess = () => {
+		successToast(
+			Liferay.Language.get('the-table-view-was-saved-successfully')
+		);
+		history.goBack();
 	};
 
 	const onInput = event => {
@@ -78,8 +70,8 @@ const EditTableView = withRouter(({history}) => {
 		return {
 			...dataListView,
 			name: {
-				en_US: name
-			}
+				en_US: name,
+			},
 		};
 	};
 
@@ -95,16 +87,17 @@ const EditTableView = withRouter(({history}) => {
 				`/o/data-engine/v2.0/data-list-views/${dataListView.id}`,
 				dataListView
 			)
-				.then(() => history.goBack())
+				.then(onSuccess)
 				.catch(error => {
 					onError(error);
 				});
-		} else {
+		}
+		else {
 			addItem(
 				`/o/data-engine/v2.0/data-definitions/${dataDefinition.id}/data-list-views`,
 				dataListView
 			)
-				.then(() => history.goBack())
+				.then(onSuccess)
 				.catch(error => {
 					onError(error);
 				});
@@ -115,7 +108,7 @@ const EditTableView = withRouter(({history}) => {
 
 	const {
 		fieldNames,
-		name: {en_US: dataListViewName}
+		name: {en_US: dataListViewName},
 	} = dataListView;
 
 	const [isSidebarClosed, setSidebarClosed] = useState(false);
@@ -123,7 +116,7 @@ const EditTableView = withRouter(({history}) => {
 	const onAddFieldName = (fieldName, index = 0) => {
 		dispatch({
 			payload: {fieldName, index},
-			type: ADD_DATA_LIST_VIEW_FIELD
+			type: ADD_DATA_LIST_VIEW_FIELD,
 		});
 	};
 
@@ -182,7 +175,7 @@ const EditTableView = withRouter(({history}) => {
 					className={classNames(
 						'data-layout-builder-sidebar-content',
 						{
-							closed: isSidebarClosed
+							closed: isSidebarClosed,
 						}
 					)}
 				>
@@ -191,7 +184,7 @@ const EditTableView = withRouter(({history}) => {
 							fields={fieldNames.map(fieldName => ({
 								...dataDefinitionFields.find(
 									({name}) => name === fieldName
-								)
+								),
 							}))}
 							onAddFieldName={onAddFieldName}
 							onRemoveFieldName={onRemoveFieldName}
@@ -206,9 +199,7 @@ const EditTableView = withRouter(({history}) => {
 export default props => {
 	return (
 		<EditTableViewContextProvider>
-			<ToastContextProvider>
-				<EditTableView {...props} />
-			</ToastContextProvider>
+			<EditTableView {...props} />
 		</EditTableViewContextProvider>
 	);
 };

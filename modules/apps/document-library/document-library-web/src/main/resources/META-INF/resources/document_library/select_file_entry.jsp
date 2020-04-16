@@ -84,7 +84,7 @@ dlSearchContainer.setResults(foldersAndFileEntriesAndFileShortcuts);
 						%>
 
 						<liferay-ui:search-container-column-text
-							name="title"
+							name="name"
 						>
 							<aui:a href="<%= rowURL.toString() %>">
 								<%= curFolder.getName() %>
@@ -99,14 +99,15 @@ dlSearchContainer.setResults(foldersAndFileEntriesAndFileShortcuts);
 
 						<c:if test="<%= fileVersion.isApproved() %>">
 							<liferay-ui:search-container-column-text
-								name="title"
+								name="name"
 							>
 
 								<%
-								Map<String, Object> data = new HashMap<String, Object>();
-
-								data.put("entryid", fileEntry.getFileEntryId());
-								data.put("entryname", HtmlUtil.unescape(fileEntry.getTitle()));
+								Map<String, Object> data = HashMapBuilder.<String, Object>put(
+									"entryid", fileEntry.getFileEntryId()
+								).put(
+									"entryname", HtmlUtil.unescape(fileEntry.getTitle())
+								).build();
 								%>
 
 								<aui:a cssClass="selector-button" data="<%= data %>" href="javascript:;">

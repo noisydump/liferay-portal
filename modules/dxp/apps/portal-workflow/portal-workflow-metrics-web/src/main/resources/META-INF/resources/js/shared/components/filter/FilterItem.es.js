@@ -10,19 +10,24 @@
  */
 
 import getClassName from 'classnames';
-import React, {useMemo, useCallback} from 'react';
+import React, {useEffect, useMemo, useState} from 'react';
 
-const FilterItem = ({
-	active,
-	description,
-	dividerAfter,
-	hideControl,
-	itemKey,
-	multiple,
-	name,
-	onChange,
-	onClick
-}) => {
+const FilterItem = properties => {
+	const [checked, setChecked] = useState(active);
+
+	const {
+		active = false,
+		description,
+		dividerAfter,
+		hideControl,
+		itemKey,
+		labelPropertyName = 'name',
+		multiple,
+		name,
+		onChange,
+		onClick,
+	} = properties;
+
 	const classes = useMemo(
 		() => ({
 			control: getClassName(
@@ -34,32 +39,30 @@ const FilterItem = ({
 				active && 'active',
 				description && 'with-description',
 				hideControl && 'control-hidden'
-			)
+			),
 		}),
 		[active, description, hideControl, multiple]
 	);
 
-	const onChangeCallback = useCallback(
-		event => {
-			onChange(event);
+	const handleChange = event => {
+		setChecked(event.target.checked);
+		onChange(event);
+	};
 
-			if (!multiple) {
-				document.dispatchEvent(new Event('mousedown'));
-			}
-		},
-		[multiple, onChange]
-	);
+	useEffect(() => {
+		setChecked(active);
+	}, [active]);
 
 	return (
 		<>
 			<li className={classes.dropdown} data-testid="filterItem">
 				<label className={classes.control}>
 					<input
-						checked={!!active}
+						checked={checked}
 						className="custom-control-input"
 						data-key={itemKey}
 						data-testid="filterItemInput"
-						onChange={onChangeCallback}
+						onChange={handleChange}
 						onClick={onClick}
 						type={multiple ? 'checkbox' : 'radio'}
 					/>
@@ -69,7 +72,7 @@ const FilterItem = ({
 							className="custom-control-label-text"
 							data-testid="filterItemName"
 						>
-							{name}
+							{properties[labelPropertyName] || name}
 						</span>
 
 						{description && (

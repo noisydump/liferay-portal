@@ -14,12 +14,13 @@
 
 package com.liferay.batch.engine;
 
+import com.liferay.batch.engine.pagination.Page;
+import com.liferay.batch.engine.pagination.Pagination;
+import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.search.Sort;
 import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.odata.entity.EntityModel;
-import com.liferay.portal.vulcan.pagination.Page;
-import com.liferay.portal.vulcan.pagination.Pagination;
 
 import java.io.Serializable;
 
@@ -33,26 +34,33 @@ import java.util.Map;
 public interface BatchEngineTaskItemDelegate<T> {
 
 	public void create(
-			Collection<T> items, Map<String, Serializable> queryParameters,
-			User user)
+			Collection<T> items, Map<String, Serializable> parameters)
 		throws Exception;
 
 	public void delete(
-			Collection<T> items, Map<String, Serializable> queryParameters,
-			User user)
+			Collection<T> items, Map<String, Serializable> parameters)
 		throws Exception;
 
 	public EntityModel getEntityModel(Map<String, List<String>> multivaluedMap)
 		throws Exception;
 
+	public default Class<T> getItemClass() {
+		return null;
+	}
+
 	public Page<T> read(
 			Filter filter, Pagination pagination, Sort[] sorts,
-			Map<String, Serializable> queryParameters, String search, User user)
+			Map<String, Serializable> parameters, String search)
 		throws Exception;
 
+	public void setContextCompany(Company contextCompany);
+
+	public void setContextUser(User contextUser);
+
+	public void setLanguageId(String languageId);
+
 	public void update(
-			Collection<T> items, Map<String, Serializable> queryParameters,
-			User user)
+			Collection<T> items, Map<String, Serializable> parameters)
 		throws Exception;
 
 }

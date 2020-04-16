@@ -30,6 +30,7 @@ FormInstancePermissionCheckerHelper formInstancePermissionCheckerHelper = ddmFor
 
 		<liferay-ui:search-container
 			id="<%= ddmFormAdminDisplayContext.getSearchContainerId() %>"
+			rowChecker="<%= new EmptyOnClickRowChecker(renderResponse) %>"
 			searchContainer="<%= ddmFormAdminDisplayContext.getSearch() %>"
 		>
 			<liferay-ui:search-container-row
@@ -115,11 +116,11 @@ FormInstancePermissionCheckerHelper formInstancePermissionCheckerHelper = ddmFor
 			events: {
 				popoverClosed: function() {
 					popover.dispose();
-				}
+				},
 			},
 			spritemap: spritemap,
 			url: url,
-			visible: true
+			visible: true,
 		});
 	});
 </aui:script>

@@ -13,9 +13,12 @@
  */
 
 import KeyValue from '../../../src/main/resources/META-INF/resources/KeyValue/KeyValue.es';
+import withContextMock from '../__mocks__/withContextMock.es';
 
 let component;
 const spritemap = 'icons.svg';
+
+const KeyValueWithContextMock = withContextMock(KeyValue);
 
 describe('KeyValue', () => {
 	afterEach(() => {
@@ -25,100 +28,100 @@ describe('KeyValue', () => {
 	});
 
 	it('is not edidable', () => {
-		component = new KeyValue({
+		component = new KeyValueWithContextMock({
 			name: 'keyValue',
 			readOnly: false,
-			spritemap
+			spritemap,
 		});
 
 		expect(component).toMatchSnapshot();
 	});
 
 	it('has a helptext', () => {
-		component = new KeyValue({
+		component = new KeyValueWithContextMock({
 			name: 'keyValue',
 			spritemap,
-			tip: 'Type something'
+			tip: 'Type something',
 		});
 
 		expect(component).toMatchSnapshot();
 	});
 
 	it('has an id', () => {
-		component = new KeyValue({
+		component = new KeyValueWithContextMock({
 			id: 'ID',
 			name: 'keyValue',
-			spritemap
+			spritemap,
 		});
 
 		expect(component).toMatchSnapshot();
 	});
 
 	it('has a label', () => {
-		component = new KeyValue({
+		component = new KeyValueWithContextMock({
 			label: 'label',
 			name: 'keyValue',
-			spritemap
+			spritemap,
 		});
 
 		expect(component).toMatchSnapshot();
 	});
 
 	it('has a predefined Value', () => {
-		component = new KeyValue({
+		component = new KeyValueWithContextMock({
 			name: 'keyValue',
 			placeholder: 'Option 1',
-			spritemap
+			spritemap,
 		});
 
 		expect(component).toMatchSnapshot();
 	});
 
 	it('is not required', () => {
-		component = new KeyValue({
+		component = new KeyValueWithContextMock({
 			name: 'keyValue',
 			required: false,
-			spritemap
+			spritemap,
 		});
 
 		expect(component).toMatchSnapshot();
 	});
 
 	it('renders Label if showLabel is true', () => {
-		component = new KeyValue({
+		component = new KeyValueWithContextMock({
 			label: 'text',
 			name: 'keyValue',
 			showLabel: true,
-			spritemap
+			spritemap,
 		});
 
 		expect(component).toMatchSnapshot();
 	});
 
 	it('has a spritemap', () => {
-		component = new KeyValue({
+		component = new KeyValueWithContextMock({
 			name: 'keyValue',
-			spritemap
+			spritemap,
 		});
 
 		expect(component).toMatchSnapshot();
 	});
 
 	it('has a value', () => {
-		component = new KeyValue({
+		component = new KeyValueWithContextMock({
 			name: 'keyValue',
 			spritemap,
-			value: 'value'
+			value: 'value',
 		});
 
 		expect(component).toMatchSnapshot();
 	});
 
 	it('renders component with a key', () => {
-		component = new KeyValue({
+		component = new KeyValueWithContextMock({
 			keyword: 'key',
 			name: 'keyValue',
-			spritemap
+			spritemap,
 		});
 
 		expect(component).toMatchSnapshot();

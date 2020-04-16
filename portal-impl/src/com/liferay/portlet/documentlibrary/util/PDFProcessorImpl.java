@@ -686,9 +686,13 @@ public class PDFProcessorImpl
 				new LiferayPDFBoxProcessCallable(
 					ServerDetector.getServerId(),
 					PropsUtil.get(PropsKeys.LIFERAY_HOME),
-					Log4JUtil.getCustomLogSettings(), decryptedFile,
-					thumbnailFile, previewFiles, getThumbnailType(fileVersion),
-					getPreviewType(fileVersion),
+					HashMapBuilder.putAll(
+						Log4JUtil.getCustomLogSettings()
+					).put(
+						PropsUtil.class.getName(), "WARN"
+					).build(),
+					decryptedFile, thumbnailFile, previewFiles,
+					getThumbnailType(fileVersion), getPreviewType(fileVersion),
 					PropsValues.DL_FILE_ENTRY_PREVIEW_DOCUMENT_DPI,
 					PropsValues.DL_FILE_ENTRY_PREVIEW_DOCUMENT_MAX_HEIGHT,
 					PropsValues.DL_FILE_ENTRY_PREVIEW_DOCUMENT_MAX_WIDTH,
@@ -822,33 +826,34 @@ public class PDFProcessorImpl
 			}
 		}
 
-		if (_log.isInfoEnabled()) {
-			long fileVersionId = fileVersion.getFileVersionId();
-			int previewFileCount = getPreviewFileCount(fileVersion);
-			long time = stopWatch.getTime();
+		if (!_log.isInfoEnabled()) {
+			return;
+		}
 
-			if (generateThumbnail && generatePreview) {
+		long fileVersionId = fileVersion.getFileVersionId();
+		int previewFileCount = getPreviewFileCount(fileVersion);
+		long time = stopWatch.getTime();
+
+		if (generateThumbnail && generatePreview) {
+			_log.info(
+				StringBundler.concat(
+					"PDFBox generated a thumbnail and ", previewFileCount,
+					" preview pages for ", fileVersionId, " in ", time, " ms"));
+		}
+		else {
+			if (generateThumbnail) {
 				_log.info(
 					StringBundler.concat(
-						"PDFBox generated a thumbnail and ", previewFileCount,
+						"PDFBox generated a thumbnail for ", fileVersionId,
+						" in ", time, " ms"));
+			}
+
+			if (generatePreview) {
+				_log.info(
+					StringBundler.concat(
+						"PDFBox generated ", previewFileCount,
 						" preview pages for ", fileVersionId, " in ", time,
 						" ms"));
-			}
-			else {
-				if (generateThumbnail) {
-					_log.info(
-						StringBundler.concat(
-							"PDFBox generated a thumbnail for ", fileVersionId,
-							" in ", time, " ms"));
-				}
-
-				if (generatePreview) {
-					_log.info(
-						StringBundler.concat(
-							"PDFBox generated ", previewFileCount,
-							" preview pages for ", fileVersionId, " in ", time,
-							" ms"));
-				}
 			}
 		}
 	}

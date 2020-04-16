@@ -17,17 +17,19 @@ package com.liferay.headless.admin.workflow.internal.resource.v1_0;
 import com.liferay.headless.admin.workflow.dto.v1_0.Assignee;
 import com.liferay.headless.admin.workflow.dto.v1_0.WorkflowTaskAssignableUser;
 import com.liferay.headless.admin.workflow.dto.v1_0.WorkflowTaskAssignableUsers;
+import com.liferay.headless.admin.workflow.dto.v1_0.WorkflowTaskIds;
 import com.liferay.headless.admin.workflow.internal.dto.v1_0.util.AssigneeUtil;
 import com.liferay.headless.admin.workflow.resource.v1_0.WorkflowTaskAssignableUsersResource;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.util.Portal;
+import com.liferay.portal.kernel.util.comparator.UserFirstNameComparator;
 import com.liferay.portal.kernel.workflow.WorkflowTaskManager;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.TreeSet;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -45,8 +47,8 @@ public class WorkflowTaskAssignableUsersResourceImpl
 	extends BaseWorkflowTaskAssignableUsersResourceImpl {
 
 	@Override
-	public WorkflowTaskAssignableUsers getWorkflowTaskAssignableUser(
-			Long[] workflowTaskIds)
+	public WorkflowTaskAssignableUsers postWorkflowTaskAssignableUser(
+			WorkflowTaskIds workflowTaskIds)
 		throws Exception {
 
 		return new WorkflowTaskAssignableUsers() {
@@ -58,14 +60,18 @@ public class WorkflowTaskAssignableUsersResourceImpl
 
 						Set<User> commonAssignableUsers = null;
 
-						for (Long workflowTaskId : workflowTaskIds) {
+						for (Long workflowTaskId :
+								workflowTaskIds.getWorkflowTaskIds()) {
+
 							List<User> assignableUsers =
 								_workflowTaskManager.getAssignableUsers(
 									contextUser.getCompanyId(), workflowTaskId);
 
 							if (commonAssignableUsers == null) {
-								commonAssignableUsers = new HashSet<>(
-									assignableUsers);
+								commonAssignableUsers = new TreeSet<>(
+									new UserFirstNameComparator(true));
+
+								commonAssignableUsers.addAll(assignableUsers);
 							}
 							else {
 								commonAssignableUsers.retainAll(

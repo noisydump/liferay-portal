@@ -20,20 +20,20 @@ AUI.add(
 		var JournalNavigation = A.Component.create({
 			ATTRS: {
 				editEntryUrl: {
-					validator: Lang.isString
+					validator: Lang.isString,
 				},
 
 				form: {
-					validator: Lang.isObject
+					validator: Lang.isObject,
 				},
 
 				moveEntryUrl: {
-					validator: Lang.isString
+					validator: Lang.isString,
 				},
 
 				searchContainerId: {
-					validator: Lang.isString
-				}
+					validator: Lang.isString,
+				},
 			},
 
 			AUGMENTS: [Liferay.PortletBase],
@@ -51,7 +51,7 @@ AUI.add(
 							instance.ns('editEntry'),
 							instance._editEntry,
 							instance
-						)
+						),
 					];
 				},
 
@@ -123,7 +123,8 @@ AUI.add(
 						form.get(namespace + 'javax-portlet-action').val(
 							action
 						);
-					} else {
+					}
+					else {
 						form.get(namespace + 'cmd').val(action);
 					}
 
@@ -159,8 +160,8 @@ AUI.add(
 					instance._searchContainer = searchContainer;
 
 					instance._bindUI();
-				}
-			}
+				},
+			},
 		});
 
 		Liferay.Portlet.JournalNavigation = JournalNavigation;
@@ -170,7 +171,7 @@ AUI.add(
 		requires: [
 			'aui-component',
 			'liferay-portlet-base',
-			'liferay-search-container'
-		]
+			'liferay-search-container',
+		],
 	}
 );

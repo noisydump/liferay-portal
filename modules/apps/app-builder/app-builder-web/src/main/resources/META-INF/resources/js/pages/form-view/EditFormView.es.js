@@ -12,8 +12,9 @@
  * details.
  */
 
-import {withDragAndDropContext} from 'data-engine-taglib';
-import React, {useState, useContext} from 'react';
+import React, {useContext, useState} from 'react';
+import {DndProvider} from 'react-dnd';
+import HTML5Backend from 'react-dnd-html5-backend';
 import {createPortal} from 'react-dom';
 
 import {AppContext} from '../../AppContext.es';
@@ -25,7 +26,7 @@ import FormViewUpperToolbar from './FormViewUpperToolbar.es';
 const parseProps = ({dataDefinitionId, dataLayoutId, ...props}) => ({
 	...props,
 	dataDefinitionId: Number(dataDefinitionId),
-	dataLayoutId: Number(dataLayoutId)
+	dataLayoutId: Number(dataLayoutId),
 });
 
 const FormViewControlMenu = ({backURL, dataLayoutId}) => {
@@ -40,13 +41,13 @@ const FormViewControlMenu = ({backURL, dataLayoutId}) => {
 	);
 };
 
-const EditFormView = withDragAndDropContext(props => {
+const EditFormView = props => {
 	const {
 		customObjectSidebarElementId,
 		dataDefinitionId,
 		dataLayoutBuilder,
 		dataLayoutId,
-		newCustomObject
+		newCustomObject,
 	} = parseProps(props);
 	const {basePortletURL} = useContext(AppContext);
 
@@ -57,25 +58,27 @@ const EditFormView = withDragAndDropContext(props => {
 	}
 
 	return (
-		<FormViewContextProvider
-			dataDefinitionId={dataDefinitionId}
-			dataLayoutBuilder={dataLayoutBuilder}
-			dataLayoutId={dataLayoutId}
-		>
-			<FormViewControlMenu
-				backURL={backURL}
+		<DndProvider backend={HTML5Backend}>
+			<FormViewContextProvider
+				dataDefinitionId={dataDefinitionId}
+				dataLayoutBuilder={dataLayoutBuilder}
 				dataLayoutId={dataLayoutId}
-			/>
+			>
+				<FormViewControlMenu
+					backURL={backURL}
+					dataLayoutId={dataLayoutId}
+				/>
 
-			<FormViewUpperToolbar newCustomObject={newCustomObject} />
+				<FormViewUpperToolbar newCustomObject={newCustomObject} />
 
-			{createPortal(
-				<CustomObjectSidebar />,
-				document.querySelector(`#${customObjectSidebarElementId}`)
-			)}
-		</FormViewContextProvider>
+				{createPortal(
+					<CustomObjectSidebar />,
+					document.querySelector(`#${customObjectSidebarElementId}`)
+				)}
+			</FormViewContextProvider>
+		</DndProvider>
 	);
-});
+};
 
 export default ({dataLayoutBuilderId, ...props}) => {
 	const [dataLayoutBuilder, setDataLayoutBuilder] = useState();

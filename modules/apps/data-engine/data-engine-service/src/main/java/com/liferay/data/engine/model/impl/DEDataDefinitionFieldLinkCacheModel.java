@@ -24,6 +24,8 @@ import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
 
+import java.util.Date;
+
 /**
  * The cache model class for representing DEDataDefinitionFieldLink in entity cache.
  *
@@ -64,7 +66,7 @@ public class DEDataDefinitionFieldLinkCacheModel
 
 	@Override
 	public String toString() {
-		StringBundler sb = new StringBundler(17);
+		StringBundler sb = new StringBundler(23);
 
 		sb.append("{uuid=");
 		sb.append(uuid);
@@ -74,6 +76,10 @@ public class DEDataDefinitionFieldLinkCacheModel
 		sb.append(groupId);
 		sb.append(", companyId=");
 		sb.append(companyId);
+		sb.append(", createDate=");
+		sb.append(createDate);
+		sb.append(", modifiedDate=");
+		sb.append(modifiedDate);
 		sb.append(", classNameId=");
 		sb.append(classNameId);
 		sb.append(", classPK=");
@@ -82,6 +88,8 @@ public class DEDataDefinitionFieldLinkCacheModel
 		sb.append(ddmStructureId);
 		sb.append(", fieldName=");
 		sb.append(fieldName);
+		sb.append(", lastPublishDate=");
+		sb.append(lastPublishDate);
 		sb.append("}");
 
 		return sb.toString();
@@ -103,6 +111,22 @@ public class DEDataDefinitionFieldLinkCacheModel
 			deDataDefinitionFieldLinkId);
 		deDataDefinitionFieldLinkImpl.setGroupId(groupId);
 		deDataDefinitionFieldLinkImpl.setCompanyId(companyId);
+
+		if (createDate == Long.MIN_VALUE) {
+			deDataDefinitionFieldLinkImpl.setCreateDate(null);
+		}
+		else {
+			deDataDefinitionFieldLinkImpl.setCreateDate(new Date(createDate));
+		}
+
+		if (modifiedDate == Long.MIN_VALUE) {
+			deDataDefinitionFieldLinkImpl.setModifiedDate(null);
+		}
+		else {
+			deDataDefinitionFieldLinkImpl.setModifiedDate(
+				new Date(modifiedDate));
+		}
+
 		deDataDefinitionFieldLinkImpl.setClassNameId(classNameId);
 		deDataDefinitionFieldLinkImpl.setClassPK(classPK);
 		deDataDefinitionFieldLinkImpl.setDdmStructureId(ddmStructureId);
@@ -112,6 +136,14 @@ public class DEDataDefinitionFieldLinkCacheModel
 		}
 		else {
 			deDataDefinitionFieldLinkImpl.setFieldName(fieldName);
+		}
+
+		if (lastPublishDate == Long.MIN_VALUE) {
+			deDataDefinitionFieldLinkImpl.setLastPublishDate(null);
+		}
+		else {
+			deDataDefinitionFieldLinkImpl.setLastPublishDate(
+				new Date(lastPublishDate));
 		}
 
 		deDataDefinitionFieldLinkImpl.resetOriginalValues();
@@ -128,6 +160,8 @@ public class DEDataDefinitionFieldLinkCacheModel
 		groupId = objectInput.readLong();
 
 		companyId = objectInput.readLong();
+		createDate = objectInput.readLong();
+		modifiedDate = objectInput.readLong();
 
 		classNameId = objectInput.readLong();
 
@@ -135,6 +169,7 @@ public class DEDataDefinitionFieldLinkCacheModel
 
 		ddmStructureId = objectInput.readLong();
 		fieldName = objectInput.readUTF();
+		lastPublishDate = objectInput.readLong();
 	}
 
 	@Override
@@ -151,6 +186,8 @@ public class DEDataDefinitionFieldLinkCacheModel
 		objectOutput.writeLong(groupId);
 
 		objectOutput.writeLong(companyId);
+		objectOutput.writeLong(createDate);
+		objectOutput.writeLong(modifiedDate);
 
 		objectOutput.writeLong(classNameId);
 
@@ -164,15 +201,20 @@ public class DEDataDefinitionFieldLinkCacheModel
 		else {
 			objectOutput.writeUTF(fieldName);
 		}
+
+		objectOutput.writeLong(lastPublishDate);
 	}
 
 	public String uuid;
 	public long deDataDefinitionFieldLinkId;
 	public long groupId;
 	public long companyId;
+	public long createDate;
+	public long modifiedDate;
 	public long classNameId;
 	public long classPK;
 	public long ddmStructureId;
 	public String fieldName;
+	public long lastPublishDate;
 
 }

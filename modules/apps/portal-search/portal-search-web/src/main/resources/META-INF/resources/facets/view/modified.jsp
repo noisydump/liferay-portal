@@ -83,10 +83,11 @@ int index = 0;
 					<li class="default facet-value">
 
 						<%
-						Map<String, Object> data = new HashMap<>();
-
-						data.put("selection", 0);
-						data.put("value", StringPool.BLANK);
+						Map<String, Object> data = HashMapBuilder.<String, Object>put(
+							"selection", 0
+						).put(
+							"value", StringPool.BLANK
+						).build();
 						%>
 
 						<aui:a cssClass='<%= (Validator.isNull(fieldParamSelection) || fieldParamSelection.equals("0")) ? "facet-term-selected" : "facet-term-unselected" %>' href="javascript:;">
@@ -113,10 +114,11 @@ int index = 0;
 								rangeCssClass = "facet-term-selected";
 							}
 
-							data = new HashMap<>();
-
-							data.put("selection", index);
-							data.put("value", HtmlUtil.escape(range));
+							data = HashMapBuilder.<String, Object>put(
+								"selection", index
+							).put(
+								"value", HtmlUtil.escape(range)
+							).build();
 							%>
 
 							<aui:a cssClass="<%= rangeCssClass %>" data="<%= data %>" href="javascript:;">
@@ -167,7 +169,7 @@ int index = 0;
 					<%
 					Calendar fromCalendar = CalendarFactoryUtil.getCalendar(timeZone, locale);
 
-					if (Validator.isNotNull(fromDate)) {
+					if (fromDate != null) {
 						fromCalendar.setTime(fromDate);
 					}
 					else {
@@ -176,7 +178,7 @@ int index = 0;
 
 					Calendar toCalendar = CalendarFactoryUtil.getCalendar(timeZone, locale);
 
-					if (Validator.isNotNull(toDate)) {
+					if (toDate != null) {
 						toCalendar.setTime(toDate);
 					}
 					%>
@@ -339,7 +341,7 @@ int index = 0;
 		DEFAULTS_FORM_VALIDATOR.STRINGS,
 		{
 			<portlet:namespace />dateRange:
-				'<%= UnicodeLanguageUtil.get(request, "search-custom-range-invalid-date-range") %>'
+				'<%= UnicodeLanguageUtil.get(request, "search-custom-range-invalid-date-range") %>',
 		},
 		true
 	);
@@ -352,7 +354,7 @@ int index = 0;
 					customRangeTo.getDate(),
 					customRangeFrom.getDate()
 				);
-			}
+			},
 		},
 		true
 	);
@@ -366,16 +368,16 @@ int index = 0;
 			},
 			validField: function(event) {
 				Util.toggleDisabled(searchButton, false);
-			}
+			},
 		},
 		rules: {
 			<portlet:namespace /><%= HtmlUtil.escapeJS(facet.getFieldId()) %>from: {
-				<portlet:namespace />dateRange: true
+				<portlet:namespace />dateRange: true,
 			},
 			<portlet:namespace /><%= HtmlUtil.escapeJS(facet.getFieldId()) %>to: {
-				<portlet:namespace />dateRange: true
-			}
-		}
+				<portlet:namespace />dateRange: true,
+			},
+		},
 	});
 
 	var onRangeSelectionChange = function(event) {

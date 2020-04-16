@@ -73,8 +73,9 @@ public interface KaleoDefinitionVersionLocalService
 		KaleoDefinitionVersion kaleoDefinitionVersion);
 
 	public KaleoDefinitionVersion addKaleoDefinitionVersion(
-			String name, String title, String description, String content,
-			String version, ServiceContext serviceContext)
+			long kaleoDefinitionId, String name, String title,
+			String description, String content, String version,
+			ServiceContext serviceContext)
 		throws PortalException;
 
 	/**
@@ -86,6 +87,12 @@ public interface KaleoDefinitionVersionLocalService
 	@Transactional(enabled = false)
 	public KaleoDefinitionVersion createKaleoDefinitionVersion(
 		long kaleoDefinitionVersionId);
+
+	/**
+	 * @throws PortalException
+	 */
+	public PersistedModel createPersistedModel(Serializable primaryKeyObj)
+		throws PortalException;
 
 	/**
 	 * Deletes the kaleo definition version from the database. Also notifies the appropriate model listeners.
@@ -317,6 +324,9 @@ public interface KaleoDefinitionVersionLocalService
 	 */
 	public String getOSGiServiceIdentifier();
 
+	/**
+	 * @throws PortalException
+	 */
 	@Override
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public PersistedModel getPersistedModel(Serializable primaryKeyObj)

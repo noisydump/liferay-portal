@@ -10,7 +10,7 @@
  */
 
 import PropTypes from 'prop-types';
-import React, {useReducer, useEffect} from 'react';
+import React, {useEffect, useReducer} from 'react';
 
 import {SegmentsVariantType} from '../../types.es';
 import {SliderWithLabel} from '../SliderWithLabel.es';
@@ -34,7 +34,7 @@ function SplitPicker({onChange, variants}) {
 							dispatch({
 								type: 'change',
 								value,
-								variantId: variant.segmentsExperimentRelId
+								variantId: variant.segmentsExperimentRelId,
 							})
 						}
 						value={variant.split}
@@ -47,7 +47,7 @@ function SplitPicker({onChange, variants}) {
 
 SplitPicker.propTypes = {
 	onChange: PropTypes.func.isRequired,
-	variants: PropTypes.arrayOf(SegmentsVariantType)
+	variants: PropTypes.arrayOf(SegmentsVariantType),
 };
 
 export {SplitPicker};

@@ -24,7 +24,7 @@ class LayoutPageTemplateEntryManagementToolbarDefaultEventHandler extends Defaul
 			mainFieldName: 'name',
 			mainFieldPlaceholder: Liferay.Language.get('name'),
 			namespace: this.namespace,
-			spritemap: this.spritemap
+			spritemap: this.spritemap,
 		});
 	}
 
@@ -37,10 +37,14 @@ class LayoutPageTemplateEntryManagementToolbarDefaultEventHandler extends Defaul
 			submitForm(this.one('#fm'));
 		}
 	}
+
+	exportLayoutPageTemplateEntries(itemData) {
+		submitForm(this.one('#fm'), itemData.exportLayoutPageTemplateEntryURL);
+	}
 }
 
 LayoutPageTemplateEntryManagementToolbarDefaultEventHandler.STATE = {
-	spritemap: Config.string()
+	spritemap: Config.string(),
 };
 
 export default LayoutPageTemplateEntryManagementToolbarDefaultEventHandler;

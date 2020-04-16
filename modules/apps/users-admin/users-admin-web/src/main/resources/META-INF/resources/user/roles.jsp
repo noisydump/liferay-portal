@@ -22,7 +22,7 @@ User selUser = userDisplayContext.getSelectedUser();
 List<Group> groups = new ArrayList<>();
 
 groups.addAll(userDisplayContext.getGroups());
-groups.addAll(userDisplayContext.getInheritedSites());
+groups.addAll(userDisplayContext.getInheritedSiteGroups());
 
 List<Organization> organizations = userDisplayContext.getOrganizations();
 
@@ -39,6 +39,8 @@ String regularRoleSyncEntitiesEventName = liferayPortletResponse.getNamespace() 
 String siteRoleSyncEntitiesEventName = liferayPortletResponse.getNamespace() + "syncSiteRoles";
 String organizationRoleSyncEntitiesEventName = liferayPortletResponse.getNamespace() + "syncOrganizationRoles";
 %>
+
+<liferay-util:dynamic-include key="com.liferay.users.admin.web#/user/roles.jsp#pre" />
 
 <liferay-ui:error-marker
 	key="<%= WebKeys.ERROR_SECTION %>"
@@ -145,7 +147,8 @@ String organizationRoleSyncEntitiesEventName = liferayPortletResponse.getNamespa
 
 					if (!searchContainerData.length) {
 						searchContainerData = [];
-					} else {
+					}
+					else {
 						searchContainerData = searchContainerData.split(',');
 					}
 
@@ -153,7 +156,7 @@ String organizationRoleSyncEntitiesEventName = liferayPortletResponse.getNamespa
 						{
 							dialog: {
 								constrain: true,
-								modal: true
+								modal: true,
 							},
 
 							<%
@@ -174,7 +177,7 @@ String organizationRoleSyncEntitiesEventName = liferayPortletResponse.getNamespa
 							selectRegularRoleURL.setWindowState(LiferayWindowState.POP_UP);
 							%>
 
-							uri: '<%= selectRegularRoleURL.toString() %>'
+							uri: '<%= selectRegularRoleURL.toString() %>',
 						},
 						function(event) {
 							<portlet:namespace />selectRole(
@@ -429,7 +432,7 @@ String organizationRoleSyncEntitiesEventName = liferayPortletResponse.getNamespa
 						{
 							dialog: {
 								constrain: true,
-								modal: true
+								modal: true,
 							},
 
 							<%
@@ -453,7 +456,7 @@ String organizationRoleSyncEntitiesEventName = liferayPortletResponse.getNamespa
 							selectOrganizationRoleURL.setWindowState(LiferayWindowState.POP_UP);
 							%>
 
-							uri: '<%= selectOrganizationRoleURL.toString() %>'
+							uri: '<%= selectOrganizationRoleURL.toString() %>',
 						},
 						function(event) {
 							<portlet:namespace />selectRole(
@@ -652,7 +655,7 @@ String organizationRoleSyncEntitiesEventName = liferayPortletResponse.getNamespa
 						{
 							dialog: {
 								constrain: true,
-								modal: true
+								modal: true,
 							},
 
 							<%
@@ -675,7 +678,7 @@ String organizationRoleSyncEntitiesEventName = liferayPortletResponse.getNamespa
 							selectSiteRoleURL.setWindowState(LiferayWindowState.POP_UP);
 							%>
 
-							uri: '<%= selectSiteRoleURL.toString() %>'
+							uri: '<%= selectSiteRoleURL.toString() %>',
 						},
 						function(event) {
 							<portlet:namespace />selectRole(
@@ -864,7 +867,8 @@ String organizationRoleSyncEntitiesEventName = liferayPortletResponse.getNamespa
 						document.<portlet:namespace />fm.<portlet:namespace />deleteGroupRolesRoleIds.value = <portlet:namespace />deleteGroupRolesRoleIds.join(
 							','
 						);
-					} else {
+					}
+					else {
 						rowColumns.push(
 							'<a class="modify-link" data-rowId="' +
 								roleId +
@@ -940,3 +944,5 @@ String organizationRoleSyncEntitiesEventName = liferayPortletResponse.getNamespa
 		</aui:script>
 	</c:if>
 </div>
+
+<liferay-util:dynamic-include key="com.liferay.users.admin.web#/user/roles.jsp#post" />

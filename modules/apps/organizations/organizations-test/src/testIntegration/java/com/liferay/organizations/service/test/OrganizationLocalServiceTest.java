@@ -27,13 +27,10 @@ import com.liferay.portal.kernel.model.ListTypeConstants;
 import com.liferay.portal.kernel.model.Organization;
 import com.liferay.portal.kernel.model.OrganizationConstants;
 import com.liferay.portal.kernel.model.User;
-import com.liferay.portal.kernel.model.role.RoleConstants;
-import com.liferay.portal.kernel.search.BaseModelSearchResult;
 import com.liferay.portal.kernel.search.Document;
 import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.search.Hits;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
-import com.liferay.portal.kernel.security.permission.PermissionCheckerFactoryUtil;
 import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
 import com.liferay.portal.kernel.service.OrganizationLocalServiceUtil;
 import com.liferay.portal.kernel.service.ServiceContext;
@@ -44,12 +41,11 @@ import com.liferay.portal.kernel.test.util.OrganizationTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.test.util.UserTestUtil;
-import com.liferay.portal.kernel.util.LinkedHashMapBuilder;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
+import com.liferay.portal.search.test.util.SearchTestRule;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
 
 import org.junit.After;
@@ -854,19 +850,8 @@ public class OrganizationLocalServiceTest {
 		Assert.assertEquals(hits.toString(), 0, hits.getLength());
 	}
 
-	@Test
-	public void testSearchOrganizationsWithOrganizationsTreeParameter()
-		throws Exception {
-
-		testSearchOrganizationsWithOrganizationsTreeParameter(false);
-	}
-
-	@Test
-	public void testSearchOrganizationsWithOrganizationsTreeParameterAsAdminUser()
-		throws Exception {
-
-		testSearchOrganizationsWithOrganizationsTreeParameter(true);
-	}
+	@Rule
+	public SearchTestRule searchTestRule = new SearchTestRule();
 
 	protected List<Object> getOrganizationsAndUsers(Organization organization) {
 		return OrganizationLocalServiceUtil.getOrganizationsAndUsers(
@@ -890,84 +875,6 @@ public class OrganizationLocalServiceTest {
 			parentOrganization.getOrganizationId(), keywords,
 			WorkflowConstants.STATUS_ANY, null, QueryUtil.ALL_POS,
 			QueryUtil.ALL_POS, null);
-	}
-
-	protected void testSearchOrganizationsWithOrganizationsTreeParameter(
-			boolean searchAsAdminUser)
-		throws Exception {
-
-		Organization rootOrganization = OrganizationTestUtil.addOrganization();
-
-		Organization organization = OrganizationTestUtil.addOrganization(
-			rootOrganization.getOrganizationId(), RandomTestUtil.randomString(),
-			false);
-
-		Organization suborganization = OrganizationTestUtil.addOrganization(
-			organization.getOrganizationId(), RandomTestUtil.randomString(),
-			false);
-
-		_organizations.add(suborganization);
-
-		_organizations.add(organization);
-
-		_organizations.add(rootOrganization);
-
-		_user = UserTestUtil.addUser();
-
-		PermissionChecker permissionChecker =
-			PermissionCheckerFactoryUtil.create(_user);
-
-		PermissionThreadLocal.setPermissionChecker(permissionChecker);
-
-		UserLocalServiceUtil.addOrganizationUsers(
-			organization.getOrganizationId(), new long[] {_user.getUserId()});
-
-		if (searchAsAdminUser) {
-			UserTestUtil.addUserGroupRole(
-				_user.getUserId(), organization.getGroupId(),
-				RoleConstants.ORGANIZATION_ADMINISTRATOR);
-		}
-
-		LinkedHashMap<String, Object> organizationParams =
-			LinkedHashMapBuilder.<String, Object>put(
-				"organizationsTree", _user.getOrganizations(true)
-			).build();
-
-		BaseModelSearchResult<Organization> baseModelSearchResult =
-			OrganizationLocalServiceUtil.searchOrganizations(
-				_user.getCompanyId(),
-				OrganizationConstants.ANY_PARENT_ORGANIZATION_ID, null,
-				organizationParams, QueryUtil.ALL_POS, QueryUtil.ALL_POS, null);
-
-		int expectedCount = 1;
-
-		if (searchAsAdminUser) {
-			expectedCount = 2;
-		}
-
-		Assert.assertEquals(expectedCount, baseModelSearchResult.getLength());
-
-		List<Organization> indexerSearchResults =
-			baseModelSearchResult.getBaseModels();
-
-		List<Organization> expectedSearchResults = new ArrayList<>();
-
-		expectedSearchResults.add(organization);
-
-		if (searchAsAdminUser) {
-			expectedSearchResults.add(suborganization);
-		}
-
-		Assert.assertEquals(expectedSearchResults, indexerSearchResults);
-
-		List<Organization> finderSearchResults =
-			OrganizationLocalServiceUtil.search(
-				_user.getCompanyId(),
-				OrganizationConstants.ANY_PARENT_ORGANIZATION_ID, null, null,
-				null, null, organizationParams, QueryUtil.ALL_POS,
-				QueryUtil.ALL_POS, null);
-
-		Assert.assertEquals(indexerSearchResults, finderSearchResults);
 	}
 
 	private String _getTreePath(Organization[] organizations) {

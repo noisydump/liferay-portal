@@ -49,7 +49,8 @@ class Flags extends PortletBase {
 			reason =
 				this.refs.modal.refs.otherReason.value ||
 				Liferay.Language.get('no-reason-specified');
-		} else {
+		}
+		else {
 			reason = this.refs.modal.refs.reason.value;
 		}
 
@@ -109,14 +110,13 @@ class Flags extends PortletBase {
 
 		const formData = new FormData();
 
-		// eslint-disable-next-line no-unused-vars
 		for (const name in this.formData) {
 			formData.append(name, this.formData[name]);
 		}
 
 		fetch(this.uri, {
 			body: formData,
-			method: 'POST'
+			method: 'POST',
 		})
 			.then(response => {
 				if (response.status === Liferay.STATUS_CODE.OK) {
@@ -319,7 +319,7 @@ Flags.STATE = {
 	 * @type {String}
 	 */
 
-	uri: Config.string().required()
+	uri: Config.string().required(),
 };
 
 // Register component

@@ -3628,7 +3628,7 @@ public class UserLocalServiceImpl extends UserLocalServiceBaseImpl {
 		mailTemplateContextBuilder.put(
 			"[$FROM_NAME$]", HtmlUtil.escape(fromName));
 		mailTemplateContextBuilder.put(
-			"[$PORTAL_URL$]", company.getPortalURL(0));
+			"[$PORTAL_URL$]", serviceContext.getPortalURL());
 		mailTemplateContextBuilder.put(
 			"[$REMOTE_ADDRESS$]", serviceContext.getRemoteAddr());
 		mailTemplateContextBuilder.put(
@@ -3923,7 +3923,7 @@ public class UserLocalServiceImpl extends UserLocalServiceBaseImpl {
 		Organization organization = organizationPersistence.findByPrimaryKey(
 			organizationId);
 
-		final Group group = organization.getGroup();
+		Group group = organization.getGroup();
 
 		userGroupRoleLocalService.deleteUserGroupRoles(
 			userIds, group.getGroupId());
@@ -4808,6 +4808,8 @@ public class UserLocalServiceImpl extends UserLocalServiceBaseImpl {
 				null, ServiceContextThreadLocal.getServiceContext());
 		}
 
+		_invalidateTicket(user);
+
 		return user;
 	}
 
@@ -4839,7 +4841,11 @@ public class UserLocalServiceImpl extends UserLocalServiceBaseImpl {
 		user.setPasswordModifiedDate(passwordModifiedDate);
 		user.setDigest(user.getDigest(password));
 
-		return userPersistence.update(user);
+		user = userPersistence.update(user);
+
+		_invalidateTicket(user);
+
+		return user;
 	}
 
 	/**
@@ -5349,11 +5355,12 @@ public class UserLocalServiceImpl extends UserLocalServiceBaseImpl {
 
 		Group group = groupLocalService.getGroup(groupId);
 
-		UnicodeProperties typeSettingsProperties =
+		UnicodeProperties typeSettingsUnicodeProperties =
 			group.getTypeSettingsProperties();
 
 		long[] defaultSiteRoleIds = StringUtil.split(
-			typeSettingsProperties.getProperty("defaultSiteRoleIds"), 0L);
+			typeSettingsUnicodeProperties.getProperty("defaultSiteRoleIds"),
+			0L);
 
 		for (long defaultSiteRoleId : defaultSiteRoleIds) {
 			Role defaultSiteRole = rolePersistence.fetchByPrimaryKey(
@@ -5373,7 +5380,7 @@ public class UserLocalServiceImpl extends UserLocalServiceBaseImpl {
 		List<Team> defaultTeams = new ArrayList<>();
 
 		long[] defaultTeamIds = StringUtil.split(
-			typeSettingsProperties.getProperty("defaultTeamIds"), 0L);
+			typeSettingsUnicodeProperties.getProperty("defaultTeamIds"), 0L);
 
 		for (long defaultTeamId : defaultTeamIds) {
 			Team defaultTeam = teamPersistence.findByPrimaryKey(defaultTeamId);
@@ -5644,6 +5651,12 @@ public class UserLocalServiceImpl extends UserLocalServiceBaseImpl {
 		if (params != null) {
 			attributes.put(
 				Field.GROUP_ID, (Long)params.getOrDefault(Field.GROUP_ID, 0L));
+
+			if (params.containsKey("accountEntryIds")) {
+				attributes.put(
+					"accountEntryIds",
+					GetterUtil.getLongValues(params.get("accountEntryIds")));
+			}
 		}
 
 		attributes.put("city", city);
@@ -5923,6 +5936,7 @@ public class UserLocalServiceImpl extends UserLocalServiceBaseImpl {
 				}
 			}
 			else if (!key.equals(Field.GROUP_ID) &&
+					 !key.equals("accountEntryIds") &&
 					 !key.equals("usersGroups") && !key.equals("usersOrgs") &&
 					 !key.equals("usersOrgsCount") &&
 					 !key.equals("usersRoles") && !key.equals("usersTeams") &&
@@ -5968,13 +5982,12 @@ public class UserLocalServiceImpl extends UserLocalServiceBaseImpl {
 
 		boolean autoPassword = GetterUtil.getBoolean(
 			serviceContext.getAttribute("autoPassword"));
-		Company company = null;
 		String fromAddress = PrefsPropsUtil.getString(
 			user.getCompanyId(), PropsKeys.ADMIN_EMAIL_FROM_ADDRESS);
 		String fromName = PrefsPropsUtil.getString(
 			user.getCompanyId(), PropsKeys.ADMIN_EMAIL_FROM_NAME);
 		String passwordResetURL = StringPool.BLANK;
-		String portalURL = null;
+		String portalURL = serviceContext.getPortalURL();
 
 		PortletPreferences companyPortletPreferences =
 			PrefsPropsUtil.getPreferences(user.getCompanyId(), true);
@@ -5984,16 +5997,7 @@ public class UserLocalServiceImpl extends UserLocalServiceBaseImpl {
 				companyPortletPreferences, "adminEmailUserAddedSubject",
 				PropsKeys.ADMIN_EMAIL_USER_ADDED_SUBJECT);
 
-		try {
-			company = companyLocalService.getCompany(user.getCompanyId());
-
-			portalURL = company.getPortalURL(0);
-		}
-		catch (PortalException portalException) {
-			ReflectionUtil.throwException(portalException);
-		}
-
-		final Map<Locale, String> localizedBodyMap;
+		Map<Locale, String> localizedBodyMap = null;
 
 		if (!autoPassword) {
 			localizedBodyMap = LocalizationUtil.getLocalizationMap(
@@ -6069,7 +6073,7 @@ public class UserLocalServiceImpl extends UserLocalServiceBaseImpl {
 		}
 	}
 
-	protected void reindex(final List<User> users) throws SearchException {
+	protected void reindex(List<User> users) throws SearchException {
 		Indexer<User> indexer = IndexerRegistryUtil.nullSafeGetIndexer(
 			User.class);
 
@@ -6105,7 +6109,7 @@ public class UserLocalServiceImpl extends UserLocalServiceBaseImpl {
 		indexer.reindex(users);
 	}
 
-	protected void reindex(final User user) throws SearchException {
+	protected void reindex(User user) throws SearchException {
 		Indexer<User> indexer = IndexerRegistryUtil.nullSafeGetIndexer(
 			User.class);
 
@@ -6168,9 +6172,9 @@ public class UserLocalServiceImpl extends UserLocalServiceBaseImpl {
 		PortletPreferences companyPortletPreferences =
 			PrefsPropsUtil.getPreferences(companyId, true);
 
-		final String bodyProperty;
-		final String prefix;
-		final String subjectProperty;
+		String bodyProperty = null;
+		String prefix = null;
+		String subjectProperty = null;
 
 		if (Validator.isNotNull(passwordResetURL)) {
 			bodyProperty = PropsKeys.ADMIN_EMAIL_PASSWORD_RESET_BODY;
@@ -6889,6 +6893,21 @@ public class UserLocalServiceImpl extends UserLocalServiceBaseImpl {
 		return localizedValueMap.get(fallbackLocale);
 	}
 
+	private void _invalidateTicket(User user) throws PortalException {
+		List<Ticket> tickets = ticketLocalService.getTickets(
+			user.getCompanyId(), User.class.getName(), user.getUserId(),
+			TicketConstants.TYPE_PASSWORD);
+
+		for (Ticket ticket : tickets) {
+			if (!ticket.isExpired()) {
+				ticketLocalService.updateTicket(
+					ticket.getTicketId(), User.class.getName(),
+					user.getUserId(), TicketConstants.TYPE_PASSWORD,
+					ticket.getExtraInfo(), new Date());
+			}
+		}
+	}
+
 	private void _sendNotificationEmail(
 			String fromAddress, String fromName, String toAddress, User toUser,
 			String subject, String body,
@@ -6916,8 +6935,7 @@ public class UserLocalServiceImpl extends UserLocalServiceBaseImpl {
 
 			mailMessage.setMessageId(
 				PortalUtil.getMailId(
-					company.getMx(), "user", toUser.getUserId(),
-					System.currentTimeMillis()));
+					company.getMx(), "user", System.currentTimeMillis()));
 
 			mailService.sendEmail(mailMessage);
 		}

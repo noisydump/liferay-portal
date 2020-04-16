@@ -16,7 +16,7 @@ import ClayIcon from '@clayui/icon';
 import ClayLoadingIndicator from '@clayui/loading-indicator';
 import {fetch, objectToFormData} from 'frontend-js-web';
 import PropTypes from 'prop-types';
-import React, {useState, useCallback} from 'react';
+import React, {useCallback, useState} from 'react';
 
 import {useDebounceCallback} from './useDebounceCallback.es';
 
@@ -37,16 +37,16 @@ function LayoutFinder(props) {
 		newKeywords => {
 			fetch(props.findLayoutsURL, {
 				body: objectToFormData({
-					[`${props.namespace}keywords`]: newKeywords
+					[`${props.namespace}keywords`]: newKeywords,
 				}),
-				method: 'post'
+				method: 'post',
 			})
 				.then(response => {
 					return response.ok
 						? response.json()
 						: {
 								layouts: [],
-								totalCount: 0
+								totalCount: 0,
 						  };
 				})
 				.then(response => {
@@ -76,7 +76,8 @@ function LayoutFinder(props) {
 				cancelUpdatePageResults();
 
 				tree.classList.remove('hide');
-			} else {
+			}
+			else {
 				setLoading(true);
 				updatePageResults(newKeywords);
 
@@ -203,9 +204,7 @@ LayoutFinder.propTypes = {
 	administrationPortletURL: PropTypes.string,
 	findLayoutsURL: PropTypes.string,
 	namespace: PropTypes.string,
-	viewInPageAdministrationURL: PropTypes.string
+	viewInPageAdministrationURL: PropTypes.string,
 };
 
-export default function(props) {
-	return <LayoutFinder {...props} />;
-}
+export default LayoutFinder;

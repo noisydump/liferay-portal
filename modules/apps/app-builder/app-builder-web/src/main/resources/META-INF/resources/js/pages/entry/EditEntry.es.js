@@ -14,26 +14,27 @@
 
 import ClayButton from '@clayui/button';
 import {PagesVisitor} from 'dynamic-data-mapping-form-renderer';
-import openToast from 'frontend-js-web/liferay/toast/commands/OpenToast.es';
-import React, {useContext, useEffect, useCallback, useState} from 'react';
+import React, {useCallback, useContext, useEffect, useState} from 'react';
 
 import {AppContext} from '../../AppContext.es';
 import Button from '../../components/button/Button.es';
 import {ControlMenuBase} from '../../components/control-menu/ControlMenu.es';
 import {addItem, updateItem} from '../../utils/client.es';
+import {successToast} from '../../utils/toast.es';
 
 export const EditEntry = ({
 	dataDefinitionId,
 	dataRecordId,
 	ddmForm,
-	redirect
+	redirect,
 }) => {
 	const {basePortletURL} = useContext(AppContext);
 
 	const onCancel = useCallback(() => {
 		if (redirect) {
 			Liferay.Util.navigate(redirect);
-		} else {
+		}
+		else {
 			Liferay.Util.navigate(basePortletURL);
 		}
 	}, [basePortletURL, redirect]);
@@ -48,15 +49,16 @@ export const EditEntry = ({
 			}
 
 			const dataRecord = {
-				dataRecordValues: {}
+				dataRecordValues: {},
 			};
 
 			visitor.mapFields(({fieldName, localizable, value}) => {
 				if (localizable) {
 					dataRecord.dataRecordValues[fieldName] = {
-						[themeDisplay.getLanguageId()]: value
+						[themeDisplay.getLanguageId()]: value,
 					};
-				} else {
+				}
+				else {
 					dataRecord.dataRecordValues[fieldName] = value;
 				}
 			});
@@ -66,11 +68,7 @@ export const EditEntry = ({
 					? Liferay.Language.get('an-entry-was-added')
 					: Liferay.Language.get('an-entry-was-updated');
 
-				openToast({
-					message,
-					title: Liferay.Language.get('success'),
-					type: 'success'
-				});
+				successToast(message);
 			};
 
 			if (dataRecordId !== '0') {
@@ -81,7 +79,8 @@ export const EditEntry = ({
 					openSuccessToast(false);
 					onCancel();
 				});
-			} else {
+			}
+			else {
 				addItem(
 					`/o/data-engine/v2.0/data-definitions/${dataDefinitionId}/data-records`,
 					dataRecord

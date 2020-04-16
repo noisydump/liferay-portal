@@ -134,7 +134,7 @@ AUI().use('escape', 'aui-lang', A => {
 			var reportParameter = {
 				key: parameterKey,
 				type: parameterType,
-				value: parameterValue
+				value: parameterValue,
 			};
 
 			reportParameters.push(reportParameter);
@@ -157,7 +157,7 @@ AUI().use('escape', 'aui-lang', A => {
 				key,
 				parameterKey,
 				parameterType,
-				parameterValue
+				parameterValue,
 			});
 
 			tagsContainer.append(html);
@@ -266,7 +266,8 @@ AUI().use('escape', 'aui-lang', A => {
 
 			if (parameterKey && parameterValue) {
 				instance._enableAddParameterButton();
-			} else {
+			}
+			else {
 				instance._disableAddParameterButton();
 			}
 		},
@@ -386,6 +387,6 @@ AUI().use('escape', 'aui-lang', A => {
 					parametersValue.val('${endDateDay}');
 				}
 			});
-		}
+		},
 	};
 });

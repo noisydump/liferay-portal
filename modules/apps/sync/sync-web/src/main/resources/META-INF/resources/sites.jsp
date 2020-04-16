@@ -94,10 +94,11 @@ portletURL.setParameter("delta", String.valueOf(delta));
 		<aui:input name="permissions" type="hidden" />
 
 		<%
-		LinkedHashMap<String, Object> groupParams = new LinkedHashMap<String, Object>();
-
-		groupParams.put("active", true);
-		groupParams.put("site", true);
+		LinkedHashMap<String, Object> groupParams = LinkedHashMapBuilder.<String, Object>put(
+			"active", true
+		).put(
+			"site", true
+		).build();
 
 		List<Group> groups = GroupLocalServiceUtil.search(themeDisplay.getCompanyId(), keywords, groupParams, QueryUtil.ALL_POS, QueryUtil.ALL_POS);
 
@@ -254,8 +255,8 @@ portletURL.setParameter("delta", String.valueOf(delta));
 								Liferay.Portlet.refresh(
 									'#p_p_id<portlet:namespace />'
 								);
-							}
-						}
+							},
+						},
 					},
 					id: '<portlet:namespace />editDefaultFilePermissionsDialog',
 					title: '<liferay-ui:message key="default-file-permissions" />',
@@ -270,9 +271,9 @@ portletURL.setParameter("delta", String.valueOf(delta));
 							'<%= editSitesDefaultFilePermissionsURL %>'
 						),
 						{
-							groupIds: groupIds
+							groupIds: groupIds,
 						}
-					)
+					),
 				});
 			}
 		}

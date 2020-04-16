@@ -82,10 +82,12 @@ public class AssetListEntrySegmentsEntryRelCacheModel
 
 	@Override
 	public String toString() {
-		StringBundler sb = new StringBundler(27);
+		StringBundler sb = new StringBundler(29);
 
 		sb.append("{mvccVersion=");
 		sb.append(mvccVersion);
+		sb.append(", ctCollectionId=");
+		sb.append(ctCollectionId);
 		sb.append(", uuid=");
 		sb.append(uuid);
 		sb.append(", assetListEntrySegmentsEntryRelId=");
@@ -121,6 +123,7 @@ public class AssetListEntrySegmentsEntryRelCacheModel
 			new AssetListEntrySegmentsEntryRelImpl();
 
 		assetListEntrySegmentsEntryRelImpl.setMvccVersion(mvccVersion);
+		assetListEntrySegmentsEntryRelImpl.setCtCollectionId(ctCollectionId);
 
 		if (uuid == null) {
 			assetListEntrySegmentsEntryRelImpl.setUuid("");
@@ -183,8 +186,12 @@ public class AssetListEntrySegmentsEntryRelCacheModel
 	}
 
 	@Override
-	public void readExternal(ObjectInput objectInput) throws IOException {
+	public void readExternal(ObjectInput objectInput)
+		throws ClassNotFoundException, IOException {
+
 		mvccVersion = objectInput.readLong();
+
+		ctCollectionId = objectInput.readLong();
 		uuid = objectInput.readUTF();
 
 		assetListEntrySegmentsEntryRelId = objectInput.readLong();
@@ -201,13 +208,15 @@ public class AssetListEntrySegmentsEntryRelCacheModel
 		assetListEntryId = objectInput.readLong();
 
 		segmentsEntryId = objectInput.readLong();
-		typeSettings = objectInput.readUTF();
+		typeSettings = (String)objectInput.readObject();
 		lastPublishDate = objectInput.readLong();
 	}
 
 	@Override
 	public void writeExternal(ObjectOutput objectOutput) throws IOException {
 		objectOutput.writeLong(mvccVersion);
+
+		objectOutput.writeLong(ctCollectionId);
 
 		if (uuid == null) {
 			objectOutput.writeUTF("");
@@ -239,16 +248,17 @@ public class AssetListEntrySegmentsEntryRelCacheModel
 		objectOutput.writeLong(segmentsEntryId);
 
 		if (typeSettings == null) {
-			objectOutput.writeUTF("");
+			objectOutput.writeObject("");
 		}
 		else {
-			objectOutput.writeUTF(typeSettings);
+			objectOutput.writeObject(typeSettings);
 		}
 
 		objectOutput.writeLong(lastPublishDate);
 	}
 
 	public long mvccVersion;
+	public long ctCollectionId;
 	public String uuid;
 	public long assetListEntrySegmentsEntryRelId;
 	public long groupId;

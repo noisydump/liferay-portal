@@ -17,6 +17,7 @@ package com.liferay.mule.internal.connection;
 import com.liferay.mule.internal.connection.authentication.BasicAuthentication;
 import com.liferay.mule.internal.connection.authentication.HttpAuthentication;
 import com.liferay.mule.internal.connection.authentication.OAuth2Authentication;
+import com.liferay.mule.internal.error.LiferayError;
 import com.liferay.mule.internal.oas.OASURLParser;
 
 import java.io.IOException;
@@ -29,6 +30,7 @@ import java.util.concurrent.TimeoutException;
 
 import org.mule.runtime.api.connection.ConnectionException;
 import org.mule.runtime.api.util.MultiMap;
+import org.mule.runtime.extension.api.exception.ModuleException;
 import org.mule.runtime.http.api.HttpConstants;
 import org.mule.runtime.http.api.HttpService;
 import org.mule.runtime.http.api.client.HttpClient;
@@ -39,6 +41,9 @@ import org.mule.runtime.http.api.domain.entity.InputStreamHttpEntity;
 import org.mule.runtime.http.api.domain.message.request.HttpRequest;
 import org.mule.runtime.http.api.domain.message.request.HttpRequestBuilder;
 import org.mule.runtime.http.api.domain.message.response.HttpResponse;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author Matija Petanjek
@@ -67,66 +72,58 @@ public final class LiferayConnection {
 
 	public HttpResponse delete(
 			Map<String, String> pathParams,
-			MultiMap<String, String> queryParams, String endpoint)
-		throws IOException, TimeoutException {
+			MultiMap<String, String> queryParams, String endpoint,
+			long connectionTimeout)
+		throws ModuleException {
 
-		return _httpClient.send(
-			_getHttpRequest(
-				HttpConstants.Method.DELETE,
-				_serverBaseURL + _resolvePathParams(endpoint, pathParams),
-				queryParams, null),
-			10000, true, null);
+		return send(
+			HttpConstants.Method.DELETE, null, pathParams, queryParams,
+			endpoint, connectionTimeout);
 	}
 
 	public HttpResponse get(
 			Map<String, String> pathParams,
-			MultiMap<String, String> queryParams, String endpoint)
-		throws IOException, TimeoutException {
+			MultiMap<String, String> queryParams, String endpoint,
+			long connectionTimeout)
+		throws ModuleException {
 
-		return _httpClient.send(
-			_getHttpRequest(
-				HttpConstants.Method.GET,
-				_serverBaseURL + _resolvePathParams(endpoint, pathParams),
-				queryParams, null),
-			10000, true, null);
+		return send(
+			HttpConstants.Method.GET, null, pathParams, queryParams, endpoint,
+			connectionTimeout);
 	}
 
 	public HttpResponse getOpenAPISpec() throws IOException, TimeoutException {
-		return _httpClient.send(
-			_getHttpRequest(
-				HttpConstants.Method.GET, _openAPISpecPath, new MultiMap<>(),
+		return httpClient.send(
+			getHttpRequest(
+				HttpConstants.Method.GET, openAPISpecPath, new MultiMap<>(),
 				null),
 			10000, true, null);
 	}
 
 	public void invalidate() {
-		_httpClient.stop();
+		httpClient.stop();
 	}
 
 	public HttpResponse patch(
 			InputStream inputStream, Map<String, String> pathParams,
-			MultiMap<String, String> queryParams, String endpoint)
-		throws IOException, TimeoutException {
+			MultiMap<String, String> queryParams, String endpoint,
+			long connectionTimeout)
+		throws ModuleException {
 
-		return _httpClient.send(
-			_getHttpRequest(
-				HttpConstants.Method.PATCH,
-				_serverBaseURL + _resolvePathParams(endpoint, pathParams),
-				queryParams, inputStream),
-			10000, true, null);
+		return send(
+			HttpConstants.Method.PATCH, inputStream, pathParams, queryParams,
+			endpoint, connectionTimeout);
 	}
 
 	public HttpResponse post(
 			InputStream inputStream, Map<String, String> pathParams,
-			MultiMap<String, String> queryParams, String endpoint)
-		throws IOException, TimeoutException {
+			MultiMap<String, String> queryParams, String endpoint,
+			long connectionTimeout)
+		throws ModuleException {
 
-		return _httpClient.send(
-			_getHttpRequest(
-				HttpConstants.Method.POST,
-				_serverBaseURL + _resolvePathParams(endpoint, pathParams),
-				queryParams, inputStream),
-			10000, true, null);
+		return send(
+			HttpConstants.Method.POST, inputStream, pathParams, queryParams,
+			endpoint, connectionTimeout);
 	}
 
 	private LiferayConnection(
@@ -134,11 +131,11 @@ public final class LiferayConnection {
 			BasicAuthentication basicAuthentication, ProxyConfig proxyConfig)
 		throws ConnectionException {
 
-		_openAPISpecPath = openApiSpecPath;
-		_serverBaseURL = _getServerBaseURL(openApiSpecPath);
-		_httpAuthentication = basicAuthentication;
+		openAPISpecPath = openApiSpecPath;
+		serverBaseURL = getServerBaseURL(openApiSpecPath);
+		httpAuthentication = basicAuthentication;
 
-		_initHttpClient(httpService, proxyConfig);
+		initHttpClient(httpService, proxyConfig);
 	}
 
 	private LiferayConnection(
@@ -146,29 +143,29 @@ public final class LiferayConnection {
 			String consumerSecret, ProxyConfig proxyConfig)
 		throws ConnectionException {
 
-		_openAPISpecPath = openApiSpecPath;
-		_serverBaseURL = _getServerBaseURL(openApiSpecPath);
+		openAPISpecPath = openApiSpecPath;
+		serverBaseURL = getServerBaseURL(openApiSpecPath);
 
-		_initHttpClient(httpService, proxyConfig);
+		initHttpClient(httpService, proxyConfig);
 
 		try {
-			_httpAuthentication = new OAuth2Authentication(
-				consumerKey, consumerSecret, _httpClient, _openAPISpecPath);
+			httpAuthentication = new OAuth2Authentication(
+				consumerKey, consumerSecret, httpClient, openAPISpecPath);
 		}
 		catch (MalformedURLException malformedURLException) {
 			throw new ConnectionException(malformedURLException);
 		}
 	}
 
-	private HttpRequest _getHttpRequest(
+	private HttpRequest getHttpRequest(
 			HttpConstants.Method method, String uri,
 			MultiMap<String, String> queryParams, InputStream inputStream)
-		throws IOException, TimeoutException {
+		throws ModuleException {
 
 		HttpRequestBuilder httpRequestBuilder = HttpRequest.builder();
 
 		httpRequestBuilder.addHeader(
-			"Authorization", _httpAuthentication.getAuthorizationHeader()
+			"Authorization", httpAuthentication.getAuthorizationHeader()
 		).addHeader(
 			"Content-Type", "application/json"
 		).method(
@@ -186,7 +183,7 @@ public final class LiferayConnection {
 		return httpRequestBuilder.build();
 	}
 
-	private String _getServerBaseURL(String openApiSpecPath)
+	private String getServerBaseURL(String openApiSpecPath)
 		throws ConnectionException {
 
 		try {
@@ -199,7 +196,7 @@ public final class LiferayConnection {
 		}
 	}
 
-	private void _initHttpClient(
+	private void initHttpClient(
 		HttpService httpService, ProxyConfig proxyConfig) {
 
 		HttpClientConfiguration.Builder builder =
@@ -213,12 +210,23 @@ public final class LiferayConnection {
 
 		HttpClientFactory httpClientFactory = httpService.getClientFactory();
 
-		_httpClient = httpClientFactory.create(builder.build());
+		httpClient = httpClientFactory.create(builder.build());
 
-		_httpClient.start();
+		httpClient.start();
 	}
 
-	private String _resolvePathParams(
+	private void logHttpRequest(
+		long connectionTimeout, HttpConstants.Method method,
+		Map<String, String> pathParams, MultiMap<String, String> queryParams,
+		String uri) {
+
+		logger.debug(
+			"Sending {} request to {} with path parameters {}, query " +
+				"parameters {} and connection timeout {} ms",
+			method, uri, pathParams, queryParams, connectionTimeout);
+	}
+
+	private String resolvePathParams(
 		String endpoint, Map<String, String> pathParams) {
 
 		for (Map.Entry<String, String> pathParam : pathParams.entrySet()) {
@@ -229,9 +237,45 @@ public final class LiferayConnection {
 		return endpoint;
 	}
 
-	private final HttpAuthentication _httpAuthentication;
-	private HttpClient _httpClient;
-	private final String _openAPISpecPath;
-	private final String _serverBaseURL;
+	private HttpResponse send(
+			HttpConstants.Method method, InputStream inputStream,
+			Map<String, String> pathParams,
+			MultiMap<String, String> queryParams, String endpoint,
+			long connectionTimeout)
+		throws ModuleException {
+
+		String uri = serverBaseURL + resolvePathParams(endpoint, pathParams);
+
+		HttpRequest httpRequest = getHttpRequest(
+			method, uri, queryParams, inputStream);
+
+		logHttpRequest(connectionTimeout, method, pathParams, queryParams, uri);
+
+		try {
+			return httpClient.send(
+				httpRequest, (int)connectionTimeout, true, null);
+		}
+		catch (IOException ioException) {
+			logger.error(ioException.getMessage(), ioException);
+
+			throw new ModuleException(
+				ioException.getMessage(), LiferayError.EXECUTION, ioException);
+		}
+		catch (TimeoutException timeoutException) {
+			logger.error(timeoutException.getMessage(), timeoutException);
+
+			throw new ModuleException(
+				timeoutException.getMessage(), LiferayError.CONNECTION_TIMEOUT,
+				timeoutException);
+		}
+	}
+
+	private static final Logger logger = LoggerFactory.getLogger(
+		LiferayConnection.class);
+
+	private final HttpAuthentication httpAuthentication;
+	private HttpClient httpClient;
+	private final String openAPISpecPath;
+	private final String serverBaseURL;
 
 }

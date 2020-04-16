@@ -473,9 +473,11 @@ public abstract class BaseUserAccountResourceTestCase {
 				}
 				else {
 					BeanUtils.setProperty(
-						userAccount1, entityField.getName(), "Aaa");
+						userAccount1, entityField.getName(),
+						"Aaa" + RandomTestUtil.randomString());
 					BeanUtils.setProperty(
-						userAccount2, entityField.getName(), "Bbb");
+						userAccount2, entityField.getName(),
+						"Bbb" + RandomTestUtil.randomString());
 				}
 			});
 	}
@@ -741,9 +743,11 @@ public abstract class BaseUserAccountResourceTestCase {
 				}
 				else {
 					BeanUtils.setProperty(
-						userAccount1, entityField.getName(), "Aaa");
+						userAccount1, entityField.getName(),
+						"Aaa" + RandomTestUtil.randomString());
 					BeanUtils.setProperty(
-						userAccount2, entityField.getName(), "Bbb");
+						userAccount2, entityField.getName(),
+						"Bbb" + RandomTestUtil.randomString());
 				}
 			});
 	}
@@ -972,9 +976,11 @@ public abstract class BaseUserAccountResourceTestCase {
 				}
 				else {
 					BeanUtils.setProperty(
-						userAccount1, entityField.getName(), "Aaa");
+						userAccount1, entityField.getName(),
+						"Aaa" + RandomTestUtil.randomString());
 					BeanUtils.setProperty(
-						userAccount2, entityField.getName(), "Bbb");
+						userAccount2, entityField.getName(),
+						"Bbb" + RandomTestUtil.randomString());
 				}
 			});
 	}
@@ -1219,6 +1225,14 @@ public abstract class BaseUserAccountResourceTestCase {
 		for (String additionalAssertFieldName :
 				getAdditionalAssertFieldNames()) {
 
+			if (Objects.equals("actions", additionalAssertFieldName)) {
+				if (userAccount.getActions() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
 			if (Objects.equals("additionalName", additionalAssertFieldName)) {
 				if (userAccount.getAdditionalName() == null) {
 					valid = false;
@@ -1430,6 +1444,17 @@ public abstract class BaseUserAccountResourceTestCase {
 
 		for (String additionalAssertFieldName :
 				getAdditionalAssertFieldNames()) {
+
+			if (Objects.equals("actions", additionalAssertFieldName)) {
+				if (!equals(
+						(Map)userAccount1.getActions(),
+						(Map)userAccount2.getActions())) {
+
+					return false;
+				}
+
+				continue;
+			}
 
 			if (Objects.equals("additionalName", additionalAssertFieldName)) {
 				if (!Objects.deepEquals(
@@ -1683,6 +1708,30 @@ public abstract class BaseUserAccountResourceTestCase {
 		return true;
 	}
 
+	protected boolean equals(
+		Map<String, Object> map1, Map<String, Object> map2) {
+
+		if (Objects.equals(map1.keySet(), map2.keySet())) {
+			for (Map.Entry<String, Object> entry : map1.entrySet()) {
+				if (entry.getValue() instanceof Map) {
+					if (!equals(
+							(Map)entry.getValue(),
+							(Map)map2.get(entry.getKey()))) {
+
+						return false;
+					}
+				}
+				else if (!Objects.deepEquals(
+							entry.getValue(), map2.get(entry.getKey()))) {
+
+					return false;
+				}
+			}
+		}
+
+		return true;
+	}
+
 	protected boolean equalsJSONObject(
 		UserAccount userAccount, JSONObject jsonObject) {
 
@@ -1884,6 +1933,11 @@ public abstract class BaseUserAccountResourceTestCase {
 		sb.append(" ");
 		sb.append(operator);
 		sb.append(" ");
+
+		if (entityFieldName.equals("actions")) {
+			throw new IllegalArgumentException(
+				"Invalid entity field " + entityFieldName);
+		}
 
 		if (entityFieldName.equals("additionalName")) {
 			sb.append("'");

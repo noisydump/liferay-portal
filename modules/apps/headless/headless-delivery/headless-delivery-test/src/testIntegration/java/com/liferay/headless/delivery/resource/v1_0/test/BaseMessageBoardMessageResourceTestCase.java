@@ -191,6 +191,7 @@ public abstract class BaseMessageBoardMessageResourceTestCase {
 
 		messageBoardMessage.setArticleBody(regex);
 		messageBoardMessage.setEncodingFormat(regex);
+		messageBoardMessage.setFriendlyUrlPath(regex);
 		messageBoardMessage.setHeadline(regex);
 
 		String json = MessageBoardMessageSerDes.toJSON(messageBoardMessage);
@@ -201,11 +202,13 @@ public abstract class BaseMessageBoardMessageResourceTestCase {
 
 		Assert.assertEquals(regex, messageBoardMessage.getArticleBody());
 		Assert.assertEquals(regex, messageBoardMessage.getEncodingFormat());
+		Assert.assertEquals(regex, messageBoardMessage.getFriendlyUrlPath());
 		Assert.assertEquals(regex, messageBoardMessage.getHeadline());
 	}
 
 	@Test
 	public void testDeleteMessageBoardMessage() throws Exception {
+		@SuppressWarnings("PMD.UnusedLocalVariable")
 		MessageBoardMessage messageBoardMessage =
 			testDeleteMessageBoardMessage_addMessageBoardMessage();
 
@@ -350,7 +353,7 @@ public abstract class BaseMessageBoardMessageResourceTestCase {
 				randomPatchMessageBoardMessage);
 
 		MessageBoardMessage expectedPatchMessageBoardMessage =
-			(MessageBoardMessage)BeanUtils.cloneBean(postMessageBoardMessage);
+			postMessageBoardMessage.clone();
 
 		_beanUtilsBean.copyProperties(
 			expectedPatchMessageBoardMessage, randomPatchMessageBoardMessage);
@@ -404,6 +407,7 @@ public abstract class BaseMessageBoardMessageResourceTestCase {
 
 	@Test
 	public void testDeleteMessageBoardMessageMyRating() throws Exception {
+		@SuppressWarnings("PMD.UnusedLocalVariable")
 		MessageBoardMessage messageBoardMessage =
 			testDeleteMessageBoardMessageMyRating_addMessageBoardMessage();
 
@@ -734,9 +738,11 @@ public abstract class BaseMessageBoardMessageResourceTestCase {
 				}
 				else {
 					BeanUtils.setProperty(
-						messageBoardMessage1, entityField.getName(), "Aaa");
+						messageBoardMessage1, entityField.getName(),
+						"Aaa" + RandomTestUtil.randomString());
 					BeanUtils.setProperty(
-						messageBoardMessage2, entityField.getName(), "Bbb");
+						messageBoardMessage2, entityField.getName(),
+						"Bbb" + RandomTestUtil.randomString());
 				}
 			});
 	}
@@ -1097,9 +1103,11 @@ public abstract class BaseMessageBoardMessageResourceTestCase {
 				}
 				else {
 					BeanUtils.setProperty(
-						messageBoardMessage1, entityField.getName(), "Aaa");
+						messageBoardMessage1, entityField.getName(),
+						"Aaa" + RandomTestUtil.randomString());
 					BeanUtils.setProperty(
-						messageBoardMessage2, entityField.getName(), "Bbb");
+						messageBoardMessage2, entityField.getName(),
+						"Bbb" + RandomTestUtil.randomString());
 				}
 			});
 	}
@@ -1436,9 +1444,11 @@ public abstract class BaseMessageBoardMessageResourceTestCase {
 				}
 				else {
 					BeanUtils.setProperty(
-						messageBoardMessage1, entityField.getName(), "Aaa");
+						messageBoardMessage1, entityField.getName(),
+						"Aaa" + RandomTestUtil.randomString());
 					BeanUtils.setProperty(
-						messageBoardMessage2, entityField.getName(), "Bbb");
+						messageBoardMessage2, entityField.getName(),
+						"Bbb" + RandomTestUtil.randomString());
 				}
 			});
 	}
@@ -1572,6 +1582,66 @@ public abstract class BaseMessageBoardMessageResourceTestCase {
 		assertEqualsJSONArray(
 			Arrays.asList(messageBoardMessage1, messageBoardMessage2),
 			messageBoardMessagesJSONObject.getJSONArray("items"));
+	}
+
+	@Test
+	public void testGetSiteMessageBoardMessageByFriendlyUrlPath()
+		throws Exception {
+
+		MessageBoardMessage postMessageBoardMessage =
+			testGetSiteMessageBoardMessageByFriendlyUrlPath_addMessageBoardMessage();
+
+		MessageBoardMessage getMessageBoardMessage =
+			messageBoardMessageResource.
+				getSiteMessageBoardMessageByFriendlyUrlPath(
+					postMessageBoardMessage.getSiteId(),
+					postMessageBoardMessage.getFriendlyUrlPath());
+
+		assertEquals(postMessageBoardMessage, getMessageBoardMessage);
+		assertValid(getMessageBoardMessage);
+	}
+
+	protected MessageBoardMessage
+			testGetSiteMessageBoardMessageByFriendlyUrlPath_addMessageBoardMessage()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testGraphQLGetSiteMessageBoardMessageByFriendlyUrlPath()
+		throws Exception {
+
+		MessageBoardMessage messageBoardMessage =
+			testGraphQLMessageBoardMessage_addMessageBoardMessage();
+
+		List<GraphQLField> graphQLFields = getGraphQLFields();
+
+		GraphQLField graphQLField = new GraphQLField(
+			"query",
+			new GraphQLField(
+				"messageBoardMessageByFriendlyUrlPath",
+				new HashMap<String, Object>() {
+					{
+						put("siteId", messageBoardMessage.getSiteId());
+						put(
+							"friendlyUrlPath",
+							messageBoardMessage.getFriendlyUrlPath());
+					}
+				},
+				graphQLFields.toArray(new GraphQLField[0])));
+
+		JSONObject jsonObject = JSONFactoryUtil.createJSONObject(
+			invoke(graphQLField.toString()));
+
+		JSONObject dataJSONObject = jsonObject.getJSONObject("data");
+
+		Assert.assertTrue(
+			equalsJSONObject(
+				messageBoardMessage,
+				dataJSONObject.getJSONObject(
+					"messageBoardMessageByFriendlyUrlPath")));
 	}
 
 	@Test
@@ -1787,6 +1857,16 @@ public abstract class BaseMessageBoardMessageResourceTestCase {
 				continue;
 			}
 
+			if (Objects.equals(
+					"creatorStatistics", additionalAssertFieldName)) {
+
+				if (messageBoardMessage.getCreatorStatistics() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
 			if (Objects.equals("customFields", additionalAssertFieldName)) {
 				if (messageBoardMessage.getCustomFields() == null) {
 					valid = false;
@@ -1803,6 +1883,14 @@ public abstract class BaseMessageBoardMessageResourceTestCase {
 				continue;
 			}
 
+			if (Objects.equals("friendlyUrlPath", additionalAssertFieldName)) {
+				if (messageBoardMessage.getFriendlyUrlPath() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
 			if (Objects.equals("headline", additionalAssertFieldName)) {
 				if (messageBoardMessage.getHeadline() == null) {
 					valid = false;
@@ -1813,6 +1901,16 @@ public abstract class BaseMessageBoardMessageResourceTestCase {
 
 			if (Objects.equals("keywords", additionalAssertFieldName)) {
 				if (messageBoardMessage.getKeywords() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals(
+					"messageBoardSectionId", additionalAssertFieldName)) {
+
+				if (messageBoardMessage.getMessageBoardSectionId() == null) {
 					valid = false;
 				}
 
@@ -2034,9 +2132,9 @@ public abstract class BaseMessageBoardMessageResourceTestCase {
 				getAdditionalAssertFieldNames()) {
 
 			if (Objects.equals("actions", additionalAssertFieldName)) {
-				if (!Objects.deepEquals(
-						messageBoardMessage1.getActions(),
-						messageBoardMessage2.getActions())) {
+				if (!equals(
+						(Map)messageBoardMessage1.getActions(),
+						(Map)messageBoardMessage2.getActions())) {
 
 					return false;
 				}
@@ -2088,6 +2186,19 @@ public abstract class BaseMessageBoardMessageResourceTestCase {
 				continue;
 			}
 
+			if (Objects.equals(
+					"creatorStatistics", additionalAssertFieldName)) {
+
+				if (!Objects.deepEquals(
+						messageBoardMessage1.getCreatorStatistics(),
+						messageBoardMessage2.getCreatorStatistics())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
 			if (Objects.equals("customFields", additionalAssertFieldName)) {
 				if (!Objects.deepEquals(
 						messageBoardMessage1.getCustomFields(),
@@ -2132,6 +2243,17 @@ public abstract class BaseMessageBoardMessageResourceTestCase {
 				continue;
 			}
 
+			if (Objects.equals("friendlyUrlPath", additionalAssertFieldName)) {
+				if (!Objects.deepEquals(
+						messageBoardMessage1.getFriendlyUrlPath(),
+						messageBoardMessage2.getFriendlyUrlPath())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
 			if (Objects.equals("headline", additionalAssertFieldName)) {
 				if (!Objects.deepEquals(
 						messageBoardMessage1.getHeadline(),
@@ -2158,6 +2280,19 @@ public abstract class BaseMessageBoardMessageResourceTestCase {
 				if (!Objects.deepEquals(
 						messageBoardMessage1.getKeywords(),
 						messageBoardMessage2.getKeywords())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals(
+					"messageBoardSectionId", additionalAssertFieldName)) {
+
+				if (!Objects.deepEquals(
+						messageBoardMessage1.getMessageBoardSectionId(),
+						messageBoardMessage2.getMessageBoardSectionId())) {
 
 					return false;
 				}
@@ -2270,6 +2405,30 @@ public abstract class BaseMessageBoardMessageResourceTestCase {
 			throw new IllegalArgumentException(
 				"Invalid additional assert field name " +
 					additionalAssertFieldName);
+		}
+
+		return true;
+	}
+
+	protected boolean equals(
+		Map<String, Object> map1, Map<String, Object> map2) {
+
+		if (Objects.equals(map1.keySet(), map2.keySet())) {
+			for (Map.Entry<String, Object> entry : map1.entrySet()) {
+				if (entry.getValue() instanceof Map) {
+					if (!equals(
+							(Map)entry.getValue(),
+							(Map)map2.get(entry.getKey()))) {
+
+						return false;
+					}
+				}
+				else if (!Objects.deepEquals(
+							entry.getValue(), map2.get(entry.getKey()))) {
+
+					return false;
+				}
+			}
 		}
 
 		return true;
@@ -2406,6 +2565,17 @@ public abstract class BaseMessageBoardMessageResourceTestCase {
 				continue;
 			}
 
+			if (Objects.equals("friendlyUrlPath", fieldName)) {
+				if (!Objects.deepEquals(
+						messageBoardMessage.getFriendlyUrlPath(),
+						jsonObject.getString("friendlyUrlPath"))) {
+
+					return false;
+				}
+
+				continue;
+			}
+
 			if (Objects.equals("headline", fieldName)) {
 				if (!Objects.deepEquals(
 						messageBoardMessage.getHeadline(),
@@ -2421,6 +2591,17 @@ public abstract class BaseMessageBoardMessageResourceTestCase {
 				if (!Objects.deepEquals(
 						messageBoardMessage.getId(),
 						jsonObject.getLong("id"))) {
+
+					return false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals("messageBoardSectionId", fieldName)) {
+				if (!Objects.deepEquals(
+						messageBoardMessage.getMessageBoardSectionId(),
+						jsonObject.getLong("messageBoardSectionId"))) {
 
 					return false;
 				}
@@ -2581,6 +2762,11 @@ public abstract class BaseMessageBoardMessageResourceTestCase {
 				"Invalid entity field " + entityFieldName);
 		}
 
+		if (entityFieldName.equals("creatorStatistics")) {
+			throw new IllegalArgumentException(
+				"Invalid entity field " + entityFieldName);
+		}
+
 		if (entityFieldName.equals("customFields")) {
 			throw new IllegalArgumentException(
 				"Invalid entity field " + entityFieldName);
@@ -2662,6 +2848,14 @@ public abstract class BaseMessageBoardMessageResourceTestCase {
 			return sb.toString();
 		}
 
+		if (entityFieldName.equals("friendlyUrlPath")) {
+			sb.append("'");
+			sb.append(String.valueOf(messageBoardMessage.getFriendlyUrlPath()));
+			sb.append("'");
+
+			return sb.toString();
+		}
+
 		if (entityFieldName.equals("headline")) {
 			sb.append("'");
 			sb.append(String.valueOf(messageBoardMessage.getHeadline()));
@@ -2676,6 +2870,11 @@ public abstract class BaseMessageBoardMessageResourceTestCase {
 		}
 
 		if (entityFieldName.equals("keywords")) {
+			throw new IllegalArgumentException(
+				"Invalid entity field " + entityFieldName);
+		}
+
+		if (entityFieldName.equals("messageBoardSectionId")) {
 			throw new IllegalArgumentException(
 				"Invalid entity field " + entityFieldName);
 		}
@@ -2754,8 +2953,10 @@ public abstract class BaseMessageBoardMessageResourceTestCase {
 				dateCreated = RandomTestUtil.nextDate();
 				dateModified = RandomTestUtil.nextDate();
 				encodingFormat = RandomTestUtil.randomString();
+				friendlyUrlPath = RandomTestUtil.randomString();
 				headline = RandomTestUtil.randomString();
 				id = RandomTestUtil.randomLong();
+				messageBoardSectionId = RandomTestUtil.randomLong();
 				messageBoardThreadId = RandomTestUtil.randomLong();
 				numberOfMessageBoardAttachments = RandomTestUtil.randomInt();
 				numberOfMessageBoardMessages = RandomTestUtil.randomInt();

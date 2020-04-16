@@ -17,6 +17,10 @@ package com.liferay.gradle.plugins.defaults;
 import aQute.bnd.osgi.Constants;
 import aQute.bnd.version.Version;
 
+import com.github.spotbugs.snom.SpotBugsPlugin;
+import com.github.spotbugs.snom.SpotBugsReport;
+import com.github.spotbugs.snom.SpotBugsTask;
+
 import com.gradle.publish.PublishPlugin;
 
 import com.liferay.gradle.plugins.JspCDefaultsPlugin;
@@ -72,7 +76,7 @@ import com.liferay.gradle.plugins.test.integration.TestIntegrationTomcatExtensio
 import com.liferay.gradle.plugins.tlddoc.builder.TLDDocBuilderPlugin;
 import com.liferay.gradle.plugins.tlddoc.builder.tasks.TLDDocTask;
 import com.liferay.gradle.plugins.upgrade.table.builder.UpgradeTableBuilderPlugin;
-import com.liferay.gradle.plugins.util.BndBuilderUtil;
+import com.liferay.gradle.plugins.util.BndUtil;
 import com.liferay.gradle.plugins.util.PortalTools;
 import com.liferay.gradle.plugins.whip.WhipPlugin;
 import com.liferay.gradle.plugins.wsdd.builder.BuildWSDDTask;
@@ -126,6 +130,7 @@ import java.util.jar.JarFile;
 import java.util.jar.Manifest;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Stream;
 
 import javax.xml.bind.DatatypeConverter;
 import javax.xml.parsers.DocumentBuilder;
@@ -138,6 +143,7 @@ import org.gradle.StartParameter;
 import org.gradle.api.Action;
 import org.gradle.api.GradleException;
 import org.gradle.api.JavaVersion;
+import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
@@ -189,14 +195,10 @@ import org.gradle.api.plugins.JavaPluginConvention;
 import org.gradle.api.plugins.MavenPlugin;
 import org.gradle.api.plugins.MavenPluginConvention;
 import org.gradle.api.plugins.MavenRepositoryHandlerConvention;
-import org.gradle.api.plugins.quality.FindBugs;
-import org.gradle.api.plugins.quality.FindBugsPlugin;
-import org.gradle.api.plugins.quality.FindBugsReports;
 import org.gradle.api.plugins.quality.Pmd;
 import org.gradle.api.plugins.quality.PmdExtension;
 import org.gradle.api.plugins.quality.PmdPlugin;
-import org.gradle.api.reporting.CustomizableHtmlReport;
-import org.gradle.api.reporting.SingleFileReport;
+import org.gradle.api.provider.Property;
 import org.gradle.api.resources.ResourceHandler;
 import org.gradle.api.resources.TextResourceFactory;
 import org.gradle.api.specs.Spec;
@@ -484,10 +486,10 @@ public class LiferayOSGiDefaultsPlugin implements Plugin<Project> {
 		_configureTaskTestIntegration(project);
 		_configureTaskTlddoc(project, portalRootDir);
 		_configureTasksCheckOSGiBundleState(project, liferayExtension);
-		_configureTasksFindBugs(project);
 		_configureTasksJavaCompile(project);
 		_configureTasksJspC(project);
 		_configureTasksPmd(project);
+		_configureTasksSpotBugs(project);
 		_configureTestIntegrationTomcat(project);
 
 		_addTaskUpdateFileSnapshotVersions(project);
@@ -733,7 +735,7 @@ public class LiferayOSGiDefaultsPlugin implements Plugin<Project> {
 
 				@Override
 				public String call() throws Exception {
-					return BndBuilderUtil.getInstruction(
+					return BndUtil.getInstruction(
 						project, Constants.BUNDLE_SYMBOLICNAME);
 				}
 
@@ -1685,19 +1687,19 @@ public class LiferayOSGiDefaultsPlugin implements Plugin<Project> {
 
 	private void _applyPlugins(Project project) {
 		if (Validator.isNotNull(
-				BndBuilderUtil.getInstruction(project, "Main-Class"))) {
+				BndUtil.getInstruction(project, "Main-Class"))) {
 
 			GradleUtil.applyPlugin(project, ApplicationPlugin.class);
 		}
 
 		GradleUtil.applyPlugin(project, BaselinePlugin.class);
 		GradleUtil.applyPlugin(project, DependencyCheckerPlugin.class);
-		GradleUtil.applyPlugin(project, FindBugsPlugin.class);
 		GradleUtil.applyPlugin(project, IdeaPlugin.class);
 		GradleUtil.applyPlugin(project, JSDocPlugin.class);
 		GradleUtil.applyPlugin(project, MavenPlugin.class);
 		GradleUtil.applyPlugin(project, PmdPlugin.class);
 		GradleUtil.applyPlugin(project, ProvidedBasePlugin.class);
+		GradleUtil.applyPlugin(project, SpotBugsPlugin.class);
 
 		if (FileUtil.exists(project, "rest-config.yaml")) {
 			GradleUtil.applyPlugin(project, RESTBuilderPlugin.class);
@@ -1769,8 +1771,8 @@ public class LiferayOSGiDefaultsPlugin implements Plugin<Project> {
 			Constants.BUNDLE_VERSION);
 
 		if (Validator.isNotNull(bundleVersion)) {
-			Map<String, Object> bundleInstructions =
-				BndBuilderUtil.getInstructions(project);
+			Map<String, Object> bundleInstructions = BndUtil.getInstructions(
+				project);
 
 			bundleInstructions.put(Constants.BUNDLE_VERSION, bundleVersion);
 
@@ -2078,7 +2080,7 @@ public class LiferayOSGiDefaultsPlugin implements Plugin<Project> {
 	}
 
 	private void _configureBundleInstructions(Project project) {
-		Map<String, Object> bundleInstructions = BndBuilderUtil.getInstructions(
+		Map<String, Object> bundleInstructions = BndUtil.getInstructions(
 			project);
 
 		String projectPath = project.getPath();
@@ -2803,6 +2805,27 @@ public class LiferayOSGiDefaultsPlugin implements Plugin<Project> {
 			return;
 		}
 
+		if (portalToolName.startsWith("com.liferay.portal.tools.") &&
+			portalToolName.endsWith(".builder")) {
+
+			int length = portalToolName.length();
+
+			String taskNameSuffix = portalToolName.substring(25, length - 8);
+
+			String buildTaskName = "build" + taskNameSuffix;
+
+			Gradle gradle = project.getGradle();
+
+			Set<String> taskNames = GradleUtil.getTaskNames(
+				project, gradle.getStartParameter());
+
+			Stream<String> taskNamesStream = taskNames.stream();
+
+			if (!taskNamesStream.anyMatch(buildTaskName::equalsIgnoreCase)) {
+				return;
+			}
+		}
+
 		String portalRootDirValue = System.getProperty("portal.root.dir");
 
 		if (Validator.isNotNull(portalRootDirValue)) {
@@ -3366,52 +3389,6 @@ public class LiferayOSGiDefaultsPlugin implements Plugin<Project> {
 			});
 	}
 
-	private void _configureTaskFindBugs(FindBugs findBugs) {
-		Project project = findBugs.getProject();
-
-		findBugs.setMaxHeapSize("3g");
-
-		FindBugsReports findBugsReports = findBugs.getReports();
-
-		CustomizableHtmlReport customizableHtmlReport =
-			findBugsReports.getHtml();
-
-		customizableHtmlReport.setEnabled(true);
-
-		SingleFileReport xmlReport = findBugsReports.getXml();
-
-		xmlReport.setEnabled(false);
-
-		SourceSet sourceSet = null;
-
-		String name = findBugs.getName();
-
-		if (name.startsWith("findbugs")) {
-			name = GUtil.toLowerCamelCase(name.substring(8));
-
-			JavaPluginConvention javaPluginConvention =
-				GradleUtil.getConvention(project, JavaPluginConvention.class);
-
-			SourceSetContainer sourceSetContainer =
-				javaPluginConvention.getSourceSets();
-
-			sourceSet = sourceSetContainer.findByName(name);
-		}
-
-		if (sourceSet != null) {
-			ConfigurableFileTree configurableFileTree = project.fileTree(
-				FileUtil.getJavaClassesDir(sourceSet));
-
-			configurableFileTree.setBuiltBy(
-				Collections.singleton(sourceSet.getOutput()));
-
-			configurableFileTree.setIncludes(
-				Collections.singleton("**/*.class"));
-
-			findBugs.setClasses(configurableFileTree);
-		}
-	}
-
 	private void _configureTaskGenerateJSPJava(
 		Project project, LiferayExtension liferayExtension) {
 
@@ -3616,7 +3593,7 @@ public class LiferayOSGiDefaultsPlugin implements Plugin<Project> {
 	}
 
 	private void _configureTaskJavadocFilter(Javadoc javadoc) {
-		String exportPackage = BndBuilderUtil.getInstruction(
+		String exportPackage = BndUtil.getInstruction(
 			javadoc.getProject(), Constants.EXPORT_PACKAGE);
 
 		if (Validator.isNull(exportPackage)) {
@@ -3720,8 +3697,7 @@ public class LiferayOSGiDefaultsPlugin implements Plugin<Project> {
 		sb.append(' ');
 		sb.append(project.getVersion());
 		sb.append(" - ");
-		sb.append(
-			BndBuilderUtil.getInstruction(project, Constants.BUNDLE_NAME));
+		sb.append(BndUtil.getInstruction(project, Constants.BUNDLE_NAME));
 
 		javadoc.setTitle(sb.toString());
 	}
@@ -3791,21 +3767,6 @@ public class LiferayOSGiDefaultsPlugin implements Plugin<Project> {
 		}
 	}
 
-	private void _configureTasksFindBugs(Project project) {
-		TaskContainer taskContainer = project.getTasks();
-
-		taskContainer.withType(
-			FindBugs.class,
-			new Action<FindBugs>() {
-
-				@Override
-				public void execute(FindBugs findBugs) {
-					_configureTaskFindBugs(findBugs);
-				}
-
-			});
-	}
-
 	private void _configureTasksJavaCompile(Project project) {
 		TaskContainer taskContainer = project.getTasks();
 
@@ -3822,7 +3783,7 @@ public class LiferayOSGiDefaultsPlugin implements Plugin<Project> {
 	}
 
 	private void _configureTasksJspC(Project project) {
-		String fragmentHost = BndBuilderUtil.getInstruction(
+		String fragmentHost = BndUtil.getInstruction(
 			project, Constants.FRAGMENT_HOST);
 
 		if (Validator.isNotNull(fragmentHost)) {
@@ -3853,6 +3814,88 @@ public class LiferayOSGiDefaultsPlugin implements Plugin<Project> {
 			});
 	}
 
+	private void _configureTaskSpotBugs(SpotBugsTask spotBugsTask) {
+		Property<String> maxHeapSizeProperty = spotBugsTask.getMaxHeapSize();
+
+		maxHeapSizeProperty.set("3g");
+
+		Property<Boolean> showProgressProperty = spotBugsTask.getShowProgress();
+
+		showProgressProperty.set(true);
+
+		String name = spotBugsTask.getName();
+		Project project = spotBugsTask.getProject();
+
+		if (name.startsWith("spotbugs")) {
+			name = GUtil.toLowerCamelCase(name.substring(8));
+
+			JavaPluginConvention javaPluginConvention =
+				GradleUtil.getConvention(project, JavaPluginConvention.class);
+
+			SourceSetContainer sourceSetContainer =
+				javaPluginConvention.getSourceSets();
+
+			SourceSet sourceSet = sourceSetContainer.findByName(name);
+
+			if (sourceSet != null) {
+				ConfigurableFileTree configurableFileTree = project.fileTree(
+					FileUtil.getJavaClassesDir(sourceSet));
+
+				configurableFileTree.setBuiltBy(
+					Collections.singleton(sourceSet.getOutput()));
+
+				configurableFileTree.setIncludes(
+					Collections.singleton("**/*.class"));
+
+				spotBugsTask.setClasses(configurableFileTree);
+			}
+		}
+
+		NamedDomainObjectContainer<SpotBugsReport> namedDomainObjectContainer =
+			spotBugsTask.getReports();
+
+		final SpotBugsReport spotBugsReport = namedDomainObjectContainer.create(
+			"html");
+
+		spotBugsReport.setEnabled(true);
+		spotBugsReport.setStylesheet("fancy-hist.xsl");
+
+		spotBugsTask.doFirst(
+			new Action<Task>() {
+
+				@Override
+				public void execute(Task task) {
+					Project project = task.getProject();
+
+					Logger logger = project.getLogger();
+
+					if (logger.isLifecycleEnabled()) {
+						File file = spotBugsReport.getDestination();
+
+						String url = FileUtil.getUrl(file);
+
+						logger.lifecycle("Creating report: {}", url);
+					}
+				}
+
+			});
+	}
+
+	private void _configureTasksSpotBugs(Project project) {
+		TaskContainer taskContainer = project.getTasks();
+
+		taskContainer.withType(
+			SpotBugsTask.class,
+			new Action<SpotBugsTask>() {
+
+				@Override
+				public void execute(SpotBugsTask spotBugsTask) {
+					_configureTaskSpotBugs(spotBugsTask);
+				}
+
+			});
+	}
+
 	private void _configureTaskTest(Project project) {
 		Test test = (Test)GradleUtil.getTask(
 			project, JavaPlugin.TEST_TASK_NAME);
@@ -3862,6 +3905,16 @@ public class LiferayOSGiDefaultsPlugin implements Plugin<Project> {
 		_configureTaskTestOutputs(test);
 
 		test.setEnableAssertions(false);
+
+		project.afterEvaluate(
+			new Action<Project>() {
+
+				@Override
+				public void execute(Project project) {
+					_configureTaskTestIncludes(test);
+				}
+
+			});
 	}
 
 	private void _configureTaskTestIgnoreFailures(Test test) {
@@ -3873,6 +3926,14 @@ public class LiferayOSGiDefaultsPlugin implements Plugin<Project> {
 		}
 		else {
 			test.setIgnoreFailures(true);
+		}
+	}
+
+	private void _configureTaskTestIncludes(Test test) {
+		Set<String> includes = test.getIncludes();
+
+		if (includes.isEmpty()) {
+			test.setIncludes(Collections.singleton("**/*Test.class"));
 		}
 	}
 

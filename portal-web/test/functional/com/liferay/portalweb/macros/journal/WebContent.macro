@@ -74,6 +74,8 @@ definition {
 			assetType = "${assetType}",
 			scopeSite = "${scopeSite}");
 
+		Pause(locator1 = "3000");
+
 		SelectFrame(value1 = "relative=top");
 
 		var key_assetTitle = "${assetTitle}";
@@ -171,6 +173,8 @@ definition {
 	}
 
 	macro addNullCP {
+		AssertElementNotPresent(locator1 = "TextInput#REQUIRED_ALERT");
+
 		if (isSet(webContentContent)) {
 			AlloyEditor.addContent(content = "${webContentContent}");
 		}
@@ -179,12 +183,7 @@ definition {
 			locator1 = "Button#PUBLISH",
 			value1 = "Publish");
 
-		Alert.viewSuccessMessage();
-
-		AssertTextEquals.assertPartialText(
-			key_webContentTitle = "Untitled",
-			locator1 = "WC#ENTRY_LIST_TITLE",
-			value1 = "Untitled");
+		AssertElementPresent(locator1 = "TextInput#REQUIRED_ALERT");
 	}
 
 	macro addPGViaAP {
@@ -300,11 +299,20 @@ definition {
 		PortletEntry.inputTitle(title = "${webContentTitle}");
 
 		Type.typeCKEditorWaitForCKEditor(
-			locator1 = "CKEditor#BODY_FIELD",
+			key_fieldLabel = "content",
+			locator1 = "CKEditor#BODY_FIELD_WEB_CONTENT_ARTICLE",
 			value1 = "${webContentContent}");
 	}
 
 	macro addWithCategoryCP {
+		for (var key_panel : list "Basic Information,Default Template,Display Page Template,Featured Image ") {
+			if ((IsElementPresent(locator1 = "Panel#PANEL_EXPANDED")) && (IsVisible(locator1 = "Panel#PANEL_EXPANDED"))) {
+				AssertClick(
+					locator1 = "Panel#PANEL_EXPANDED",
+					value1 = "${key_panel}");
+			}
+		}
+
 		WebContent.addCP(
 			webContentContent = "${webContentContent}",
 			webContentTitle = "${webContentTitle}");
@@ -333,9 +341,9 @@ definition {
 
 		if (isSet(siteName)) {
 			AssertClick(
-				key_breadcrumbName = "sites",
+				key_breadcrumbName = "Sites and Libraries",
 				locator1 = "Breadcrumb#BREADCRUMB_ENTRY",
-				value1 = "sites");
+				value1 = "Sites and Libraries");
 
 			AssertClick(
 				key_siteName = "${siteName}",
@@ -403,6 +411,14 @@ definition {
 	}
 
 	macro addWithMultipleCategories {
+		for (var key_panel : list "Basic Information,Default Template,Display Page Template,Featured Image ") {
+			if ((IsElementPresent(locator1 = "Panel#PANEL_EXPANDED")) && (IsVisible(locator1 = "Panel#PANEL_EXPANDED"))) {
+				AssertClick(
+					locator1 = "Panel#PANEL_EXPANDED",
+					value1 = "${key_panel}");
+			}
+		}
+
 		WebContent.addCP(
 			webContentContent = "${webContentContent}",
 			webContentTitle = "${webContentTitle}");
@@ -415,6 +431,8 @@ definition {
 
 		if ("${allowMultipleCategories}" == "false") {
 			Button.clickPublish();
+
+			Alert.viewErrorMessage(errorMessage = "You cannot select more than one category for Vocabulary Name.");
 		}
 
 		PortletEntry.publish();
@@ -660,7 +678,10 @@ definition {
 		}
 
 		if (isSet(description)) {
-			AlloyEditor.addDescription(description = "${description}");
+			Type.typeCKEditorWaitForCKEditor(
+				key_fieldLabel = "Summary",
+				locator1 = "CKEditor#BODY_FIELD_WEB_CONTENT_ARTICLE",
+				value1 = "${description}");
 		}
 
 		if (isSet(templateName)) {
@@ -682,6 +703,14 @@ definition {
 	}
 
 	macro addWithTagCP {
+		for (var key_panel : list "Basic Information,Default Template,Display Page Template,Featured Image ") {
+			if ((IsElementPresent(locator1 = "Panel#PANEL_EXPANDED")) && (IsVisible(locator1 = "Panel#PANEL_EXPANDED"))) {
+				AssertClick(
+					locator1 = "Panel#PANEL_EXPANDED",
+					value1 = "${key_panel}");
+			}
+		}
+
 		WebContent.addCP(
 			webContentContent = "${webContentContent}",
 			webContentTitle = "${webContentTitle}");
@@ -892,9 +921,14 @@ definition {
 				value1 = "${pageName}");
 		}
 		else {
-			Navigator.gotoNavItem(navItem = "${pageType}");
+			if (IsElementNotPresent(key_navItem = "${pageType}", locator1 = "NavBar#NAV_ITEM_LINK")) {
+				LexiconCard.clickCard(card = "${pageName}");
+			}
+			else {
+				Navigator.gotoNavItem(navItem = "${pageType}");
 
-			LexiconCard.clickCard(card = "${pageName}");
+				LexiconCard.clickCard(card = "${pageName}");
+			}
 		}
 
 		if ("${pageType}" == "Public Pages") {
@@ -955,6 +989,8 @@ definition {
 	}
 
 	macro editNullCP {
+		AssertElementNotPresent(locator1 = "TextInput#REQUIRED_ALERT");
+
 		WebContent.addCP(webContentTitle = "");
 
 		if (isSet(webContentContent)) {
@@ -965,12 +1001,7 @@ definition {
 			locator1 = "Button#PUBLISH",
 			value1 = "Publish");
 
-		Alert.viewSuccessMessage();
-
-		AssertTextEquals.assertPartialText(
-			key_webContentTitle = "Untitled",
-			locator1 = "WC#ENTRY_LIST_TITLE",
-			value1 = "Untitled");
+		AssertElementPresent(locator1 = "TextInput#REQUIRED_ALERT");
 	}
 
 	macro editPGViaWCD {
@@ -1013,9 +1044,9 @@ definition {
 	macro editViaContentPanel {
 		PageEditor.gotoTab(tabName = "Contents");
 
-		LexiconEntry.gotoFragmentEllipsisMenuItem(
+		LexiconEntry.gotoFragmentPageContentEllipsisMenuItem(
 			menuItem = "Edit",
-			webContentTitle = "${webContentTitleEdit}");
+			rowEntry = "${webContentTitle}");
 
 		WebContent.addCP(webContentTitle = "${webContentTitleEdit}");
 
@@ -1123,6 +1154,8 @@ definition {
 
 		SelectFrame(locator1 = "IFrame#DIALOG");
 
+		Pause(locator1 = "3000");
+
 		WebContentFolder.selectFolderTreeNode(nodeName = "${folderName}");
 
 		SelectFrameTop();
@@ -1151,6 +1184,8 @@ definition {
 
 		SelectFrame(locator1 = "IFrame#DIALOG");
 
+		Pause(locator1 = "3000");
+
 		WebContentFolder.selectFolderTreeNode(nodeName = "${folderName}");
 
 		SelectFrame(value1 = "relative=top");
@@ -1177,6 +1212,8 @@ definition {
 			value1 = "Select");
 
 		SelectFrame(locator1 = "IFrame#DIALOG");
+
+		Pause(locator1 = "3000");
 
 		WebContentFolder.selectFolderTreeNode(nodeName = "${folderName}");
 
@@ -1330,7 +1367,7 @@ definition {
 	macro selectRepositoryWC {
 		var key_contentName = "${contentName}";
 
-		ItemSelector.changeWorkspaces(workspacesType = "Repository");
+		ItemSelector.changeWorkspaces(workspacesType = "Asset Library");
 
 		LexiconCard.clickCard(card = "${depotName}");
 
@@ -1434,9 +1471,12 @@ definition {
 
 		ItemSelector.addFromURL(
 			imageSourceURL = "${dmDocumentURL}",
-			navTab = "${navTab}");
+			navTab = "${navTab}",
+			type = "Audio");
 
-		SelectFrame.selectFrameNoLoading(locator1 = "CKEditor#BODY_FIELD_IFRAME");
+		SelectFrame.selectFrameNoLoading(
+			key_fieldLabel = "content",
+			locator1 = "CKEditor#BODY_FIELD_IFRAME_WEB_CONTENT_ARTICLE");
 
 		AssertElementPresent(locator1 = "CKEditor#CONTENT_AUDIO_LINK_IMAGE");
 
@@ -1448,9 +1488,12 @@ definition {
 
 		ItemSelector.addFromURL(
 			imageSourceURL = "${dmDocumentURL}",
-			navTab = "${navTab}");
+			navTab = "${navTab}",
+			type = "Video");
 
-		SelectFrame.selectFrameNoLoading(locator1 = "CKEditor#BODY_FIELD_IFRAME");
+		SelectFrame.selectFrameNoLoading(
+			key_fieldLabel = "content",
+			locator1 = "CKEditor#BODY_FIELD_IFRAME_WEB_CONTENT_ARTICLE");
 
 		AssertElementPresent(locator1 = "CKEditor#CONTENT_VIDEO_LINK_IMAGE");
 
@@ -1497,9 +1540,11 @@ definition {
 	macro viewCategorizationCategoryNotVisibleCP {
 		Panel.expandPanel(panel = "Metadata");
 
-		AssertElementNotPresent(
-			key_categoryName = "${categoryName}",
-			locator1 = "AssetCategorization#CATEGORY");
+		for (var categoryName : list "${categoryNameList}") {
+			AssertElementNotPresent(
+				key_categoryName = "${categoryName}",
+				locator1 = "AssetCategorization#CATEGORY");
+		}
 	}
 
 	macro viewCategorizationVocabularyCP {
@@ -2028,30 +2073,6 @@ definition {
 		}
 	}
 
-	macro viewUnlocalizableTextBox {
-		AssertTextEquals(
-			locator1 = "TextInput#TITLE",
-			value1 = "${webContentTitle}");
-
-		FormFields.viewTextMultilineValue(
-			fieldName = "TextBox",
-			fieldValue = "${webContentTextBox}");
-
-		PortletEntry.changeLocale(locale = "es-ES");
-
-		AssertTextEquals(
-			locator1 = "TextInput#TITLE",
-			value1 = "${localizedTitle}");
-
-		FormFields.viewTextValue(
-			fieldName = "Text",
-			fieldValue = "${localizedText}");
-
-		FormFields.viewTextMultilineValue(
-			fieldName = "TextBox",
-			fieldValue = "${localizedTextBox}");
-	}
-
 	macro viewUserEditCP {
 		AssertTextEquals.assertPartialText(
 			key_webContentTitle = "${webContentTitle}",
@@ -2064,7 +2085,17 @@ definition {
 	}
 
 	macro viewVersion {
+		var key_panel = "Basic Information";
+
 		WebContentNavigator.gotoEditCP(webContentTitle = "${webContentTitle}");
+
+		if ((IsElementPresent(locator1 = "Panel#PANEL_COLLAPSED")) && (IsVisible(locator1 = "Panel#PANEL_COLLAPSED"))) {
+			AssertClick(
+				locator1 = "Panel#PANEL_COLLAPSED",
+				value1 = "${key_panel}");
+		}
+
+		AssertElementPresent(locator1 = "Panel#PANEL_EXPANDED");
 
 		AssertTextEquals.assertPartialText(
 			locator1 = "WCEditWebContent#VERSION",
@@ -2097,10 +2128,15 @@ definition {
 			value1 = "${webContentTitle}");
 
 		if (isSet(description)) {
+			SelectFrame.selectFrameNoLoading(
+				key_fieldLabel = "Summary",
+				locator1 = "CKEditor#BODY_FIELD_IFRAME_WEB_CONTENT_ARTICLE");
+
 			AssertTextEquals(
-				key_editor = "description",
-				locator1 = "AlloyEditor#EDITOR",
+				locator1 = "CKEditor#BODY",
 				value1 = "${description}");
+
+			SelectFrameTop(value1 = "relative=top");
 		}
 
 		if (isSet(webContentImage)) {

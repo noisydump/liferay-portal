@@ -21,7 +21,7 @@
 		'(': '&#40;',
 		')': '&#41;',
 		'[': '&#91;',
-		']': '&#93;'
+		']': '&#93;',
 	});
 
 	var BBCodeUtil = Liferay.namespace('BBCodeUtil');
@@ -50,7 +50,7 @@
 			var instance = this;
 
 			return REGEX_BBCODE.exec(instance._data);
-		}
+		},
 	};
 
 	Liferay.BBCodeLexer = Lexer;
@@ -76,11 +76,11 @@
 		table: 1,
 		td: 1,
 		th: 1,
-		tr: 1
+		tr: 1,
 	};
 
 	var ELEMENTS_CLOSE_SELF = {
-		'*': 1
+		'*': 1,
 	};
 
 	var ELEMENTS_INLINE = {
@@ -92,7 +92,7 @@
 		s: 1,
 		size: 1,
 		u: 1,
-		url: 1
+		url: 1,
 	};
 
 	var REGEX_TAG_NAME = /^\/?(?:b|center|code|colou?r|email|i|img|justify|left|pre|q|quote|right|\*|s|size|table|tr|th|td|li|list|font|u|url)$/i;
@@ -132,7 +132,7 @@
 			if (length > instance._dataPointer) {
 				instance._result.push({
 					type: Parser.TOKEN_DATA,
-					value: data.substring(instance._dataPointer, length)
+					value: data.substring(instance._dataPointer, length),
 				});
 			}
 
@@ -151,7 +151,8 @@
 			if (token) {
 				if (isString(token)) {
 					tagName = token;
-				} else {
+				}
+				else {
 					tagName = token[3];
 				}
 
@@ -170,7 +171,7 @@
 				for (var i = stack.length - 1; i >= pos; i--) {
 					instance._result.push({
 						type: tokenTagEnd,
-						value: stack[i]
+						value: stack[i],
 					});
 				}
 
@@ -209,7 +210,7 @@
 				instance._result.push({
 					attribute: token[2],
 					type: Parser.TOKEN_TAG_START,
-					value: tagName
+					value: tagName,
 				});
 			}
 		},
@@ -274,17 +275,21 @@
 						while (
 							(token = lexer.getNextToken()) &&
 							token[3] != STR_TAG_CODE
-						);
+						) {
+							// Continue.
+						}
 
 						instance._handleData(token, data);
 
 						if (token) {
 							instance._handleTagEnd(token);
-						} else {
+						}
+						else {
 							break;
 						}
 					}
-				} else {
+				}
+				else {
 					instance._handleTagEnd(token);
 				}
 			}
@@ -298,7 +303,7 @@
 			instance._reset();
 
 			return result;
-		}
+		},
 	};
 
 	Parser.TOKEN_DATA = 4;
@@ -326,7 +331,7 @@
 		6: 24,
 		7: 32,
 		8: 48,
-		defaultSize: 14
+		defaultSize: 14,
 	};
 
 	var MAP_HANDLERS = {
@@ -353,7 +358,7 @@
 		td: '_handleTableCell',
 		th: '_handleTableHeader',
 		tr: '_handleTableRow',
-		url: '_handleURL'
+		url: '_handleURL',
 	};
 
 	var MAP_IMAGE_ATTRIBUTES = {
@@ -367,7 +372,7 @@
 		longdesc: 1,
 		style: 1,
 		title: 1,
-		width: 1
+		width: 1,
 	};
 
 	var MAP_ORDERED_LIST_STYLES = {
@@ -375,7 +380,7 @@
 		A: 'list-style-type: upper-alpha;',
 		I: 'list-style-type: upper-roman;',
 		a: 'list-style-type: lower-alpha;',
-		i: 'list-style-type: lower-roman;'
+		i: 'list-style-type: lower-roman;',
 	};
 
 	var MAP_TOKENS_EXCLUDE_NEW_LINE = {
@@ -384,13 +389,13 @@
 		table: 2,
 		td: 3,
 		th: 3,
-		tr: 3
+		tr: 3,
 	};
 
 	var MAP_UNORDERED_LIST_STYLES = {
 		circle: 'list-style-type: circle;',
 		disc: 'list-style-type: disc;',
-		square: 'list-style-type: square;'
+		square: 'list-style-type: square;',
 	};
 
 	var REGEX_ATTRS = /\s*([^=]+)\s*=\s*"([^"]*)"\s*/g;
@@ -551,7 +556,7 @@
 
 				for (var i = 0; i < length; i++) {
 					var image = tplImage.output({
-						imageSrc: emoticonPath + emoticonImages[i]
+						imageSrc: emoticonPath + emoticonImages[i],
 					});
 
 					var escapedSymbol = emoticonSymbols[i].replace(
@@ -628,7 +633,7 @@
 
 			var result = tplImage.output({
 				attributes: instance._handleImageAttributes(token, token.value),
-				imageSrc
+				imageSrc,
 			});
 
 			instance._result.push(result);
@@ -683,14 +688,16 @@
 							styleAttr = MAP_ORDERED_LIST_STYLES[attrValue];
 
 							tag = 'ol';
-						} else {
+						}
+						else {
 							styleAttr = MAP_UNORDERED_LIST_STYLES[attrValue];
 						}
 
 						if (styleAttr) {
 							listAttributes += ' style="' + styleAttr + '"';
 						}
-					} else if (
+					}
+					else if (
 						attrName === STR_START &&
 						REGEX_NUMBER.test(attrValue)
 					) {
@@ -733,7 +740,8 @@
 					) {
 						value = STR_BLANK;
 					}
-				} else if (REGEX_LASTCHAR_NEWLINE.test(value)) {
+				}
+				else if (REGEX_LASTCHAR_NEWLINE.test(value)) {
 					nextToken =
 						instance._parsedData[instance._tokenPointer + 1];
 
@@ -759,7 +767,7 @@
 
 			var cite = token.attribute;
 
-			var result = '<blockquote>';
+			var result = '<blockquote><p>';
 
 			if (cite && cite.length) {
 				cite = BBCodeUtil.escape(cite);
@@ -769,7 +777,7 @@
 
 			instance._result.push(result);
 
-			instance._stack.push('</blockquote>');
+			instance._stack.push('</p></blockquote>');
 		},
 
 		_handleSimpleTag(tagName) {
@@ -930,11 +938,14 @@
 
 				if (type === TOKEN_TAG_START) {
 					instance._handleTagStart(token);
-				} else if (type === TOKEN_TAG_END) {
+				}
+				else if (type === TOKEN_TAG_END) {
 					instance._handleTagEnd(token);
-				} else if (type === TOKEN_DATA) {
+				}
+				else if (type === TOKEN_DATA) {
 					instance._handleData(token);
-				} else {
+				}
+				else {
 					throw 'Internal error. Invalid token type';
 				}
 			}
@@ -955,7 +966,7 @@
 
 			instance._result = [];
 			instance._stack = [];
-		}
+		},
 	};
 
 	CKEDITOR.BBCode2HTML = Converter;

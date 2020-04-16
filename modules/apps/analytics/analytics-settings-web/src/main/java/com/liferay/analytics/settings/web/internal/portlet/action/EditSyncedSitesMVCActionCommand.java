@@ -19,6 +19,8 @@ import com.liferay.configuration.admin.constants.ConfigurationAdminPortletKeys;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONUtil;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
 import com.liferay.portal.kernel.service.CompanyService;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
@@ -102,12 +104,14 @@ public class EditSyncedSitesMVCActionCommand
 		StatusLine statusLine = httpResponse.getStatusLine();
 
 		if (statusLine.getStatusCode() == HttpStatus.SC_FORBIDDEN) {
-			disconnectDataSource(themeDisplay.getCompanyId(), httpResponse);
+			checkResponse(themeDisplay.getCompanyId(), httpResponse);
 
 			return;
 		}
 
 		if (statusLine.getStatusCode() != HttpStatus.SC_OK) {
+			_log.error("Unable to notify Analytics Cloud");
+
 			throw new PortalException("Invalid token");
 		}
 	}
@@ -128,6 +132,9 @@ public class EditSyncedSitesMVCActionCommand
 		_companyService.updatePreferences(
 			themeDisplay.getCompanyId(), unicodeProperties);
 	}
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		EditSyncedSitesMVCActionCommand.class);
 
 	@Reference
 	private CompanyService _companyService;

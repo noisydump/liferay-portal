@@ -23,8 +23,12 @@ import java.time.LocalDateTime;
  */
 public class WorkflowMetricsSLATaskResult {
 
-	public Long getAssigneeId() {
-		return _assigneeId;
+	public Long[] getAssigneeIds() {
+		return _assigneeIds;
+	}
+
+	public String getAssigneeType() {
+		return _assigneeType;
 	}
 
 	public long getCompanyId() {
@@ -47,6 +51,10 @@ public class WorkflowMetricsSLATaskResult {
 		return _lastCheckLocalDateTime;
 	}
 
+	public long getNodeId() {
+		return _nodeId;
+	}
+
 	public long getProcessId() {
 		return _processId;
 	}
@@ -61,10 +69,6 @@ public class WorkflowMetricsSLATaskResult {
 
 	public String getTaskName() {
 		return _taskName;
-	}
-
-	public long getTokenId() {
-		return _tokenId;
 	}
 
 	public WorkflowMetricsSLAStatus getWorkflowMetricsSLAStatus() {
@@ -83,8 +87,12 @@ public class WorkflowMetricsSLATaskResult {
 		return _onTime;
 	}
 
-	public void setAssigneeId(Long assigneeId) {
-		_assigneeId = assigneeId;
+	public void setAssigneeIds(Long[] assigneeIds) {
+		_assigneeIds = assigneeIds;
+	}
+
+	public void setAssigneeType(String assigneeType) {
+		_assigneeType = assigneeType;
 	}
 
 	public void setBreached(boolean breached) {
@@ -119,6 +127,10 @@ public class WorkflowMetricsSLATaskResult {
 		_lastCheckLocalDateTime = lastCheckLocalDateTime;
 	}
 
+	public void setNodeId(long nodeId) {
+		_nodeId = nodeId;
+	}
+
 	public void setOnTime(boolean onTime) {
 		_onTime = onTime;
 	}
@@ -139,17 +151,14 @@ public class WorkflowMetricsSLATaskResult {
 		_taskName = taskName;
 	}
 
-	public void setTokenId(long tokenId) {
-		_tokenId = tokenId;
-	}
-
 	public void setWorkflowMetricsSLAStatus(
 		WorkflowMetricsSLAStatus workflowMetricsSLAStatus) {
 
 		_workflowMetricsSLAStatus = workflowMetricsSLAStatus;
 	}
 
-	private Long _assigneeId;
+	private Long[] _assigneeIds;
+	private String _assigneeType;
 	private boolean _breached;
 	private long _companyId;
 	private LocalDateTime _completionLocalDateTime;
@@ -157,12 +166,12 @@ public class WorkflowMetricsSLATaskResult {
 	private boolean _instanceCompleted;
 	private long _instanceId;
 	private LocalDateTime _lastCheckLocalDateTime;
+	private long _nodeId;
 	private boolean _onTime;
 	private long _processId;
 	private long _slaDefinitionId;
 	private long _taskId;
 	private String _taskName;
-	private long _tokenId;
 	private WorkflowMetricsSLAStatus _workflowMetricsSLAStatus;
 
 }

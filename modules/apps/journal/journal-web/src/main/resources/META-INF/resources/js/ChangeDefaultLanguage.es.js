@@ -17,7 +17,7 @@ import ClayDropDown from '@clayui/drop-down';
 import ClayIcon from '@clayui/icon';
 import ClayLabel from '@clayui/label';
 import PropTypes from 'prop-types';
-import React, {useState, useCallback} from 'react';
+import React, {useCallback, useState} from 'react';
 
 function ChangeDefaultLanguage(props) {
 	const [active, setActive] = useState(false);
@@ -31,7 +31,7 @@ function ChangeDefaultLanguage(props) {
 		setActive(false);
 
 		Liferay.fire('inputLocalized:defaultLocaleChanged', {
-			item: event.currentTarget
+			item: event.currentTarget,
 		});
 	}, []);
 
@@ -100,12 +100,10 @@ ChangeDefaultLanguage.propTypes = {
 	languages: PropTypes.arrayOf(
 		PropTypes.shape({
 			icon: PropTypes.string,
-			label: PropTypes.string
+			label: PropTypes.string,
 		})
 	).isRequired,
-	strings: PropTypes.object.isRequired
+	strings: PropTypes.object.isRequired,
 };
 
-export default function(props) {
-	return <ChangeDefaultLanguage {...props} />;
-}
+export default ChangeDefaultLanguage;

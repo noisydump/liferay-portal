@@ -26,7 +26,26 @@ import javax.annotation.Generated;
  * @generated
  */
 @Generated("")
-public class MasterPage {
+public class MasterPage implements Cloneable {
+
+	public String getKey() {
+		return key;
+	}
+
+	public void setKey(String key) {
+		this.key = key;
+	}
+
+	public void setKey(UnsafeSupplier<String, Exception> keyUnsafeSupplier) {
+		try {
+			key = keyUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected String key;
 
 	public String getName() {
 		return name;
@@ -46,6 +65,11 @@ public class MasterPage {
 	}
 
 	protected String name;
+
+	@Override
+	public MasterPage clone() throws CloneNotSupportedException {
+		return (MasterPage)super.clone();
+	}
 
 	@Override
 	public boolean equals(Object object) {

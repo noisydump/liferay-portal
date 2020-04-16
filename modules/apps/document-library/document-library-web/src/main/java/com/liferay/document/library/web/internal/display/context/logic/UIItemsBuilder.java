@@ -23,14 +23,14 @@ import com.liferay.document.library.kernel.model.DLFileShortcutConstants;
 import com.liferay.document.library.kernel.model.DLFolderConstants;
 import com.liferay.document.library.kernel.versioning.VersioningStrategy;
 import com.liferay.document.library.util.DLURLHelper;
-import com.liferay.document.library.web.internal.util.DLTrashUtil;
+import com.liferay.document.library.web.internal.helper.DLTrashHelper;
 import com.liferay.exportimport.kernel.lar.StagedModelDataHandler;
 import com.liferay.exportimport.kernel.lar.StagedModelDataHandlerRegistryUtil;
+import com.liferay.petra.io.unsync.UnsyncStringWriter;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
-import com.liferay.portal.kernel.io.unsync.UnsyncStringWriter;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.language.UnicodeLanguageUtil;
 import com.liferay.portal.kernel.portlet.LiferayPortletRequest;
@@ -65,7 +65,6 @@ import com.liferay.portal.kernel.util.JavaConstants;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.StringUtil;
-import com.liferay.portal.kernel.util.TextFormatter;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
@@ -94,34 +93,34 @@ public class UIItemsBuilder {
 	public UIItemsBuilder(
 		HttpServletRequest httpServletRequest, FileEntry fileEntry,
 		FileVersion fileVersion, ResourceBundle resourceBundle,
-		DLTrashUtil dlTrashUtil, VersioningStrategy versioningStrategy,
+		DLTrashHelper dlTrashHelper, VersioningStrategy versioningStrategy,
 		DLURLHelper dlURLHelper) {
 
 		this(
 			httpServletRequest, fileEntry, null, fileVersion, resourceBundle,
-			dlTrashUtil, versioningStrategy, dlURLHelper);
+			dlTrashHelper, versioningStrategy, dlURLHelper);
 	}
 
 	public UIItemsBuilder(
 			HttpServletRequest httpServletRequest, FileShortcut fileShortcut,
-			ResourceBundle resourceBundle, DLTrashUtil dlTrashUtil,
+			ResourceBundle resourceBundle, DLTrashHelper dlTrashHelper,
 			VersioningStrategy versioningStrategy, DLURLHelper dlURLHelper)
 		throws PortalException {
 
 		this(
 			httpServletRequest, null, fileShortcut,
-			fileShortcut.getFileVersion(), resourceBundle, dlTrashUtil,
+			fileShortcut.getFileVersion(), resourceBundle, dlTrashHelper,
 			versioningStrategy, dlURLHelper);
 	}
 
 	public UIItemsBuilder(
 		HttpServletRequest httpServletRequest, FileVersion fileVersion,
-		ResourceBundle resourceBundle, DLTrashUtil dlTrashUtil,
+		ResourceBundle resourceBundle, DLTrashHelper dlTrashHelper,
 		VersioningStrategy versioningStrategy, DLURLHelper dlURLHelper) {
 
 		this(
 			httpServletRequest, null, null, fileVersion, resourceBundle,
-			dlTrashUtil, versioningStrategy, dlURLHelper);
+			dlTrashHelper, versioningStrategy, dlURLHelper);
 	}
 
 	public void addCancelCheckoutMenuItem(List<MenuItem> menuItems)
@@ -460,7 +459,7 @@ public class UIItemsBuilder {
 			return;
 		}
 
-		String label = TextFormatter.formatStorageSize(
+		String label = LanguageUtil.formatStorageSize(
 			_fileVersion.getSize(), _themeDisplay.getLocale());
 
 		label = StringBundler.concat(
@@ -502,7 +501,7 @@ public class UIItemsBuilder {
 			return;
 		}
 
-		String label = TextFormatter.formatStorageSize(
+		String label = LanguageUtil.formatStorageSize(
 			_fileVersion.getSize(), _themeDisplay.getLocale());
 
 		URLToolbarItem urlToolbarItem = new URLToolbarItem();
@@ -1051,7 +1050,7 @@ public class UIItemsBuilder {
 	private UIItemsBuilder(
 		HttpServletRequest httpServletRequest, FileEntry fileEntry,
 		FileShortcut fileShortcut, FileVersion fileVersion,
-		ResourceBundle resourceBundle, DLTrashUtil dlTrashUtil,
+		ResourceBundle resourceBundle, DLTrashHelper dlTrashHelper,
 		VersioningStrategy versioningStrategy, DLURLHelper dlURLHelper) {
 
 		try {
@@ -1066,7 +1065,7 @@ public class UIItemsBuilder {
 			_fileShortcut = fileShortcut;
 			_fileVersion = fileVersion;
 			_resourceBundle = resourceBundle;
-			_dlTrashUtil = dlTrashUtil;
+			_dlTrashHelper = dlTrashHelper;
 			_versioningStrategy = versioningStrategy;
 			_dlURLHelper = dlURLHelper;
 
@@ -1375,11 +1374,11 @@ public class UIItemsBuilder {
 
 		_trashEnabled = false;
 
-		if (_dlTrashUtil == null) {
+		if (_dlTrashHelper == null) {
 			return _trashEnabled;
 		}
 
-		_trashEnabled = _dlTrashUtil.isTrashEnabled(
+		_trashEnabled = _dlTrashHelper.isTrashEnabled(
 			_themeDisplay.getScopeGroupId(), _fileEntry.getRepositoryId());
 
 		return _trashEnabled;
@@ -1392,7 +1391,7 @@ public class UIItemsBuilder {
 	}
 
 	private String _currentURL;
-	private final DLTrashUtil _dlTrashUtil;
+	private final DLTrashHelper _dlTrashHelper;
 	private final DLURLHelper _dlURLHelper;
 	private final FileEntry _fileEntry;
 	private final FileEntryDisplayContextHelper _fileEntryDisplayContextHelper;

@@ -9,7 +9,7 @@
  * distribution rights of the Software.
  */
 
-import {cleanup, render, findByTestId} from '@testing-library/react';
+import {cleanup, findByTestId, render} from '@testing-library/react';
 import React from 'react';
 
 import ProcessStepFilter from '../../../src/main/resources/META-INF/resources/js/components/filter/ProcessStepFilter.es';
@@ -18,12 +18,14 @@ import {MockRouter} from '../../mock/MockRouter.es';
 const query = '?filters.taskKeys%5B0%5D=update';
 
 const items = [
-	{key: 'review', name: 'Review'},
-	{key: 'update', name: 'Update'}
+	{label: 'Review', name: 'review'},
+	{label: 'Update', name: 'update'},
 ];
 
 const clientMock = {
-	get: jest.fn().mockResolvedValue({data: {items, totalCount: items.length}})
+	request: jest
+		.fn()
+		.mockResolvedValue({data: {items, totalCount: items.length}}),
 };
 
 const wrapper = ({children}) => (
@@ -38,10 +40,9 @@ describe('The process step filter component should', () => {
 	afterEach(cleanup);
 
 	beforeEach(() => {
-		const renderResult = render(
-			<ProcessStepFilter dispatch={() => {}} processId={12345} />,
-			{wrapper}
-		);
+		const renderResult = render(<ProcessStepFilter processId={12345} />, {
+			wrapper,
+		});
 
 		getAllByTestId = renderResult.getAllByTestId;
 	});

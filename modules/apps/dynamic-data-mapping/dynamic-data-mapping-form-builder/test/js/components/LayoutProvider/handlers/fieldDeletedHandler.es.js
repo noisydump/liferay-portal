@@ -12,10 +12,11 @@
  * details.
  */
 
+import {FormSupport} from 'dynamic-data-mapping-form-renderer';
+
+import * as fieldDeletedHandler from '../../../../../src/main/resources/META-INF/resources/js/components/LayoutProvider/handlers/fieldDeletedHandler.es';
+import RulesSupport from '../../../../../src/main/resources/META-INF/resources/js/components/RuleBuilder/RulesSupport.es';
 import mockPages from '../../../__mock__/mockPages.es';
-import * as FormSupport from '../../../src/main/resources/META-INF/resources/js/components/Form/FormSupport.es';
-import * as fieldDeletedHandler from '../../../src/main/resources/META-INF/resources/js/components/LayoutProvider/handlers/fieldDeletedHandler.es';
-import RulesSupport from '../../../src/main/resources/META-INF/resources/js/components/RuleBuilder/RulesSupport.es';
 
 describe('LayoutProvider/handlers/fieldDeletedHandler', () => {
 	describe('handleFieldDeleted(state, event)', () => {
@@ -23,11 +24,11 @@ describe('LayoutProvider/handlers/fieldDeletedHandler', () => {
 			const event = {
 				columnIndex: 0,
 				pageIndex: 0,
-				rowIndex: 0
+				rowIndex: 0,
 			};
 			const state = {
 				pages: mockPages,
-				rules: []
+				rules: [],
 			};
 
 			const removeRowSpy = jest.spyOn(FormSupport, 'removeRow');
@@ -45,7 +46,7 @@ describe('LayoutProvider/handlers/fieldDeletedHandler', () => {
 			const event = {
 				columnIndex: 0,
 				pageIndex: 0,
-				rowIndex: 0
+				rowIndex: 0,
 			};
 			const state = {
 				pages: mockPages,
@@ -56,13 +57,13 @@ describe('LayoutProvider/handlers/fieldDeletedHandler', () => {
 							{
 								operands: [
 									{
-										value: 'radio'
-									}
-								]
-							}
-						]
-					}
-				]
+										value: 'radio',
+									},
+								],
+							},
+						],
+					},
+				],
 			};
 
 			const clearAllConditionFieldValuesSpy = jest.spyOn(
