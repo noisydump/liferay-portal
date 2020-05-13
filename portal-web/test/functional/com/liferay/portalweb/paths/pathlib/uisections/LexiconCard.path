@@ -45,12 +45,17 @@
 </tr>
 <tr>
 	<td>CARD_SELECTED</td>
-	<td>//li[contains(@class,'active')]//div[contains(@class,'card')][contains(.,'${key_card}')]</td>
+	<td>//li[contains(@class,'active')]//div[contains(@class,'card')][contains(.,'${key_card}')] | //div[contains(@class,'card')][contains(@class,'active')][contains(.,'${key_card}')]</td>
 	<td></td>
 </tr>
 <tr>
 	<td>CARD_STICKER</td>
 	<td>//div[contains(@class,'card')][contains(.,'${key_card}')]//span[contains(@class,'sticker')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>CARD_THUMBNAIL</td>
+	<td>//div[contains(@class,'card')][contains(.,'${key_card}')]//img</td>
 	<td></td>
 </tr>
 <tr>

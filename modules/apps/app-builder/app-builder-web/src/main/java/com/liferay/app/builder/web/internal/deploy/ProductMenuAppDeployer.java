@@ -14,7 +14,6 @@
 
 package com.liferay.app.builder.web.internal.deploy;
 
-import com.liferay.app.builder.constants.AppBuilderAppConstants;
 import com.liferay.app.builder.constants.AppBuilderPortletKeys;
 import com.liferay.app.builder.deploy.AppDeployer;
 import com.liferay.app.builder.model.AppBuilderApp;
@@ -67,6 +66,8 @@ public class ProductMenuAppDeployer implements AppDeployer {
 		AppBuilderApp appBuilderApp =
 			_appBuilderAppLocalService.getAppBuilderApp(appId);
 
+		appBuilderApp.setActive(true);
+
 		String appName = appBuilderApp.getName(
 			LocaleThreadLocal.getDefaultLocale());
 
@@ -83,10 +84,12 @@ public class ProductMenuAppDeployer implements AppDeployer {
 						appBuilderApp, appName, controlPanelMenuLabel),
 					_deployPortlet(appBuilderApp, appName, siteMenuLabel),
 					_deployPanelApp(
+						appBuilderApp.getCompanyId(),
 						PanelCategoryKeys.CONTROL_PANEL, controlPanelMenuLabel,
 						JSONUtil.toLongArray(
 							jsonObject.getJSONArray("siteIds"))),
 					_deployPanelApp(
+						appBuilderApp.getCompanyId(),
 						PanelCategoryKeys.SITE_ADMINISTRATION_CONTENT,
 						siteMenuLabel,
 						JSONUtil.toLongArray(
@@ -109,14 +112,11 @@ public class ProductMenuAppDeployer implements AppDeployer {
 				mapKey -> new ServiceRegistration<?>[] {
 					_deployPortlet(appBuilderApp, appName, menuLabel),
 					_deployPanelApp(
-						scope, menuLabel,
+						appBuilderApp.getCompanyId(), scope, menuLabel,
 						JSONUtil.toLongArray(
 							jsonObject.getJSONArray("siteIds")))
 				});
 		}
-
-		appBuilderApp.setStatus(
-			AppBuilderAppConstants.Status.DEPLOYED.getValue());
 
 		_appBuilderAppLocalService.updateAppBuilderApp(appBuilderApp);
 	}
@@ -139,11 +139,13 @@ public class ProductMenuAppDeployer implements AppDeployer {
 	}
 
 	private ServiceRegistration<?> _deployPanelApp(
-		String panelCategoryKey, String portletName, long[] siteIds) {
+		long companyId, String panelCategoryKey, String portletName,
+		long[] siteIds) {
 
 		return _bundleContext.registerService(
 			PanelApp.class,
-			new ProductMenuPanelApp(panelCategoryKey, portletName, siteIds),
+			new ProductMenuPanelApp(
+				companyId, panelCategoryKey, portletName, siteIds),
 			new HashMapDictionary<String, Object>() {
 				{
 					put("panel.app.order:Integer", 100);

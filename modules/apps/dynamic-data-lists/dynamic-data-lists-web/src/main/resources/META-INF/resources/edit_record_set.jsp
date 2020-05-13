@@ -28,6 +28,12 @@ long recordSetId = BeanParamUtil.getLong(recordSet, request, "recordSetId");
 
 long groupId = BeanParamUtil.getLong(recordSet, request, "groupId", scopeGroupId);
 
+Group scopeGroup = GroupLocalServiceUtil.getGroup(scopeGroupId);
+
+if (scopeGroup.isStagingGroup() && !scopeGroup.isInStagingPortlet(DDLPortletKeys.DYNAMIC_DATA_LISTS)) {
+	groupId = scopeGroup.getLiveGroupId();
+}
+
 long ddmStructureId = ParamUtil.getLong(request, "ddmStructureId");
 
 if (recordSet != null) {
@@ -102,10 +108,6 @@ if (ddlDisplayContext.isAdminPortlet()) {
 					url='<%= "javascript:" + renderResponse.getNamespace() + "openDDMStructureSelector();" %>'
 				/>
 			</div>
-
-			<%
-			Group scopeGroup = GroupLocalServiceUtil.getGroup(scopeGroupId);
-			%>
 
 			<c:if test="<%= WorkflowEngineManagerUtil.isDeployed() && (WorkflowHandlerRegistryUtil.getWorkflowHandler(DDLRecord.class.getName()) != null) && !scopeGroup.isLayoutSetPrototype() %>">
 				<aui:select label="workflow" name="workflowDefinition">
@@ -186,7 +188,7 @@ if (ddlDisplayContext.isAdminPortlet()) {
 				title:
 					'<%= UnicodeLanguageUtil.get(request, "data-definitions") %>',
 			},
-			function(event) {
+			function (event) {
 				Liferay.Util.setFormValues(form, {
 					ddmStructureId: event.ddmstructureid,
 					ddmStructureNameDisplay: Liferay.Util.unescape(event.name),

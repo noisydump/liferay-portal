@@ -153,8 +153,10 @@ if (privateVirtualHostnames.isEmpty()) {
 			String virtualHostLanguageId = Validator.isNotNull(entry.getValue()) ? entry.getValue() : StringPool.BLANK;
 		%>
 
-			<div class="container-fluid lfr-form-row">
-				<div class="row">
+			<clay:container
+				className="lfr-form-row"
+			>
+				<clay:row>
 					<aui:input inlineField="<%= true %>" label="public-pages" maxlength="200" name="publicVirtualHostname[]" placeholder="virtual-host" type="text" value="<%= virtualHostname %>" wrapperCssClass="col-sm-6" />
 
 					<aui:select inlineField="<%= true %>" label="language" name="publicVirtualHostLanguageId[]" wrapperCssClass="col-sm-6">
@@ -172,8 +174,8 @@ if (privateVirtualHostnames.isEmpty()) {
 						%>
 
 					</aui:select>
-				</div>
-			</div>
+				</clay:row>
+			</clay:container>
 
 		<%
 		}
@@ -190,8 +192,10 @@ if (privateVirtualHostnames.isEmpty()) {
 			String virtualHostLanguageId = Validator.isNotNull(entry.getValue()) ? entry.getValue() : StringPool.BLANK;
 		%>
 
-			<div class="container-fluid lfr-form-row">
-				<div class="row">
+			<clay:container
+				className="lfr-form-row"
+			>
+				<clay:row>
 					<aui:input inlineField="<%= true %>" label="private-pages" maxlength="200" name="privateVirtualHostname[]" placeholder="virtual-host" type="text" value="<%= virtualHostname %>" wrapperCssClass="col-sm-6" />
 
 					<aui:select inlineField="<%= true %>" label="language" name="privateVirtualHostLanguageId[]" wrapperCssClass="col-sm-6">
@@ -209,8 +213,8 @@ if (privateVirtualHostnames.isEmpty()) {
 						%>
 
 					</aui:select>
-				</div>
-			</div>
+				</clay:row>
+			</clay:container>
 
 		<%
 		}
@@ -241,8 +245,10 @@ if (privateVirtualHostnames.isEmpty()) {
 				String virtualHostLanguageId = Validator.isNotNull(entry.getValue()) ? entry.getValue() : StringPool.BLANK;
 			%>
 
-				<div class="container-fluid lfr-form-row">
-					<div class="row">
+				<clay:container
+					className="lfr-form-row"
+				>
+					<clay:row>
 						<aui:input inlineField="<%= true %>" label="staging-public-pages" maxlength="200" name="stagingPublicVirtualHostname[]" placeholder="virtual-host" type="text" value="<%= virtualHostname %>" wrapperCssClass="col-sm-6" />
 
 						<aui:select inlineField="<%= true %>" label="language" name="stagingPublicVirtualHostLanguageId[]" wrapperCssClass="col-sm-6">
@@ -260,8 +266,8 @@ if (privateVirtualHostnames.isEmpty()) {
 							%>
 
 						</aui:select>
-					</div>
-				</div>
+					</clay:row>
+				</clay:container>
 
 			<%
 			}
@@ -290,8 +296,10 @@ if (privateVirtualHostnames.isEmpty()) {
 				String virtualHostLanguageId = Validator.isNotNull(entry.getValue()) ? entry.getValue() : StringPool.BLANK;
 			%>
 
-				<div class="container-fluid lfr-form-row">
-					<div class="row">
+				<clay:container
+					className="lfr-form-row"
+				>
+					<clay:row>
 						<aui:input inlineField="<%= true %>" label="staging-private-pages" maxlength="200" name="stagingPrivateVirtualHostname[]" placeholder="virtual-host" type="text" value="<%= virtualHostname %>" wrapperCssClass="col-sm-6" />
 
 						<aui:select inlineField="<%= true %>" label="language" name="stagingPrivateVirtualHostLanguageId[]" wrapperCssClass="col-sm-6">
@@ -309,8 +317,8 @@ if (privateVirtualHostnames.isEmpty()) {
 							%>
 
 						</aui:select>
-					</div>
-				</div>
+					</clay:row>
+				</clay:container>
 
 			<%
 			}
@@ -350,14 +358,14 @@ if (privateVirtualHostnames.isEmpty()) {
 	);
 
 	if (friendlyURL) {
-		friendlyURL.addEventListener('change', function(event) {
+		friendlyURL.addEventListener('change', function (event) {
 			var value = friendlyURL.value.trim();
 
 			if (value == '/') {
 				value = '';
 			}
 			else {
-				value = value.replace(/^[^\/]|\/$/g, function(match, index) {
+				value = value.replace(/^[^\/]|\/$/g, function (match, index) {
 					var str = '';
 
 					if (index == 0) {

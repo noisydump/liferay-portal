@@ -32,6 +32,8 @@ definition {
 	}
 
 	test AssertSearchAdmin {
+		property test.name.skip.portal.instance = "Solr#AssertSearchAdmin";
+
 		ProductMenu.gotoPortlet(
 			category = "Configuration",
 			panel = "Control Panel",
@@ -45,6 +47,8 @@ definition {
 
 	@priority = "4"
 	test AssertSearchInsightsExplain {
+		property test.name.skip.portal.instance = "Solr#AssertSearchInsightsExplain";
+
 		JSONWebcontent.addWebContent(
 			content = "WC Content",
 			groupName = "Guest",
@@ -59,6 +63,11 @@ definition {
 		Portlet.gotoPortletOptions(
 			portletName = "Search Insights",
 			portletOption = "Configuration");
+
+		LiferayEvent.waitForLiferayEvent(
+			attributeName = "src",
+			attributeValue = "dialog-iframe-popup",
+			eventName = "modalIframeLoaded");
 
 		SelectFrame(locator1 = "IFrame#CONFIGURATION");
 
@@ -85,6 +94,11 @@ definition {
 		Portlet.gotoPortletOptions(
 			portletName = "Search Insights",
 			portletOption = "Configuration");
+
+		LiferayEvent.waitForLiferayEvent(
+			attributeName = "src",
+			attributeValue = "dialog-iframe-popup",
+			eventName = "modalIframeLoaded");
 
 		SelectFrame(locator1 = "IFrame#CONFIGURATION");
 

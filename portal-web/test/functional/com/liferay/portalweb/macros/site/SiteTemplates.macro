@@ -30,6 +30,8 @@ definition {
 	}
 
 	macro addCP {
+		SiteTemplatesNavigator.openSiteTemplatesAdmin();
+
 		LexiconEntry.gotoAdd();
 
 		PortletEntry.inputName(name = "${siteTemplateName}");
@@ -51,6 +53,8 @@ definition {
 	}
 
 	macro addSitePageViaSiteTemplateCP {
+		SiteTemplatesNavigator.openSiteTemplatesAdmin();
+
 		LexiconEntry.gotoEntryMenuItem(
 			menuItem = "Manage",
 			rowEntry = "${siteTemplateName}");
@@ -85,7 +89,12 @@ definition {
 			LexiconCard.clickCard(card = "${rowEntry}");
 		}
 
-		SelectFrame(locator1 = "IFrame#DIALOG");
+		LiferayEvent.waitForLiferayEvent(
+			attributeName = "src",
+			attributeValue = "dialog-iframe-popup",
+			eventName = "modalIframeLoaded");
+
+		SelectFrame(locator1 = "IFrame#MODAL_BODY");
 
 		PortletEntry.inputName(name = "${pageName}");
 

@@ -116,7 +116,12 @@ definition {
 			locator1 = "Calendar#SCHEDULER_EVENT_DIALOG_BOX_VIEW_DETAILS_BUTTON",
 			value1 = "View Details");
 
-		SelectFrame(locator1 = "IFrame#DIALOG");
+		LiferayEvent.waitForLiferayEvent(
+			attributeName = "src",
+			attributeValue = "dialog-iframe-popup",
+			eventName = "modalIframeLoaded");
+
+		SelectFrame(locator1 = "IFrame#MODAL_BODY");
 	}
 
 	macro gotoEdit {
@@ -127,6 +132,11 @@ definition {
 		AssertClick(
 			locator1 = "Calendar#SCHEDULER_EVENT_DIALOG_BOX_EDIT_BUTTON",
 			value1 = "Edit");
+
+		LiferayEvent.waitForLiferayEvent(
+			attributeName = "src",
+			attributeValue = "dialog-iframe-popup",
+			eventName = "modalIframeLoaded");
 
 		SelectFrame(locator1 = "IFrame#METADATA_SETS_IFRAME");
 	}
@@ -140,6 +150,11 @@ definition {
 			locator1 = "Calendar#SCHEDULER_EVENT_DIALOG_BOX_EDIT_BUTTON",
 			value1 = "Edit");
 
+		LiferayEvent.waitForLiferayEvent(
+			attributeName = "src",
+			attributeValue = "dialog-iframe-popup",
+			eventName = "modalIframeLoaded");
+
 		SelectFrame(locator1 = "IFrame#METADATA_SETS_IFRAME");
 	}
 
@@ -147,6 +162,11 @@ definition {
 		AssertClick(
 			locator1 = "Calendar#SCHEDULER_EVENT_DIALOG_BOX_EDIT_BUTTON",
 			value1 = "Edit");
+
+		LiferayEvent.waitForLiferayEvent(
+			attributeName = "src",
+			attributeValue = "dialog-iframe-popup",
+			eventName = "modalIframeLoaded");
 
 		SelectFrame(locator1 = "IFrame#METADATA_SETS_IFRAME");
 	}

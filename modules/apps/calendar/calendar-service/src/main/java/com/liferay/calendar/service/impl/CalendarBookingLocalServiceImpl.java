@@ -15,6 +15,7 @@
 package com.liferay.calendar.service.impl;
 
 import com.liferay.asset.kernel.model.AssetEntry;
+import com.liferay.asset.kernel.model.AssetLink;
 import com.liferay.asset.kernel.model.AssetLinkConstants;
 import com.liferay.calendar.configuration.CalendarServiceConfigurationValues;
 import com.liferay.calendar.constants.CalendarPortletKeys;
@@ -45,6 +46,7 @@ import com.liferay.calendar.social.CalendarActivityKeys;
 import com.liferay.calendar.util.JCalendarUtil;
 import com.liferay.calendar.util.RecurrenceUtil;
 import com.liferay.calendar.workflow.CalendarBookingWorkflowConstants;
+import com.liferay.expando.kernel.model.ExpandoBridge;
 import com.liferay.message.boards.service.MBMessageLocalService;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.aop.AopService;
@@ -79,6 +81,7 @@ import com.liferay.portal.kernel.util.ContentTypes;
 import com.liferay.portal.kernel.util.DateUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HtmlUtil;
+import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.StringUtil;
@@ -843,6 +846,8 @@ public class CalendarBookingLocalServiceImpl
 
 			String recurrence = null;
 
+			addAssetEntry(calendarBooking, serviceContext);
+
 			if (allFollowing) {
 				List<CalendarBooking> recurringCalendarBookings =
 					splitCalendarBookingInstances(
@@ -1391,13 +1396,24 @@ public class CalendarBookingLocalServiceImpl
 			Recurrence recurrenceObj = RecurrenceSerializer.deserialize(
 				recurrence, calendar.getTimeZone());
 
-			if ((recurrenceObj != null) && oldRecurrence.equals(recurrence) &&
-				(recurrenceObj.getCount() > 0)) {
+			if (recurrenceObj != null) {
+				if (oldRecurrence.equals(recurrence)) {
+					if (recurrenceObj.getCount() > 0) {
+						recurrenceObj.setCount(
+							recurrenceObj.getCount() - instanceIndex);
 
-				recurrenceObj.setCount(
-					recurrenceObj.getCount() - instanceIndex);
+						recurrence = RecurrenceSerializer.serialize(
+							recurrenceObj);
+					}
+				}
+				else {
+					List<java.util.Calendar> exceptionJCalendars =
+						recurrenceObj.getExceptionJCalendars();
 
-				recurrence = RecurrenceSerializer.serialize(recurrenceObj);
+					exceptionJCalendars.clear();
+
+					recurrence = RecurrenceSerializer.serialize(recurrenceObj);
+				}
 			}
 
 			updateCalendarBookingsByChanges(
@@ -1652,6 +1668,32 @@ public class CalendarBookingLocalServiceImpl
 
 		return calendarBookingLocalService.updateStatus(
 			userId, calendarBooking, status, serviceContext);
+	}
+
+	protected void addAssetEntry(
+		CalendarBooking calendarBooking, ServiceContext serviceContext) {
+
+		AssetEntry assetEntry = assetEntryLocalService.fetchEntry(
+			CalendarBooking.class.getName(),
+			calendarBooking.getCalendarBookingId());
+
+		if (assetEntry != null) {
+			serviceContext.setAssetCategoryIds(assetEntry.getCategoryIds());
+			serviceContext.setAssetLinkEntryIds(
+				ListUtil.toLongArray(
+					assetLinkLocalService.getDirectLinks(
+						assetEntry.getEntryId()),
+					AssetLink.ENTRY_ID2_ACCESSOR));
+			serviceContext.setAssetPriority(assetEntry.getPriority());
+			serviceContext.setAssetTagNames(assetEntry.getTagNames());
+		}
+
+		ExpandoBridge expandoBridge = calendarBooking.getExpandoBridge();
+
+		if (expandoBridge != null) {
+			serviceContext.setExpandoBridgeAttributes(
+				expandoBridge.getAttributes());
+		}
 	}
 
 	protected void addChildCalendarBookings(

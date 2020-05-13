@@ -54,7 +54,6 @@ import com.liferay.portal.kernel.dao.orm.ProjectionFactoryUtil;
 import com.liferay.portal.kernel.dao.orm.Property;
 import com.liferay.portal.kernel.dao.orm.PropertyFactoryUtil;
 import com.liferay.portal.kernel.dao.orm.RestrictionsFactoryUtil;
-import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.module.configuration.ConfigurationProviderUtil;
@@ -111,7 +110,10 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	configurationPid = "com.liferay.journal.configuration.JournalServiceConfiguration",
-	property = "javax.portlet.name=" + JournalPortletKeys.JOURNAL,
+	property = {
+		"javax.portlet.name=" + JournalPortletKeys.JOURNAL,
+		"schema.version=" + JournalPortletDataHandler.SCHEMA_VERSION
+	},
 	service = PortletDataHandler.class
 )
 public class JournalPortletDataHandler extends BasePortletDataHandler {
@@ -686,7 +688,7 @@ public class JournalPortletDataHandler extends BasePortletDataHandler {
 
 	private void _populateJournalArticleLastPublishDateCounts(
 			PortletDataContext portletDataContext)
-		throws PortalException {
+		throws Exception {
 
 		ManifestSummary manifestSummary =
 			portletDataContext.getManifestSummary();

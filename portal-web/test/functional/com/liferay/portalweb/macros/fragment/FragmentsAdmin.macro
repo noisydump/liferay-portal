@@ -57,7 +57,11 @@ definition {
 			locator1 = "TextInput#FILE",
 			value1 = "${collectionZipFile}");
 
-		Button.click(button = "Import");
+		SelectFrameTop();
+
+		Click.mouseDownMouseUp(
+			key_text = "Import",
+			locator1 = "Modal#ANY_BUTTON");
 
 		Alert.viewSuccessMessage();
 
@@ -73,9 +77,17 @@ definition {
 			locator1 = "TextInput#FILE",
 			value1 = "${collectionsZipFileName}");
 
-		Button.click(button = "Import");
+		SelectFrameTop();
+
+		Click.mouseDownMouseUp(
+			key_text = "Import",
+			locator1 = "Modal#ANY_BUTTON");
+
+		SelectFrame.selectFrameNoLoading(locator1 = "IFrame#MODAL_IFRAME");
 
 		Alert.viewSuccessMessage();
+
+		SelectFrameTop();
 
 		IFrame.closeFrame();
 	}
@@ -85,7 +97,12 @@ definition {
 	}
 
 	macro selectCollection {
-		SelectFrame(locator1 = "IFrame#DIALOG");
+		LiferayEvent.waitForLiferayEvent(
+			attributeName = "src",
+			attributeValue = "dialog-iframe-popup",
+			eventName = "modalIframeLoaded");
+
+		SelectFrame(locator1 = "IFrame#MODAL_BODY");
 
 		LexiconCard.clickCard(card = "${collectionName}");
 	}

@@ -1,7 +1,12 @@
 definition {
 
 	macro addVideoId {
-		SelectFrame(locator1 = "IFrame#DIALOG");
+		LiferayEvent.waitForLiferayEvent(
+			attributeName = "src",
+			attributeValue = "dialog-iframe-popup",
+			eventName = "modalIframeLoaded");
+
+		SelectFrame(locator1 = "IFrame#MODAL_BODY");
 
 		Type(
 			locator1 = "TextInput#URL",
@@ -19,7 +24,12 @@ definition {
 	}
 
 	macro viewPortletConfiguration {
-		SelectFrame(locator1 = "IFrame#DIALOG");
+		LiferayEvent.waitForLiferayEvent(
+			attributeName = "src",
+			attributeValue = "dialog-iframe-popup",
+			eventName = "modalIframeLoaded");
+
+		SelectFrame(locator1 = "IFrame#MODAL_BODY");
 
 		AssertTextEquals(
 			locator1 = "TextInput#URL",

@@ -94,6 +94,11 @@ definition {
 
 		var key_assetTitle = "${assetTitle}";
 
+		LiferayEvent.waitForLiferayEvent(
+			attributeName = "src",
+			attributeValue = "dialog-iframe-popup",
+			eventName = "modalIframeLoaded");
+
 		SelectFrame(locator1 = "AssetRelatedAssets#SELECT_ASSET_IFRAME");
 
 		AssertClick(
@@ -334,6 +339,11 @@ definition {
 		Select(
 			locator1 = "ReportContent#REASON_SELECT",
 			value1 = "${flagReason}");
+
+		LiferayEvent.waitForLiferayEvent(
+			attributeName = "src",
+			attributeValue = "dialog-iframe-popup",
+			eventName = "modalIframeLoaded");
 
 		SelectFrame(locator1 = "ItemSelector#ITEM_SELECTOR_MODAL_FOOTER");
 
@@ -1228,6 +1238,10 @@ definition {
 			locator1 = "BlogsEntry#TITLE",
 			value1 = "${entryTitle}");
 
+		var entryViewCount = selenium.getText("BlogsEntry#ENTRY_VIEW_COUNT");
+		var entryViewCount = StringUtil.extractLast("${entryViewCount}", "-");
+		var entryViewCount = StringUtil.extractDigits("${entryViewCount}");
+
 		if ("${entryViewCount}" == "1") {
 			AssertTextEquals.assertPartialText(
 				locator1 = "BlogsEntry#ENTRY_VIEW_COUNT",
@@ -1241,11 +1255,18 @@ definition {
 
 		Navigator.gotoPage(pageName = "${pageName}");
 
-		var entryViewCount = ${entryViewCount} + 1;
+		if ("${entryViewCount}" == "1") {
+			var entryViewCount = ${entryViewCount} + 1;
 
-		AssertTextEquals.assertPartialText(
-			locator1 = "BlogsEntry#ENTRY_VIEW_COUNT",
-			value1 = "${entryViewCount} Views");
+			AssertTextEquals.assertPartialText(
+				locator1 = "BlogsEntry#ENTRY_VIEW_COUNT",
+				value1 = "${entryViewCount} View");
+		}
+		else {
+			AssertTextEquals.assertPartialText(
+				locator1 = "BlogsEntry#ENTRY_VIEW_COUNT",
+				value1 = "${entryViewCount} Views");
+		}
 	}
 
 	macro viewWithAbstractDisplayTemplatePG {

@@ -61,7 +61,7 @@ export default withRouter(
 				articleBody,
 				headline,
 				sectionId || section.id,
-				tags.map(tag => tag.value)
+				tags.map((tag) => tag.label)
 			).then(() => debounceCallback());
 
 		useEffect(() => {
@@ -95,7 +95,7 @@ export default withRouter(
 
 									<ClayInput
 										maxLength={75}
-										onChange={event =>
+										onChange={(event) =>
 											setHeadline(event.target.value)
 										}
 										placeholder={Liferay.Language.get(
@@ -128,8 +128,13 @@ export default withRouter(
 
 									<Editor
 										config={getCKEditorConfig()}
-										onBeforeLoad={onBeforeLoadCKEditor}
-										onChange={event =>
+										onBeforeLoad={(editor) =>
+											onBeforeLoadCKEditor(
+												editor,
+												context.imageBrowseURL
+											)
+										}
+										onChange={(event) =>
 											setArticleBody(
 												event.editor.getData()
 											)
@@ -155,7 +160,7 @@ export default withRouter(
 										{Liferay.Language.get('topic')}
 									</label>
 									<ClaySelect
-										onChange={event =>
+										onChange={(event) =>
 											setSectionId(event.target.value)
 										}
 									>
@@ -174,7 +179,7 @@ export default withRouter(
 
 								<TagSelector
 									className="c-mt-3"
-									tagsChange={tags => setTags(tags)}
+									tagsChange={(tags) => setTags(tags)}
 									tagsLoaded={setTagsLoaded}
 								/>
 							</ClayForm>

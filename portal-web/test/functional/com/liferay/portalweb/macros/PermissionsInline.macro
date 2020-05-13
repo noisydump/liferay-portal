@@ -67,7 +67,12 @@ definition {
 			portletOption = "${optionName}",
 			siteTemplate = "${siteTemplate}");
 
-		SelectFrame(locator1 = "IFrame#DIALOG");
+		LiferayEvent.waitForLiferayEvent(
+			attributeName = "src",
+			attributeValue = "dialog-iframe-popup",
+			eventName = "modalIframeLoaded");
+
+		SelectFrame(locator1 = "IFrame#MODAL_BODY");
 	}
 
 	macro gotoDocumentsAndMediaDocumentPG {
@@ -75,7 +80,12 @@ definition {
 			menuItem = "Permissions",
 			rowEntry = "${dmDocumentTitle}");
 
-		SelectFrame(locator1 = "IFrame#DIALOG");
+		LiferayEvent.waitForLiferayEvent(
+			attributeName = "src",
+			attributeValue = "dialog-iframe-popup",
+			eventName = "modalIframeLoaded");
+
+		SelectFrame(locator1 = "IFrame#MODAL_BODY");
 	}
 
 	macro gotoDocumentsAndMediaHomeFolderPG {
@@ -93,7 +103,12 @@ definition {
 
 		LexiconEntry.gotoEllipsisMenuItem(menuItem = "Permissions");
 
-		SelectFrame(locator1 = "IFrame#DIALOG");
+		LiferayEvent.waitForLiferayEvent(
+			attributeName = "src",
+			attributeValue = "dialog-iframe-popup",
+			eventName = "modalIframeLoaded");
+
+		SelectFrame(locator1 = "IFrame#MODAL_BODY");
 	}
 
 	macro gotoMessageBoardsCategoryPG {
@@ -106,7 +121,12 @@ definition {
 
 		MenuItem.click(menuItem = "Permissions");
 
-		SelectFrame(locator1 = "IFrame#DIALOG");
+		LiferayEvent.waitForLiferayEvent(
+			attributeName = "src",
+			attributeValue = "dialog-iframe-popup",
+			eventName = "modalIframeLoaded");
+
+		SelectFrame(locator1 = "IFrame#MODAL_BODY");
 	}
 
 	macro gotoMessageBoardsPG {
@@ -116,7 +136,12 @@ definition {
 
 		MenuItem.click(menuItem = "Permissions");
 
-		SelectFrame(locator1 = "IFrame#DIALOG");
+		LiferayEvent.waitForLiferayEvent(
+			attributeName = "src",
+			attributeValue = "dialog-iframe-popup",
+			eventName = "modalIframeLoaded");
+
+		SelectFrame(locator1 = "IFrame#MODAL_BODY");
 	}
 
 	macro gotoMessageBoardsThreadReplyPG {
@@ -135,7 +160,12 @@ definition {
 
 		MenuItem.click(menuItem = "Permissions");
 
-		SelectFrame(locator1 = "IFrame#DIALOG");
+		LiferayEvent.waitForLiferayEvent(
+			attributeName = "src",
+			attributeValue = "dialog-iframe-popup",
+			eventName = "modalIframeLoaded");
+
+		SelectFrame(locator1 = "IFrame#MODAL_BODY");
 	}
 
 	macro gotoPagePG {
@@ -156,7 +186,12 @@ definition {
 			menuItem = "Permissions",
 			rowEntry = "${pollsQuestionTitle}");
 
-		SelectFrame(locator1 = "IFrame#DIALOG");
+		LiferayEvent.waitForLiferayEvent(
+			attributeName = "src",
+			attributeValue = "dialog-iframe-popup",
+			eventName = "modalIframeLoaded");
+
+		SelectFrame(locator1 = "IFrame#MODAL_BODY");
 	}
 
 	macro gotoSitepageCP {
@@ -181,7 +216,12 @@ definition {
 			menuItem = "Permissions",
 			rowEntry = "${teamName}");
 
-		SelectFrame(locator1 = "IFrame#DIALOG");
+		LiferayEvent.waitForLiferayEvent(
+			attributeName = "src",
+			attributeValue = "dialog-iframe-popup",
+			eventName = "modalIframeLoaded");
+
+		SelectFrame(locator1 = "IFrame#MODAL_BODY");
 	}
 
 	macro gotoSiteTemplateCP {

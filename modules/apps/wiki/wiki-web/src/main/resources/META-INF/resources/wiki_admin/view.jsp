@@ -92,7 +92,10 @@ WikiNodesManagementToolbarDisplayContext wikiNodesManagementToolbarDisplayContex
 	viewTypeItems="<%= wikiNodesManagementToolbarDisplayContext.getViewTypes() %>"
 />
 
-<div class="closed container-fluid container-fluid-max-xl sidenav-container sidenav-right" id="<portlet:namespace />infoPanelId">
+<clay:container
+	className="closed sidenav-container sidenav-right"
+	id='<%= renderResponse.getNamespace() + "infoPanelId" %>'
+>
 	<liferay-portlet:resourceURL copyCurrentRenderParameters="<%= false %>" id="/wiki/node_info_panel" var="sidebarPanelURL" />
 
 	<liferay-frontend:sidebar-panel
@@ -225,10 +228,10 @@ WikiNodesManagementToolbarDisplayContext wikiNodesManagementToolbarDisplayContex
 			</liferay-ui:search-container>
 		</aui:form>
 	</div>
-</div>
+</clay:container>
 
 <script>
-	var deleteNodes = function() {
+	var deleteNodes = function () {
 		if (
 			<%= trashHelper.isTrashEnabled(scopeGroupId) %> ||
 			confirm(
@@ -251,10 +254,10 @@ WikiNodesManagementToolbarDisplayContext wikiNodesManagementToolbarDisplayContex
 		deleteNodes: deleteNodes,
 	};
 
-	Liferay.componentReady('wikiNodesManagementToolbar').then(function(
+	Liferay.componentReady('wikiNodesManagementToolbar').then(function (
 		managementToolbar
 	) {
-		managementToolbar.on('actionItemClicked', function(event) {
+		managementToolbar.on('actionItemClicked', function (event) {
 			var itemData = event.data.item.data;
 
 			if (itemData && itemData.action && ACTIONS[itemData.action]) {

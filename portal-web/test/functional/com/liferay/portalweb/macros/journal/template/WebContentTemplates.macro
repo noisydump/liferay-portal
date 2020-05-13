@@ -41,11 +41,18 @@ definition {
 
 			SelectFrameTop();
 
-			SelectFrame(locator1 = "IFrame#DIALOG");
+			LiferayEvent.waitForLiferayEvent(
+				attributeName = "src",
+				attributeValue = "dialog-iframe-popup",
+				eventName = "modalIframeLoaded");
+
+			SelectFrame(locator1 = "IFrame#MODAL_BODY");
 
 			Click(locator1 = "Icon#BASIC_SEARCH");
 
 			var key_ddlDataDefinitionName = "${structureName}";
+
+			AssertElementPresent(locator1 = "DDMSelectStructure#DDM_STRUCTURE_TABLE_NAME_LINK");
 
 			AssertClick.assertTextClickAt(
 				locator1 = "DDMSelectStructure#DDM_STRUCTURE_TABLE_NAME_LINK",
@@ -101,7 +108,12 @@ definition {
 			item = "Permissions",
 			templateName = "${templateName}");
 
-		SelectFrame(locator1 = "IFrame#DIALOG");
+		LiferayEvent.waitForLiferayEvent(
+			attributeName = "src",
+			attributeValue = "dialog-iframe-popup",
+			eventName = "modalIframeLoaded");
+
+		SelectFrame(locator1 = "IFrame#MODAL_BODY");
 
 		PermissionsInline.addOrRemoveViewPermissionFromAllRoles(
 			addOrRemoveViewPermission = "Add",

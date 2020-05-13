@@ -36,18 +36,22 @@ PortalUtil.addPortletBreadcrumbEntry(request, LanguageUtil.get(resourceBundle, "
 
 <portlet:actionURL name="/analytics/edit_channel" var="editChannelURL" />
 
-<div class="container-fluid container-fluid-max-xl">
-	<div class="col-12">
-		<div id="breadcrumb">
-			<liferay-ui:breadcrumb
-				showCurrentGroup="<%= false %>"
-				showGuestGroup="<%= false %>"
-				showLayout="<%= false %>"
-				showPortletBreadcrumb="<%= true %>"
-			/>
-		</div>
-	</div>
-</div>
+<clay:container>
+	<clay:row>
+		<clay:col
+			size="12"
+		>
+			<div id="breadcrumb">
+				<liferay-ui:breadcrumb
+					showCurrentGroup="<%= false %>"
+					showGuestGroup="<%= false %>"
+					showLayout="<%= false %>"
+					showPortletBreadcrumb="<%= true %>"
+				/>
+			</div>
+		</clay:col>
+	</clay:row>
+</clay:container>
 
 <aui:form action="<%= editChannelURL %>" method="post" name="fm">
 	<aui:input name="redirect" type="hidden" value="<%= redirect %>" />

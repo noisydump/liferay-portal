@@ -137,7 +137,7 @@ if ((publicLayoutSet.isLayoutSetPrototypeLinkEnabled() || privateLayoutSet.isLay
 
 		// Left list
 
-		List leftList = new ArrayList();
+		List<KeyValuePair> leftList = new ArrayList<>();
 
 		String groupLanguageIds = typeSettingsProperties.getProperty(PropsKeys.LOCALES);
 
@@ -154,7 +154,7 @@ if ((publicLayoutSet.isLayoutSetPrototypeLinkEnabled() || privateLayoutSet.isLay
 
 		// Right list
 
-		List rightList = new ArrayList();
+		List<KeyValuePair> rightList = new ArrayList<>();
 
 		for (Locale availableLocale : LanguageUtil.getAvailableLocales()) {
 			if (!siteAvailableLocales.contains(availableLocale)) {
@@ -213,7 +213,7 @@ if ((publicLayoutSet.isLayoutSetPrototypeLinkEnabled() || privateLayoutSet.isLay
 	if (languageSelectInput) {
 		var nameInput = Liferay.component('<portlet:namespace />name');
 
-		languageSelectInput.on('change', function(event) {
+		languageSelectInput.on('change', function (event) {
 			var select = event.currentTarget.getDOMNode();
 
 			var selectedOption = select.options[select.selectedIndex];
@@ -240,7 +240,10 @@ if ((publicLayoutSet.isLayoutSetPrototypeLinkEnabled() || privateLayoutSet.isLay
 				render: true,
 			});
 
-			if (!defaultLanguageSiteName && <%= !liveGroup.isGuest() %>) {
+			if (
+				!defaultLanguageSiteName &&
+				<%= !liveGroup.isGuest() && !liveGroup.isOrganization() %>
+			) {
 				new A.Alert({
 					bodyContent:
 						'<liferay-ui:message key="site-name-will-display-a-generic-text-until-a-translation-is-added" />',

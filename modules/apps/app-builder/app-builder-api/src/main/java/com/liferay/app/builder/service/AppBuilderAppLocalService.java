@@ -16,6 +16,7 @@ package com.liferay.app.builder.service;
 
 import com.liferay.app.builder.model.AppBuilderApp;
 import com.liferay.exportimport.kernel.lar.PortletDataContext;
+import com.liferay.petra.sql.dsl.query.DSLQuery;
 import com.liferay.portal.kernel.dao.orm.ActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.DynamicQuery;
 import com.liferay.portal.kernel.dao.orm.ExportActionableDynamicQuery;
@@ -76,9 +77,9 @@ public interface AppBuilderAppLocalService
 
 	@Indexable(type = IndexableType.REINDEX)
 	public AppBuilderApp addAppBuilderApp(
-			long groupId, long companyId, long userId, long ddmStructureId,
-			long ddmStructureLayoutId, long deDataListViewId,
-			Map<Locale, String> nameMap, int status)
+			long groupId, long companyId, long userId, boolean active,
+			long ddmStructureId, long ddmStructureLayoutId,
+			long deDataListViewId, Map<Locale, String> nameMap)
 		throws PortalException;
 
 	/**
@@ -125,6 +126,9 @@ public interface AppBuilderAppLocalService
 	@Override
 	public PersistedModel deletePersistedModel(PersistedModel persistedModel)
 		throws PortalException;
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public <T> T dslQuery(DSLQuery dslQuery);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public DynamicQuery dynamicQuery();
@@ -234,7 +238,7 @@ public interface AppBuilderAppLocalService
 		throws PortalException;
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
-	public List<Long> getAppBuilderAppIds(int status, String type);
+	public List<Long> getAppBuilderAppIds(boolean active, String type);
 
 	/**
 	 * Returns a range of all the app builder apps.
@@ -254,7 +258,8 @@ public interface AppBuilderAppLocalService
 	public List<AppBuilderApp> getAppBuilderApps(long ddmStructureId);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
-	public List<AppBuilderApp> getAppBuilderApps(long companyId, int status);
+	public List<AppBuilderApp> getAppBuilderApps(
+		long companyId, boolean active);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<AppBuilderApp> getAppBuilderApps(
@@ -308,6 +313,14 @@ public interface AppBuilderAppLocalService
 		long groupId, long companyId, long ddmStructureId);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public List<AppBuilderApp> getCompanyAppBuilderApps(
+		long companyId, int start, int end,
+		OrderByComparator<AppBuilderApp> orderByComparator);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public int getCompanyAppBuilderAppsCount(long companyId);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public ExportActionableDynamicQuery getExportActionableDynamicQuery(
 		PortletDataContext portletDataContext);
 
@@ -340,9 +353,9 @@ public interface AppBuilderAppLocalService
 
 	@Indexable(type = IndexableType.REINDEX)
 	public AppBuilderApp updateAppBuilderApp(
-			long userId, long appBuilderAppId, long ddmStructureId,
-			long ddmStructureLayoutId, long deDataListViewId,
-			Map<Locale, String> nameMap, int status)
+			long userId, long appBuilderAppId, boolean active,
+			long ddmStructureId, long ddmStructureLayoutId,
+			long deDataListViewId, Map<Locale, String> nameMap)
 		throws PortalException;
 
 }

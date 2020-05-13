@@ -14,7 +14,7 @@
 
 import ClayButton from '@clayui/button';
 import ClayIcon from '@clayui/icon';
-import {fetch, objectToFormData} from 'frontend-js-web';
+import {useIsMounted} from 'frontend-js-react-web';
 import PropTypes from 'prop-types';
 import React, {useCallback, useReducer} from 'react';
 
@@ -22,7 +22,6 @@ import AnimatedCounter from './AnimatedCounter';
 
 const PRESSED_DOWN = 'DOWN';
 const PRESSED_UP = 'UP';
-const RATING_TYPE = 'thumbs';
 const SCORE_DOWN = 0;
 const SCORE_UNVOTE = -1;
 const SCORE_UP = 1;
@@ -69,22 +68,20 @@ function reducer(state, action) {
 }
 
 const RatingsThumbs = ({
-	className,
-	classPK,
-	enabled = false,
-	inTrash = false,
+	disabled = true,
 	initialNegativeVotes = 0,
 	initialPositiveVotes = 0,
-	signedIn,
+	inititalTitle,
+	sendVoteRequest,
 	thumbDown = false,
 	thumbUp = false,
-	url,
 }) => {
 	const [state, dispatch] = useReducer(reducer, {
 		negativeVotes: initialNegativeVotes,
 		positiveVotes: initialPositiveVotes,
 		pressed: thumbDown ? PRESSED_DOWN : thumbUp ? PRESSED_UP : null,
 	});
+	const isMounted = useIsMounted();
 
 	const {negativeVotes, positiveVotes, pressed} = state;
 
@@ -92,98 +89,59 @@ const RatingsThumbs = ({
 		dispatch({type: VOTE_UP});
 
 		const score = pressed !== PRESSED_UP ? SCORE_UP : SCORE_UNVOTE;
-		sendVoteRequest(score);
-	}, [pressed, sendVoteRequest]);
+		handleSendVoteRequest(score);
+	}, [handleSendVoteRequest, pressed]);
 
 	const voteDown = useCallback(() => {
 		dispatch({type: VOTE_DOWN});
 
 		const score = pressed !== PRESSED_DOWN ? SCORE_DOWN : SCORE_UNVOTE;
-		sendVoteRequest(score);
-	}, [pressed, sendVoteRequest]);
-
-	const getTitle = useCallback(() => {
-		if (inTrash) {
-			return Liferay.Language.get(
-				'ratings-are-disabled-because-this-entry-is-in-the-recycle-bin'
-			);
-		}
-		else if (!enabled) {
-			return Liferay.Language.get('ratings-are-disabled-in-staging');
-		}
-
-		return '';
-	}, [inTrash, enabled]);
+		handleSendVoteRequest(score);
+	}, [handleSendVoteRequest, pressed]);
 
 	const getTitleThumbsUp = useCallback(() => {
-		if (!signedIn) {
-			return '';
+		if (inititalTitle !== undefined) {
+			return inititalTitle;
 		}
 
-		const title = getTitle();
-
-		if (!title) {
-			if (pressed === PRESSED_UP) {
-				return Liferay.Language.get('you-have-rated-this-as-good');
-			}
-			else {
-				return Liferay.Language.get('rate-this-as-good');
-			}
+		if (pressed === PRESSED_UP) {
+			return Liferay.Language.get('you-have-rated-this-as-good');
 		}
-	}, [getTitle, pressed, signedIn]);
+		else {
+			return Liferay.Language.get('rate-this-as-good');
+		}
+	}, [inititalTitle, pressed]);
 
 	const getTitleThumbsDown = useCallback(() => {
-		if (!signedIn) {
-			return '';
+		if (inititalTitle !== undefined) {
+			return inititalTitle;
 		}
 
-		const title = getTitle();
-
-		if (!title) {
-			if (pressed === PRESSED_DOWN) {
-				return Liferay.Language.get('you-have-rated-this-as-bad');
-			}
-			else {
-				return Liferay.Language.get('rate-this-as-bad');
-			}
+		if (pressed === PRESSED_DOWN) {
+			return Liferay.Language.get('you-have-rated-this-as-bad');
 		}
-	}, [getTitle, pressed, signedIn]);
+		else {
+			return Liferay.Language.get('rate-this-as-bad');
+		}
+	}, [inititalTitle, pressed]);
 
-	const sendVoteRequest = useCallback(
-		score => {
-			Liferay.fire('ratings:vote', {
-				className,
-				classPK,
-				ratingType: RATING_TYPE,
-				score,
+	const handleSendVoteRequest = useCallback(
+		(score) => {
+			sendVoteRequest(score).then(({totalEntries, totalScore} = {}) => {
+				if (isMounted() && totalEntries && totalScore) {
+					const positiveVotes = Math.round(totalScore);
+
+					dispatch({
+						payload: {
+							negativeVotes: totalEntries - positiveVotes,
+							positiveVotes,
+						},
+						type: UPDATE_VOTES,
+					});
+				}
 			});
-
-			const body = objectToFormData({
-				className,
-				classPK,
-				p_auth: Liferay.authToken,
-				p_l_id: themeDisplay.getPlid(),
-				score,
-			});
-
-			fetch(url, {
-				body,
-				method: 'POST',
-			})
-				.then(response => response.json())
-				.then(({totalEntries, totalScore}) => {
-					if (totalEntries && totalScore) {
-						dispatch({
-							payload: {
-								negativeVotes: totalEntries - totalScore,
-								positiveVotes: totalScore,
-							},
-							type: UPDATE_VOTES,
-						});
-					}
-				});
 		},
-		[className, classPK, url]
+		[isMounted, sendVoteRequest]
 	);
 
 	return (
@@ -191,7 +149,7 @@ const RatingsThumbs = ({
 			<ClayButton
 				aria-pressed={pressed === PRESSED_UP}
 				borderless
-				disabled={!signedIn || !enabled}
+				disabled={disabled}
 				displayType="secondary"
 				onClick={voteUp}
 				small
@@ -206,7 +164,7 @@ const RatingsThumbs = ({
 			<ClayButton
 				aria-pressed={pressed === PRESSED_DOWN}
 				borderless
-				disabled={!signedIn || !enabled}
+				disabled={disabled}
 				displayType="secondary"
 				onClick={voteDown}
 				small
@@ -223,18 +181,16 @@ const RatingsThumbs = ({
 };
 
 RatingsThumbs.propTypes = {
-	className: PropTypes.string.isRequired,
-	classPK: PropTypes.string.isRequired,
-	enabled: PropTypes.bool,
-	inTrash: PropTypes.bool,
+	disabled: PropTypes.bool,
 	initialNegativeVotes: PropTypes.number,
 	initialPositiveVotes: PropTypes.number,
-	signedIn: PropTypes.bool.isRequired,
+	inititalTitle: PropTypes.string,
+	positiveVotes: PropTypes.number,
+	sendVoteRequest: PropTypes.func.isRequired,
 	thumbDown: PropTypes.bool,
 	thumbUp: PropTypes.bool,
-	url: PropTypes.string.isRequired,
 };
 
-export default function(props) {
+export default function (props) {
 	return <RatingsThumbs {...props} />;
 }

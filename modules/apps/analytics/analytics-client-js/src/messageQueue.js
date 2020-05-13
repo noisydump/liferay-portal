@@ -21,9 +21,6 @@ import {
 import {getRetryDelay} from './utils/delay';
 import {getItem, setItem, verifyStorageLimitForKey} from './utils/storage';
 
-const MIN_DELAY = 1000;
-const MAX_DELAY = 30000;
-
 /**
  * An Analytics Event.
  *
@@ -149,7 +146,7 @@ class MessageQueue {
 
 		return queue.map(({attemptNumber, item}) => {
 			return {
-				done: success => {
+				done: (success) => {
 					self._dequeue(item.id);
 
 					if (!success) {
@@ -187,7 +184,7 @@ class MessageQueue {
 		if (!this.processing && messages.length) {
 			const lock = new ProcessLock();
 
-			lock.acquireLock(this.name).then(success => {
+			lock.acquireLock(this.name).then((success) => {
 				if (success) {
 					this.processing = true;
 					const now = Date.now();
@@ -224,20 +221,15 @@ class MessageQueue {
 	 * @param {Number} attemptNumber - The number of attempts to process this item.
 	 */
 	_requeue(item, attemptNumber) {
-		const now = Date.now();
-
-		if (attemptNumber < this.maxRetries) {
-			this._enqueue(
-				{
-					attemptNumber,
-					item,
-					time:
-						now +
-						getRetryDelay(attemptNumber, MIN_DELAY, MAX_DELAY),
-				},
-				false
-			);
-		}
+		this._enqueue(
+			{
+				attemptNumber,
+				item,
+				time:
+					Date.now() + getRetryDelay(attemptNumber, this.maxRetries),
+			},
+			false
+		);
 	}
 
 	/**

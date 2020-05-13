@@ -51,9 +51,9 @@ import com.liferay.layout.admin.constants.LayoutAdminPortletKeys;
 import com.liferay.layout.content.page.editor.constants.ContentPageEditorPortletKeys;
 import com.liferay.layout.content.page.editor.sidebar.panel.ContentPageEditorSidebarPanel;
 import com.liferay.layout.content.page.editor.web.internal.comment.CommentUtil;
+import com.liferay.layout.content.page.editor.web.internal.configuration.FFLayoutContentPageEditorConfiguration;
 import com.liferay.layout.content.page.editor.web.internal.constants.ContentPageEditorActionKeys;
 import com.liferay.layout.content.page.editor.web.internal.constants.ContentPageEditorConstants;
-import com.liferay.layout.content.page.editor.web.internal.constants.ViewportSize;
 import com.liferay.layout.content.page.editor.web.internal.util.ContentUtil;
 import com.liferay.layout.content.page.editor.web.internal.util.FragmentEntryLinkItemSelectorUtil;
 import com.liferay.layout.page.template.constants.LayoutPageTemplateEntryTypeConstants;
@@ -62,6 +62,7 @@ import com.liferay.layout.page.template.model.LayoutPageTemplateStructure;
 import com.liferay.layout.page.template.service.LayoutPageTemplateEntryLocalServiceUtil;
 import com.liferay.layout.page.template.service.LayoutPageTemplateStructureLocalServiceUtil;
 import com.liferay.layout.page.template.util.PaddingConverter;
+import com.liferay.layout.responsive.ViewportSize;
 import com.liferay.layout.util.constants.LayoutConverterTypeConstants;
 import com.liferay.layout.util.structure.DropZoneLayoutStructureItem;
 import com.liferay.layout.util.structure.LayoutStructure;
@@ -163,6 +164,8 @@ public class ContentPageEditorDisplayContext {
 	public ContentPageEditorDisplayContext(
 		CommentManager commentManager,
 		List<ContentPageEditorSidebarPanel> contentPageEditorSidebarPanels,
+		FFLayoutContentPageEditorConfiguration
+			ffLayoutContentPageEditorConfiguration,
 		FragmentCollectionContributorTracker
 			fragmentCollectionContributorTracker,
 		FragmentEntryConfigurationParser fragmentEntryConfigurationParser,
@@ -175,6 +178,8 @@ public class ContentPageEditorDisplayContext {
 
 		_commentManager = commentManager;
 		_contentPageEditorSidebarPanels = contentPageEditorSidebarPanels;
+		_ffLayoutContentPageEditorConfiguration =
+			ffLayoutContentPageEditorConfiguration;
 		_fragmentCollectionContributorTracker =
 			fragmentCollectionContributorTracker;
 		_fragmentEntryConfigurationParser = fragmentEntryConfigurationParser;
@@ -348,9 +353,15 @@ public class ContentPageEditorDisplayContext {
 				"renderFragmentEntryURL",
 				getResourceURL("/content_layout/get_fragment_entry_link")
 			).put(
+				"responsiveEnabled",
+				_ffLayoutContentPageEditorConfiguration.responsiveEnabled()
+			).put(
 				"sidebarPanels", getSidebarPanels()
 			).put(
 				"themeColorsCssClasses", _getThemeColorsCssClasses()
+			).put(
+				"undoEnabled",
+				_ffLayoutContentPageEditorConfiguration.undoEnabled()
 			).put(
 				"updateConfigurationValuesURL",
 				getFragmentEntryActionURL(
@@ -385,7 +396,8 @@ public class ContentPageEditorDisplayContext {
 			).put(
 				"fragments", _getFragmentCollections(false, true)
 			).put(
-				"languageId", themeDisplay.getLanguageId()
+				"languageId",
+				LocaleUtil.toLanguageId(themeDisplay.getSiteDefaultLocale())
 			).put(
 				"layoutData", JSONFactoryUtil.createJSONObject(_getLayoutData())
 			).put(
@@ -1138,9 +1150,7 @@ public class ContentPageEditorDisplayContext {
 		return jsonArray;
 	}
 
-	private Map<String, Object> _getFragmentEntryLinks()
-		throws PortalException {
-
+	private Map<String, Object> _getFragmentEntryLinks() throws Exception {
 		if (_fragmentEntryLinks != null) {
 			return _fragmentEntryLinks;
 		}
@@ -1371,7 +1381,7 @@ public class ContentPageEditorDisplayContext {
 		return languageDirection;
 	}
 
-	private String _getLayoutData() throws PortalException {
+	private String _getLayoutData() throws Exception {
 		if (_layoutData != null) {
 			return _layoutData;
 		}
@@ -1389,9 +1399,7 @@ public class ContentPageEditorDisplayContext {
 		return _layoutData;
 	}
 
-	private Set<Map<String, Object>> _getMappedInfoItems()
-		throws PortalException {
-
+	private Set<Map<String, Object>> _getMappedInfoItems() throws Exception {
 		Set<Map<String, Object>> mappedInfoItems = new HashSet<>();
 
 		Set<InfoDisplayObjectProvider> infoDisplayObjectProviders =
@@ -1849,6 +1857,8 @@ public class ContentPageEditorDisplayContext {
 	private final List<ContentPageEditorSidebarPanel>
 		_contentPageEditorSidebarPanels;
 	private Map<String, Object> _defaultConfigurations;
+	private final FFLayoutContentPageEditorConfiguration
+		_ffLayoutContentPageEditorConfiguration;
 	private final FragmentCollectionContributorTracker
 		_fragmentCollectionContributorTracker;
 	private final FragmentEntryConfigurationParser

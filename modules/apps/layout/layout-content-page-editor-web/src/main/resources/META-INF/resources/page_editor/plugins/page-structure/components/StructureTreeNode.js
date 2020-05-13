@@ -55,14 +55,14 @@ export default function StructureTreeNode({node}) {
 					hoveredItemId
 				),
 			})}
-			onMouseLeave={event => {
+			onMouseLeave={(event) => {
 				event.stopPropagation();
 
 				if (nodeIsHovered(node.id, hoveredItemId)) {
 					hoverItem(null);
 				}
 			}}
-			onMouseOver={event => {
+			onMouseOver={(event) => {
 				event.stopPropagation();
 				hoverItem(node.id);
 			}}
@@ -74,17 +74,16 @@ export default function StructureTreeNode({node}) {
 				className="page-editor__page-structure__tree-node__mask"
 				disabled={node.disabled}
 				displayType="unstyled"
-				onClick={event => {
+				onClick={(event) => {
 					event.stopPropagation();
 					event.target.focus();
 
 					selectItem(toControlsId(node.id), {
 						itemType: node.type,
-						multiSelect: event.shiftKey,
 						origin: ITEM_ACTIVATION_ORIGINS.structureTree,
 					});
 				}}
-				onDoubleClick={event => event.stopPropagation()}
+				onDoubleClick={(event) => event.stopPropagation()}
 			/>
 
 			<NameLabel
@@ -136,7 +135,7 @@ const NameLabel = ({activable, disabled, id, name}) => {
 
 const RemoveButton = ({node, visible}) => {
 	const dispatch = useDispatch();
-	const store = useSelector(state => state);
+	const store = useSelector((state) => state);
 
 	return (
 		<ClayButton
@@ -150,7 +149,7 @@ const RemoveButton = ({node, visible}) => {
 				}
 			)}
 			displayType="unstyled"
-			onClick={event => {
+			onClick={(event) => {
 				event.stopPropagation();
 
 				dispatch(deleteItem({itemId: node.id, store}));

@@ -28,7 +28,6 @@ definition {
 	@priority = "5"
 	test ConvertBasicWidgetPageToContentPage {
 		property portal.acceptance = "true";
-		property portal.upstream = "quarantine";
 
 		JSONLayout.addPublicLayout(
 			groupName = "Test Site Name",
@@ -431,7 +430,7 @@ definition {
 
 		Click(locator1 = "Icon#CLOSE");
 
-		WaitForElementNotPresent(locator1 = "IFrame#DIALOG");
+		WaitForElementNotPresent(locator1 = "IFrame#MODAL_BODY");
 
 		DragAndDrop.dragAndDropPortletToObject(
 			key_portletTitleName = "Asset Publisher",
@@ -725,7 +724,7 @@ definition {
 
 		Click(locator1 = "Icon#CLOSE");
 
-		WaitForElementNotPresent(locator1 = "IFrame#DIALOG");
+		WaitForElementNotPresent(locator1 = "IFrame#MODAL_BODY");
 
 		DragAndDrop.dragAndDropPortletToObject(
 			key_portletTitleName = "Asset Publisher",
@@ -796,12 +795,8 @@ definition {
 	}
 
 	@description = "This is a test for LPS-98589. Can edit the title of the widgets with "borderless" and "decorate" decorators in content page with correct permissions."
-	@ignore = "true"
 	@priority = "5"
 	test EditConvertedContentPageWithDecorator {
-
-		// Ignore test until LRQA-56526 is resolved
-
 		property portal.acceptance = "true";
 
 		JSONLayout.addPublicLayout(

@@ -12,14 +12,14 @@
  * details.
  */
 
+import deleteItemAction from '../actions/deleteItem';
 import deleteWidgets from '../actions/deleteWidgets';
-import updateLayoutData from '../actions/updateLayoutData';
 import updatePageContents from '../actions/updatePageContents';
 import InfoItemService from '../services/InfoItemService';
 import LayoutService from '../services/LayoutService';
 
 export default function deleteItem({itemId, store}) {
-	return dispatch => {
+	return (dispatch) => {
 		const {segmentsExperienceId} = store;
 
 		return LayoutService.deleteItem({
@@ -30,11 +30,11 @@ export default function deleteItem({itemId, store}) {
 			.then(({deletedFragmentEntryLinkIds = [], layoutData}) => {
 				const deletedWidgets = deletedFragmentEntryLinkIds
 					.map(
-						fragmentEntryLinkId =>
+						(fragmentEntryLinkId) =>
 							store.fragmentEntryLinks[fragmentEntryLinkId]
 					)
 					.filter(
-						fragmentEntryLink =>
+						(fragmentEntryLink) =>
 							fragmentEntryLink.editableValues.portletId
 					);
 
@@ -43,13 +43,17 @@ export default function deleteItem({itemId, store}) {
 				}
 
 				dispatch(
-					updateLayoutData({deletedFragmentEntryLinkIds, layoutData})
+					deleteItemAction({
+						deletedFragmentEntryLinkIds,
+						itemId,
+						layoutData,
+					})
 				);
 			})
 			.then(() => {
 				InfoItemService.getPageContents({
 					onNetworkStatus: dispatch,
-				}).then(pageContents => {
+				}).then((pageContents) => {
 					dispatch(
 						updatePageContents({
 							pageContents,

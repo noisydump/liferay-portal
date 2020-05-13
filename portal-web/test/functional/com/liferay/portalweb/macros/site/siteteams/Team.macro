@@ -36,7 +36,12 @@ definition {
 
 		LexiconEntry.gotoAdd();
 
-		SelectFrame(locator1 = "IFrame#DIALOG");
+		LiferayEvent.waitForLiferayEvent(
+			attributeName = "src",
+			attributeValue = "dialog-iframe-popup",
+			eventName = "modalIframeLoaded");
+
+		SelectFrame(locator1 = "IFrame#MODAL_BODY");
 
 		Search.searchCP(searchTerm = "${userScreenName}");
 
@@ -87,7 +92,12 @@ definition {
 
 		LexiconEntry.gotoAdd();
 
-		SelectFrame(locator1 = "IFrame#DIALOG");
+		LiferayEvent.waitForLiferayEvent(
+			attributeName = "src",
+			attributeValue = "dialog-iframe-popup",
+			eventName = "modalIframeLoaded");
+
+		SelectFrame(locator1 = "IFrame#MODAL_BODY");
 
 		var key_cardText = "${userGroupName}";
 

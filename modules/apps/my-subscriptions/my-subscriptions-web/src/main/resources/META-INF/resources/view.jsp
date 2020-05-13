@@ -34,7 +34,7 @@ int subscriptionsCount = mySubscriptionsManagementToolbarDisplayContext.getTotal
 	showSearch="<%= mySubscriptionsManagementToolbarDisplayContext.isShowSearch() %>"
 />
 
-<div class="container-fluid-1280">
+<clay:container>
 	<aui:form action="<%= unsubscribeURL %>" method="get" name="fm" onSubmit='<%= "event.preventDefault(); " + renderResponse.getNamespace() + "unsubscribe();" %>'>
 		<liferay-portlet:renderURLParams varImpl="portletURL" />
 		<aui:input name="redirect" type="hidden" value="<%= currentURL %>" />
@@ -111,13 +111,13 @@ int subscriptionsCount = mySubscriptionsManagementToolbarDisplayContext.getTotal
 			</liferay-ui:search-container>
 		</aui:fieldset>
 	</aui:form>
-</div>
+</clay:container>
 
 <aui:script>
 	Liferay.provide(
 		window,
 		'<portlet:namespace />displayPopup',
-		function(url, title) {
+		function (url, title) {
 			Liferay.Util.Window.getWindow({
 				dialog: {
 					align: {
@@ -139,7 +139,7 @@ int subscriptionsCount = mySubscriptionsManagementToolbarDisplayContext.getTotal
 </aui:script>
 
 <aui:script sandbox="<%= true %>">
-	var unsubscribe = function() {
+	var unsubscribe = function () {
 		var form = document.getElementById('<portlet:namespace />fm');
 
 		if (form) {
@@ -167,10 +167,10 @@ int subscriptionsCount = mySubscriptionsManagementToolbarDisplayContext.getTotal
 		unsubscribe: unsubscribe,
 	};
 
-	Liferay.componentReady('mySubscriptionsManagementToolbar').then(function(
+	Liferay.componentReady('mySubscriptionsManagementToolbar').then(function (
 		managementToolbar
 	) {
-		managementToolbar.on('actionItemClicked', function(event) {
+		managementToolbar.on('actionItemClicked', function (event) {
 			var itemData = event.data.item.data;
 
 			if (itemData && itemData.action && ACTIONS[itemData.action]) {

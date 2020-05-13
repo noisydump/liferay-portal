@@ -62,10 +62,9 @@ public class ExportImportPortletConfigurationIcon
 	public String getOnClick(
 		PortletRequest portletRequest, PortletResponse portletResponse) {
 
-		StringBundler sb = new StringBundler(12);
+		StringBundler sb = new StringBundler(11);
 
-		sb.append("Liferay.Portlet.openWindow({bodyCssClass: ");
-		sb.append("'dialog-with-footer', namespace: '");
+		sb.append("Liferay.Portlet.openModal({namespace: '");
 
 		ThemeDisplay themeDisplay = (ThemeDisplay)portletRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
@@ -74,13 +73,13 @@ public class ExportImportPortletConfigurationIcon
 
 		sb.append(portletDisplay.getNamespace());
 
-		sb.append("', portlet: '#p_p_id_");
+		sb.append("', portletSelector: '#p_p_id_");
 		sb.append(portletDisplay.getId());
 		sb.append("_', portletId: '");
 		sb.append(portletDisplay.getId());
 		sb.append("', title: '");
 		sb.append(LanguageUtil.get(themeDisplay.getLocale(), "export-import"));
-		sb.append("', uri: '");
+		sb.append("', url: '");
 		sb.append(HtmlUtil.escapeJS(portletDisplay.getURLExportImport()));
 		sb.append("'}); return false;");
 

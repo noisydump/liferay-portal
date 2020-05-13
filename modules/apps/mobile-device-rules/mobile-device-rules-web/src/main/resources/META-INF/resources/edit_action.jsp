@@ -47,7 +47,7 @@ MDRRuleGroupInstance ruleGroupInstance = (MDRRuleGroupInstance)renderRequest.get
 	<aui:model-context bean="<%= action %>" model="<%= MDRAction.class %>" />
 
 	<div class="portlet-configuration-body-content">
-		<div class="container-fluid-1280">
+		<clay:container>
 			<aui:fieldset-group markupView="lexicon">
 				<aui:fieldset>
 					<c:if test="<%= action == null %>">
@@ -81,7 +81,7 @@ MDRRuleGroupInstance ruleGroupInstance = (MDRRuleGroupInstance)renderRequest.get
 					</div>
 				</aui:fieldset>
 			</aui:fieldset-group>
-		</div>
+		</clay:container>
 	</div>
 
 	<aui:button-row>
@@ -117,10 +117,10 @@ MDRRuleGroupInstance ruleGroupInstance = (MDRRuleGroupInstance)renderRequest.get
 				method: 'POST',
 			}
 		)
-			.then(function(response) {
+			.then(function (response) {
 				return response.text();
 			})
-			.then(function(response) {
+			.then(function (response) {
 				var layouts = document.getElementById(
 					'<portlet:namespace />layouts'
 				);
@@ -152,10 +152,10 @@ MDRRuleGroupInstance ruleGroupInstance = (MDRRuleGroupInstance)renderRequest.get
 			body: formData,
 			method: 'POST',
 		})
-			.then(function(response) {
+			.then(function (response) {
 				return response.text();
 			})
-			.then(function(response) {
+			.then(function (response) {
 				var typeSettings = document.getElementById(
 					'<portlet:namespace />typeSettings'
 				);

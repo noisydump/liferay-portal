@@ -184,6 +184,8 @@ definition {
 
 	macro openNodePort {
 		Open(locator1 = "http://localhost:${nodePort}");
+
+		LiferayEvent.initializeLiferayEventLog();
 	}
 
 	macro openPrivateSitePageURL {
@@ -198,6 +200,8 @@ definition {
 		}
 
 		Open(locator1 = "${baseURL}/group/${siteNameURL}/${pageNameURL}");
+
+		LiferayEvent.initializeLiferayEventLog();
 	}
 
 	macro openPrivateSiteURL {
@@ -210,6 +214,8 @@ definition {
 		}
 
 		Open(locator1 = "${baseURL}/group/${siteNameURL}");
+
+		LiferayEvent.initializeLiferayEventLog();
 	}
 
 	macro openPrivateStagedSiteURL {
@@ -222,6 +228,8 @@ definition {
 		}
 
 		Open(locator1 = "${baseURL}/group/${siteNameURL}-staging");
+
+		LiferayEvent.initializeLiferayEventLog();
 	}
 
 	macro openPrivateURL {
@@ -232,6 +240,23 @@ definition {
 		}
 
 		Open(locator1 = "${baseURL}/group/guest");
+
+		LiferayEvent.initializeLiferayEventLog();
+	}
+
+	macro openSitePage {
+		var siteNameURL = StringUtil.replace("${siteName}", " ", "-");
+		var siteNameURL = StringUtil.lowerCase("${siteNameURL}");
+		var baseURL = "${baseURL}";
+
+		if (contains("${baseURL}", "{baseURL}")) {
+			var baseURL = PropsUtil.get("portal.url");
+		}
+
+		var pageNameURL = StringUtil.replace("${pageName}", " ", "-");
+		var pageNameURL = StringUtil.lowerCase("${pageNameURL}");
+
+		Open(locator1 = "${baseURL}/web/${siteNameURL}/${pageNameURL}");
 	}
 
 	macro openSiteURL {
@@ -244,6 +269,8 @@ definition {
 		}
 
 		Open(locator1 = "${baseURL}/web/${siteNameURL}");
+
+		LiferayEvent.initializeLiferayEventLog();
 	}
 
 	macro openSpecificURL {
@@ -266,6 +293,8 @@ definition {
 		else {
 			Open(locator1 = "${baseURL}/web/${siteNameURL}-staging");
 		}
+
+		LiferayEvent.initializeLiferayEventLog();
 	}
 
 	macro openURL {
@@ -278,6 +307,8 @@ definition {
 		}
 
 		Open(locator1 = "${baseURL}/web/guest/home");
+
+		LiferayEvent.initializeLiferayEventLog();
 	}
 
 	macro openWithAppendToBaseURL {
@@ -288,6 +319,8 @@ definition {
 		}
 
 		Open(locator1 = "${baseURL}/${urlAppend}");
+
+		LiferayEvent.initializeLiferayEventLog();
 	}
 
 	macro selectSpecificWindow {

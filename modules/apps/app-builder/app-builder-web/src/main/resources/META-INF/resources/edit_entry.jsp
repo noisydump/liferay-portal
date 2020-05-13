@@ -21,11 +21,17 @@ AppBuilderApp appBuilderApp = (AppBuilderApp)request.getAttribute(AppBuilderWebK
 %>
 
 <div class="app-builder-root">
-	<div class="container edit-entry">
+	<clay:container
+		className="edit-entry"
+	>
 		<div id="<%= renderResponse.getNamespace() %>-control-menu"></div>
 
-		<div class="justify-content-center row">
-			<div class="col-lg-12">
+		<clay:row
+			className="justify-content-center"
+		>
+			<clay:col
+				lg="12"
+			>
 				<div class="card card-root mb-0 mt-4 shadowless-card">
 					<div class="card-body pt-0">
 						<aui:form>
@@ -74,7 +80,7 @@ AppBuilderApp appBuilderApp = (AppBuilderApp)request.getAttribute(AppBuilderWebK
 						</aui:form>
 					</div>
 				</div>
-			</div>
-		</div>
-	</div>
+			</clay:col>
+		</clay:row>
+	</clay:container>
 </div>

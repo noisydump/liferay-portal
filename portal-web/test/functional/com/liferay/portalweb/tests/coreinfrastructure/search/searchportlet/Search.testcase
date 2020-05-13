@@ -65,6 +65,11 @@ definition {
 			portletName = "Search Options",
 			portletOption = "Configuration");
 
+		LiferayEvent.waitForLiferayEvent(
+			attributeName = "src",
+			attributeValue = "dialog-iframe-popup",
+			eventName = "modalIframeLoaded");
+
 		SelectFrame(locator1 = "IFrame#CONFIGURATION");
 
 		AssertNotChecked(
@@ -304,6 +309,11 @@ definition {
 			portletName = "Suggestions",
 			portletOption = "Configuration");
 
+		LiferayEvent.waitForLiferayEvent(
+			attributeName = "src",
+			attributeValue = "dialog-iframe-popup",
+			eventName = "modalIframeLoaded");
+
 		SelectFrame(locator1 = "IFrame#CONFIGURATION");
 
 		FormFields.enableCheckbox(fieldName = "spellCheckSuggestionEnabled");
@@ -323,7 +333,11 @@ definition {
 
 		Navigator.openURL();
 
-		Portlet.addPG(portletName = "Language Selector");
+		ContentPages.clickPencil();
+
+		PageEditor.addWidget(portletName = "Language Selector");
+
+		PageEditor.clickPublish();
 
 		LanguagePortlet.selectLanguagePG(
 			locale = "de-DE",
@@ -350,11 +364,25 @@ definition {
 		property portal.acceptance = "true";
 		property environment.acceptance = "true";
 
+		ProductMenu.gotoPortlet(
+			category = "Site Builder",
+			panel = "Site Administration",
+			portlet = "Pages");
+
+		SitePages.addPublicPage(pageName = "Search Page");
+
+		Navigator.gotoPage(pageName = "Search Page");
+
 		Portlet.addPG(portletName = "Search Results");
 
 		Portlet.gotoPortletOptions(
 			portletName = "Search Results",
 			portletOption = "Configuration");
+
+		LiferayEvent.waitForLiferayEvent(
+			attributeName = "src",
+			attributeValue = "dialog-iframe-popup",
+			eventName = "modalIframeLoaded");
 
 		SelectFrame(locator1 = "IFrame#CONFIGURATION");
 
@@ -380,6 +408,11 @@ definition {
 		Portlet.gotoPortletOptions(
 			portletName = "Search Results",
 			portletOption = "Configuration");
+
+		LiferayEvent.waitForLiferayEvent(
+			attributeName = "src",
+			attributeValue = "dialog-iframe-popup",
+			eventName = "modalIframeLoaded");
 
 		SelectFrame(locator1 = "IFrame#CONFIGURATION");
 
@@ -551,6 +584,8 @@ definition {
 
 	@priority = "4"
 	test SearchBlogsEntryCategory {
+		property test.name.skip.portal.instance = "Search#SearchBlogsEntryCategory";
+
 		Navigator.openURL();
 
 		ProductMenu.gotoPortlet(
@@ -585,6 +620,16 @@ definition {
 			searchAssetSummary = "Blogs Entry Content",
 			searchAssetTitle = "Blogs Entry Title",
 			searchAssetType = "Blogs Entry");
+
+		SearchFacetPortlet.updateFacetConfiguration(
+			displayTemplate = "Cloud Layout",
+			portletName = "Category Facet");
+
+		Refresh();
+
+		AssertElementPresent(
+			categoryName = "Category Name",
+			locator1 = "Search#CATEGORY_FACET_CLOUD_LAYOUT");
 
 		SearchPortlets.searchEmbedded(searchTerm = "Category");
 
@@ -782,6 +827,8 @@ definition {
 
 	@priority = "4"
 	test SearchBlogsEntryTag {
+		property test.name.skip.portal.instance = "Search#SearchBlogsEntryTag";
+
 		Navigator.openURL();
 
 		ProductMenu.gotoPortlet(
@@ -802,6 +849,16 @@ definition {
 			searchAssetSummary = "Blogs Entry Content",
 			searchAssetTitle = "Blogs Entry Title",
 			searchAssetType = "Blogs Entry");
+
+		SearchFacetPortlet.updateFacetConfiguration(
+			displayTemplate = "Cloud Layout",
+			portletName = "Tag Facet");
+
+		Refresh();
+
+		AssertElementPresent(
+			locator1 = "Search#TAG_FACET_CLOUD_LAYOUT",
+			tagName = "tag name");
 
 		SearchPortlets.searchEmbedded(searchTerm = "tag");
 
@@ -892,8 +949,6 @@ definition {
 		Portlet.selectScopePG(
 			portletName = "Blogs",
 			scope = "Blogs Page");
-
-		IFrame.closeFrame();
 
 		Blogs.addEntry(
 			entryContent = "Entry Content",
@@ -1046,6 +1101,24 @@ definition {
 		SearchResultPortlet.viewMultipleSearchResults(
 			resultsList = "Apple/Web Content Article,Apple/Document,Apple/Blogs Entry",
 			searchTerm = "Apple");
+
+		SearchFacetPortlet.updateFacetConfiguration(
+			maxTerms = "2",
+			portletName = "Site Facet");
+
+		Refresh();
+
+		AssertElementPresent(
+			key_fieldName = "liferay",
+			locator1 = "FormFields#CHECKBOX_LABEL");
+
+		AssertElementPresent(
+			key_fieldName = "Site Name 2",
+			locator1 = "FormFields#CHECKBOX_LABEL");
+
+		AssertElementNotPresent(
+			key_fieldName = "Site Name 3",
+			locator1 = "FormFields#CHECKBOX_LABEL");
 
 		SearchPortlets.selectEmbeddedScopeInput(searchScope = "This Site");
 
@@ -1286,6 +1359,8 @@ definition {
 
 	@priority = "4"
 	test SearchUser {
+		property test.name.skip.portal.instance = "Search#SearchUser";
+
 		var siteName = TestCase.getSiteName(siteName = "${siteName}");
 
 		ProductMenu.gotoPortlet(
@@ -1315,6 +1390,20 @@ definition {
 		SearchResultPortlet.viewSearchResults(
 			searchAssetTitle = "userfn userln",
 			searchAssetType = "User");
+
+		SearchFacetPortlet.updateFacetConfiguration(
+			parameterName = "username",
+			portletName = "User Facet");
+
+		Refresh();
+
+		SearchFacetPortlet.checkFacet(facetValueName = "userfn userln");
+
+		var currentURL = selenium.getLocation();
+
+		if (!(contains("${currentURL}", "username"))) {
+			fail("User parameter name failed to change.");
+		}
 
 		SearchPortlets.searchEmbedded(searchTerm = "userfn");
 
@@ -1476,6 +1565,8 @@ definition {
 
 	@priority = "4"
 	test SearchWebContent {
+		property test.name.skip.portal.instance = "Search#SearchWebContent";
+
 		JSONWebcontent.addWebContent(
 			content = "WC WebContent Content",
 			groupName = "Guest",
@@ -1616,6 +1707,66 @@ definition {
 			searchAssetType = "Wiki Page");
 	}
 
+	@priority = "4"
+	test SearchWithFolderFacet {
+		for (var count : list "1,2") {
+			JSONDocument.addFolder(
+				dmFolderDescription = "DM Folder Description ${count}",
+				dmFolderName = "DM Folder Name ${count}",
+				groupName = "Guest");
+		}
+
+		for (var count : list "1,2") {
+			JSONDocument.addFile(
+				dmDocumentDescription = "DM Document Description ${count}",
+				dmDocumentTitle = "DM Document Title ${count}",
+				folderName = "DM Folder Name ${count}",
+				groupName = "Guest");
+		}
+
+		Navigator.openURL();
+
+		SearchPortlets.searchEmbedded(searchTerm = "DM");
+
+		SearchResultPortlet.viewMultipleSearchResults(
+			resultsList = "DM Document Title 1/Document,DM Document Title 2/Document",
+			searchTerm = "DM");
+
+		SearchFacetPortlet.checkFacet(facetValueName = "DM Folder Name 1");
+
+		SearchResultPortlet.viewSearchResults(
+			searchAssetTitle = "DM Document Title 1",
+			searchAssetType = "Document");
+
+		SearchResultPortlet.viewSearchResultNotPresent(
+			searchAssetTitle = "DM Document Title 2",
+			searchAssetType = "Document");
+
+		SearchFacetPortlet.clearFacet();
+
+		SearchFacetPortlet.checkFacet(facetValueName = "DM Folder Name 2");
+
+		SearchResultPortlet.viewSearchResults(
+			searchAssetTitle = "DM Document Title 2",
+			searchAssetType = "Document");
+
+		SearchResultPortlet.viewSearchResultNotPresent(
+			searchAssetTitle = "DM Document Title 1",
+			searchAssetType = "Document");
+
+		SearchFacetPortlet.clearFacet();
+
+		SearchFacetPortlet.updateFacetConfiguration(
+			displayFrequencies = "disable",
+			portletName = "Folder Facet");
+
+		Refresh();
+
+		AssertElementNotPresent(
+			facetValueName = "DM Folder Name 1",
+			locator1 = "Search#FACET_DISPLAY_FREQUENCIES");
+	}
+
 	test SearchWithModifiedFacet {
 		JSONWebcontent.addWebContent(
 			content = "WC Content",
@@ -1627,6 +1778,11 @@ definition {
 		Portlet.gotoPortletOptions(
 			portletName = "Modified Facet",
 			portletOption = "Configuration");
+
+		LiferayEvent.waitForLiferayEvent(
+			attributeName = "src",
+			attributeValue = "dialog-iframe-popup",
+			eventName = "modalIframeLoaded");
 
 		SelectFrame(locator1 = "IFrame#CONFIGURATION");
 
@@ -1664,6 +1820,11 @@ definition {
 		Portlet.gotoPortletOptions(
 			portletName = "Modified Facet",
 			portletOption = "Configuration");
+
+		LiferayEvent.waitForLiferayEvent(
+			attributeName = "src",
+			attributeValue = "dialog-iframe-popup",
+			eventName = "modalIframeLoaded");
 
 		SelectFrame(locator1 = "IFrame#CONFIGURATION");
 
@@ -1730,6 +1891,55 @@ definition {
 			searchAssetTitle = "WC Title",
 			searchAssetType = "Web Content Article",
 			searchTerm = "WC Title");
+	}
+
+	@priority = "4"
+	test SearchWithTypeFacet {
+		JSONWebcontent.addWebContent(
+			content = "WC WebContent Content",
+			groupName = "Guest",
+			title = "Apple");
+
+		JSONDocument.addFile(
+			dmDocumentDescription = "DM Document Description ${count}",
+			dmDocumentTitle = "Apple",
+			groupName = "Guest");
+
+		JSONBlog.addEntry(
+			entryContent = "Blogs Entry Content",
+			entryTitle = "Apple");
+
+		Navigator.openURL();
+
+		SearchPortlets.searchEmbedded(searchTerm = "Apple");
+
+		SearchResultPortlet.viewMultipleSearchResults(
+			resultsList = "Apple/Web Content Article,Apple/Document,Apple/Blogs Entry",
+			searchTerm = "Apple");
+
+		SearchFacetPortlet.moveAssetTypesToAvailable(assetType = "Document");
+
+		Refresh();
+
+		AssertElementPresent(
+			key_fieldName = "Web Content Article",
+			locator1 = "FormFields#CHECKBOX_LABEL");
+
+		AssertElementPresent(
+			key_fieldName = "Blogs Entry",
+			locator1 = "FormFields#CHECKBOX_LABEL");
+
+		AssertElementNotPresent(
+			key_fieldName = "Document",
+			locator1 = "FormFields#CHECKBOX_LABEL");
+
+		SearchResultPortlet.viewMultipleSearchResults(
+			resultsList = "Apple/Web Content Article,Apple/Blogs Entry",
+			searchTerm = "Apple");
+
+		SearchResultPortlet.viewSearchResultNotPresent(
+			searchAssetTitle = "Apple",
+			searchAssetType = "Document");
 	}
 
 	@priority = "4"

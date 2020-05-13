@@ -407,10 +407,14 @@ public class EntityColumn implements Cloneable, Comparable<EntityColumn> {
 			return true;
 		}
 
-		if (!includeWrappers) {
-			return false;
+		if (includeWrappers && isPrimitiveTypeWrapper()) {
+			return true;
 		}
 
+		return false;
+	}
+
+	public boolean isPrimitiveTypeWrapper() {
 		if (_type.equals("Boolean")) {
 			return true;
 		}

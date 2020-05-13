@@ -14,12 +14,14 @@
 
 package com.liferay.jenkins.results.parser.spira;
 
+import java.io.Serializable;
+
 import org.json.JSONObject;
 
 /**
  * @author Michael Hashimoto
  */
-public interface SpiraArtifact {
+public interface SpiraArtifact extends Serializable {
 
 	public int getID();
 

@@ -71,7 +71,6 @@ import freemarker.template.Configuration;
 import freemarker.template.DefaultObjectWrapperBuilder;
 import freemarker.template.Template;
 import freemarker.template.TemplateHashModel;
-import freemarker.template.TemplateModelException;
 
 import java.beans.Introspector;
 
@@ -1818,6 +1817,18 @@ public class ServiceBuilder {
 		return true;
 	}
 
+	public boolean isDSLEnabled() {
+		if (isVersionGTE_7_4_0()) {
+			return true;
+		}
+
+		if (ArrayUtil.contains(_incubationFeatures, "DSL")) {
+			return true;
+		}
+
+		return false;
+	}
+
 	public boolean isHBMCamelCasePropertyAccessor(String propertyName) {
 		if (propertyName.length() < 3) {
 			return false;
@@ -2113,7 +2124,7 @@ public class ServiceBuilder {
 	}
 
 	private static void _move(File sourceFile, File destinationFile)
-		throws IOException {
+		throws Exception {
 
 		File parentFile = destinationFile.getParentFile();
 
@@ -2366,9 +2377,7 @@ public class ServiceBuilder {
 			String classDeprecatedComment, List<String> modelNames)
 		throws Exception {
 
-		if (!isVersionGTE_7_4_0() &&
-			!ArrayUtil.contains(_incubationFeatures, "DSL")) {
-
+		if (!isDSLEnabled()) {
 			return;
 		}
 
@@ -4057,7 +4066,7 @@ public class ServiceBuilder {
 	private void _createSQLMappingTables(
 			File sqlFile, String newCreateTableString,
 			EntityMapping entityMapping, boolean addMissingTables)
-		throws IOException {
+		throws Exception {
 
 		if (!sqlFile.exists()) {
 			_touch(sqlFile);
@@ -4507,7 +4516,7 @@ public class ServiceBuilder {
 		return null;
 	}
 
-	private String _fixHbmXml(String content) throws IOException {
+	private String _fixHbmXml(String content) throws Exception {
 		try (UnsyncBufferedReader unsyncBufferedReader =
 				new UnsyncBufferedReader(new UnsyncStringReader(content))) {
 
@@ -4712,7 +4721,7 @@ public class ServiceBuilder {
 		return properties;
 	}
 
-	private Map<String, Object> _getContext() throws TemplateModelException {
+	private Map<String, Object> _getContext() throws Exception {
 		Map<String, Object> context = HashMapBuilder.<String, Object>put(
 			"apiPackagePath", _apiPackagePath
 		).put(
@@ -4944,6 +4953,13 @@ public class ServiceBuilder {
 
 			sb.append("\tctCollectionId LONG default 0 not null,\n");
 			sb.append("\tctChangeType BOOLEAN,\n");
+		}
+		else if (entities[1].isChangeTrackingEnabled() ||
+				 entities[2].isChangeTrackingEnabled()) {
+
+			throw new ServiceBuilderException(
+				"Must enable change tracking for both sides of mapping table " +
+					tableName);
 		}
 
 		sb.append("\tprimary key (");
@@ -5261,7 +5277,7 @@ public class ServiceBuilder {
 		return mappingPKEntityColumnDBNames;
 	}
 
-	private JavaClass _getJavaClass(String fileName) throws IOException {
+	private JavaClass _getJavaClass(String fileName) throws Exception {
 		fileName = _normalize(fileName);
 
 		int pos = 0;
@@ -5559,7 +5575,7 @@ public class ServiceBuilder {
 		return transients;
 	}
 
-	private List<Path> _getUpdateSQLFilePaths() throws IOException {
+	private List<Path> _getUpdateSQLFilePaths() throws Exception {
 		if (!_osgiModule) {
 			final List<Path> updateSQLFilePaths = new ArrayList<>();
 
@@ -6008,6 +6024,10 @@ public class ServiceBuilder {
 			columnElement.addAttribute("type", "long");
 
 			derivedColumnElements.add(columnElement);
+		}
+
+		if (columnElements.isEmpty()) {
+			changeTrackingEnabled = false;
 		}
 
 		if (changeTrackingEnabled) {

@@ -53,7 +53,7 @@ portletDisplay.setURLBack(redirect);
 renderResponse.setTitle(headerTitle);
 %>
 
-<div class="container-fluid-1280">
+<clay:container>
 	<portlet:actionURL name="/bookmarks/edit_entry" var="editEntryURL">
 		<portlet:param name="mvcRenderCommandName" value="/bookmarks/edit_entry" />
 	</portlet:actionURL>
@@ -104,7 +104,7 @@ renderResponse.setTitle(headerTitle);
 								);
 
 								if (<portlet:namespace />selectFolderButton) {
-									<portlet:namespace />selectFolderButton.addEventListener('click', function(
+									<portlet:namespace />selectFolderButton.addEventListener('click', function (
 										event
 									) {
 										Liferay.Util.selectEntity(
@@ -121,7 +121,7 @@ renderResponse.setTitle(headerTitle);
 												uri:
 													'<liferay-portlet:renderURL windowState="<%= LiferayWindowState.POP_UP.toString() %>"><portlet:param name="mvcRenderCommandName" value="/bookmarks/select_folder" /></liferay-portlet:renderURL>',
 											},
-											function(event) {
+											function (event) {
 												var folderData = {
 													idString: 'folderId',
 													idValue: event.entityid,
@@ -199,7 +199,7 @@ renderResponse.setTitle(headerTitle);
 			<aui:button href="<%= redirect %>" type="cancel" />
 		</aui:button-row>
 	</aui:form>
-</div>
+</clay:container>
 
 <aui:script>
 	function <portlet:namespace />saveEntry() {

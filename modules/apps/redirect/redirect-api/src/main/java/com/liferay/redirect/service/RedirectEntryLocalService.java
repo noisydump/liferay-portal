@@ -15,6 +15,7 @@
 package com.liferay.redirect.service;
 
 import com.liferay.exportimport.kernel.lar.PortletDataContext;
+import com.liferay.petra.sql.dsl.query.DSLQuery;
 import com.liferay.portal.kernel.dao.orm.ActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.DynamicQuery;
 import com.liferay.portal.kernel.dao.orm.ExportActionableDynamicQuery;
@@ -80,6 +81,13 @@ public interface RedirectEntryLocalService
 			boolean permanent, String sourceURL, ServiceContext serviceContext)
 		throws PortalException;
 
+	@Indexable(type = IndexableType.REINDEX)
+	public RedirectEntry addRedirectEntry(
+			long groupId, String destinationURL, Date expirationDate,
+			String groupBaseURL, boolean permanent, String sourceURL,
+			boolean updateChainedRedirectEntries, ServiceContext serviceContext)
+		throws PortalException;
+
 	/**
 	 * Adds the redirect entry to the database. Also notifies the appropriate model listeners.
 	 *
@@ -130,6 +138,9 @@ public interface RedirectEntryLocalService
 	 */
 	@Indexable(type = IndexableType.DELETE)
 	public RedirectEntry deleteRedirectEntry(RedirectEntry redirectEntry);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public <T> T dslQuery(DSLQuery dslQuery);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public DynamicQuery dynamicQuery();
@@ -261,6 +272,10 @@ public interface RedirectEntryLocalService
 	public List<RedirectEntry> getRedirectEntries(
 		long groupId, int start, int end, OrderByComparator<RedirectEntry> obc);
 
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public List<RedirectEntry> getRedirectEntries(
+		long groupId, String destinationURL);
+
 	/**
 	 * Returns all the redirect entries matching the UUID and company.
 	 *
@@ -326,6 +341,13 @@ public interface RedirectEntryLocalService
 	public RedirectEntry updateRedirectEntry(
 			long redirectEntryId, String destinationURL, Date expirationDate,
 			boolean permanent, String sourceURL)
+		throws PortalException;
+
+	@Indexable(type = IndexableType.REINDEX)
+	public RedirectEntry updateRedirectEntry(
+			long redirectEntryId, String destinationURL, Date expirationDate,
+			String groupBaseURL, boolean permanent, String sourceURL,
+			boolean updateChainedRedirectEntries)
 		throws PortalException;
 
 	/**

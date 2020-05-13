@@ -24,10 +24,11 @@ definition {
 			Button.clickSave();
 		}
 
-		for (var workflowResourceValue : list "Blogs Entry,Calendar Event,Comment,Message Boards Message,Page Revision,Wiki Page") {
-			LexiconEntry.gotoEntryMenuItem(
-				menuItem = "Edit",
-				rowEntry = "${workflowResourceValue}");
+		for (var workflowResourceValue : list "Blogs Entry,Calendar Event,Comment,Content Page,Knowledge Base Article,Message Boards Message,Page Revision,Web Content Article,Wiki Page") {
+			AssertClick.pauseAssertTextClickAt(
+				key_rowEntry = "${workflowResourceValue}",
+				locator1 = "Button#EDIT_ROW",
+				value1 = "Edit");
 
 			var key_workflowResourceValue = "${workflowResourceValue}";
 
@@ -35,7 +36,9 @@ definition {
 				locator1 = "WorkflowConfiguration#RESOURCE_TABLE_SELECT",
 				value1 = "${noWorkflow}");
 
-			Button.clickSave();
+			AssertClick(
+				locator1 = "WorkflowConfiguration#RESOURCE_TABLE_SAVE",
+				value1 = "Save");
 		}
 	}
 
@@ -177,9 +180,15 @@ definition {
 
 		IFrame.selectConfigurationFrame();
 
-		Select(
-			locator1 = "MyWorkflowTasks#DIALOG_BOX_ASSIGN_TO_SELECT",
-			value1 = "${user}");
+		Click(locator1 = "MyWorkflowTasks#DIALOG_BOX_ASSIGN_TO_SELECT");
+
+		Pause(locator1 = "1000");
+
+		Click(
+			key_user = "${user}",
+			locator1 = "MyWorkflowTasks#DIALOG_BOX_ASSIGN_TO_VALUE");
+
+		Pause(locator1 = "1000");
 
 		if (isSet(comment)) {
 			Type(
@@ -295,6 +304,8 @@ definition {
 	}
 
 	macro configureWCWorkflowViaFolderInfo {
+		Pause(locator1 = "5000");
+
 		Click.pauseClickAt(locator1 = "Icon#INFO");
 
 		if (IsElementNotPresent(locator1 = "Icon#VERTICAL_ELLIPSIS_BUTTON")) {
@@ -424,6 +435,11 @@ definition {
 		var editAsset = "IFrame#EDIT_ASSET";
 
 		if (IsElementPresent(locator1 = "${editAsset}")) {
+			LiferayEvent.waitForLiferayEvent(
+				attributeName = "src",
+				attributeValue = "dialog-iframe-popup",
+				eventName = "modalIframeLoaded");
+
 			SelectFrame(locator1 = "${editAsset}");
 		}
 	}
@@ -619,9 +635,9 @@ definition {
 
 	macro tearDownPortalWorkflow {
 		ProductMenu.gotoPortlet(
-			category = "Configuration",
+			category = "Workflow",
 			panel = "Control Panel",
-			portlet = "Workflow");
+			portlet = "Process Builder");
 
 		Navigator.gotoNavItem(navItem = "Schemes");
 
@@ -661,9 +677,9 @@ definition {
 
 	macro tearDownSpecificWorkflowDefinition {
 		ProductMenu.gotoPortlet(
-			category = "Configuration",
+			category = "Workflow",
 			panel = "Control Panel",
-			portlet = "Workflow");
+			portlet = "Process Builder");
 
 		var key_workflowDefinitionTitle = "${workflowDefinitionTitle}";
 
@@ -675,15 +691,17 @@ definition {
 	}
 
 	macro tearDownWorkflowDefinitions {
+		var key_workflowDefinitionTitle = "${workflowDefinitionTitle}";
+
 		ProductMenu.gotoPortlet(
-			category = "Configuration",
+			category = "Workflow",
 			panel = "Control Panel",
-			portlet = "Workflow");
+			portlet = "Process Builder");
 
-		while (IsElementPresent(locator1 = "WorkflowDefinition#DEFINITION_TABLE_ADDED_DEFINITION_ELLIPSIS")) {
-			Workflow.unpublishWorkflowDefinition();
+		while (IsElementPresent(locator1 = "WorkflowDefinition#DEFINITION_TABLE_TITLE")) {
+			Workflow.unpublishWorkflowDefinition(workflowDefinitionTitle = "${workflowDefinitionTitle}");
 
-			Workflow.deleteWorkflowDefinition();
+			Workflow.deleteWorkflowDefinition(workflowDefinitionTitle = "${workflowDefinitionTitle}");
 		}
 	}
 
@@ -766,7 +784,17 @@ definition {
 		var currentYear = DateUtil.getCurrentYear();
 		var futureYear = ${currentYear} + 1;
 
+		LiferayEvent.waitForLiferayEvent(
+			attributeName = "src",
+			attributeValue = "dialog-iframe-popup",
+			eventName = "modalIframeLoaded");
+
 		SelectFrame(locator1 = "WorkflowDefinition#DIALOG_BOX_BODY");
+
+		LiferayEvent.waitForLiferayEvent(
+			attributeName = "src",
+			attributeValue = "dialog-iframe-popup",
+			eventName = "modalIframeLoaded");
 
 		SelectFrame(locator1 = "IFrame#IFRAME");
 
@@ -1223,10 +1251,10 @@ definition {
 
 		Navigator.gotoNavTab(navTab = "Assigned to My Roles");
 
-		if (IsElementNotPresent(locator1 = "MyWorkflowTasks#ASSIGNED_TO_MY_ROLES_TABLE_LAST_ACTIVITY_DATE")) {
+		while (IsElementNotPresent(locator1 = "MyWorkflowTasks#ASSIGNED_TO_MY_ROLES_TABLE_LAST_ACTIVITY_DATE") && (maxIterations = "10")) {
 			Navigator.gotoNavTab(navTab = "Assigned to Me");
-
 			Navigator.gotoNavTab(navTab = "Assigned to My Roles");
+			Pause(locator1 = "1000");
 		}
 
 		AssertTextEquals(

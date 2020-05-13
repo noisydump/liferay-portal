@@ -59,24 +59,16 @@ public class PageWidgetInstanceDefinitionSerDes {
 
 		sb.append("{");
 
-		if (pageWidgetInstanceDefinition.getWidget() != null) {
+		if (pageWidgetInstanceDefinition.getWidgetInstance() != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
 			}
 
-			sb.append("\"widget\": ");
+			sb.append("\"widgetInstance\": ");
 
-			sb.append(String.valueOf(pageWidgetInstanceDefinition.getWidget()));
-		}
-
-		if (pageWidgetInstanceDefinition.getWidgetConfig() != null) {
-			if (sb.length() > 1) {
-				sb.append(", ");
-			}
-
-			sb.append("\"widgetConfig\": ");
-
-			sb.append(_toJSON(pageWidgetInstanceDefinition.getWidgetConfig()));
+			sb.append(
+				String.valueOf(
+					pageWidgetInstanceDefinition.getWidgetInstance()));
 		}
 
 		sb.append("}");
@@ -101,22 +93,14 @@ public class PageWidgetInstanceDefinitionSerDes {
 
 		Map<String, String> map = new TreeMap<>();
 
-		if (pageWidgetInstanceDefinition.getWidget() == null) {
-			map.put("widget", null);
+		if (pageWidgetInstanceDefinition.getWidgetInstance() == null) {
+			map.put("widgetInstance", null);
 		}
 		else {
 			map.put(
-				"widget",
-				String.valueOf(pageWidgetInstanceDefinition.getWidget()));
-		}
-
-		if (pageWidgetInstanceDefinition.getWidgetConfig() == null) {
-			map.put("widgetConfig", null);
-		}
-		else {
-			map.put(
-				"widgetConfig",
-				String.valueOf(pageWidgetInstanceDefinition.getWidgetConfig()));
+				"widgetInstance",
+				String.valueOf(
+					pageWidgetInstanceDefinition.getWidgetInstance()));
 		}
 
 		return map;
@@ -140,16 +124,10 @@ public class PageWidgetInstanceDefinitionSerDes {
 			PageWidgetInstanceDefinition pageWidgetInstanceDefinition,
 			String jsonParserFieldName, Object jsonParserFieldValue) {
 
-			if (Objects.equals(jsonParserFieldName, "widget")) {
+			if (Objects.equals(jsonParserFieldName, "widgetInstance")) {
 				if (jsonParserFieldValue != null) {
-					pageWidgetInstanceDefinition.setWidget(
-						WidgetSerDes.toDTO((String)jsonParserFieldValue));
-				}
-			}
-			else if (Objects.equals(jsonParserFieldName, "widgetConfig")) {
-				if (jsonParserFieldValue != null) {
-					pageWidgetInstanceDefinition.setWidgetConfig(
-						(Map)PageWidgetInstanceDefinitionSerDes.toMap(
+					pageWidgetInstanceDefinition.setWidgetInstance(
+						WidgetInstanceSerDes.toDTO(
 							(String)jsonParserFieldValue));
 				}
 			}

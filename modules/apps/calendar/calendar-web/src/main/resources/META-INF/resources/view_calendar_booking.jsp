@@ -38,7 +38,7 @@ java.util.Calendar endTimeJCalendar = JCalendarUtil.getJCalendar(endTime, userTi
 AssetEntry layoutAssetEntry = AssetEntryLocalServiceUtil.getEntry(CalendarBooking.class.getName(), calendarBooking.getCalendarBookingId());
 %>
 
-<div class="container-fluid-1280">
+<clay:container>
 	<div class="panel panel-default">
 		<liferay-ui:header
 			backURL="<%= backURL %>"
@@ -282,21 +282,21 @@ AssetEntry layoutAssetEntry = AssetEntryLocalServiceUtil.getEntry(CalendarBookin
 			if (<%= calendarBooking.isRecurring() %>) {
 				Liferay.RecurrenceUtil.openConfirmationPanel(
 					'invokeTransition',
-					function() {
+					function () {
 						document.<portlet:namespace />fm.<portlet:namespace />updateInstance.value =
 							'true';
 						document.<portlet:namespace />fm.<portlet:namespace />allFollowing.value =
 							'false';
 						submitForm(document.<portlet:namespace />fm);
 					},
-					function() {
+					function () {
 						document.<portlet:namespace />fm.<portlet:namespace />updateInstance.value =
 							'true';
 						document.<portlet:namespace />fm.<portlet:namespace />allFollowing.value =
 							'true';
 						submitForm(document.<portlet:namespace />fm);
 					},
-					function() {
+					function () {
 						submitForm(document.<portlet:namespace />fm);
 					}
 				);
@@ -306,4 +306,4 @@ AssetEntry layoutAssetEntry = AssetEntryLocalServiceUtil.getEntry(CalendarBookin
 			}
 		}
 	</aui:script>
-</div>
+</clay:container>

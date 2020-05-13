@@ -18,7 +18,12 @@ definition {
 	macro gotoBlogsEntriesPermissionsCP {
 		LexiconEntry.gotoHeaderMenuItem(menuItem = "Entries Permissions");
 
-		SelectFrame(locator1 = "IFrame#DIALOG");
+		LiferayEvent.waitForLiferayEvent(
+			attributeName = "src",
+			attributeValue = "dialog-iframe-popup",
+			eventName = "modalIframeLoaded");
+
+		SelectFrame(locator1 = "IFrame#MODAL_BODY");
 	}
 
 	macro gotoBlogsEntryPermissionsCP {
@@ -28,7 +33,12 @@ definition {
 			card = "${entryTitle}",
 			item = "Permissions");
 
-		SelectFrame(locator1 = "IFrame#DIALOG");
+		LiferayEvent.waitForLiferayEvent(
+			attributeName = "src",
+			attributeValue = "dialog-iframe-popup",
+			eventName = "modalIframeLoaded");
+
+		SelectFrame(locator1 = "IFrame#MODAL_BODY");
 	}
 
 	macro gotoBlogsEntryPermissionsPG {
@@ -38,7 +48,12 @@ definition {
 			entryTitle = "${entryTitle}",
 			item = "Permissions");
 
-		SelectFrame(locator1 = "IFrame#DIALOG");
+		LiferayEvent.waitForLiferayEvent(
+			attributeName = "src",
+			attributeValue = "dialog-iframe-popup",
+			eventName = "modalIframeLoaded");
+
+		SelectFrame(locator1 = "IFrame#MODAL_BODY");
 	}
 
 	macro gotoBrowseImage {
@@ -52,7 +67,12 @@ definition {
 	macro gotoConfigurationSetupPG {
 		Portlet.gotoPortletOptions(portletOption = "Configuration");
 
-		SelectFrame(locator1 = "IFrame#DIALOG");
+		LiferayEvent.waitForLiferayEvent(
+			attributeName = "src",
+			attributeValue = "dialog-iframe-popup",
+			eventName = "modalIframeLoaded");
+
+		SelectFrame(locator1 = "IFrame#MODAL_BODY");
 	}
 
 	macro gotoEditCP {

@@ -37,7 +37,12 @@ definition {
 			locator1 = "Portlet#H3_MODAL_TITLE",
 			value1 = "Add List");
 
-		SelectFrame(locator1 = "IFrame#DIALOG");
+		LiferayEvent.waitForLiferayEvent(
+			attributeName = "src",
+			attributeValue = "dialog-iframe-popup",
+			eventName = "modalIframeLoaded");
+
+		SelectFrame(locator1 = "IFrame#MODAL_BODY");
 
 		PortletEntry.inputName(name = "${ddlListName}");
 
@@ -109,7 +114,12 @@ definition {
 			locator1 = "DDL#PORTLET_ACTIONS_EDIT_LIST",
 			value1 = "Edit List");
 
-		SelectFrame(locator1 = "IFrame#DIALOG");
+		LiferayEvent.waitForLiferayEvent(
+			attributeName = "src",
+			attributeValue = "dialog-iframe-popup",
+			eventName = "modalIframeLoaded");
+
+		SelectFrame(locator1 = "IFrame#MODAL_BODY");
 
 		PortletEntry.inputName(name = "${ddlListNameEdit}");
 
@@ -132,6 +142,11 @@ definition {
 		Click(
 			locator1 = "DDL#PORTLET_ACTIONS_SELECT_LIST",
 			value1 = "Select List");
+
+		LiferayEvent.waitForLiferayEvent(
+			attributeName = "src",
+			attributeValue = "dialog-iframe-popup",
+			eventName = "modalIframeLoaded");
 
 		SelectFrame(locator1 = "DDLConfiguration#CONFIGURATION_IFRAME");
 

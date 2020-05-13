@@ -19,6 +19,7 @@ import {
 	getPathname,
 	withParams,
 } from '../../shared/components/router/routerUtil.es';
+import {useProcessTitle} from '../../shared/hooks/useProcessTitle.es';
 import {AppContext} from '../AppContext.es';
 import {useTimeRangeFetch} from '../filter/hooks/useTimeRangeFetch.es';
 import SLAInfo from './SLAInfo.es';
@@ -30,7 +31,7 @@ import PendingItemsCard from './process-items/PendingItemsCard.es';
 import WorkloadByAssigneeCard from './workload-by-assignee-card/WorkloadByAssigneeCard.es';
 import WorkloadByStepCard from './workload-by-step-card/WorkloadByStepCard.es';
 
-const DashboardTab = props => {
+const DashboardTab = (props) => {
 	return (
 		<div className="container-fluid-1280">
 			<div className="row">
@@ -48,7 +49,7 @@ const DashboardTab = props => {
 	);
 };
 
-const PerformanceTab = props => {
+const PerformanceTab = (props) => {
 	useTimeRangeFetch();
 
 	return (
@@ -63,6 +64,8 @@ const PerformanceTab = props => {
 
 const ProcessMetricsContainer = ({history, processId, query}) => {
 	const {defaultDelta} = useContext(AppContext);
+
+	useProcessTitle(processId);
 
 	const dashboardTab = useMemo(
 		() => ({
@@ -95,7 +98,7 @@ const ProcessMetricsContainer = ({history, processId, query}) => {
 
 		const search = stringify({
 			...parse(query),
-			filters: {taskKeys: ['allSteps']},
+			filters: {taskNames: ['allSteps']},
 		});
 
 		history.replace({pathname, search});

@@ -147,7 +147,11 @@ public class RatingsTag extends IncludeTag {
 			httpServletRequest.setAttribute(
 				"liferay-ratings:ratings:classPK", String.valueOf(_classPK));
 
+			boolean inTrash = _isInTrash();
+
 			RatingsStats ratingsStats = _getRatingsStats();
+
+			int positiveVotes = (int)Math.round(_getTotalScore(ratingsStats));
 
 			ThemeDisplay themeDisplay =
 				(ThemeDisplay)httpServletRequest.getAttribute(
@@ -156,7 +160,13 @@ public class RatingsTag extends IncludeTag {
 			RatingsEntry ratingsEntry = _getRatingsEntry(
 				ratingsStats, themeDisplay);
 
-			int positiveVotes = (int)Math.round(_getTotalScore());
+			double userScore = _getUserScore(ratingsEntry);
+
+			boolean thumbUp = _isThumbUp(userScore);
+
+			int totalEntries = _getTotalEntries(ratingsStats);
+			String type = _getType(httpServletRequest);
+			String url = _getURL(themeDisplay);
 
 			httpServletRequest.setAttribute(
 				"liferay-ratings:ratings:data",
@@ -165,20 +175,19 @@ public class RatingsTag extends IncludeTag {
 				).put(
 					"classPK", _classPK
 				).put(
-					"enabled", _isEnabled(themeDisplay)
+					"enabled", _isEnabled(themeDisplay, inTrash)
 				).put(
 					"initialAverageScore", _getInitialAverageScore(ratingsStats)
 				).put(
-					"initialLiked", _isThumbUp(_getUserScore(ratingsEntry))
+					"initialLiked", thumbUp
 				).put(
-					"initialNegativeVotes",
-					_getTotalEntries(ratingsStats) - positiveVotes
+					"initialNegativeVotes", totalEntries - positiveVotes
 				).put(
 					"initialPositiveVotes", positiveVotes
 				).put(
-					"initialTotalEntries", _getTotalEntries(ratingsStats)
+					"initialTotalEntries", totalEntries
 				).put(
-					"inTrash", _isInTrash()
+					"inTrash", inTrash
 				).put(
 					"numberOfStars", getNumberOfStars()
 				).put(
@@ -186,25 +195,26 @@ public class RatingsTag extends IncludeTag {
 				).put(
 					"signedIn", themeDisplay.isSignedIn()
 				).put(
-					"thumbDown", _isThumbDown(_getUserScore(ratingsEntry))
+					"thumbDown", _isThumbDown(userScore)
 				).put(
-					"thumbUp", _isThumbUp(_getUserScore(ratingsEntry))
+					"thumbUp", thumbUp
 				).put(
-					"url", _getURL(themeDisplay)
+					"type", type
 				).put(
-					"userScore", _getUserScore(ratingsEntry)
+					"url", url
+				).put(
+					"userScore", userScore
 				).build());
 
 			httpServletRequest.setAttribute(
-				"liferay-ratings:ratings:inTrash", _isInTrash());
+				"liferay-ratings:ratings:inTrash", inTrash);
 			httpServletRequest.setAttribute(
 				"liferay-ratings:ratings:ratingsEntry", ratingsEntry);
 			httpServletRequest.setAttribute(
 				"liferay-ratings:ratings:ratingsStats", ratingsStats);
 			httpServletRequest.setAttribute(
-				"liferay-ratings:ratings:type", _getType(httpServletRequest));
-			httpServletRequest.setAttribute(
-				"liferay-ratings:ratings:url", _getURL(themeDisplay));
+				"liferay-ratings:ratings:type", type);
+			httpServletRequest.setAttribute("liferay-ratings:ratings:url", url);
 		}
 		catch (Exception exception) {
 			_log.error(exception, exception);
@@ -249,10 +259,7 @@ public class RatingsTag extends IncludeTag {
 		return totalEntries;
 	}
 
-	private double _getTotalScore() {
-		RatingsStats ratingsStats = RatingsStatsLocalServiceUtil.fetchStats(
-			_className, _classPK);
-
+	private double _getTotalScore(RatingsStats ratingsStats) {
 		if (ratingsStats != null) {
 			return ratingsStats.getTotalScore();
 		}
@@ -316,10 +323,8 @@ public class RatingsTag extends IncludeTag {
 		return userScore;
 	}
 
-	private boolean _isEnabled(ThemeDisplay themeDisplay)
-		throws PortalException {
-
-		if (!_isInTrash()) {
+	private boolean _isEnabled(ThemeDisplay themeDisplay, boolean inTrash) {
+		if (!inTrash) {
 			Group group = themeDisplay.getSiteGroup();
 
 			if (!group.isStagingGroup() && !group.isStagedRemotely()) {

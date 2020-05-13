@@ -18,14 +18,15 @@ import {createPortal} from 'react-dom';
 import {config} from '../config/index';
 import {useSelector} from '../store/index';
 import DisabledArea from './DisabledArea';
+import DragPreview from './DragPreview';
 import LayoutViewport from './LayoutViewport';
 import Sidebar from './Sidebar';
 import Toolbar from './Toolbar';
 
 export default function App() {
-	const mainItemId = useSelector(state => state.layoutData.rootItems.main);
-	const masterLayoutData = useSelector(state => state.masterLayoutData);
-	const languageId = useSelector(state => state.languageId);
+	const mainItemId = useSelector((state) => state.layoutData.rootItems.main);
+	const masterLayoutData = useSelector((state) => state.masterLayoutData);
+	const languageId = useSelector((state) => state.languageId);
 
 	useEffect(() => {
 		const currentLanguageDirection = config.languageDirection[languageId];
@@ -40,6 +41,7 @@ export default function App() {
 	return (
 		<>
 			<DisabledArea />
+			<DragPreview />
 			<Toolbar />
 			<LayoutViewport
 				mainItemId={mainItemId}

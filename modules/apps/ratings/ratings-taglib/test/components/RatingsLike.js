@@ -16,7 +16,7 @@ import {cleanup, fireEvent, render} from '@testing-library/react';
 import React from 'react';
 import {act} from 'react-dom/test-utils';
 
-import RatingsLike from '../../src/main/resources/META-INF/resources/js/components/RatingsLike';
+import Ratings from '../../src/main/resources/META-INF/resources/js/components/Ratings';
 import {formDataToObj} from '../utils';
 
 const baseProps = {
@@ -24,11 +24,12 @@ const baseProps = {
 	classPK: 'classPK',
 	enabled: true,
 	signedIn: true,
+	type: 'like',
 	url: 'http://url',
 };
 
-const renderComponent = props =>
-	render(<RatingsLike {...baseProps} {...props} />);
+const renderComponent = (props) =>
+	render(<Ratings {...baseProps} {...props} />);
 
 describe('RatingsLike', () => {
 	afterEach(cleanup);
@@ -47,15 +48,27 @@ describe('RatingsLike', () => {
 		it('has default votes', () => {
 			expect(LikeButton.value).toBe('0');
 		});
+
+		it('has like title', () => {
+			expect(LikeButton.title).toBe('like-this');
+		});
 	});
 
 	describe('when rendered with enabled = false', () => {
-		it('is disabled', () => {
-			const LikeButton = renderComponent({
+		let LikeButton;
+
+		beforeEach(() => {
+			LikeButton = renderComponent({
 				enabled: false,
 			}).getByRole('button');
+		});
 
+		it('is disabled', () => {
 			expect(LikeButton.disabled).toBe(true);
+		});
+
+		it('has disabled title', () => {
+			expect(LikeButton.title).toBe('ratings-are-disabled-in-staging');
 		});
 	});
 
@@ -83,6 +96,10 @@ describe('RatingsLike', () => {
 
 			it('increases the likes counter', () => {
 				expect(LikeButton.value).toBe('27');
+			});
+
+			it('has unlike title', () => {
+				expect(LikeButton.title).toBe('unlike-this');
 			});
 
 			describe('and the user clicks unlike', () => {
@@ -132,7 +149,7 @@ describe('RatingsLike', () => {
 
 	describe('when there is a valid server response', () => {
 		beforeEach(() => {
-			fetch.mockResponseOnce(JSON.stringify({totalScore: 27}));
+			fetch.mockResponseOnce(JSON.stringify({totalScore: 27.1}));
 		});
 
 		afterEach(() => {
@@ -161,7 +178,7 @@ describe('RatingsLike', () => {
 				expect(objFormData.score).toBe('1');
 			});
 
-			it('updates the counters with the ones from the server', () => {
+			it('updates the rounded counters with the ones from the server', () => {
 				expect(LikeButton.value).toBe('27');
 			});
 		});

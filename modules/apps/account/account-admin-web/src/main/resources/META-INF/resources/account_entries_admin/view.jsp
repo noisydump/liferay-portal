@@ -17,7 +17,7 @@
 <%@ include file="/init.jsp" %>
 
 <%
-SearchContainer accountEntryDisplaySearchContainer = AccountEntryDisplaySearchContainerFactory.create(liferayPortletRequest, liferayPortletResponse);
+SearchContainer<AccountEntryDisplay> accountEntryDisplaySearchContainer = AccountEntryDisplaySearchContainerFactory.create(liferayPortletRequest, liferayPortletResponse);
 
 ViewAccountEntriesManagementToolbarDisplayContext viewAccountEntriesManagementToolbarDisplayContext = new ViewAccountEntriesManagementToolbarDisplayContext(request, liferayPortletRequest, liferayPortletResponse, accountEntryDisplaySearchContainer);
 %>
@@ -26,7 +26,7 @@ ViewAccountEntriesManagementToolbarDisplayContext viewAccountEntriesManagementTo
 	displayContext="<%= viewAccountEntriesManagementToolbarDisplayContext %>"
 />
 
-<div class="container-fluid container-fluid-max-xl">
+<clay:container>
 	<aui:form method="post" name="fm">
 		<aui:input name="accountEntryIds" type="hidden" />
 
@@ -100,7 +100,7 @@ ViewAccountEntriesManagementToolbarDisplayContext viewAccountEntriesManagementTo
 			/>
 		</liferay-ui:search-container>
 	</aui:form>
-</div>
+</clay:container>
 
 <liferay-frontend:component
 	componentId="<%= viewAccountEntriesManagementToolbarDisplayContext.getDefaultEventHandler() %>"

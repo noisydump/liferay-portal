@@ -117,6 +117,11 @@ public class CTProcessLocalServiceWrapper
 	}
 
 	@Override
+	public <T> T dslQuery(com.liferay.petra.sql.dsl.query.DSLQuery dslQuery) {
+		return _ctProcessLocalService.dslQuery(dslQuery);
+	}
+
+	@Override
 	public com.liferay.portal.kernel.dao.orm.DynamicQuery dynamicQuery() {
 		return _ctProcessLocalService.dynamicQuery();
 	}
@@ -265,19 +270,6 @@ public class CTProcessLocalServiceWrapper
 		getCTProcesses(long ctCollectionId) {
 
 		return _ctProcessLocalService.getCTProcesses(ctCollectionId);
-	}
-
-	@Override
-	public java.util.List<com.liferay.change.tracking.model.CTProcess>
-		getCTProcesses(
-			long companyId, long userId, String keywords, int status, int start,
-			int end,
-			com.liferay.portal.kernel.util.OrderByComparator
-				<com.liferay.change.tracking.model.CTProcess>
-					orderByComparator) {
-
-		return _ctProcessLocalService.getCTProcesses(
-			companyId, userId, keywords, status, start, end, orderByComparator);
 	}
 
 	/**

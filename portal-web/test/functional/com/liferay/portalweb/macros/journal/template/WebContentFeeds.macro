@@ -27,7 +27,12 @@ definition {
 			locator1 = "DDMEditTemplate#DETAILS_SELECT_STRUCTURE",
 			value1 = "Select");
 
-		SelectFrame(locator1 = "IFrame#DIALOG");
+		LiferayEvent.waitForLiferayEvent(
+			attributeName = "src",
+			attributeValue = "dialog-iframe-popup",
+			eventName = "modalIframeLoaded");
+
+		SelectFrame(locator1 = "IFrame#MODAL_BODY");
 
 		ClickNoError(
 			locator1 = "DDMSelectStructure#DDM_STRUCTURE_TABLE_NAME_LINK",

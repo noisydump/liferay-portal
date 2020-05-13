@@ -297,7 +297,7 @@ public class NestedFieldsWriterInterceptor implements WriterInterceptor {
 				Map.Entry<String, Class<?>> resourceMethodArgNameTypeEntry)
 			throws Exception {
 
-			List<Class> itemClasses = new ArrayList<>();
+			List<Class<?>> itemClasses = new ArrayList<>();
 
 			Class<?> itemClass = item.getClass();
 
@@ -486,7 +486,7 @@ public class NestedFieldsWriterInterceptor implements WriterInterceptor {
 
 		private void _setContextFields(
 				Field[] fields, Message message, Object resource)
-			throws IllegalAccessException {
+			throws Exception {
 
 			for (Field field : fields) {
 				String name = field.getName();
@@ -553,7 +553,7 @@ public class NestedFieldsWriterInterceptor implements WriterInterceptor {
 		}
 
 		if (fieldType.isArray() && (value instanceof Collection)) {
-			Collection collection = (Collection)value;
+			Collection<Object> collection = (Collection)value;
 
 			value = Array.newInstance(
 				fieldType.getComponentType(), collection.size());

@@ -18,8 +18,9 @@ import {UPDATE_LANGUAGE_ID} from './types';
  * @param {string} languageId
  * @return {object}
  */
-export default function updateLanguageId({languageId}) {
+export default function updateLanguageId({isUndo = false, languageId}) {
 	return {
+		isUndo,
 		languageId,
 		type: UPDATE_LANGUAGE_ID,
 	};

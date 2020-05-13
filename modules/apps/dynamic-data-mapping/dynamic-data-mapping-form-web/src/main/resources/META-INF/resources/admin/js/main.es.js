@@ -46,8 +46,8 @@ import StateSyncronizer from './util/StateSyncronizer.es';
 
 const NAV_ITEMS = {
 	FORM: 0,
+	REPORT: 2,
 	RULES: 1,
-	SUMMARY: 2,
 };
 
 /**
@@ -70,7 +70,7 @@ class Form extends Component {
 		this._eventHandler = new EventHandler();
 
 		const dependencies = [
-			this._createEditor('nameEditor').then(editor => {
+			this._createEditor('nameEditor').then((editor) => {
 				this._eventHandler.add(
 					dom.on(
 						editor.element.$,
@@ -297,7 +297,9 @@ class Form extends Component {
 		this._eventHandler.removeAllListeners();
 
 		if (this._translationManagerHandles) {
-			this._translationManagerHandles.forEach(handle => handle.detach());
+			this._translationManagerHandles.forEach((handle) =>
+				handle.detach()
+			);
 		}
 	}
 
@@ -340,10 +342,10 @@ class Form extends Component {
 		return activeNavItem === NAV_ITEMS.RULES && this.isFormBuilderView();
 	}
 
-	isShowSummary() {
+	isShowReport() {
 		const {activeNavItem} = this.state;
 
-		return activeNavItem === NAV_ITEMS.SUMMARY && this.isFormBuilderView();
+		return activeNavItem === NAV_ITEMS.REPORT && this.isFormBuilderView();
 	}
 
 	onAvailableLocalesRemoved({newValue, previousValue}) {
@@ -453,7 +455,7 @@ class Form extends Component {
 						spritemap={spritemap}
 						view={view}
 						visible={
-							!this.isShowRuleBuilder() && !this.isShowSummary()
+							!this.isShowRuleBuilder() && !this.isShowReport()
 						}
 					/>
 
@@ -467,7 +469,7 @@ class Form extends Component {
 						ref="sidebar"
 						spritemap={spritemap}
 						visible={
-							!this.isShowRuleBuilder() && !this.isShowSummary()
+							!this.isShowRuleBuilder() && !this.isShowReport()
 						}
 					/>
 				</LayoutProviderTag>
@@ -576,20 +578,20 @@ class Form extends Component {
 		switch (activeNavItem) {
 			case NAV_ITEMS.FORM:
 				this._toggleRulesBuilder(false);
-				this._toggleSummary(false);
+				this._toggleReport(false);
 				this._toggleFormBuilder(true);
 				break;
 
 			case NAV_ITEMS.RULES:
 				this._toggleFormBuilder(false);
-				this._toggleSummary(false);
+				this._toggleReport(false);
 				this._toggleRulesBuilder(true);
 				break;
 
-			case NAV_ITEMS.SUMMARY:
+			case NAV_ITEMS.REPORT:
 				this._toggleFormBuilder(false);
 				this._toggleRulesBuilder(false);
-				this._toggleSummary(true);
+				this._toggleReport(true);
 				break;
 
 			default:
@@ -629,8 +631,8 @@ class Form extends Component {
 			promise = Promise.resolve(CKEDITOR.instances[editorName]);
 		}
 		else {
-			promise = new Promise(resolve => {
-				Liferay.on('editorAPIReady', event => {
+			promise = new Promise((resolve) => {
+				Liferay.on('editorAPIReady', (event) => {
 					if (event.editorName === editorName) {
 						event.editor.create();
 
@@ -667,7 +669,7 @@ class Form extends Component {
 		if (settingsDDMForm) {
 			const settingsPageVisitor = new PagesVisitor(settingsDDMForm.pages);
 
-			settingsPageVisitor.mapFields(field => {
+			settingsPageVisitor.mapFields((field) => {
 				if (field.fieldName === 'requireAuthentication') {
 					requireAuthentication = field.value;
 				}
@@ -739,24 +741,18 @@ class Form extends Component {
 
 	_handleFormNavClicked(event) {
 		const {delegateTarget} = event;
-		const {published, saved} = this.props;
 		const navItem = dom.closest(delegateTarget, '.nav-item');
 		const navItemIndex = Number(navItem.dataset.navItemIndex);
 		const navLink = navItem.querySelector('.nav-link');
 
-		if (
-			(navItemIndex === 2 && (published || saved)) ||
-			navItemIndex !== 2
-		) {
-			document
-				.querySelector('.forms-management-bar li > a.active')
-				.classList.remove('active');
-			navLink.classList.add('active');
+		document
+			.querySelector('.forms-management-bar li > a.active')
+			.classList.remove('active');
+		navLink.classList.add('active');
 
-			this.setState({
-				activeNavItem: navItemIndex,
-			});
-		}
+		this.setState({
+			activeNavItem: navItemIndex,
+		});
 
 		this.syncActiveNavItem(this.state.activeNavItem);
 	}
@@ -881,7 +877,7 @@ class Form extends Component {
 
 		return {
 			...context,
-			pages: context.pages.map(page => {
+			pages: context.pages.map((page) => {
 				let {
 					description,
 					localizedDescription,
@@ -1000,6 +996,21 @@ class Form extends Component {
 		}
 	}
 
+	_toggleReport(show) {
+		const formReport = document.querySelector('.ddm-form-report');
+
+		if (!formReport) {
+			return;
+		}
+
+		if (show) {
+			formReport.classList.remove('hide');
+		}
+		else {
+			formReport.classList.add('hide');
+		}
+	}
+
 	_toggleRulesBuilder(show) {
 		const {namespace} = this.props;
 
@@ -1019,19 +1030,6 @@ class Form extends Component {
 		}
 		else {
 			this.hideAddButton();
-		}
-	}
-
-	_toggleSummary(show) {
-		const {namespace} = this.props;
-
-		const formSummary = document.querySelector(`#${namespace}formSummary`);
-
-		if (show) {
-			formSummary.classList.remove('hide');
-		}
-		else {
-			formSummary.classList.add('hide');
 		}
 	}
 
@@ -1078,6 +1076,7 @@ class Form extends Component {
 }
 
 Form.PROPS = {
+
 	/**
 	 * The context for rendering a layout that represents a form.
 	 * @default undefined
@@ -1301,6 +1300,7 @@ Form.PROPS = {
 };
 
 Form.STATE = {
+
 	/**
 	 * Current active tab index.
 	 * @default

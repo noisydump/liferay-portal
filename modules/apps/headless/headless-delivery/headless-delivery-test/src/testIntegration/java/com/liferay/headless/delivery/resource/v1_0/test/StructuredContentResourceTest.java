@@ -33,23 +33,32 @@ import com.liferay.journal.model.JournalArticle;
 import com.liferay.journal.model.JournalFolder;
 import com.liferay.journal.test.util.JournalTestUtil;
 import com.liferay.portal.kernel.model.Group;
+import com.liferay.portal.kernel.model.ResourceConstants;
+import com.liferay.portal.kernel.model.Role;
+import com.liferay.portal.kernel.model.User;
+import com.liferay.portal.kernel.model.role.RoleConstants;
+import com.liferay.portal.kernel.security.permission.ActionKeys;
+import com.liferay.portal.kernel.service.RoleLocalService;
+import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.template.TemplateConstants;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
+import com.liferay.portal.kernel.test.util.RoleTestUtil;
+import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.StringUtil;
-import com.liferay.portal.search.test.util.SearchTestRule;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 
 import java.io.InputStream;
 
+import java.util.Map;
+
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.ClassRule;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -133,6 +142,117 @@ public class StructuredContentResourceTest
 
 	@Override
 	@Test
+	public void testGetStructuredContent() throws Exception {
+
+		// Get structured content
+
+		super.testGetStructuredContent();
+
+		// Admin user
+
+		StructuredContent postStructuredContent =
+			testGetStructuredContent_addStructuredContent();
+
+		StructuredContent getStructuredContent =
+			structuredContentResource.getStructuredContent(
+				postStructuredContent.getId());
+
+		Map<String, Map<String, String>> actions =
+			getStructuredContent.getActions();
+
+		Assert.assertTrue(actions.containsKey("delete"));
+		Assert.assertTrue(actions.containsKey("get"));
+		Assert.assertTrue(actions.containsKey("get-rendered-content"));
+		Assert.assertTrue(actions.containsKey("replace"));
+		Assert.assertTrue(actions.containsKey("subscribe"));
+		Assert.assertTrue(actions.containsKey("unsubscribe"));
+		Assert.assertTrue(actions.containsKey("update"));
+
+		// Owner
+
+		Role role = RoleTestUtil.addRole(RoleConstants.TYPE_SITE);
+
+		RoleTestUtil.addResourcePermission(
+			role.getName(), "com.liferay.journal",
+			ResourceConstants.SCOPE_GROUP,
+			String.valueOf(testGroup.getGroupId()), ActionKeys.ADD_ARTICLE);
+
+		User ownerUser = UserTestUtil.addGroupUser(testGroup, role.getName());
+
+		StructuredContentResource.Builder builder =
+			StructuredContentResource.builder();
+
+		StructuredContentResource structuredContentResource =
+			builder.authentication(
+				ownerUser.getLogin(), ownerUser.getPasswordUnencrypted()
+			).locale(
+				LocaleUtil.getDefault()
+			).build();
+
+		postStructuredContent =
+			structuredContentResource.postSiteStructuredContent(
+				testGroup.getGroupId(), randomStructuredContent());
+
+		getStructuredContent = structuredContentResource.getStructuredContent(
+			postStructuredContent.getId());
+
+		try {
+			actions = getStructuredContent.getActions();
+
+			Assert.assertTrue(actions.containsKey("delete"));
+			Assert.assertTrue(actions.containsKey("get"));
+			Assert.assertTrue(actions.containsKey("get-rendered-content"));
+			Assert.assertTrue(actions.containsKey("replace"));
+			Assert.assertTrue(actions.containsKey("subscribe"));
+			Assert.assertTrue(actions.containsKey("unsubscribe"));
+			Assert.assertTrue(actions.containsKey("update"));
+		}
+		finally {
+			_roleLocalService.deleteRole(role);
+		}
+
+		// Regular user
+
+		role = RoleTestUtil.addRole(RoleConstants.TYPE_SITE);
+
+		RoleTestUtil.addResourcePermission(
+			role.getName(), JournalArticle.class.getName(),
+			ResourceConstants.SCOPE_GROUP,
+			String.valueOf(testGroup.getGroupId()), ActionKeys.VIEW);
+
+		User regularUser = UserTestUtil.addGroupUser(testGroup, role.getName());
+
+		builder = StructuredContentResource.builder();
+
+		structuredContentResource = builder.authentication(
+			regularUser.getLogin(), regularUser.getPasswordUnencrypted()
+		).locale(
+			LocaleUtil.getDefault()
+		).build();
+
+		getStructuredContent = structuredContentResource.getStructuredContent(
+			postStructuredContent.getId());
+
+		try {
+			actions = getStructuredContent.getActions();
+
+			Assert.assertFalse(actions.containsKey("delete"));
+			Assert.assertTrue(actions.containsKey("get"));
+			Assert.assertTrue(actions.containsKey("get-rendered-content"));
+			Assert.assertFalse(actions.containsKey("replace"));
+			Assert.assertFalse(actions.containsKey("subscribe"));
+			Assert.assertFalse(actions.containsKey("unsubscribe"));
+			Assert.assertFalse(actions.containsKey("update"));
+		}
+		finally {
+			_roleLocalService.deleteRole(role);
+			_userLocalService.deleteUser(regularUser);
+			_userLocalService.deleteUser(ownerUser);
+		}
+	}
+
+	@Override
+	@Test
 	public void testGetStructuredContentRenderedContentTemplate()
 		throws Exception {
 
@@ -151,18 +271,6 @@ public class StructuredContentResourceTest
 					structuredContent.getId(), _ddmTemplate.getTemplateId()));
 	}
 
-	@Ignore
-	@Override
-	@Test
-	public void testGraphQLGetSiteStructuredContentByKey() {
-	}
-
-	@Ignore
-	@Override
-	@Test
-	public void testGraphQLGetSiteStructuredContentByUuid() {
-	}
-
 	@Test
 	public void testPostSiteLocalizedStructuredContent() throws Exception {
 		StructuredContent randomLocalizedStructuredContent =
@@ -175,9 +283,6 @@ public class StructuredContentResourceTest
 		assertEquals(randomLocalizedStructuredContent, postStructuredContent);
 		assertValid(postStructuredContent);
 	}
-
-	@Rule
-	public SearchTestRule searchTestRule = new SearchTestRule();
 
 	@Override
 	protected String[] getAdditionalAssertFieldNames() {
@@ -253,6 +358,15 @@ public class StructuredContentResourceTest
 		testGetStructuredContentFolderStructuredContentsPage_getStructuredContentFolderId() {
 
 		return _journalFolder.getFolderId();
+	}
+
+	@Override
+	protected StructuredContent
+			testGraphQLStructuredContent_addStructuredContent()
+		throws Exception {
+
+		return testPostSiteStructuredContent_addStructuredContent(
+			randomStructuredContent());
 	}
 
 	private DDMStructure _addDDMStructure(Group group, String fileName)
@@ -347,5 +461,11 @@ public class StructuredContentResourceTest
 	private DDMStructure _irrelevantDDMStructure;
 	private JournalFolder _irrelevantJournalFolder;
 	private JournalFolder _journalFolder;
+
+	@Inject
+	private RoleLocalService _roleLocalService;
+
+	@Inject
+	private UserLocalService _userLocalService;
 
 }

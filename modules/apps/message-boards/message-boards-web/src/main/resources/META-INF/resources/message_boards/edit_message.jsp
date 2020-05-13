@@ -112,7 +112,9 @@ if (portletTitleBasedNavigation) {
 }
 %>
 
-<div class="container-fluid-1280" id="<%= renderResponse.getNamespace() + "mbEditPageContainer" %>">
+<clay:container
+	id='<%= renderResponse.getNamespace() + "mbEditPageContainer" %>'
+>
 	<c:if test="<%= !portletTitleBasedNavigation %>">
 		<h3><%= headerTitle %></h3>
 	</c:if>
@@ -200,7 +202,7 @@ if (portletTitleBasedNavigation) {
 
 				<aui:input autoFocus="<%= windowState.equals(WindowState.MAXIMIZED) %>" name="subject" value="<%= subject %>" />
 
-				<aui:field-wrapper cssClass="message-content" label="body">
+				<aui:field-wrapper cssClass="message-content">
 					<c:choose>
 						<c:when test='<%= ((messageId != 0) && message.isFormatBBCode()) || ((messageId == 0) && messageFormat.equals("bbcode")) %>'>
 							<%@ include file="/message_boards/bbcode_editor.jspf" %>
@@ -400,11 +402,7 @@ if (portletTitleBasedNavigation) {
 			</c:if>
 
 			<c:if test="<%= (message == null) && captchaConfiguration.messageBoardsEditMessageCaptchaEnabled() %>">
-				<portlet:resourceURL id="/message_boards/captcha" var="captchaURL" />
-
-				<liferay-captcha:captcha
-					url="<%= captchaURL %>"
-				/>
+				<liferay-captcha:captcha />
 			</c:if>
 		</aui:fieldset-group>
 
@@ -453,7 +451,7 @@ if (portletTitleBasedNavigation) {
 			<aui:button href="<%= redirect %>" type="cancel" />
 		</aui:button-row>
 	</aui:form>
-</div>
+</clay:container>
 
 <aui:script require='<%= npmResolvedPackageName + "/message_boards/js/MBPortlet.es as MBPortlet" %>'>
 	new MBPortlet.default({

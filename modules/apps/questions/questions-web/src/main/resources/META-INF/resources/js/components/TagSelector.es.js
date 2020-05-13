@@ -28,25 +28,15 @@ export default ({tagsChange, tagsLoaded, tags = [], ...props}) => {
 	const [sourceItems, setSourceItems] = useState([]);
 
 	useEffect(() => {
-		getAllTags(context.siteKey).then(data => {
-			const vocabulariesOfQuestions = data.items.filter(
-				vocabulary =>
-					vocabulary.assetTypes.filter(
-						assetType =>
-							assetType.type === context.defaultVocabulary
-					).length > 0
-			);
-
+		getAllTags(context.siteKey).then((data) => {
 			setSourceItems(
-				vocabulariesOfQuestions
-					.flatMap(vocabulary => vocabulary.taxonomyCategories.items)
-					.map(({id, name}) => ({
-						label: name,
-						value: +id,
-					}))
+				data.items.map(({name}) => ({
+					label: name,
+					value: name,
+				}))
 			);
 		});
-	}, [context.defaultVocabulary, context.siteKey]);
+	}, [context.siteKey]);
 
 	useEffect(() => {
 		if (tags.length) {
@@ -63,20 +53,12 @@ export default ({tagsChange, tagsLoaded, tags = [], ...props}) => {
 		}
 	}, [inputValue, tagsLoaded]);
 
-	const maxTags = tags => tags.length > 5;
-	const duplicatedTags = tags =>
-		new Set(tags.map(tag => tag.value)).size !== tags.length;
-	const tagsAlreadyCreated = tags =>
-		tags
-			.map(tags => tags.value)
-			.every(tag => sourceItems.map(tag => tag.value).includes(tag));
+	const maxTags = (tags) => tags.length > 5;
+	const duplicatedTags = (tags) =>
+		new Set(tags.map((tag) => tag.value)).size !== tags.length;
 
-	const filterItems = tags => {
-		if (
-			tagsAlreadyCreated(tags) &&
-			!maxTags(tags) &&
-			!duplicatedTags(tags)
-		) {
+	const filterItems = (tags) => {
+		if (!maxTags(tags) && !duplicatedTags(tags)) {
 			setError(false);
 			setItems(tags);
 			tagsChange(tags);

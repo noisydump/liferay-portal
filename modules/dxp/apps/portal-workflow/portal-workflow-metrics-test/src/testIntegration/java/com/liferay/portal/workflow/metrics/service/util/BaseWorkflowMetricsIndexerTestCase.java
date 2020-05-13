@@ -16,10 +16,10 @@ package com.liferay.portal.workflow.metrics.service.util;
 
 import com.liferay.blogs.model.BlogsEntry;
 import com.liferay.blogs.service.BlogsEntryLocalService;
+import com.liferay.petra.function.UnsafeConsumer;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.User;
-import com.liferay.portal.kernel.search.Indexer;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.WorkflowDefinitionLinkLocalService;
 import com.liferay.portal.kernel.service.WorkflowInstanceLinkLocalService;
@@ -29,8 +29,6 @@ import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
-import com.liferay.portal.kernel.workflow.WorkflowDefinition;
-import com.liferay.portal.kernel.workflow.WorkflowDefinitionManager;
 import com.liferay.portal.search.document.DocumentBuilderFactory;
 import com.liferay.portal.test.log.CaptureAppender;
 import com.liferay.portal.test.log.Log4JLoggerTestUtil;
@@ -51,6 +49,7 @@ import com.liferay.portal.workflow.kaleo.service.KaleoInstanceTokenLocalService;
 import com.liferay.portal.workflow.kaleo.service.KaleoNodeLocalService;
 import com.liferay.portal.workflow.kaleo.service.KaleoTaskInstanceTokenLocalService;
 import com.liferay.portal.workflow.kaleo.service.KaleoTaskLocalService;
+import com.liferay.portal.workflow.metrics.search.index.reindexer.WorkflowMetricsReindexer;
 
 import java.io.Serializable;
 
@@ -66,7 +65,6 @@ import java.util.stream.Stream;
 
 import org.apache.log4j.Level;
 
-import org.junit.After;
 import org.junit.Before;
 
 /**
@@ -76,13 +74,18 @@ public abstract class BaseWorkflowMetricsIndexerTestCase
 	extends BaseWorkflowMetricsTestCase {
 
 	@Before
+	@Override
 	public void setUp() throws Exception {
-		_deployWorkflowDefinition();
-	}
+		super.setUp();
 
-	@After
-	public void tearDown() throws Exception {
-		undeployWorkflowDefinition();
+		_kaleoDefinition = _kaleoDefinitionLocalService.getKaleoDefinition(
+			workflowDefinition.getName(),
+			ServiceContextTestUtil.getServiceContext());
+
+		_workflowDefinitionLinkLocalService.updateWorkflowDefinitionLink(
+			TestPropsValues.getUserId(), TestPropsValues.getCompanyId(),
+			TestPropsValues.getGroupId(), BlogsEntry.class.getName(), 0, 0,
+			workflowDefinition.getName(), workflowDefinition.getVersion());
 	}
 
 	protected BlogsEntry addBlogsEntry() throws PortalException {
@@ -102,25 +105,24 @@ public abstract class BaseWorkflowMetricsIndexerTestCase
 	}
 
 	protected KaleoInstance addKaleoInstance() throws Exception {
-		return addKaleoInstance(getKaleoDefinition(), _createWorkflowContext());
+		return addKaleoInstance(_createWorkflowContext());
 	}
 
 	protected KaleoInstance addKaleoInstance(
-			KaleoDefinition kaleoDefinition,
 			Map<String, Serializable> workflowContext)
 		throws Exception {
 
 		List<KaleoDefinitionVersion> kaleoDefinitionVersions =
-			kaleoDefinition.getKaleoDefinitionVersions();
+			_kaleoDefinition.getKaleoDefinitionVersions();
 
 		KaleoDefinitionVersion kaleoDefinitionVersion =
 			kaleoDefinitionVersions.get(0);
 
 		KaleoInstance kaleoInstance =
 			_kaleoInstanceLocalService.addKaleoInstance(
-				kaleoDefinition.getKaleoDefinitionId(),
+				_kaleoDefinition.getKaleoDefinitionId(),
 				kaleoDefinitionVersion.getKaleoDefinitionVersionId(),
-				kaleoDefinitionVersion.getName(), kaleoDefinition.getVersion(),
+				kaleoDefinitionVersion.getName(), _kaleoDefinition.getVersion(),
 				workflowContext, ServiceContextTestUtil.getServiceContext());
 
 		_kaleoInstances.add(kaleoInstance);
@@ -128,17 +130,15 @@ public abstract class BaseWorkflowMetricsIndexerTestCase
 		return kaleoInstance;
 	}
 
-	protected KaleoNode addKaleoNode(KaleoDefinition kaleoDefinition, Node node)
-		throws Exception {
-
+	protected KaleoNode addKaleoNode(Node node) throws Exception {
 		List<KaleoDefinitionVersion> kaleoDefinitionVersions =
-			kaleoDefinition.getKaleoDefinitionVersions();
+			_kaleoDefinition.getKaleoDefinitionVersions();
 
 		KaleoDefinitionVersion kaleoDefinitionVersion =
 			kaleoDefinitionVersions.get(0);
 
 		KaleoNode kaleoNode = _kaleoNodeLocalService.addKaleoNode(
-			kaleoDefinition.getKaleoDefinitionId(),
+			_kaleoDefinition.getKaleoDefinitionId(),
 			kaleoDefinitionVersion.getKaleoDefinitionVersionId(), node,
 			ServiceContextTestUtil.getServiceContext());
 
@@ -147,18 +147,8 @@ public abstract class BaseWorkflowMetricsIndexerTestCase
 		return kaleoNode;
 	}
 
-	protected KaleoNode addKaleoNode(Node node) throws Exception {
-		return addKaleoNode(getKaleoDefinition(), node);
-	}
-
 	protected KaleoTask addKaleoTask(Task task) throws Exception {
-		return addKaleoTask(task, getKaleoDefinition());
-	}
-
-	protected KaleoTask addKaleoTask(Task task, KaleoDefinition kaleoDefinition)
-		throws Exception {
-
-		KaleoNode kaleoNode = addKaleoNode(kaleoDefinition, task);
+		KaleoNode kaleoNode = addKaleoNode(task);
 
 		KaleoTask kaleoTask = _kaleoTaskLocalService.addKaleoTask(
 			kaleoNode.getKaleoDefinitionId(),
@@ -175,8 +165,7 @@ public abstract class BaseWorkflowMetricsIndexerTestCase
 
 		Map<String, Serializable> workflowContext = _createWorkflowContext();
 
-		KaleoInstance kaleoInstance = addKaleoInstance(
-			getKaleoDefinition(), workflowContext);
+		KaleoInstance kaleoInstance = addKaleoInstance(workflowContext);
 
 		KaleoInstanceToken rootKaleoInstanceToken =
 			kaleoInstance.getRootKaleoInstanceToken(
@@ -186,7 +175,7 @@ public abstract class BaseWorkflowMetricsIndexerTestCase
 
 		task.setAssignments(Collections.emptySet());
 
-		KaleoTask kaleoTask = addKaleoTask(task, getKaleoDefinition());
+		KaleoTask kaleoTask = addKaleoTask(task);
 
 		KaleoTaskInstanceToken kaleoTaskInstanceToken =
 			_kaleoTaskInstanceTokenLocalService.addKaleoTaskInstanceToken(
@@ -206,7 +195,7 @@ public abstract class BaseWorkflowMetricsIndexerTestCase
 		throws Exception {
 
 		_assertReindex(
-			_workflowMetricsIndexer, indexNamesMap, indexTypes, parameters);
+			this::_reindexMetricIndexes, indexNamesMap, indexTypes, parameters);
 	}
 
 	protected void assertReindex(
@@ -229,7 +218,7 @@ public abstract class BaseWorkflowMetricsIndexerTestCase
 		throws Exception {
 
 		_assertReindex(
-			_slaWorkflowMetricsIndexer, indexNamesMap, indexTypes, parameters);
+			this::_reindexSLAIndexes, indexNamesMap, indexTypes, parameters);
 	}
 
 	protected void assertSLAReindex(
@@ -337,10 +326,6 @@ public abstract class BaseWorkflowMetricsIndexerTestCase
 			kaleoTaskInstanceToken);
 	}
 
-	protected KaleoDefinition getKaleoDefinition() {
-		return _kaleoDefinition;
-	}
-
 	protected KaleoInstance getKaleoInstance() {
 		return _kaleoInstances.peek();
 	}
@@ -356,6 +341,7 @@ public abstract class BaseWorkflowMetricsIndexerTestCase
 		return kaleoInstances.get(0);
 	}
 
+	@Override
 	protected void undeployWorkflowDefinition() throws Exception {
 		_deleteBlogsEntries();
 		_deleteKaleoInstances();
@@ -363,45 +349,36 @@ public abstract class BaseWorkflowMetricsIndexerTestCase
 		_deleteKaleoTaskInstanceTokens();
 		_deleteKaleoTasks();
 
-		if (_workflowDefinition != null) {
+		if (workflowDefinition != null) {
 			_workflowDefinitionLinkLocalService.updateWorkflowDefinitionLink(
 				TestPropsValues.getUserId(), TestPropsValues.getCompanyId(),
 				TestPropsValues.getGroupId(), BlogsEntry.class.getName(), 0, 0,
 				null);
 
-			_workflowDefinitionManager.updateActive(
+			workflowDefinitionManager.updateActive(
 				TestPropsValues.getCompanyId(), TestPropsValues.getUserId(),
-				_workflowDefinition.getName(), _workflowDefinition.getVersion(),
+				workflowDefinition.getName(), workflowDefinition.getVersion(),
 				false);
 
-			_workflowDefinitionManager.undeployWorkflowDefinition(
+			workflowDefinitionManager.undeployWorkflowDefinition(
 				TestPropsValues.getCompanyId(), TestPropsValues.getUserId(),
-				_workflowDefinition.getName(),
-				_workflowDefinition.getVersion());
+				workflowDefinition.getName(), workflowDefinition.getVersion());
 
-			_workflowDefinition = null;
+			workflowDefinition = null;
 		}
 	}
 
-	protected void updateKaleoDefinition() throws Exception {
-		_workflowDefinition =
-			_workflowDefinitionManager.deployWorkflowDefinition(
-				TestPropsValues.getCompanyId(), TestPropsValues.getUserId(),
-				_workflowDefinition.getTitle(), _workflowDefinition.getName(),
-				WorkflowDefinitionUtil.getBytes());
-	}
-
 	private void _assertReindex(
-			Indexer<Object> indexer, Map<String, Integer> indexNamesMap,
-			String[] indexTypes, Object... parameters)
+			UnsafeConsumer<Long, Exception> unsafeConsumer,
+			Map<String, Integer> indexNamesMap, String[] indexTypes,
+			Object... parameters)
 		throws Exception {
 
 		if (searchEngineAdapter == null) {
 			return;
 		}
 
-		indexer.reindex(
-			new String[] {String.valueOf(TestPropsValues.getCompanyId())});
+		unsafeConsumer.accept(TestPropsValues.getCompanyId());
 
 		String[] indexNames = ArrayUtil.toStringArray(indexNamesMap.keySet());
 
@@ -413,7 +390,7 @@ public abstract class BaseWorkflowMetricsIndexerTestCase
 	}
 
 	private Map<String, Serializable> _createWorkflowContext()
-		throws PortalException {
+		throws Exception {
 
 		return HashMapBuilder.<String, Serializable>put(
 			WorkflowConstants.CONTEXT_ENTRY_CLASS_NAME,
@@ -488,21 +465,17 @@ public abstract class BaseWorkflowMetricsIndexerTestCase
 		}
 	}
 
-	private void _deployWorkflowDefinition() throws Exception {
-		_workflowDefinition =
-			_workflowDefinitionManager.deployWorkflowDefinition(
-				TestPropsValues.getCompanyId(), TestPropsValues.getUserId(),
-				StringUtil.randomId(), StringUtil.randomId(),
-				WorkflowDefinitionUtil.getBytes());
+	private void _reindexMetricIndexes(long companyId) throws Exception {
+		_instanceWorkflowMetricsReindexer.reindex(companyId);
+		_nodeWorkflowMetricsReindexer.reindex(companyId);
+		_processWorkflowMetricsReindexer.reindex(companyId);
+		_taskWorkflowMetricsReindexer.reindex(companyId);
+		_transitionWorkflowMetricsReindexer.reindex(companyId);
+	}
 
-		_kaleoDefinition = _kaleoDefinitionLocalService.getKaleoDefinition(
-			_workflowDefinition.getName(),
-			ServiceContextTestUtil.getServiceContext());
-
-		_workflowDefinitionLinkLocalService.updateWorkflowDefinitionLink(
-			TestPropsValues.getUserId(), TestPropsValues.getCompanyId(),
-			TestPropsValues.getGroupId(), BlogsEntry.class.getName(), 0, 0,
-			_workflowDefinition.getName(), _workflowDefinition.getVersion());
+	private void _reindexSLAIndexes(long companyId) throws Exception {
+		_slaInstanceResultWorkflowMetricsReindexer.reindex(companyId);
+		_slaTaskResultWorkflowMetricsReindexer.reindex(companyId);
 	}
 
 	private final List<BlogsEntry> _blogsEntries = new ArrayList<>();
@@ -512,6 +485,9 @@ public abstract class BaseWorkflowMetricsIndexerTestCase
 
 	@Inject
 	private DocumentBuilderFactory _documentBuilderFactory;
+
+	@Inject(filter = "workflow.metrics.index.entity.name=instance")
+	private WorkflowMetricsReindexer _instanceWorkflowMetricsReindexer;
 
 	private KaleoDefinition _kaleoDefinition;
 
@@ -543,26 +519,29 @@ public abstract class BaseWorkflowMetricsIndexerTestCase
 
 	private final List<KaleoTask> _kaleoTasks = new ArrayList<>();
 
-	@Inject(
-		filter = "(&(objectClass=com.liferay.portal.workflow.metrics.internal.search.SLAWorkflowMetricsIndexer))"
-	)
-	private Indexer<Object> _slaWorkflowMetricsIndexer;
+	@Inject(filter = "workflow.metrics.index.entity.name=node")
+	private WorkflowMetricsReindexer _nodeWorkflowMetricsReindexer;
 
-	private WorkflowDefinition _workflowDefinition;
+	@Inject(filter = "workflow.metrics.index.entity.name=process")
+	private WorkflowMetricsReindexer _processWorkflowMetricsReindexer;
+
+	@Inject(filter = "workflow.metrics.index.entity.name=sla-instance-result")
+	private WorkflowMetricsReindexer _slaInstanceResultWorkflowMetricsReindexer;
+
+	@Inject(filter = "workflow.metrics.index.entity.name=sla-task-result")
+	private WorkflowMetricsReindexer _slaTaskResultWorkflowMetricsReindexer;
+
+	@Inject(filter = "workflow.metrics.index.entity.name=task")
+	private WorkflowMetricsReindexer _taskWorkflowMetricsReindexer;
+
+	@Inject(filter = "workflow.metrics.index.entity.name=transition")
+	private WorkflowMetricsReindexer _transitionWorkflowMetricsReindexer;
 
 	@Inject
 	private WorkflowDefinitionLinkLocalService
 		_workflowDefinitionLinkLocalService;
 
 	@Inject
-	private WorkflowDefinitionManager _workflowDefinitionManager;
-
-	@Inject
 	private WorkflowInstanceLinkLocalService _workflowInstanceLinkLocalService;
-
-	@Inject(
-		filter = "(&(objectClass=com.liferay.portal.workflow.metrics.internal.search.WorkflowMetricsIndexer))"
-	)
-	private Indexer<Object> _workflowMetricsIndexer;
 
 }

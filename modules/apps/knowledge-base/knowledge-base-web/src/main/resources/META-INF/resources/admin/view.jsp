@@ -67,7 +67,10 @@ if (parentResourcePrimKey != KBFolderConstants.DEFAULT_PARENT_FOLDER_ID) {
 	sortingURL="<%= String.valueOf(kbAdminManagementToolbarDisplayContext.getSortingURL()) %>"
 />
 
-<div class="closed container-fluid-1280 sidenav-container sidenav-right" id="<portlet:namespace />infoPanelId">
+<clay:container
+	className="closed sidenav-container sidenav-right"
+	id='<%= renderResponse.getNamespace() + "infoPanelId" %>'
+>
 	<liferay-portlet:resourceURL copyCurrentRenderParameters="<%= false %>" id="infoPanel" var="sidebarPanelURL">
 		<portlet:param name="parentResourceClassNameId" value="<%= String.valueOf(parentResourceClassNameId) %>" />
 		<portlet:param name="parentResourcePrimKey" value="<%= String.valueOf(parentResourcePrimKey) %>" />
@@ -315,10 +318,10 @@ if (parentResourcePrimKey != KBFolderConstants.DEFAULT_PARENT_FOLDER_ID) {
 			</liferay-ui:search-container>
 		</aui:form>
 	</div>
-</div>
+</clay:container>
 
 <aui:script>
-	var deleteEntries = function() {
+	var deleteEntries = function () {
 		if (
 			confirm(
 				'<liferay-ui:message key="are-you-sure-you-want-to-delete-the-selected-entries" />'
@@ -336,10 +339,10 @@ if (parentResourcePrimKey != KBFolderConstants.DEFAULT_PARENT_FOLDER_ID) {
 		deleteEntries: deleteEntries,
 	};
 
-	Liferay.componentReady('kbAdminManagementToolbar').then(function(
+	Liferay.componentReady('kbAdminManagementToolbar').then(function (
 		managementToolbar
 	) {
-		managementToolbar.on('actionItemClicked', function(event) {
+		managementToolbar.on('actionItemClicked', function (event) {
 			var itemData = event.data.item.data;
 
 			if (itemData && itemData.action && ACTIONS[itemData.action]) {

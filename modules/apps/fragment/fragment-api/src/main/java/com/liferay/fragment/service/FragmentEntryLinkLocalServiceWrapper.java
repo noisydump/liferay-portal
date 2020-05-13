@@ -50,6 +50,30 @@ public class FragmentEntryLinkLocalServiceWrapper
 	@Override
 	public com.liferay.fragment.model.FragmentEntryLink addFragmentEntryLink(
 			long userId, long groupId, long originalFragmentEntryLinkId,
+			long fragmentEntryId, long segmentsExperienceId, long classNameId,
+			long classPK, String css, String html, String js,
+			String configuration, String editableValues, String namespace,
+			int position, String rendererKey,
+			com.liferay.portal.kernel.service.ServiceContext serviceContext)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _fragmentEntryLinkLocalService.addFragmentEntryLink(
+			userId, groupId, originalFragmentEntryLinkId, fragmentEntryId,
+			segmentsExperienceId, classNameId, classPK, css, html, js,
+			configuration, editableValues, namespace, position, rendererKey,
+			serviceContext);
+	}
+
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 #addFragmentEntryLink(long, long, long, long, long, long,
+	 long, String, String, String, String, String, String, int,
+	 String, ServiceContext)}
+	 */
+	@Deprecated
+	@Override
+	public com.liferay.fragment.model.FragmentEntryLink addFragmentEntryLink(
+			long userId, long groupId, long originalFragmentEntryLinkId,
 			long fragmentEntryId, long classNameId, long classPK, String css,
 			String html, String js, String configuration, String editableValues,
 			String namespace, int position, String rendererKey,
@@ -151,6 +175,11 @@ public class FragmentEntryLinkLocalServiceWrapper
 
 		return _fragmentEntryLinkLocalService.deletePersistedModel(
 			persistedModel);
+	}
+
+	@Override
+	public <T> T dslQuery(com.liferay.petra.sql.dsl.query.DSLQuery dslQuery) {
+		return _fragmentEntryLinkLocalService.dslQuery(dslQuery);
 	}
 
 	@Override
@@ -406,6 +435,17 @@ public class FragmentEntryLinkLocalServiceWrapper
 
 		return _fragmentEntryLinkLocalService.
 			getFragmentEntryLinksByFragmentEntryId(fragmentEntryId);
+	}
+
+	@Override
+	public java.util.List<com.liferay.fragment.model.FragmentEntryLink>
+		getFragmentEntryLinksBySegmentsExperienceId(
+			long groupId, long segmentsExperienceId, long classNameId,
+			long classPK) {
+
+		return _fragmentEntryLinkLocalService.
+			getFragmentEntryLinksBySegmentsExperienceId(
+				groupId, segmentsExperienceId, classNameId, classPK);
 	}
 
 	/**

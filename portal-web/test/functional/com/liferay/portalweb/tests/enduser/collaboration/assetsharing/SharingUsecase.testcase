@@ -62,15 +62,17 @@ definition {
 
 		DMDocument.enableActionsMenuOnPortlet();
 
+		JSONDocument.addFileWithUploadedFile(
+			dmDocumentTitle = "Document with sharing disabled",
+			groupName = "Test Site",
+			mimeType = "application/msword",
+			sourceFileName = "Document_1.doc");
+
 		Navigator.gotoSitePage(
 			pageName = "Test Page",
 			siteName = "Test Site");
 
 		LexiconEntry.changeDisplayStyle(displayStyle = "list");
-
-		DMDocument.addPG(
-			dmDocumentFile = "Document_1.doc",
-			dmDocumentTitle = "Document with sharing disabled");
 
 		LexiconEntry.openEntryMenu(rowEntry = "Document with sharing disabled");
 
@@ -137,15 +139,17 @@ definition {
 
 		DMDocument.enableActionsMenuOnPortlet();
 
+		JSONDocument.addFileWithUploadedFile(
+			dmDocumentTitle = "Document with sharing disabled",
+			groupName = "Test Site",
+			mimeType = "application/msword",
+			sourceFileName = "Document_1.doc");
+
 		Navigator.gotoSitePage(
 			pageName = "Test Page",
 			siteName = "Test Site");
 
 		LexiconEntry.changeDisplayStyle(displayStyle = "list");
-
-		DMDocument.addPG(
-			dmDocumentFile = "Document_1.doc",
-			dmDocumentTitle = "Document with sharing disabled");
 
 		LexiconEntry.openEntryMenu(rowEntry = "Document with sharing disabled");
 
@@ -248,6 +252,11 @@ definition {
 			locator1 = "Portlet#H3_MODAL_TITLE",
 			value1 = "Select Asset Type");
 
+		LiferayEvent.waitForLiferayEvent(
+			attributeName = "src",
+			attributeValue = "dialog-iframe-popup",
+			eventName = "modalIframeLoaded");
+
 		SelectFrame(locator1 = "IFrame#MODAL_IFRAME");
 
 		var key_assetType = "Document";
@@ -275,6 +284,11 @@ definition {
 			locator1 = "Portlet#H3_MODAL_TITLE",
 			value1 = "Select Asset Type");
 
+		LiferayEvent.waitForLiferayEvent(
+			attributeName = "src",
+			attributeValue = "dialog-iframe-popup",
+			eventName = "modalIframeLoaded");
+
 		SelectFrame(locator1 = "IFrame#MODAL_IFRAME");
 
 		var key_assetType = "Blogs Entry";
@@ -298,7 +312,6 @@ definition {
 	@description = "This test ensures that users can Order By Shared Date in the Shared Content app."
 	@priority = "3"
 	test OrderBySharedDate {
-		property portal.upstream = "quarantine";
 		property test.name.skip.portal.instance = "SharingUsecase#OrderBySharedDate";
 
 		JSONLayout.addWidgetToPublicLayout(

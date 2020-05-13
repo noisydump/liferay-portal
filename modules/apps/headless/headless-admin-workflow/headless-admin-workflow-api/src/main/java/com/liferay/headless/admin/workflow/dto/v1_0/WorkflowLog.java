@@ -24,6 +24,7 @@ import com.liferay.petra.function.UnsafeSupplier;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
+import com.liferay.portal.vulcan.util.ObjectMapperUtil;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
@@ -52,39 +53,8 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlRootElement(name = "WorkflowLog")
 public class WorkflowLog {
 
-	@GraphQLName("Type")
-	public static enum Type {
-
-		TASK_ASSIGN("TaskAssign"), TASK_COMPLETION("TaskCompletion"),
-		TASK_UPDATE("TaskUpdate"), TRANSITION("Transition");
-
-		@JsonCreator
-		public static Type create(String value) {
-			for (Type type : values()) {
-				if (Objects.equals(type.getValue(), value)) {
-					return type;
-				}
-			}
-
-			return null;
-		}
-
-		@JsonValue
-		public String getValue() {
-			return _value;
-		}
-
-		@Override
-		public String toString() {
-			return _value;
-		}
-
-		private Type(String value) {
-			_value = value;
-		}
-
-		private final String _value;
-
+	public static WorkflowLog toDTO(String json) {
+		return ObjectMapperUtil.readValue(WorkflowLog.class, json);
 	}
 
 	@Schema(
@@ -617,6 +587,41 @@ public class WorkflowLog {
 	)
 	public String xClassName;
 
+	@GraphQLName("Type")
+	public static enum Type {
+
+		TASK_ASSIGN("TaskAssign"), TASK_COMPLETION("TaskCompletion"),
+		TASK_UPDATE("TaskUpdate"), TRANSITION("Transition");
+
+		@JsonCreator
+		public static Type create(String value) {
+			for (Type type : values()) {
+				if (Objects.equals(type.getValue(), value)) {
+					return type;
+				}
+			}
+
+			return null;
+		}
+
+		@JsonValue
+		public String getValue() {
+			return _value;
+		}
+
+		@Override
+		public String toString() {
+			return _value;
+		}
+
+		private Type(String value) {
+			_value = value;
+		}
+
+		private final String _value;
+
+	}
+
 	private static String _escape(Object object) {
 		String string = String.valueOf(object);
 
@@ -638,9 +643,44 @@ public class WorkflowLog {
 			sb.append("\"");
 			sb.append(entry.getKey());
 			sb.append("\":");
-			sb.append("\"");
-			sb.append(entry.getValue());
-			sb.append("\"");
+
+			Object value = entry.getValue();
+
+			Class<?> clazz = value.getClass();
+
+			if (clazz.isArray()) {
+				sb.append("[");
+
+				Object[] valueArray = (Object[])value;
+
+				for (int i = 0; i < valueArray.length; i++) {
+					if (valueArray[i] instanceof String) {
+						sb.append("\"");
+						sb.append(valueArray[i]);
+						sb.append("\"");
+					}
+					else {
+						sb.append(valueArray[i]);
+					}
+
+					if ((i + 1) < valueArray.length) {
+						sb.append(", ");
+					}
+				}
+
+				sb.append("]");
+			}
+			else if (value instanceof Map) {
+				sb.append(_toJSON((Map<String, ?>)value));
+			}
+			else if (value instanceof String) {
+				sb.append("\"");
+				sb.append(value);
+				sb.append("\"");
+			}
+			else {
+				sb.append(value);
+			}
 
 			if (iterator.hasNext()) {
 				sb.append(",");

@@ -41,17 +41,20 @@ else {
 	action="<%= editRedirectEntryURL %>"
 	method="post"
 	name="fm"
-	onSubmit='<%= "event.preventDefault(); " + renderResponse.getNamespace() + "saveRedirectEntry();" %>'
+	onSubmit="event.preventDefault();"
 >
 	<aui:input name="<%= Constants.CMD %>" type="hidden" />
 	<aui:input name="redirect" type="hidden" value="<%= redirect %>" />
 	<aui:input name="backURL" type="hidden" value="<%= backURL %>" />
+	<aui:input name="updateChainedRedirectEntries" type="hidden" value="" />
 
 	<c:if test="<%= redirectEntry != null %>">
 		<aui:input name="redirectEntryId" type="hidden" value="<%= redirectEntry.getRedirectEntryId() %>" />
 	</c:if>
 
 	<liferay-frontend:edit-form-body>
+		<liferay-ui:error exception="<%= CircularRedirectEntryException.DestinationURLMustNotBeEqualToSourceURL.class %>" focusField="destinationURL" message="destination-url-cannot-be-the-same-as-source-url" />
+		<liferay-ui:error exception="<%= CircularRedirectEntryException.MustNotFormALoopWithAnotherRedirectEntry.class %>" focusField="sourceURL" message="please-change-the-source-or-destination-url-to-avoid-redirect-loop" />
 		<liferay-ui:error exception="<%= DuplicateRedirectEntrySourceURLException.class %>" focusField="sourceURL" message="there-is-already-a-redirect-set-for-the-same-source-url" />
 		<liferay-ui:error exception="<%= RequiredRedirectEntryDestinationURLException.class %>" focusField="destinationURL" message="the-destination-url-must-be-specified" />
 		<liferay-ui:error exception="<%= RequiredRedirectEntrySourceURLException.class %>" focusField="sourceURL" message="the-source-url-must-be-specified" />
@@ -81,14 +84,14 @@ else {
 		Map<String, Object> data = HashMapBuilder.<String, Object>put(
 			"autofocus", autoFocusDestination
 		).put(
-			"initialDestinationUrl", (redirectEntry != null) ? redirectEntry.getDestinationURL() : StringPool.BLANK
+			"initialDestinationUrl", (redirectEntry != null) ? redirectEntry.getDestinationURL() : ParamUtil.getString(request, "destinationURL")
 		).put(
 			"namespace", liferayPortletResponse.getNamespace()
 		).build();
 		%>
 
 		<div class="destination-url">
-			<aui:input autoFocus="<%= autoFocusDestination %>" name="destinationURL" value="<%= destinationURL %>" />
+			<aui:input name="destinationURL" value="<%= destinationURL %>" />
 
 			<react:component
 				data="<%= data %>"
@@ -110,24 +113,29 @@ else {
 	</liferay-frontend:edit-form-body>
 
 	<liferay-frontend:edit-form-footer>
-		<aui:button type="submit" />
+		<aui:button type="submit" value='<%= LanguageUtil.get(request, (redirectEntry == null) ? "create" : "save") %>' />
 
 		<aui:button href="<%= redirect %>" type="cancel" />
 	</liferay-frontend:edit-form-footer>
 </liferay-frontend:edit-form>
 
-<script>
-	function <portlet:namespace />saveRedirectEntry() {
-		var form = document.<portlet:namespace />fm;
+<div>
+	<react:component
+		data='<%=
+			HashMapBuilder.<String, Object>put(
+				"saveButtonLabel", LanguageUtil.get(request, (redirectEntry == null) ? "create" : "save")
+			).build() %>'
+		module="js/ChainedRedirections"
+	/>
+</div>
 
-		var destinationURL = form.elements['<portlet:namespace />destinationURL'];
+<portlet:resourceURL id="/redirect/get_redirect_entry_chain_cause" var="getRedirectEntryChainCauseURL" />
 
-		if (destinationURL.value) {
-			submitForm(form);
-		}
-		else {
-			destinationURL.focus();
-			destinationURL.blur();
-		}
-	}
-</script>
+<liferay-frontend:component
+	context='<%=
+		HashMapBuilder.<String, Object>put(
+			"getRedirectEntryChainCauseURL", getRedirectEntryChainCauseURL
+		).build()
+	%>'
+	module="js/editRedirectEntry"
+/>

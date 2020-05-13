@@ -12,11 +12,19 @@
  * details.
  */
 
-const createItems = size => {
+const createItems = (size) => {
 	const items = [];
 
 	for (let i = 0; i < size; i++) {
 		items.push({
+			active: true,
+			appDeployments: [
+				{
+					settings: {},
+					type: 'standalone',
+				},
+			],
+			dataDefinitionName: 'Object',
 			dateCreated: '2020-03-26T11:26:54.262Z',
 			dateModified: '2020-03-26T11:26:54.262Z',
 			id: i + 1,
@@ -59,11 +67,23 @@ export const EMPTY_STATE = {
 export const ENDPOINT = '/endpoint';
 
 export const ITEMS = {
+	MANY: (size) => createItems(size),
 	ONE: createItems(1),
 	TWENTY: createItems(20),
 };
 
 export const RESPONSES = {
+	MANY_ITEMS: (size) => {
+		const items = ITEMS.MANY(size);
+
+		return {
+			items,
+			lastPage: 1,
+			page: 1,
+			pageSize: 20,
+			totalCount: items.length,
+		};
+	},
 	NO_ITEMS: {
 		lastPage: 1,
 		page: 1,

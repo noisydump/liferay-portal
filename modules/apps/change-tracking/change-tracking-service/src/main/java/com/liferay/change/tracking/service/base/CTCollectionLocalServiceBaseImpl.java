@@ -20,8 +20,8 @@ import com.liferay.change.tracking.service.persistence.CTCollectionPersistence;
 import com.liferay.change.tracking.service.persistence.CTEntryPersistence;
 import com.liferay.change.tracking.service.persistence.CTMessagePersistence;
 import com.liferay.change.tracking.service.persistence.CTPreferencesPersistence;
-import com.liferay.change.tracking.service.persistence.CTProcessFinder;
 import com.liferay.change.tracking.service.persistence.CTProcessPersistence;
+import com.liferay.petra.sql.dsl.query.DSLQuery;
 import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.dao.db.DB;
 import com.liferay.portal.kernel.dao.db.DBManagerUtil;
@@ -121,11 +121,19 @@ public abstract class CTCollectionLocalServiceBaseImpl
 	 *
 	 * @param ctCollection the ct collection
 	 * @return the ct collection that was removed
+	 * @throws PortalException
 	 */
 	@Indexable(type = IndexableType.DELETE)
 	@Override
-	public CTCollection deleteCTCollection(CTCollection ctCollection) {
+	public CTCollection deleteCTCollection(CTCollection ctCollection)
+		throws PortalException {
+
 		return ctCollectionPersistence.remove(ctCollection);
+	}
+
+	@Override
+	public <T> T dslQuery(DSLQuery dslQuery) {
+		return ctCollectionPersistence.dslQuery(dslQuery);
 	}
 
 	@Override
@@ -424,8 +432,5 @@ public abstract class CTCollectionLocalServiceBaseImpl
 
 	@Reference
 	protected CTProcessPersistence ctProcessPersistence;
-
-	@Reference
-	protected CTProcessFinder ctProcessFinder;
 
 }

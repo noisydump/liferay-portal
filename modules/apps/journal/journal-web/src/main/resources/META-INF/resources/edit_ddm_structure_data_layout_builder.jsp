@@ -60,7 +60,7 @@ editDDMStructureURL.setParameter("mvcPath", "/edit_ddm_structure.jsp");
 	<aui:model-context bean="<%= ddmStructure %>" model="<%= DDMStructure.class %>" />
 
 	<nav class="component-tbar subnav-tbar-light tbar tbar-article">
-		<div class="container-fluid container-fluid-max-xl">
+		<clay:container>
 			<ul class="tbar-nav">
 				<li class="tbar-item tbar-item-expand">
 					<aui:input cssClass="form-control-inline" defaultLanguageId="<%= (ddmForm == null) ? LocaleUtil.toLanguageId(LocaleUtil.getSiteDefault()): LocaleUtil.toLanguageId(ddmForm.getDefaultLocale()) %>" label="" name="name" placeholder='<%= LanguageUtil.format(request, "untitled-x", "structure") %>' wrapperCssClass="article-content-title mb-0" />
@@ -73,67 +73,12 @@ editDDMStructureURL.setParameter("mvcPath", "/edit_ddm_structure.jsp");
 					</div>
 				</li>
 			</ul>
-		</div>
+		</clay:container>
 	</nav>
 
-	<div class="container-fluid container-fluid-max-xl container-view">
-		<liferay-ui:error exception="<%= DDMFormLayoutValidationException.class %>" message="please-enter-a-valid-form-layout" />
-
-		<liferay-ui:error exception="<%= DDMFormLayoutValidationException.MustNotDuplicateFieldName.class %>">
-
-			<%
-			DDMFormLayoutValidationException.MustNotDuplicateFieldName mndfn = (DDMFormLayoutValidationException.MustNotDuplicateFieldName)errorException;
-			%>
-
-			<liferay-ui:message arguments="<%= HtmlUtil.escape(StringUtil.merge(mndfn.getDuplicatedFieldNames(), StringPool.COMMA_AND_SPACE)) %>" key="the-definition-field-name-x-was-defined-more-than-once" translateArguments="<%= false %>" />
-		</liferay-ui:error>
-
-		<liferay-ui:error exception="<%= DDMFormValidationException.class %>" message="please-enter-a-valid-form-definition" />
-
-		<liferay-ui:error exception="<%= DDMFormValidationException.MustNotDuplicateFieldName.class %>">
-
-			<%
-			DDMFormValidationException.MustNotDuplicateFieldName mndfn = (DDMFormValidationException.MustNotDuplicateFieldName)errorException;
-			%>
-
-			<liferay-ui:message arguments="<%= HtmlUtil.escape(mndfn.getFieldName()) %>" key="the-definition-field-name-x-was-defined-more-than-once" translateArguments="<%= false %>" />
-		</liferay-ui:error>
-
-		<liferay-ui:error exception="<%= DDMFormValidationException.MustSetFieldsForForm.class %>" message="please-add-at-least-one-field" />
-
-		<liferay-ui:error exception="<%= DDMFormValidationException.MustSetOptionsForField.class %>">
-
-			<%
-			DDMFormValidationException.MustSetOptionsForField msoff = (DDMFormValidationException.MustSetOptionsForField)errorException;
-			%>
-
-			<liferay-ui:message arguments="<%= HtmlUtil.escape(msoff.getFieldName()) %>" key="at-least-one-option-should-be-set-for-field-x" translateArguments="<%= false %>" />
-		</liferay-ui:error>
-
-		<liferay-ui:error exception="<%= DDMFormValidationException.MustSetValidCharactersForFieldName.class %>">
-
-			<%
-			DDMFormValidationException.MustSetValidCharactersForFieldName msvcffn = (DDMFormValidationException.MustSetValidCharactersForFieldName)errorException;
-			%>
-
-			<liferay-ui:message arguments="<%= HtmlUtil.escape(msvcffn.getFieldName()) %>" key="invalid-characters-were-defined-for-field-name-x" translateArguments="<%= false %>" />
-		</liferay-ui:error>
-
-		<liferay-ui:error exception="<%= LocaleException.class %>">
-
-			<%
-			LocaleException le = (LocaleException)errorException;
-			%>
-
-			<c:if test="<%= le.getType() == LocaleException.TYPE_CONTENT %>">
-				<liferay-ui:message arguments="<%= new String[] {StringUtil.merge(le.getSourceAvailableLocales(), StringPool.COMMA_AND_SPACE), StringUtil.merge(le.getTargetAvailableLocales(), StringPool.COMMA_AND_SPACE)} %>" key="the-default-language-x-does-not-match-the-portal's-available-languages-x" />
-			</c:if>
-		</liferay-ui:error>
-
-		<liferay-ui:error exception="<%= StructureDefinitionException.class %>" message="please-enter-a-valid-definition" />
-		<liferay-ui:error exception="<%= StructureDuplicateElementException.class %>" message="please-enter-unique-structure-field-names-(including-field-names-inherited-from-the-parent-structure)" />
-		<liferay-ui:error exception="<%= StructureNameException.class %>" message="please-enter-a-valid-name" />
-
+	<clay:container
+		className="container-view"
+	>
 		<c:if test="<%= (ddmStructure != null) && (DDMStorageLinkLocalServiceUtil.getStructureStorageLinksCount(journalEditDDMStructuresDisplayContext.getDDMStructureId()) > 0) %>">
 			<div class="alert alert-warning">
 				<liferay-ui:message key="there-are-content-references-to-this-structure.-you-may-lose-data-if-a-field-name-is-renamed-or-removed" />
@@ -162,7 +107,7 @@ editDDMStructureURL.setParameter("mvcPath", "/edit_ddm_structure.jsp");
 			namespace="<%= renderResponse.getNamespace() %>"
 			singlePage="<%= true %>"
 		/>
-	</div>
+	</clay:container>
 </aui:form>
 
 <aui:script>
@@ -175,7 +120,7 @@ editDDMStructureURL.setParameter("mvcPath", "/edit_ddm_structure.jsp");
 				.get('translatedLanguages')
 				.values();
 
-			translatedLanguages.forEach(function(languageId) {
+			translatedLanguages.forEach(function (languageId) {
 				localizedValues[languageId] = inputLocalized.getValue(languageId);
 			});
 		}
@@ -185,7 +130,7 @@ editDDMStructureURL.setParameter("mvcPath", "/edit_ddm_structure.jsp");
 
 	function <portlet:namespace />saveDDMStructure() {
 		Liferay.componentReady('<portlet:namespace />dataLayoutBuilder').then(
-			function(dataLayoutBuilder) {
+			function (dataLayoutBuilder) {
 				var name = <portlet:namespace />getInputLocalizedValues('name');
 				var formData = dataLayoutBuilder.getFormData();
 

@@ -997,6 +997,22 @@ public abstract class BaseWebDriverImpl implements LiferaySelenium, WebDriver {
 	}
 
 	@Override
+	public void executeJavaScript(
+		String javaScript, String argument1, String argument2) {
+
+		WebElement webElement = getWebElement("//body");
+
+		WrapsDriver wrapsDriver = (WrapsDriver)webElement;
+
+		WebDriver wrappedWebDriver = wrapsDriver.getWrappedDriver();
+
+		JavascriptExecutor javascriptExecutor =
+			(JavascriptExecutor)wrappedWebDriver;
+
+		javascriptExecutor.executeScript(javaScript, argument1, argument2);
+	}
+
+	@Override
 	public void fail(String message) {
 		LiferaySeleniumUtil.fail(message);
 	}
@@ -1236,6 +1252,23 @@ public abstract class BaseWebDriverImpl implements LiferaySelenium, WebDriver {
 	@Override
 	public String getHtmlSource() {
 		return getPageSource();
+	}
+
+	@Override
+	public String getJavaScriptResult(
+		String javaScript, String argument1, String argument2) {
+
+		WebElement webElement = getWebElement("//body");
+
+		WrapsDriver wrapsDriver = (WrapsDriver)webElement;
+
+		WebDriver wrappedWebDriver = wrapsDriver.getWrappedDriver();
+
+		JavascriptExecutor javascriptExecutor =
+			(JavascriptExecutor)wrappedWebDriver;
+
+		return (String)javascriptExecutor.executeScript(
+			javaScript, argument1, argument2);
 	}
 
 	@Override
@@ -3270,6 +3303,17 @@ public abstract class BaseWebDriverImpl implements LiferaySelenium, WebDriver {
 	}
 
 	@Override
+	public void waitForJavaScript(
+			String javaScript, String message, String argument)
+		throws Exception {
+
+		Condition javaScriptCondition = getJavaScriptCondition(
+			javaScript, message, argument);
+
+		javaScriptCondition.waitFor();
+	}
+
+	@Override
 	public void waitForNotEditable(String locator) throws Exception {
 		Condition notEditableCondition = getNotEditableCondition(locator);
 
@@ -3771,6 +3815,36 @@ public abstract class BaseWebDriverImpl implements LiferaySelenium, WebDriver {
 			LiferaySeleniumUtil.getSourceDirFilePath(filePath));
 
 		return new ImageTarget(file);
+	}
+
+	protected Condition getJavaScriptCondition(
+		String javaScript, String message, String argument) {
+
+		return new Condition(message) {
+
+			@Override
+			public boolean evaluate() {
+				WebElement bodyWebElement = getWebElement("//body");
+
+				WrapsDriver wrapsDriver = (WrapsDriver)bodyWebElement;
+
+				WebDriver wrappedWebDriver = wrapsDriver.getWrappedDriver();
+
+				JavascriptExecutor javascriptExecutor =
+					(JavascriptExecutor)wrappedWebDriver;
+
+				Boolean javaScriptResult =
+					(Boolean)javascriptExecutor.executeScript(
+						javaScript, argument);
+
+				if (javaScriptResult == null) {
+					return false;
+				}
+
+				return javaScriptResult;
+			}
+
+		};
 	}
 
 	protected int getNavigationBarHeight() {

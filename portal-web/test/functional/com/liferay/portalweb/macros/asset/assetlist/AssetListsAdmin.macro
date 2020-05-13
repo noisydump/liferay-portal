@@ -109,6 +109,8 @@ definition {
 			locator1 = "APConfiguration#SOURCE_SCOPE_ASSET_TYPE_SELECT",
 			value1 = "${selectedAsset}");
 
+		Pause(locator1 = "3000");
+
 		PortletEntry.save();
 	}
 
@@ -127,6 +129,11 @@ definition {
 			MenuItem.click(menuItem = "Other Site or Asset Library...");
 
 			SelectFrame(value1 = "relative=top");
+
+			LiferayEvent.waitForLiferayEvent(
+				attributeName = "src",
+				attributeValue = "dialog-iframe-popup",
+				eventName = "modalIframeLoaded");
 
 			SelectFrame(locator1 = "IFrame#SELECT_SITES");
 
@@ -234,7 +241,12 @@ definition {
 
 		Click(locator1 = "AssetLists#ASSET_TYPE_DROPDOWN_ITEM");
 
-		SelectFrame(locator1 = "IFrame#DIALOG");
+		LiferayEvent.waitForLiferayEvent(
+			attributeName = "src",
+			attributeValue = "dialog-iframe-popup",
+			eventName = "modalIframeLoaded");
+
+		SelectFrame(locator1 = "IFrame#MODAL_BODY");
 
 		Pause(locator1 = "3000");
 
@@ -252,7 +264,17 @@ definition {
 			LexiconCard.clickCard(card = "${depotName}");
 		}
 
-		LexiconEntry.selectEntry(rowEntry = "${assetName}");
+		if (isSet(entryList)) {
+			for (var assetName : list "${entryList}") {
+
+				LexiconEntry.selectEntry(rowEntry = "${assetName}");
+
+				Pause(locator1 = "3000");
+			}
+		}
+		else {
+			LexiconEntry.selectEntry(rowEntry = "${assetName}");
+		}
 
 		SelectFrameTop();
 
@@ -327,7 +349,12 @@ definition {
 			key_menuItem = "View Content",
 			locator1 = "AssetLists#PERSONALIZATION_DROPDOWN_ITEM");
 
-		SelectFrame(locator1 = "IFrame#DIALOG");
+		LiferayEvent.waitForLiferayEvent(
+			attributeName = "src",
+			attributeValue = "dialog-iframe-popup",
+			eventName = "modalIframeLoaded");
+
+		SelectFrame(locator1 = "IFrame#MODAL_BODY");
 
 		AssertTextEquals(
 			key_assetTitle = "${assetTitle}",
@@ -355,7 +382,12 @@ definition {
 			key_menuItem = "View Content",
 			locator1 = "AssetLists#PERSONALIZATION_DROPDOWN_ITEM");
 
-		SelectFrame(locator1 = "IFrame#DIALOG");
+		LiferayEvent.waitForLiferayEvent(
+			attributeName = "src",
+			attributeValue = "dialog-iframe-popup",
+			eventName = "modalIframeLoaded");
+
+		SelectFrame(locator1 = "IFrame#MODAL_BODY");
 
 		var key_assetTitle = "${assetTitle}";
 

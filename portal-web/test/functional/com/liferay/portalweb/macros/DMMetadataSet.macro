@@ -67,10 +67,15 @@ definition {
 	}
 
 	macro selectMetadataSetsFrame {
-		if (IsElementPresent(locator1 = "IFrame#DIALOG")) {
+		if (IsElementPresent(locator1 = "IFrame#MODAL_BODY")) {
 			SelectFrameTop();
 
-			SelectFrame(locator1 = "IFrame#DIALOG");
+			LiferayEvent.waitForLiferayEvent(
+				attributeName = "src",
+				attributeValue = "dialog-iframe-popup",
+				eventName = "modalIframeLoaded");
+
+			SelectFrame(locator1 = "IFrame#MODAL_BODY");
 		}
 	}
 

@@ -172,6 +172,9 @@ public interface LiferaySelenium {
 
 	public void echo(String message);
 
+	public void executeJavaScript(
+		String javaScript, String argument1, String argument2);
+
 	public void fail(String message);
 
 	public String getAlert();
@@ -199,6 +202,9 @@ public interface LiferaySelenium {
 	public String getFirstNumberIncrement(String locator);
 
 	public String getHtmlSource();
+
+	public String getJavaScriptResult(
+		String javaScript, String argument1, String argument2);
 
 	public String getLocation() throws Exception;
 
@@ -499,6 +505,10 @@ public interface LiferaySelenium {
 		throws Exception;
 
 	public void waitForElementPresent(String locator, String throwException)
+		throws Exception;
+
+	public void waitForJavaScript(
+			String javaScript, String message, String argument)
 		throws Exception;
 
 	public void waitForNotEditable(String locator) throws Exception;

@@ -279,7 +279,7 @@ public class AMJournalArticleStagedModelDataHandlerTest
 		return _journalArticleLocalService.addArticle(
 			serviceContext.getUserId(), serviceContext.getScopeGroupId(),
 			journalFolder.getFolderId(),
-			JournalArticleConstants.CLASSNAME_ID_DEFAULT, 0, StringPool.BLANK,
+			JournalArticleConstants.CLASS_NAME_ID_DEFAULT, 0, StringPool.BLANK,
 			true, 0, titleMap, null, content, ddmStructure.getStructureKey(),
 			ddmTemplate.getTemplateKey(), null, 1, 1, 1965, 0, 0, 0, 0, 0, 0, 0,
 			true, 0, 0, 0, 0, 0, true, true, false, null, null, null, null,
@@ -387,7 +387,7 @@ public class AMJournalArticleStagedModelDataHandlerTest
 		return sb.toString();
 	}
 
-	private ServiceContext _getServiceContext() throws PortalException {
+	private ServiceContext _getServiceContext() throws Exception {
 		return ServiceContextTestUtil.getServiceContext(
 			stagingGroup.getGroupId(), TestPropsValues.getUserId());
 	}

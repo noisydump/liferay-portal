@@ -27,6 +27,7 @@ import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.redirect.model.RedirectEntry;
 import com.liferay.redirect.service.RedirectEntryService;
 import com.liferay.redirect.web.internal.constants.RedirectPortletKeys;
+import com.liferay.redirect.web.internal.util.RedirectUtil;
 
 import java.util.Date;
 
@@ -63,19 +64,23 @@ public class EditRedirectEntryMVCActionCommand extends BaseMVCActionCommand {
 		Date expirationDate = _getExpirationDate(actionRequest, themeDisplay);
 		boolean permanent = ParamUtil.getBoolean(actionRequest, "permanent");
 		String sourceURL = ParamUtil.getString(actionRequest, "sourceURL");
+		boolean updateChainedRedirectEntries = ParamUtil.getBoolean(
+			actionRequest, "updateChainedRedirectEntries");
 
 		try {
 			if (redirectEntryId == 0) {
 				_redirectEntryService.addRedirectEntry(
 					themeDisplay.getScopeGroupId(), destinationURL,
-					expirationDate, permanent, sourceURL,
+					expirationDate, RedirectUtil.getGroupBaseURL(themeDisplay),
+					permanent, sourceURL, updateChainedRedirectEntries,
 					ServiceContextFactory.getInstance(
 						RedirectEntry.class.getName(), actionRequest));
 			}
 			else {
 				_redirectEntryService.updateRedirectEntry(
-					redirectEntryId, destinationURL, expirationDate, permanent,
-					sourceURL);
+					redirectEntryId, destinationURL, expirationDate,
+					RedirectUtil.getGroupBaseURL(themeDisplay), permanent,
+					sourceURL, updateChainedRedirectEntries);
 			}
 		}
 		catch (Exception exception) {

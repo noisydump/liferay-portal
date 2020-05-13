@@ -26,7 +26,6 @@ import com.liferay.layout.util.structure.LayoutStructureItem;
 import com.liferay.layout.util.structure.RootLayoutStructureItem;
 import com.liferay.layout.util.structure.RowLayoutStructureItem;
 import com.liferay.petra.string.StringPool;
-import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Layout;
@@ -37,7 +36,6 @@ import com.liferay.portal.kernel.service.CompanyLocalService;
 import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
-import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.kernel.test.portlet.MockLiferayPortletActionRequest;
 import com.liferay.portal.kernel.test.portlet.MockLiferayPortletActionResponse;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
@@ -59,10 +57,8 @@ import com.liferay.segments.constants.SegmentsExperienceConstants;
 import java.util.List;
 
 import javax.portlet.ActionRequest;
-import javax.portlet.ActionResponse;
 
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -73,7 +69,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import org.springframework.mock.web.MockHttpServletRequest;
-import org.springframework.mock.web.MockHttpServletResponse;
 
 /**
  * @author Rubén Pulido
@@ -120,10 +115,8 @@ public class ConvertLayoutMVCActionCommandTest {
 		ActionRequest actionRequest = _getMockActionRequest(
 			originalLayout.getPlid());
 
-		ReflectionTestUtil.invoke(
-			_mvcActionCommand, "processAction",
-			new Class<?>[] {ActionRequest.class, ActionResponse.class},
-			actionRequest, new MockActionResponse());
+		_mvcActionCommand.processAction(
+			actionRequest, new MockLiferayPortletActionResponse());
 
 		_validateLayoutConversion(originalLayout);
 	}
@@ -149,16 +142,14 @@ public class ConvertLayoutMVCActionCommandTest {
 		ActionRequest actionRequest = _getMockActionRequest(
 			originalLayout.getPlid());
 
-		ReflectionTestUtil.invoke(
-			_mvcActionCommand, "processAction",
-			new Class<?>[] {ActionRequest.class, ActionResponse.class},
-			actionRequest, new MockActionResponse());
+		_mvcActionCommand.processAction(
+			actionRequest, new MockLiferayPortletActionResponse());
 
 		_validateLayoutConversion(originalLayout);
 	}
 
 	private MockActionRequest _getMockActionRequest(long plid)
-		throws PortalException {
+		throws Exception {
 
 		MockActionRequest mockActionRequest = new MockActionRequest();
 
@@ -174,7 +165,8 @@ public class ConvertLayoutMVCActionCommandTest {
 		HttpServletRequest httpServletRequest = new MockHttpServletRequest();
 
 		httpServletRequest.setAttribute(
-			JavaConstants.JAVAX_PORTLET_RESPONSE, new MockActionResponse());
+			JavaConstants.JAVAX_PORTLET_RESPONSE,
+			new MockLiferayPortletActionResponse());
 
 		ServiceContext serviceContext =
 			ServiceContextTestUtil.getServiceContext(group, userId);
@@ -184,7 +176,7 @@ public class ConvertLayoutMVCActionCommandTest {
 		return serviceContext;
 	}
 
-	private ThemeDisplay _getThemeDisplay() throws PortalException {
+	private ThemeDisplay _getThemeDisplay() throws Exception {
 		ThemeDisplay themeDisplay = new ThemeDisplay();
 
 		themeDisplay.setCompany(_company);
@@ -368,16 +360,6 @@ public class ConvertLayoutMVCActionCommandTest {
 		@Override
 		public HttpServletRequest getHttpServletRequest() {
 			return new MockHttpServletRequest();
-		}
-
-	}
-
-	private static class MockActionResponse
-		extends MockLiferayPortletActionResponse {
-
-		@Override
-		public HttpServletResponse getHttpServletResponse() {
-			return new MockHttpServletResponse();
 		}
 
 	}

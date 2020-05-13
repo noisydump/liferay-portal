@@ -2286,7 +2286,7 @@ public class DataFactory {
 		journalArticleModel.setCreateDate(new Date());
 		journalArticleModel.setModifiedDate(new Date());
 		journalArticleModel.setClassNameId(
-			JournalArticleConstants.CLASSNAME_ID_DEFAULT);
+			JournalArticleConstants.CLASS_NAME_ID_DEFAULT);
 		journalArticleModel.setArticleId(
 			journalArticleResourceModel.getArticleId());
 		journalArticleModel.setTreePath("/");
@@ -3383,6 +3383,25 @@ public class DataFactory {
 		}
 	}
 
+	public String toInsertSQL(
+		String mappingTableName, long companyId, long leftPrimaryKey,
+		long rightPrimaryKey) {
+
+		StringBundler sb = new StringBundler(9);
+
+		sb.append("insert into ");
+		sb.append(mappingTableName);
+		sb.append(" values (");
+		sb.append(companyId);
+		sb.append(", ");
+		sb.append(leftPrimaryKey);
+		sb.append(", ");
+		sb.append(rightPrimaryKey);
+		sb.append(", 0, null);");
+
+		return sb.toString();
+	}
+
 	protected ObjectValuePair<String[], Integer>
 		getAssetPublisherAssetCategoriesQueryValues(
 			List<AssetCategoryModel> assetCategoryModels, int index) {
@@ -4457,7 +4476,7 @@ public class DataFactory {
 		return sb.toString();
 	}
 
-	private String _readFile(String resourceName) throws IOException {
+	private String _readFile(String resourceName) throws Exception {
 		List<String> lines = new ArrayList<>();
 
 		StringUtil.readLines(getResourceInputStream(resourceName), lines);

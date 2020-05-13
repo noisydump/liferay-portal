@@ -29,6 +29,8 @@ definition {
 
 		Navigator.gotoPage(pageName = "Home");
 
+		ProductMenuHelper.openProductMenu();
+
 		Refresh();
 
 		SikuliAssertElementPresent(locator1 = "ControlMenu#HOME_HEADING_AND_PRODUCT_MENU_CLOSED_PNG");
@@ -176,12 +178,8 @@ definition {
 			columnNumberTo = "1",
 			portletName = "Hello World");
 
-		task ("Removes Hello World Portlets on Test Page and Welcome Page") {
+		task ("Removes Hello World Portlet on Test Page") {
 			Navigator.gotoPage(pageName = "Test Page");
-
-			Portlet.deletePG(portletName = "Hello World");
-
-			Navigator.gotoPage(pageName = "Home");
 
 			Portlet.deletePG(portletName = "Hello World");
 
@@ -217,11 +215,10 @@ definition {
 			userScreenName = "uskandi");
 	}
 
-	@description = "Checks for each portlet having defined boundries."
+	@description = "Checks for each portlet having defined boundaries."
 	@priority = "5"
-	test ViewPortletBoundries {
+	test ViewPortletBoundaries {
 		property portal.acceptance = "false";
-		property portal.upstream = "quarantine";
 
 		ProductMenu.gotoPortlet(
 			category = "Site Builder",
@@ -255,6 +252,8 @@ definition {
 			columnNumberTo = "2",
 			portletName = "Hello World");
 
+		Navigator.gotoPage(pageName = "Test Page");
+
 		Portlet.dragAndDropPortletToColumnPG(
 			columnNumberFrom = "1",
 			columnNumberTo = "3",
@@ -264,17 +263,23 @@ definition {
 			key_portletTitleName = "Message Boards",
 			locator1 = "Home#PAGE_COLUMN_PORTLET_COLUMN_1_PORTLET_TITLE");
 
+		Portlet.assertPortletHeader(portletName = "MBPortlet");
+
 		takeScreenshot();
 
 		MouseOver(
 			key_portletTitleName = "Hello World",
 			locator1 = "Home#PAGE_COLUMN_PORTLET_COLUMN_2_PORTLET_TITLE");
 
+		Portlet.assertPortletHeader(portletName = "HelloWorldPortlet");
+
 		takeScreenshot();
 
 		MouseOver(
 			key_portletTitleName = "Documents and Media",
 			locator1 = "Home#PAGE_COLUMN_PORTLET_COLUMN_3_PORTLET_TITLE");
+
+		Portlet.assertPortletHeader(portletName = "DLPortlet");
 
 		takeScreenshot();
 	}

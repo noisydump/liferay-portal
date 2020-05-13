@@ -22,7 +22,9 @@ long sourcePlid = ParamUtil.getLong(request, "sourcePlid");
 List<SiteNavigationMenu> autoSiteNavigationMenus = layoutsAdminDisplayContext.getAutoSiteNavigationMenus();
 %>
 
-<div class="container-fluid-1280 pt-2">
+<clay:container
+	className="pt-2"
+>
 	<liferay-frontend:edit-form
 		action="<%= (sourcePlid <= 0) ? layoutsAdminDisplayContext.getAddLayoutURL() : layoutsAdminDisplayContext.getCopyLayoutURL(sourcePlid) %>"
 		method="post"
@@ -38,23 +40,27 @@ List<SiteNavigationMenu> autoSiteNavigationMenus = layoutsAdminDisplayContext.ge
 
 					<liferay-ui:message key="add-this-page-to-the-following-menus" />
 
-					<div class="auto-site-navigation-menus container my-3">
-						<div class="row">
+					<clay:container
+						className="auto-site-navigation-menus mt-3"
+					>
+						<clay:row>
 
 							<%
 							for (SiteNavigationMenu autoSiteNavigationMenu : autoSiteNavigationMenus) {
 							%>
 
-								<div class="col-6">
+								<clay:col
+									size="6"
+								>
 									<aui:input id='<%= "menu_" + autoSiteNavigationMenu.getSiteNavigationMenuId() %>' label="<%= HtmlUtil.escape(autoSiteNavigationMenu.getName()) %>" name="TypeSettingsProperties--siteNavigationMenuId--" type="checkbox" value="<%= autoSiteNavigationMenu.getSiteNavigationMenuId() %>" />
-								</div>
+								</clay:col>
 
 							<%
 							}
 							%>
 
-						</div>
-					</div>
+						</clay:row>
+					</clay:container>
 				</c:when>
 				<c:when test="<%= autoSiteNavigationMenus.size() == 1 %>">
 
@@ -62,11 +68,13 @@ List<SiteNavigationMenu> autoSiteNavigationMenus = layoutsAdminDisplayContext.ge
 					SiteNavigationMenu autoSiteNavigationMenu = autoSiteNavigationMenus.get(0);
 					%>
 
-					<div class="auto-site-navigation-menus container mt-3">
-						<div class="row">
+					<clay:container
+						className="auto-site-navigation-menus mt-3"
+					>
+						<clay:row>
 							<aui:input id='<%= "menu_" + autoSiteNavigationMenu.getSiteNavigationMenuId() %>' label='<%= LanguageUtil.format(request, "add-this-page-to-x", HtmlUtil.escape(autoSiteNavigationMenu.getName())) %>' name="TypeSettingsProperties--siteNavigationMenuId--" type="checkbox" value="<%= autoSiteNavigationMenu.getSiteNavigationMenuId() %>" />
-						</div>
-					</div>
+						</clay:row>
+					</clay:container>
 				</c:when>
 			</c:choose>
 
@@ -104,19 +112,19 @@ List<SiteNavigationMenu> autoSiteNavigationMenus = layoutsAdminDisplayContext.ge
 			/>
 		</liferay-frontend:edit-form-footer>
 	</liferay-frontend:edit-form>
-</div>
+</clay:container>
 
 <aui:script use="liferay-alert">
 	var form = document.<portlet:namespace />fm;
 
-	form.addEventListener('submit', function(event) {
+	form.addEventListener('submit', function (event) {
 		event.stopPropagation();
 
 		var formData = new FormData();
 
 		Array.prototype.slice
 			.call(form.querySelectorAll('input'))
-			.forEach(function(input) {
+			.forEach(function (input) {
 				if (input.type == 'checkbox' && !input.checked) {
 					return;
 				}
@@ -130,10 +138,10 @@ List<SiteNavigationMenu> autoSiteNavigationMenus = layoutsAdminDisplayContext.ge
 			body: formData,
 			method: 'POST',
 		})
-			.then(function(response) {
+			.then(function (response) {
 				return response.json();
 			})
-			.then(function(response) {
+			.then(function (response) {
 				if (response.redirectURL) {
 					var redirectURL = new URL(
 						response.redirectURL,

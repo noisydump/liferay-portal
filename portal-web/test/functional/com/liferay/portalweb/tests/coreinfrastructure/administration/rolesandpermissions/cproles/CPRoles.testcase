@@ -26,7 +26,7 @@ definition {
 
 	@priority = "5"
 	test AddOrganizationRole {
-		property portal.acceptance = "quarantine";
+		property portal.acceptance = "true";
 		property testray.component.names = "Training";
 
 		ProductMenu.gotoPortlet(
@@ -189,6 +189,11 @@ definition {
 
 		LexiconEntry.gotoAdd();
 
+		LiferayEvent.waitForLiferayEvent(
+			attributeName = "src",
+			attributeValue = "dialog-iframe-popup",
+			eventName = "modalIframeLoaded");
+
 		SelectFrame(locator1 = "IFrame#SELECT_ASSIGNEES");
 
 		LexiconEntry.gotoAdd();
@@ -202,6 +207,11 @@ definition {
 		Segmentation.fillProperty(PropertyField = "liferay");
 
 		Button.clickSave();
+
+		LiferayEvent.waitForLiferayEvent(
+			attributeName = "src",
+			attributeValue = "dialog-iframe-popup",
+			eventName = "modalIframeLoaded");
 
 		SelectFrame(locator1 = "IFrame#SELECT_ASSIGNEES");
 
@@ -229,7 +239,7 @@ definition {
 	@description = "This is a use case for LPS-109572."
 	@priority = "5"
 	test AssignNewUserToRegularRole {
-		property portal.acceptance = "quarantine";
+		property portal.acceptance = "true";
 
 		JSONRole.addRegularRole(
 			roleKey = "Regular Role",

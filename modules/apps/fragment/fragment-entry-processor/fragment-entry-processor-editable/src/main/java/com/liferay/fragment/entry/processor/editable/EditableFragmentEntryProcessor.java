@@ -254,8 +254,7 @@ public class EditableFragmentEntryProcessor implements FragmentEntryProcessor {
 			else {
 				value = _fragmentEntryProcessorHelper.getEditableValue(
 					editableValueJSONObject,
-					fragmentEntryProcessorContext.getLocale(),
-					fragmentEntryProcessorContext.getSegmentsExperienceIds());
+					fragmentEntryProcessorContext.getLocale());
 			}
 
 			if (Objects.equals(
@@ -455,7 +454,8 @@ public class EditableFragmentEntryProcessor implements FragmentEntryProcessor {
 		}
 
 		for (Element element :
-				document.getElementsByAttribute("data-lfr-editable-id")) {
+				document.select(
+					"*[data-lfr-editable-id],*[data-lfr-editable-type]")) {
 
 			_validateAttribute(element, "data-lfr-editable-id");
 			_validateAttribute(element, "data-lfr-editable-type");

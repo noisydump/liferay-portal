@@ -5,7 +5,12 @@ definition {
 
 		MenuItem.click(menuItem = "Permissions");
 
-		SelectFrame(locator1 = "IFrame#DIALOG");
+		LiferayEvent.waitForLiferayEvent(
+			attributeName = "src",
+			attributeValue = "dialog-iframe-popup",
+			eventName = "modalIframeLoaded");
+
+		SelectFrame(locator1 = "IFrame#MODAL_BODY");
 
 		Check(locator1 = "AssetPermissions#GUEST_REPLY_TO_MESSAGE_CHECKBOX");
 

@@ -1,6 +1,11 @@
 definition {
 
 	macro addCP {
+		LiferayEvent.waitForLiferayEvent(
+			attributeName = "src",
+			attributeValue = "dialog-iframe-popup",
+			eventName = "modalIframeLoaded");
+
 		SelectFrame(locator1 = "IFrame#CONFIGURATION");
 
 		Type(
@@ -25,28 +30,53 @@ definition {
 	}
 
 	macro selectCategoryFrame {
+		LiferayEvent.waitForLiferayEvent(
+			attributeName = "src",
+			attributeValue = "dialog-iframe-popup",
+			eventName = "modalIframeLoaded");
+
 		SelectFrame(locator1 = "IFrame#SELECT_CATEGORY");
 	}
 
 	macro selectConfigurationFrame {
-		if (IsElementPresent(locator1 = "IFrame#DIALOG")) {
+		if (IsElementPresent(locator1 = "IFrame#MODAL_BODY")) {
 			echo("Selecting configuration iframe");
 
-			SelectFrame(locator1 = "IFrame#DIALOG");
+			LiferayEvent.waitForLiferayEvent(
+				attributeName = "src",
+				attributeValue = "dialog-iframe-popup",
+				eventName = "modalIframeLoaded");
+
+			SelectFrame(locator1 = "IFrame#MODAL_BODY");
 		}
 	}
 
 	macro selectEditAssetFrame {
+		LiferayEvent.waitForLiferayEvent(
+			attributeName = "src",
+			attributeValue = "dialog-iframe-popup",
+			eventName = "modalIframeLoaded");
+
 		SelectFrame(locator1 = "IFrame#EDIT_ASSET");
 	}
 
 	macro selectModalFrame {
+		LiferayEvent.waitForLiferayEvent(
+			attributeName = "src",
+			attributeValue = "dialog-iframe-popup",
+			eventName = "modalIframeLoaded");
+
 		SelectFrame(locator1 = "IFrame#MODAL_IFRAME");
 	}
 
 	macro selectPermissionsFrame {
-		while (IsElementPresent(locator1 = "IFrame#DIALOG")) {
-			SelectFrame(locator1 = "IFrame#DIALOG");
+		while (IsElementPresent(locator1 = "IFrame#MODAL_BODY")) {
+			LiferayEvent.waitForLiferayEvent(
+				attributeName = "src",
+				attributeValue = "dialog-iframe-popup",
+				eventName = "modalIframeLoaded");
+
+			SelectFrame(locator1 = "IFrame#MODAL_BODY");
 		}
 	}
 

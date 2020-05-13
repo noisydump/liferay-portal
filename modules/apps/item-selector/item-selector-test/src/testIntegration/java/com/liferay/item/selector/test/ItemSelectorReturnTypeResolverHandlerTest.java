@@ -83,7 +83,7 @@ public class ItemSelectorReturnTypeResolverHandlerTest {
 				registerItemSelectorViewProvider(
 					new TestItemSelectorViewReturnTypeProvider(), "test-view");
 
-		List serviceRegistrations = new ArrayList<>();
+		List<ServiceRegistration<?>> serviceRegistrations = new ArrayList<>();
 
 		serviceRegistrations.add(itemSelectorViewServiceRegistration);
 		serviceRegistrations.add(
@@ -128,7 +128,7 @@ public class ItemSelectorReturnTypeResolverHandlerTest {
 				registerItemSelectorReturnTypeResolver(
 					new TestItemSelectorReturnTypeResolver3(), 50);
 
-		List<ServiceRegistration> serviceRegistrations =
+		List<ServiceRegistration<?>> serviceRegistrations =
 			new CopyOnWriteArrayList<>();
 
 		serviceRegistrations.add(
@@ -196,7 +196,7 @@ public class ItemSelectorReturnTypeResolverHandlerTest {
 				registerItemSelectorReturnTypeResolver(
 					new TestItemSelectorReturnTypeResolver3(), 50);
 
-		List<ServiceRegistration> serviceRegistrations =
+		List<ServiceRegistration<?>> serviceRegistrations =
 			new CopyOnWriteArrayList<>();
 
 		serviceRegistrations.add(
@@ -261,7 +261,9 @@ public class ItemSelectorReturnTypeResolverHandlerTest {
 			itemSelectorViewReturnTypeProvider, properties);
 	}
 
-	private void _unregister(List<ServiceRegistration> serviceRegistrations) {
+	private void _unregister(
+		List<ServiceRegistration<?>> serviceRegistrations) {
+
 		serviceRegistrations.forEach(ServiceRegistration::unregister);
 	}
 

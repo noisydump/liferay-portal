@@ -42,14 +42,14 @@ function gql(strings, ...values) {
 		.replace(/"/g, '\\"');
 }
 
-export const request = query =>
-	fetch(getURL(), {
+export const request = (query, params = {}) =>
+	fetch(getURL(params), {
 		body: `{"query": "${query}"}`,
 		headers: HEADERS,
 		method: 'POST',
 	})
-		.then(response => response.json())
-		.then(json => {
+		.then((response) => response.json())
+		.then((json) => {
 			const data = json.data;
 
 			if (!data) {
@@ -59,7 +59,7 @@ export const request = query =>
 			return data[Object.keys(data)[0]];
 		});
 
-export const getURL = params => {
+export const getURL = (params) => {
 	params = {
 		['p_auth']: Liferay.authToken,
 		t: Date.now(),
@@ -69,7 +69,7 @@ export const getURL = params => {
 	const uri = new URL(`${window.location.origin}/o/graphql`);
 	const keys = Object.keys(params);
 
-	keys.forEach(key => uri.searchParams.set(key, params[key]));
+	keys.forEach((key) => uri.searchParams.set(key, params[key]));
 
 	return uri.toString();
 };
@@ -103,13 +103,10 @@ export const createQuestion = (
 ) =>
 	request(gql`
         mutation {
-            createMessageBoardSectionMessageBoardThread(messageBoardSectionId: ${messageBoardSectionId}, messageBoardThread: {articleBody: ${articleBody}, encodingFormat: "html", headline: ${headline}, showAsQuestion: true, taxonomyCategoryIds: ${tags}, viewableBy: ANYONE}){
+            createMessageBoardSectionMessageBoardThread(messageBoardSectionId: ${messageBoardSectionId}, messageBoardThread: {articleBody: ${articleBody}, encodingFormat: "html", headline: ${headline}, showAsQuestion: true, keywords: ${tags}, viewableBy: ANYONE}){
                 articleBody
                 headline
-                taxonomyCategoryBriefs {
-                	taxonomyCategoryId
-					taxonomyCategoryName 
-                }
+                keywords
                 showAsQuestion
             }
         }`);
@@ -132,14 +129,14 @@ export const createVoteThread = (id, rating) =>
           }
         }`);
 
-export const deleteMessage = messageBoardMessage =>
+export const deleteMessage = (messageBoardMessage) =>
 	request(gql`
         mutation {
             deleteMessageBoardMessage(messageBoardMessageId: ${messageBoardMessage.id})
-        }`).then(data => {
+        }`).then((data) => {
 		if (messageBoardMessage.messageBoardMessages) {
 			return Promise.all(
-				messageBoardMessage.messageBoardMessages.items.map(x =>
+				messageBoardMessage.messageBoardMessages.items.map((x) =>
 					deleteMessage(x)
 				)
 			);
@@ -148,7 +145,7 @@ export const deleteMessage = messageBoardMessage =>
 		return data;
 	});
 
-export const deleteMessageBoardThread = messageBoardThreadId =>
+export const deleteMessageBoardThread = (messageBoardThreadId) =>
 	request(gql`
 		mutation {
 			deleteMessageBoardThread(messageBoardThreadId: ${messageBoardThreadId})
@@ -158,12 +155,12 @@ export const deleteMessageBoardThread = messageBoardThreadId =>
 export const getTags = (page = 1, siteKey) =>
 	request(gql`
         query {
-            taxonomyCategoryRanked(page: ${page}, pageSize: 20, siteKey: ${siteKey}){
+            keywordsRanked(page: ${page}, pageSize: 20, siteKey: ${siteKey}){
                 items {
-                    name
                     dateCreated
                     id
-                    taxonomyCategoryUsageCount
+                    keywordUsageCount
+                    name
                 }
                 lastPage
                 page
@@ -172,23 +169,15 @@ export const getTags = (page = 1, siteKey) =>
             }
         }`);
 
-export const getAllTags = siteKey =>
-	request(gql`   
-		query {
-			taxonomyVocabularies(siteKey: ${siteKey}){
-				items {
-					taxonomyCategories {
-						items {
-							id
-							name
-						}
-					}
-					assetTypes {
-						type
-					}
-				}
-			}
-		}`);
+export const getAllTags = (siteKey) =>
+	request(gql`
+	query {
+		keywords(siteKey:${siteKey}) {
+		  items{
+			name
+		  }
+		}
+	  }`);
 
 export const getMessage = (friendlyUrlPath, siteKey) =>
 	request(gql`
@@ -206,7 +195,8 @@ export const getThread = (
 	page = 1,
 	sort = 'showAsAnswer:desc,dateModified:desc'
 ) =>
-	request(gql`
+	request(
+		gql`
         query {
             messageBoardThreadByFriendlyUrlPath(friendlyUrlPath: ${friendlyUrlPath}, siteKey: ${siteKey}){
             	actions
@@ -231,7 +221,8 @@ export const getThread = (
                 encodingFormat
                 friendlyUrlPath
                 headline
-                id 
+				id
+				keywords
                 messageBoardMessages(page: ${page}, pageSize: 20, sort: ${sort}) {
                     items {
                     	actions
@@ -282,13 +273,11 @@ export const getThread = (
                     ratingValue
                 }
                 subscribed
-				taxonomyCategoryBriefs {
-                	taxonomyCategoryId
-					taxonomyCategoryName 
-                }
                 viewCount
             }
-        }`);
+        }`,
+		{nestedFields: 'lastPostDate'}
+	);
 
 export const getMessages = (
 	parentMessageBoardMessageId,
@@ -296,10 +285,12 @@ export const getMessages = (
 	page = 1,
 	pageSize = 20
 ) =>
-	request(gql`
+	request(
+		gql`
         query {
-              messageBoardThreadMessageBoardMessages(messageBoardThreadId: ${parentMessageBoardMessageId}, page: ${page}, pageSize: ${pageSize}, sort: ${'showAsAnswer:desc,' +
-		sort}){
+              messageBoardThreadMessageBoardMessages(messageBoardThreadId: ${parentMessageBoardMessageId}, page: ${page}, pageSize: ${pageSize}, sort: ${
+			'showAsAnswer:desc,' + sort
+		}){
                 items {
                 	actions
                     aggregateRating {
@@ -342,19 +333,18 @@ export const getMessages = (
                 pageSize
                 totalCount
             }
-        }`).then(x => x.items);
+        }`,
+		{nestedFields: 'lastPostDate'}
+	).then((x) => x.items);
 
 export const getThreadContent = (friendlyUrlPath, siteKey) =>
 	request(gql`
         query {
             messageBoardThreadByFriendlyUrlPath(friendlyUrlPath: ${friendlyUrlPath}, siteKey: ${siteKey}){
-                articleBody 
+                articleBody
                 headline
-                id 
-				taxonomyCategoryBriefs {
-                	taxonomyCategoryId
-					taxonomyCategoryName 
-                } 
+                id
+				keywords
             }
         }`);
 
@@ -364,17 +354,17 @@ export const hasListPermissions = (permission, siteKey) =>
 				messageBoardThreads(siteKey: ${siteKey}) {
 					actions
 				}
-			}`).then(data => Boolean(data.actions[permission]));
+			}`).then((data) => Boolean(data.actions[permission]));
 
 export const getThreads = ({
 	creatorId = '',
+	keywords = '',
 	page = 1,
 	pageSize = 30,
 	search = '',
 	section,
 	siteKey,
 	sort = 'dateCreated:desc',
-	taxonomyCategoryId = '',
 }) => {
 	let filter = `(messageBoardSectionId eq ${section.id} `;
 
@@ -384,8 +374,8 @@ export const getThreads = ({
 
 	filter += ')';
 
-	if (taxonomyCategoryId) {
-		filter = `taxonomyCategoryIds/any(x:x eq ${taxonomyCategoryId})`;
+	if (keywords) {
+		filter = `keywords/any(x:x eq '${keywords}')`;
 	}
 	else if (creatorId) {
 		filter = `creator/id eq ${creatorId}`;
@@ -399,33 +389,27 @@ export const getThreads = ({
 						ratingAverage
 						ratingCount
 						ratingValue
-					} 
+					}
 					articleBody
 					creator {
 						id
 						image
 						name
-					} 
+					}
 					dateModified
 					friendlyUrlPath
+					hasValidAnswer
 					headline
-					id 
-					messageBoardMessages {
-						items {
-							showAsAnswer
-						}
-					}
+					id
 					messageBoardSection {
 						title
 					}
-					taxonomyCategoryBriefs {
-						taxonomyCategoryId
-						taxonomyCategoryName
-					} 
+					numberOfMessageBoardMessages
+					keywords
 					viewCount
 				}
-				page 
-				pageSize 
+				page
+				pageSize
 				totalCount
 			}
         }`);
@@ -454,7 +438,7 @@ export const getSection = (title, siteKey) => {
 				}
 			}
 		}
-	`).then(data => data.items[0]);
+	`).then((data) => data.items[0]);
 };
 
 export const getRankedThreads = (
@@ -481,16 +465,13 @@ export const getRankedThreads = (
 						name
 					} 
 					dateModified
+					hasValidAnswer
 					headline
 					id  
-					messageBoardMessages {
-						items {
-							showAsAnswer
-						}
-					}
 					messageBoardSection {
 						title
 					}
+					numberOfMessageBoardMessages
 					taxonomyCategoryBriefs {
 						taxonomyCategoryId
 						taxonomyCategoryName
@@ -531,7 +512,7 @@ export const getRelatedThreads = (search = '', siteKey) =>
             }
         }`);
 
-export const getSections = siteKey =>
+export const getSections = (siteKey) =>
 	request(gql`
 		query {
 			messageBoardSections(siteKey: ${siteKey}, sort: "title:desc") {
@@ -547,12 +528,17 @@ export const getSections = siteKey =>
 		}
 `);
 
-export const getUserActivity = (siteKey, userId = '') => {
+export const getUserActivity = ({
+	page = 1,
+	pageSize = 30,
+	siteKey,
+	userId = '',
+}) => {
 	const filter = `creatorId eq ${userId}`;
 
 	return request(gql`
 		query {
-			messageBoardThreads(filter: ${filter}, flatten: true, siteKey: ${siteKey}, sort: "dateCreated:desc") {
+			messageBoardThreads(filter: ${filter}, flatten: true, page: ${page}, pageSize: ${pageSize}, siteKey: ${siteKey}, sort: "dateCreated:desc") {
 				items {
 					aggregateRating {
 						ratingAverage
@@ -571,19 +557,17 @@ export const getUserActivity = (siteKey, userId = '') => {
 					}
 					dateModified
 					friendlyUrlPath
+					hasValidAnswer
 					headline
 					id
+					keywords
 					messageBoardSection {
 						title
-					}
-					messageBoardMessages {
-						items {
-						showAsAnswer
-						}
 					}
 					messageBoardSection {
 						title
 					}
+					numberOfMessageBoardMessages
 					taxonomyCategoryBriefs{
 						taxonomyCategoryId
 						taxonomyCategoryName
@@ -619,42 +603,39 @@ export const updateThread = (
 	articleBody,
 	headline,
 	messageBoardThreadId,
-	taxonomyCategoryIds
+	tags
 ) =>
 	request(gql`
         mutation {
-            patchMessageBoardThread(messageBoardThread: {articleBody: ${articleBody}, encodingFormat: "html", headline: ${headline}, taxonomyCategoryIds: ${taxonomyCategoryIds}}, messageBoardThreadId: ${messageBoardThreadId}){
+            patchMessageBoardThread(messageBoardThread: {articleBody: ${articleBody}, encodingFormat: "html", headline: ${headline}, keywords: ${tags}}, messageBoardThreadId: ${messageBoardThreadId}){
                 articleBody
                 headline
-				taxonomyCategoryBriefs {
-					taxonomyCategoryId
-					taxonomyCategoryName
-				} 
+				keywords
             }
         }`);
 
-export const subscribe = messageBoardThreadId =>
+export const subscribe = (messageBoardThreadId) =>
 	request(gql`
         mutation {
             updateMessageBoardThreadSubscribe(messageBoardThreadId: ${messageBoardThreadId})
         }
     `);
 
-export const unsubscribe = messageBoardThreadId =>
+export const unsubscribe = (messageBoardThreadId) =>
 	request(gql`
         mutation {
             updateMessageBoardThreadUnsubscribe(messageBoardThreadId: ${messageBoardThreadId})
         }
     `);
 
-export const subscribeSection = messageBoardSectionId =>
+export const subscribeSection = (messageBoardSectionId) =>
 	request(gql`
         mutation {
             updateMessageBoardSectionSubscribe(messageBoardSectionId: ${messageBoardSectionId})
         }
     `);
 
-export const unsubscribeSection = messageBoardSectionId =>
+export const unsubscribeSection = (messageBoardSectionId) =>
 	request(gql`
         mutation {
             updateMessageBoardSectionUnsubscribe(messageBoardSectionId: ${messageBoardSectionId})

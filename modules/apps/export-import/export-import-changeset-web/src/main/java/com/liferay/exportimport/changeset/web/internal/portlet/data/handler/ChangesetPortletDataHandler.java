@@ -54,7 +54,6 @@ import com.liferay.portal.kernel.xml.Element;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.stream.Stream;
 
 import javax.portlet.PortletPreferences;
@@ -173,14 +172,12 @@ public class ChangesetPortletDataHandler extends BasePortletDataHandler {
 			_exportChangesetCollection(portletDataContext, changesetCollection);
 		}
 		else {
-			Optional<Changeset> changesetOptional =
-				_changesetManager.popChangeset(changesetUuid);
+			Changeset changeset = _changesetManager.removeChangeset(
+				changesetUuid);
 
-			if (!changesetOptional.isPresent()) {
+			if (changeset == null) {
 				return getExportDataRootElementString(rootElement);
 			}
-
-			Changeset changeset = changesetOptional.get();
 
 			Stream<StagedModel> stream = changeset.stream();
 
@@ -238,7 +235,7 @@ public class ChangesetPortletDataHandler extends BasePortletDataHandler {
 	}
 
 	private void _exportAssetLinks(PortletDataContext portletDataContext)
-		throws PortletDataException {
+		throws Exception {
 
 		for (Long linkId : portletDataContext.getAssetLinkIds()) {
 			AssetLink assetLink = _assetLinkLocalService.fetchAssetLink(linkId);
@@ -258,7 +255,7 @@ public class ChangesetPortletDataHandler extends BasePortletDataHandler {
 	private void _exportChangesetCollection(
 			PortletDataContext portletDataContext,
 			ChangesetCollection changesetCollection)
-		throws PortalException {
+		throws Exception {
 
 		ActionableDynamicQuery actionableDynamicQuery =
 			_changesetEntryLocalService.getActionableDynamicQuery();

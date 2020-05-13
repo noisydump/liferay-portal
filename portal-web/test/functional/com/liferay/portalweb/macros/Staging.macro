@@ -109,9 +109,9 @@ definition {
 
 			AssertConfirm(value1 = "Are you sure you want to activate local staging for ${siteName}?");
 
-			Pause(locator1 = "5000");
-
-			Refresh();
+			while (IsElementNotPresent(locator1 = "Staging#PROCESS_SUCCESSFUL")) {
+				Pause(locator1 = "3000");
+			}
 
 			AssertTextEquals(
 				locator1 = "Staging#PROCESS_RESULT",
@@ -149,7 +149,12 @@ definition {
 	macro addEventRepeatDaily {
 		Click(locator1 = "Staging#STAGING_PUBLISH_TO_LIVE_BUTTON");
 
-		SelectFrame(locator1 = "IFrame#DIALOG");
+		LiferayEvent.waitForLiferayEvent(
+			attributeName = "src",
+			attributeValue = "dialog-iframe-popup",
+			eventName = "modalIframeLoaded");
+
+		SelectFrame(locator1 = "IFrame#MODAL_BODY");
 
 		Click(locator1 = "StagingPublishToLive#SWITCH_TO_ADVANCED_PUBLICATION");
 
@@ -200,6 +205,11 @@ definition {
 
 		Click(locator1 = "Staging#STAGING_MENU_MANAGE_PAGE_VARIATION");
 
+		LiferayEvent.waitForLiferayEvent(
+			attributeName = "src",
+			attributeValue = "dialog-iframe-popup",
+			eventName = "modalIframeLoaded");
+
 		SelectFrame(locator1 = "IFrame#PAGE_VARIATION_IFRAME");
 
 		AssertClick(
@@ -239,6 +249,11 @@ definition {
 		Click(locator1 = "Staging#MANAGE_VARIATIONS");
 
 		var key_sitePagesVariationName = "${sitePagesVariationName}";
+
+		LiferayEvent.waitForLiferayEvent(
+			attributeName = "src",
+			attributeValue = "dialog-iframe-popup",
+			eventName = "modalIframeLoaded");
 
 		SelectFrame(locator1 = "IFrame#SITE_VARIATION_IFRAME");
 
@@ -310,7 +325,12 @@ definition {
 
 		Click(locator1 = "Staging#HISTORY_BUTTON");
 
-		SelectFrame(locator1 = "IFrame#DIALOG");
+		LiferayEvent.waitForLiferayEvent(
+			attributeName = "src",
+			attributeValue = "dialog-iframe-popup",
+			eventName = "modalIframeLoaded");
+
+		SelectFrame(locator1 = "IFrame#MODAL_BODY");
 
 		Select(
 			key_pageVariationName = "${pageVariationNameMenulistName}",
@@ -427,7 +447,12 @@ definition {
 			portletName = "${portletName}",
 			portletOption = "${portletOption}");
 
-		SelectFrame(locator1 = "IFrame#DIALOG");
+		LiferayEvent.waitForLiferayEvent(
+			attributeName = "src",
+			attributeValue = "dialog-iframe-popup",
+			eventName = "modalIframeLoaded");
+
+		SelectFrame(locator1 = "IFrame#MODAL_BODY");
 
 		ClickNoError(locator1 = "Staging#COPY_FROM_LIVE");
 
@@ -484,6 +509,11 @@ definition {
 		Click(locator1 = "Icon#STAGING_BAR_VERTICAL_ELLIPSIS");
 
 		Click(locator1 = "Staging#STAGING_MENU_MANAGE_PAGE_VARIATION");
+
+		LiferayEvent.waitForLiferayEvent(
+			attributeName = "src",
+			attributeValue = "dialog-iframe-popup",
+			eventName = "modalIframeLoaded");
 
 		SelectFrame(locator1 = "IFrame#PAGE_VARIATION_IFRAME");
 
@@ -603,9 +633,16 @@ definition {
 	}
 
 	macro gotoHistory {
-		Click(locator1 = "Icon#STAGING_BAR_VERTICAL_ELLIPSIS");
+		while (IsElementNotPresent(locator1 = "Staging#HISTORY_BUTTON")) {
+			Click(locator1 = "Icon#STAGING_BAR_VERTICAL_ELLIPSIS");
+		}
 
 		Click(locator1 = "Staging#HISTORY_BUTTON");
+
+		LiferayEvent.waitForLiferayEvent(
+			attributeName = "src",
+			attributeValue = "dialog-iframe-popup",
+			eventName = "modalIframeLoaded");
 
 		SelectFrame(locator1 = "IFrame#METADATA_SETS_IFRAME");
 	}
@@ -623,7 +660,12 @@ definition {
 
 		Click(locator1 = "Staging#STAGING_PUBLISH_TO_LIVE_BUTTON");
 
-		SelectFrame(locator1 = "IFrame#DIALOG");
+		LiferayEvent.waitForLiferayEvent(
+			attributeName = "src",
+			attributeValue = "dialog-iframe-popup",
+			eventName = "modalIframeLoaded");
+
+		SelectFrame(locator1 = "IFrame#MODAL_BODY");
 	}
 
 	macro markAsReadyForPublication {
@@ -695,6 +737,11 @@ definition {
 
 		Click(locator1 = "Staging#MANAGE_VARIATIONS");
 
+		LiferayEvent.waitForLiferayEvent(
+			attributeName = "src",
+			attributeValue = "dialog-iframe-popup",
+			eventName = "modalIframeLoaded");
+
 		SelectFrame(locator1 = "IFrame#SITE_VARIATION_IFRAME");
 	}
 
@@ -763,7 +810,7 @@ definition {
 
 		SelectFrameTop();
 
-		if (IsElementPresent(locator1 = "IFrame#DIALOG")) {
+		if (IsElementPresent(locator1 = "IFrame#MODAL_BODY")) {
 			IFrame.closeFrame();
 		}
 	}
@@ -772,6 +819,11 @@ definition {
 		LexiconEntry.gotoHeaderMenuItem(menuItem = "Staging");
 
 		Pause(locator1 = "3000");
+
+		LiferayEvent.waitForLiferayEvent(
+			attributeName = "src",
+			attributeValue = "dialog-iframe-popup",
+			eventName = "modalIframeLoaded");
 
 		SelectFrame(locator1 = "IFrame#CONFIGURATION_DIALOG");
 
@@ -835,7 +887,7 @@ definition {
 			locator1 = "Staging#STAGING_PUBLISH_TO_LIVE_BUTTON",
 			value1 = "Publish to Live");
 
-		Pause(locator1 = "8000");
+		Pause(locator1 = "10000");
 
 		if (IsElementPresent(locator1 = "Staging#PROCESS_SUCCESSFUL")) {
 			AssertTextEquals(
@@ -997,7 +1049,12 @@ definition {
 
 		Click(locator1 = "Staging#STAGING_PUBLISH_TO_LIVE_BUTTON");
 
-		SelectFrame(locator1 = "IFrame#DIALOG");
+		LiferayEvent.waitForLiferayEvent(
+			attributeName = "src",
+			attributeValue = "dialog-iframe-popup",
+			eventName = "modalIframeLoaded");
+
+		SelectFrame(locator1 = "IFrame#MODAL_BODY");
 
 		Click(locator1 = "StagingPublishToLive#SWITCH_TO_ADVANCED_PUBLICATION");
 
@@ -1103,7 +1160,12 @@ definition {
 
 		Click(locator1 = "Staging#STAGING_PUBLISH_TO_LIVE_BUTTON");
 
-		SelectFrame(locator1 = "IFrame#DIALOG");
+		LiferayEvent.waitForLiferayEvent(
+			attributeName = "src",
+			attributeValue = "dialog-iframe-popup",
+			eventName = "modalIframeLoaded");
+
+		SelectFrame(locator1 = "IFrame#MODAL_BODY");
 
 		AssertClick.assertPartialTextClickAt(
 			locator1 = "StagingPublishToLive#SWITCH_TO_ADVANCED_PUBLICATION",
@@ -1226,6 +1288,11 @@ definition {
 	macro viewNoPublishContentCountViaPortletStagingCP {
 		LexiconEntry.gotoHeaderMenuItem(menuItem = "Staging");
 
+		LiferayEvent.waitForLiferayEvent(
+			attributeName = "src",
+			attributeValue = "dialog-iframe-popup",
+			eventName = "modalIframeLoaded");
+
 		SelectFrame(locator1 = "IFrame#CONFIGURATION_DIALOG");
 
 		AssertElementNotPresent(locator1 = "Staging#STAGING_CONTENT_COUNT");
@@ -1254,7 +1321,12 @@ definition {
 			menuItem = "Summary",
 			rowEntry = "${publicationTitle}");
 
-		SelectFrame(locator1 = "IFrame#DIALOG");
+		LiferayEvent.waitForLiferayEvent(
+			attributeName = "src",
+			attributeValue = "dialog-iframe-popup",
+			eventName = "modalIframeLoaded");
+
+		SelectFrame(locator1 = "IFrame#MODAL_BODY");
 
 		AssertElementPresent(locator1 = "Staging#PROCESS_SUMMARY_PAGES_TITLE");
 
@@ -1325,6 +1397,11 @@ definition {
 
 	macro viewPublishContentCountViaPortletStagingCP {
 		LexiconEntry.gotoHeaderMenuItem(menuItem = "Staging");
+
+		LiferayEvent.waitForLiferayEvent(
+			attributeName = "src",
+			attributeValue = "dialog-iframe-popup",
+			eventName = "modalIframeLoaded");
 
 		SelectFrame(locator1 = "IFrame#CONFIGURATION_DIALOG");
 
@@ -1399,6 +1476,16 @@ definition {
 		}
 	}
 
+	macro viewUncheckContentNameList {
+		LexiconEntry.gotoHeaderMenuItem(menuItem = "Staging Configuration");
+
+		for (var contentName : list "${uncheckContentNameList}") {
+			AssertNotChecked(
+				key_contentName = "${contentName}",
+				locator1 = "PagesConfiguration#CONTENT_CHOOSE_CONTENT_CHECKBOX_LABEL");
+		}
+	}
+
 	macro viewValidationError {
 		Click(locator1 = "Message#SEE_MORE_DETAILS_LINK");
 
@@ -1411,6 +1498,11 @@ definition {
 
 	macro viewVariationSuccessMessage {
 		SelectFrameTop(value1 = "relative=top");
+
+		LiferayEvent.waitForLiferayEvent(
+			attributeName = "src",
+			attributeValue = "dialog-iframe-popup",
+			eventName = "modalIframeLoaded");
 
 		SelectFrame(locator1 = "IFrame#SITE_VARIATION_IFRAME");
 

@@ -55,7 +55,9 @@ PortletURL portletURL = userItemSelectorViewDisplayContext.getPortletURL();
 	</liferay-frontend:management-bar-filters>
 </liferay-frontend:management-bar>
 
-<div class="container-fluid-1280" id="<portlet:namespace />userSelectorWrapper">
+<clay:container
+	id='<%= renderResponse.getNamespace() + "userSelectorWrapper" %>'
+>
 	<liferay-ui:search-container
 		id="users"
 		searchContainer="<%= userItemSelectorViewDisplayContext.getSearchContainer() %>"
@@ -98,16 +100,16 @@ PortletURL portletURL = userItemSelectorViewDisplayContext.getPortletURL();
 			searchContainer="<%= userItemSelectorViewDisplayContext.getSearchContainer() %>"
 		/>
 	</liferay-ui:search-container>
-</div>
+</clay:container>
 
 <aui:script use="liferay-search-container">
 	var searchContainer = Liferay.SearchContainer.get('<portlet:namespace />users');
 
-	searchContainer.on('rowToggled', function(event) {
+	searchContainer.on('rowToggled', function (event) {
 		var allSelectedElements = event.elements.allSelectedElements;
 		var arr = [];
 
-		allSelectedElements.each(function() {
+		allSelectedElements.each(function () {
 			var row = this.ancestor('tr');
 
 			var data = row.getDOM().dataset;

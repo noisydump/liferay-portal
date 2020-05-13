@@ -253,11 +253,13 @@ public class JournalArticleItemSelectorViewDisplayContext {
 
 			articleSearchContainer.setTotal(total);
 
-			List results = JournalArticleServiceUtil.getArticlesByStructureId(
-				_themeDisplay.getScopeGroupId(), getDDMStructureKey(),
-				WorkflowConstants.STATUS_APPROVED,
-				articleSearchContainer.getStart(),
-				articleSearchContainer.getEnd(), structuresOrderByComparator);
+			List<JournalArticle> results =
+				JournalArticleServiceUtil.getArticlesByStructureId(
+					_themeDisplay.getScopeGroupId(), getDDMStructureKey(),
+					WorkflowConstants.STATUS_APPROVED,
+					articleSearchContainer.getStart(),
+					articleSearchContainer.getEnd(),
+					structuresOrderByComparator);
 
 			articleSearchContainer.setResults(results);
 		}
@@ -309,7 +311,7 @@ public class JournalArticleItemSelectorViewDisplayContext {
 
 			articleSearchContainer.setTotal(total);
 
-			List results = new ArrayList<>();
+			List<Object> results = new ArrayList<>();
 
 			Document[] documents = hits.getDocs();
 
@@ -361,11 +363,13 @@ public class JournalArticleItemSelectorViewDisplayContext {
 					orderByAsc);
 			}
 
-			List results = JournalFolderServiceUtil.getFoldersAndArticles(
-				_themeDisplay.getScopeGroupId(), 0, _getFolderId(),
-				_infoItemItemSelectorCriterion.getStatus(),
-				_themeDisplay.getLocale(), articleSearchContainer.getStart(),
-				articleSearchContainer.getEnd(), folderOrderByComparator);
+			List<Object> results =
+				JournalFolderServiceUtil.getFoldersAndArticles(
+					_themeDisplay.getScopeGroupId(), 0, _getFolderId(),
+					_infoItemItemSelectorCriterion.getStatus(),
+					_themeDisplay.getLocale(),
+					articleSearchContainer.getStart(),
+					articleSearchContainer.getEnd(), folderOrderByComparator);
 
 			articleSearchContainer.setResults(results);
 		}
@@ -413,7 +417,7 @@ public class JournalArticleItemSelectorViewDisplayContext {
 				Field.ARTICLE_ID, getKeywords()
 			).put(
 				Field.CLASS_NAME_ID,
-				JournalArticleConstants.CLASSNAME_ID_DEFAULT
+				JournalArticleConstants.CLASS_NAME_ID_DEFAULT
 			).put(
 				Field.CONTENT, getKeywords()
 			).put(
@@ -520,7 +524,7 @@ public class JournalArticleItemSelectorViewDisplayContext {
 		return _orderByType;
 	}
 
-	private BreadcrumbEntry _getSiteBreadcrumb() throws PortletException {
+	private BreadcrumbEntry _getSiteBreadcrumb() throws Exception {
 		BreadcrumbEntry breadcrumbEntry = new BreadcrumbEntry();
 
 		breadcrumbEntry.setTitle(

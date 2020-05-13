@@ -102,6 +102,12 @@ definition {
 		AssertElementPresent(locator1 = "Portlet#LOADED");
 	}
 
+	macro assertPortletHeader {
+		var key_portletTitleName = "${portletName}";
+
+		AssertVisible(locator1 = "Home#PORTLET_HEADER");
+	}
+
 	macro assertServerShutdown {
 		var shutdownPauseCount = "0";
 
@@ -195,7 +201,7 @@ definition {
 
 		Click(locator1 = "Portlet#SPECIFIC_TITLE");
 
-		Type(
+		Type.typePause(
 			locator1 = "TextInput#PORTLET_TITLE",
 			value1 = "${portletTitleName} Custom");
 
@@ -299,7 +305,7 @@ definition {
 
 		Click(locator1 = "Icon#CLOSE");
 
-		WaitForElementNotPresent(locator1 = "IFrame#DIALOG");
+		WaitForElementNotPresent(locator1 = "IFrame#MODAL_BODY");
 	}
 
 	macro selectApplicationDecorator {

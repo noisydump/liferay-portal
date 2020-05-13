@@ -100,10 +100,10 @@ public class RedirectNotFoundEntryModelImpl
 		"drop table RedirectNotFoundEntry";
 
 	public static final String ORDER_BY_JPQL =
-		" ORDER BY redirectNotFoundEntry.hits DESC";
+		" ORDER BY redirectNotFoundEntry.redirectNotFoundEntryId ASC";
 
 	public static final String ORDER_BY_SQL =
-		" ORDER BY RedirectNotFoundEntry.hits DESC";
+		" ORDER BY RedirectNotFoundEntry.redirectNotFoundEntryId ASC";
 
 	public static final String DATA_SOURCE = "liferayDataSource";
 
@@ -115,7 +115,7 @@ public class RedirectNotFoundEntryModelImpl
 
 	public static final long URL_COLUMN_BITMASK = 2L;
 
-	public static final long HITS_COLUMN_BITMASK = 4L;
+	public static final long REDIRECTNOTFOUNDENTRYID_COLUMN_BITMASK = 4L;
 
 	public static void setEntityCacheEnabled(boolean entityCacheEnabled) {
 		_entityCacheEnabled = entityCacheEnabled;
@@ -455,8 +455,6 @@ public class RedirectNotFoundEntryModelImpl
 
 	@Override
 	public void setHits(long hits) {
-		_columnBitmask = -1L;
-
 		_hits = hits;
 	}
 
@@ -558,25 +556,17 @@ public class RedirectNotFoundEntryModelImpl
 
 	@Override
 	public int compareTo(RedirectNotFoundEntry redirectNotFoundEntry) {
-		int value = 0;
+		long primaryKey = redirectNotFoundEntry.getPrimaryKey();
 
-		if (getHits() < redirectNotFoundEntry.getHits()) {
-			value = -1;
+		if (getPrimaryKey() < primaryKey) {
+			return -1;
 		}
-		else if (getHits() > redirectNotFoundEntry.getHits()) {
-			value = 1;
+		else if (getPrimaryKey() > primaryKey) {
+			return 1;
 		}
 		else {
-			value = 0;
+			return 0;
 		}
-
-		value = value * -1;
-
-		if (value != 0) {
-			return value;
-		}
-
-		return 0;
 	}
 
 	@Override

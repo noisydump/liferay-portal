@@ -12,6 +12,11 @@ definition {
 
 			SelectFrameTop();
 
+			LiferayEvent.waitForLiferayEvent(
+				attributeName = "src",
+				attributeValue = "dialog-iframe-popup",
+				eventName = "modalIframeLoaded");
+
 			SelectFrame(locator1 = "IFrame#SELECT_FOLDER");
 
 			var key_folderName = "${bookmarkFolderName}";
@@ -183,6 +188,11 @@ definition {
 	}
 
 	macro addRelatedAssetBookmarksEntryPG {
+		LiferayEvent.waitForLiferayEvent(
+			attributeName = "src",
+			attributeValue = "dialog-iframe-popup",
+			eventName = "modalIframeLoaded");
+
 		SelectFrame(locator1 = "AssetRelatedAssets#SELECT_ASSET_IFRAME");
 
 		LexiconEntry.gotoAdd();
@@ -369,7 +379,12 @@ definition {
 			locator1 = "Button#SELECT",
 			value1 = "Select");
 
-		SelectFrame(locator1 = "IFrame#DIALOG");
+		LiferayEvent.waitForLiferayEvent(
+			attributeName = "src",
+			attributeValue = "dialog-iframe-popup",
+			eventName = "modalIframeLoaded");
+
+		SelectFrame(locator1 = "IFrame#MODAL_BODY");
 
 		var key_folderName = "${folderName2}";
 
@@ -421,7 +436,12 @@ definition {
 			locator1 = "Button#SELECT",
 			value1 = "Select");
 
-		SelectFrame(locator1 = "IFrame#DIALOG");
+		LiferayEvent.waitForLiferayEvent(
+			attributeName = "src",
+			attributeValue = "dialog-iframe-popup",
+			eventName = "modalIframeLoaded");
+
+		SelectFrame(locator1 = "IFrame#MODAL_BODY");
 
 		AssertClick(
 			locator1 = "Button#CHOOSE_THIS_FOLDER",

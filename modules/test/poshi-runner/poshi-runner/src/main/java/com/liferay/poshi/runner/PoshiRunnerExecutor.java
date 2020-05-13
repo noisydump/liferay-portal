@@ -974,6 +974,14 @@ public class PoshiRunnerExecutor {
 							PoshiRunnerVariablesUtil.getStringFromCommandMap(
 								"value1");
 					}
+					else if (selenium.equals("executeJavaScript") ||
+							 selenium.equals("getJavaScriptResult") ||
+							 selenium.equals("waitForJavaScript")) {
+
+						argument =
+							PoshiRunnerVariablesUtil.getStringFromCommandMap(
+								"javaScript");
+					}
 					else {
 						argument =
 							PoshiRunnerVariablesUtil.getStringFromCommandMap(
@@ -987,12 +995,28 @@ public class PoshiRunnerExecutor {
 					if (selenium.equals("clickAt")) {
 						argument = "";
 					}
+					else if (selenium.equals("executeJavaScript") ||
+							 selenium.equals("getJavaScriptResult")) {
+
+						argument = null;
+					}
+					else if (selenium.equals("waitForJavaScript")) {
+						argument =
+							PoshiRunnerVariablesUtil.getStringFromCommandMap(
+								"message");
+					}
 				}
 				else if (i == 2) {
 					if (selenium.equals("assertCssValue")) {
 						argument =
 							PoshiRunnerVariablesUtil.getStringFromCommandMap(
 								"value1");
+					}
+					else if (selenium.equals("executeJavaScript") ||
+							 selenium.equals("getJavaScriptResult") ||
+							 selenium.equals("waitForJavaScript")) {
+
+						argument = null;
 					}
 					else {
 						argument =

@@ -1,6 +1,11 @@
 definition {
 
 	macro configureViewCurrentLanguages {
+		LiferayEvent.waitForLiferayEvent(
+			attributeName = "src",
+			attributeValue = "dialog-iframe-popup",
+			eventName = "modalIframeLoaded");
+
 		SelectFrame(locator1 = "IFrame#CONFIGURATION");
 
 		Panel.expandPanel(panel = "Languages");
@@ -23,6 +28,11 @@ definition {
 	}
 
 	macro moveLanguagesToAvailable {
+		LiferayEvent.waitForLiferayEvent(
+			attributeName = "src",
+			attributeValue = "dialog-iframe-popup",
+			eventName = "modalIframeLoaded");
+
 		SelectFrame(locator1 = "IFrame#CONFIGURATION");
 
 		Panel.expandPanel(panel = "Languages");
@@ -77,6 +87,11 @@ definition {
 	}
 
 	macro toggleDisplayTemplate {
+		LiferayEvent.waitForLiferayEvent(
+			attributeName = "src",
+			attributeValue = "dialog-iframe-popup",
+			eventName = "modalIframeLoaded");
+
 		SelectFrame(locator1 = "IFrame#CONFIGURATION");
 
 		Panel.expandPanel(panel = "Languages");
@@ -85,7 +100,14 @@ definition {
 			locator1 = "Select#DISPLAY_TEMPLATE",
 			value1 = "${displayStyle}");
 
-		Button.clickSave();
+		Pause(locator1 = "1000");
+
+		AssertSelectedLabel(
+			key_fieldLabel = "Display Template",
+			locator1 = "Select#GENERIC_SELECT_FIELD",
+			value1 = "${displayStyle}");
+
+		PortletEntry.save();
 
 		SelectFrame(value1 = "relative=top");
 	}

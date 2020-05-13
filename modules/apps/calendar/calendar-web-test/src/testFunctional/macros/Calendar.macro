@@ -87,7 +87,12 @@ definition {
 	}
 
 	macro _viewEmailHeader {
-		SelectFrame(locator1 = "IFrame#DIALOG");
+		LiferayEvent.waitForLiferayEvent(
+			attributeName = "src",
+			attributeValue = "dialog-iframe-popup",
+			eventName = "modalIframeLoaded");
+
+		SelectFrame(locator1 = "IFrame#MODAL_BODY");
 
 		AssertTextEquals(
 			locator1 = "Portlet#H3_HEADER",
@@ -221,7 +226,12 @@ definition {
 
 			Calendar._gotoMenulistOption(menuListOption = "Calendar Settings");
 
-			SelectFrame(locator1 = "IFrame#DIALOG");
+			LiferayEvent.waitForLiferayEvent(
+				attributeName = "src",
+				attributeValue = "dialog-iframe-popup",
+				eventName = "modalIframeLoaded");
+
+			SelectFrame(locator1 = "IFrame#MODAL_BODY");
 
 			PortletEntry.inputName(name = "${calendarNameEdit}");
 
@@ -240,7 +250,12 @@ definition {
 
 			Calendar._gotoMenulistOption(menuListOption = "Calendar Settings");
 
-			SelectFrame(locator1 = "IFrame#DIALOG");
+			LiferayEvent.waitForLiferayEvent(
+				attributeName = "src",
+				attributeValue = "dialog-iframe-popup",
+				eventName = "modalIframeLoaded");
+
+			SelectFrame(locator1 = "IFrame#MODAL_BODY");
 
 			PortletEntry.inputName(name = "${calendarNameEdit}");
 
@@ -253,7 +268,12 @@ definition {
 				calendarName = "${calendarName}",
 				menuListOption = "Calendar Settings");
 
-			SelectFrame(locator1 = "IFrame#DIALOG");
+			LiferayEvent.waitForLiferayEvent(
+				attributeName = "src",
+				attributeValue = "dialog-iframe-popup",
+				eventName = "modalIframeLoaded");
+
+			SelectFrame(locator1 = "IFrame#MODAL_BODY");
 
 			PortletEntry.inputName(name = "${calendarNameEdit}");
 
@@ -385,7 +405,12 @@ definition {
 				menuListOption = "Calendar Settings");
 		}
 
-		SelectFrame(locator1 = "IFrame#DIALOG");
+		LiferayEvent.waitForLiferayEvent(
+			attributeName = "src",
+			attributeValue = "dialog-iframe-popup",
+			eventName = "modalIframeLoaded");
+
+		SelectFrame(locator1 = "IFrame#MODAL_BODY");
 
 		var key_calendarName = "${calendarName}";
 

@@ -228,6 +228,8 @@ definition {
 
 	@priority = "4"
 	test DeactivateAndDeleteWorkflowDefinition {
+		property test.name.skip.portal.instance = "CPKaleoformsadmin#DeactivateAndDeleteWorkflowDefinition";
+
 		Navigator.openURL();
 
 		ProductMenu.gotoPortlet(
@@ -1082,7 +1084,7 @@ definition {
 	@description = "This is a use case for LPS-49037."
 	@priority = "2"
 	test EditProcessFieldSetPaginationAndViewSelectedForm {
-		property portal.upstream = "quarantine";
+		property portal.upstream = "true";
 
 		for (var kfFieldSetName : list "Field1,Field2,Field3,Field4,Field5,Field6") {
 			ProductMenu.gotoPortlet(
@@ -1152,7 +1154,7 @@ definition {
 
 		KaleoFormsAdmin.next();
 
-		KaleoFormsAdmin.editFieldSetPagination(paginationNumber = "5");
+		KaleoFormsAdmin.editFieldSetPagination(paginationNumber = "8");
 
 		KaleoFormsAdmin.viewNextFieldSetPage();
 
@@ -2967,7 +2969,12 @@ definition {
 
 		KaleoFormsAdmin.editWorkflowDraft(workflowDefinitionTitle = "Workflow Definition Title");
 
-		SelectFrame(locator1 = "IFrame#DIALOG");
+		LiferayEvent.waitForLiferayEvent(
+			attributeName = "src",
+			attributeValue = "dialog-iframe-popup",
+			eventName = "modalIframeLoaded");
+
+		SelectFrame(locator1 = "IFrame#MODAL_BODY");
 
 		Workflow.saveDefinition();
 

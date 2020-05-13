@@ -12,21 +12,23 @@
  * details.
  */
 
-import updateLayoutData from '../actions/updateLayoutData';
+import updateItemConfig from '../actions/updateItemConfig';
 import LayoutService from '../services/LayoutService';
 
 export default function updateRowColumns({
 	itemId,
 	numberOfColumns,
 	segmentsExperienceId,
+	viewportSizeId,
 }) {
-	return dispatch =>
+	return (dispatch) =>
 		LayoutService.updateRowColumns({
 			itemId,
 			numberOfColumns,
 			onNetworkStatus: dispatch,
 			segmentsExperienceId,
+			viewportSizeId,
 		}).then(({layoutData}) => {
-			dispatch(updateLayoutData({layoutData}));
+			dispatch(updateItemConfig({layoutData}));
 		});
 }

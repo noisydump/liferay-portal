@@ -406,6 +406,13 @@ public abstract class BaseCheck extends AbstractCheck {
 		DetailAST typeArgumentsDetailAST = typeDetailAST.findFirstToken(
 			TokenTypes.TYPE_ARGUMENTS);
 
+		if ((typeArgumentsDetailAST == null) &&
+			(childDetailAST.getType() == TokenTypes.DOT)) {
+
+			typeArgumentsDetailAST = childDetailAST.findFirstToken(
+				TokenTypes.TYPE_ARGUMENTS);
+		}
+
 		if (typeArgumentsDetailAST == null) {
 			return sb.toString();
 		}
@@ -743,6 +750,18 @@ public abstract class BaseCheck extends AbstractCheck {
 		return SourceFormatterCheckUtil.isExcludedPath(
 			_excludesJSONObject, _excludesValuesMap, key, getAbsolutePath(), -1,
 			null, getBaseDirName());
+	}
+
+	protected boolean isJSPFile() {
+		FileContents fileContents = getFileContents();
+
+		if (StringUtil.endsWith(fileContents.getFileName(), ".jsp") ||
+			StringUtil.endsWith(fileContents.getFileName(), ".jspf")) {
+
+			return true;
+		}
+
+		return false;
 	}
 
 	protected static final int ALL_TYPES = DetailASTUtil.ALL_TYPES;

@@ -34,8 +34,18 @@
 	<td></td>
 </tr>
 <tr>
+	<td>DANGER_INFO</td>
+	<td>//*[contains(@class,'danger-info')][contains(.,'${key_dangerInfo}')]</td>
+	<td></td>
+</tr>
+<tr>
 	<td>DRAFT_AUTO_SAVE</td>
 	<td>//div/small[contains(@id,'saveStatus') and contains(.,'Draft Saved at')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>EMPTY_DEPOT_ROLE</td>
+	<td>//div[contains(@id,'depotRoles')]/p[contains(@class,'text-muted')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -259,6 +269,11 @@
 	<td></td>
 </tr>
 <tr>
+	<td>INFO_MAIN_CONTENT</td>
+	<td>//*[@id="main-content"]//div[contains(@class,'alert alert-info') and not(contains(@class,'hide'))]</td>
+	<td></td>
+</tr>
+<tr>
 	<td>LOGIN_URL_SUCCESS</td>
 	<td>//tr[contains(.,'Login URL')]/td//span[contains(@class,'lfr-status-success')]</td>
 	<td></td>
@@ -356,6 +371,11 @@
 <tr>
 	<td>USER_BLOCKED</td>
 	<td>//div[contains(@class,'alert-block')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>WARNING_INFO</td>
+	<td>//*[contains(@class,'warning-info')][contains(.,'${key_warningInfo}')]</td>
 	<td></td>
 </tr>
 <tr>

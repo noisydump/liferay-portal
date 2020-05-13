@@ -24,6 +24,7 @@ import com.liferay.petra.function.UnsafeSupplier;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
+import com.liferay.portal.vulcan.util.ObjectMapperUtil;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
@@ -52,72 +53,8 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlRootElement(name = "Instance")
 public class Instance {
 
-	@GraphQLName("SLAStatus")
-	public static enum SLAStatus {
-
-		ON_TIME("OnTime"), OVERDUE("Overdue"), UNTRACKED("Untracked");
-
-		@JsonCreator
-		public static SLAStatus create(String value) {
-			for (SLAStatus slaStatus : values()) {
-				if (Objects.equals(slaStatus.getValue(), value)) {
-					return slaStatus;
-				}
-			}
-
-			return null;
-		}
-
-		@JsonValue
-		public String getValue() {
-			return _value;
-		}
-
-		@Override
-		public String toString() {
-			return _value;
-		}
-
-		private SLAStatus(String value) {
-			_value = value;
-		}
-
-		private final String _value;
-
-	}
-
-	@GraphQLName("Status")
-	public static enum Status {
-
-		COMPLETED("Completed"), PENDING("Pending");
-
-		@JsonCreator
-		public static Status create(String value) {
-			for (Status status : values()) {
-				if (Objects.equals(status.getValue(), value)) {
-					return status;
-				}
-			}
-
-			return null;
-		}
-
-		@JsonValue
-		public String getValue() {
-			return _value;
-		}
-
-		@Override
-		public String toString() {
-			return _value;
-		}
-
-		private Status(String value) {
-			_value = value;
-		}
-
-		private final String _value;
-
+	public static Instance toDTO(String json) {
+		return ObjectMapperUtil.readValue(Instance.class, json);
 	}
 
 	@Schema
@@ -640,44 +577,6 @@ public class Instance {
 	protected SLAStatus slaStatus;
 
 	@Schema
-	@Valid
-	public Status getStatus() {
-		return status;
-	}
-
-	@JsonIgnore
-	public String getStatusAsString() {
-		if (status == null) {
-			return null;
-		}
-
-		return status.toString();
-	}
-
-	public void setStatus(Status status) {
-		this.status = status;
-	}
-
-	@JsonIgnore
-	public void setStatus(
-		UnsafeSupplier<Status, Exception> statusUnsafeSupplier) {
-
-		try {
-			status = statusUnsafeSupplier.get();
-		}
-		catch (RuntimeException re) {
-			throw re;
-		}
-		catch (Exception e) {
-			throw new RuntimeException(e);
-		}
-	}
-
-	@GraphQLField
-	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
-	protected Status status;
-
-	@Schema
 	public String[] getTaskNames() {
 		return taskNames;
 	}
@@ -996,20 +895,6 @@ public class Instance {
 			sb.append("\"");
 		}
 
-		if (status != null) {
-			if (sb.length() > 1) {
-				sb.append(", ");
-			}
-
-			sb.append("\"status\": ");
-
-			sb.append("\"");
-
-			sb.append(status);
-
-			sb.append("\"");
-		}
-
 		if (taskNames != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -1065,6 +950,40 @@ public class Instance {
 	)
 	public String xClassName;
 
+	@GraphQLName("SLAStatus")
+	public static enum SLAStatus {
+
+		ON_TIME("OnTime"), OVERDUE("Overdue"), UNTRACKED("Untracked");
+
+		@JsonCreator
+		public static SLAStatus create(String value) {
+			for (SLAStatus slaStatus : values()) {
+				if (Objects.equals(slaStatus.getValue(), value)) {
+					return slaStatus;
+				}
+			}
+
+			return null;
+		}
+
+		@JsonValue
+		public String getValue() {
+			return _value;
+		}
+
+		@Override
+		public String toString() {
+			return _value;
+		}
+
+		private SLAStatus(String value) {
+			_value = value;
+		}
+
+		private final String _value;
+
+	}
+
 	private static String _escape(Object object) {
 		String string = String.valueOf(object);
 
@@ -1086,9 +1005,44 @@ public class Instance {
 			sb.append("\"");
 			sb.append(entry.getKey());
 			sb.append("\":");
-			sb.append("\"");
-			sb.append(entry.getValue());
-			sb.append("\"");
+
+			Object value = entry.getValue();
+
+			Class<?> clazz = value.getClass();
+
+			if (clazz.isArray()) {
+				sb.append("[");
+
+				Object[] valueArray = (Object[])value;
+
+				for (int i = 0; i < valueArray.length; i++) {
+					if (valueArray[i] instanceof String) {
+						sb.append("\"");
+						sb.append(valueArray[i]);
+						sb.append("\"");
+					}
+					else {
+						sb.append(valueArray[i]);
+					}
+
+					if ((i + 1) < valueArray.length) {
+						sb.append(", ");
+					}
+				}
+
+				sb.append("]");
+			}
+			else if (value instanceof Map) {
+				sb.append(_toJSON((Map<String, ?>)value));
+			}
+			else if (value instanceof String) {
+				sb.append("\"");
+				sb.append(value);
+				sb.append("\"");
+			}
+			else {
+				sb.append(value);
+			}
 
 			if (iterator.hasNext()) {
 				sb.append(",");

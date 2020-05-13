@@ -5,7 +5,12 @@ definition {
 			portletName = "Web Content Display",
 			portletOption = "Configuration");
 
-		SelectFrame(locator1 = "IFrame#DIALOG");
+		LiferayEvent.waitForLiferayEvent(
+			attributeName = "src",
+			attributeValue = "dialog-iframe-popup",
+			eventName = "modalIframeLoaded");
+
+		SelectFrame(locator1 = "IFrame#MODAL_BODY");
 
 		Pause(locator1 = "3000");
 
@@ -13,7 +18,7 @@ definition {
 
 		SelectFrame(value1 = "relative=top");
 
-		SelectFrame.selectSecondFrame(locator1 = "IFrame#DIALOG");
+		SelectFrame.selectSecondFrame(locator1 = "IFrame#MODAL_BODY");
 
 		if (isSet(depotName)) {
 			var key_rowEntry = "${webContentTitle}";
@@ -32,7 +37,12 @@ definition {
 
 			Click(locator1 = "ContentRow#ENTRY_CONTENT_ENTRY_NAME");
 
-			SelectFrame(locator1 = "IFrame#DIALOG");
+			LiferayEvent.waitForLiferayEvent(
+				attributeName = "src",
+				attributeValue = "dialog-iframe-popup",
+				eventName = "modalIframeLoaded");
+
+			SelectFrame(locator1 = "IFrame#MODAL_BODY");
 
 			AssertTextEquals.assertPartialText(
 				key_card = "${webContentTitle}",
@@ -48,7 +58,12 @@ definition {
 			portletName = "${portletName}",
 			portletOption = "Configuration");
 
-		SelectFrame(locator1 = "IFrame#DIALOG");
+		LiferayEvent.waitForLiferayEvent(
+			attributeName = "src",
+			attributeValue = "dialog-iframe-popup",
+			eventName = "modalIframeLoaded");
+
+		SelectFrame(locator1 = "IFrame#MODAL_BODY");
 
 		Navigator.gotoNavItem(navItem = "Scope");
 
@@ -63,7 +78,12 @@ definition {
 		Pause(locator1 = "3000");
 
 		if (isSet(userToolNameList)) {
-			SelectFrame(locator1 = "IFrame#DIALOG");
+			LiferayEvent.waitForLiferayEvent(
+				attributeName = "src",
+				attributeValue = "dialog-iframe-popup",
+				eventName = "modalIframeLoaded");
+
+			SelectFrame(locator1 = "IFrame#MODAL_BODY");
 
 			Click(locator1 = "WCDConfiguration#USER_TOOLS_SELECT_BUTTON");
 
@@ -79,7 +99,12 @@ definition {
 		}
 
 		if (isSet(metadataNameList)) {
-			SelectFrame(locator1 = "IFrame#DIALOG");
+			LiferayEvent.waitForLiferayEvent(
+				attributeName = "src",
+				attributeValue = "dialog-iframe-popup",
+				eventName = "modalIframeLoaded");
+
+			SelectFrame(locator1 = "IFrame#MODAL_BODY");
 
 			Click(locator1 = "WCDConfiguration#CONTENT_METADATA_SELECT");
 
@@ -97,7 +122,12 @@ definition {
 		}
 
 		if ("${enableViewCountIncrement}" == "true") {
-			SelectFrame(locator1 = "IFrame#DIALOG");
+			LiferayEvent.waitForLiferayEvent(
+				attributeName = "src",
+				attributeValue = "dialog-iframe-popup",
+				eventName = "modalIframeLoaded");
+
+			SelectFrame(locator1 = "IFrame#MODAL_BODY");
 
 			Check.checkToggleSwitch(locator1 = "WCDConfiguration#ENABLE_VIEW_COUNT_INCREMENT_CHECKBOX");
 
@@ -147,6 +177,11 @@ definition {
 
 			SelectFrame(value1 = "relative=top");
 
+			LiferayEvent.waitForLiferayEvent(
+				attributeName = "src",
+				attributeValue = "dialog-iframe-popup",
+				eventName = "modalIframeLoaded");
+
 			SelectFrame(locator1 = "IFrame#MODAL_IFRAME");
 
 			Panel.expandPanel(panel = "Default Template");
@@ -185,15 +220,29 @@ definition {
 			portletName = "${portletName}",
 			portletOption = "Configuration");
 
-		SelectFrame(locator1 = "IFrame#DIALOG");
+		LiferayEvent.waitForLiferayEvent(
+			attributeName = "src",
+			attributeValue = "dialog-iframe-popup",
+			eventName = "modalIframeLoaded");
+
+		SelectFrame(locator1 = "IFrame#MODAL_BODY");
 
 		Button.clickRemove();
+
+		AssertElementNotPresent(
+			key_text = "Remove",
+			locator1 = "Button#ANY");
 
 		PortletEntry.save();
 	}
 
 	macro saveConfiguration {
-		SelectFrame(locator1 = "IFrame#DIALOG");
+		LiferayEvent.waitForLiferayEvent(
+			attributeName = "src",
+			attributeValue = "dialog-iframe-popup",
+			eventName = "modalIframeLoaded");
+
+		SelectFrame(locator1 = "IFrame#MODAL_BODY");
 
 		PortletEntry.save();
 
@@ -205,7 +254,12 @@ definition {
 			portletName = "${portletName}",
 			portletOption = "Configuration");
 
-		SelectFrame(locator1 = "IFrame#DIALOG");
+		LiferayEvent.waitForLiferayEvent(
+			attributeName = "src",
+			attributeValue = "dialog-iframe-popup",
+			eventName = "modalIframeLoaded");
+
+		SelectFrame(locator1 = "IFrame#MODAL_BODY");
 
 		AssertClick(
 			locator1 = "WCDConfiguration#SELECT_WEB_CONTENT_BUTTON",
@@ -213,7 +267,7 @@ definition {
 
 		SelectFrame(value1 = "relative=top");
 
-		SelectFrame.selectSecondFrame(locator1 = "IFrame#DIALOG");
+		SelectFrame.selectSecondFrame(locator1 = "IFrame#MODAL_BODY");
 
 		var searchTerm = "${webContentTitle}";
 
@@ -239,7 +293,12 @@ definition {
 
 			SelectFrame(value1 = "relative=top");
 
-			SelectFrame(locator1 = "IFrame#DIALOG");
+			LiferayEvent.waitForLiferayEvent(
+				attributeName = "src",
+				attributeValue = "dialog-iframe-popup",
+				eventName = "modalIframeLoaded");
+
+			SelectFrame(locator1 = "IFrame#MODAL_BODY");
 
 			AssertTextEquals(
 				locator1 = "Message#INFO_ARTICLE",
@@ -256,7 +315,12 @@ definition {
 			portletName = "${portletName}",
 			portletOption = "Configuration");
 
-		SelectFrame(locator1 = "IFrame#DIALOG");
+		LiferayEvent.waitForLiferayEvent(
+			attributeName = "src",
+			attributeValue = "dialog-iframe-popup",
+			eventName = "modalIframeLoaded");
+
+		SelectFrame(locator1 = "IFrame#MODAL_BODY");
 
 		AssertClick(
 			locator1 = "WCDConfiguration#SELECT_WEB_CONTENT_BUTTON",
@@ -264,7 +328,12 @@ definition {
 
 		SelectFrame(value1 = "relative=top");
 
-		SelectFrame(locator1 = "IFrame#DIALOG");
+		LiferayEvent.waitForLiferayEvent(
+			attributeName = "src",
+			attributeValue = "dialog-iframe-popup",
+			eventName = "modalIframeLoaded");
+
+		SelectFrame(locator1 = "IFrame#MODAL_BODY");
 
 		Search.searchCP(searchTerm = "${webContentTitle}");
 
@@ -284,7 +353,12 @@ definition {
 			portletName = "Web Content Display",
 			portletOption = "Configuration");
 
-		SelectFrame(locator1 = "IFrame#DIALOG");
+		LiferayEvent.waitForLiferayEvent(
+			attributeName = "src",
+			attributeValue = "dialog-iframe-popup",
+			eventName = "modalIframeLoaded");
+
+		SelectFrame(locator1 = "IFrame#MODAL_BODY");
 
 		AssertClick(
 			locator1 = "WCDConfiguration#SELECT_WEB_CONTENT_BUTTON",
@@ -292,7 +366,12 @@ definition {
 
 		SelectFrame(value1 = "relative=top");
 
-		SelectFrame(locator1 = "IFrame#DIALOG");
+		LiferayEvent.waitForLiferayEvent(
+			attributeName = "src",
+			attributeValue = "dialog-iframe-popup",
+			eventName = "modalIframeLoaded");
+
+		SelectFrame(locator1 = "IFrame#MODAL_BODY");
 
 		Click(
 			key_breadcrumbName = "Sites",
@@ -312,7 +391,12 @@ definition {
 
 		SelectFrame(value1 = "relative=top");
 
-		SelectFrame(locator1 = "IFrame#DIALOG");
+		LiferayEvent.waitForLiferayEvent(
+			attributeName = "src",
+			attributeValue = "dialog-iframe-popup",
+			eventName = "modalIframeLoaded");
+
+		SelectFrame(locator1 = "IFrame#MODAL_BODY");
 
 		AssertTextEquals.assertPartialText(
 			key_card = "${webContentTitle}",
@@ -331,7 +415,12 @@ definition {
 			portletName = "Web Content Display",
 			portletOption = "Configuration");
 
-		SelectFrame(locator1 = "IFrame#DIALOG");
+		LiferayEvent.waitForLiferayEvent(
+			attributeName = "src",
+			attributeValue = "dialog-iframe-popup",
+			eventName = "modalIframeLoaded");
+
+		SelectFrame(locator1 = "IFrame#MODAL_BODY");
 
 		Pause(locator1 = "3000");
 
@@ -341,7 +430,7 @@ definition {
 
 		SelectFrame(value1 = "relative=top");
 
-		SelectFrame.selectSecondFrame(locator1 = "IFrame#DIALOG");
+		SelectFrame.selectSecondFrame(locator1 = "IFrame#MODAL_BODY");
 
 		if (isSet(depotName)) {
 			var key_rowEntry = "${webContentTitle}";
@@ -360,7 +449,12 @@ definition {
 
 			Click(locator1 = "ContentRow#ENTRY_CONTENT_ENTRY_NAME");
 
-			SelectFrame(locator1 = "IFrame#DIALOG");
+			LiferayEvent.waitForLiferayEvent(
+				attributeName = "src",
+				attributeValue = "dialog-iframe-popup",
+				eventName = "modalIframeLoaded");
+
+			SelectFrame(locator1 = "IFrame#MODAL_BODY");
 
 			AssertTextEquals.assertPartialText(
 				key_card = "${webContentTitle}",
@@ -369,16 +463,23 @@ definition {
 		}
 
 		else {
+			var key_listEntry = "${webContentTitle}";
 			var key_webContentTitle = "${webContentTitle}";
 
 			LexiconEntry.changeDisplayStyle(displayStyle = "list");
 
-			AssertClick(
-				key_listEntry = "${webContentTitle}",
-				locator1 = "LexiconList#LIST_ENTRY_TITLE_LINK",
-				value1 = "${webContentTitle}");
+			if (IsElementPresent.pauseIsElementPresent(locator1 = "LexiconList#LIST_ENTRY_TITLE_LINK")) {
+				AssertClick(
+					locator1 = "LexiconList#LIST_ENTRY_TITLE_LINK",
+					value1 = "${webContentTitle}");
+			}
 
-			SelectFrame(locator1 = "IFrame#DIALOG");
+			LiferayEvent.waitForLiferayEvent(
+				attributeName = "src",
+				attributeValue = "dialog-iframe-popup",
+				eventName = "modalIframeLoaded");
+
+			SelectFrame(locator1 = "IFrame#MODAL_BODY");
 
 			AssertTextEquals(
 				key_card = "${webContentTitle}",
@@ -464,7 +565,12 @@ definition {
 			portletName = "${portletName}",
 			portletOption = "Configuration");
 
-		SelectFrame(locator1 = "IFrame#DIALOG");
+		LiferayEvent.waitForLiferayEvent(
+			attributeName = "src",
+			attributeValue = "dialog-iframe-popup",
+			eventName = "modalIframeLoaded");
+
+		SelectFrame(locator1 = "IFrame#MODAL_BODY");
 
 		Navigator.gotoNavItem(navItem = "Scope");
 

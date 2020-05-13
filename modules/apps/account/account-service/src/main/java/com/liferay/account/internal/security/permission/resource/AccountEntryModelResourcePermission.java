@@ -16,11 +16,18 @@ package com.liferay.account.internal.security.permission.resource;
 
 import com.liferay.account.constants.AccountConstants;
 import com.liferay.account.model.AccountEntry;
+import com.liferay.account.model.AccountEntryOrganizationRel;
+import com.liferay.account.service.AccountEntryLocalService;
+import com.liferay.account.service.AccountEntryOrganizationRelLocalService;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.model.Organization;
 import com.liferay.portal.kernel.security.auth.PrincipalException;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
 import com.liferay.portal.kernel.security.permission.resource.PortletResourcePermission;
+import com.liferay.portal.kernel.service.OrganizationLocalService;
+
+import java.util.List;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -68,9 +75,8 @@ public class AccountEntryModelResourcePermission
 			String actionId)
 		throws PortalException {
 
-		return permissionChecker.hasPermission(
-			null, AccountEntry.class.getName(),
-			accountEntry.getAccountEntryId(), actionId);
+		return contains(
+			permissionChecker, accountEntry.getAccountEntryId(), actionId);
 	}
 
 	@Override
@@ -79,8 +85,32 @@ public class AccountEntryModelResourcePermission
 			String actionId)
 		throws PortalException {
 
+		List<AccountEntryOrganizationRel> accountEntryOrganizationRels =
+			_accountEntryOrganizationRelLocalService.
+				getAccountEntryOrganizationRels(accountEntryId);
+
+		for (AccountEntryOrganizationRel accountEntryOrganizationRel :
+				accountEntryOrganizationRels) {
+
+			Organization organization =
+				_organizationLocalService.fetchOrganization(
+					accountEntryOrganizationRel.getOrganizationId());
+
+			if ((organization != null) &&
+				permissionChecker.hasPermission(
+					organization.getGroupId(), AccountEntry.class.getName(),
+					accountEntryId, actionId)) {
+
+				return true;
+			}
+		}
+
+		AccountEntry accountEntry = _accountEntryLocalService.getAccountEntry(
+			accountEntryId);
+
 		return permissionChecker.hasPermission(
-			null, AccountEntry.class.getName(), accountEntryId, actionId);
+			accountEntry.getAccountEntryGroupId(), AccountEntry.class.getName(),
+			accountEntryId, actionId);
 	}
 
 	@Override
@@ -92,6 +122,16 @@ public class AccountEntryModelResourcePermission
 	public PortletResourcePermission getPortletResourcePermission() {
 		return _portletResourcePermission;
 	}
+
+	@Reference
+	private AccountEntryLocalService _accountEntryLocalService;
+
+	@Reference
+	private AccountEntryOrganizationRelLocalService
+		_accountEntryOrganizationRelLocalService;
+
+	@Reference
+	private OrganizationLocalService _organizationLocalService;
 
 	@Reference(
 		target = "(resource.name=" + AccountConstants.RESOURCE_NAME + ")"

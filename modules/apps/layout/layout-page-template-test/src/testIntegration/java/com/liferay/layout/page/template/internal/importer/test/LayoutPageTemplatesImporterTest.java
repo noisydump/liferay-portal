@@ -21,12 +21,12 @@ import com.liferay.fragment.model.FragmentEntryLink;
 import com.liferay.fragment.service.FragmentCollectionLocalService;
 import com.liferay.fragment.service.FragmentEntryLinkLocalService;
 import com.liferay.fragment.service.FragmentEntryLocalService;
+import com.liferay.layout.page.template.constants.LayoutPageTemplateEntryTypeConstants;
 import com.liferay.layout.page.template.constants.LayoutPageTemplateExportImportConstants;
 import com.liferay.layout.page.template.importer.LayoutPageTemplatesImporter;
 import com.liferay.layout.page.template.importer.LayoutPageTemplatesImporterResultEntry;
 import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
 import com.liferay.layout.page.template.model.LayoutPageTemplateStructure;
-import com.liferay.layout.page.template.service.LayoutPageTemplateCollectionLocalService;
 import com.liferay.layout.page.template.service.LayoutPageTemplateEntryLocalService;
 import com.liferay.layout.page.template.service.LayoutPageTemplateStructureLocalService;
 import com.liferay.layout.util.constants.LayoutDataItemTypeConstants;
@@ -38,13 +38,14 @@ import com.liferay.layout.util.structure.LayoutStructureItem;
 import com.liferay.layout.util.structure.RowLayoutStructureItem;
 import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringPool;
-import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.json.JSONException;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.User;
+import com.liferay.portal.kernel.portletfilerepository.PortletFileRepositoryUtil;
+import com.liferay.portal.kernel.repository.model.FileEntry;
+import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
@@ -53,8 +54,10 @@ import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.util.FileUtil;
+import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.kernel.util.UnicodeProperties;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.kernel.zip.ZipWriter;
 import com.liferay.portal.kernel.zip.ZipWriterFactoryUtil;
@@ -67,6 +70,7 @@ import java.io.IOException;
 
 import java.net.URL;
 
+import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
 
@@ -283,6 +287,141 @@ public class LayoutPageTemplatesImporterTest {
 			fragmentEntryLink.getEditableValues());
 	}
 
+	@Test
+	public void testImportLayoutPageTemplates() throws Exception {
+		List<LayoutPageTemplatesImporterResultEntry>
+			layoutPageTemplatesImporterResultEntries =
+				_getLayoutPageTemplatesImporterResultEntries(
+					"layout-page-template-multiple");
+
+		Assert.assertEquals(
+			layoutPageTemplatesImporterResultEntries.toString(), 2,
+			layoutPageTemplatesImporterResultEntries.size());
+
+		LayoutPageTemplateEntry layoutPageTemplateEntry1 =
+			_getLayoutPageTemplateEntry(
+				layoutPageTemplatesImporterResultEntries, 0);
+		LayoutPageTemplateEntry layoutPageTemplateEntry2 =
+			_getLayoutPageTemplateEntry(
+				layoutPageTemplatesImporterResultEntries, 1);
+
+		List<String> actualLayoutPageTemplateEntryNames = ListUtil.sort(
+			new ArrayList() {
+				{
+					add(layoutPageTemplateEntry1.getName());
+					add(layoutPageTemplateEntry2.getName());
+				}
+			});
+
+		Assert.assertArrayEquals(
+			new String[] {
+				"Layout Page Template One", "Layout Page Template Two"
+			},
+			actualLayoutPageTemplateEntryNames.toArray(new String[0]));
+	}
+
+	@Test
+	public void testImportLayoutPageTemplateWithCustomLookAndFeel()
+		throws Exception {
+
+		List<LayoutPageTemplatesImporterResultEntry>
+			layoutPageTemplatesImporterResultEntries =
+				_getLayoutPageTemplatesImporterResultEntries(
+					"layout-page-template-custom-look-and-feel");
+
+		Assert.assertEquals(
+			layoutPageTemplatesImporterResultEntries.toString(), 1,
+			layoutPageTemplatesImporterResultEntries.size());
+
+		LayoutPageTemplateEntry layoutPageTemplateEntry =
+			_getLayoutPageTemplateEntry(
+				layoutPageTemplatesImporterResultEntries, 0);
+
+		Layout layout = _layoutLocalService.fetchLayout(
+			layoutPageTemplateEntry.getPlid());
+
+		Assert.assertNotNull(layout);
+
+		UnicodeProperties typeSettingsUnicodeProperties =
+			layout.getTypeSettingsProperties();
+
+		Assert.assertEquals(
+			"false",
+			typeSettingsUnicodeProperties.getProperty(
+				"lfr-theme:regular:show-footer"));
+		Assert.assertEquals(
+			"false",
+			typeSettingsUnicodeProperties.getProperty(
+				"lfr-theme:regular:show-header"));
+		Assert.assertEquals(
+			"false",
+			typeSettingsUnicodeProperties.getProperty(
+				"lfr-theme:regular:show-header-search"));
+		Assert.assertEquals(
+			"true",
+			typeSettingsUnicodeProperties.getProperty(
+				"lfr-theme:regular:show-maximize-minimize-application-links"));
+		Assert.assertEquals(
+			"false",
+			typeSettingsUnicodeProperties.getProperty(
+				"lfr-theme:regular:wrap-widget-page-content"));
+	}
+
+	@Test
+	public void testImportLayoutPageTemplateWithMasterPage() throws Exception {
+		ServiceContext serviceContext =
+			ServiceContextTestUtil.getServiceContext(_group.getGroupId());
+
+		LayoutPageTemplateEntry masterLayoutPageTemplateEntry =
+			_layoutPageTemplateEntryLocalService.addLayoutPageTemplateEntry(
+				TestPropsValues.getUserId(), _group.getGroupId(), 0,
+				"Test Master Page",
+				LayoutPageTemplateEntryTypeConstants.TYPE_MASTER_LAYOUT,
+				WorkflowConstants.STATUS_DRAFT, serviceContext);
+
+		List<LayoutPageTemplatesImporterResultEntry>
+			layoutPageTemplatesImporterResultEntries =
+				_getLayoutPageTemplatesImporterResultEntries(
+					"layout-page-template-master-page");
+
+		Assert.assertEquals(
+			layoutPageTemplatesImporterResultEntries.toString(), 1,
+			layoutPageTemplatesImporterResultEntries.size());
+
+		LayoutPageTemplateEntry layoutPageTemplateEntry =
+			_getLayoutPageTemplateEntry(
+				layoutPageTemplatesImporterResultEntries, 0);
+
+		Layout layout = _layoutLocalService.fetchLayout(
+			layoutPageTemplateEntry.getPlid());
+
+		Assert.assertEquals(
+			masterLayoutPageTemplateEntry.getPlid(),
+			layout.getMasterLayoutPlid());
+	}
+
+	@Test
+	public void testImportLayoutPageTemplateWithThumbnail() throws Exception {
+		List<LayoutPageTemplatesImporterResultEntry>
+			layoutPageTemplatesImporterResultEntries =
+				_getLayoutPageTemplatesImporterResultEntries(
+					"layout-page-template-thumbnail");
+
+		Assert.assertEquals(
+			layoutPageTemplatesImporterResultEntries.toString(), 1,
+			layoutPageTemplatesImporterResultEntries.size());
+
+		LayoutPageTemplateEntry layoutPageTemplateEntry =
+			_getLayoutPageTemplateEntry(
+				layoutPageTemplatesImporterResultEntries, 0);
+
+		FileEntry portletFileEntry =
+			PortletFileRepositoryUtil.getPortletFileEntry(
+				layoutPageTemplateEntry.getPreviewFileEntryId());
+
+		Assert.assertNotNull(portletFileEntry);
+	}
+
 	private void _addZipWriterEntry(ZipWriter zipWriter, URL url)
 		throws IOException {
 
@@ -295,7 +434,7 @@ public class LayoutPageTemplatesImporterTest {
 	}
 
 	private void _createFragmentEntry(String key, String name, String html)
-		throws PortalException {
+		throws Exception {
 
 		ServiceContext serviceContext =
 			ServiceContextTestUtil.getServiceContext(_group.getGroupId());
@@ -431,6 +570,62 @@ public class LayoutPageTemplatesImporterTest {
 		return layoutPageTemplateEntry;
 	}
 
+	private LayoutPageTemplateEntry _getLayoutPageTemplateEntry(
+		List<LayoutPageTemplatesImporterResultEntry>
+			layoutPageTemplatesImporterResultEntries,
+		int index) {
+
+		LayoutPageTemplatesImporterResultEntry
+			layoutPageTemplatesImporterResultEntry =
+				layoutPageTemplatesImporterResultEntries.get(index);
+
+		Assert.assertEquals(
+			LayoutPageTemplatesImporterResultEntry.Status.IMPORTED,
+			layoutPageTemplatesImporterResultEntry.getStatus());
+
+		String layoutPageTemplateEntryKey = StringUtil.toLowerCase(
+			layoutPageTemplatesImporterResultEntry.getName());
+
+		layoutPageTemplateEntryKey = StringUtil.replace(
+			layoutPageTemplateEntryKey, CharPool.SPACE, CharPool.DASH);
+
+		LayoutPageTemplateEntry layoutPageTemplateEntry =
+			_layoutPageTemplateEntryLocalService.fetchLayoutPageTemplateEntry(
+				_group.getGroupId(), layoutPageTemplateEntryKey);
+
+		Assert.assertNotNull(layoutPageTemplateEntry);
+
+		return layoutPageTemplateEntry;
+	}
+
+	private List<LayoutPageTemplatesImporterResultEntry>
+			_getLayoutPageTemplatesImporterResultEntries(String testCaseName)
+		throws Exception {
+
+		File file = _generateZipFile(testCaseName);
+
+		List<LayoutPageTemplatesImporterResultEntry>
+			layoutPageTemplatesImporterResultEntries = null;
+
+		ServiceContext serviceContext =
+			ServiceContextTestUtil.getServiceContext(_group.getGroupId());
+
+		ServiceContextThreadLocal.pushServiceContext(serviceContext);
+
+		try {
+			layoutPageTemplatesImporterResultEntries =
+				_layoutPageTemplatesImporter.importFile(
+					_user.getUserId(), _group.getGroupId(), 0, file, false);
+		}
+		finally {
+			ServiceContextThreadLocal.popServiceContext();
+		}
+
+		Assert.assertNotNull(layoutPageTemplatesImporterResultEntries);
+
+		return layoutPageTemplatesImporterResultEntries;
+	}
+
 	private LayoutStructureItem _getMainChildLayoutStructureItem(
 		LayoutStructure layoutStructure) {
 
@@ -479,11 +674,23 @@ public class LayoutPageTemplatesImporterTest {
 
 			_addZipWriterEntry(zipWriter, elementUrl);
 		}
+
+		enumeration = _bundle.findEntries(path, "thumbnail.png", true);
+
+		if (enumeration == null) {
+			return;
+		}
+
+		while (enumeration.hasMoreElements()) {
+			URL elementUrl = enumeration.nextElement();
+
+			_addZipWriterEntry(zipWriter, elementUrl);
+		}
 	}
 
 	private void _validateHTMLFragmentEntryLinkEditableValues(
 			String editableValues)
-		throws JSONException {
+		throws Exception {
 
 		JSONObject jsonObject = JSONFactoryUtil.createJSONObject(
 			editableValues);
@@ -509,7 +716,7 @@ public class LayoutPageTemplatesImporterTest {
 
 	private void _validateImageFragmentEntryLinkEditableValues(
 			String editableValues)
-		throws JSONException {
+		throws Exception {
 
 		JSONObject jsonObject = JSONFactoryUtil.createJSONObject(
 			editableValues);
@@ -557,7 +764,7 @@ public class LayoutPageTemplatesImporterTest {
 
 	private void _validateLinkFragmentEntryLinkEditableValues(
 			String editableValues)
-		throws JSONException {
+		throws Exception {
 
 		JSONObject jsonObject = JSONFactoryUtil.createJSONObject(
 			editableValues);
@@ -588,7 +795,7 @@ public class LayoutPageTemplatesImporterTest {
 
 	private void _validateTextFragmentEntryLinkEditableValues(
 			String editableValues)
-		throws JSONException {
+		throws Exception {
 
 		JSONObject jsonObject = JSONFactoryUtil.createJSONObject(
 			editableValues);
@@ -660,8 +867,7 @@ public class LayoutPageTemplatesImporterTest {
 	private Group _group;
 
 	@Inject
-	private LayoutPageTemplateCollectionLocalService
-		_layoutPageTemplateCollectionLocalService;
+	private LayoutLocalService _layoutLocalService;
 
 	@Inject
 	private LayoutPageTemplateEntryLocalService

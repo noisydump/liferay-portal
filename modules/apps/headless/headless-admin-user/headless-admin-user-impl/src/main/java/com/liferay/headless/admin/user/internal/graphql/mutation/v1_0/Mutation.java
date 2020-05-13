@@ -15,8 +15,10 @@
 package com.liferay.headless.admin.user.internal.graphql.mutation.v1_0;
 
 import com.liferay.headless.admin.user.dto.v1_0.Organization;
+import com.liferay.headless.admin.user.dto.v1_0.UserAccount;
 import com.liferay.headless.admin.user.resource.v1_0.OrganizationResource;
 import com.liferay.headless.admin.user.resource.v1_0.SubscriptionResource;
+import com.liferay.headless.admin.user.resource.v1_0.UserAccountResource;
 import com.liferay.petra.function.UnsafeConsumer;
 import com.liferay.petra.function.UnsafeFunction;
 import com.liferay.portal.kernel.search.Sort;
@@ -57,6 +59,14 @@ public class Mutation {
 
 		_subscriptionResourceComponentServiceObjects =
 			subscriptionResourceComponentServiceObjects;
+	}
+
+	public static void setUserAccountResourceComponentServiceObjects(
+		ComponentServiceObjects<UserAccountResource>
+			userAccountResourceComponentServiceObjects) {
+
+		_userAccountResourceComponentServiceObjects =
+			userAccountResourceComponentServiceObjects;
 	}
 
 	@GraphQLField(description = "Creates a new organization")
@@ -170,6 +180,86 @@ public class Mutation {
 		return true;
 	}
 
+	@GraphQLField(description = "Creates a new user account")
+	public UserAccount createUserAccount(
+			@GraphQLName("userAccount") UserAccount userAccount)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_userAccountResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			userAccountResource -> userAccountResource.postUserAccount(
+				userAccount));
+	}
+
+	@GraphQLField
+	public Response createUserAccountBatch(
+			@GraphQLName("callbackURL") String callbackURL,
+			@GraphQLName("object") Object object)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_userAccountResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			userAccountResource -> userAccountResource.postUserAccountBatch(
+				callbackURL, object));
+	}
+
+	@GraphQLField(description = "Deletes the user account")
+	public boolean deleteUserAccount(
+			@GraphQLName("userAccountId") Long userAccountId)
+		throws Exception {
+
+		_applyVoidComponentServiceObjects(
+			_userAccountResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			userAccountResource -> userAccountResource.deleteUserAccount(
+				userAccountId));
+
+		return true;
+	}
+
+	@GraphQLField
+	public Response deleteUserAccountBatch(
+			@GraphQLName("callbackURL") String callbackURL,
+			@GraphQLName("object") Object object)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_userAccountResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			userAccountResource -> userAccountResource.deleteUserAccountBatch(
+				callbackURL, object));
+	}
+
+	@GraphQLField(
+		description = "Replaces the user account with information sent in the request body. Any missing fields are deleted unless they are required."
+	)
+	public UserAccount updateUserAccount(
+			@GraphQLName("userAccountId") Long userAccountId,
+			@GraphQLName("userAccount") UserAccount userAccount)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_userAccountResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			userAccountResource -> userAccountResource.putUserAccount(
+				userAccountId, userAccount));
+	}
+
+	@GraphQLField
+	public Response updateUserAccountBatch(
+			@GraphQLName("callbackURL") String callbackURL,
+			@GraphQLName("object") Object object)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_userAccountResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			userAccountResource -> userAccountResource.putUserAccountBatch(
+				callbackURL, object));
+	}
+
 	private <T, R, E1 extends Throwable, E2 extends Throwable> R
 			_applyComponentServiceObjects(
 				ComponentServiceObjects<T> componentServiceObjects,
@@ -234,10 +324,24 @@ public class Mutation {
 		subscriptionResource.setContextUser(_user);
 	}
 
+	private void _populateResourceContext(
+			UserAccountResource userAccountResource)
+		throws Exception {
+
+		userAccountResource.setContextAcceptLanguage(_acceptLanguage);
+		userAccountResource.setContextCompany(_company);
+		userAccountResource.setContextHttpServletRequest(_httpServletRequest);
+		userAccountResource.setContextHttpServletResponse(_httpServletResponse);
+		userAccountResource.setContextUriInfo(_uriInfo);
+		userAccountResource.setContextUser(_user);
+	}
+
 	private static ComponentServiceObjects<OrganizationResource>
 		_organizationResourceComponentServiceObjects;
 	private static ComponentServiceObjects<SubscriptionResource>
 		_subscriptionResourceComponentServiceObjects;
+	private static ComponentServiceObjects<UserAccountResource>
+		_userAccountResourceComponentServiceObjects;
 
 	private AcceptLanguage _acceptLanguage;
 	private com.liferay.portal.kernel.model.Company _company;

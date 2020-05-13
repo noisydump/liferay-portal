@@ -385,9 +385,10 @@ definition {
 			userLoginFullName = "Test Test");
 	}
 
-	@ignore = "true"
 	@priority = "4"
 	test AddBlogsEntrySiteRoleInline {
+		property portal.upstream = "quarantine";
+
 		Permissions.setUpSiteRoleLoginUserPG(
 			page = "Public Pages",
 			pageName = "Blogs Page",
@@ -627,7 +628,6 @@ definition {
 	@priority = "5"
 	test DeleteBlogsEntryOrgRoleDefinePermission {
 		property portal.acceptance = "true";
-		property portal.upstream = "quarantine";
 
 		Permissions.setUpOrgRoleLoginUserPG(
 			orgName = "Organization Name",

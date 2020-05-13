@@ -102,7 +102,10 @@ WikiPagesManagementToolbarDisplayContext wikiPagesManagementToolbarDisplayContex
 	viewTypeItems="<%= wikiPagesManagementToolbarDisplayContext.getViewTypes() %>"
 />
 
-<div class="closed container-fluid-1280 sidenav-container sidenav-right" id="<portlet:namespace />infoPanelId">
+<clay:container
+	className="closed sidenav-container sidenav-right"
+	id='<%= renderResponse.getNamespace() + "infoPanelId" %>'
+>
 	<liferay-portlet:resourceURL copyCurrentRenderParameters="<%= false %>" id="/wiki/page_info_panel" var="sidebarPanelURL">
 		<portlet:param name="nodeId" value="<%= String.valueOf(node.getNodeId()) %>" />
 		<portlet:param name="showSidebarHeader" value="<%= Boolean.TRUE.toString() %>" />
@@ -289,10 +292,10 @@ WikiPagesManagementToolbarDisplayContext wikiPagesManagementToolbarDisplayContex
 			</liferay-ui:search-container>
 		</aui:form>
 	</div>
-</div>
+</clay:container>
 
 <script>
-	var deletePages = function() {
+	var deletePages = function () {
 		if (
 			<%= trashHelper.isTrashEnabled(scopeGroupId) %> ||
 			confirm(
@@ -315,10 +318,10 @@ WikiPagesManagementToolbarDisplayContext wikiPagesManagementToolbarDisplayContex
 		deletePages: deletePages,
 	};
 
-	Liferay.componentReady('wikiPagesManagementToolbar').then(function(
+	Liferay.componentReady('wikiPagesManagementToolbar').then(function (
 		managementToolbar
 	) {
-		managementToolbar.on('actionItemClicked', function(event) {
+		managementToolbar.on('actionItemClicked', function (event) {
 			var itemData = event.data.item.data;
 
 			if (itemData && itemData.action && ACTIONS[itemData.action]) {

@@ -22,16 +22,14 @@ import com.liferay.headless.delivery.client.dto.v1_0.Comment;
 import com.liferay.journal.model.JournalArticle;
 import com.liferay.journal.test.util.JournalTestUtil;
 import com.liferay.petra.string.StringBundler;
-import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.UserLocalServiceUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
-import com.liferay.portal.search.test.util.SearchTestRule;
+import com.liferay.portal.kernel.util.HtmlUtil;
 
 import java.util.Objects;
 
-import org.junit.Rule;
 import org.junit.runner.RunWith;
 
 /**
@@ -39,9 +37,6 @@ import org.junit.runner.RunWith;
  */
 @RunWith(Arquillian.class)
 public class CommentResourceTest extends BaseCommentResourceTestCase {
-
-	@Rule
-	public SearchTestRule searchTestRule = new SearchTestRule();
 
 	@Override
 	protected boolean equals(Comment comment1, Comment comment2) {
@@ -133,7 +128,7 @@ public class CommentResourceTest extends BaseCommentResourceTestCase {
 			comment.getId(), randomComment());
 	}
 
-	private BlogsEntry _addBlogsEntry() throws PortalException {
+	private BlogsEntry _addBlogsEntry() throws Exception {
 		ServiceContext serviceContext = new ServiceContext();
 
 		serviceContext.setScopeGroupId(testGroup.getGroupId());
@@ -156,7 +151,7 @@ public class CommentResourceTest extends BaseCommentResourceTestCase {
 	}
 
 	private String _formatHTML(Comment comment) {
-		String text = comment.getText();
+		String text = HtmlUtil.stripHtml(comment.getText());
 
 		if (!text.startsWith("<p>")) {
 			return StringBundler.concat("<p>", text, "</p>");

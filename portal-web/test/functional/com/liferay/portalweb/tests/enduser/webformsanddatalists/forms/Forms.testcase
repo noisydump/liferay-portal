@@ -321,7 +321,6 @@ definition {
 
 	@priority = "5"
 	test AddFormInGlobal {
-		property portal.upstream = "quarantine";
 		property test.name.skip.portal.instance = "Forms#AddFormInGlobal";
 		property portal.acceptance = "true";
 		property testray.component.names = "Training";
@@ -566,7 +565,6 @@ definition {
 		Form.save();
 	}
 
-	@ignore = "true"
 	@priority = "5"
 	test AddFormWithSpanishAsDefaultPortalLanguage {
 		property test.name.skip.portal.instance = "Forms#AddFormWithSpanishAsDefaultPortalLanguage";
@@ -1376,7 +1374,7 @@ definition {
 
 		FormFields.viewFieldName(fieldName = "ParagraphName");
 
-		FormFields.editParagraphBody(fieldValue = "Paragraph body text.");
+		FormFields.editParagraphBody(content = "Paragraph body text.");
 
 		Form.closeSidebar();
 
@@ -2385,7 +2383,7 @@ definition {
 
 		Form.editFieldLabelMetal(fieldValue = "Paragraph");
 
-		FormFields.editParagraphBody(fieldValue = "Paragraph body text.");
+		FormFields.editParagraphBody(content = "Paragraph body text.");
 
 		Form.closeSidebar();
 
@@ -2520,7 +2518,7 @@ definition {
 
 		Form.editFieldLabelMetal(fieldValue = "New Paragraph");
 
-		FormFields.editParagraphBody(fieldValue = "New Paragraph body text.");
+		FormFields.editParagraphBody(content = "New Paragraph body text.");
 
 		Form.closeSidebar();
 
@@ -2917,7 +2915,7 @@ definition {
 
 		Form.editFieldLabelMetal(fieldValue = "Paragraph");
 
-		FormFields.editParagraphBody(fieldValue = "Paragraph body text.");
+		FormFields.editParagraphBody(content = "Paragraph body text.");
 
 		Form.closeSidebar();
 
@@ -4132,7 +4130,6 @@ definition {
 	@priority = "3"
 	test ViewBlankLabelWhenAddingNewField {
 		property test.name.skip.portal.instance = "Forms#ViewBlankLabelWhenAddingNewField";
-		property portal.upstream = "quarantine";
 
 		Navigator.openURL();
 
@@ -4429,7 +4426,6 @@ definition {
 	@priority = "4"
 	test ViewRepeatableTextFieldLabel {
 		property test.name.skip.portal.instance = "Forms#ViewRepeatableTextFieldLabel";
-		property portal.upstream = "quarantine";
 
 		Navigator.openURL();
 

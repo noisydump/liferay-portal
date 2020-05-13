@@ -39,7 +39,12 @@ definition {
 	}
 
 	macro selectConfigurationIFrame {
-		SelectFrame(locator1 = "IFrame#DIALOG");
+		LiferayEvent.waitForLiferayEvent(
+			attributeName = "src",
+			attributeValue = "dialog-iframe-popup",
+			eventName = "modalIframeLoaded");
+
+		SelectFrame(locator1 = "IFrame#MODAL_BODY");
 	}
 
 	macro selectDisplayTemplate {
@@ -177,6 +182,11 @@ definition {
 			if (IsElementPresent(locator1 = "MenuItem#ANY_MENU_ITEM", key_menuItem = "Configuration")) {
 				MenuItem.click(menuItem = "Configuration");
 
+				LiferayEvent.waitForLiferayEvent(
+					attributeName = "src",
+					attributeValue = "dialog-iframe-popup",
+					eventName = "modalIframeLoaded");
+
 				SelectFrame(locator1 = "IFrame#CONFIGURATION");
 
 				MenuItem.viewNotPresent(menuItem = "Permissions");
@@ -194,7 +204,12 @@ definition {
 		if (IsElementPresent(locator1 = "Portlet#OPTIONS_MENULIST_PERMISSIONS")) {
 			Click(locator1 = "Portlet#OPTIONS_MENULIST_PERMISSIONS");
 
-			SelectFrame(locator1 = "IFrame#DIALOG");
+			LiferayEvent.waitForLiferayEvent(
+				attributeName = "src",
+				attributeValue = "dialog-iframe-popup",
+				eventName = "modalIframeLoaded");
+
+			SelectFrame(locator1 = "IFrame#MODAL_BODY");
 		}
 
 		MenuItem.viewPresent(menuItem = "Permissions");

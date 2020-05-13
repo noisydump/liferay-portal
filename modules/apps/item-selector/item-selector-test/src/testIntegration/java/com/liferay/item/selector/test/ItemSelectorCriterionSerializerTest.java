@@ -73,7 +73,7 @@ public class ItemSelectorCriterionSerializerTest {
 				registerItemSelectorViewProvider(
 					new TestItemSelectorViewReturnTypeProvider(), "test-view");
 
-		List serviceRegistrations = new ArrayList<>();
+		List<ServiceRegistration<?>> serviceRegistrations = new ArrayList<>();
 
 		serviceRegistrations.add(itemSelectorViewServiceRegistration);
 		serviceRegistrations.add(
@@ -150,7 +150,9 @@ public class ItemSelectorCriterionSerializerTest {
 			itemSelectorViewReturnTypeProvider, properties);
 	}
 
-	private void _unregister(List<ServiceRegistration> serviceRegistrations) {
+	private void _unregister(
+		List<ServiceRegistration<?>> serviceRegistrations) {
+
 		serviceRegistrations.forEach(ServiceRegistration::unregister);
 	}
 

@@ -64,7 +64,7 @@ renderResponse.setTitle((fileEntryType == null) ? LanguageUtil.get(request, "new
 	<aui:model-context bean="<%= fileEntryType %>" model="<%= DLFileEntryType.class %>" />
 
 	<nav class="component-tbar subnav-tbar-light tbar tbar-metadata-type">
-		<div class="container-fluid container-fluid-max-xl">
+		<clay:container>
 			<ul class="tbar-nav">
 				<li class="tbar-item tbar-item-expand"></li>
 				<li class="tbar-item">
@@ -75,10 +75,12 @@ renderResponse.setTitle((fileEntryType == null) ? LanguageUtil.get(request, "new
 					</div>
 				</li>
 			</ul>
-		</div>
+		</clay:container>
 	</nav>
 
-	<div class="container-fluid container-fluid-max-xl container-view">
+	<clay:container
+		className="container-view"
+	>
 
 		<%
 		DLEditFileEntryTypeDisplayContext dlEditFileEntryTypeDisplayContext = (DLEditFileEntryTypeDisplayContext)request.getAttribute(DLWebKeys.DOCUMENT_LIBRARY_EDIT_EDIT_FILE_ENTRY_TYPE_DISPLAY_CONTEXT);
@@ -94,14 +96,14 @@ renderResponse.setTitle((fileEntryType == null) ? LanguageUtil.get(request, "new
 			localizable="<%= true %>"
 			namespace="<%= renderResponse.getNamespace() %>"
 		/>
-	</div>
+	</clay:container>
 </aui:form>
 
 <aui:script>
 	function <portlet:namespace />saveStructure() {
 		Liferay.componentReady(
 			'<%= renderResponse.getNamespace() + "dataLayoutBuilder" %>'
-		).then(function(dataLayoutBuilder) {
+		).then(function (dataLayoutBuilder) {
 			var name =
 				document.<portlet:namespace />fm[
 					'<portlet:namespace />name_' + themeDisplay.getLanguageId()
@@ -130,7 +132,7 @@ renderResponse.setTitle((fileEntryType == null) ? LanguageUtil.get(request, "new
 						},
 					},
 				})
-				.then(function(dataLayout) {
+				.then(function (dataLayout) {
 					document.<portlet:namespace />fm[
 						'<portlet:namespace />ddmStructureId'
 					].value = dataLayout.id;

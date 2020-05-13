@@ -54,6 +54,11 @@
 	<td></td>
 </tr>
 <tr>
+	<td>CONTRIBUTED_FRAGMENT_EDITABLE_FIELD_IMAGE_PROPERTIES</td>
+	<td>//img[contains(@alt,'${key_imageDescription}') and contains(@data-lfr-editable-id,'${id}') and contains(@src,'${key_image}')]</td>
+	<td></td>
+</tr>
+<tr>
 	<td>EDITABLE_FIELD</td>
 	<td>//div[contains(@class,'page-editor')]//div[contains(.,'${key_fragmentName}')]//lfr-editable[contains(@id,'${id}')]</td>
 	<td></td>
@@ -91,6 +96,11 @@
 <tr>
 	<td>MESSAGE_INFO</td>
 	<td>//div[contains(@class,'page-editor__topper') and contains(.,'${key_fragmentName}')]//div[@class='portlet-msg-info' and contains(.,'${key_messageIfo}')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>NOT_COLLECTION_SELECTED_MESSAGE</td>
+	<td>//div[contains(@class,'page-editor__topper') and contains(.,'${key_fragmentName}')]//div[@class='page-editor__collection' and contains(.,'${key_message}')]</td>
 	<td></td>
 </tr>
 <tr>

@@ -28,7 +28,10 @@ RedirectManagementToolbarDisplayContext redirectManagementToolbarDisplayContext 
 	displayContext="<%= redirectManagementToolbarDisplayContext %>"
 />
 
-<div class="closed container-fluid-1280 sidenav-container sidenav-right" id="<portlet:namespace />infoPanelId">
+<clay:container
+	className="closed redirect-entries sidenav-container sidenav-right"
+	id='<%= renderResponse.getNamespace() + "infoPanelId" %>'
+>
 	<liferay-portlet:resourceURL copyCurrentRenderParameters="<%= false %>" id="/redirect/info_panel" var="sidebarPanelURL" />
 
 	<liferay-frontend:sidebar-panel
@@ -62,21 +65,26 @@ RedirectManagementToolbarDisplayContext redirectManagementToolbarDisplayContext 
 					>
 
 						<%
-						String url = RedirectUtil.getGroupBaseURL(themeDisplay) + StringPool.SLASH + redirectEntry.getSourceURL();
+						String sourceURL = RedirectUtil.getGroupBaseURL(themeDisplay) + StringPool.SLASH + redirectEntry.getSourceURL();
 						%>
 
-						<aui:a href="<%= HtmlUtil.escapeAttribute(url) %>" target="_blank">
-							<%= HtmlUtil.escape(url) %>
-						</aui:a>
+						<span data-title="<%= sourceURL %>">
+							<%= HtmlUtil.escape(sourceURL) %>
+						</span>
 					</liferay-ui:search-container-column-text>
 
 					<liferay-ui:search-container-column-text
 						cssClass="table-cell-content"
 						name="destination-url"
 					>
-						<aui:a href="<%= HtmlUtil.escapeAttribute(redirectEntry.getDestinationURL()) %>" target="_blank">
-							<%= HtmlUtil.escape(redirectEntry.getDestinationURL()) %>
-						</aui:a>
+
+						<%
+						String destinationURL = HtmlUtil.escape(redirectEntry.getDestinationURL());
+						%>
+
+						<span data-title="<%= destinationURL %>">
+							<%= destinationURL %>
+						</span>
 					</liferay-ui:search-container-column-text>
 
 					<liferay-ui:search-container-column-text
@@ -117,10 +125,27 @@ RedirectManagementToolbarDisplayContext redirectManagementToolbarDisplayContext 
 			</liferay-ui:search-container>
 		</aui:form>
 	</div>
-</div>
+</clay:container>
 
 <liferay-frontend:component
 	componentId="<%= redirectManagementToolbarDisplayContext.getDefaultEventHandler() %>"
 	context="<%= redirectManagementToolbarDisplayContext.getComponentContext() %>"
 	module="js/RedirectManagementToolbarDefaultEventHandler.es"
 />
+
+<aui:script require="metal-dom/src/all/dom as dom">
+	dom.delegate(
+		document.querySelector('#<portlet:namespace />fm'),
+		'click',
+		'.icon-shortcut',
+		function (event) {
+			var delegateTarget = event.delegateTarget;
+
+			var destinationURL = delegateTarget.dataset.href;
+
+			if (destinationURL) {
+				window.open(destinationURL, '_blank');
+			}
+		}
+	);
+</aui:script>

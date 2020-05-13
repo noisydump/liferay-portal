@@ -135,7 +135,7 @@
 </tr>
 <tr>
 	<td>ERROR_MESSAGE_ALERT_ERROR</td>
-	<td>//section[@id='content']/h3[contains(@class, 'alert-danger')] | //div[@class='portlet-content']/h3[contains(@class, 'alert-danger')]</td>
+	<td>//section[@id='content']//h3[contains(@class, 'alert-danger')] | //div[@class='portlet-content']/h3[contains(@class, 'alert-danger')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -456,6 +456,11 @@
 	<td></td>
 </tr>
 <tr>
+	<td>PAGE_COLUMN_PORTLET_HEADER_ELLIPSIS</td>
+	<td>//div[@id='column-${key_columnNumber}']//header[@class='portlet-topper' and contains(.,'${key_portletName}')]//div[contains(@class,'portlet-options')]/a</td>
+	<td></td>
+</tr>
+<tr>
 	<td></td>
 	<td></td>
 	<td></td>
@@ -572,6 +577,11 @@
 <tr>
 	<td>PAGE_COLUMN_2_SIGN_IN_PORTLET</td>
 	<td>//div[@id='column-2']//section/header/h1[contains(.,'Sign In')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>PORTLET_HEADER</td>
+	<td>//section[contains(@id, '${key_portletTitleName}')]//header[@class='portlet-topper']</td>
 	<td></td>
 </tr>
 <tr>

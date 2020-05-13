@@ -120,6 +120,11 @@ public class CTEntryLocalServiceWrapper
 	}
 
 	@Override
+	public <T> T dslQuery(com.liferay.petra.sql.dsl.query.DSLQuery dslQuery) {
+		return _ctEntryLocalService.dslQuery(dslQuery);
+	}
+
+	@Override
 	public com.liferay.portal.kernel.dao.orm.DynamicQuery dynamicQuery() {
 		return _ctEntryLocalService.dynamicQuery();
 	}
@@ -302,6 +307,14 @@ public class CTEntryLocalServiceWrapper
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _ctEntryLocalService.getCTEntry(ctEntryId);
+	}
+
+	@Override
+	public long getCTRowCTCollectionId(
+			com.liferay.change.tracking.model.CTEntry ctEntry)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _ctEntryLocalService.getCTRowCTCollectionId(ctEntry);
 	}
 
 	@Override

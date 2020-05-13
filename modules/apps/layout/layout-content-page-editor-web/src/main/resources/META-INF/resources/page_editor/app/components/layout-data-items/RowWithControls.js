@@ -12,29 +12,17 @@
  * details.
  */
 
-/**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
- *
- * This library is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
- * details.
- */
-
 import {useModal} from '@clayui/modal';
+import classNames from 'classnames';
 import {useIsMounted} from 'frontend-js-react-web';
 import PropTypes from 'prop-types';
-import React, {useEffect, useRef, useState} from 'react';
+import React, {useCallback, useEffect, useRef, useState} from 'react';
 
 import {
 	LayoutDataPropTypes,
 	getLayoutDataItemPropTypes,
 } from '../../../prop-types/index';
+import {UPDATE_COL_SIZE_START} from '../../actions/types';
 import updateColSize from '../../actions/updateColSize';
 import {LAYOUT_DATA_FLOATING_TOOLBAR_BUTTONS} from '../../config/constants/layoutDataFloatingToolbarButtons';
 import {LAYOUT_DATA_ITEM_DEFAULT_CONFIGURATIONS} from '../../config/constants/layoutDataItemDefaultConfigurations';
@@ -42,6 +30,7 @@ import {LAYOUT_DATA_ITEM_TYPES} from '../../config/constants/layoutDataItemTypes
 import {useDispatch, useSelector} from '../../store/index';
 import duplicateItem from '../../thunks/duplicateItem';
 import resizeColumns from '../../thunks/resizeColumns';
+import {getResponsiveConfig} from '../../utils/getResponsiveConfig';
 import Topper from '../Topper';
 import FloatingToolbar from '../floating-toolbar/FloatingToolbar';
 import SaveFragmentCompositionModal from '../floating-toolbar/SaveFragmentCompositionModal';
@@ -53,6 +42,7 @@ export const ResizingContext = React.createContext();
 
 const RowWithControls = React.forwardRef(
 	({children, item, layoutData}, ref) => {
+		const {config} = layoutData.items[item.itemId];
 		const dispatch = useDispatch();
 		const {gutters} = {
 			...LAYOUT_DATA_ITEM_DEFAULT_CONFIGURATIONS[
@@ -73,7 +63,14 @@ const RowWithControls = React.forwardRef(
 			},
 		});
 
-		const state = useSelector(state => state);
+		const segmentsExperienceId = useSelector(
+			(state) => state.segmentsExperienceId
+		);
+		const selectedViewportSize = useSelector(
+			(state) => state.selectedViewportSize
+		);
+
+		const rowConfig = getResponsiveConfig(config, selectedViewportSize);
 
 		const rowRef = useRef(null);
 		const rowRect = getRect(rowRef.current);
@@ -81,24 +78,30 @@ const RowWithControls = React.forwardRef(
 		const [resizeFinished, setResizeFinished] = useState(false);
 		const [showOverlay, setShowOverlay] = useState(false);
 
-		const handleButtonClick = id => {
-			if (id === LAYOUT_DATA_FLOATING_TOOLBAR_BUTTONS.duplicateItem.id) {
-				dispatch(
-					duplicateItem({
-						itemId: item.itemId,
-						store: state,
-					})
-				);
-			}
-			else if (
-				id ===
-				LAYOUT_DATA_FLOATING_TOOLBAR_BUTTONS.saveFragmentComposition.id
-			) {
-				setOpenSaveFragmentCompositionModal(true);
-			}
-		};
+		const handleButtonClick = useCallback(
+			(id) => {
+				if (
+					id === LAYOUT_DATA_FLOATING_TOOLBAR_BUTTONS.duplicateItem.id
+				) {
+					dispatch(
+						duplicateItem({
+							itemId: item.itemId,
+							segmentsExperienceId,
+						})
+					);
+				}
+				else if (
+					id ===
+					LAYOUT_DATA_FLOATING_TOOLBAR_BUTTONS.saveFragmentComposition
+						.id
+				) {
+					setOpenSaveFragmentCompositionModal(true);
+				}
+			},
+			[dispatch, item.itemId, segmentsExperienceId]
+		);
 
-		const getHighlightedColumnIndex = clientX => {
+		const getHighlightedColumnIndex = (clientX) => {
 			const gridSizes = getGridSizes(rowRect.width);
 			const mousePosition = clientX - rowRect.left;
 
@@ -106,6 +109,7 @@ const RowWithControls = React.forwardRef(
 		};
 
 		const onResizeStart = ({clientX}) => {
+			dispatch({itemId: item.itemId, type: UPDATE_COL_SIZE_START});
 			setHighLightedColumn(getHighlightedColumnIndex(clientX));
 			setShowOverlay(true);
 		};
@@ -164,11 +168,11 @@ const RowWithControls = React.forwardRef(
 				dispatch(
 					resizeColumns({
 						layoutData,
-						store: state,
+						segmentsExperienceId,
 					})
 				);
 			}
-		}, [layoutData, state, dispatch, resizeFinished]);
+		}, [layoutData, dispatch, resizeFinished, segmentsExperienceId]);
 
 		const buttons = [];
 
@@ -181,13 +185,18 @@ const RowWithControls = React.forwardRef(
 
 		buttons.push(LAYOUT_DATA_FLOATING_TOOLBAR_BUTTONS.rowConfiguration);
 
+		const {verticalAlignment} = rowConfig;
+
 		return (
 			<Topper item={item} itemRef={ref} layoutData={layoutData}>
 				<Row
-					className="page-editor__row"
+					className={classNames('page-editor__row', {
+						'align-bottom': verticalAlignment === 'bottom',
+						'align-middle': verticalAlignment === 'middle',
+					})}
 					item={item}
 					layoutData={layoutData}
-					ref={node => {
+					ref={(node) => {
 						if (node) {
 							rowRef.current = node;
 

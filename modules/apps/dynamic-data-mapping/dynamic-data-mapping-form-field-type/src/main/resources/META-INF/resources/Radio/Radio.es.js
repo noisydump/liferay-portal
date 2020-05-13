@@ -12,16 +12,14 @@
  * details.
  */
 
-import './RadioRegister.soy';
-
 import {ClayRadio} from '@clayui/form';
 import React, {useMemo} from 'react';
 
 import {FieldBaseProxy} from '../FieldBase/ReactFieldBase.es';
+import {useSyncValue} from '../hooks/useSyncValue.es';
 import getConnectedReactComponentAdapter from '../util/ReactComponentAdapter.es';
 import {connectStore} from '../util/connectStore.es';
 import {setJSONArrayValue} from '../util/setters.es';
-import templates from './RadioAdapter.soy';
 
 const Radio = ({
 	disabled,
@@ -32,22 +30,30 @@ const Radio = ({
 	onFocus,
 	options,
 	value,
-}) => (
-	<div className="ddm-radio" onBlur={onBlur} onFocus={onFocus}>
-		{options.map(option => (
-			<ClayRadio
-				checked={value === option.value}
-				disabled={disabled}
-				inline={inline}
-				key={option.value}
-				label={option.label}
-				name={name}
-				onChange={onChange}
-				value={option.value}
-			/>
-		))}
-	</div>
-);
+}) => {
+	const [currentValue, setCurrentValue] = useSyncValue(value);
+
+	return (
+		<div className="ddm-radio" onBlur={onBlur} onFocus={onFocus}>
+			{options.map((option) => (
+				<ClayRadio
+					checked={currentValue === option.value}
+					disabled={disabled}
+					inline={inline}
+					key={option.value}
+					label={option.label}
+					name={name}
+					onChange={(event) => {
+						setCurrentValue(option.value);
+
+						onChange(event);
+					}}
+					value={option.value}
+				/>
+			))}
+		</div>
+	);
+};
 
 const RadioProxy = connectStore(
 	({
@@ -80,11 +86,11 @@ const RadioProxy = connectStore(
 					disabled={readOnly}
 					inline={inline}
 					name={name}
-					onBlur={event =>
+					onBlur={(event) =>
 						emit('fieldBlurred', event, event.target.value)
 					}
-					onChange={event => emit('fieldFocused', event)}
-					onFocus={event =>
+					onChange={(event) => emit('fieldFocused', event)}
+					onFocus={(event) =>
 						emit('fieldEdited', event, event.target.value)
 					}
 					options={options}
@@ -97,7 +103,7 @@ const RadioProxy = connectStore(
 
 const ReactRadioAdapter = getConnectedReactComponentAdapter(
 	RadioProxy,
-	templates
+	'radio'
 );
 
 export {ReactRadioAdapter};

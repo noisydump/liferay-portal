@@ -242,7 +242,12 @@ definition {
 
 			Click(locator1 = "SitePagesEditPage#CHANGE_CURRENT_THEME_BUTTON");
 
-			SelectFrame(locator1 = "IFrame#DIALOG");
+			LiferayEvent.waitForLiferayEvent(
+				attributeName = "src",
+				attributeValue = "dialog-iframe-popup",
+				eventName = "modalIframeLoaded");
+
+			SelectFrame(locator1 = "IFrame#MODAL_BODY");
 
 			LexiconCard.clickCard(card = "Fjord");
 
@@ -744,7 +749,6 @@ definition {
 	@priority = "5"
 	test ViewDisplayPageViaAssetPublisher {
 		property portal.acceptance = "true";
-		property portal.upstream = "quarantine";
 
 		task ("Add a web content article that uses the display page") {
 			WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name");

@@ -9,7 +9,7 @@ definition {
 				value1 = "${kbArticleContentEdit}");
 		}
 		else {
-			KeyPress(
+			KeyPress.keyPressCKEditorWaitForCKEditor(
 				locator1 = "CKEditor#BODY",
 				value1 = "${content}");
 		}
@@ -25,6 +25,16 @@ definition {
 		AssertTextEquals(
 			locator1 = "CKEditor#BODY",
 			value1 = "${content}");
+	}
+
+	macro viewEntryContentImage {
+		SelectFrame.selectFrameNoLoading(locator1 = "CKEditor#BODY_FIELD_IFRAME");
+
+		AssertVisible(
+			key_contentImageName = "${contentImageName}",
+			locator1 = "Wiki#CONTENT_IMAGE_NAME");
+
+		SelectFrame(value1 = "relative=top");
 	}
 
 }

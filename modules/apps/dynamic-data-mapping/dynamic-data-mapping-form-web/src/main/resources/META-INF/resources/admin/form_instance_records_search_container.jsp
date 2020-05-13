@@ -22,12 +22,6 @@ DDMFormViewFormInstanceRecordsDisplayContext ddmFormViewFormInstanceRecordsDispl
 PortletURL portletURL = ddmFormViewFormInstanceRecordsDisplayContext.getPortletURL();
 %>
 
-<clay:alert
-	message='<%= LanguageUtil.get(resourceBundle, "view-current-fields-warning-message") %>'
-	style="info"
-	title='<%= LanguageUtil.get(resourceBundle, "info") %>'
-/>
-
 <clay:management-toolbar
 	actionDropdownItems="<%= ddmFormViewFormInstanceRecordsDisplayContext.getActionItemsDropdownItems() %>"
 	clearResultsURL="<%= ddmFormViewFormInstanceRecordsDisplayContext.getClearResultsURL() %>"
@@ -43,7 +37,9 @@ PortletURL portletURL = ddmFormViewFormInstanceRecordsDisplayContext.getPortletU
 	sortingURL="<%= ddmFormViewFormInstanceRecordsDisplayContext.getSortingURL() %>"
 />
 
-<div class="container-fluid-1280" id="<portlet:namespace />viewEntriesContainer">
+<clay:container
+	id='<%= renderResponse.getNamespace() + "viewEntriesContainer" %>'
+>
 	<aui:form action="<%= portletURL.toString() %>" method="post" name="searchContainerForm">
 		<aui:input name="deleteFormInstanceRecordIds" type="hidden" />
 
@@ -119,18 +115,18 @@ PortletURL portletURL = ddmFormViewFormInstanceRecordsDisplayContext.getPortletU
 			/>
 		</liferay-ui:search-container>
 	</aui:form>
-</div>
+</clay:container>
 
-<div class="container-fluid-1280">
+<clay:container>
 	<liferay-ui:search-paginator
 		searchContainer="<%= ddmFormViewFormInstanceRecordsDisplayContext.getSearch() %>"
 	/>
-</div>
+</clay:container>
 
 <%@ include file="/admin/export_form_instance.jspf" %>
 
 <aui:script sandbox="<%= true %>">
-	var deleteRecords = function() {
+	var deleteRecords = function () {
 		if (
 			confirm(
 				'<%= UnicodeLanguageUtil.get(request, "are-you-sure-you-want-to-delete-this") %>'
@@ -167,15 +163,15 @@ PortletURL portletURL = ddmFormViewFormInstanceRecordsDisplayContext.getPortletU
 		deleteRecords: deleteRecords,
 	};
 
-	Liferay.componentReady('ddmFormInstanceRecordsManagementToolbar').then(function(
-		managementToolbar
-	) {
-		managementToolbar.on(['actionItemClicked'], function(event) {
-			var itemData = event.data.item.data;
+	Liferay.componentReady('ddmFormInstanceRecordsManagementToolbar').then(
+		function (managementToolbar) {
+			managementToolbar.on(['actionItemClicked'], function (event) {
+				var itemData = event.data.item.data;
 
-			if (itemData && itemData.action && ACTIONS[itemData.action]) {
-				ACTIONS[itemData.action]();
-			}
-		});
-	});
+				if (itemData && itemData.action && ACTIONS[itemData.action]) {
+					ACTIONS[itemData.action]();
+				}
+			});
+		}
+	);
 </aui:script>

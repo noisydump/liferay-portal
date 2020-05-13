@@ -204,7 +204,12 @@ definition {
 
 		AssertElementPresent.assertVisible(locator1 = "Button#DONE");
 
-		SelectFrame(locator1 = "IFrame#DIALOG");
+		LiferayEvent.waitForLiferayEvent(
+			attributeName = "src",
+			attributeValue = "dialog-iframe-popup",
+			eventName = "modalIframeLoaded");
+
+		SelectFrame(locator1 = "IFrame#MODAL_BODY");
 
 		var key_userScreenName = "${userScreenName}";
 
@@ -346,7 +351,12 @@ definition {
 
 		MenuItem.click(menuItem = "Assign Organization Roles");
 
-		SelectFrame(locator1 = "IFrame#DIALOG");
+		LiferayEvent.waitForLiferayEvent(
+			attributeName = "src",
+			attributeValue = "dialog-iframe-popup",
+			eventName = "modalIframeLoaded");
+
+		SelectFrame(locator1 = "IFrame#MODAL_BODY");
 
 		AssertTextEquals(
 			locator1 = "UsersAndOrganizationsAssignOrganizationalRoles#ROLE_TITLE",
@@ -566,6 +576,11 @@ definition {
 			locator1 = "UsersAndOrganizationsEditOrganization#PARENT_ORGANIZATION_SELECT_BUTTON",
 			value1 = "Select");
 
+		LiferayEvent.waitForLiferayEvent(
+			attributeName = "src",
+			attributeValue = "dialog-iframe-popup",
+			eventName = "modalIframeLoaded");
+
 		SelectFrame(locator1 = "UsersAndOrganizationsSelectOrganization#SELECT_ORGANIZATION_IFRAME");
 
 		AssertTextEquals(
@@ -736,6 +751,11 @@ definition {
 				locator1 = "UsersAndOrganizationsEditOrganization#PARENT_ORGANIZATION_SELECT_BUTTON",
 				value1 = "Change");
 
+			LiferayEvent.waitForLiferayEvent(
+				attributeName = "src",
+				attributeValue = "dialog-iframe-popup",
+				eventName = "modalIframeLoaded");
+
 			SelectFrame(locator1 = "UsersAndOrganizationsSelectOrganization#SELECT_ORGANIZATION_IFRAME");
 
 			AssertTextEquals(
@@ -750,6 +770,11 @@ definition {
 			AssertClick(
 				locator1 = "UsersAndOrganizationsEditOrganization#PARENT_ORGANIZATION_SELECT_BUTTON",
 				value1 = "Select");
+
+			LiferayEvent.waitForLiferayEvent(
+				attributeName = "src",
+				attributeValue = "dialog-iframe-popup",
+				eventName = "modalIframeLoaded");
 
 			SelectFrame(locator1 = "UsersAndOrganizationsSelectOrganization#SELECT_ORGANIZATION_IFRAME");
 

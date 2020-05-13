@@ -3,11 +3,11 @@ definition {
 	macro chooseMenu {
 		Click(locator1 = "Radio#CHOOSE_MENU");
 
-		Click(locator1 = "Button#SELECT");
+		Click.pauseClickAt(locator1 = "Button#SELECT");
 
 		SelectFrame(value1 = "relative=top");
 
-		SelectFrame.selectSecondFrame(locator1 = "IFrame#DIALOG");
+		SelectFrame.selectSecondFrame(locator1 = "IFrame#MODAL_BODY");
 
 		Click(
 			key_rowEntry = "${menuName}",
@@ -15,7 +15,12 @@ definition {
 
 		SelectFrame(value1 = "relative=top");
 
-		SelectFrame(locator1 = "IFrame#DIALOG");
+		LiferayEvent.waitForLiferayEvent(
+			attributeName = "src",
+			attributeValue = "dialog-iframe-popup",
+			eventName = "modalIframeLoaded");
+
+		SelectFrame(locator1 = "IFrame#MODAL_BODY");
 
 		AssertTextEquals(
 			locator1 = "NavigationMenusWidget#CHOOSE_MENU_SELECTED_MENU_NAME",

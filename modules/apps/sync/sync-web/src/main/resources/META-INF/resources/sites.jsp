@@ -86,7 +86,7 @@ portletURL.setParameter("delta", String.valueOf(delta));
 	</liferay-frontend:management-bar-action-buttons>
 </liferay-frontend:management-bar>
 
-<div class="container-fluid-1280">
+<clay:container>
 	<aui:form method="post" name="fm">
 		<aui:input name="redirect" type="hidden" value="<%= currentURL %>" />
 		<aui:input name="enabled" type="hidden" />
@@ -107,7 +107,7 @@ portletURL.setParameter("delta", String.valueOf(delta));
 		List<String> localizedResourceActions = new ArrayList<String>(resourceActions.size());
 
 		for (String resourceAction : resourceActions) {
-			localizedResourceActions.add(LanguageUtil.get(request, ResourceActionsUtil.getActionNamePrefix() + resourceAction));
+			localizedResourceActions.add(ResourceActionsUtil.getAction(request, resourceAction));
 		}
 
 		String fullAccessPermissionsDescription = LanguageUtil.format(request, "full-access-x", StringUtil.merge(localizedResourceActions, StringPool.COMMA_AND_SPACE));
@@ -120,7 +120,7 @@ portletURL.setParameter("delta", String.valueOf(delta));
 			localizedResourceActions = new ArrayList<String>(resourceActions.size());
 
 			for (String resourceAction : resourceActions) {
-				localizedResourceActions.add(LanguageUtil.get(request, ResourceActionsUtil.getActionNamePrefix() + resourceAction));
+				localizedResourceActions.add(ResourceActionsUtil.getAction(request, resourceAction));
 			}
 
 			defaultPermissionsDescription = StringUtil.merge(localizedResourceActions, StringPool.COMMA_AND_SPACE);
@@ -204,7 +204,7 @@ portletURL.setParameter("delta", String.valueOf(delta));
 			/>
 		</liferay-ui:search-container>
 	</aui:form>
-</div>
+</clay:container>
 
 <aui:script>
 	function <portlet:namespace />disableSites() {
@@ -251,7 +251,7 @@ portletURL.setParameter("delta", String.valueOf(delta));
 					dialog: {
 						destroyOnHide: true,
 						on: {
-							destroy: function() {
+							destroy: function () {
 								Liferay.Portlet.refresh(
 									'#p_p_id<portlet:namespace />'
 								);

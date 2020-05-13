@@ -835,12 +835,12 @@ definition {
 
 			ContentPages.clickPencil();
 
-			AssertVisible(
+			AssertElementPresent(
 				key_elementType = "Section",
 				key_position = "1",
 				locator1 = "PageEditor#LAYOUT_ELEMENTS_HEADER");
 
-			AssertVisible(
+			AssertElementPresent(
 				key_elementType = "Row",
 				key_position = "1",
 				locator1 = "PageEditor#LAYOUT_ELEMENTS_HEADER");
@@ -907,6 +907,8 @@ definition {
 		}
 
 		task ("Assert could add fragment added to display page after upgrading") {
+			DisplayPageTemplatesAdmin.openDisplayPagesAdmin(siteURLKey = "test-site-name");
+
 			DisplayPageTemplatesAdmin.gotoDisplayPageEllipsisItem(
 				displayPageName = "Display Page Name",
 				item = "Edit");
@@ -916,7 +918,7 @@ definition {
 				fragmentName = "Paragraph");
 		}
 
-		task ("Assert button frgamnet configuration survived") {
+		task ("Assert button fragment configuration survived") {
 			Navigator.openWithAppendToBaseURL(urlAppend = "web/test-site-name/test-configuration-content-page");
 
 			ContentPages.clickPencil();
@@ -1753,6 +1755,11 @@ definition {
 
 		ClassicSearch.gotoOptions(portletOption = "Configuration");
 
+		LiferayEvent.waitForLiferayEvent(
+			attributeName = "src",
+			attributeValue = "dialog-iframe-popup",
+			eventName = "modalIframeLoaded");
+
 		SelectFrame(locator1 = "IFrame#CONFIGURATION");
 
 		AssertTextEquals(
@@ -1783,6 +1790,16 @@ definition {
 			searchAssetType = "Web Content Article");
 
 		AssertElementNotPresent(locator1 = "SearchResults#USER_FACET_ANY_USER");
+	}
+
+	macro viewDefaultPage {
+		Navigator.openURL();
+
+		// Assert the Home/Welcome page is a widget page in the default site when upgrade from 7.2/7.1/7.0
+
+		AssertElementNotPresent(locator1 = "Icon#EDIT_PENCIL");
+
+		AssertVisible(locator1 = "ControlMenu#ADD");
 	}
 
 	macro viewDocument {
@@ -2255,6 +2272,11 @@ definition {
 
 		SearchPortlets.gotoEmbeddedOptions(portletOption = "Configuration");
 
+		LiferayEvent.waitForLiferayEvent(
+			attributeName = "src",
+			attributeValue = "dialog-iframe-popup",
+			eventName = "modalIframeLoaded");
+
 		SelectFrame(locator1 = "IFrame#CONFIGURATION");
 
 		FormFields.viewTextValue(
@@ -2266,6 +2288,11 @@ definition {
 		Portlet.gotoPortletOptions(
 			portletName = "Search Result",
 			portletOption = "Configuration");
+
+		LiferayEvent.waitForLiferayEvent(
+			attributeName = "src",
+			attributeValue = "dialog-iframe-popup",
+			eventName = "modalIframeLoaded");
 
 		SelectFrame(locator1 = "IFrame#CONFIGURATION");
 
@@ -2279,6 +2306,11 @@ definition {
 			portletName = "Search Options",
 			portletOption = "Configuration");
 
+		LiferayEvent.waitForLiferayEvent(
+			attributeName = "src",
+			attributeValue = "dialog-iframe-popup",
+			eventName = "modalIframeLoaded");
+
 		SelectFrame(locator1 = "IFrame#CONFIGURATION");
 
 		FormFields.viewCheckboxChecked(fieldName = "allowEmptySearches");
@@ -2289,6 +2321,11 @@ definition {
 			portletName = "Suggestion",
 			portletOption = "Configuration");
 
+		LiferayEvent.waitForLiferayEvent(
+			attributeName = "src",
+			attributeValue = "dialog-iframe-popup",
+			eventName = "modalIframeLoaded");
+
 		SelectFrame(locator1 = "IFrame#CONFIGURATION");
 
 		FormFields.viewCheckboxChecked(fieldName = "spellCheckSuggestionEnabled");
@@ -2298,6 +2335,11 @@ definition {
 		Portlet.gotoPortletOptions(
 			portletName = "Type Facet",
 			portletOption = "Configuration");
+
+		LiferayEvent.waitForLiferayEvent(
+			attributeName = "src",
+			attributeValue = "dialog-iframe-popup",
+			eventName = "modalIframeLoaded");
 
 		SelectFrame(locator1 = "IFrame#CONFIGURATION");
 
@@ -2645,6 +2687,7 @@ definition {
 		SignIn.signIn(userEmailAddress = "user@liferay.com");
 
 		Smoke.viewWelcomePage(
+			upgrade = "true",
 			userFirstName = "Userfn",
 			userLastName = "Userln");
 

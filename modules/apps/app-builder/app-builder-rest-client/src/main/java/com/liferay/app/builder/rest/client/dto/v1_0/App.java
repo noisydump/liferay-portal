@@ -30,6 +30,31 @@ import javax.annotation.Generated;
 @Generated("")
 public class App implements Cloneable {
 
+	public static App toDTO(String json) {
+		return AppSerDes.toDTO(json);
+	}
+
+	public Boolean getActive() {
+		return active;
+	}
+
+	public void setActive(Boolean active) {
+		this.active = active;
+	}
+
+	public void setActive(
+		UnsafeSupplier<Boolean, Exception> activeUnsafeSupplier) {
+
+		try {
+			active = activeUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected Boolean active;
+
 	public AppDeployment[] getAppDeployments() {
 		return appDeployments;
 	}
@@ -72,6 +97,27 @@ public class App implements Cloneable {
 	}
 
 	protected Long dataDefinitionId;
+
+	public String getDataDefinitionName() {
+		return dataDefinitionName;
+	}
+
+	public void setDataDefinitionName(String dataDefinitionName) {
+		this.dataDefinitionName = dataDefinitionName;
+	}
+
+	public void setDataDefinitionName(
+		UnsafeSupplier<String, Exception> dataDefinitionNameUnsafeSupplier) {
+
+		try {
+			dataDefinitionName = dataDefinitionNameUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected String dataDefinitionName;
 
 	public Long getDataLayoutId() {
 		return dataLayoutId;
@@ -217,27 +263,6 @@ public class App implements Cloneable {
 	}
 
 	protected Long siteId;
-
-	public String getStatus() {
-		return status;
-	}
-
-	public void setStatus(String status) {
-		this.status = status;
-	}
-
-	public void setStatus(
-		UnsafeSupplier<String, Exception> statusUnsafeSupplier) {
-
-		try {
-			status = statusUnsafeSupplier.get();
-		}
-		catch (Exception e) {
-			throw new RuntimeException(e);
-		}
-	}
-
-	protected String status;
 
 	public Long getUserId() {
 		return userId;

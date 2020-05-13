@@ -15,6 +15,7 @@
 package com.liferay.change.tracking.service;
 
 import com.liferay.change.tracking.model.CTProcess;
+import com.liferay.petra.sql.dsl.query.DSLQuery;
 import com.liferay.portal.kernel.dao.orm.ActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.DynamicQuery;
 import com.liferay.portal.kernel.dao.orm.IndexableActionableDynamicQuery;
@@ -113,6 +114,9 @@ public interface CTProcessLocalService
 	@Override
 	public PersistedModel deletePersistedModel(PersistedModel persistedModel)
 		throws PortalException;
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public <T> T dslQuery(DSLQuery dslQuery);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public DynamicQuery dynamicQuery();
@@ -215,11 +219,6 @@ public interface CTProcessLocalService
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<CTProcess> getCTProcesses(long ctCollectionId);
-
-	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
-	public List<CTProcess> getCTProcesses(
-		long companyId, long userId, String keywords, int status, int start,
-		int end, OrderByComparator<CTProcess> orderByComparator);
 
 	/**
 	 * Returns the number of ct processes.

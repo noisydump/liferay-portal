@@ -313,7 +313,8 @@ public class JournalContentDisplayContext {
 	public List<ContentMetadataAssetAddonEntry>
 		getCommentsContentMetadataAssetAddonEntries() {
 
-		List commentsContentMetadataAssetAddonEntries = new ArrayList();
+		List<ContentMetadataAssetAddonEntry>
+			commentsContentMetadataAssetAddonEntries = new ArrayList<>();
 
 		ContentMetadataAssetAddonEntry
 			enableCommentsContentMetadataAssetAddonEntry =
@@ -494,10 +495,14 @@ public class JournalContentDisplayContext {
 	public long getGroupId() {
 		long groupId = _themeDisplay.getScopeGroupId();
 
-		Group scopeGroup = _themeDisplay.getScopeGroup();
+		StagingGroupHelper stagingGroupHelper =
+			StagingGroupHelperUtil.getStagingGroupHelper();
 
-		if (scopeGroup.isStaged() &&
-			!scopeGroup.isInStagingPortlet(JournalPortletKeys.JOURNAL)) {
+		if (stagingGroupHelper.isLocalStagingGroup(groupId) &&
+			!stagingGroupHelper.isStagedPortlet(
+				groupId, JournalPortletKeys.JOURNAL)) {
+
+			Group scopeGroup = _themeDisplay.getScopeGroup();
 
 			groupId = scopeGroup.getLiveGroupId();
 		}
@@ -525,11 +530,13 @@ public class JournalContentDisplayContext {
 
 		assetEntryItemSelectorCriterion.setDesiredItemSelectorReturnTypes(
 			new AssetEntryItemSelectorReturnType());
-		assetEntryItemSelectorCriterion.setGroupId(
-			_themeDisplay.getScopeGroupId());
+
+		long groupId = getGroupId();
+
+		assetEntryItemSelectorCriterion.setGroupId(groupId);
 		assetEntryItemSelectorCriterion.setSelectedGroupIds(
-			PortalUtil.getCurrentAndAncestorSiteGroupIds(
-				_themeDisplay.getScopeGroupId()));
+			PortalUtil.getCurrentAndAncestorSiteGroupIds(groupId));
+
 		assetEntryItemSelectorCriterion.setShowNonindexable(true);
 		assetEntryItemSelectorCriterion.setShowScheduled(true);
 		assetEntryItemSelectorCriterion.setSingleSelect(true);

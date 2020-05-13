@@ -89,7 +89,7 @@ portletURL.setParameter("portletResource", portletResource);
 			<aui:input name="<%= Constants.CMD %>" type="hidden" value="<%= Constants.EXPORT %>" />
 
 			<div class="export-dialog-tree">
-				<div class="container-fluid-1280">
+				<clay:container>
 					<aui:fieldset-group markupView="lexicon">
 						<aui:fieldset>
 							<aui:input label="export-the-selected-data-to-the-given-lar-file-name" name="exportFileName" required="<%= true %>" showRequiredLabel="<%= false %>" size="50" value="<%= ExportImportHelperUtil.getPortletExportFileName(selPortlet) %>" />
@@ -452,7 +452,7 @@ portletURL.setParameter("portletResource", portletResource);
 							/>
 						</c:if>
 					</aui:fieldset-group>
-				</div>
+				</clay:container>
 			</div>
 
 			<aui:button-row>
@@ -467,7 +467,7 @@ portletURL.setParameter("portletResource", portletResource);
 
 		var form = liferayForm.formNode;
 
-		form.on('submit', function(event) {
+		form.on('submit', function (event) {
 			event.halt();
 
 			var exportImport = Liferay.component(
@@ -488,7 +488,7 @@ portletURL.setParameter("portletResource", portletResource);
 
 		var fieldRules = [
 			{
-				body: function(val, fieldNode, ruleValue) {
+				body: function (val, fieldNode, ruleValue) {
 
 					<%
 					JSONArray blacklistCharJSONArray = JSONFactoryUtil.createJSONArray();
@@ -560,7 +560,7 @@ portletURL.setParameter("portletResource", portletResource);
 
 	Liferay.component('<portlet:namespace />ExportImportComponent', exportImport);
 
-	Liferay.once('destroyPortlet', function() {
+	Liferay.once('destroyPortlet', function () {
 		exportImport.destroy();
 	});
 </aui:script>

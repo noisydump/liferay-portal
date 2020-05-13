@@ -27,6 +27,13 @@ boolean formView = PrefsParamUtil.getBoolean(PortletPreferencesFactoryUtil.getPo
 long formDDMTemplateId = PrefsParamUtil.getLong(PortletPreferencesFactoryUtil.getPortletSetup(renderRequest), renderRequest, "formDDMTemplateId");
 long recordSetId = PrefsParamUtil.getLong(PortletPreferencesFactoryUtil.getPortletSetup(renderRequest), renderRequest, "recordSetId");
 boolean spreadsheet = PrefsParamUtil.getBoolean(PortletPreferencesFactoryUtil.getPortletSetup(renderRequest), renderRequest, "spreadsheet");
+
+Group scopeGroup = themeDisplay.getScopeGroup();
+
+if (scopeGroup.isStagingGroup() && !scopeGroup.isInStagingPortlet(DDLPortletKeys.DYNAMIC_DATA_LISTS)) {
+	scopeGroupId = scopeGroup.getLiveGroupId();
+}
+
 long[] templateGroupIds = PortalUtil.getCurrentAndAncestorSiteGroupIds(scopeGroupId);
 
 DDLRecordSet selRecordSet = DDLRecordSetServiceUtil.fetchRecordSet(recordSetId);
@@ -48,7 +55,7 @@ String orderByType = ParamUtil.getString(request, "orderByType", "asc");
 			<aui:input name="redirect" type="hidden" value="<%= configurationRenderURL.toString() %>" />
 
 			<liferay-ui:section>
-				<div class="container-fluid-1280">
+				<clay:container>
 					<div class="alert alert-info">
 						<span class="displaying-help-message-holder <%= (selRecordSet == null) ? StringPool.BLANK : "hide" %>">
 							<liferay-ui:message key="please-select-a-list-entry-from-the-list-below" />
@@ -133,7 +140,7 @@ String orderByType = ParamUtil.getString(request, "orderByType", "asc");
 							</div>
 						</div>
 					</aui:fieldset>
-				</div>
+				</clay:container>
 			</liferay-ui:section>
 		</aui:form>
 
@@ -144,7 +151,7 @@ String orderByType = ParamUtil.getString(request, "orderByType", "asc");
 
 			<c:if test="<%= selRecordSet != null %>">
 				<liferay-ui:section>
-					<div class="container-fluid-1280">
+					<clay:container>
 						<div class="alert alert-info">
 							<span class="displaying-record-set-id-holder <%= (selRecordSet == null) ? "hide" : StringPool.BLANK %>">
 								<liferay-ui:message key="displaying-list" />: <span class="displaying-record-set-id"><%= (selRecordSet != null) ? HtmlUtil.escape(selRecordSet.getName(locale)) : StringPool.BLANK %></span>
@@ -226,7 +233,7 @@ String orderByType = ParamUtil.getString(request, "orderByType", "asc");
 								</div>
 							</div>
 						</aui:fieldset>
-					</div>
+					</clay:container>
 				</liferay-ui:section>
 			</c:if>
 		</aui:form>
@@ -243,7 +250,7 @@ String orderByType = ParamUtil.getString(request, "orderByType", "asc");
 	var submitButton = A.one('#<portlet:namespace />fm_submit');
 
 	if (submitButton) {
-		submitButton.on('click', function(event) {
+		submitButton.on('click', function (event) {
 			if (form) {
 				form.submit();
 			}
@@ -255,7 +262,7 @@ String orderByType = ParamUtil.getString(request, "orderByType", "asc");
 	Liferay.provide(
 		window,
 		'<portlet:namespace />selectRecordSet',
-		function(recordSetId, recordSetName) {
+		function (recordSetId, recordSetName) {
 			var A = AUI();
 
 			document.<portlet:namespace />fm.<portlet:namespace />recordSetId.value = recordSetId;

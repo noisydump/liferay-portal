@@ -69,6 +69,11 @@
 	<td></td>
 </tr>
 <tr>
+	<td>ANY_WITH_COLOR</td>
+	<td>//*[contains(@class,'btn-${key_color}')][normalize-space(text())='${key_text}']</td>
+	<td></td>
+</tr>
+<tr>
 	<td>ANY_DISABLED</td>
 	<td>//*[contains(@class,'btn')][normalize-space(text())='${key_text}'][@disabled='']</td>
 	<td></td>
@@ -334,6 +339,11 @@
 	<td></td>
 </tr>
 <tr>
+	<td>IGNORE_REDIRECT_URLS</td>
+	<td>//button[*[name()='svg'][contains(@class,'lexicon-icon-hidden')]]</td>
+	<td></td>
+</tr>s
+<tr>
 	<td>IMPORT</td>
 	<td>//div[contains(@class,'footer')]//button[contains(.,'Import')]</td>
 	<td></td>
@@ -460,7 +470,7 @@
 </tr>
 <tr>
 	<td>PLUS_IE</td>
-	<td>//a[contains(@class,'nav-btn-monospaced')] | //button[@data-title='New' or @title='New' or @title='Add']</td>
+	<td>//a[contains(@class,'nav-btn-monospaced')] | //button[contains(@class,'nav-btn-monospaced')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -709,8 +719,23 @@
 	<td></td>
 </tr>
 <tr>
+	<td>MODAL_ITEM_SUBMIT</td>
+	<td>//div[contains(@class,'modal-item')]//button[@type='submit']</td>
+	<td></td>
+</tr>
+<tr>
 	<td>TAB_SUBMIT_BTN</td>
 	<td>//button[contains(@type,'submit') and contains(.,'${key_tab}')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>TRY_REDIRECTION</td>
+	<td>//button[@type='button' and @title='Check URL']</td>
+	<td></td>
+</tr>
+<tr>
+	<td>TRY_REDIRECTION_DISABLED</td>
+	<td>//button[@type='button' and @title='Check URL'][@disabled='']</td>
 	<td></td>
 </tr>
 <tr>
@@ -731,6 +756,11 @@
 <tr>
 	<td>UNDO</td>
 	<td>//button[contains(.,'Undo')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>UNIGNORE_REDIRECT_URLS</td>
+	<td>//button[*[name()='svg'][contains(@class,'lexicon-icon-view')]]</td>
 	<td></td>
 </tr>
 <tr>

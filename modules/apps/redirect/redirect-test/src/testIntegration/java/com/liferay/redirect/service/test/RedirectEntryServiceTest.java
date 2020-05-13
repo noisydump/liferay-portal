@@ -67,8 +67,9 @@ public class RedirectEntryServiceTest {
 		RedirectTestUtil.withRegularUser(
 			(user, role) ->
 				_redirectEntry = _redirectEntryService.addRedirectEntry(
-					_group.getGroupId(), "destinationURL", null, false,
-					"sourceURL", ServiceContextTestUtil.getServiceContext()));
+					_group.getGroupId(), "destinationURL", null, "groupBaseURL",
+					false, "sourceURL", false,
+					ServiceContextTestUtil.getServiceContext()));
 	}
 
 	@Test
@@ -82,8 +83,9 @@ public class RedirectEntryServiceTest {
 					ActionKeys.ADD_ENTRY);
 
 				_redirectEntry = _redirectEntryService.addRedirectEntry(
-					_group.getGroupId(), "destinationURL", null, false,
-					"sourceURL", ServiceContextTestUtil.getServiceContext());
+					_group.getGroupId(), "destinationURL", null, "groupBaseURL",
+					false, "sourceURL", false,
+					ServiceContextTestUtil.getServiceContext());
 
 				Assert.assertNotNull(_redirectEntry);
 			});
@@ -234,8 +236,10 @@ public class RedirectEntryServiceTest {
 				_redirectEntry = _redirectEntryService.updateRedirectEntry(
 					_redirectEntry.getRedirectEntryId(),
 					RandomTestUtil.randomString(), null,
+					RandomTestUtil.randomString(),
 					RandomTestUtil.randomBoolean(),
-					RandomTestUtil.randomString()));
+					RandomTestUtil.randomString(),
+					RandomTestUtil.randomBoolean()));
 	}
 
 	@Test
@@ -255,12 +259,17 @@ public class RedirectEntryServiceTest {
 				_redirectEntry = _redirectEntryService.updateRedirectEntry(
 					_redirectEntry.getRedirectEntryId(),
 					RandomTestUtil.randomString(), null,
+					RandomTestUtil.randomString(),
 					RandomTestUtil.randomBoolean(),
-					RandomTestUtil.randomString());
+					RandomTestUtil.randomString(),
+					RandomTestUtil.randomBoolean());
 
 				Assert.assertNotNull(_redirectEntry);
 			});
 	}
+
+	@DeleteAfterTestRun
+	private RedirectEntry _destinationRedirectEntry;
 
 	@DeleteAfterTestRun
 	private Group _group;

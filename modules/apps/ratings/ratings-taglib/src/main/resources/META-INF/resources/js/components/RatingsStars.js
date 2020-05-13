@@ -15,27 +15,24 @@
 import ClayButton from '@clayui/button';
 import ClayDropDown from '@clayui/drop-down';
 import ClayIcon from '@clayui/icon';
-import {fetch, objectToFormData} from 'frontend-js-web';
+import {useIsMounted} from 'frontend-js-react-web';
 import PropTypes from 'prop-types';
 import React, {useCallback, useState} from 'react';
 
 import Lang from '../utils/lang';
 
-const RATING_TYPE = 'stars';
+const SCORE_UNVOTE = -1;
 
 const RatingsStars = ({
-	className,
-	classPK,
-	enabled = false,
-	inTrash = false,
+	disabled = true,
 	initialAverageScore = 0,
 	initialTotalEntries = 0,
+	inititalTitle,
 	numberOfStars,
-	signedIn,
-	url,
+	sendVoteRequest,
 	userScore,
 }) => {
-	const startScores = Array.from(Array(numberOfStars)).map((_, index) => {
+	const starScores = Array.from(Array(numberOfStars)).map((_, index) => {
 		const number = index + 1;
 
 		return {
@@ -45,16 +42,16 @@ const RatingsStars = ({
 	});
 
 	const getLabelScore = useCallback(
-		score => {
-			const startScore = startScores.find(({value}) => score === value);
+		(score) => {
+			const starScore = starScores.find(({value}) => score === value);
 
-			return (startScore && startScore.label) || 0;
+			return (starScore && starScore.label) || 0;
 		},
-		[startScores]
+		[starScores]
 	);
 
 	const formatAverageScore = useCallback(
-		averageScore => (averageScore * numberOfStars).toFixed(1),
+		(averageScore) => (averageScore * numberOfStars).toFixed(1),
 		[numberOfStars]
 	);
 
@@ -64,60 +61,49 @@ const RatingsStars = ({
 		formatAverageScore(initialAverageScore)
 	);
 	const [totalEntries, setTotalEntries] = useState(initialTotalEntries);
+	const isMounted = useIsMounted();
 
-	const handleOnClick = index => {
-		const {label, value} = startScores[index];
+	const handleOnClick = (index) => {
+		let value, label;
+		const starScore = starScores[index];
+
+		if (starScore) {
+			value = starScore.value;
+			label = starScore.label;
+		}
+		else {
+			value = SCORE_UNVOTE;
+			label = getLabelScore(SCORE_UNVOTE);
+		}
 
 		setScore(label);
-		sendVoteRequest(value);
+		handleSendVoteRequest(value);
 		setIsDropdownOpen(false);
 	};
 
-	const sendVoteRequest = useCallback(
-		score => {
-			Liferay.fire('ratings:vote', {
-				className,
-				classPK,
-				ratingType: RATING_TYPE,
-				score,
-			});
-
-			const body = objectToFormData({
-				className,
-				classPK,
-				p_auth: Liferay.authToken,
-				p_l_id: themeDisplay.getPlid(),
-				score,
-			});
-
-			fetch(url, {
-				body,
-				method: 'POST',
-			})
-				.then(response => response.json())
-				.then(({averageScore, score, totalEntries}) => {
-					if (averageScore && score && totalEntries) {
+	const handleSendVoteRequest = useCallback(
+		(score) => {
+			sendVoteRequest(score).then(
+				({averageScore, score, totalEntries} = {}) => {
+					if (
+						isMounted() &&
+						averageScore !== undefined &&
+						score !== undefined &&
+						totalEntries !== undefined
+					) {
 						setTotalEntries(totalEntries);
 						setAverageScore(formatAverageScore(averageScore));
 						setScore(getLabelScore(score));
 					}
-				});
+				}
+			);
 		},
-		[className, classPK, formatAverageScore, getLabelScore, url]
+		[formatAverageScore, getLabelScore, isMounted, sendVoteRequest]
 	);
 
 	const getTitle = useCallback(() => {
-		if (!signedIn) {
-			return '';
-		}
-
-		if (inTrash) {
-			return Liferay.Language.get(
-				'ratings-are-disabled-because-this-entry-is-in-the-recycle-bin'
-			);
-		}
-		else if (!enabled) {
-			return Liferay.Language.get('ratings-are-disabled-in-staging');
+		if (inititalTitle !== undefined) {
+			return inititalTitle;
 		}
 		else if (score <= 0) {
 			return Liferay.Language.get('vote');
@@ -136,7 +122,7 @@ const RatingsStars = ({
 		}
 
 		return '';
-	}, [signedIn, inTrash, enabled, score, numberOfStars]);
+	}, [inititalTitle, score, numberOfStars]);
 
 	const getSrAverageMessage = () => {
 		const srAverageMessage =
@@ -157,13 +143,13 @@ const RatingsStars = ({
 					menuElementAttrs={{
 						className: 'ratings-stars-dropdown',
 					}}
-					onActiveChange={isActive => setIsDropdownOpen(isActive)}
+					onActiveChange={(isActive) => setIsDropdownOpen(isActive)}
 					trigger={
 						<ClayButton
 							aria-pressed={!!score}
 							borderless
 							className="ratings-stars-dropdown-toggle"
-							disabled={!signedIn || !enabled}
+							disabled={disabled}
 							displayType="secondary"
 							small
 							title={getTitle()}
@@ -179,7 +165,7 @@ const RatingsStars = ({
 					}
 				>
 					<ClayDropDown.ItemList>
-						{startScores.map(({label}, index) => {
+						{starScores.map(({label}, index) => {
 							const srMessage =
 								index === 0
 									? Liferay.Language.get(
@@ -207,6 +193,15 @@ const RatingsStars = ({
 								</ClayDropDown.Item>
 							);
 						})}
+
+						<ClayDropDown.Item
+							disabled={score === 0}
+							onClick={() => {
+								handleOnClick();
+							}}
+						>
+							{Liferay.Language.get('delete')}
+						</ClayDropDown.Item>
 					</ClayDropDown.ItemList>
 				</ClayDropDown>
 			</div>
@@ -235,15 +230,13 @@ const RatingsStars = ({
 };
 
 RatingsStars.propTypes = {
-	className: PropTypes.string.isRequired,
-	classPK: PropTypes.string.isRequired,
-	enabled: PropTypes.bool,
-	inTrash: PropTypes.bool,
+	disabled: PropTypes.bool,
 	initialAverageScore: PropTypes.number,
 	initialTotalEntries: PropTypes.number,
+	inititalTitle: PropTypes.string,
 	numberOfStars: PropTypes.number.isRequired,
-	signedIn: PropTypes.bool.isRequired,
-	url: PropTypes.string.isRequired,
+	positiveVotes: PropTypes.number,
+	sendVoteRequest: PropTypes.func.isRequired,
 	userScore: PropTypes.number,
 };
 

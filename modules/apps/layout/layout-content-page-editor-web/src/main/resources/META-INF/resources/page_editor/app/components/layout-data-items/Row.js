@@ -20,20 +20,34 @@ import {
 	LayoutDataPropTypes,
 	getLayoutDataItemPropTypes,
 } from '../../../prop-types/index';
-import {LAYOUT_DATA_ITEM_DEFAULT_CONFIGURATIONS} from '../../config/constants/layoutDataItemDefaultConfigurations';
 import {LAYOUT_DATA_ITEM_TYPES} from '../../config/constants/layoutDataItemTypes';
 import {useSelector} from '../../store/index';
+import {getResponsiveConfig} from '../../utils/getResponsiveConfig';
 
 const Row = React.forwardRef(({children, className, item, layoutData}, ref) => {
+	const selectedViewportSize = useSelector(
+		(state) => state.selectedViewportSize
+	);
+
+	const itemConfig = getResponsiveConfig(item.config, selectedViewportSize);
+
+	const {modulesPerRow, reverseOrder} = itemConfig;
+
 	const rowContent = (
 		<div
 			className={classNames(className, 'row', {
-				empty: !item.children.some(
-					childId => layoutData.items[childId].children.length
-				),
-				'no-gutters': !(typeof item.config.gutters === 'boolean'
-					? item.config.gutters
-					: LAYOUT_DATA_ITEM_DEFAULT_CONFIGURATIONS[item.type]),
+				empty:
+					item.config.numberOfColumns === modulesPerRow &&
+					!item.children.some(
+						(childId) => layoutData.items[childId].children.length
+					),
+				'flex-column': modulesPerRow === 1,
+				'flex-column-reverse':
+					item.config.numberOfColumns === 2 &&
+					modulesPerRow === 1 &&
+					reverseOrder,
+
+				'no-gutters': !item.config.gutters,
 			})}
 			ref={ref}
 		>
@@ -41,7 +55,7 @@ const Row = React.forwardRef(({children, className, item, layoutData}, ref) => {
 		</div>
 	);
 
-	const masterLayoutData = useSelector(state => state.masterLayoutData);
+	const masterLayoutData = useSelector((state) => state.masterLayoutData);
 
 	const masterParent = useMemo(() => {
 		const dropZone =
@@ -52,7 +66,7 @@ const Row = React.forwardRef(({children, className, item, layoutData}, ref) => {
 	}, [masterLayoutData]);
 
 	const shouldAddContainer = useSelector(
-		state => !getItemParent(item, state.layoutData) && !masterParent
+		(state) => !getItemParent(item, state.layoutData) && !masterParent
 	);
 
 	return shouldAddContainer ? (
@@ -72,7 +86,9 @@ Row.propTypes = {
 function getItemParent(item, itemLayoutData) {
 	const parent = itemLayoutData.items[item.parentId];
 
-	return parent && parent.type === LAYOUT_DATA_ITEM_TYPES.root
+	return parent &&
+		(parent.type === LAYOUT_DATA_ITEM_TYPES.root ||
+			parent.type === LAYOUT_DATA_ITEM_TYPES.fragmentDropZone)
 		? getItemParent(parent, itemLayoutData)
 		: parent;
 }

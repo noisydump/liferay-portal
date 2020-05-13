@@ -25,7 +25,6 @@ import com.liferay.fragment.util.FragmentEntryTestUtil;
 import com.liferay.fragment.util.FragmentTestUtil;
 import com.liferay.layout.test.util.LayoutTestUtil;
 import com.liferay.petra.string.StringPool;
-import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Layout;
@@ -61,9 +60,6 @@ import com.liferay.spring.mock.web.portlet.MockActionRequest;
 import javax.portlet.ActionRequest;
 import javax.portlet.ActionResponse;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.ClassRule;
@@ -72,7 +68,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import org.springframework.mock.web.MockHttpServletRequest;
-import org.springframework.mock.web.MockHttpServletResponse;
 
 /**
  * @author Jürgen Kappler
@@ -112,7 +107,7 @@ public class PropagateGroupFragmentEntryChangesMVCActionCommandTest {
 		FragmentEntryLink fragmentEntryLink =
 			_fragmentEntryLinkLocalService.addFragmentEntryLink(
 				TestPropsValues.getUserId(), _group.getGroupId(), 0,
-				_fragmentEntry.getFragmentEntryId(),
+				_fragmentEntry.getFragmentEntryId(), 0,
 				PortalUtil.getClassNameId(Layout.class), _layout.getPlid(),
 				"css value", "<div>HTML value</div>", "js value",
 				"{fieldSets: []}", StringPool.BLANK, StringPool.BLANK, 0, null,
@@ -126,7 +121,7 @@ public class PropagateGroupFragmentEntryChangesMVCActionCommandTest {
 			_fragmentEntry);
 
 		MockActionRequest actionRequest = _getMockActionRequest();
-		ActionResponse actionResponse = new MockActionResponse();
+		ActionResponse actionResponse = new MockLiferayPortletActionResponse();
 
 		ReflectionTestUtil.invoke(
 			_mvcActionCommand, "processAction",
@@ -145,7 +140,7 @@ public class PropagateGroupFragmentEntryChangesMVCActionCommandTest {
 			_fragmentEntry.getJs(), persistedFragmentEntryLink.getJs());
 	}
 
-	private MockActionRequest _getMockActionRequest() throws PortalException {
+	private MockActionRequest _getMockActionRequest() throws Exception {
 		ThemeDisplay themeDisplay = _getThemeDisplay();
 
 		MockActionRequest mockActionRequest = new MockActionRequest(
@@ -169,7 +164,7 @@ public class PropagateGroupFragmentEntryChangesMVCActionCommandTest {
 		return mockActionRequest;
 	}
 
-	private ThemeDisplay _getThemeDisplay() throws PortalException {
+	private ThemeDisplay _getThemeDisplay() throws Exception {
 		ThemeDisplay themeDisplay = new ThemeDisplay();
 
 		themeDisplay.setCompany(_company);
@@ -235,35 +230,21 @@ public class PropagateGroupFragmentEntryChangesMVCActionCommandTest {
 		public MockActionRequest(Group group, ThemeDisplay themeDisplay) {
 			_group = group;
 			_themeDisplay = themeDisplay;
-		}
 
-		@Override
-		public HttpServletRequest getHttpServletRequest() {
-			MockHttpServletRequest httpServletRequest =
-				new MockHttpServletRequest();
+			MockHttpServletRequest mockHttpServletRequest =
+				(MockHttpServletRequest)getHttpServletRequest();
 
-			httpServletRequest.setAttribute(
-				JavaConstants.JAVAX_PORTLET_RESPONSE, new MockActionResponse());
-			httpServletRequest.setAttribute(
+			mockHttpServletRequest.setAttribute(
+				JavaConstants.JAVAX_PORTLET_RESPONSE,
+				new MockLiferayPortletActionResponse());
+			mockHttpServletRequest.setAttribute(
 				WebKeys.THEME_DISPLAY, _themeDisplay);
-			httpServletRequest.setParameter(
+			mockHttpServletRequest.setParameter(
 				"rowIds", new String[] {String.valueOf(_group.getGroupId())});
-
-			return httpServletRequest;
 		}
 
 		private final Group _group;
 		private final ThemeDisplay _themeDisplay;
-
-	}
-
-	private static class MockActionResponse
-		extends MockLiferayPortletActionResponse {
-
-		@Override
-		public HttpServletResponse getHttpServletResponse() {
-			return new MockHttpServletResponse();
-		}
 
 	}
 

@@ -643,7 +643,6 @@ public class RoleFinderImpl extends RoleFinderBaseImpl implements RoleFinder {
 			QueryPos queryPos = QueryPos.getInstance(sqlQuery);
 
 			queryPos.add(userId);
-			queryPos.add(groupIds);
 
 			return sqlQuery.list(true);
 		}
@@ -1140,16 +1139,20 @@ public class RoleFinderImpl extends RoleFinderBaseImpl implements RoleFinder {
 			return StringPool.BLANK;
 		}
 
-		StringBundler sb = new StringBundler(groupIds.length * 3 - 1);
+		StringBundler sb = new StringBundler((groupIds.length * 2) + 2);
+
+		sb.append(table);
+		sb.append(".groupId IN (");
 
 		for (int i = 0; i < groupIds.length; i++) {
-			sb.append(table);
-			sb.append(".groupId = ?");
+			sb.append(groupIds[i]);
 
 			if ((i + 1) < groupIds.length) {
-				sb.append(" OR ");
+				sb.append(", ");
 			}
 		}
+
+		sb.append(StringPool.CLOSE_PARENTHESIS);
 
 		return sb.toString();
 	}

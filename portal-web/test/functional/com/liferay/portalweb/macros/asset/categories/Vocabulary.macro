@@ -263,7 +263,12 @@ definition {
 			menuItem = "Permissions",
 			rowEntry = "${vocabularyName}");
 
-		SelectFrame(locator1 = "IFrame#DIALOG");
+		LiferayEvent.waitForLiferayEvent(
+			attributeName = "src",
+			attributeValue = "dialog-iframe-popup",
+			eventName = "modalIframeLoaded");
+
+		SelectFrame(locator1 = "IFrame#MODAL_BODY");
 
 		if ("${viewableBy}" == "Anyone (Guest Role)") {
 			AssertChecked(locator1 = "AssetPermissions#GUEST_VIEW_CHECKBOX");

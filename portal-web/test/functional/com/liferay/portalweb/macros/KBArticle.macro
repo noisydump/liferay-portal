@@ -311,7 +311,12 @@ definition {
 
 		MenuItem.click(menuItem = "Configuration");
 
-		SelectFrame(locator1 = "KnowledgeBaseConfiguration#IFRAME");
+		LiferayEvent.waitForLiferayEvent(
+			attributeName = "src",
+			attributeValue = "dialog-iframe-popup",
+			eventName = "modalIframeLoaded");
+
+		SelectFrame(locator1 = "IFrame#MODAL_BODY");
 
 		if (isSet(emailFrom)) {
 			AssertClick(
@@ -342,7 +347,12 @@ definition {
 
 			SelectFrame(value1 = "relative=top");
 
-			SelectFrame(locator1 = "KnowledgeBaseConfiguration#IFRAME");
+			LiferayEvent.waitForLiferayEvent(
+				attributeName = "src",
+				attributeValue = "dialog-iframe-popup",
+				eventName = "modalIframeLoaded");
+
+			SelectFrame(locator1 = "IFrame#MODAL_BODY");
 
 			PortletEntry.save();
 		}
@@ -360,7 +370,12 @@ definition {
 
 			SelectFrame(value1 = "relative=top");
 
-			SelectFrame(locator1 = "KnowledgeBaseConfiguration#IFRAME");
+			LiferayEvent.waitForLiferayEvent(
+				attributeName = "src",
+				attributeValue = "dialog-iframe-popup",
+				eventName = "modalIframeLoaded");
+
+			SelectFrame(locator1 = "IFrame#MODAL_BODY");
 
 			PortletEntry.save();
 		}
@@ -378,7 +393,12 @@ definition {
 
 			SelectFrame(value1 = "relative=top");
 
-			SelectFrame(locator1 = "KnowledgeBaseConfiguration#IFRAME");
+			LiferayEvent.waitForLiferayEvent(
+				attributeName = "src",
+				attributeValue = "dialog-iframe-popup",
+				eventName = "modalIframeLoaded");
+
+			SelectFrame(locator1 = "IFrame#MODAL_BODY");
 
 			PortletEntry.save();
 		}
@@ -391,7 +411,12 @@ definition {
 			portletName = "${portletName}",
 			portletOption = "Configuration");
 
-		SelectFrame(locator1 = "KnowledgeBaseConfiguration#IFRAME");
+		LiferayEvent.waitForLiferayEvent(
+			attributeName = "src",
+			attributeValue = "dialog-iframe-popup",
+			eventName = "modalIframeLoaded");
+
+		SelectFrame(locator1 = "IFrame#MODAL_BODY");
 
 		AssertClick(
 			locator1 = "Button#SELECT",
@@ -400,6 +425,11 @@ definition {
 		SelectFrame(value1 = "relative=top");
 
 		if (isSet(kbFolderName)) {
+			LiferayEvent.waitForLiferayEvent(
+				attributeName = "src",
+				attributeValue = "dialog-iframe-popup",
+				eventName = "modalIframeLoaded");
+
 			SelectFrame(locator1 = "KnowledgeBaseSelectParent#SELECT_PARENT_DISPLAY_IFRAME");
 
 			AssertClick(
@@ -410,6 +440,11 @@ definition {
 			SelectFrame(value1 = "relative=top");
 		}
 
+		LiferayEvent.waitForLiferayEvent(
+			attributeName = "src",
+			attributeValue = "dialog-iframe-popup",
+			eventName = "modalIframeLoaded");
+
 		SelectFrame(locator1 = "KnowledgeBaseSelectParent#SELECT_PARENT_DISPLAY_IFRAME");
 
 		Click(
@@ -418,7 +453,12 @@ definition {
 
 		SelectFrame(value1 = "relative=top");
 
-		SelectFrame(locator1 = "KnowledgeBaseConfiguration#IFRAME");
+		LiferayEvent.waitForLiferayEvent(
+			attributeName = "src",
+			attributeValue = "dialog-iframe-popup",
+			eventName = "modalIframeLoaded");
+
+		SelectFrame(locator1 = "IFrame#MODAL_BODY");
 
 		PortletEntry.save();
 
@@ -430,7 +470,12 @@ definition {
 			portletName = "${portletName}",
 			portletOption = "Configuration");
 
-		SelectFrame(locator1 = "KnowledgeBaseConfiguration#IFRAME");
+		LiferayEvent.waitForLiferayEvent(
+			attributeName = "src",
+			attributeValue = "dialog-iframe-popup",
+			eventName = "modalIframeLoaded");
+
+		SelectFrame(locator1 = "IFrame#MODAL_BODY");
 
 		AssertClick(
 			locator1 = "KnowledgeBaseConfiguration#NAVIGATION_TAB_DISPLAY_SETTINGS",
@@ -467,13 +512,23 @@ definition {
 			portletName = "${portletName}",
 			portletOption = "Configuration");
 
-		SelectFrame(locator1 = "KnowledgeBaseConfiguration#IFRAME");
+		LiferayEvent.waitForLiferayEvent(
+			attributeName = "src",
+			attributeValue = "dialog-iframe-popup",
+			eventName = "modalIframeLoaded");
+
+		SelectFrame(locator1 = "IFrame#MODAL_BODY");
 
 		AssertClick(
 			locator1 = "Button#SELECT",
 			value1 = "Select");
 
 		SelectFrame(value1 = "relative=top");
+
+		LiferayEvent.waitForLiferayEvent(
+			attributeName = "src",
+			attributeValue = "dialog-iframe-popup",
+			eventName = "modalIframeLoaded");
 
 		SelectFrame(locator1 = "KnowledgeBaseSelectParent#SELECT_PARENT_DISPLAY_IFRAME");
 
@@ -484,7 +539,12 @@ definition {
 
 		SelectFrame(value1 = "relative=top");
 
-		SelectFrame(locator1 = "KnowledgeBaseConfiguration#IFRAME");
+		LiferayEvent.waitForLiferayEvent(
+			attributeName = "src",
+			attributeValue = "dialog-iframe-popup",
+			eventName = "modalIframeLoaded");
+
+		SelectFrame(locator1 = "IFrame#MODAL_BODY");
 
 		PortletEntry.save();
 	}
@@ -494,7 +554,12 @@ definition {
 			portletName = "${portletName}",
 			portletOption = "Configuration");
 
-		SelectFrame(locator1 = "KnowledgeBaseConfiguration#IFRAME");
+		LiferayEvent.waitForLiferayEvent(
+			attributeName = "src",
+			attributeValue = "dialog-iframe-popup",
+			eventName = "modalIframeLoaded");
+
+		SelectFrame(locator1 = "IFrame#MODAL_BODY");
 
 		AssertClick(
 			locator1 = "KnowledgeBaseConfiguration#NAVIGATION_TAB_DISPLAY_SETTINGS",
@@ -904,6 +969,11 @@ definition {
 	}
 
 	macro selectParentArticleCP {
+		LiferayEvent.waitForLiferayEvent(
+			attributeName = "src",
+			attributeValue = "dialog-iframe-popup",
+			eventName = "modalIframeLoaded");
+
 		SelectFrame(locator1 = "KnowledgeBaseSelectParent#IFRAME");
 
 		Click(
@@ -923,6 +993,11 @@ definition {
 	}
 
 	macro selectParentViaKBDisplayPG {
+		LiferayEvent.waitForLiferayEvent(
+			attributeName = "src",
+			attributeValue = "dialog-iframe-popup",
+			eventName = "modalIframeLoaded");
+
 		SelectFrame(locator1 = "KnowledgeBaseSelectParent#IFRAME");
 
 		Click(
@@ -948,13 +1023,23 @@ definition {
 			portletName = "${portletName}",
 			portletOption = "Configuration");
 
-		SelectFrame(locator1 = "IFrame#DIALOG");
+		LiferayEvent.waitForLiferayEvent(
+			attributeName = "src",
+			attributeValue = "dialog-iframe-popup",
+			eventName = "modalIframeLoaded");
+
+		SelectFrame(locator1 = "IFrame#MODAL_BODY");
 
 		AssertClick(
 			locator1 = "Button#SELECT",
 			value1 = "Select");
 
 		SelectFrame(value1 = "relative=top");
+
+		LiferayEvent.waitForLiferayEvent(
+			attributeName = "src",
+			attributeValue = "dialog-iframe-popup",
+			eventName = "modalIframeLoaded");
 
 		SelectFrame(locator1 = "KnowledgeBaseSelectParent#SELECT_PARENT_DISPLAY_IFRAME");
 
@@ -965,7 +1050,12 @@ definition {
 
 		SelectFrame(value1 = "relative=top");
 
-		SelectFrame(locator1 = "IFrame#DIALOG");
+		LiferayEvent.waitForLiferayEvent(
+			attributeName = "src",
+			attributeValue = "dialog-iframe-popup",
+			eventName = "modalIframeLoaded");
+
+		SelectFrame(locator1 = "IFrame#MODAL_BODY");
 
 		Button.clickSave();
 

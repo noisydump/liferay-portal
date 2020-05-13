@@ -120,7 +120,7 @@ String orderByType = ParamUtil.getString(request, "orderByType");
 
 SearchContainer searchContainer = new SearchContainer(renderRequest, null, null, SearchContainer.DEFAULT_CUR_PARAM, SearchContainer.DEFAULT_DELTA, currentURLObj, headerNames, wikiListPagesDisplayContext.getEmptyResultsMessage());
 
-Map orderableHeaders = new HashMap();
+Map<String, String> orderableHeaders = new HashMap<>();
 
 if (navigation.equals("all-pages") || navigation.equals("categorized-pages") || navigation.equals("tagged-pages")) {
 	orderableHeaders.put("date", "modifiedDate");
@@ -271,7 +271,7 @@ for (int i = 0; i < pages.size(); i++) {
 				'input[name=<portlet:namespace />rowIds]'
 			);
 
-			Array.prototype.forEach.call(rowIdsNodes, function(rowIdsNode, index) {
+			Array.prototype.forEach.call(rowIdsNodes, function (rowIdsNode, index) {
 				if (index > 1) {
 					rowIdsNode.checked = false;
 				}
@@ -297,12 +297,12 @@ for (int i = 0; i < pages.size(); i++) {
 		<c:if test="<%= pages.size() > 1 %>">
 
 			<%
-			WikiPage latestWikiPage = (WikiPage)pages.get(1);
+			WikiPage latestWikiPage = pages.get(1);
 			%>
 
 			var compareButton = document.getElementById('<portlet:namespace />compare');
 
-			compareButton.addEventListener('click', function(event) {
+			compareButton.addEventListener('click', function (event) {
 				<portlet:renderURL var="compareVersionURL">
 					<portlet:param name="mvcRenderCommandName" value="/wiki/compare_versions" />
 					<portlet:param name="backURL" value="<%= currentURL %>" />
@@ -360,7 +360,7 @@ for (int i = 0; i < pages.size(); i++) {
 				searchContainer,
 				'click',
 				'input[name=<portlet:namespace />rowIds]',
-				function(event) {
+				function (event) {
 					<portlet:namespace />updateRowsChecked(event.delegateTarget);
 				}
 			);

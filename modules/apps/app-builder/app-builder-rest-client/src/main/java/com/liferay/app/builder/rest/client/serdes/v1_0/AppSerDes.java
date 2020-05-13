@@ -61,6 +61,16 @@ public class AppSerDes {
 		DateFormat liferayToJSONDateFormat = new SimpleDateFormat(
 			"yyyy-MM-dd'T'HH:mm:ss'Z'");
 
+		if (app.getActive() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"active\": ");
+
+			sb.append(app.getActive());
+		}
+
 		if (app.getAppDeployments() != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -89,6 +99,20 @@ public class AppSerDes {
 			sb.append("\"dataDefinitionId\": ");
 
 			sb.append(app.getDataDefinitionId());
+		}
+
+		if (app.getDataDefinitionName() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"dataDefinitionName\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(app.getDataDefinitionName()));
+
+			sb.append("\"");
 		}
 
 		if (app.getDataLayoutId() != null) {
@@ -169,20 +193,6 @@ public class AppSerDes {
 			sb.append(app.getSiteId());
 		}
 
-		if (app.getStatus() != null) {
-			if (sb.length() > 1) {
-				sb.append(", ");
-			}
-
-			sb.append("\"status\": ");
-
-			sb.append("\"");
-
-			sb.append(_escape(app.getStatus()));
-
-			sb.append("\"");
-		}
-
 		if (app.getUserId() != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -214,6 +224,13 @@ public class AppSerDes {
 		DateFormat liferayToJSONDateFormat = new SimpleDateFormat(
 			"yyyy-MM-dd'T'HH:mm:ss'Z'");
 
+		if (app.getActive() == null) {
+			map.put("active", null);
+		}
+		else {
+			map.put("active", String.valueOf(app.getActive()));
+		}
+
 		if (app.getAppDeployments() == null) {
 			map.put("appDeployments", null);
 		}
@@ -227,6 +244,15 @@ public class AppSerDes {
 		else {
 			map.put(
 				"dataDefinitionId", String.valueOf(app.getDataDefinitionId()));
+		}
+
+		if (app.getDataDefinitionName() == null) {
+			map.put("dataDefinitionName", null);
+		}
+		else {
+			map.put(
+				"dataDefinitionName",
+				String.valueOf(app.getDataDefinitionName()));
 		}
 
 		if (app.getDataLayoutId() == null) {
@@ -243,13 +269,23 @@ public class AppSerDes {
 			map.put("dataListViewId", String.valueOf(app.getDataListViewId()));
 		}
 
-		map.put(
-			"dateCreated",
-			liferayToJSONDateFormat.format(app.getDateCreated()));
+		if (app.getDateCreated() == null) {
+			map.put("dateCreated", null);
+		}
+		else {
+			map.put(
+				"dateCreated",
+				liferayToJSONDateFormat.format(app.getDateCreated()));
+		}
 
-		map.put(
-			"dateModified",
-			liferayToJSONDateFormat.format(app.getDateModified()));
+		if (app.getDateModified() == null) {
+			map.put("dateModified", null);
+		}
+		else {
+			map.put(
+				"dateModified",
+				liferayToJSONDateFormat.format(app.getDateModified()));
+		}
 
 		if (app.getId() == null) {
 			map.put("id", null);
@@ -270,13 +306,6 @@ public class AppSerDes {
 		}
 		else {
 			map.put("siteId", String.valueOf(app.getSiteId()));
-		}
-
-		if (app.getStatus() == null) {
-			map.put("status", null);
-		}
-		else {
-			map.put("status", String.valueOf(app.getStatus()));
 		}
 
 		if (app.getUserId() == null) {
@@ -305,7 +334,12 @@ public class AppSerDes {
 		protected void setField(
 			App app, String jsonParserFieldName, Object jsonParserFieldValue) {
 
-			if (Objects.equals(jsonParserFieldName, "appDeployments")) {
+			if (Objects.equals(jsonParserFieldName, "active")) {
+				if (jsonParserFieldValue != null) {
+					app.setActive((Boolean)jsonParserFieldValue);
+				}
+			}
+			else if (Objects.equals(jsonParserFieldName, "appDeployments")) {
 				if (jsonParserFieldValue != null) {
 					app.setAppDeployments(
 						Stream.of(
@@ -321,6 +355,13 @@ public class AppSerDes {
 				if (jsonParserFieldValue != null) {
 					app.setDataDefinitionId(
 						Long.valueOf((String)jsonParserFieldValue));
+				}
+			}
+			else if (Objects.equals(
+						jsonParserFieldName, "dataDefinitionName")) {
+
+				if (jsonParserFieldValue != null) {
+					app.setDataDefinitionName((String)jsonParserFieldValue);
 				}
 			}
 			else if (Objects.equals(jsonParserFieldName, "dataLayoutId")) {
@@ -359,11 +400,6 @@ public class AppSerDes {
 			else if (Objects.equals(jsonParserFieldName, "siteId")) {
 				if (jsonParserFieldValue != null) {
 					app.setSiteId(Long.valueOf((String)jsonParserFieldValue));
-				}
-			}
-			else if (Objects.equals(jsonParserFieldName, "status")) {
-				if (jsonParserFieldValue != null) {
-					app.setStatus((String)jsonParserFieldValue);
 				}
 			}
 			else if (Objects.equals(jsonParserFieldName, "userId")) {

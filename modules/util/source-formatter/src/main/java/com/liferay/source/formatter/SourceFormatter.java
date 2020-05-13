@@ -519,6 +519,15 @@ public class SourceFormatter {
 
 				tagJavaFilesAdded = true;
 			}
+			else if (recentChangesFileName.endsWith(
+						"/modules/source-formatter.properties")) {
+
+				dependentFileNames.addAll(
+					SourceFormatterUtil.filterFileNames(
+						_allFileNames, new String[0],
+						new String[] {"**/build.gradle"},
+						_sourceFormatterExcludes, false));
+			}
 		}
 
 		_sourceFormatterArgs.addRecentChangesFileNames(
@@ -534,12 +543,10 @@ public class SourceFormatter {
 		while (true) {
 			String serviceFileName = dirName + "/service.xml";
 
-			File file = new File(
-				_sourceFormatterArgs.getBaseDirName() + serviceFileName);
+			File file = new File(serviceFileName);
 
 			if (file.exists()) {
-				dependentFileNames.add(
-					_sourceFormatterArgs.getBaseDirName() + serviceFileName);
+				dependentFileNames.add(serviceFileName);
 
 				return dependentFileNames;
 			}

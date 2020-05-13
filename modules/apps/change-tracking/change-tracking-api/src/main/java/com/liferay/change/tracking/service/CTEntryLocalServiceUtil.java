@@ -121,6 +121,12 @@ public class CTEntryLocalServiceUtil {
 		return getService().deletePersistedModel(persistedModel);
 	}
 
+	public static <T> T dslQuery(
+		com.liferay.petra.sql.dsl.query.DSLQuery dslQuery) {
+
+		return getService().dslQuery(dslQuery);
+	}
+
 	public static com.liferay.portal.kernel.dao.orm.DynamicQuery
 		dynamicQuery() {
 
@@ -289,6 +295,13 @@ public class CTEntryLocalServiceUtil {
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return getService().getCTEntry(ctEntryId);
+	}
+
+	public static long getCTRowCTCollectionId(
+			com.liferay.change.tracking.model.CTEntry ctEntry)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return getService().getCTRowCTCollectionId(ctEntry);
 	}
 
 	public static java.util.List<Long> getExclusiveModelClassPKs(

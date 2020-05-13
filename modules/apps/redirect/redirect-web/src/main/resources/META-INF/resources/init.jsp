@@ -42,6 +42,7 @@ page import="com.liferay.portal.kernel.util.HtmlUtil" %><%@
 page import="com.liferay.portal.kernel.util.ParamUtil" %><%@
 page import="com.liferay.portal.kernel.util.StringUtil" %><%@
 page import="com.liferay.portal.kernel.util.Validator" %><%@
+page import="com.liferay.redirect.exception.CircularRedirectEntryException" %><%@
 page import="com.liferay.redirect.exception.DuplicateRedirectEntrySourceURLException" %><%@
 page import="com.liferay.redirect.exception.RequiredRedirectEntryDestinationURLException" %><%@
 page import="com.liferay.redirect.exception.RequiredRedirectEntrySourceURLException" %><%@
@@ -52,7 +53,7 @@ page import="com.liferay.redirect.web.internal.constants.RedirectWebKeys" %><%@
 page import="com.liferay.redirect.web.internal.display.context.RedirectDisplayContext" %><%@
 page import="com.liferay.redirect.web.internal.display.context.RedirectManagementToolbarDisplayContext" %><%@
 page import="com.liferay.redirect.web.internal.display.context.RedirectNotFoundEntriesDisplayContext" %><%@
-page import="com.liferay.redirect.web.internal.display.context.RedirectNotFountEntriesManagementToolbarDisplayContext" %><%@
+page import="com.liferay.redirect.web.internal.display.context.RedirectNotFoundEntriesManagementToolbarDisplayContext" %><%@
 page import="com.liferay.redirect.web.internal.util.RedirectUtil" %>
 
 <%@ page import="java.text.DateFormat" %>

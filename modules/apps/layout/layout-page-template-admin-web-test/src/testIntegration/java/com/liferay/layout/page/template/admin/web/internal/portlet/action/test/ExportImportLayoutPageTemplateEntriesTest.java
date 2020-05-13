@@ -39,7 +39,6 @@ import com.liferay.layout.util.structure.LayoutStructureItem;
 import com.liferay.layout.util.structure.RowLayoutStructureItem;
 import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringPool;
-import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.model.Group;
@@ -120,7 +119,7 @@ public class ExportImportLayoutPageTemplateEntriesTest {
 					getLayoutPageTemplateCollectionId(),
 				"Page Template One",
 				LayoutPageTemplateEntryTypeConstants.TYPE_BASIC, 0,
-				WorkflowConstants.STATUS_DRAFT, _serviceContext1);
+				WorkflowConstants.STATUS_APPROVED, _serviceContext1);
 
 		String html =
 			"<lfr-editable id=\"element-text\" type=\"text\">Test Text " +
@@ -133,7 +132,7 @@ public class ExportImportLayoutPageTemplateEntriesTest {
 		FragmentEntryLink fragmentEntryLink =
 			_fragmentEntryLinkLocalService.addFragmentEntryLink(
 				TestPropsValues.getUserId(), _group1.getGroupId(), 0,
-				fragmentEntry.getFragmentEntryId(),
+				fragmentEntry.getFragmentEntryId(), 0,
 				_portal.getClassNameId(Layout.class),
 				layoutPageTemplateEntry1.getPlid(), StringPool.BLANK, html,
 				StringPool.BLANK,
@@ -300,7 +299,7 @@ public class ExportImportLayoutPageTemplateEntriesTest {
 
 	private FragmentEntry _addFragmentEntry(
 			long groupId, String key, String name, String html)
-		throws PortalException {
+		throws Exception {
 
 		ServiceContext serviceContext =
 			ServiceContextTestUtil.getServiceContext(groupId);
@@ -395,7 +394,7 @@ public class ExportImportLayoutPageTemplateEntriesTest {
 	private void _validateFragmentLayoutStructureItem(
 			FragmentLayoutStructureItem expectedFragmentLayoutStructureItem,
 			FragmentLayoutStructureItem actualFragmentLayoutStructureItem)
-		throws PortalException {
+		throws Exception {
 
 		long expectedFragmentEntryLinkId =
 			expectedFragmentLayoutStructureItem.getFragmentEntryLinkId();

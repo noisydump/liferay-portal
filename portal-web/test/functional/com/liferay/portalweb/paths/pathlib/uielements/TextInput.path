@@ -240,12 +240,17 @@
 </tr>
 <tr>
 	<td>GENERIC_TEXT_INPUT</td>
-	<td>//div[label[contains(.,'${key_fieldLabel}')]]//input[@type='text'] | //div[p[contains(.,'${key_fieldLabel}')]]//input[@type='text']</td>
+	<td>//div[label[contains(.,'${key_fieldLabel}')]]//input[@type='text'] | //div[contains(@class,'ddm-field') and contains(.,'${key_fieldLabel}')]//input[@type='text']</td>
 	<td></td>
 </tr>
 <tr>
 	<td>GOOGLE_ANALYTICS_ID</td>
 	<td>//input[contains(@id,'googleAnalyticsId')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>GRACE_LIMIT</td>
+	<td>//div[label[contains(.,'Grace Limit')]]//input[@type='text']</td>
 	<td></td>
 </tr>
 <tr>

@@ -17,8 +17,8 @@ package com.liferay.change.tracking.service.base;
 import com.liferay.change.tracking.model.CTProcess;
 import com.liferay.change.tracking.service.CTProcessLocalService;
 import com.liferay.change.tracking.service.persistence.CTCollectionPersistence;
-import com.liferay.change.tracking.service.persistence.CTProcessFinder;
 import com.liferay.change.tracking.service.persistence.CTProcessPersistence;
+import com.liferay.petra.sql.dsl.query.DSLQuery;
 import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.dao.db.DB;
 import com.liferay.portal.kernel.dao.db.DBManagerUtil;
@@ -121,6 +121,11 @@ public abstract class CTProcessLocalServiceBaseImpl
 	@Override
 	public CTProcess deleteCTProcess(CTProcess ctProcess) {
 		return ctProcessPersistence.remove(ctProcess);
+	}
+
+	@Override
+	public <T> T dslQuery(DSLQuery dslQuery) {
+		return ctProcessPersistence.dslQuery(dslQuery);
 	}
 
 	@Override
@@ -399,9 +404,6 @@ public abstract class CTProcessLocalServiceBaseImpl
 
 	@Reference
 	protected CTProcessPersistence ctProcessPersistence;
-
-	@Reference
-	protected CTProcessFinder ctProcessFinder;
 
 	@Reference
 	protected CTCollectionPersistence ctCollectionPersistence;

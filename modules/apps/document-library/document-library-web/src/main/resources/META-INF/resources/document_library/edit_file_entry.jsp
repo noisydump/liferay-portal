@@ -137,7 +137,7 @@ renderResponse.setTitle(headerTitle);
 	</liferay-frontend:info-bar>
 </c:if>
 
-<div class="container-fluid-1280">
+<clay:container>
 	<c:if test="<%= checkedOut %>">
 
 		<%
@@ -281,7 +281,7 @@ renderResponse.setTitle(headerTitle);
 								);
 
 								if (selectFolderButton) {
-									selectFolderButton.addEventListener('click', function(event) {
+									selectFolderButton.addEventListener('click', function (event) {
 										Liferay.Util.selectEntity(
 											{
 												dialog: {
@@ -300,7 +300,7 @@ renderResponse.setTitle(headerTitle);
 
 												uri: '<%= selectFolderURL.toString() %>',
 											},
-											function(event) {
+											function (event) {
 												var folderData = {
 													idString: 'folderId',
 													idValue: event.folderid,
@@ -555,7 +555,7 @@ renderResponse.setTitle(headerTitle);
 		id="<%= uploadProgressId %>"
 		message="uploading"
 	/>
-</div>
+</clay:container>
 
 <c:if test="<%= (fileEntry != null) && checkedOut && dlAdminDisplayContext.isVersioningStrategyOverridable() %>">
 
@@ -630,8 +630,8 @@ renderResponse.setTitle(headerTitle);
 	function <portlet:namespace />showVersionDetailsDialog() {
 		Liferay.componentReady(
 			'<portlet:namespace />DocumentLibraryCheckinModal'
-		).then(function(documentLibraryCheckinModal) {
-			documentLibraryCheckinModal.open(function(versionIncrease, changeLog) {
+		).then(function (documentLibraryCheckinModal) {
+			documentLibraryCheckinModal.open(function (versionIncrease, changeLog) {
 				Liferay.Util.postForm(form, {
 					data: {
 						changeLog: changeLog,
@@ -670,7 +670,7 @@ renderResponse.setTitle(headerTitle);
 		);
 
 		if (updateVersionDetailsElement && versionDetailsElement) {
-			updateVersionDetailsElement.addEventListener('click', function(event) {
+			updateVersionDetailsElement.addEventListener('click', function (event) {
 				dom.toggleClasses(versionDetailsElement, 'hide');
 			});
 		}

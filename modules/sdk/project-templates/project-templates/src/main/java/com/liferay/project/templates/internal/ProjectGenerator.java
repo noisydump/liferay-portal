@@ -27,8 +27,6 @@ import com.liferay.project.templates.extensions.util.WorkspaceUtil;
 
 import java.io.File;
 
-import java.net.MalformedURLException;
-
 import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
@@ -121,6 +119,18 @@ public class ProjectGenerator {
 			buildType = "maven";
 		}
 
+		if (buildType.equals("maven") && template.contains("-ext")) {
+			throw new IllegalArgumentException(
+				"EXT project is not supported for Maven");
+		}
+
+		if (buildType.equals("maven") && template.equals("form-field") &&
+			liferayVersion.startsWith("7.2")) {
+
+			throw new IllegalArgumentException(
+				"Form Field project is not supported 7.2 for Maven");
+		}
+
 		Properties properties = new Properties();
 
 		_setProperty(properties, "author", author);
@@ -174,7 +184,7 @@ public class ProjectGenerator {
 
 	private ProjectTemplateCustomizer _getProjectTemplateCustomizer(
 			String templateName)
-		throws MalformedURLException {
+		throws Exception {
 
 		ServiceLoader<ProjectTemplateCustomizer> serviceLoader =
 			ServiceLoader.load(ProjectTemplateCustomizer.class);

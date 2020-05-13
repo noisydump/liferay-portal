@@ -14,49 +14,37 @@
 
 import ClayButton from '@clayui/button';
 import ClayIcon from '@clayui/icon';
-import {fetch, objectToFormData} from 'frontend-js-web';
+import {useIsMounted} from 'frontend-js-react-web';
 import PropTypes from 'prop-types';
 import React, {useState} from 'react';
 
 import AnimatedCounter from './AnimatedCounter';
 
-const RATING_TYPE = 'like';
 const SCORE_LIKE = 1;
 const SCORE_UNLIKE = -1;
 
 const RatingsLike = ({
-	className,
-	classPK,
-	enabled = false,
-	inTrash = false,
+	disabled = true,
 	initialLiked = false,
+	inititalTitle,
 	positiveVotes = 0,
-	signedIn,
-	url,
+	sendVoteRequest,
 }) => {
 	const [liked, setLiked] = useState(initialLiked);
 	const [totalLikes, setTotalLikes] = useState(positiveVotes);
+	const isMounted = useIsMounted();
 
 	const toggleLiked = () => {
 		const score = liked ? SCORE_UNLIKE : SCORE_LIKE;
 
 		setLiked(!liked);
 		setTotalLikes(totalLikes + score);
-		sendVoteRequest(score);
+		handleSendVoteRequest(score);
 	};
 
 	const getTitle = () => {
-		if (!signedIn) {
-			return '';
-		}
-
-		if (inTrash) {
-			return Liferay.Language.get(
-				'ratings-are-disabled-because-this-entry-is-in-the-recycle-bin'
-			);
-		}
-		else if (!enabled) {
-			return Liferay.Language.get('ratings-are-disabled-in-staging');
+		if (inititalTitle !== undefined) {
+			return inititalTitle;
 		}
 
 		return liked
@@ -64,46 +52,26 @@ const RatingsLike = ({
 			: Liferay.Language.get('like-this');
 	};
 
-	const sendVoteRequest = score => {
-		Liferay.fire('ratings:vote', {
-			className,
-			classPK,
-			ratingType: RATING_TYPE,
-			score,
+	const handleSendVoteRequest = (score) => {
+		sendVoteRequest(score).then(({totalScore} = {}) => {
+			if (isMounted() && totalScore) {
+				setTotalLikes(Math.round(totalScore));
+			}
 		});
-
-		const body = objectToFormData({
-			className,
-			classPK,
-			p_auth: Liferay.authToken,
-			p_l_id: themeDisplay.getPlid(),
-			score,
-		});
-
-		fetch(url, {
-			body,
-			method: 'POST',
-		})
-			.then(response => response.json())
-			.then(({totalScore}) => {
-				if (totalScore) {
-					setTotalLikes(totalScore);
-				}
-			});
 	};
 
 	return (
 		<div className="ratings ratings-like">
 			<ClayButton
 				borderless
-				disabled={!signedIn || !enabled}
+				disabled={disabled}
 				displayType="secondary"
 				onClick={toggleLiked}
 				small
 				title={getTitle()}
 				value={totalLikes}
 			>
-				<ClayIcon className={liked ? 'liked' : ''} symbol="heart" />
+				<ClayIcon symbol={liked ? 'heart-full' : 'heart'} />
 
 				<strong className="likes">
 					<AnimatedCounter counter={totalLikes} />
@@ -114,14 +82,11 @@ const RatingsLike = ({
 };
 
 RatingsLike.propTypes = {
-	className: PropTypes.string.isRequired,
-	classPK: PropTypes.string.isRequired,
-	enabled: PropTypes.bool,
-	inTrash: PropTypes.bool,
+	disabled: PropTypes.bool,
 	initialLiked: PropTypes.bool,
+	inititalTitle: PropTypes.string,
 	positiveVotes: PropTypes.number,
-	signedIn: PropTypes.bool.isRequired,
-	url: PropTypes.string.isRequired,
+	sendVoteRequest: PropTypes.func.isRequired,
 };
 
 export default RatingsLike;

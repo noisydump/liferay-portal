@@ -30,7 +30,9 @@ OAuth2Application oAuth2Application = oAuth2ConnectedApplicationsPortletDisplayC
 renderResponse.setTitle(oAuth2Application.getName());
 %>
 
-<div class="container-fluid-1280 view-application">
+<clay:container
+	className="view-application"
+>
 	<portlet:actionURL name="/connected_applications/revoke_oauth2_authorizations" var="revokeOAuth2AuthorizationURL" />
 
 	<aui:form action="<%= revokeOAuth2AuthorizationURL %>" method="post" name="fm">
@@ -141,7 +143,7 @@ renderResponse.setTitle(oAuth2Application.getName());
 			</div>
 		</aui:fieldset-group>
 	</aui:form>
-</div>
+</clay:container>
 
 <script>
 	var removeAccessButton = document.getElementById(
@@ -149,7 +151,7 @@ renderResponse.setTitle(oAuth2Application.getName());
 	);
 
 	if (removeAccessButton) {
-		removeAccessButton.addEventListener('click', function() {
+		removeAccessButton.addEventListener('click', function () {
 			if (
 				confirm(
 					'<%= UnicodeLanguageUtil.format(request, "x-will-no-longer-have-access-to-your-account-removed-access-cannot-be-recovered", new String[] {oAuth2Application.getName()}) %>'

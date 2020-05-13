@@ -50,7 +50,12 @@ definition {
 
 		SelectFrame(value1 = "relative=top");
 
-		SelectFrame(locator1 = "IFrame#DIALOG");
+		LiferayEvent.waitForLiferayEvent(
+			attributeName = "src",
+			attributeValue = "dialog-iframe-popup",
+			eventName = "modalIframeLoaded");
+
+		SelectFrame(locator1 = "IFrame#MODAL_BODY");
 
 		if (isSet(scopeSite)) {
 			Click(locator1 = "Dropdown#FILTER_AND_ORDER");

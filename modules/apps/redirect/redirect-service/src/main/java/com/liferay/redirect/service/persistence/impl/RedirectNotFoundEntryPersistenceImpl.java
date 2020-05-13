@@ -41,6 +41,7 @@ import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.ProxyUtil;
 import com.liferay.redirect.exception.NoSuchNotFoundEntryException;
 import com.liferay.redirect.model.RedirectNotFoundEntry;
+import com.liferay.redirect.model.RedirectNotFoundEntryTable;
 import com.liferay.redirect.model.impl.RedirectNotFoundEntryImpl;
 import com.liferay.redirect.model.impl.RedirectNotFoundEntryModelImpl;
 import com.liferay.redirect.service.persistence.RedirectNotFoundEntryPersistence;
@@ -865,6 +866,8 @@ public class RedirectNotFoundEntryPersistenceImpl
 
 		setModelImplClass(RedirectNotFoundEntryImpl.class);
 		setModelPKClass(long.class);
+
+		setTable(RedirectNotFoundEntryTable.INSTANCE);
 	}
 
 	/**
@@ -1588,8 +1591,7 @@ public class RedirectNotFoundEntryPersistenceImpl
 			RedirectNotFoundEntryImpl.class,
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByGroupId",
 			new String[] {Long.class.getName()},
-			RedirectNotFoundEntryModelImpl.GROUPID_COLUMN_BITMASK |
-			RedirectNotFoundEntryModelImpl.HITS_COLUMN_BITMASK);
+			RedirectNotFoundEntryModelImpl.GROUPID_COLUMN_BITMASK);
 
 		_finderPathCountByGroupId = new FinderPath(
 			entityCacheEnabled, finderCacheEnabled, Long.class,

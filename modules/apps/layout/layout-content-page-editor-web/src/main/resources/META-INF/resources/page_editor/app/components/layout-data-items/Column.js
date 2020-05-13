@@ -19,6 +19,8 @@ import React from 'react';
 import {getLayoutDataItemPropTypes} from '../../../prop-types/index';
 import {LAYOUT_DATA_ITEM_DEFAULT_CONFIGURATIONS} from '../../config/constants/layoutDataItemDefaultConfigurations';
 import {LAYOUT_DATA_ITEM_TYPES} from '../../config/constants/layoutDataItemTypes';
+import {useSelector} from '../../store/index';
+import {getResponsiveConfig} from '../../utils/getResponsiveConfig';
 
 const Column = React.forwardRef(
 	({children, className, item, ...props}, ref) => {
@@ -30,15 +32,37 @@ const Column = React.forwardRef(
 			},
 		} = item;
 
+		const layoutData = useSelector((state) => state.layoutData);
+		const parentItem = layoutData.items[item.parentId];
+		const selectedViewportSize = useSelector(
+			(state) => state.selectedViewportSize
+		);
+
+		const parentItemConfig = getResponsiveConfig(
+			parentItem.config,
+			selectedViewportSize
+		);
+
+		const {modulesPerRow, numberOfColumns} = parentItemConfig;
+
+		let columnSize = (size * numberOfColumns) / modulesPerRow;
+
+		if (numberOfColumns === 5 && modulesPerRow !== numberOfColumns) {
+			columnSize = parentItem.children.indexOf(item.itemId) > 2 ? 6 : 4;
+		}
+
 		return (
 			<div
 				{...props}
 				className={classNames(className, 'col', {
-					[`col-${size}`]: size,
+					[`col-${columnSize}`]: columnSize,
+					empty:
+						modulesPerRow !== numberOfColumns &&
+						!item.children.length,
 				})}
 				ref={ref}
 			>
-				{children}
+				<div className="page-editor__col__border">{children}</div>
 			</div>
 		);
 	}

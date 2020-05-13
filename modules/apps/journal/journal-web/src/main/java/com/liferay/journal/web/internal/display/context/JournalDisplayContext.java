@@ -518,6 +518,9 @@ public class JournalDisplayContext {
 			_displayStyle = displayViews[0];
 		}
 
+		portalPreferences.setValue(
+			JournalPortletKeys.JOURNAL, "display-style", _displayStyle);
+
 		return _displayStyle;
 	}
 
@@ -1083,7 +1086,7 @@ public class JournalDisplayContext {
 				Field.ARTICLE_ID, getKeywords()
 			).put(
 				Field.CLASS_NAME_ID,
-				JournalArticleConstants.CLASSNAME_ID_DEFAULT
+				JournalArticleConstants.CLASS_NAME_ID_DEFAULT
 			).put(
 				Field.CONTENT, getKeywords()
 			).put(
@@ -1198,12 +1201,13 @@ public class JournalDisplayContext {
 
 			articleSearchContainer.setTotal(total);
 
-			List results = JournalArticleServiceUtil.getGroupArticles(
-				_themeDisplay.getScopeGroupId(), _themeDisplay.getUserId(),
-				getFolderId(), getStatus(), includeOwner,
-				articleSearchContainer.getStart(),
-				articleSearchContainer.getEnd(),
-				articleSearchContainer.getOrderByComparator());
+			List<JournalArticle> results =
+				JournalArticleServiceUtil.getGroupArticles(
+					_themeDisplay.getScopeGroupId(), _themeDisplay.getUserId(),
+					getFolderId(), getStatus(), includeOwner,
+					articleSearchContainer.getStart(),
+					articleSearchContainer.getEnd(),
+					articleSearchContainer.getOrderByComparator());
 
 			articleSearchContainer.setResults(results);
 		}
@@ -1214,11 +1218,12 @@ public class JournalDisplayContext {
 
 			articleSearchContainer.setTotal(total);
 
-			List results = JournalArticleServiceUtil.getArticlesByStructureId(
-				_themeDisplay.getScopeGroupId(), getDDMStructureKey(),
-				getStatus(), articleSearchContainer.getStart(),
-				articleSearchContainer.getEnd(),
-				articleSearchContainer.getOrderByComparator());
+			List<JournalArticle> results =
+				JournalArticleServiceUtil.getArticlesByStructureId(
+					_themeDisplay.getScopeGroupId(), getDDMStructureKey(),
+					getStatus(), articleSearchContainer.getStart(),
+					articleSearchContainer.getEnd(),
+					articleSearchContainer.getOrderByComparator());
 
 			articleSearchContainer.setResults(results);
 		}
@@ -1273,7 +1278,7 @@ public class JournalDisplayContext {
 
 			articleSearchContainer.setTotal(total);
 
-			List results = new ArrayList<>();
+			List<Object> results = new ArrayList<>();
 
 			Document[] documents = hits.getDocs();
 
@@ -1328,10 +1333,12 @@ public class JournalDisplayContext {
 					orderByAsc);
 			}
 
-			List results = JournalFolderServiceUtil.getFoldersAndArticles(
-				_themeDisplay.getScopeGroupId(), 0, getFolderId(), getStatus(),
-				_themeDisplay.getLocale(), articleSearchContainer.getStart(),
-				articleSearchContainer.getEnd(), folderOrderByComparator);
+			List<Object> results =
+				JournalFolderServiceUtil.getFoldersAndArticles(
+					_themeDisplay.getScopeGroupId(), 0, getFolderId(),
+					getStatus(), _themeDisplay.getLocale(),
+					articleSearchContainer.getStart(),
+					articleSearchContainer.getEnd(), folderOrderByComparator);
 
 			articleSearchContainer.setResults(results);
 		}
@@ -1494,7 +1501,7 @@ public class JournalDisplayContext {
 
 		articleVersionsSearchContainer.setTotal(total);
 
-		List results = new ArrayList<>();
+		List<Object> results = new ArrayList<>();
 
 		Document[] documents = hits.getDocs();
 

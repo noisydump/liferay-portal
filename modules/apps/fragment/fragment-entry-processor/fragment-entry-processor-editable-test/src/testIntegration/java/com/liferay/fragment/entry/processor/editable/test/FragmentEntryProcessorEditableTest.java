@@ -138,10 +138,24 @@ public class FragmentEntryProcessorEditableTest {
 			_originalThemeDisplayDefaultLocale);
 	}
 
+	@Test(expected = FragmentEntryContentException.class)
+	public void testCanAddOneNoninstanceableWidget() throws Exception {
+		_addFragmentEntry(
+			"fragment_entry_with_noninstanceable_widget_tag.html");
+	}
+
+	@Test(expected = FragmentEntryContentException.class)
+	public void testCannotAddMoreThanOneNoninstanceableWidget()
+		throws Exception {
+
+		_addFragmentEntry(
+			"fragment_entry_with_duplicate_noninstanceable_widget_tag.html");
+	}
+
 	@Test
 	public void testFragmentEntryLinkPortletPreferences() throws Exception {
 		FragmentEntry fragmentEntry = _addFragmentEntry(
-			"fragment_entry_with_widget_tag.html");
+			"fragment_entry_with_instanceable_widget_tag.html");
 
 		ServiceContext serviceContext = new MockServiceContext(
 			_layout, _getThemeDisplay());
@@ -149,7 +163,7 @@ public class FragmentEntryProcessorEditableTest {
 		FragmentEntryLink fragmentEntryLink =
 			_fragmentEntryLinkLocalService.addFragmentEntryLink(
 				TestPropsValues.getUserId(), _group.getGroupId(), 0,
-				fragmentEntry.getFragmentEntryId(),
+				fragmentEntry.getFragmentEntryId(), 0,
 				_portal.getClassNameId(Layout.class), _layout.getPlid(),
 				fragmentEntry.getCss(), fragmentEntry.getHtml(),
 				fragmentEntry.getJs(), StringPool.BLANK, StringPool.BLANK,
@@ -168,7 +182,7 @@ public class FragmentEntryProcessorEditableTest {
 
 					return portletId.startsWith(
 						FragmentEntryLinkPortletKeys.
-							FRAGMENT_ENTRY_LINK_TEST_PORTLET);
+							FRAGMENT_ENTRY_LINK_INSTANCEABLE_TEST_PORTLET);
 				});
 
 		Assert.assertEquals(
@@ -203,27 +217,6 @@ public class FragmentEntryProcessorEditableTest {
 	}
 
 	@Test
-	public void testFragmentEntryProcessorEditableCompatibility()
-		throws Exception {
-
-		FragmentEntryLink fragmentEntryLink =
-			_fragmentEntryLinkLocalService.createFragmentEntryLink(0);
-
-		FragmentEntry fragmentEntry = _addFragmentEntry("fragment_entry.html");
-
-		fragmentEntryLink.setHtml(fragmentEntry.getHtml());
-
-		fragmentEntryLink.setEditableValues(
-			_getJsonFileAsString(
-				"fragment_entry_link_editable_values_compatibility.json"));
-
-		Assert.assertEquals(
-			_processedHTML,
-			_fragmentEntryProcessorRegistry.processFragmentEntryLinkHTML(
-				fragmentEntryLink, _getFragmentEntryProcessorContext()));
-	}
-
-	@Test
 	public void testFragmentEntryProcessorEditableMappedAssetField()
 		throws Exception {
 
@@ -232,7 +225,7 @@ public class FragmentEntryProcessorEditableTest {
 		FragmentEntryLink fragmentEntryLink =
 			_fragmentEntryLinkLocalService.addFragmentEntryLink(
 				TestPropsValues.getUserId(), _group.getGroupId(), 0,
-				fragmentEntry.getFragmentEntryId(),
+				fragmentEntry.getFragmentEntryId(), 0,
 				_portal.getClassNameId(Layout.class), TestPropsValues.getPlid(),
 				fragmentEntry.getCss(), fragmentEntry.getHtml(),
 				fragmentEntry.getJs(), StringPool.BLANK, StringPool.BLANK,
@@ -303,8 +296,7 @@ public class FragmentEntryProcessorEditableTest {
 			_getProcessedHTML("processed_fragment_entry_empty_string.html"),
 			_fragmentEntryProcessorRegistry.processFragmentEntryLinkHTML(
 				fragmentEntryLink,
-				_getFragmentEntryProcessorContext(
-					LocaleUtil.US, new long[] {0L})));
+				_getFragmentEntryProcessorContext(LocaleUtil.US)));
 	}
 
 	@Test(expected = FragmentEntryContentException.class)
@@ -315,52 +307,31 @@ public class FragmentEntryProcessorEditableTest {
 			"fragment_entry_with_invalid_editable_type_attribute.html");
 	}
 
-	@Test
-	public void testFragmentEntryProcessorEditableWithMatchedExperienceAndDefaultLanguage()
+	@Test(expected = FragmentEntryContentException.class)
+	public void testFragmentEntryProcessorEditableWithInvalidTypeAttributeInImageTag()
 		throws Exception {
 
-		FragmentEntryLink fragmentEntryLink =
-			_fragmentEntryLinkLocalService.createFragmentEntryLink(0);
-
-		FragmentEntry fragmentEntry = _addFragmentEntry("fragment_entry.html");
-
-		fragmentEntryLink.setHtml(fragmentEntry.getHtml());
-
-		fragmentEntryLink.setEditableValues(
-			_getJsonFileAsString(
-				"fragment_entry_link_editable_values_matching_segments_" +
-					"experience_and_default_language.json"));
-
-		Assert.assertEquals(
-			_processedHTML,
-			_fragmentEntryProcessorRegistry.processFragmentEntryLinkHTML(
-				fragmentEntryLink,
-				_getFragmentEntryProcessorContext(
-					LocaleUtil.CHINESE, new long[] {1L, 0L})));
+		_addFragmentEntry(
+			"fragment_entry_with_invalid_editable_type_attribute_in_image_" +
+				"tag.html");
 	}
 
-	@Test
-	public void testFragmentEntryProcessorEditableWithMatchedExperienceAndLanguage()
+	@Test(expected = FragmentEntryContentException.class)
+	public void testFragmentEntryProcessorEditableWithInvalidTypeAttributeInLinkTag()
 		throws Exception {
 
-		FragmentEntryLink fragmentEntryLink =
-			_fragmentEntryLinkLocalService.createFragmentEntryLink(0);
+		_addFragmentEntry(
+			"fragment_entry_with_invalid_editable_type_attribute_in_link_tag." +
+				"html");
+	}
 
-		FragmentEntry fragmentEntry = _addFragmentEntry("fragment_entry.html");
+	@Test(expected = FragmentEntryContentException.class)
+	public void testFragmentEntryProcessorEditableWithInvalidTypeAttributeInTextTag()
+		throws Exception {
 
-		fragmentEntryLink.setHtml(fragmentEntry.getHtml());
-
-		fragmentEntryLink.setEditableValues(
-			_getJsonFileAsString(
-				"fragment_entry_link_editable_values_matching_segments_" +
-					"experience_and_language.json"));
-
-		Assert.assertEquals(
-			_processedHTML,
-			_fragmentEntryProcessorRegistry.processFragmentEntryLinkHTML(
-				fragmentEntryLink,
-				_getFragmentEntryProcessorContext(
-					LocaleUtil.US, new long[] {1L, 0L})));
+		_addFragmentEntry(
+			"fragment_entry_with_invalid_editable_type_attribute_in_text_tag." +
+				"html");
 	}
 
 	@Test
@@ -377,30 +348,6 @@ public class FragmentEntryProcessorEditableTest {
 		fragmentEntryLink.setEditableValues(
 			_getJsonFileAsString(
 				"fragment_entry_link_editable_values_matching_language.json"));
-
-		Assert.assertEquals(
-			_processedHTML,
-			_fragmentEntryProcessorRegistry.processFragmentEntryLinkHTML(
-				fragmentEntryLink,
-				_getFragmentEntryProcessorContext(
-					LocaleUtil.US, new long[] {0L})));
-	}
-
-	@Test
-	public void testFragmentEntryProcessorEditableWithMatchedLanguageCompatibility()
-		throws Exception {
-
-		FragmentEntryLink fragmentEntryLink =
-			_fragmentEntryLinkLocalService.createFragmentEntryLink(0);
-
-		FragmentEntry fragmentEntry = _addFragmentEntry("fragment_entry.html");
-
-		fragmentEntryLink.setHtml(fragmentEntry.getHtml());
-
-		fragmentEntryLink.setEditableValues(
-			_getJsonFileAsString(
-				"fragment_entry_link_editable_values_matching_language_" +
-					"compatibility.json"));
 
 		Assert.assertEquals(
 			_processedHTML,
@@ -425,30 +372,6 @@ public class FragmentEntryProcessorEditableTest {
 	}
 
 	@Test
-	public void testFragmentEntryProcessorEditableWithUnmatchedExperience()
-		throws Exception {
-
-		FragmentEntryLink fragmentEntryLink =
-			_fragmentEntryLinkLocalService.createFragmentEntryLink(0);
-
-		FragmentEntry fragmentEntry = _addFragmentEntry("fragment_entry.html");
-
-		fragmentEntryLink.setHtml(fragmentEntry.getHtml());
-
-		fragmentEntryLink.setEditableValues(
-			_getJsonFileAsString(
-				"fragment_entry_link_editable_values_unmatching_segments_" +
-					"experience.json"));
-
-		Assert.assertEquals(
-			_processedHTML,
-			_fragmentEntryProcessorRegistry.processFragmentEntryLinkHTML(
-				fragmentEntryLink,
-				_getFragmentEntryProcessorContext(
-					LocaleUtil.US, new long[] {2L, 0L})));
-	}
-
-	@Test
 	public void testFragmentEntryProcessorEditableWithUnmatchedLanguage()
 		throws Exception {
 
@@ -463,29 +386,6 @@ public class FragmentEntryProcessorEditableTest {
 			_getJsonFileAsString(
 				"fragment_entry_link_editable_values_unmatching_language." +
 					"json"));
-
-		Assert.assertEquals(
-			_processedHTML,
-			_fragmentEntryProcessorRegistry.processFragmentEntryLinkHTML(
-				fragmentEntryLink,
-				_getFragmentEntryProcessorContext(LocaleUtil.CHINESE)));
-	}
-
-	@Test
-	public void testFragmentEntryProcessorEditableWithUnmatchedLanguageCompatibility()
-		throws Exception {
-
-		FragmentEntryLink fragmentEntryLink =
-			_fragmentEntryLinkLocalService.createFragmentEntryLink(0);
-
-		FragmentEntry fragmentEntry = _addFragmentEntry("fragment_entry.html");
-
-		fragmentEntryLink.setHtml(fragmentEntry.getHtml());
-
-		fragmentEntryLink.setEditableValues(
-			_getJsonFileAsString(
-				"fragment_entry_link_editable_values_unmatching_language_" +
-					"compatibility.json"));
 
 		Assert.assertEquals(
 			_processedHTML,
@@ -514,7 +414,7 @@ public class FragmentEntryProcessorEditableTest {
 			serviceContext);
 	}
 
-	private Layout _addLayout(long groupId) throws PortalException {
+	private Layout _addLayout(long groupId) throws Exception {
 		String name = RandomTestUtil.randomString();
 
 		String friendlyURL =
@@ -544,21 +444,8 @@ public class FragmentEntryProcessorEditableTest {
 	private FragmentEntryProcessorContext _getFragmentEntryProcessorContext(
 		Locale locale) {
 
-		return _getFragmentEntryProcessorContext(locale, new long[0]);
-	}
-
-	private FragmentEntryProcessorContext _getFragmentEntryProcessorContext(
-		Locale locale, long[] segmentsExperienceIds) {
-
-		DefaultFragmentEntryProcessorContext
-			defaultFragmentEntryProcessorContext =
-				new DefaultFragmentEntryProcessorContext(
-					null, null, FragmentEntryLinkConstants.EDIT, locale);
-
-		defaultFragmentEntryProcessorContext.setSegmentsExperienceIds(
-			segmentsExperienceIds);
-
-		return defaultFragmentEntryProcessorContext;
+		return new DefaultFragmentEntryProcessorContext(
+			null, null, FragmentEntryLinkConstants.EDIT, locale);
 	}
 
 	private String _getJsonFileAsString(String jsonFileName)
@@ -570,7 +457,7 @@ public class FragmentEntryProcessorEditableTest {
 		return jsonObject.toString();
 	}
 
-	private String _getProcessedHTML(String fileName) throws IOException {
+	private String _getProcessedHTML(String fileName) throws Exception {
 		Document document = Jsoup.parseBodyFragment(_getFileAsString(fileName));
 
 		document.outputSettings(
@@ -585,7 +472,7 @@ public class FragmentEntryProcessorEditableTest {
 		return bodyElement.html();
 	}
 
-	private ThemeDisplay _getThemeDisplay() throws PortalException {
+	private ThemeDisplay _getThemeDisplay() throws Exception {
 		ThemeDisplay themeDisplay = new ThemeDisplay();
 
 		themeDisplay.setCompany(_company);
@@ -630,6 +517,11 @@ public class FragmentEntryProcessorEditableTest {
 	@DeleteAfterTestRun
 	private Group _group;
 
+	@Inject(
+		filter = "javax.portlet.name=" + FragmentEntryLinkPortletKeys.FRAGMENT_ENTRY_LINK_INSTANCEABLE_TEST_PORTLET
+	)
+	private final Portlet _instanceablePortlet = null;
+
 	private Layout _layout;
 
 	@Inject
@@ -642,16 +534,16 @@ public class FragmentEntryProcessorEditableTest {
 	@Inject
 	private LayoutSetLocalService _layoutSetLocalService;
 
+	@Inject(
+		filter = "javax.portlet.name=" + FragmentEntryLinkPortletKeys.FRAGMENT_ENTRY_LINK_NONINSTANCEABLE_TEST_PORTLET
+	)
+	private final Portlet _noninstanceablePortlet = null;
+
 	private Locale _originalSiteDefaultLocale;
 	private Locale _originalThemeDisplayDefaultLocale;
 
 	@Inject
 	private Portal _portal;
-
-	@Inject(
-		filter = "javax.portlet.name=" + FragmentEntryLinkPortletKeys.FRAGMENT_ENTRY_LINK_TEST_PORTLET
-	)
-	private final Portlet _portlet = null;
 
 	@Inject
 	private PortletPreferencesLocalService _portletPreferencesLocalService;

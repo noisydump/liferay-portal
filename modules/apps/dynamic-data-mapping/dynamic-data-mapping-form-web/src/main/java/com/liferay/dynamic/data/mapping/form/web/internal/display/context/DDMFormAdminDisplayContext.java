@@ -28,6 +28,7 @@ import com.liferay.dynamic.data.mapping.form.renderer.DDMFormRenderingContext;
 import com.liferay.dynamic.data.mapping.form.renderer.DDMFormTemplateContextFactory;
 import com.liferay.dynamic.data.mapping.form.values.factory.DDMFormValuesFactory;
 import com.liferay.dynamic.data.mapping.form.web.internal.configuration.DDMFormWebConfiguration;
+import com.liferay.dynamic.data.mapping.form.web.internal.configuration.FFDDMFormWebConfigurationUtil;
 import com.liferay.dynamic.data.mapping.form.web.internal.constants.DDMFormWebKeys;
 import com.liferay.dynamic.data.mapping.form.web.internal.display.context.util.DDMFormAdminRequestHelper;
 import com.liferay.dynamic.data.mapping.form.web.internal.display.context.util.FormInstancePermissionCheckerHelper;
@@ -341,10 +342,17 @@ public class DDMFormAdminDisplayContext {
 	public String getDDMFormHTML(RenderRequest renderRequest)
 		throws PortalException {
 
+		return getDDMFormHTML(renderRequest, true);
+	}
+
+	public String getDDMFormHTML(RenderRequest renderRequest, boolean readOnly)
+		throws PortalException {
+
 		DDMFormViewFormInstanceRecordDisplayContext
 			formViewRecordDisplayContext = getFormViewRecordDisplayContext();
 
-		return formViewRecordDisplayContext.getDDMFormHTML(renderRequest);
+		return formViewRecordDisplayContext.getDDMFormHTML(
+			renderRequest, readOnly);
 	}
 
 	public DDMFormInstance getDDMFormInstance() throws PortalException {
@@ -505,9 +513,9 @@ public class DDMFormAdminDisplayContext {
 					LanguageUtil.get(httpServletRequest, "rules"));
 			}
 		).add(
-			this::isShowSummary,
+			this::isShowReport,
 			navigationItem -> {
-				navigationItem.putData("action", "showSummary");
+				navigationItem.putData("action", "showReport");
 				navigationItem.setHref(StringPool.BLANK);
 				navigationItem.setLabel(
 					LanguageUtil.get(httpServletRequest, "entries"));
@@ -967,17 +975,8 @@ public class DDMFormAdminDisplayContext {
 		return ParamUtil.getBoolean(renderRequest, "showPublishAlert");
 	}
 
-	public boolean isShowSummary() {
-		try {
-			if (getDDMFormInstance() == null) {
-				return false;
-			}
-		}
-		catch (PortalException portalException) {
-			_log.error(portalException, portalException);
-		}
-
-		return ParamUtil.getBoolean(renderRequest, "showSummary");
+	public boolean isShowReport() {
+		return FFDDMFormWebConfigurationUtil.reportEnabled();
 	}
 
 	public String serializeSettingsForm(PageContext pageContext)

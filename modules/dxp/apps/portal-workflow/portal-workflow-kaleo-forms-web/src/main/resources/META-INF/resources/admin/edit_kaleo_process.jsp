@@ -64,9 +64,11 @@ renderResponse.setTitle(title);
 %>
 
 <c:if test="<%= kaleoProcessStarted %>">
-	<div class="alert alert-info container-fluid-1280">
+	<clay:container
+		className="alert alert-info"
+	>
 		<liferay-ui:message key="updating-the-field-set-or-workflow-will-cause-loss-of-data" />
-	</div>
+	</clay:container>
 </c:if>
 
 <portlet:actionURL name="updateKaleoProcess" var="editKaleoProcessURL">
@@ -107,11 +109,11 @@ renderResponse.setTitle(title);
 	/>
 
 	<aui:script use="liferay-component,liferay-form,liferay-kaleo-forms-admin">
-		var afterFormRegistered = function(event) {
+		var afterFormRegistered = function (event) {
 			var form = Liferay.Form.get('<portlet:namespace />fm');
 
 			if (form === event.form) {
-				Liferay.component('<portlet:namespace/>KaleoFormsAdmin', function() {
+				Liferay.component('<portlet:namespace/>KaleoFormsAdmin', function () {
 					return new Liferay.KaleoFormsAdmin({
 						currentURL: '<%= currentURL %>',
 						form: form,
@@ -130,7 +132,7 @@ renderResponse.setTitle(title);
 
 		Liferay.after('form:registered', afterFormRegistered);
 
-		var clearAfterFormRegistered = function(event) {
+		var clearAfterFormRegistered = function (event) {
 			Liferay.detach('form:registered', afterFormRegistered);
 		};
 

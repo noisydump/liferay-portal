@@ -13,7 +13,9 @@ definition {
 				value1 = "${siteTemplateName}");
 		}
 
-		Button.clickSave();
+		Click(
+			locator1 = "Button#SAVE",
+			value1 = "Save");
 
 		if (("${userGroupNameVariation}" == "Asterik") || ("${userGroupNameVariation}" == "Comma") || ("${userGroupNameVariation}" == "Number")) {
 			Alert.viewRequestFailedToComplete();
@@ -75,7 +77,12 @@ definition {
 
 		LexiconEntry.gotoAdd();
 
-		SelectFrame(locator1 = "IFrame#DIALOG");
+		LiferayEvent.waitForLiferayEvent(
+			attributeName = "src",
+			attributeValue = "dialog-iframe-popup",
+			eventName = "modalIframeLoaded");
+
+		SelectFrame(locator1 = "IFrame#MODAL_BODY");
 
 		PortletEntry.selectAll();
 
@@ -107,7 +114,12 @@ definition {
 
 		AssertElementPresent.assertVisible(locator1 = "Button#ADD");
 
-		SelectFrame(locator1 = "IFrame#DIALOG");
+		LiferayEvent.waitForLiferayEvent(
+			attributeName = "src",
+			attributeValue = "dialog-iframe-popup",
+			eventName = "modalIframeLoaded");
+
+		SelectFrame(locator1 = "IFrame#MODAL_BODY");
 
 		User.searchCP(searchTerm = "${userScreenName}");
 
@@ -200,6 +212,10 @@ definition {
 		LexiconEntry.gotoEllipsisMenuItem(
 			menuItem = "Manage Pages",
 			rowEntry = "${userGroupName}");
+	}
+
+	macro openUserGroupsAdmin {
+		Navigator.openWithAppendToBaseURL(urlAppend = "group/control_panel/manage?p_p_id=com_liferay_user_groups_admin_web_portlet_UserGroupsAdminPortlet");
 	}
 
 	macro removeMemberCP {

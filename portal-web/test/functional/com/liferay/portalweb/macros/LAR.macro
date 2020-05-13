@@ -58,6 +58,11 @@ definition {
 	}
 
 	macro _export {
+		LiferayEvent.waitForLiferayEvent(
+			attributeName = "src",
+			attributeValue = "dialog-iframe-popup",
+			eventName = "modalIframeLoaded");
+
 		SelectFrame(locator1 = "IFrame#CONFIGURATION_DIALOG");
 
 		if (isSet(portletName)) {
@@ -168,6 +173,11 @@ definition {
 	}
 
 	macro _selectImportFile {
+		LiferayEvent.waitForLiferayEvent(
+			attributeName = "src",
+			attributeValue = "dialog-iframe-popup",
+			eventName = "modalIframeLoaded");
+
 		SelectFrame(locator1 = "IFrame#CONFIGURATION_DIALOG");
 
 		NavItem.click(navItem = "Import");
@@ -373,6 +383,11 @@ definition {
 		if (isSet(deleteFromPortlet)) {
 			LAR._gotoExportImport();
 
+			LiferayEvent.waitForLiferayEvent(
+				attributeName = "src",
+				attributeValue = "dialog-iframe-popup",
+				eventName = "modalIframeLoaded");
+
 			SelectFrame(locator1 = "IFrame#CONFIGURATION_DIALOG");
 
 			Click(locator1 = "ExportImport#CURRENT_AND_PREVIOUS_TAB");
@@ -441,7 +456,7 @@ definition {
 	macro exportPortlet {
 		LAR._gotoExportImport();
 
-		AssertElementPresent(locator1 = "IFrame#DIALOG");
+		AssertElementPresent(locator1 = "IFrame#MODAL_BODY");
 
 		LAR._export(
 			exportIndividualDeletions = "${exportIndividualDeletions}",

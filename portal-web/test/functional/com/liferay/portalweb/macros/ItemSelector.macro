@@ -4,6 +4,11 @@ definition {
 		var key_imageSourceURL = "${imageSourceURL}";
 		var key_navTab = "${navTab}";
 
+		LiferayEvent.waitForLiferayEvent(
+			attributeName = "src",
+			attributeValue = "dialog-iframe-popup",
+			eventName = "modalIframeLoaded");
+
 		SelectFrame(locator1 = "ItemSelector#ITEM_SELECTOR_IFRAME");
 
 		AssertClick(
@@ -52,6 +57,11 @@ definition {
 	}
 
 	macro changeWorkspaces {
+		LiferayEvent.waitForLiferayEvent(
+			attributeName = "src",
+			attributeValue = "dialog-iframe-popup",
+			eventName = "modalIframeLoaded");
+
 		SelectFrame(locator1 = "ItemSelector#ITEM_SELECTOR_IFRAME");
 
 		if (isSet(navTab)) {
@@ -80,11 +90,22 @@ definition {
 		Click.clickNoMouseOver(locator1 = "AlloyEditor#CONTENT_ADD_MENUBAR_IMAGE");
 	}
 
+	macro gotoItemSelectorViaCKEditor {
+		Click(locator1 = "CKEditor#TOOLBAR_IMAGE_BUTTON");
+
+		SelectFrame(value1 = "relative=top");
+	}
+
 	macro gotoItemSelectorViaSelectButton {
 		Click(locator1 = "FormFields#SELECT_UPLOAD_FIELD");
 	}
 
 	macro gotoPreviewViaSelectFile {
+		LiferayEvent.waitForLiferayEvent(
+			attributeName = "src",
+			attributeValue = "dialog-iframe-popup",
+			eventName = "modalIframeLoaded");
+
 		SelectFrame(locator1 = "ItemSelector#ITEM_SELECTOR_IFRAME");
 
 		AssertClick(
@@ -97,6 +118,11 @@ definition {
 
 	macro searchBlogImages {
 		var key_imageFileName = "${imageFileName}";
+
+		LiferayEvent.waitForLiferayEvent(
+			attributeName = "src",
+			attributeValue = "dialog-iframe-popup",
+			eventName = "modalIframeLoaded");
 
 		SelectFrame(locator1 = "ItemSelector#ITEM_SELECTOR_IFRAME");
 
@@ -134,6 +160,11 @@ definition {
 	macro searchDMImages {
 		var key_imageFileName = "${imageFileName}";
 		var key_uploadFileName = "${imageFileName}";
+
+		LiferayEvent.waitForLiferayEvent(
+			attributeName = "src",
+			attributeValue = "dialog-iframe-popup",
+			eventName = "modalIframeLoaded");
 
 		SelectFrame(locator1 = "ItemSelector#ITEM_SELECTOR_IFRAME");
 
@@ -173,6 +204,11 @@ definition {
 		var key_navTab = "${navTab}";
 		var key_uploadFileName = "${imageFileName}";
 
+		LiferayEvent.waitForLiferayEvent(
+			attributeName = "src",
+			attributeValue = "dialog-iframe-popup",
+			eventName = "modalIframeLoaded");
+
 		SelectFrame(locator1 = "ItemSelector#ITEM_SELECTOR_IFRAME");
 
 		AssertClick(
@@ -193,6 +229,11 @@ definition {
 	macro selectDMImage {
 		var key_navTab = "${navTab}";
 		var key_uploadFileName = "${imageFileName}";
+
+		LiferayEvent.waitForLiferayEvent(
+			attributeName = "src",
+			attributeValue = "dialog-iframe-popup",
+			eventName = "modalIframeLoaded");
 
 		SelectFrame(locator1 = "ItemSelector#ITEM_SELECTOR_IFRAME");
 
@@ -241,6 +282,11 @@ definition {
 		var key_navTab = "${navTab}";
 		var key_uploadFileName = "${uploadFileName}";
 
+		LiferayEvent.waitForLiferayEvent(
+			attributeName = "src",
+			attributeValue = "dialog-iframe-popup",
+			eventName = "modalIframeLoaded");
+
 		SelectFrame(locator1 = "ItemSelector#ITEM_SELECTOR_IFRAME");
 
 		if (IsElementPresent(locator1 = "ItemSelector#NAVIGATION_SPECIFIC_TAB")) {
@@ -270,11 +316,18 @@ definition {
 		var key_imageFileName = "${imageFileName}";
 		var key_uploadFileName = "${uploadFileName}";
 
+		LiferayEvent.waitForLiferayEvent(
+			attributeName = "src",
+			attributeValue = "dialog-iframe-popup",
+			eventName = "modalIframeLoaded");
+
 		SelectFrame(locator1 = "ItemSelector#ITEM_SELECTOR_IFRAME");
 
 		AssertElementPresent(locator1 = "ItemSelector#SELECT_FILE_IMAGE_CARD");
 
 		Click(locator1 = "Icon#EYE_PREVIEW");
+
+		AssertElementPresent.assertVisible(locator1 = "ItemSelector#VIEWER_INFO");
 
 		Click(locator1 = "ItemSelector#VIEWER_INFO");
 
@@ -332,11 +385,12 @@ definition {
 	macro viewWikiAttachment {
 		var key_imageFileName = "${imageFileName}";
 
-		AlloyEditor.clickContentField();
+		ItemSelector.gotoItemSelectorViaCKEditor();
 
-		Click(locator1 = "AlloyEditor#CONTENT_ADD_BUTTON");
-
-		Click.clickNoMouseOver(locator1 = "AlloyEditor#CONTENT_ADD_MENUBAR_IMAGE");
+		LiferayEvent.waitForLiferayEvent(
+			attributeName = "src",
+			attributeValue = "dialog-iframe-popup",
+			eventName = "modalIframeLoaded");
 
 		SelectFrame(locator1 = "ItemSelector#ITEM_SELECTOR_IFRAME");
 
