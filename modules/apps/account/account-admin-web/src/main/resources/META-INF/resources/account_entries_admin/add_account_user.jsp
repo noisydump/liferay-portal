@@ -43,18 +43,18 @@ renderResponse.setTitle(LanguageUtil.format(request, "add-new-user-to-x", accoun
 	action="<%= addAccountUsersURL %>"
 >
 	<liferay-frontend:edit-form-body>
-		<portlet:renderURL var="redirect">
+		<portlet:renderURL var="defaultRedirect">
 			<portlet:param name="mvcPath" value="/account_users_admin/edit_account_user.jsp" />
 		</portlet:renderURL>
 
-		<aui:input name="redirect" type="hidden" value="<%= redirect %>" />
+		<aui:input name="redirect" type="hidden" value='<%= ParamUtil.getString(request, "redirect", defaultRedirect) %>' />
 		<aui:input name="accountEntryId" type="hidden" value="<%= String.valueOf(accountEntryDisplay.getAccountEntryId()) %>" />
 
 		<h2 class="sheet-title">
 			<%= LanguageUtil.get(request, "information") %>
 		</h2>
 
-		<div class="sheet-section">
+		<clay:sheet-section>
 			<h3 class="sheet-subtitle">
 				<%= LanguageUtil.get(request, "user-display-data") %>
 			</h3>
@@ -115,7 +115,7 @@ renderResponse.setTitle(LanguageUtil.format(request, "add-new-user-to-x", accoun
 					</div>
 				</clay:col>
 			</clay:row>
-		</div>
+		</clay:sheet-section>
 	</liferay-frontend:edit-form-body>
 
 	<liferay-frontend:edit-form-footer>
@@ -124,3 +124,34 @@ renderResponse.setTitle(LanguageUtil.format(request, "add-new-user-to-x", accoun
 		<aui:button href="<%= backURL %>" type="cancel" />
 	</liferay-frontend:edit-form-footer>
 </liferay-frontend:edit-form>
+
+<c:if test="<%= !Objects.equals(accountEntryDisplay.getType(), AccountConstants.ACCOUNT_ENTRY_TYPE_PERSON) && (accountEntryDisplay.isValidateUserEmailAddress(themeDisplay) || Validator.isNotNull(AccountUserDisplay.getBlockedDomains(themeDisplay.getCompanyId()))) %>">
+
+	<%
+	Map<String, Object> context = HashMapBuilder.<String, Object>put(
+		"accountEntryNames", accountEntryDisplay.getName()
+	).build();
+
+	if (Validator.isNotNull(AccountUserDisplay.getBlockedDomains(themeDisplay.getCompanyId()))) {
+		context.put("blockedDomains", AccountUserDisplay.getBlockedDomains(themeDisplay.getCompanyId()));
+	}
+
+	if (accountEntryDisplay.isValidateUserEmailAddress(themeDisplay)) {
+		context.put("validDomains", StringUtil.merge(accountEntryDisplay.getDomains(), StringPool.COMMA));
+
+		PortletURL viewValidDomainsURL = renderResponse.createRenderURL();
+
+		viewValidDomainsURL.setParameter("mvcPath", "/account_users_admin/account_user/view_valid_domains.jsp");
+		viewValidDomainsURL.setParameter("validDomains", StringUtil.merge(accountEntryDisplay.getDomains(), StringPool.COMMA));
+		viewValidDomainsURL.setWindowState(LiferayWindowState.POP_UP);
+
+		context.put("viewValidDomainsURL", viewValidDomainsURL.toString());
+	}
+	%>
+
+	<liferay-frontend:component
+		componentId="AccountUserEmailDomainValidator"
+		context="<%= context %>"
+		module="account_users_admin/js/AccountUserEmailDomainValidator.es"
+	/>
+</c:if>

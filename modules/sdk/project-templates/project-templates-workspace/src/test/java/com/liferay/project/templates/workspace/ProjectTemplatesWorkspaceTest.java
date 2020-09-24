@@ -27,6 +27,9 @@ import java.io.FileOutputStream;
 
 import java.net.URI;
 
+import java.nio.file.Files;
+import java.nio.file.StandardOpenOption;
+
 import java.util.Optional;
 import java.util.Properties;
 import java.util.regex.Matcher;
@@ -73,24 +76,46 @@ public class ProjectTemplatesWorkspaceTest
 		testExists(workspaceProjectDir, "gradle.properties");
 		testExists(workspaceProjectDir, "modules");
 		testExists(workspaceProjectDir, "themes");
-		testExists(workspaceProjectDir, "wars");
 
 		testNotExists(workspaceProjectDir, "modules/pom.xml");
 		testNotExists(workspaceProjectDir, "themes/pom.xml");
-		testNotExists(workspaceProjectDir, "wars/pom.xml");
 
-		File moduleProjectDir = buildTemplateWithGradle(
+		File modulesProjectDir = buildTemplateWithGradle(
 			new File(workspaceProjectDir, "modules"), "", "foo-portlet");
 
 		testNotContains(
-			moduleProjectDir, "build.gradle", "buildscript", "repositories");
+			modulesProjectDir, "build.gradle", "buildscript", "repositories");
 
 		if (isBuildProjects()) {
 			executeGradle(
 				workspaceProjectDir, _gradleDistribution,
 				":modules:foo-portlet" + GRADLE_TASK_PATH_BUILD);
 
-			testExists(moduleProjectDir, "build/libs/foo.portlet-1.0.0.jar");
+			testExists(modulesProjectDir, "build/libs/foo.portlet-1.0.0.jar");
+		}
+	}
+
+	@Test
+	public void testBuildTemplateWorkspaceDXPProductKey() throws Exception {
+		File workspaceProjectDir = buildWorkspace(
+			temporaryFolder, "gradle", "foows", getDefaultLiferayVersion(),
+			mavenExecutor);
+
+		writeGradlePropertiesInWorkspace(
+			workspaceProjectDir, "liferay.workspace.product=dxp-7.3-ep5");
+
+		File modulesProjectDir = buildTemplateWithGradle(
+			new File(workspaceProjectDir, "modules"), "mvc-portlet",
+			"foo-portlet", "--product", "dxp");
+
+		testContains(modulesProjectDir, "build.gradle", "release.dxp.api");
+
+		if (isBuildProjects()) {
+			executeGradle(
+				workspaceProjectDir, _gradleDistribution,
+				":modules:foo-portlet" + GRADLE_TASK_PATH_BUILD);
+
+			testExists(modulesProjectDir, "build/libs/foo.portlet-1.0.0.jar");
 		}
 	}
 
@@ -111,6 +136,39 @@ public class ProjectTemplatesWorkspaceTest
 
 		buildTemplateWithGradle(
 			destinationDir, WorkspaceUtil.WORKSPACE, "forced", "--force");
+	}
+
+	@Test
+	public void testBuildTemplateWorkspaceLegacyWarsDirProperty()
+		throws Exception {
+
+		File workspaceProjectDir = buildWorkspace(
+			temporaryFolder, "gradle", "foows", getDefaultLiferayVersion(),
+			mavenExecutor);
+
+		File gradleProperties = new File(
+			workspaceProjectDir, "gradle.properties");
+
+		Assert.assertTrue(gradleProperties.exists());
+
+		String configLine =
+			System.lineSeparator() + "liferay.workspace.wars.dir=wars";
+
+		Files.write(
+			gradleProperties.toPath(), configLine.getBytes(),
+			StandardOpenOption.APPEND);
+
+		File warsProjectDir = buildTemplateWithGradle(
+			new File(workspaceProjectDir, "wars"), "war-mvc-portlet",
+			"foo-portlet");
+
+		if (isBuildProjects()) {
+			executeGradle(
+				workspaceProjectDir, _gradleDistribution,
+				":wars:foo-portlet" + GRADLE_TASK_PATH_BUILD);
+
+			testExists(warsProjectDir, "build/libs/foo-portlet.war");
+		}
 	}
 
 	@Test
@@ -147,10 +205,46 @@ public class ProjectTemplatesWorkspaceTest
 		executeGradle(
 			workspaceProjectDir, _gradleDistribution,
 			":" + modulesDirName.replace('/', ':') + ":foo-portlet" +
-				BaseProjectTemplatesTestCase.GRADLE_TASK_PATH_DEPLOY);
+				GRADLE_TASK_PATH_DEPLOY);
 
 		testExists(
 			workspaceProjectDir, homeDirName + "/osgi/modules/foo.portlet.jar");
+	}
+
+	@Test
+	public void testBuildTemplateWorkspaceNodePackageManagerYarn()
+		throws Exception {
+
+		File workspaceProjectDir = buildWorkspace(
+			temporaryFolder, "gradle", "foows", getDefaultLiferayVersion(),
+			mavenExecutor);
+
+		File gradleProperties = new File(
+			workspaceProjectDir, "gradle.properties");
+
+		Assert.assertTrue(gradleProperties.exists());
+
+		String configLine =
+			System.lineSeparator() +
+				"liferay.workspace.node.package.manager=yarn";
+
+		Files.write(
+			gradleProperties.toPath(), configLine.getBytes(),
+			StandardOpenOption.APPEND);
+
+		File modulesProjectDir = buildTemplateWithGradle(
+			new File(workspaceProjectDir, "modules"), "npm-react-portlet",
+			"foo-portlet");
+
+		if (isBuildProjects()) {
+			executeGradle(
+				workspaceProjectDir, _gradleDistribution,
+				":modules:foo-portlet" + GRADLE_TASK_PATH_BUILD);
+
+			testExists(modulesProjectDir, "build/libs/foo.portlet-1.0.0.jar");
+			testExists(workspaceProjectDir, "yarn.lock");
+			testExists(workspaceProjectDir, ".yarnrc");
+		}
 	}
 
 	@Test
@@ -212,9 +306,8 @@ public class ProjectTemplatesWorkspaceTest
 
 		String gradleAntBndVersion = null;
 
-		Matcher matcher =
-			BaseProjectTemplatesTestCase.antBndPluginVersionPattern.matcher(
-				gradleResult.get());
+		Matcher matcher = antBndPluginVersionPattern.matcher(
+			gradleResult.get());
 
 		if (matcher.matches()) {
 			gradleAntBndVersion = matcher.group(1);
@@ -247,9 +340,8 @@ public class ProjectTemplatesWorkspaceTest
 		Optional<String> result = executeGradle(
 			workspaceDir, true, _gradleDistribution, ":tasks");
 
-		Matcher matcher =
-			BaseProjectTemplatesTestCase.portalToolsBundleSupportVersionPattern.
-				matcher(result.get());
+		Matcher matcher = portalToolsBundleSupportVersionPattern.matcher(
+			result.get());
 
 		String portalToolsBundleSupportVersion = null;
 
@@ -341,11 +433,10 @@ public class ProjectTemplatesWorkspaceTest
 		File nativeSassProjectDir = buildTemplateWithGradle(
 			nativeSassModulesDir, "mvc-portlet", "foo-portlet");
 
-		Optional<String> nativeSassResult = executeGradle(
-			nativeSassWorkspaceDir, true, _gradleDistribution,
-			":modules:foo-portlet" + GRADLE_TASK_PATH_BUILD);
-
-		String nativeSassOutput = nativeSassResult.toString();
+		String nativeSassOutput = String.valueOf(
+			executeGradle(
+				nativeSassWorkspaceDir, true, _gradleDistribution,
+				":modules:foo-portlet" + GRADLE_TASK_PATH_BUILD));
 
 		Assert.assertTrue(
 			nativeSassOutput,
@@ -362,11 +453,10 @@ public class ProjectTemplatesWorkspaceTest
 		File rubySassProjectDir = buildTemplateWithGradle(
 			rubySassModulesDir, "mvc-portlet", "foo-portlet");
 
-		Optional<String> rubySassResult = executeGradle(
-			rubySassWorkspaceDir, true, _gradleDistribution,
-			":modules:foo-portlet" + GRADLE_TASK_PATH_BUILD);
-
-		String rubySassOutput = rubySassResult.toString();
+		String rubySassOutput = String.valueOf(
+			executeGradle(
+				rubySassWorkspaceDir, true, _gradleDistribution,
+				":modules:foo-portlet" + GRADLE_TASK_PATH_BUILD));
 
 		Assert.assertTrue(
 			rubySassOutput,

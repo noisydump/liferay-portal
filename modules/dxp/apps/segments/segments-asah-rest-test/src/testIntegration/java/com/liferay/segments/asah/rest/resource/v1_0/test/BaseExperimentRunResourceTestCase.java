@@ -107,7 +107,9 @@ public abstract class BaseExperimentRunResourceTestCase {
 
 		ExperimentRunResource.Builder builder = ExperimentRunResource.builder();
 
-		experimentRunResource = builder.locale(
+		experimentRunResource = builder.authentication(
+			"test@liferay.com", "test"
+		).locale(
 			LocaleUtil.getDefault()
 		).build();
 	}
@@ -260,7 +262,7 @@ public abstract class BaseExperimentRunResourceTestCase {
 		}
 	}
 
-	protected void assertValid(ExperimentRun experimentRun) {
+	protected void assertValid(ExperimentRun experimentRun) throws Exception {
 		boolean valid = true;
 
 		for (String additionalAssertFieldName :

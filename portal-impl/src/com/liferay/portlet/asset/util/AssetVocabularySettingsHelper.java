@@ -16,6 +16,7 @@ package com.liferay.portlet.asset.util;
 
 import com.liferay.asset.kernel.model.AssetCategoryConstants;
 import com.liferay.petra.string.CharPool;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
@@ -31,10 +32,28 @@ import java.util.Set;
  */
 public class AssetVocabularySettingsHelper {
 
+	public static final long[] DEFAULT_SELECTED_CLASS_NAME_IDS = {
+		AssetCategoryConstants.ALL_CLASS_NAME_ID
+	};
+
+	public static final long[] DEFAULT_SELECTED_CLASS_TYPE_PKS = {
+		AssetCategoryConstants.ALL_CLASS_TYPE_PK
+	};
+
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #DEFAULT_SELECTED_CLASS_NAME_IDS}
+	 */
+	@Deprecated
 	public static final long[] DEFAULT_SELECTED_CLASSNAME_IDS = {
 		AssetCategoryConstants.ALL_CLASS_NAME_ID
 	};
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #DEFAULT_SELECTED_CLASS_TYPE_PKS}
+	 */
+	@Deprecated
 	public static final long[] DEFAULT_SELECTED_CLASSTYPE_PKS = {
 		AssetCategoryConstants.ALL_CLASS_TYPE_PK
 	};
@@ -157,13 +176,7 @@ public class AssetVocabularySettingsHelper {
 	protected String getClassNameIdAndClassTypePK(
 		long classNameId, long classTypePK) {
 
-		return String.valueOf(
-			classNameId
-		).concat(
-			StringPool.COLON
-		).concat(
-			String.valueOf(classTypePK)
-		);
+		return StringBundler.concat(classNameId, StringPool.COLON, classTypePK);
 	}
 
 	protected long[] getClassNameIds(String[] classNameIdsAndClassTypePKs) {

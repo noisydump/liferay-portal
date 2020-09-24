@@ -41,9 +41,9 @@
 		>
 
 			<%
-			AssetRenderer assetRenderer = assetEntry.getAssetRenderer();
+			AssetRenderer<?> assetRenderer = assetEntry.getAssetRenderer();
 
-			AssetRendererFactory assetRendererFactory = assetRenderer.getAssetRendererFactory();
+			AssetRendererFactory<?> assetRendererFactory = assetRenderer.getAssetRendererFactory();
 
 			Group group = GroupLocalServiceUtil.getGroup(assetEntry.getGroupId());
 
@@ -83,12 +83,10 @@
 
 						<%
 						Date modifiedDate = assetEntry.getModifiedDate();
-
-						String modifiedDateDescription = LanguageUtil.getTimeDescription(request, System.currentTimeMillis() - modifiedDate.getTime(), true);
 						%>
 
 						<h6 class="text-default">
-							<span><liferay-ui:message arguments="<%= modifiedDateDescription %>" key="modified-x-ago" /></span>
+							<span><liferay-ui:message arguments="<%= LanguageUtil.getTimeDescription(request, System.currentTimeMillis() - modifiedDate.getTime(), true) %>" key="modified-x-ago" /></span>
 						</h6>
 
 						<h5>
@@ -103,6 +101,19 @@
 								</c:otherwise>
 							</c:choose>
 						</h5>
+
+						<c:if test="<%= assetBrowserDisplayContext.isSearchEverywhere() %>">
+							<h6 class="text-default">
+								<liferay-ui:message key="location" />:
+								<span class="text-secondary">
+									<clay:icon
+										symbol="<%= assetBrowserDisplayContext.getGroupCssIcon(assetRenderer.getGroupId()) %>"
+									/>
+
+									<small><%= assetBrowserDisplayContext.getGroupLabel(assetRenderer.getGroupId(), locale) %></small>
+								</span>
+							</h6>
+						</c:if>
 
 						<c:if test="<%= Validator.isNull(assetBrowserDisplayContext.getTypeSelection()) %>">
 							<h6 class="text-muted">
@@ -131,8 +142,8 @@
 				</c:when>
 				<c:when test='<%= Objects.equals(assetBrowserDisplayContext.getDisplayStyle(), "list") %>'>
 					<liferay-ui:search-container-column-text
+						cssClass="table-cell-expand table-cell-minw-200 table-title"
 						name="title"
-						truncate="<%= true %>"
 					>
 						<c:choose>
 							<c:when test="<%= (assetEntry.getEntryId() != assetBrowserDisplayContext.getRefererAssetEntryId()) && !assetBrowserDisplayContext.isMultipleSelection() %>">
@@ -149,38 +160,49 @@
 					<c:if test="<%= Validator.isNull(assetBrowserDisplayContext.getTypeSelection()) %>">
 						<liferay-ui:search-container-column-text
 							name="type"
-							truncate="<%= true %>"
 							value="<%= HtmlUtil.escape(assetRendererFactory.getTypeName(locale, assetBrowserDisplayContext.getSubtypeSelectionId())) %>"
 						/>
 					</c:if>
 
 					<liferay-ui:search-container-column-text
+						cssClass="table-cell-expand table-cell-minw-200 text-truncate"
 						name="description"
-						truncate="<%= true %>"
 						value="<%= HtmlUtil.escape(assetRenderer.getSummary(renderRequest, renderResponse)) %>"
 					/>
 
+					<c:if test="<%= assetBrowserDisplayContext.isSearchEverywhere() %>">
+						<liferay-ui:search-container-column-text
+							name="location"
+						>
+							<span class="text-secondary">
+								<clay:icon
+									symbol="<%= assetBrowserDisplayContext.getGroupCssIcon(assetRenderer.getGroupId()) %>"
+								/>
+
+								<small><%= assetBrowserDisplayContext.getGroupLabel(assetRenderer.getGroupId(), locale) %></small>
+							</span>
+						</liferay-ui:search-container-column-text>
+					</c:if>
+
 					<liferay-ui:search-container-column-text
+						cssClass="table-cell-expand-smallest table-cell-minw-100"
 						name="author"
 						value="<%= PortalUtil.getUserName(assetEntry) %>"
 					/>
 
 					<liferay-ui:search-container-column-date
+						cssClass="table-cell-expand-smallest table-cell-ws-nowrap"
 						name="modified-date"
 						value="<%= assetEntry.getModifiedDate() %>"
 					/>
 
 					<c:if test="<%= assetBrowserDisplayContext.isShowAssetEntryStatus() %>">
 						<liferay-ui:search-container-column-status
+							cssClass="text-nowrap"
 							name="status"
 							status="<%= assetRenderer.getStatus() %>"
 						/>
 					</c:if>
-
-					<liferay-ui:search-container-column-text
-						name="<%= assetBrowserDisplayContext.getGroupTypeTitle() %>"
-						value="<%= HtmlUtil.escape(group.getDescriptiveName(locale)) %>"
-					/>
 				</c:when>
 			</c:choose>
 		</liferay-ui:search-container-row>

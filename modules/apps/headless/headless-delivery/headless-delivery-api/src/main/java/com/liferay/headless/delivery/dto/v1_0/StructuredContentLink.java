@@ -33,6 +33,8 @@ import java.util.Set;
 
 import javax.annotation.Generated;
 
+import javax.validation.Valid;
+
 import javax.xml.bind.annotation.XmlRootElement;
 
 /**
@@ -76,6 +78,43 @@ public class StructuredContentLink {
 	@GraphQLField
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected String contentType;
+
+	@Schema(
+		description = "optional field with the structured content, can be embedded with nestedFields"
+	)
+	@Valid
+	public StructuredContent getEmbeddedStructuredContent() {
+		return embeddedStructuredContent;
+	}
+
+	public void setEmbeddedStructuredContent(
+		StructuredContent embeddedStructuredContent) {
+
+		this.embeddedStructuredContent = embeddedStructuredContent;
+	}
+
+	@JsonIgnore
+	public void setEmbeddedStructuredContent(
+		UnsafeSupplier<StructuredContent, Exception>
+			embeddedStructuredContentUnsafeSupplier) {
+
+		try {
+			embeddedStructuredContent =
+				embeddedStructuredContentUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField(
+		description = "optional field with the structured content, can be embedded with nestedFields"
+	)
+	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
+	protected StructuredContent embeddedStructuredContent;
 
 	@Schema(description = "The resource's ID.")
 	public Long getId() {
@@ -173,6 +212,16 @@ public class StructuredContentLink {
 			sb.append("\"");
 		}
 
+		if (embeddedStructuredContent != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"embeddedStructuredContent\": ");
+
+			sb.append(String.valueOf(embeddedStructuredContent));
+		}
+
 		if (id != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -214,6 +263,16 @@ public class StructuredContentLink {
 		return string.replaceAll("\"", "\\\\\"");
 	}
 
+	private static boolean _isArray(Object value) {
+		if (value == null) {
+			return false;
+		}
+
+		Class<?> clazz = value.getClass();
+
+		return clazz.isArray();
+	}
+
 	private static String _toJSON(Map<String, ?> map) {
 		StringBuilder sb = new StringBuilder("{");
 
@@ -232,9 +291,7 @@ public class StructuredContentLink {
 
 			Object value = entry.getValue();
 
-			Class<?> clazz = value.getClass();
-
-			if (clazz.isArray()) {
+			if (_isArray(value)) {
 				sb.append("[");
 
 				Object[] valueArray = (Object[])value;

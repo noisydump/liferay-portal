@@ -12,75 +12,164 @@
  * details.
  */
 
+import ClayLayout from '@clayui/layout';
 import classNames from 'classnames';
 import PropTypes from 'prop-types';
-import React, {useMemo} from 'react';
+import React, {useEffect, useMemo, useState} from 'react';
 
-import {
-	LayoutDataPropTypes,
-	getLayoutDataItemPropTypes,
-} from '../../../prop-types/index';
+import {getLayoutDataItemPropTypes} from '../../../prop-types/index';
 import {LAYOUT_DATA_ITEM_TYPES} from '../../config/constants/layoutDataItemTypes';
 import {useSelector} from '../../store/index';
+import {getFrontendTokenValue} from '../../utils/getFrontendTokenValue';
 import {getResponsiveConfig} from '../../utils/getResponsiveConfig';
+import loadBackgroundImage from '../../utils/loadBackgroundImage';
+import {useCustomRowContext} from '../ResizeContext';
 
-const Row = React.forwardRef(({children, className, item, layoutData}, ref) => {
-	const selectedViewportSize = useSelector(
-		(state) => state.selectedViewportSize
-	);
+const Row = React.forwardRef(
+	({children, className, item, withinTopper = false}, ref) => {
+		const customRow = useCustomRowContext();
+		const selectedViewportSize = useSelector(
+			(state) => state.selectedViewportSize
+		);
 
-	const itemConfig = getResponsiveConfig(item.config, selectedViewportSize);
+		const itemConfig = getResponsiveConfig(
+			item.config,
+			selectedViewportSize
+		);
+		const {modulesPerRow, reverseOrder} = itemConfig;
 
-	const {modulesPerRow, reverseOrder} = itemConfig;
+		const {
+			backgroundColor,
+			backgroundImage,
+			borderColor,
+			borderRadius,
+			borderWidth,
+			fontFamily,
+			fontSize,
+			fontWeight,
+			height,
+			marginBottom,
+			marginLeft,
+			marginRight,
+			marginTop,
+			maxHeight,
+			maxWidth,
+			minHeight,
+			minWidth,
+			opacity,
+			overflow,
+			paddingBottom,
+			paddingLeft,
+			paddingRight,
+			paddingTop,
+			shadow,
+			textAlign,
+			textColor,
+			width,
+		} = itemConfig.styles;
 
-	const rowContent = (
-		<div
-			className={classNames(className, 'row', {
-				empty:
-					item.config.numberOfColumns === modulesPerRow &&
-					!item.children.some(
-						(childId) => layoutData.items[childId].children.length
-					),
-				'flex-column': modulesPerRow === 1,
-				'flex-column-reverse':
-					item.config.numberOfColumns === 2 &&
-					modulesPerRow === 1 &&
-					reverseOrder,
+		const [backgroundImageValue, setBackgroundImageValue] = useState('');
 
-				'no-gutters': !item.config.gutters,
-			})}
-			ref={ref}
-		>
-			{children}
-		</div>
-	);
+		useEffect(() => {
+			loadBackgroundImage(backgroundImage).then(setBackgroundImageValue);
+		}, [backgroundImage]);
 
-	const masterLayoutData = useSelector((state) => state.masterLayoutData);
+		const style = {};
 
-	const masterParent = useMemo(() => {
-		const dropZone =
-			masterLayoutData &&
-			masterLayoutData.items[masterLayoutData.rootItems.dropZone];
+		style.backgroundColor = getFrontendTokenValue(backgroundColor);
+		style.border = `solid ${borderWidth}px`;
+		style.borderColor = getFrontendTokenValue(borderColor);
+		style.borderRadius = getFrontendTokenValue(borderRadius);
+		style.boxShadow = getFrontendTokenValue(shadow);
+		style.color = getFrontendTokenValue(textColor);
+		style.fontFamily = getFrontendTokenValue(fontFamily);
+		style.fontSize = getFrontendTokenValue(fontSize);
+		style.fontWeight = getFrontendTokenValue(fontWeight);
+		style.height = height;
+		style.maxHeight = maxHeight;
+		style.minHeight = minHeight;
+		style.opacity = opacity ? opacity / 100 : null;
+		style.overflow = overflow;
 
-		return dropZone ? getItemParent(dropZone, masterLayoutData) : undefined;
-	}, [masterLayoutData]);
+		if (!withinTopper) {
+			style.maxWidth = maxWidth;
+			style.minWidth = minWidth;
+			style.width = width;
+		}
 
-	const shouldAddContainer = useSelector(
-		(state) => !getItemParent(item, state.layoutData) && !masterParent
-	);
+		if (backgroundImageValue) {
+			style.backgroundImage = `url(${backgroundImageValue})`;
+			style.backgroundPosition = '50% 50%';
+			style.backgroundRepeat = 'no-repeat';
+			style.backgroundSize = 'cover';
+		}
 
-	return shouldAddContainer ? (
-		<div className="container-fluid p-0">{rowContent}</div>
-	) : (
-		rowContent
-	);
-});
+		const rowContent = (
+			<ClayLayout.Row
+				className={classNames(
+					className,
+					`mb-${marginBottom || 0}`,
+					`mt-${marginTop || 0}`,
+					`pb-${paddingBottom || 0}`,
+					`pl-${paddingLeft || 0}`,
+					`pr-${paddingRight || 0}`,
+					`pt-${paddingTop || 0}`,
+					{
+						'flex-column': customRow && modulesPerRow === 1,
+						'flex-column-reverse':
+							item.config.numberOfColumns === 2 &&
+							modulesPerRow === 1 &&
+							reverseOrder,
+						[`ml-${marginLeft}`]: marginLeft && marginLeft !== '0',
+						[`mr-${marginRight}`]:
+							marginRight && marginRight !== '0',
+						'no-gutters': !item.config.gutters,
+						[textAlign
+							? textAlign.startsWith('text-')
+								? textAlign
+								: `text-${textAlign}`
+							: '']: textAlign,
+					}
+				)}
+				ref={ref}
+				style={style}
+			>
+				{children}
+			</ClayLayout.Row>
+		);
+
+		const masterLayoutData = useSelector(
+			(state) => state.masterLayout?.masterLayoutData
+		);
+
+		const masterParent = useMemo(() => {
+			const dropZone =
+				masterLayoutData &&
+				masterLayoutData.items[masterLayoutData.rootItems.dropZone];
+
+			return dropZone
+				? getItemParent(dropZone, masterLayoutData)
+				: undefined;
+		}, [masterLayoutData]);
+
+		const shouldAddContainer = useSelector(
+			(state) => !getItemParent(item, state.layoutData) && !masterParent
+		);
+
+		return shouldAddContainer ? (
+			<ClayLayout.ContainerFluid className="p-0" size={false}>
+				{rowContent}
+			</ClayLayout.ContainerFluid>
+		) : (
+			rowContent
+		);
+	}
+);
 
 Row.propTypes = {
 	item: getLayoutDataItemPropTypes({
 		config: PropTypes.shape({gutters: PropTypes.bool}),
 	}).isRequired,
-	layoutData: LayoutDataPropTypes.isRequired,
 };
 
 function getItemParent(item, itemLayoutData) {

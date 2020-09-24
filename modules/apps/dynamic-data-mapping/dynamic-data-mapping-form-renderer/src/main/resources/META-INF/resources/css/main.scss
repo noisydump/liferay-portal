@@ -38,6 +38,10 @@
 	pointer-events: none;
 }
 
+.input-group-inset-item {
+	height: auto;
+}
+
 body .ddm-user-view-content {
 	.ddm-field {
 		padding: 0 12px;
@@ -76,6 +80,7 @@ body .ddm-user-view-content {
 }
 
 .lfr-ddm-form-field-container label,
+.lfr-ddm-form-field-container legend,
 .lfr-ddm-form-field-container p {
 	padding-right: 40px;
 }
@@ -152,7 +157,7 @@ body .ddm-user-view-content {
 
 	.lfr-ddm-form-page {
 		display: none;
-		padding: 25px 0;
+		padding: 0;
 
 		&.active {
 			display: block;
@@ -220,7 +225,7 @@ body .ddm-user-view-content {
 
 .liferay-ddm-form-field-paragraph,
 .liferay-ddm-form-field-tip {
-	color: #869cad;
+	color: #5b7b86;
 	line-height: 16px;
 }
 
@@ -457,6 +462,7 @@ body .ddm-user-view-content {
 	}
 
 	.ddm-form-field-repeatable-delete-button {
+		margin-right: 4px !important;
 		right: 26px;
 	}
 
@@ -518,6 +524,7 @@ body .ddm-user-view-content {
 
 .liferay-ddm-form-builder-sidebar-content {
 	label,
+	legend,
 	p {
 		padding-right: 0;
 	}
@@ -556,6 +563,10 @@ body .ddm-user-view-content {
 	}
 }
 
+.ddm-empty {
+	display: inline-block;
+}
+
 .ddm-tooltip {
 	color: #a7a9bc;
 	display: inline-block;
@@ -584,6 +595,7 @@ p.ddm-label {
 	word-wrap: break-word;
 }
 
+legend .reference-mark,
 p .reference-mark {
 	color: #b95000;
 	font-size: 6px;

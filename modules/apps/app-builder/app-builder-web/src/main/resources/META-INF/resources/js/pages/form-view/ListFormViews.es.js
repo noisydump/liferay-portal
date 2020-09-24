@@ -17,7 +17,9 @@ import React, {useContext} from 'react';
 import {AppContext} from '../../AppContext.es';
 import Button from '../../components/button/Button.es';
 import ListView from '../../components/list-view/ListView.es';
+import useDataDefinition from '../../hooks/useDataDefinition.es';
 import {confirmDelete} from '../../utils/client.es';
+import {getLocalizedValue} from '../../utils/lang.es';
 import {fromNow} from '../../utils/time.es';
 
 export default ({
@@ -26,6 +28,7 @@ export default ({
 	},
 }) => {
 	const {basePortletURL} = useContext(AppContext);
+	const {defaultLanguageId} = useDataDefinition(dataDefinitionId);
 
 	const getItemURL = (item) =>
 		Liferay.Util.PortletURL.createRenderURL(basePortletURL, {
@@ -56,6 +59,10 @@ export default ({
 			key: 'dateModified',
 			sortable: true,
 			value: Liferay.Language.get('modified-date'),
+		},
+		{
+			key: 'id',
+			value: Liferay.Language.get('id'),
 		},
 	];
 
@@ -101,13 +108,21 @@ export default ({
 			}}
 			endpoint={`/o/data-engine/v2.0/data-definitions/${dataDefinitionId}/data-layouts`}
 		>
-			{(item) => ({
-				dataDefinitionId,
-				dateCreated: fromNow(item.dateCreated),
-				dateModified: fromNow(item.dateModified),
-				id: item.id,
-				name: <a href={getItemURL(item)}>{item.name.en_US}</a>,
-			})}
+			{(item) => {
+				const {dateCreated, dateModified, id, name} = item;
+
+				return {
+					dataDefinitionId,
+					dateCreated: fromNow(dateCreated),
+					dateModified: fromNow(dateModified),
+					id,
+					name: (
+						<a href={getItemURL(item)}>
+							{getLocalizedValue(defaultLanguageId, name)}
+						</a>
+					),
+				};
+			}}
 		</ListView>
 	);
 };

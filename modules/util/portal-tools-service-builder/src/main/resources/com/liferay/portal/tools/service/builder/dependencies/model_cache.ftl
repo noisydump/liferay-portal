@@ -44,28 +44,28 @@ public class ${entity.name}CacheModel implements CacheModel<${entity.name}>, Ext
 	{
 
 	@Override
-	public boolean equals(Object obj) {
-		if (this == obj) {
+	public boolean equals(Object object) {
+		if (this == object) {
 			return true;
 		}
 
-		if (!(obj instanceof ${entity.name}CacheModel)) {
+		if (!(object instanceof ${entity.name}CacheModel)) {
 			return false;
 		}
 
-		${entity.name}CacheModel ${entity.varName}CacheModel = (${entity.name}CacheModel)obj;
+		${entity.name}CacheModel ${entity.variableName}CacheModel = (${entity.name}CacheModel)object;
 
 		<#if entity.hasPrimitivePK(false)>
 			<#if entity.isMvccEnabled()>
-				if ((${entity.PKVarName} == ${entity.varName}CacheModel.${entity.PKVarName}) && (mvccVersion == ${entity.varName}CacheModel.mvccVersion)) {
+				if ((${entity.PKVariableName} == ${entity.variableName}CacheModel.${entity.PKVariableName}) && (mvccVersion == ${entity.variableName}CacheModel.mvccVersion)) {
 			<#else>
-				if (${entity.PKVarName} == ${entity.varName}CacheModel.${entity.PKVarName}) {
+				if (${entity.PKVariableName} == ${entity.variableName}CacheModel.${entity.PKVariableName}) {
 			</#if>
 		<#else>
 			<#if entity.isMvccEnabled()>
-				if (${entity.PKVarName}.equals(${entity.varName}CacheModel.${entity.PKVarName}) && (mvccVersion == ${entity.varName}CacheModel.mvccVersion)) {
+				if (${entity.PKVariableName}.equals(${entity.variableName}CacheModel.${entity.PKVariableName}) && (mvccVersion == ${entity.variableName}CacheModel.mvccVersion)) {
 			<#else>
-				if (${entity.PKVarName}.equals(${entity.varName}CacheModel.${entity.PKVarName})) {
+				if (${entity.PKVariableName}.equals(${entity.variableName}CacheModel.${entity.PKVariableName})) {
 			</#if>
 		</#if>
 
@@ -78,11 +78,11 @@ public class ${entity.name}CacheModel implements CacheModel<${entity.name}>, Ext
 	@Override
 	public int hashCode() {
 		<#if entity.isMvccEnabled()>
-			int hashCode = HashUtil.hash(0, ${entity.PKVarName});
+			int hashCode = HashUtil.hash(0, ${entity.PKVariableName});
 
 			return HashUtil.hash(hashCode, mvccVersion);
 		<#else>
-			return HashUtil.hash(0, ${entity.PKVarName});
+			return HashUtil.hash(0, ${entity.PKVariableName});
 		</#if>
 	}
 
@@ -123,41 +123,41 @@ public class ${entity.name}CacheModel implements CacheModel<${entity.name}>, Ext
 
 	@Override
 	public ${entity.name} toEntityModel() {
-		${entity.name}Impl ${entity.varName}Impl = new ${entity.name}Impl();
+		${entity.name}Impl ${entity.variableName}Impl = new ${entity.name}Impl();
 
 		<#list entity.databaseRegularEntityColumns as entityColumn>
 			<#if !stringUtil.equals(entityColumn.type, "Blob")>
 				<#if stringUtil.equals(entityColumn.type, "Date")>
 					if (${entityColumn.name} == Long.MIN_VALUE) {
-						${entity.varName}Impl.set${entityColumn.methodName}(null);
+						${entity.variableName}Impl.set${entityColumn.methodName}(null);
 					}
 					else {
-						${entity.varName}Impl.set${entityColumn.methodName}(new Date(${entityColumn.name}));
+						${entity.variableName}Impl.set${entityColumn.methodName}(new Date(${entityColumn.name}));
 					}
 				<#else>
 					<#if stringUtil.equals(entityColumn.type, "String") && entityColumn.isConvertNull()>
 						if (${entityColumn.name} == null) {
-							${entity.varName}Impl.set${entityColumn.methodName}("");
+							${entity.variableName}Impl.set${entityColumn.methodName}("");
 						}
 						else {
-							${entity.varName}Impl.set${entityColumn.methodName}(${entityColumn.name});
+							${entity.variableName}Impl.set${entityColumn.methodName}(${entityColumn.name});
 						}
 					<#else>
-						${entity.varName}Impl.set${entityColumn.methodName}(${entityColumn.name});
+						${entity.variableName}Impl.set${entityColumn.methodName}(${entityColumn.name});
 					</#if>
 				</#if>
 			</#if>
 		</#list>
 
-		${entity.varName}Impl.resetOriginalValues();
+		${entity.variableName}Impl.resetOriginalValues();
 
 		<#list cacheFields as cacheField>
 			<#assign methodName = serviceBuilder.getCacheFieldMethodName(cacheField) />
 
-			${entity.varName}Impl.set${methodName}(${cacheField.name});
+			${entity.variableName}Impl.set${methodName}(${cacheField.name});
 		</#list>
 
-		return ${entity.varName}Impl;
+		return ${entity.variableName}Impl;
 	}
 
 	@Override
@@ -206,7 +206,7 @@ public class ${entity.name}CacheModel implements CacheModel<${entity.name}>, Ext
 		</#list>
 
 		<#if entity.hasCompoundPK()>
-			${entity.PKVarName} = new ${entity.PKClassName}(
+			${entity.PKVariableName} = new ${entity.PKClassName}(
 
 				<#list entity.PKEntityColumns as entityColumn>
 					${entityColumn.name}
@@ -273,7 +273,7 @@ public class ${entity.name}CacheModel implements CacheModel<${entity.name}>, Ext
 	</#list>
 
 	<#if entity.hasCompoundPK()>
-		public transient ${entity.name}PK ${entity.PKVarName};
+		public transient ${entity.name}PK ${entity.PKVariableName};
 	</#if>
 
 }

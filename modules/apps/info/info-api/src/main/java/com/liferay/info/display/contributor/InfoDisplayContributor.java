@@ -28,7 +28,11 @@ import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * @author Jürgen Kappler
+ * @deprecated As of Athanasius (7.3.x), replaced by {@link
+ * com.liferay.info.item.provider.InfoItemObjectProvider and
+ * com.liferay.layout.display.page.LayoutDisplayPageProvider}
  */
+@Deprecated
 @ProviderType
 public interface InfoDisplayContributor<T> {
 
@@ -80,7 +84,8 @@ public interface InfoDisplayContributor<T> {
 		return 0;
 	}
 
-	public InfoDisplayObjectProvider getInfoDisplayObjectProvider(long classPK)
+	public InfoDisplayObjectProvider<T> getInfoDisplayObjectProvider(
+			long classPK)
 		throws PortalException;
 
 	public InfoDisplayObjectProvider<T> getInfoDisplayObjectProvider(
@@ -93,7 +98,7 @@ public interface InfoDisplayContributor<T> {
 		return ResourceActionsUtil.getModelResource(locale, getClassName());
 	}
 
-	public default InfoDisplayObjectProvider
+	public default InfoDisplayObjectProvider<T>
 			getPreviewInfoDisplayObjectProvider(long classPK, int type)
 		throws PortalException {
 

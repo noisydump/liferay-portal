@@ -15,11 +15,18 @@
 package com.liferay.dynamic.data.mapping.form.report.web.internal.display.context;
 
 import com.liferay.dynamic.data.mapping.form.report.web.internal.portlet.DDMFormReportPortlet;
+import com.liferay.dynamic.data.mapping.model.DDMForm;
+import com.liferay.dynamic.data.mapping.model.DDMFormField;
+import com.liferay.dynamic.data.mapping.model.DDMFormFieldOptions;
+import com.liferay.dynamic.data.mapping.model.DDMFormInstance;
 import com.liferay.dynamic.data.mapping.model.DDMFormInstanceReport;
+import com.liferay.dynamic.data.mapping.model.Value;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
+import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.DateUtil;
@@ -29,9 +36,14 @@ import com.liferay.portal.kernel.util.Time;
 import com.liferay.portal.kernel.util.WebKeys;
 
 import java.util.Date;
+import java.util.Map;
 import java.util.ResourceBundle;
+import java.util.Set;
+import java.util.stream.Stream;
 
 import javax.portlet.RenderRequest;
+import javax.portlet.RenderResponse;
+import javax.portlet.ResourceURL;
 
 /**
  * @author Bruno Farache
@@ -40,14 +52,70 @@ public class DDMFormReportDisplayContext {
 
 	public DDMFormReportDisplayContext(
 		DDMFormInstanceReport ddmFormInstanceReport,
-		RenderRequest renderRequest) {
+		RenderRequest renderRequest, RenderResponse renderResponse) {
 
 		_ddmFormInstanceReport = ddmFormInstanceReport;
 		_renderRequest = renderRequest;
+		_renderResponse = renderResponse;
 	}
 
 	public DDMFormInstanceReport getDDMFormInstanceReport() {
 		return _ddmFormInstanceReport;
+	}
+
+	public JSONArray getFieldsJSONArray() throws PortalException {
+		JSONArray fieldsJSONArray = JSONFactoryUtil.createJSONArray();
+
+		if (_ddmFormInstanceReport == null) {
+			return fieldsJSONArray;
+		}
+
+		DDMFormInstance ddmFormInstance =
+			_ddmFormInstanceReport.getFormInstance();
+
+		DDMForm ddmForm = ddmFormInstance.getDDMForm();
+
+		Map<String, DDMFormField> ddmFormFieldsMap =
+			ddmForm.getDDMFormFieldsMap(true);
+
+		Set<String> set = ddmFormFieldsMap.keySet();
+
+		Stream<String> stream = set.stream();
+
+		stream.map(
+			ddmFormFieldName -> ddmFormFieldsMap.get(ddmFormFieldName)
+		).filter(
+			ddmFormField -> !StringUtil.equals(
+				ddmFormField.getType(), "fieldset")
+		).forEach(
+			ddmFormField -> fieldsJSONArray.put(
+				JSONUtil.put(
+					"columns",
+					_getPropertyLabelsJSONObject(ddmFormField, "columns")
+				).put(
+					"label", _getValue(ddmFormField.getLabel())
+				).put(
+					"name", ddmFormField.getName()
+				).put(
+					"options",
+					_getDDMFormFieldOptionLabelsJSONObject(
+						ddmFormField.getDDMFormFieldOptions())
+				).put(
+					"rows", _getPropertyLabelsJSONObject(ddmFormField, "rows")
+				).put(
+					"type", ddmFormField.getType()
+				))
+		);
+
+		return fieldsJSONArray;
+	}
+
+	public String getFormReportRecordsFieldValuesURL() {
+		ResourceURL resourceURL = _renderResponse.createResourceURL();
+
+		resourceURL.setResourceID("/form-report/get_records_field_values");
+
+		return resourceURL.toString();
 	}
 
 	public String getLastModifiedDate() {
@@ -61,7 +129,7 @@ public class DDMFormReportDisplayContext {
 		ResourceBundle resourceBundle = ResourceBundleUtil.getBundle(
 			themeDisplay.getLocale(), DDMFormReportPortlet.class);
 
-		String languageKey = "report-was-last-modified-on-x";
+		String languageKey = "the-last-entry-was-sent-on-x";
 
 		Date modifiedDate = _ddmFormInstanceReport.getModifiedDate();
 
@@ -70,7 +138,7 @@ public class DDMFormReportDisplayContext {
 			themeDisplay.getTimeZone());
 
 		if (daysBetween < 2) {
-			languageKey = "report-was-last-modified-x";
+			languageKey = "the-last-entry-was-sent-x";
 		}
 
 		String relativeTimeDescription = StringUtil.removeSubstring(
@@ -99,7 +167,48 @@ public class DDMFormReportDisplayContext {
 		return jsonObject.getInt("totalItems");
 	}
 
+	private JSONObject _getDDMFormFieldOptionLabelsJSONObject(
+		DDMFormFieldOptions ddmFormFieldOptions) {
+
+		JSONObject jsonObject = JSONFactoryUtil.createJSONObject();
+
+		int index = 0;
+
+		for (String optionValue : ddmFormFieldOptions.getOptionsValues()) {
+			jsonObject.put(
+				optionValue,
+				JSONUtil.put(
+					"index", index++
+				).put(
+					"value",
+					_getValue(ddmFormFieldOptions.getOptionLabels(optionValue))
+				));
+		}
+
+		return jsonObject;
+	}
+
+	private JSONObject _getPropertyLabelsJSONObject(
+		DDMFormField ddmFormField, String propertyName) {
+
+		Object property = ddmFormField.getProperty(propertyName);
+
+		if (property instanceof DDMFormFieldOptions) {
+			DDMFormFieldOptions ddmFormFieldOptions =
+				(DDMFormFieldOptions)property;
+
+			return _getDDMFormFieldOptionLabelsJSONObject(ddmFormFieldOptions);
+		}
+
+		return JSONFactoryUtil.createJSONObject();
+	}
+
+	private String _getValue(Value value) {
+		return value.getString(value.getDefaultLocale());
+	}
+
 	private final DDMFormInstanceReport _ddmFormInstanceReport;
 	private final RenderRequest _renderRequest;
+	private final RenderResponse _renderResponse;
 
 }

@@ -402,12 +402,10 @@ definition {
 
 		IFrame.closeFrame();
 
-		var serviceContext = '''{"assetTagNames": ["tag name"]}''';
-
 		JSONWebcontent.addWebContent(
+			assetTagNames = "tag name",
 			content = "Web Content Content",
 			groupName = "Guest",
-			serviceContext = "${serviceContext}",
 			title = "Web Content Title");
 
 		Navigator.gotoPage(pageName = "Tags Navigation Page");
@@ -432,7 +430,6 @@ definition {
 
 		ProductMenu.gotoPortlet(
 			category = "Content &amp; Data",
-			panel = "Site Administration",
 			portlet = "Web Content");
 
 		WebContentNavigator.gotoViewStatus(
@@ -448,9 +445,11 @@ definition {
 	@description = "This is a use case for LPS-49853."
 	@priority = "5"
 	test ViewWebContentViaAPAsGuestWithViewPermission {
+		property portal.acceptance = "true";
+
 		var siteName = TestCase.getSiteName(siteName = "${siteName}");
 
-		ProductMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Users",
 			panel = "Control Panel",
 			portlet = "Roles");
@@ -461,7 +460,7 @@ definition {
 			roleTitle = "Guest",
 			siteNameScope = "${siteName}");
 
-		ProductMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Users",
 			panel = "Control Panel",
 			portlet = "Roles");
@@ -474,8 +473,8 @@ definition {
 
 		ProductMenu.gotoPortlet(
 			category = "Content &amp; Data",
-			panel = "Site Administration",
-			portlet = "Web Content");
+			portlet = "Web Content",
+			site = "${siteName}");
 
 		WebContentNavigator.gotoAddCP();
 
@@ -510,6 +509,8 @@ definition {
 	@description = "This is a use case for LPS-80445."
 	@priority = "5"
 	test ViewWebContentViaAPDeleteCategory {
+		property portal.acceptance = "true";
+
 		JSONCategory.addVocabulary(
 			groupName = "Guest",
 			title = "Vocabulary Name");
@@ -532,12 +533,10 @@ definition {
 			groupName = "Guest",
 			vocabularyName = "Vocabulary Name");
 
-		var serviceContext = '''{"assetCategoryIds": ["${categoryId}"]}''';
-
 		JSONWebcontent.addWebContent(
+			assetCategoryIds = "${categoryId}",
 			content = "Web Content Content",
 			groupName = "Guest",
-			serviceContext = "${serviceContext}",
 			title = "Web Content Title");
 
 		Navigator.gotoPage(pageName = "Asset Publisher Page");
@@ -548,7 +547,6 @@ definition {
 
 		ProductMenu.gotoPortlet(
 			category = "Categorization",
-			panel = "Site Administration",
 			portlet = "Categories");
 
 		Vocabulary.deleteByMenuCP(vocabularyName = "Vocabulary Name");
@@ -571,7 +569,7 @@ definition {
 
 		AssetPublisherPortlet.gotoEditAssetPG(assetTitle = "Web Content Title");
 
-		Panel.expandPanel(panel = "Metadata");
+		Panel.expandPanel(panel = "Categorization");
 
 		AssertElementNotPresent(locator1 = "AssetCategorization#VOCABULARY");
 	}

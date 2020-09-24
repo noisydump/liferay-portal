@@ -99,6 +99,10 @@ public class DDMFormRuleConverterImpl implements SPIDDMFormRuleConverter {
 			spiDDMFormRuleCondition.getOperands();
 
 		if (functionName == null) {
+			if (operands.size() < 2) {
+				return StringPool.BLANK;
+			}
+
 			return String.format(
 				_COMPARISON_EXPRESSION_FORMAT, convertOperand(operands.get(0)),
 				_operatorMap.get(operator), convertOperand(operands.get(1)));
@@ -151,6 +155,10 @@ public class DDMFormRuleConverterImpl implements SPIDDMFormRuleConverter {
 			return value;
 		}
 
+		if (Objects.equals("string", operand.getType())) {
+			return StringUtil.quote(value);
+		}
+
 		String[] values = StringUtil.split(value);
 
 		UnaryOperator<String> quoteOperation = StringUtil::quote;
@@ -172,12 +180,27 @@ public class DDMFormRuleConverterImpl implements SPIDDMFormRuleConverter {
 
 		boolean hasNestedFunction = _hasNestedFunction(operands);
 
-		for (SPIDDMFormRuleCondition.Operand operand : operands) {
+		for (int i = 0; i < operands.size(); i++) {
+			SPIDDMFormRuleCondition.Operand operand = operands.get(i);
+
 			if (hasNestedFunction) {
 				sb.append(operand.getValue());
 			}
 			else {
-				sb.append(convertOperand(operand));
+				if ((i > 0) && Objects.equals("option", operand.getType())) {
+					SPIDDMFormRuleCondition.Operand previousOperand =
+						operands.get(i - 1);
+
+					sb.append(
+						String.format(
+							_FUNCTION_CALL_BINARY_EXPRESSION_FORMAT,
+							"getOptionLabel",
+							StringUtil.quote(previousOperand.getValue()),
+							StringUtil.quote(operand.getValue())));
+				}
+				else {
+					sb.append(convertOperand(operand));
+				}
 			}
 
 			sb.append(StringPool.COMMA_AND_SPACE);
@@ -224,7 +247,8 @@ public class DDMFormRuleConverterImpl implements SPIDDMFormRuleConverter {
 		String functionName, List<SPIDDMFormRuleCondition.Operand> operands) {
 
 		if (Objects.equals(functionName, "belongsTo")) {
-			operands.remove(0);
+			operands.removeIf(
+				operand -> StringUtil.equals(operand.getType(), "user"));
 		}
 
 		return String.format(
@@ -320,6 +344,9 @@ public class DDMFormRuleConverterImpl implements SPIDDMFormRuleConverter {
 	}
 
 	private static final String _COMPARISON_EXPRESSION_FORMAT = "%s %s %s";
+
+	private static final String _FUNCTION_CALL_BINARY_EXPRESSION_FORMAT =
+		"%s(%s, %s)";
 
 	private static final String _FUNCTION_CALL_UNARY_EXPRESSION_FORMAT =
 		"%s(%s)";

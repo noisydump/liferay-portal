@@ -22,7 +22,6 @@ import com.liferay.asset.kernel.model.AssetRenderer;
 import com.liferay.asset.kernel.model.AssetRendererFactory;
 import com.liferay.asset.kernel.model.BaseDDMStructureClassTypeReader;
 import com.liferay.asset.kernel.model.ClassType;
-import com.liferay.asset.kernel.service.AssetEntryLocalService;
 import com.liferay.dynamic.data.mapping.info.display.field.DDMFormValuesInfoDisplayFieldProvider;
 import com.liferay.dynamic.data.mapping.model.DDMStructure;
 import com.liferay.dynamic.data.mapping.model.DDMTemplate;
@@ -167,7 +166,8 @@ public class JournalArticleInfoDisplayContributor
 	}
 
 	@Override
-	public InfoDisplayObjectProvider getInfoDisplayObjectProvider(long classPK)
+	public InfoDisplayObjectProvider<JournalArticle>
+			getInfoDisplayObjectProvider(long classPK)
 		throws PortalException {
 
 		JournalArticle article = journalArticleLocalService.fetchLatestArticle(
@@ -202,23 +202,18 @@ public class JournalArticleInfoDisplayContributor
 	}
 
 	@Override
-	public InfoDisplayObjectProvider getPreviewInfoDisplayObjectProvider(
-			long classPK, int type)
+	public InfoDisplayObjectProvider<JournalArticle>
+			getPreviewInfoDisplayObjectProvider(long classPK, int type)
 		throws PortalException {
 
-		AssetEntry assetEntry = assetEntryLocalService.fetchAssetEntry(classPK);
-
-		if (assetEntry == null) {
-			return null;
-		}
-
-		AssetRendererFactory assetRendererFactory =
-			AssetRendererFactoryRegistryUtil.getAssetRendererFactoryByClassName(
-				JournalArticle.class.getName());
+		AssetRendererFactory<JournalArticle> assetRendererFactory =
+			(AssetRendererFactory<JournalArticle>)
+				AssetRendererFactoryRegistryUtil.
+					getAssetRendererFactoryByClassName(
+						JournalArticle.class.getName());
 
 		AssetRenderer<JournalArticle> assetRenderer =
-			assetRendererFactory.getAssetRenderer(
-				assetEntry.getClassPK(), type);
+			assetRendererFactory.getAssetRenderer(classPK, type);
 
 		JournalArticle article = assetRenderer.getAssetObject();
 
@@ -234,9 +229,11 @@ public class JournalArticleInfoDisplayContributor
 			JournalArticle article, long versionClassPK, Locale locale)
 		throws PortalException {
 
-		AssetRendererFactory assetRendererFactory =
-			AssetRendererFactoryRegistryUtil.getAssetRendererFactoryByClassName(
-				JournalArticle.class.getName());
+		AssetRendererFactory<JournalArticle> assetRendererFactory =
+			(AssetRendererFactory<JournalArticle>)
+				AssetRendererFactoryRegistryUtil.
+					getAssetRendererFactoryByClassName(
+						JournalArticle.class.getName());
 
 		AssetRenderer<JournalArticle> assetRenderer =
 			assetRendererFactory.getAssetRenderer(versionClassPK);
@@ -250,14 +247,11 @@ public class JournalArticleInfoDisplayContributor
 		assetEntryInfoDisplayFieldProvider;
 
 	@Reference
-	protected AssetEntryLocalService assetEntryLocalService;
-
-	@Reference
 	protected ClassTypesInfoDisplayFieldProvider
 		classTypesInfoDisplayFieldProvider;
 
 	@Reference
-	protected DDMFormValuesInfoDisplayFieldProvider
+	protected DDMFormValuesInfoDisplayFieldProvider<JournalArticle>
 		ddmFormValuesInfoDisplayFieldProvider;
 
 	@Reference
@@ -325,9 +319,7 @@ public class JournalArticleInfoDisplayContributor
 		infoDisplayFields.addAll(
 			stream.map(
 				ddmTemplate -> new InfoDisplayField(
-					_getTemplateKey(ddmTemplate),
-					ddmTemplate.getName(locale) + StringPool.SPACE +
-						StringPool.STAR,
+					_getTemplateKey(ddmTemplate), ddmTemplate.getName(locale),
 					"text")
 			).collect(
 				Collectors.toList()

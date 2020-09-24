@@ -12,8 +12,8 @@
  * details.
  */
 
+import classNames from 'classnames';
 import {
-	DataDefinitionUtils,
 	DataLayoutBuilderActions,
 	DataLayoutVisitor,
 	DragTypes,
@@ -22,61 +22,175 @@ import {
 import React, {useContext} from 'react';
 
 import useDoubleClick from '../../hooks/useDoubleClick.es';
+import {findFieldByName} from '../../utils/findFieldByName.es';
 import DataLayoutBuilderContext from './DataLayoutBuilderInstanceContext.es';
 import FormViewContext from './FormViewContext.es';
 import useDeleteDefinitionField from './useDeleteDefinitionField.es';
 import useDeleteDefinitionFieldModal from './useDeleteDefinitionFieldModal.es';
 
+const createFieldSet = ({name, nestedDataDefinitionFields, ...otherProps}) => {
+	const defaultLanguageId = Liferay.ThemeDisplay.getDefaultLanguageId();
+
+	return {
+		...otherProps,
+		availableLanguageIds: [defaultLanguageId],
+		dataDefinitionFields: nestedDataDefinitionFields,
+		defaultLanguageId,
+		description: {},
+		name,
+	};
+};
+
+const getFieldSet = ({customProperties, fieldSets, name, ...otherProps}) => {
+	const fieldSet = fieldSets.find(
+		({id}) => id === Number(customProperties.ddmStructureId)
+	);
+
+	if (fieldSet) {
+		return {
+			...fieldSet,
+			name,
+		};
+	}
+
+	return createFieldSet({
+		customProperties,
+		name,
+		...otherProps,
+	});
+};
+
 const getFieldTypes = ({
 	dataDefinition,
 	dataLayout,
+	editingLanguageId,
+	fieldSets,
 	fieldTypes,
 	focusedCustomObjectField,
 }) => {
-	const dataDefinitionFields = [];
+	const customDataDefinitionFields = [];
+	const nativeDataDefinitionFields = [];
 	const {dataLayoutPages} = dataLayout;
+	const {dataDefinitionFields: fields, defaultLanguageId} = dataDefinition;
 
-	DataDefinitionUtils.forEachDataDefinitionField(
-		dataDefinition,
-		({fieldType, label, name}) => {
-			if (fieldType === 'section') {
-				return;
+	const setDefinitionField = (
+		{
+			customProperties,
+			fieldType,
+			label,
+			name,
+			nestedDataDefinitionFields = [],
+			repeatable,
+			showLabel,
+		},
+		nested
+	) => {
+		const {ddmStructureId} = customProperties;
+
+		if (fieldType === 'section') {
+			return;
+		}
+
+		const fieldTypeSettings = fieldTypes.find(({name}) => {
+			return name === fieldType;
+		});
+
+		const isFieldGroup = fieldType === 'fieldset';
+		const isFieldSet = isFieldGroup && ddmStructureId;
+
+		const FieldTypeLabel = isFieldSet
+			? Liferay.Language.get('fieldset')
+			: fieldTypeSettings.label;
+
+		const getDescription = () => {
+			let description = '';
+
+			if (isFieldGroup && !nested) {
+				description = `- ${
+					nestedDataDefinitionFields.length
+				} ${Liferay.Language.get('fields')}`;
 			}
 
-			const fieldTypeSettings = fieldTypes.find(({name}) => {
-				return name === fieldType;
-			});
+			return `${FieldTypeLabel} ${description}`;
+		};
 
-			dataDefinitionFields.push({
-				active: name === focusedCustomObjectField.name,
-				className: 'custom-object-field',
-				description: fieldTypeSettings.label,
-				disabled: DataLayoutVisitor.containsField(
-					dataLayoutPages,
-					name
-				),
-				dragAlignment: 'right',
-				dragType: DragTypes.DRAG_DATA_DEFINITION_FIELD,
-				icon: fieldTypeSettings.icon,
-				label: label.en_US,
-				name,
-			});
+		const dataDefinitionField = {
+			active: name === focusedCustomObjectField.name,
+			className: nested
+				? 'custom-object-field-children'
+				: 'custom-object-field',
+			description: getDescription(),
+			disabled: DataLayoutVisitor.containsField(dataLayoutPages, name),
+			dragAlignment: 'right',
+			dragType: isFieldGroup
+				? DragTypes.DRAG_FIELDSET
+				: DragTypes.DRAG_DATA_DEFINITION_FIELD,
+			icon: fieldTypeSettings.icon,
+			isCustomField: !customProperties['nativeField'],
+			isFieldSet,
+			...(isFieldGroup && {
+				fieldSet: getFieldSet({
+					customProperties,
+					fieldSets,
+					name: label,
+					nestedDataDefinitionFields,
+				}),
+				properties: {
+					collapsible: customProperties.collapsible,
+					repeatable,
+					showLabel,
+				},
+				useFieldName: name,
+			}),
+			label: label[editingLanguageId] || label[defaultLanguageId],
+			name,
+			nestedDataDefinitionFields: nestedDataDefinitionFields.map(
+				(nestedField) => setDefinitionField(nestedField, true)
+			),
+		};
+
+		if (nested) {
+			return dataDefinitionField;
 		}
-	);
 
-	return dataDefinitionFields;
+		if (dataDefinitionField.isCustomField) {
+			customDataDefinitionFields.push(dataDefinitionField);
+		}
+		else {
+			nativeDataDefinitionFields.push(dataDefinitionField);
+		}
+	};
+
+	fields.forEach((fieldType) => {
+		setDefinitionField(fieldType);
+	});
+
+	return [customDataDefinitionFields, nativeDataDefinitionFields];
 };
+
+const FieldCategory = ({categoryName}) => (
+	<div
+		className={classNames('custom-object-sidebar-header', 'ml-1 pt-2 pb-2')}
+	>
+		<div className="autofit-row autofit-row-center">
+			<>
+				<div className="autofit-col autofit-col-expand">
+					<h3 className="category-text">{categoryName}</h3>
+				</div>
+			</>
+		</div>
+	</div>
+);
 
 export default ({keywords}) => {
 	const [dataLayoutBuilder] = useContext(DataLayoutBuilderContext);
 	const [state, dispatch] = useContext(FormViewContext);
-	const {dataDefinition} = state;
+	const {dataDefinition, fieldSets} = state;
 	const {dataDefinitionFields} = dataDefinition;
-	const fieldTypes = getFieldTypes(state);
+	const [customFieldTypes, nativeFieldTypes] = getFieldTypes(state);
+
 	const onClick = ({name}) => {
-		const dataDefinitionField = dataDefinitionFields.find(
-			({name: currentName}) => currentName === name
-		);
+		const dataDefinitionField = findFieldByName(dataDefinitionFields, name);
 
 		dispatch({
 			payload: {dataDefinitionField},
@@ -85,6 +199,43 @@ export default ({keywords}) => {
 	};
 	const onDoubleClick = ({name}) => {
 		const {activePage, pages} = dataLayoutBuilder.getStore();
+		const indexes = {
+			columnIndex: 0,
+			pageIndex: activePage,
+			rowIndex: pages[activePage].rows.length,
+		};
+
+		const {
+			customProperties,
+			fieldType,
+			label,
+			repeatable,
+			showLabel,
+			...otherFieldProps
+		} = findFieldByName(dataDefinitionFields, name);
+
+		if (fieldType === 'fieldset') {
+			return dataLayoutBuilder.dispatch(
+				'fieldSetAdded',
+				DataLayoutBuilderActions.dropFieldSet({
+					dataLayoutBuilder,
+					fieldName: name,
+					fieldSet: getFieldSet({
+						...otherFieldProps,
+						customProperties,
+						fieldSets,
+						name: label,
+					}),
+					indexes,
+					properties: {
+						collapsible: customProperties.collapsible,
+						repeatable,
+						showLabel,
+					},
+					useFieldName: name,
+				})
+			);
+		}
 
 		dataLayoutBuilder.dispatch(
 			'fieldAdded',
@@ -93,11 +244,7 @@ export default ({keywords}) => {
 				dataDefinition,
 				dataDefinitionFieldName: name,
 				dataLayoutBuilder,
-				indexes: {
-					columnIndex: 0,
-					pageIndex: activePage,
-					rowIndex: pages[activePage].rows.length,
-				},
+				indexes,
 			})
 		);
 	};
@@ -109,18 +256,44 @@ export default ({keywords}) => {
 
 	const deleteField = useDeleteDefinitionField({dataLayoutBuilder});
 
-	const onDeleteDefinitionField = useDeleteDefinitionFieldModal((fieldName) =>
-		deleteField(fieldName)
+	const onDeleteDefinitionField = useDeleteDefinitionFieldModal((event) =>
+		deleteField(event)
 	);
+	const showCategories =
+		!!customFieldTypes.length && !!nativeFieldTypes.length;
+
+	const fieldTypeListProps = {
+		deleteLabel: Liferay.Language.get('delete-from-object'),
+		keywords,
+		onClick: handleOnClick,
+		onDelete: (fieldName) =>
+			onDeleteDefinitionField({activePage: 0, fieldName}),
+		onDoubleClick: handleOnDoubleClick,
+	};
 
 	return (
-		<FieldTypeList
-			deleteLabel={Liferay.Language.get('delete-from-object')}
-			fieldTypes={fieldTypes}
-			keywords={keywords}
-			onClick={handleOnClick}
-			onDelete={onDeleteDefinitionField}
-			onDoubleClick={handleOnDoubleClick}
-		/>
+		<>
+			{showCategories && (
+				<FieldCategory
+					categoryName={Liferay.Language.get('custom-fields')}
+				/>
+			)}
+
+			<FieldTypeList
+				{...fieldTypeListProps}
+				fieldTypes={customFieldTypes}
+			/>
+
+			{showCategories && (
+				<FieldCategory
+					categoryName={Liferay.Language.get('native-fields')}
+				/>
+			)}
+
+			<FieldTypeList
+				{...fieldTypeListProps}
+				fieldTypes={nativeFieldTypes}
+			/>
+		</>
 	);
 };

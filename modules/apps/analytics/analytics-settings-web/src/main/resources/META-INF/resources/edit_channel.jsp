@@ -34,9 +34,9 @@ PortalUtil.addPortletBreadcrumbEntry(request, LanguageUtil.get(resourceBundle, "
 PortalUtil.addPortletBreadcrumbEntry(request, LanguageUtil.get(resourceBundle, "edit-property"), currentURL);
 %>
 
-<portlet:actionURL name="/analytics/edit_channel" var="editChannelURL" />
+<portlet:actionURL name="/analytics_settings/edit_channel" var="editChannelURL" />
 
-<clay:container>
+<clay:container-fluid>
 	<clay:row>
 		<clay:col
 			size="12"
@@ -51,14 +51,16 @@ PortalUtil.addPortletBreadcrumbEntry(request, LanguageUtil.get(resourceBundle, "
 			</div>
 		</clay:col>
 	</clay:row>
-</clay:container>
+</clay:container-fluid>
 
 <aui:form action="<%= editChannelURL %>" method="post" name="fm">
 	<aui:input name="redirect" type="hidden" value="<%= redirect %>" />
 	<aui:input name="channelId" type="hidden" value="<%= channelId %>" />
 
-	<div class="portlet-analytics-settings sheet sheet-lg">
-		<h2 class="autofit-row">
+	<clay:sheet
+		cssClass="portlet-analytics-settings"
+	>
+		<h2>
 			<liferay-ui:message arguments="<%= channelName %>" key="sites-to-sync-x" />
 		</h2>
 
@@ -71,7 +73,7 @@ PortalUtil.addPortletBreadcrumbEntry(request, LanguageUtil.get(resourceBundle, "
 		%>
 
 		<clay:management-toolbar
-			displayContext="<%= new GroupManagementToolbarDisplayContext(request, liferayPortletRequest, liferayPortletResponse, groupDisplayContext) %>"
+			displayContext="<%= new GroupManagementToolbarDisplayContext(groupDisplayContext, request, liferayPortletRequest, liferayPortletResponse) %>"
 		/>
 
 		<liferay-ui:search-container
@@ -127,5 +129,5 @@ PortalUtil.addPortletBreadcrumbEntry(request, LanguageUtil.get(resourceBundle, "
 				<aui:button type="submit" value="done" />
 			</aui:button-row>
 		</div>
-	</div>
+	</clay:sheet>
 </aui:form>

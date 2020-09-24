@@ -47,8 +47,8 @@ renderResponse.setTitle((structure == null) ? LanguageUtil.get(request, "new-ele
 	/>
 
 	<nav class="management-bar management-bar-light navbar navbar-expand-md toolbar-group-field">
-		<clay:container
-			className="toolbar"
+		<clay:container-fluid
+			cssClass="toolbar"
 		>
 			<ul class="navbar-nav toolbar-group-field"></ul>
 			<ul class="navbar-nav toolbar-group-field">
@@ -60,11 +60,11 @@ renderResponse.setTitle((structure == null) ? LanguageUtil.get(request, "new-ele
 					</button>
 				</li>
 			</ul>
-		</clay:container>
+		</clay:container-fluid>
 	</nav>
 
-	<clay:container
-		className="ddm-translation-manager"
+	<clay:container-fluid
+		cssClass="ddm-translation-manager"
 	>
 		<liferay-frontend:translation-manager
 			availableLocales="<%= ddmFormAdminDisplayContext.getAvailableLocales() %>"
@@ -72,7 +72,7 @@ renderResponse.setTitle((structure == null) ? LanguageUtil.get(request, "new-ele
 			defaultLanguageId="<%= ddmFormAdminDisplayContext.getDefaultLanguageId() %>"
 			id="translationManager"
 		/>
-	</clay:container>
+	</clay:container-fluid>
 
 	<aui:form action="<%= saveStructureURL %>" cssClass="ddm-form-builder-form" method="post" name="editForm">
 		<aui:input name="redirect" type="hidden" value="<%= redirect %>" />
@@ -85,7 +85,7 @@ renderResponse.setTitle((structure == null) ? LanguageUtil.get(request, "new-ele
 		<%@ include file="/admin/exceptions.jspf" %>
 
 		<div class="ddm-form-basic-info">
-			<clay:container>
+			<clay:container-fluid>
 				<h1>
 					<liferay-editor:editor
 						autoCreate="<%= false %>"
@@ -113,7 +113,7 @@ renderResponse.setTitle((structure == null) ? LanguageUtil.get(request, "new-ele
 				</h5>
 
 				<aui:input name="description" type="hidden" />
-			</clay:container>
+			</clay:container-fluid>
 		</div>
 
 		<div id="<portlet:namespace />-container"></div>
@@ -128,7 +128,7 @@ renderResponse.setTitle((structure == null) ? LanguageUtil.get(request, "new-ele
 	Liferay.namespace('DDM').FormSettings = {
 		portletNamespace: '<portlet:namespace />',
 		showPagination: false,
-		spritemap: '<%= themeDisplay.getPathThemeImages() %>/lexicon/icons.svg',
+		spritemap: '<%= themeDisplay.getPathThemeImages() %>/clay/icons.svg',
 	};
 
 	Liferay.Forms.App = {
@@ -173,7 +173,7 @@ renderResponse.setTitle((structure == null) ? LanguageUtil.get(request, "new-ele
 							fieldTypes: <%= ddmFormAdminDisplayContext.getDDMFormFieldTypesJSONArray() %>,
 							groupId: <%= groupId %>,
 							localizedDescription: <%= ddmFormAdminDisplayContext.getFormLocalizedDescription() %>,
-							localizedName: <%= ddmFormAdminDisplayContext.getFormLocalizedName() %>,
+							localizedName: <%= ddmFormAdminDisplayContext.getFormLocalizedName(structure) %>,
 							namespace: '<portlet:namespace />',
 							redirectURL: '<%= HtmlUtil.escape(redirect) %>',
 							spritemap: Liferay.DDM.FormSettings.spritemap,
@@ -214,12 +214,5 @@ renderResponse.setTitle((structure == null) ? LanguageUtil.get(request, "new-ele
 
 	Liferay.on('destroyPortlet', clearPortletHandlers);
 
-	if (Liferay.DMMFieldTypesReady) {
-		Liferay.Forms.App.start();
-	}
-	else {
-		Liferay.onceAfter('DMMFieldTypesReady', function () {
-			Liferay.Forms.App.start();
-		});
-	}
+	Liferay.Forms.App.start();
 </aui:script>

@@ -21,7 +21,6 @@ import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Group;
-import com.liferay.portal.kernel.model.GroupConstants;
 import com.liferay.portal.kernel.model.Role;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.model.UserGroupRole;
@@ -218,17 +217,17 @@ public class DepotAdminRolesDisplayContext {
 		List<UserGroupRole> filteredUserGroupRoles = ListUtil.copy(
 			userGroupRoles);
 
-		Iterator<UserGroupRole> itr = filteredUserGroupRoles.iterator();
+		Iterator<UserGroupRole> iterator = filteredUserGroupRoles.iterator();
 
-		while (itr.hasNext()) {
-			UserGroupRole userGroupRole = itr.next();
+		while (iterator.hasNext()) {
+			UserGroupRole userGroupRole = iterator.next();
 
 			Role role = userGroupRole.getRole();
 
 			if (Objects.equals(
 					role.getName(), DepotRolesConstants.ASSET_LIBRARY_MEMBER)) {
 
-				itr.remove();
+				iterator.remove();
 			}
 		}
 
@@ -236,11 +235,11 @@ public class DepotAdminRolesDisplayContext {
 			return filteredUserGroupRoles;
 		}
 
-		itr = filteredUserGroupRoles.iterator();
+		iterator = filteredUserGroupRoles.iterator();
 
-		while (itr.hasNext()) {
-			if (!_contains(itr.next())) {
-				itr.remove();
+		while (iterator.hasNext()) {
+			if (!_contains(iterator.next())) {
+				iterator.remove();
 			}
 		}
 
@@ -254,9 +253,7 @@ public class DepotAdminRolesDisplayContext {
 			Group group = userGroupRole.getGroup();
 			Role role = userGroupRole.getRole();
 
-			if ((group != null) &&
-				Objects.equals(group.getType(), GroupConstants.TYPE_DEPOT) &&
-				(role != null) &&
+			if ((group != null) && group.isDepot() && (role != null) &&
 				(role.getType() == RoleConstants.TYPE_DEPOT)) {
 
 				return true;

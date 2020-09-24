@@ -1,11 +1,6 @@
 definition {
 
 	macro configureViewCurrentLanguages {
-		LiferayEvent.waitForLiferayEvent(
-			attributeName = "src",
-			attributeValue = "dialog-iframe-popup",
-			eventName = "modalIframeLoaded");
-
 		SelectFrame(locator1 = "IFrame#CONFIGURATION");
 
 		Panel.expandPanel(panel = "Languages");
@@ -28,11 +23,6 @@ definition {
 	}
 
 	macro moveLanguagesToAvailable {
-		LiferayEvent.waitForLiferayEvent(
-			attributeName = "src",
-			attributeValue = "dialog-iframe-popup",
-			eventName = "modalIframeLoaded");
-
 		SelectFrame(locator1 = "IFrame#CONFIGURATION");
 
 		Panel.expandPanel(panel = "Languages");
@@ -76,7 +66,14 @@ definition {
 				key_portletName = "${portletName}",
 				locator1 = "Language#DROPDOWN");
 
-			MenuItem.click(menuItem = "${textIcon}");
+			// Workaround for LPS-87409
+
+			if (("${locale}" == "ar_SA") && (IsElementNotPresent(locator1 = "MenuItem#ANY_MENU_ITEM", key_menuItem = "${textIcon}"))) {
+				MenuItem.click(menuItem = "العربية-المملكة العربية السعودية");
+			}
+			else {
+				MenuItem.click(menuItem = "${textIcon}");
+			}
 		}
 	}
 
@@ -87,11 +84,6 @@ definition {
 	}
 
 	macro toggleDisplayTemplate {
-		LiferayEvent.waitForLiferayEvent(
-			attributeName = "src",
-			attributeValue = "dialog-iframe-popup",
-			eventName = "modalIframeLoaded");
-
 		SelectFrame(locator1 = "IFrame#CONFIGURATION");
 
 		Panel.expandPanel(panel = "Languages");

@@ -65,8 +65,8 @@ if (layoutBranch != null) {
 	<liferay-util:param name="navigationName" value="<%= title %>" />
 </liferay-util:include>
 
-<clay:container
-	id='<%= renderResponse.getNamespace() + ((layoutBranch != null) ? "updateBranch" : "addBranch") %>'
+<clay:container-fluid
+	id='<%= liferayPortletResponse.getNamespace() + ((layoutBranch != null) ? "updateBranch" : "addBranch") %>'
 >
 	<aui:model-context bean="<%= layoutBranch %>" model="<%= LayoutBranch.class %>" />
 
@@ -91,4 +91,4 @@ if (layoutBranch != null) {
 			<aui:button href="<%= redirect %>" value="cancel" />
 		</aui:button-row>
 	</aui:form>
-</clay:container>
+</clay:container-fluid>

@@ -50,9 +50,8 @@ if (request.getAttribute(OAuth2ProviderWebKeys.ASSIGN_SCOPES_TREE_DISPLAY_CONTEX
 
 <c:if test="<%= oAuth2Application != null %>">
 	<clay:navigation-bar
-		inverted="<%= true %>"
 		navigationItems='<%=
-				new JSPNavigationItemList(pageContext) {
+			new JSPNavigationItemList(pageContext) {
 				{
 					add(
 						navigationItem -> {

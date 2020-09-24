@@ -28,9 +28,9 @@ TrashHandler trashHandler = trashDisplayContext.getTrashHandler();
 			displayContext="<%= new TrashContainerManagementToolbarDisplayContext(request, liferayPortletRequest, liferayPortletResponse, trashDisplayContext) %>"
 		/>
 
-		<clay:container
-			className="closed sidenav-container sidenav-right"
-			id='<%= renderResponse.getNamespace() + "infoPanelId" %>'
+		<clay:container-fluid
+			cssClass="closed sidenav-container sidenav-right"
+			id='<%= liferayPortletResponse.getNamespace() + "infoPanelId" %>'
 		>
 			<liferay-portlet:resourceURL copyCurrentRenderParameters="<%= false %>" id="/trash/info_panel" var="sidebarPanelURL" />
 
@@ -55,7 +55,9 @@ TrashHandler trashHandler = trashDisplayContext.getTrashHandler();
 					>
 
 						<%
-						String modelClassName = ((ClassedModel)curTrashedModel).getModelClassName();
+						ClassedModel classedModel = (ClassedModel)curTrashedModel;
+
+						String modelClassName = classedModel.getModelClassName();
 
 						TrashHandler curTrashHandler = TrashHandlerRegistryUtil.getTrashHandler(modelClassName);
 
@@ -144,7 +146,7 @@ TrashHandler trashHandler = trashDisplayContext.getTrashHandler();
 					/>
 				</liferay-ui:search-container>
 			</div>
-		</clay:container>
+		</clay:container-fluid>
 	</c:when>
 	<c:otherwise>
 
@@ -157,7 +159,7 @@ TrashHandler trashHandler = trashDisplayContext.getTrashHandler();
 		renderResponse.setTitle(trashRenderer.getTitle(locale));
 		%>
 
-		<clay:container>
+		<clay:container-fluid>
 			<aui:fieldset-group markupView="lexicon">
 				<aui:fieldset>
 					<liferay-asset:asset-display
@@ -165,7 +167,7 @@ TrashHandler trashHandler = trashDisplayContext.getTrashHandler();
 					/>
 				</aui:fieldset>
 			</aui:fieldset-group>
-		</clay:container>
+		</clay:container-fluid>
 	</c:otherwise>
 </c:choose>
 

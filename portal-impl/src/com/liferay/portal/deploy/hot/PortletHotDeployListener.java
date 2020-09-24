@@ -96,9 +96,9 @@ public class PortletHotDeployListener extends BaseHotDeployListener {
 		try {
 			doInvokeDeploy(hotDeployEvent);
 		}
-		catch (Throwable t) {
+		catch (Throwable throwable) {
 			throwHotDeployException(
-				hotDeployEvent, "Error registering portlets for ", t);
+				hotDeployEvent, "Error registering portlets for ", throwable);
 		}
 	}
 
@@ -109,9 +109,9 @@ public class PortletHotDeployListener extends BaseHotDeployListener {
 		try {
 			doInvokeUndeploy(hotDeployEvent);
 		}
-		catch (Throwable t) {
+		catch (Throwable throwable) {
 			throwHotDeployException(
-				hotDeployEvent, "Error unregistering portlets for ", t);
+				hotDeployEvent, "Error unregistering portlets for ", throwable);
 		}
 	}
 
@@ -128,18 +128,17 @@ public class PortletHotDeployListener extends BaseHotDeployListener {
 			ResourceBundleUtil.getResourceBundleLoader(
 				portlet.getResourceBundle(), classLoader);
 
-		Map<String, Object> properties = HashMapBuilder.<String, Object>put(
-			"resource.bundle.base.name", portlet.getResourceBundle()
-		).put(
-			"service.ranking", Integer.MIN_VALUE
-		).put(
-			"servlet.context.name", portlet.getContextName()
-		).build();
-
 		_resourceBundleLoaderServiceRegistrations.put(
 			portlet.getPortletId(),
 			registry.registerService(
-				ResourceBundleLoader.class, resourceBundleLoader, properties));
+				ResourceBundleLoader.class, resourceBundleLoader,
+				HashMapBuilder.<String, Object>put(
+					"resource.bundle.base.name", portlet.getResourceBundle()
+				).put(
+					"service.ranking", Integer.MIN_VALUE
+				).put(
+					"servlet.context.name", portlet.getContextName()
+				).build()));
 	}
 
 	protected void doInvokeDeploy(HotDeployEvent hotDeployEvent)
@@ -227,10 +226,10 @@ public class PortletHotDeployListener extends BaseHotDeployListener {
 
 		ClassLoader classLoader = hotDeployEvent.getContextClassLoader();
 
-		Iterator<Portlet> itr = portlets.iterator();
+		Iterator<Portlet> iterator = portlets.iterator();
 
-		while (itr.hasNext()) {
-			Portlet portlet = itr.next();
+		while (iterator.hasNext()) {
+			Portlet portlet = iterator.next();
 
 			if (!portletAppInitialized) {
 				initPortletApp(

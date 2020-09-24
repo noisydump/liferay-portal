@@ -477,9 +477,7 @@ public abstract class BaseAlloyControllerImpl implements AlloyController {
 			JSONObject jsonObject = JSONFactoryUtil.createJSONObject();
 
 			if (data instanceof Exception) {
-				String stackTrace = getStackTrace((Exception)data);
-
-				jsonObject.put("data", stackTrace);
+				jsonObject.put("data", getStackTrace((Exception)data));
 			}
 			else if (data instanceof JSONArray) {
 				jsonObject.put("data", (JSONArray)data);
@@ -555,33 +553,34 @@ public abstract class BaseAlloyControllerImpl implements AlloyController {
 					_transactionConfig, () -> method.invoke(this));
 			}
 		}
-		catch (Throwable t) {
+		catch (Throwable throwable) {
 			Exception exception = null;
 
-			if (t instanceof Exception) {
-				exception = (Exception)t;
+			if (throwable instanceof Exception) {
+				exception = (Exception)throwable;
 			}
 			else {
-				exception = new Exception(t);
+				exception = new Exception(throwable);
 			}
 
 			Object[] arguments = null;
 			String message = "an-unexpected-system-error-occurred";
 
-			Throwable rootCause = getRootCause(exception);
+			Throwable rootCauseThrowable = getRootCause(exception);
 
-			if (rootCause instanceof AlloyException) {
-				AlloyException alloyException = (AlloyException)rootCause;
+			if (rootCauseThrowable instanceof AlloyException) {
+				AlloyException alloyException =
+					(AlloyException)rootCauseThrowable;
 
 				if (alloyException.log) {
-					log.error(rootCause, rootCause);
+					log.error(rootCauseThrowable, rootCauseThrowable);
 				}
 
 				if (ArrayUtil.isNotEmpty(alloyException.arguments)) {
 					arguments = alloyException.arguments;
 				}
 
-				message = rootCause.getMessage();
+				message = rootCauseThrowable.getMessage();
 			}
 			else {
 				log.error(exception, exception);
@@ -614,25 +613,18 @@ public abstract class BaseAlloyControllerImpl implements AlloyController {
 	}
 
 	protected String getMessageListenerGroupName() {
-		String rootPortletId = portlet.getRootPortletId();
-
-		return rootPortletId.concat(
-			StringPool.SLASH
-		).concat(
-			controllerPath
-		);
+		return StringBundler.concat(
+			portlet.getRootPortletId(), StringPool.SLASH, controllerPath);
 	}
 
 	protected Method getMethod(String methodName, Class<?>... parameterTypes) {
-		String methodKey = getMethodKey(methodName, parameterTypes);
-
-		return methodsMap.get(methodKey);
+		return methodsMap.get(getMethodKey(methodName, parameterTypes));
 	}
 
 	protected String getMethodKey(
 		String methodName, Class<?>... parameterTypes) {
 
-		StringBundler sb = new StringBundler(parameterTypes.length * 2 + 2);
+		StringBundler sb = new StringBundler((parameterTypes.length * 2) + 2);
 
 		sb.append(methodName);
 		sb.append(StringPool.POUND);
@@ -809,7 +801,7 @@ public abstract class BaseAlloyControllerImpl implements AlloyController {
 
 		indexerClassName = indexer.getSearchClassNames()[0];
 
-		Indexer existingIndexer = IndexerRegistryUtil.getIndexer(
+		Indexer<?> existingIndexer = IndexerRegistryUtil.getIndexer(
 			indexerClassName);
 
 		if ((existingIndexer != null) && (existingIndexer == indexer)) {
@@ -1159,20 +1151,19 @@ public abstract class BaseAlloyControllerImpl implements AlloyController {
 			Object... arguments)
 		throws Exception {
 
-		Throwable rootCause = getRootCause(exception);
+		Throwable rootCauseThrowable = getRootCause(exception);
 
 		if (isRespondingTo()) {
 			responseContent = buildResponseContent(
-				rootCause, translate(pattern, arguments), status);
+				rootCauseThrowable, translate(pattern, arguments), status);
 
 			return;
 		}
 
 		portletRequest.setAttribute("arguments", arguments);
 
-		String stackTrace = getStackTrace((Exception)rootCause);
-
-		portletRequest.setAttribute("data", stackTrace);
+		portletRequest.setAttribute(
+			"data", getStackTrace((Exception)rootCauseThrowable));
 
 		portletRequest.setAttribute("pattern", pattern);
 		portletRequest.setAttribute("status", status);
@@ -1269,7 +1260,7 @@ public abstract class BaseAlloyControllerImpl implements AlloyController {
 	}
 
 	protected AlloySearchResult search(
-			Indexer indexer, AlloyServiceInvoker alloyServiceInvoker,
+			Indexer<?> indexer, AlloyServiceInvoker alloyServiceInvoker,
 			HttpServletRequest httpServletRequest,
 			PortletRequest portletRequest, Map<String, Serializable> attributes,
 			String keywords, Sort[] sorts)
@@ -1281,7 +1272,7 @@ public abstract class BaseAlloyControllerImpl implements AlloyController {
 	}
 
 	protected AlloySearchResult search(
-			Indexer indexer, AlloyServiceInvoker alloyServiceInvoker,
+			Indexer<?> indexer, AlloyServiceInvoker alloyServiceInvoker,
 			HttpServletRequest httpServletRequest,
 			PortletRequest portletRequest, Map<String, Serializable> attributes,
 			String keywords, Sort[] sorts, int start, int end)
@@ -1372,7 +1363,7 @@ public abstract class BaseAlloyControllerImpl implements AlloyController {
 	}
 
 	protected AlloySearchResult search(
-			Indexer indexer, AlloyServiceInvoker alloyServiceInvoker,
+			Indexer<?> indexer, AlloyServiceInvoker alloyServiceInvoker,
 			HttpServletRequest httpServletRequest,
 			PortletRequest portletRequest,
 			SearchContainer<? extends BaseModel<?>> searchContainer,
@@ -1500,15 +1491,13 @@ public abstract class BaseAlloyControllerImpl implements AlloyController {
 			portlet.getPortletId() + SessionMessages.KEY_SUFFIX_REFRESH_PORTLET,
 			portlet.getPortletId());
 
-		Map<String, String> data = HashMapBuilder.put(
-			"addSuccessMessage", StringPool.TRUE
-		).build();
-
 		SessionMessages.add(
 			request,
 			portlet.getPortletId() +
 				SessionMessages.KEY_SUFFIX_REFRESH_PORTLET_DATA,
-			data);
+			HashMapBuilder.put(
+				"addSuccessMessage", StringPool.TRUE
+			).build());
 	}
 
 	protected void setPermissioned(boolean permissioned) {

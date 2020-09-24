@@ -107,7 +107,9 @@ public abstract class BasePhoneResourceTestCase {
 
 		PhoneResource.Builder builder = PhoneResource.builder();
 
-		phoneResource = builder.locale(
+		phoneResource = builder.authentication(
+			"test@liferay.com", "test"
+		).locale(
 			LocaleUtil.getDefault()
 		).build();
 	}
@@ -421,7 +423,7 @@ public abstract class BasePhoneResourceTestCase {
 		}
 	}
 
-	protected void assertValid(Phone phone) {
+	protected void assertValid(Phone phone) throws Exception {
 		boolean valid = true;
 
 		if (phone.getId() == null) {

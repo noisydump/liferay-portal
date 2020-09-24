@@ -14,7 +14,6 @@
 
 package com.liferay.depot.web.internal.search.bar.portlet.shared.search;
 
-import com.liferay.depot.configuration.DepotConfiguration;
 import com.liferay.depot.model.DepotEntryGroupRel;
 import com.liferay.depot.model.DepotEntryGroupRelModel;
 import com.liferay.depot.model.DepotEntryModel;
@@ -54,10 +53,6 @@ public class DepotSearchBarPortletSharedSearchContributor
 		_defaultSearchBarPortletSharedSearchContributor.contribute(
 			portletSharedSearchSettings);
 
-		if (!_depotConfiguration.isEnabled()) {
-			return;
-		}
-
 		SearchContext searchContext =
 			portletSharedSearchSettings.getSearchContext();
 
@@ -77,20 +72,19 @@ public class DepotSearchBarPortletSharedSearchContributor
 
 			Stream<DepotEntryGroupRel> stream = depotEntryGroupRels.stream();
 
-			List<Long> depotEntryGroupIds = stream.map(
-				DepotEntryGroupRelModel::getDepotEntryId
-			).map(
-				_depotEntryLocalService::fetchDepotEntry
-			).map(
-				DepotEntryModel::getGroupId
-			).collect(
-				Collectors.toList()
-			);
-
 			searchContext.setGroupIds(
 				ArrayUtil.append(
 					searchContext.getGroupIds(),
-					ArrayUtil.toLongArray(depotEntryGroupIds)));
+					ArrayUtil.toLongArray(
+						stream.map(
+							DepotEntryGroupRelModel::getDepotEntryId
+						).map(
+							_depotEntryLocalService::fetchDepotEntry
+						).map(
+							DepotEntryModel::getGroupId
+						).collect(
+							Collectors.toList()
+						))));
 		}
 	}
 
@@ -99,9 +93,6 @@ public class DepotSearchBarPortletSharedSearchContributor
 	)
 	private PortletSharedSearchContributor
 		_defaultSearchBarPortletSharedSearchContributor;
-
-	@Reference
-	private DepotConfiguration _depotConfiguration;
 
 	@Reference
 	private DepotEntryGroupRelLocalService _depotEntryGroupRelLocalService;

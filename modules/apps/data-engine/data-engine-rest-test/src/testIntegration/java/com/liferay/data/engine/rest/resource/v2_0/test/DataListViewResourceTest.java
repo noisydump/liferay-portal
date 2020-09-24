@@ -39,6 +39,7 @@ import org.junit.runner.RunWith;
 public class DataListViewResourceTest extends BaseDataListViewResourceTestCase {
 
 	@Before
+	@Override
 	public void setUp() throws Exception {
 		super.setUp();
 
@@ -94,6 +95,15 @@ public class DataListViewResourceTest extends BaseDataListViewResourceTestCase {
 
 	@Override
 	protected DataListView testDeleteDataListView_addDataListView()
+		throws Exception {
+
+		return dataListViewResource.postDataDefinitionDataListView(
+			_dataDefinition.getId(), randomDataListView());
+	}
+
+	@Override
+	protected DataListView
+			testDeleteDataListViewsDataDefinition_addDataListView()
 		throws Exception {
 
 		return dataListViewResource.postDataDefinitionDataListView(

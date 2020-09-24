@@ -20,6 +20,9 @@ components:
                 dataListViewId:
                     format: int64
                     type: integer
+                dataRecordCollectionId:
+                    format: int64
+                    type: integer
                 dateCreated:
                     format: date-time
                     type: string
@@ -33,12 +36,16 @@ components:
                     additionalProperties:
                         type: object
                     type: object
+                scope:
+                    type: string
                 siteId:
                     format: int64
                     type: integer
                 userId:
                     format: int64
                     type: integer
+                version:
+                    type: string
             type: object
         AppDeployment:
             properties:
@@ -52,7 +59,7 @@ components:
 info:
     description:
         "A Java client JAR is available for use with the group ID 'com.liferay', artifact ID
-        'com.liferay.app.builder.rest.client', and version '1.0.0'."
+        'com.liferay.app.builder.rest.client', and version '1.0.4'."
     license:
         name: "Apache 2.0"
         url: "http://www.apache.org/licenses/LICENSE-2.0.html"
@@ -77,6 +84,10 @@ paths:
                       type: array
                 - in: query
                   name: keywords
+                  schema:
+                      type: string
+                - in: query
+                  name: scope
                   schema:
                       type: string
                 - in: query
@@ -228,6 +239,10 @@ paths:
                   schema:
                       type: string
                 - in: query
+                  name: scope
+                  schema:
+                      type: string
+                - in: query
                   name: page
                   schema:
                       type: integer
@@ -297,6 +312,10 @@ paths:
                       type: integer
                 - in: query
                   name: keywords
+                  schema:
+                      type: string
+                - in: query
+                  name: scope
                   schema:
                       type: string
                 - in: query

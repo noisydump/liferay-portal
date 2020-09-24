@@ -16,14 +16,14 @@
 
 <%@ include file="/change_lists/init.jsp" %>
 
-<clay:container>
+<clay:container-fluid>
+	<div class="change-lists-view-entry-wrapper">
 
-	<%
-	long ctEntryId = ParamUtil.getLong(request, "ctEntryId");
+		<%
+		ViewEntryDisplayContext viewEntryDisplayContext = (ViewEntryDisplayContext)request.getAttribute(CTWebKeys.VIEW_ENTRY_DISPLAY_CONTEXT);
 
-	CTEntry ctEntry = CTEntryLocalServiceUtil.fetchCTEntry(ctEntryId);
+		viewEntryDisplayContext.renderEntry(request, response);
+		%>
 
-	ctDisplayRendererRegistry.renderCTEntry(request, response, ctEntry, ctEntry.getCtCollectionId());
-	%>
-
-</clay:container>
+	</div>
+</clay:container-fluid>

@@ -46,6 +46,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -125,7 +126,8 @@ public class DataLayoutUtil {
 		DDMFormLayout ddmFormLayout = new DDMFormLayout();
 
 		ddmFormLayout.setDDMFormLayoutPages(
-			_toDDMFormLayoutPages(dataLayout.getDataLayoutPages()));
+			_toDDMFormLayoutPages(
+				dataLayout.getDataLayoutPages(), ddmForm.getDefaultLocale()));
 		ddmFormLayout.setDefaultLocale(ddmForm.getDefaultLocale());
 		ddmFormLayout.setPaginationMode(dataLayout.getPaginationMode());
 
@@ -325,7 +327,7 @@ public class DataLayoutUtil {
 	}
 
 	private static DDMFormLayoutPage _toDDMFormLayoutPage(
-		DataLayoutPage dataLayoutPage) {
+		DataLayoutPage dataLayoutPage, Locale locale) {
 
 		DDMFormLayoutPage ddmFormLayoutPage = new DDMFormLayoutPage();
 
@@ -333,15 +335,16 @@ public class DataLayoutUtil {
 			_toDDMFormLayoutRows(dataLayoutPage.getDataLayoutRows()));
 		ddmFormLayoutPage.setDescription(
 			LocalizedValueUtil.toLocalizedValue(
-				dataLayoutPage.getDescription()));
+				dataLayoutPage.getDescription(), locale));
 		ddmFormLayoutPage.setTitle(
-			LocalizedValueUtil.toLocalizedValue(dataLayoutPage.getTitle()));
+			LocalizedValueUtil.toLocalizedValue(
+				dataLayoutPage.getTitle(), locale));
 
 		return ddmFormLayoutPage;
 	}
 
 	private static List<DDMFormLayoutPage> _toDDMFormLayoutPages(
-		DataLayoutPage[] dataLayoutPages) {
+		DataLayoutPage[] dataLayoutPages, Locale locale) {
 
 		if (ArrayUtil.isEmpty(dataLayoutPages)) {
 			return Collections.emptyList();
@@ -350,7 +353,7 @@ public class DataLayoutUtil {
 		return Stream.of(
 			dataLayoutPages
 		).map(
-			DataLayoutUtil::_toDDMFormLayoutPage
+			dataLayoutPage -> _toDDMFormLayoutPage(dataLayoutPage, locale)
 		).collect(
 			Collectors.toList()
 		);

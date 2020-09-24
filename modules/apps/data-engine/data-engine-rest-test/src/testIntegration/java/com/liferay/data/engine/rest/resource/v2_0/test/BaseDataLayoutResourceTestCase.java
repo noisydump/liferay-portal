@@ -118,7 +118,9 @@ public abstract class BaseDataLayoutResourceTestCase {
 
 		DataLayoutResource.Builder builder = DataLayoutResource.builder();
 
-		dataLayoutResource = builder.locale(
+		dataLayoutResource = builder.authentication(
+			"test@liferay.com", "test"
+		).locale(
 			LocaleUtil.getDefault()
 		).build();
 	}
@@ -632,6 +634,11 @@ public abstract class BaseDataLayoutResourceTestCase {
 	}
 
 	@Test
+	public void testPostDataLayoutContext() throws Exception {
+		Assert.assertTrue(false);
+	}
+
+	@Test
 	public void testGetSiteDataLayoutByContentTypeByDataLayoutKey()
 		throws Exception {
 
@@ -777,7 +784,7 @@ public abstract class BaseDataLayoutResourceTestCase {
 		}
 	}
 
-	protected void assertValid(DataLayout dataLayout) {
+	protected void assertValid(DataLayout dataLayout) throws Exception {
 		boolean valid = true;
 
 		if (dataLayout.getDateCreated() == null) {

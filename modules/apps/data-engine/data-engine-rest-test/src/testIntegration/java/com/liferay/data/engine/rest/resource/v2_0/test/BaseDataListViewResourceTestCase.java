@@ -118,7 +118,9 @@ public abstract class BaseDataListViewResourceTestCase {
 
 		DataListViewResource.Builder builder = DataListViewResource.builder();
 
-		dataListViewResource = builder.locale(
+		dataListViewResource = builder.authentication(
+			"test@liferay.com", "test"
+		).locale(
 			LocaleUtil.getDefault()
 		).build();
 	}
@@ -197,6 +199,26 @@ public abstract class BaseDataListViewResourceTestCase {
 		dataListView = DataListViewSerDes.toDTO(json);
 
 		Assert.assertEquals(regex, dataListView.getSortField());
+	}
+
+	@Test
+	public void testDeleteDataListViewsDataDefinition() throws Exception {
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		DataListView dataListView =
+			testDeleteDataListViewsDataDefinition_addDataListView();
+
+		assertHttpResponseStatusCode(
+			204,
+			dataListViewResource.deleteDataListViewsDataDefinitionHttpResponse(
+				dataListView.getDataDefinitionId()));
+	}
+
+	protected DataListView
+			testDeleteDataListViewsDataDefinition_addDataListView()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
 	}
 
 	@Test
@@ -682,7 +704,7 @@ public abstract class BaseDataListViewResourceTestCase {
 		}
 	}
 
-	protected void assertValid(DataListView dataListView) {
+	protected void assertValid(DataListView dataListView) throws Exception {
 		boolean valid = true;
 
 		if (dataListView.getDateCreated() == null) {

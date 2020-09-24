@@ -261,6 +261,16 @@ public class MessageBoardThreadSerDes {
 			sb.append("]");
 		}
 
+		if (messageBoardThread.getLocked() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"locked\": ");
+
+			sb.append(messageBoardThread.getLocked());
+		}
+
 		if (messageBoardThread.getMessageBoardSectionId() != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -312,6 +322,16 @@ public class MessageBoardThreadSerDes {
 			}
 
 			sb.append("]");
+		}
+
+		if (messageBoardThread.getSeen() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"seen\": ");
+
+			sb.append(messageBoardThread.getSeen());
 		}
 
 		if (messageBoardThread.getShowAsQuestion() != null) {
@@ -577,6 +597,13 @@ public class MessageBoardThreadSerDes {
 				"keywords", String.valueOf(messageBoardThread.getKeywords()));
 		}
 
+		if (messageBoardThread.getLocked() == null) {
+			map.put("locked", null);
+		}
+		else {
+			map.put("locked", String.valueOf(messageBoardThread.getLocked()));
+		}
+
 		if (messageBoardThread.getMessageBoardSectionId() == null) {
 			map.put("messageBoardSectionId", null);
 		}
@@ -613,6 +640,13 @@ public class MessageBoardThreadSerDes {
 			map.put(
 				"relatedContents",
 				String.valueOf(messageBoardThread.getRelatedContents()));
+		}
+
+		if (messageBoardThread.getSeen() == null) {
+			map.put("seen", null);
+		}
+		else {
+			map.put("seen", String.valueOf(messageBoardThread.getSeen()));
 		}
 
 		if (messageBoardThread.getShowAsQuestion() == null) {
@@ -798,6 +832,11 @@ public class MessageBoardThreadSerDes {
 						toStrings((Object[])jsonParserFieldValue));
 				}
 			}
+			else if (Objects.equals(jsonParserFieldName, "locked")) {
+				if (jsonParserFieldValue != null) {
+					messageBoardThread.setLocked((Boolean)jsonParserFieldValue);
+				}
+			}
 			else if (Objects.equals(
 						jsonParserFieldName, "messageBoardSectionId")) {
 
@@ -833,6 +872,11 @@ public class MessageBoardThreadSerDes {
 						).toArray(
 							size -> new RelatedContent[size]
 						));
+				}
+			}
+			else if (Objects.equals(jsonParserFieldName, "seen")) {
+				if (jsonParserFieldValue != null) {
+					messageBoardThread.setSeen((Boolean)jsonParserFieldValue);
 				}
 			}
 			else if (Objects.equals(jsonParserFieldName, "showAsQuestion")) {
@@ -895,9 +939,8 @@ public class MessageBoardThreadSerDes {
 							(String)jsonParserFieldValue));
 				}
 			}
-			else {
-				throw new IllegalArgumentException(
-					"Unsupported field name " + jsonParserFieldName);
+			else if (jsonParserFieldName.equals("status")) {
+				throw new IllegalArgumentException();
 			}
 		}
 

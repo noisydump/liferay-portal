@@ -20,16 +20,16 @@
 DepotApplicationDisplayContext depotApplicationDisplayContext = (DepotApplicationDisplayContext)request.getAttribute(DepotAdminWebKeys.DEPOT_APPLICATION_DISPLAY_CONTEXT);
 %>
 
-<clay:container
-	className="pt-4"
+<clay:container-fluid
+	cssClass="pt-4"
 >
 	<div class="alert alert-info">
 		<span class="alert-indicator">
 			<svg class="lexicon-icon lexicon-icon-info-circle" focusable="false" role="presentation">
-				<use xlink:href="<%= themeDisplay.getPathThemeImages() %>/lexicon/icons.svg#info-circle" />
+				<use xlink:href="<%= themeDisplay.getPathThemeImages() %>/clay/icons.svg#info-circle" />
 			</svg>
 		</span>
 
 		<strong class="lead">Info:</strong><%= depotApplicationDisplayContext.getMessage() %>
 	</div>
-</clay:container>
+</clay:container-fluid>

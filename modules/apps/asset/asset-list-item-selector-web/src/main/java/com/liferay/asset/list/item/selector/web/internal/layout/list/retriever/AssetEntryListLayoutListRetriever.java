@@ -77,7 +77,7 @@ public class AssetEntryListLayoutListRetriever
 				AssetEntry.class.getName(),
 				assetListEntry.getAssetEntryType())) {
 
-			return Collections.singletonList(assetEntries);
+			return Collections.unmodifiableList(assetEntries);
 		}
 
 		return _toAssetObjects(assetEntries);
@@ -110,7 +110,7 @@ public class AssetEntryListLayoutListRetriever
 		List<Object> assetObjects = new ArrayList<>(assetEntries.size());
 
 		for (AssetEntry assetEntry : assetEntries) {
-			AssetRenderer assetRenderer = assetEntry.getAssetRenderer();
+			AssetRenderer<?> assetRenderer = assetEntry.getAssetRenderer();
 
 			assetObjects.add(assetRenderer.getAssetObject());
 		}

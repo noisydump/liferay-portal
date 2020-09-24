@@ -106,7 +106,9 @@ public abstract class BaseStatusResourceTestCase {
 
 		StatusResource.Builder builder = StatusResource.builder();
 
-		statusResource = builder.locale(
+		statusResource = builder.authentication(
+			"test@liferay.com", "test"
+		).locale(
 			LocaleUtil.getDefault()
 		).build();
 	}
@@ -245,7 +247,7 @@ public abstract class BaseStatusResourceTestCase {
 		}
 	}
 
-	protected void assertValid(Status status) {
+	protected void assertValid(Status status) throws Exception {
 		boolean valid = true;
 
 		for (String additionalAssertFieldName :

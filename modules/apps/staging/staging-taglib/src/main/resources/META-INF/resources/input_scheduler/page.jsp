@@ -18,7 +18,21 @@
 
 <ul class="hide options portlet-list select-options" id="<portlet:namespace />selectSchedule">
 	<li>
-		<liferay-ui:error exception="<%= com.liferay.portal.kernel.scheduler.SchedulerException.class %>" message="a-wrong-end-date-was-specified-the-scheduled-process-will-never-run" />
+		<liferay-ui:error exception="<%= SchedulerException.class %>">
+
+			<%
+			SchedulerException schedulerException = (SchedulerException)errorException;
+			%>
+
+			<c:choose>
+				<c:when test="<%= schedulerException.getType() == SchedulerException.TYPE_INVALID_START_DATE %>">
+					<liferay-ui:message key="a-wrong-start-date-was-specified-the-scheduled-process-cannot-start-in-the-past" />
+				</c:when>
+				<c:otherwise>
+					<liferay-ui:message key="a-wrong-end-date-was-specified-the-scheduled-process-will-never-run" />
+				</c:otherwise>
+			</c:choose>
+		</liferay-ui:error>
 
 		<aui:input name="jobName" type="hidden" />
 
@@ -62,7 +76,6 @@
 
 		int[] monthIds = CalendarUtil.getMonthIds();
 		String[] months = CalendarUtil.getMonths(locale);
-		String timeZoneID = timeZone.getID();
 		%>
 
 		<table class="staging-publish-schedule">
@@ -79,6 +92,7 @@
 								dayValue="<%= startDay %>"
 								disabled="<%= false %>"
 								firstDayOfWeek="<%= cal.getFirstDayOfWeek() - 1 %>"
+								firstEnabledDate="<%= new Date() %>"
 								monthParam="schedulerStartDateMonth"
 								monthValue="<%= startMonth %>"
 								name="schedulerStartDate"
@@ -113,7 +127,7 @@
 						<liferay-ui:message key="time-zone" />:
 					</th>
 					<td class="staging-scheduler-content">
-						<aui:input cssClass="calendar-portlet-time-zone-field" label="" name="timeZoneId" type="timeZone" value="<%= timeZoneID %>" />
+						<aui:input cssClass="calendar-portlet-time-zone-field" label="" name="timeZoneId" type="timeZone" value="<%= timeZone.getID() %>" />
 					</td>
 				</tr>
 			</tbody>
@@ -228,7 +242,7 @@
 						%>
 
 						<clay:row
-							className="weekdays"
+							cssClass="weekdays"
 						>
 
 							<%

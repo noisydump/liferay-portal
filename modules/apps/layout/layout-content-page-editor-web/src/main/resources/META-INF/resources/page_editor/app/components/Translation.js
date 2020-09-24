@@ -104,7 +104,7 @@ const TranslationItem = ({
 			) : (
 				<span>{languageLabel}</span>
 			)}
-			<span className="dropdown-item-indicator-end">
+			<span className="dropdown-item-indicator-end page-editor__translation__label-wrapper">
 				<div
 					className={classNames(
 						'page-editor__translation__label label',
@@ -127,6 +127,7 @@ export default function Translation({
 	dispatch,
 	fragmentEntryLinks,
 	languageId,
+	showNotTranslated = true,
 }) {
 	const [active, setActive] = useState(false);
 	const editableValues = useMemo(
@@ -143,13 +144,28 @@ export default function Translation({
 		return Object.keys({
 			[defaultLanguageId]: defaultLanguage,
 			...availableLanguagesMut,
-		}).map((languageId) => ({
-			languageId,
-			values: editableValues.filter((editableValue) =>
-				isTranslated(editableValue, languageId)
-			),
-		}));
-	}, [availableLanguages, defaultLanguageId, editableValues]);
+		})
+			.filter(
+				(languageId) =>
+					showNotTranslated ||
+					editableValues.filter(
+						(editableValue) =>
+							isTranslated(editableValue, languageId) ||
+							languageId === defaultLanguageId
+					).length > 0
+			)
+			.map((languageId) => ({
+				languageId,
+				values: editableValues.filter((editableValue) =>
+					isTranslated(editableValue, languageId)
+				),
+			}));
+	}, [
+		availableLanguages,
+		defaultLanguageId,
+		editableValues,
+		showNotTranslated,
+	]);
 
 	const {languageIcon, languageLabel} = availableLanguages[languageId];
 
@@ -164,6 +180,7 @@ export default function Translation({
 			onActiveChange={setActive}
 			trigger={
 				<ClayButton
+					aria-pressed={active}
 					className="btn-monospaced"
 					displayType="secondary"
 					small

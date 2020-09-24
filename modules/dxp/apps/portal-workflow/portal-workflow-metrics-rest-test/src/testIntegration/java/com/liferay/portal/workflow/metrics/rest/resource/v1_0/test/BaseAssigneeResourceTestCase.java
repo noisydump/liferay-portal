@@ -107,7 +107,9 @@ public abstract class BaseAssigneeResourceTestCase {
 
 		AssigneeResource.Builder builder = AssigneeResource.builder();
 
-		assigneeResource = builder.locale(
+		assigneeResource = builder.authentication(
+			"test@liferay.com", "test"
+		).locale(
 			LocaleUtil.getDefault()
 		).build();
 	}
@@ -248,7 +250,7 @@ public abstract class BaseAssigneeResourceTestCase {
 		}
 	}
 
-	protected void assertValid(Assignee assignee) {
+	protected void assertValid(Assignee assignee) throws Exception {
 		boolean valid = true;
 
 		if (assignee.getId() == null) {

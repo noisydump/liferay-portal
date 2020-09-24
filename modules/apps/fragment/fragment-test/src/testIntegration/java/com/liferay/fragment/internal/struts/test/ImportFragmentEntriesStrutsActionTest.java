@@ -144,7 +144,7 @@ public class ImportFragmentEntriesStrutsActionTest {
 		FragmentCollection fragmentCollection = fragmentCollections.get(0);
 
 		Assert.assertEquals(
-			1,
+			3,
 			_fragmentEntryLocalService.getFragmentEntriesCount(
 				fragmentCollection.getFragmentCollectionId()));
 
@@ -166,19 +166,26 @@ public class ImportFragmentEntriesStrutsActionTest {
 			byte[] bytes, String namespace)
 		throws Exception {
 
-		LiferayFileItemFactory fileItemFactory = new LiferayFileItemFactory(
-			UploadServletRequestImpl.getTempDir());
-
-		LiferayFileItem liferayFileItem = fileItemFactory.createItem(
-			RandomTestUtil.randomString(), RandomTestUtil.randomString(), true,
-			RandomTestUtil.randomString());
-
-		try (OutputStream outputStream = liferayFileItem.getOutputStream()) {
-			outputStream.write(bytes);
-		}
-
 		return HashMapBuilder.<String, FileItem[]>put(
-			namespace, new FileItem[] {liferayFileItem}
+			namespace,
+			() -> {
+				LiferayFileItemFactory fileItemFactory =
+					new LiferayFileItemFactory(
+						UploadServletRequestImpl.getTempDir());
+
+				LiferayFileItem liferayFileItem = fileItemFactory.createItem(
+					RandomTestUtil.randomString(),
+					RandomTestUtil.randomString(), true,
+					RandomTestUtil.randomString());
+
+				try (OutputStream outputStream =
+						liferayFileItem.getOutputStream()) {
+
+					outputStream.write(bytes);
+				}
+
+				return new FileItem[] {liferayFileItem};
+			}
 		).build();
 	}
 

@@ -135,6 +135,16 @@ public class AppSerDes {
 			sb.append(app.getDataListViewId());
 		}
 
+		if (app.getDataRecordCollectionId() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"dataRecordCollectionId\": ");
+
+			sb.append(app.getDataRecordCollectionId());
+		}
+
 		if (app.getDateCreated() != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -183,6 +193,20 @@ public class AppSerDes {
 			sb.append(_toJSON(app.getName()));
 		}
 
+		if (app.getScope() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"scope\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(app.getScope()));
+
+			sb.append("\"");
+		}
+
 		if (app.getSiteId() != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -201,6 +225,20 @@ public class AppSerDes {
 			sb.append("\"userId\": ");
 
 			sb.append(app.getUserId());
+		}
+
+		if (app.getVersion() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"version\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(app.getVersion()));
+
+			sb.append("\"");
 		}
 
 		sb.append("}");
@@ -269,6 +307,15 @@ public class AppSerDes {
 			map.put("dataListViewId", String.valueOf(app.getDataListViewId()));
 		}
 
+		if (app.getDataRecordCollectionId() == null) {
+			map.put("dataRecordCollectionId", null);
+		}
+		else {
+			map.put(
+				"dataRecordCollectionId",
+				String.valueOf(app.getDataRecordCollectionId()));
+		}
+
 		if (app.getDateCreated() == null) {
 			map.put("dateCreated", null);
 		}
@@ -301,6 +348,13 @@ public class AppSerDes {
 			map.put("name", String.valueOf(app.getName()));
 		}
 
+		if (app.getScope() == null) {
+			map.put("scope", null);
+		}
+		else {
+			map.put("scope", String.valueOf(app.getScope()));
+		}
+
 		if (app.getSiteId() == null) {
 			map.put("siteId", null);
 		}
@@ -313,6 +367,13 @@ public class AppSerDes {
 		}
 		else {
 			map.put("userId", String.valueOf(app.getUserId()));
+		}
+
+		if (app.getVersion() == null) {
+			map.put("version", null);
+		}
+		else {
+			map.put("version", String.valueOf(app.getVersion()));
 		}
 
 		return map;
@@ -376,6 +437,14 @@ public class AppSerDes {
 						Long.valueOf((String)jsonParserFieldValue));
 				}
 			}
+			else if (Objects.equals(
+						jsonParserFieldName, "dataRecordCollectionId")) {
+
+				if (jsonParserFieldValue != null) {
+					app.setDataRecordCollectionId(
+						Long.valueOf((String)jsonParserFieldValue));
+				}
+			}
 			else if (Objects.equals(jsonParserFieldName, "dateCreated")) {
 				if (jsonParserFieldValue != null) {
 					app.setDateCreated(toDate((String)jsonParserFieldValue));
@@ -397,6 +466,11 @@ public class AppSerDes {
 						(Map)AppSerDes.toMap((String)jsonParserFieldValue));
 				}
 			}
+			else if (Objects.equals(jsonParserFieldName, "scope")) {
+				if (jsonParserFieldValue != null) {
+					app.setScope((String)jsonParserFieldValue);
+				}
+			}
 			else if (Objects.equals(jsonParserFieldName, "siteId")) {
 				if (jsonParserFieldValue != null) {
 					app.setSiteId(Long.valueOf((String)jsonParserFieldValue));
@@ -407,9 +481,13 @@ public class AppSerDes {
 					app.setUserId(Long.valueOf((String)jsonParserFieldValue));
 				}
 			}
-			else {
-				throw new IllegalArgumentException(
-					"Unsupported field name " + jsonParserFieldName);
+			else if (Objects.equals(jsonParserFieldName, "version")) {
+				if (jsonParserFieldValue != null) {
+					app.setVersion((String)jsonParserFieldValue);
+				}
+			}
+			else if (jsonParserFieldName.equals("status")) {
+				throw new IllegalArgumentException();
 			}
 		}
 

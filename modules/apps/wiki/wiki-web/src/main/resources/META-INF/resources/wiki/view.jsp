@@ -36,10 +36,17 @@ if (followRedirect && (redirectPage != null)) {
 
 String title = wikiPage.getTitle();
 String parentTitle = wikiPage.getParentTitle();
-List<WikiPage> childPages = wikiPage.getViewableChildPages();
+
+List<WikiPage> childPages = new ArrayList<>();
+
+for (WikiPage curChildPage : wikiPage.getViewableChildPages()) {
+	if (curChildPage.getRedirectPage() == null) {
+		childPages.add(curChildPage);
+	}
+}
 
 boolean preview = false;
-boolean print = ParamUtil.getString(request, "viewMode").equals(Constants.PRINT);
+boolean print = Objects.equals(ParamUtil.getString(request, "viewMode"), Constants.PRINT);
 
 PortletURL viewPageURL = renderResponse.createRenderURL();
 
@@ -171,7 +178,7 @@ if (portletTitleBasedNavigation) {
 				</c:if>
 
 				<%
-				List entries = new ArrayList();
+				List<WikiPage> entries = new ArrayList<>();
 
 				entries.add(wikiPage);
 
@@ -274,7 +281,7 @@ if (portletTitleBasedNavigation) {
 									label="<%= true %>"
 									markupView="lexicon"
 									message="print"
-									url='<%= "javascript:" + renderResponse.getNamespace() + "printPage();" %>'
+									url='<%= "javascript:" + liferayPortletResponse.getNamespace() + "printPage();" %>'
 								/>
 							</div>
 						</c:if>
@@ -395,13 +402,13 @@ if (portletTitleBasedNavigation) {
 				</liferay-ddm:template-renderer>
 
 				<%
-				if (!wikiPage.getTitle().equals(wikiGroupServiceConfiguration.frontPageName())) {
+				if (!Objects.equals(wikiPage.getTitle(), wikiGroupServiceConfiguration.frontPageName())) {
 					if (!portletName.equals(WikiPortletKeys.WIKI_DISPLAY)) {
 						PortalUtil.setPageSubtitle(wikiPage.getTitle(), request);
 
 						String description = wikiPage.getContent();
 
-						if (wikiPage.getFormat().equals("html")) {
+						if (Objects.equals(wikiPage.getFormat(), "html")) {
 							description = HtmlUtil.stripHtml(description);
 						}
 

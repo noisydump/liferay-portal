@@ -24,7 +24,7 @@ int selStatus = KBArticlePermission.contains(permissionChecker, kbArticle, KBAct
 String orderByCol = ParamUtil.getString(request, "orderByCol", "version");
 String orderByType = ParamUtil.getString(request, "orderByType", "desc");
 
-OrderByComparator orderByComparator = KBUtil.getKBArticleOrderByComparator(orderByCol, orderByType);
+OrderByComparator<KBArticle> orderByComparator = KBUtil.getKBArticleOrderByComparator(orderByCol, orderByType);
 
 List<KBArticle> kbArticles = KBArticleServiceUtil.getKBArticleVersions(scopeGroupId, kbArticle.getResourcePrimKey(), selStatus, QueryUtil.ALL_POS, QueryUtil.ALL_POS, orderByComparator);
 %>
@@ -78,7 +78,7 @@ List<KBArticle> kbArticles = KBArticleServiceUtil.getKBArticleVersions(scopeGrou
 								/>
 							</c:if>
 
-							<portlet:renderURL var="compareVersionsURL" windowState="<%= LiferayWindowState.POP_UP.toString() %>">
+							<portlet:renderURL var="selectVersionURL" windowState="<%= LiferayWindowState.POP_UP.toString() %>">
 								<portlet:param name="mvcPath" value="/admin/common/select_version.jsp" />
 								<portlet:param name="redirect" value="<%= currentURL %>" />
 								<portlet:param name="resourcePrimKey" value="<%= String.valueOf(kbArticle.getResourcePrimKey()) %>" />
@@ -86,16 +86,14 @@ List<KBArticle> kbArticles = KBArticleServiceUtil.getKBArticleVersions(scopeGrou
 							</portlet:renderURL>
 
 							<%
-							Map<String, Object> data = HashMapBuilder.<String, Object>put(
-								"uri", compareVersionsURL
-							).build();
+							String taglibOnClick = liferayPortletResponse.getNamespace() + "openCompareVersionsPopup('" + selectVersionURL.toString() + "');";
 							%>
 
 							<liferay-ui:icon
 								cssClass="compare-to-link"
-								data="<%= data %>"
 								label="<%= true %>"
 								message="compare-to"
+								onClick="<%= taglibOnClick %>"
 								url="javascript:;"
 							/>
 						</liferay-ui:icon-menu>
@@ -117,23 +115,10 @@ List<KBArticle> kbArticles = KBArticleServiceUtil.getKBArticleVersions(scopeGrou
 	<portlet:param name="resourcePrimKey" value="<%= String.valueOf(kbArticle.getResourcePrimKey()) %>" />
 </portlet:renderURL>
 
-<aui:script require="metal-dom/src/dom as dom">
-	dom.delegate(document.body, 'click', '.compare-to-link > a', function (event) {
-		var currentTarget = event.delegateTarget;
-
-		Liferay.Util.selectEntity(
-			{
-				dialog: {
-					constrain: true,
-					destroyOnHide: true,
-					modal: true,
-				},
-				eventName: '<portlet:namespace />selectVersionFm',
-				id: '<portlet:namespace />compareVersions' + currentTarget.id,
-				title: '<liferay-ui:message key="compare-versions" />',
-				uri: currentTarget.dataset.uri,
-			},
-			function (event) {
+<script>
+	function <portlet:namespace />openCompareVersionsPopup(selectVersionUrl) {
+		Liferay.Util.openSelectionModal({
+			onSelect: function (event) {
 				var uri = '<%= HtmlUtil.escapeJS(compareVersionURL) %>';
 
 				uri = Liferay.Util.addParams(
@@ -145,8 +130,11 @@ List<KBArticle> kbArticles = KBArticleServiceUtil.getKBArticleVersions(scopeGrou
 					uri
 				);
 
-				location.href = uri;
-			}
-		);
-	});
-</aui:script>
+				Liferay.Util.navigate(uri);
+			},
+			selectEventName: '<portlet:namespace />selectVersionFm',
+			title: '<liferay-ui:message key="compare-versions" />',
+			url: selectVersionUrl,
+		});
+	}
+</script>

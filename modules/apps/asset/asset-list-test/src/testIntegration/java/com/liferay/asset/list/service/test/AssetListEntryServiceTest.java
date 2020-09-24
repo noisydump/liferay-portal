@@ -119,12 +119,11 @@ public class AssetListEntryServiceTest {
 		AssetListEntry assetListEntry2 = _addAssetListEntry(
 			"Asset List Title 2");
 
-		long[] assetListEntries = {
-			assetListEntry1.getAssetListEntryId(),
-			assetListEntry2.getAssetListEntryId()
-		};
-
-		_assetListEntryService.deleteAssetListEntries(assetListEntries);
+		_assetListEntryService.deleteAssetListEntries(
+			new long[] {
+				assetListEntry1.getAssetListEntryId(),
+				assetListEntry2.getAssetListEntryId()
+			});
 
 		Assert.assertNull(
 			_assetListEntryService.fetchAssetListEntry(
@@ -192,7 +191,7 @@ public class AssetListEntryServiceTest {
 		_assetListEntryService.addAssetListEntry(
 			_group.getGroupId(), "B Test name", 0, serviceContext);
 
-		OrderByComparator orderByComparator =
+		OrderByComparator<AssetListEntry> orderByComparator =
 			new AssetListEntryCreateDateComparator(true);
 
 		List<AssetListEntry> assetListEntries =
@@ -234,8 +233,8 @@ public class AssetListEntryServiceTest {
 		_assetListEntryService.addAssetListEntry(
 			_group.getGroupId(), "AC Asset List Entry", 0, serviceContext);
 
-		OrderByComparator orderByComparator = new AssetListEntryTitleComparator(
-			true);
+		OrderByComparator<AssetListEntry> orderByComparator =
+			new AssetListEntryTitleComparator(true);
 
 		List<AssetListEntry> assetListEntries =
 			_assetListEntryService.getAssetListEntries(
@@ -313,7 +312,8 @@ public class AssetListEntryServiceTest {
 			assetListEntry.getAssetListEntryId());
 
 		Assert.assertEquals(
-			assetListEntry.getAssetEntryType(), AssetEntry.class.getName());
+			assetListEntry.getAssetEntryType(),
+			TestAssetRendererFactory.class.getName());
 
 		_assetListEntryService.deleteAssetEntrySelection(
 			assetListEntry.getAssetListEntryId(), 0, 1);

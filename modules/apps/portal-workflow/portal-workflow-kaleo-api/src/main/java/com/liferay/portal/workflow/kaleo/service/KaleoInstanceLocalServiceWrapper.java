@@ -36,6 +36,10 @@ public class KaleoInstanceLocalServiceWrapper
 	/**
 	 * Adds the kaleo instance to the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect KaleoInstanceLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param kaleoInstance the kaleo instance
 	 * @return the kaleo instance that was added
 	 */
@@ -111,6 +115,10 @@ public class KaleoInstanceLocalServiceWrapper
 	/**
 	 * Deletes the kaleo instance from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect KaleoInstanceLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param kaleoInstance the kaleo instance
 	 * @return the kaleo instance that was removed
 	 */
@@ -125,6 +133,10 @@ public class KaleoInstanceLocalServiceWrapper
 
 	/**
 	 * Deletes the kaleo instance with the primary key from the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect KaleoInstanceLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param kaleoInstanceId the primary key of the kaleo instance
 	 * @return the kaleo instance that was removed
@@ -253,6 +265,14 @@ public class KaleoInstanceLocalServiceWrapper
 	}
 
 	@Override
+	public com.liferay.portal.workflow.kaleo.model.KaleoInstance
+		fetchKaleoInstance(long kaleoInstanceId, long companyId, long userId) {
+
+		return _kaleoInstanceLocalService.fetchKaleoInstance(
+			kaleoInstanceId, companyId, userId);
+	}
+
+	@Override
 	public com.liferay.portal.kernel.dao.orm.ActionableDynamicQuery
 		getActionableDynamicQuery() {
 
@@ -264,6 +284,14 @@ public class KaleoInstanceLocalServiceWrapper
 		getIndexableActionableDynamicQuery() {
 
 		return _kaleoInstanceLocalService.getIndexableActionableDynamicQuery();
+	}
+
+	@Override
+	public int getKaleoDefinitionKaleoInstancesCount(
+		long kaleoDefinitionId, boolean completed) {
+
+		return _kaleoInstanceLocalService.getKaleoDefinitionKaleoInstancesCount(
+			kaleoDefinitionId, completed);
 	}
 
 	/**
@@ -480,8 +508,33 @@ public class KaleoInstanceLocalServiceWrapper
 			kaleoDefinitionName, completed, serviceContext);
 	}
 
+	@Override
+	public com.liferay.portal.kernel.search.BaseModelSearchResult
+		<com.liferay.portal.workflow.kaleo.model.KaleoInstance>
+				searchKaleoInstances(
+					Long userId, String assetClassName, String assetTitle,
+					String assetDescription, String nodeName,
+					String kaleoDefinitionName, Boolean completed, int start,
+					int end,
+					com.liferay.portal.kernel.util.OrderByComparator
+						<com.liferay.portal.workflow.kaleo.model.KaleoInstance>
+							orderByComparator,
+					com.liferay.portal.kernel.service.ServiceContext
+						serviceContext)
+			throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _kaleoInstanceLocalService.searchKaleoInstances(
+			userId, assetClassName, assetTitle, assetDescription, nodeName,
+			kaleoDefinitionName, completed, start, end, orderByComparator,
+			serviceContext);
+	}
+
 	/**
 	 * Updates the kaleo instance in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect KaleoInstanceLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param kaleoInstance the kaleo instance
 	 * @return the kaleo instance that was updated

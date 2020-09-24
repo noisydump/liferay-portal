@@ -21,6 +21,7 @@ import React, {useState} from 'react';
 
 import {config} from '../../app/config/index';
 import {useSelector} from '../../app/store/index';
+import {useId} from '../../app/utils/useId';
 import {openInfoItemSelector} from '../../core/openInfoItemSelector';
 
 export default function ItemSelector({
@@ -28,25 +29,41 @@ export default function ItemSelector({
 	itemSelectorURL,
 	label,
 	onItemSelect,
+	quickMappedInfoItems = [],
 	selectedItemTitle,
 	showAddButton = true,
 	showMappedItems = true,
 }) {
-	const mappedInfoItems = useSelector((state) => state.mappedInfoItems);
 	const [active, setActive] = useState(false);
+	const itemSelectorInputId = useId();
+	const mappedInfoItems = useSelector((state) => state.mappedInfoItems || []);
+
+	const mappedItems =
+		quickMappedInfoItems.length === 0
+			? mappedInfoItems
+			: quickMappedInfoItems;
 
 	const defaultEventName = `${config.portletNamespace}selectInfoItem`;
 
 	return (
 		<>
-			{label && <label htmlFor="itemSelectorInput">{label}</label>}
+			{label && <label htmlFor={itemSelectorInputId}>{label}</label>}
 
 			<div className="d-flex">
 				<ClayInput
 					className={classNames('mr-2', {
 						'page-editor__item-selector__content-input': showAddButton,
 					})}
-					id="itemSelectorInput"
+					id={itemSelectorInputId}
+					onClick={() => {
+						if (showAddButton) {
+							openInfoItemSelector(
+								onItemSelect,
+								eventName || defaultEventName,
+								itemSelectorURL || config.infoItemSelectorURL
+							);
+						}
+					}}
 					readOnly
 					sizing="sm"
 					type="text"
@@ -54,7 +71,7 @@ export default function ItemSelector({
 				/>
 
 				{showAddButton &&
-					(mappedInfoItems.length > 0 && showMappedItems ? (
+					(mappedItems.length > 0 && showMappedItems ? (
 						<ClayDropDown
 							active={active}
 							onActiveChange={setActive}
@@ -63,6 +80,9 @@ export default function ItemSelector({
 									aria-label={Liferay.Language.get(
 										'select-content-button'
 									)}
+									className={
+										'page-editor__item-selector__content-button'
+									}
 									displayType="secondary"
 									onClick={() => setActive(true)}
 									small
@@ -71,7 +91,7 @@ export default function ItemSelector({
 							}
 						>
 							<ClayDropDown.ItemList>
-								{mappedInfoItems.map((item) => (
+								{mappedItems.map((item) => (
 									<ClayDropDown.Item
 										key={item.classNameId}
 										onClick={() => {
@@ -102,6 +122,9 @@ export default function ItemSelector({
 							aria-label={Liferay.Language.get(
 								'select-content-button'
 							)}
+							className={
+								'page-editor__item-selector__content-button'
+							}
 							displayType="secondary"
 							onClick={() =>
 								openInfoItemSelector(

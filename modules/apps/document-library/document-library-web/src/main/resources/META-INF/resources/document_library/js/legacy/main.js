@@ -63,6 +63,10 @@ AUI.add(
 					validator: Lang.isBoolean,
 				},
 
+				viewFileEntryTypeURL: {
+					validator: Lang.isString,
+				},
+
 				viewFileEntryURL: {
 					validator: Lang.isString,
 				},
@@ -81,7 +85,7 @@ AUI.add(
 					var selectedElements = event.elements.allSelectedElements;
 
 					if (selectedElements.size() > 0) {
-						instance._selectedFileEntries = selectedElements.attr(
+						instance._selectedFileEntries = selectedElements.get(
 							'value'
 						);
 					}
@@ -380,18 +384,13 @@ AUI.add(
 				},
 
 				handleCreationMenuMoreButtonClicked(event) {
-					event.preventDefault();
-
 					var instance = this;
 
-					Liferay.Util.openWindow({
-						dialog: {
-							destroyOnHide: true,
-							modal: true,
-						},
-						id: instance.ns('selectAddMenuItem'),
+					event.preventDefault();
+
+					Liferay.Util.openModal({
 						title: Liferay.Language.get('more'),
-						uri: instance.get('openViewMoreFileEntryTypesURL'),
+						url: instance.get('openViewMoreFileEntryTypesURL'),
 					});
 				},
 
@@ -401,49 +400,26 @@ AUI.add(
 					var itemData = event.data.item.data;
 
 					if (itemData.action === 'openDocumentTypesSelector') {
-						Liferay.Loader.require(
-							'frontend-js-web/liferay/ItemSelectorDialog.es',
-							(ItemSelectorDialog) => {
-								var itemSelectorDialog = new ItemSelectorDialog.default(
-									{
-										eventName: instance.ns(
-											'selectFileEntryType'
-										),
-										singleSelect: true,
-										title: Liferay.Language.get(
-											'select-document-type'
-										),
-										url: instance.get(
-											'selectFileEntryTypeURL'
-										),
-									}
-								);
+						Liferay.Util.openSelectionModal({
+							onSelect: (selectedItem) => {
+								if (selectedItem) {
+									var uri = instance.get(
+										'viewFileEntryTypeURL'
+									);
 
-								itemSelectorDialog.open();
+									uri = Liferay.Util.addParams(
+										instance.ns('fileEntryTypeId=') +
+											selectedItem.value,
+										uri
+									);
 
-								itemSelectorDialog.on(
-									'selectedItemChange',
-									(event) => {
-										var selectedItem = event.selectedItem;
-
-										if (selectedItem) {
-											var uri = instance.get(
-												'viewFileEntryTypeURL'
-											);
-
-											uri = Liferay.Util.addParams(
-												instance.ns(
-													'fileEntryTypeId='
-												) + selectedItem,
-												uri
-											);
-
-											location.href = uri;
-										}
-									}
-								);
-							}
-						);
+									Liferay.Util.navigate(uri);
+								}
+							},
+							selectEventName: instance.ns('selectFileEntryType'),
+							title: Liferay.Language.get('select-document-type'),
+							url: instance.get('selectFileEntryTypeURL'),
+						});
 					}
 				},
 
@@ -534,31 +510,28 @@ AUI.add(
 						);
 					}
 
-					Liferay.Util.selectEntity(
-						{
-							dialog: {
-								constrain: true,
-								destroyOnHide: true,
-								modal: true,
-								width: 680,
-							},
-							id: namespace + 'selectFolder',
-							title: Lang.sub(dialogTitle, [selectedItems]),
-							uri: instance.get('selectFolderURL'),
-						},
-						(event) => {
+					Liferay.Util.openSelectionModal({
+						height: '480px',
+						id: namespace + 'selectFolder',
+						onSelect: (selectedItem) => {
 							if (parameterName && parameterValue) {
 								instance._moveSingleElement(
-									event.folderid,
+									selectedItem.folderid,
 									parameterName,
 									parameterValue
 								);
 							}
 							else {
-								instance._moveCurrentSelection(event.folderid);
+								instance._moveCurrentSelection(
+									selectedItem.folderid
+								);
 							}
-						}
-					);
+						},
+						selectEventName: namespace + 'selectFolder',
+						size: 'lg',
+						title: Lang.sub(dialogTitle, [selectedItems]),
+						url: instance.get('selectFolderURL'),
+					});
 				},
 			},
 		});
@@ -567,10 +540,6 @@ AUI.add(
 	},
 	'',
 	{
-		requires: [
-			'document-library-upload',
-			'liferay-message',
-			'liferay-portlet-base',
-		],
+		requires: ['document-library-upload', 'liferay-portlet-base'],
 	}
 );

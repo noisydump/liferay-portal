@@ -38,7 +38,7 @@ ViewAccountRoleAssigneesManagementToolbarDisplayContext viewAccountRoleAssignees
 	displayContext="<%= viewAccountRoleAssigneesManagementToolbarDisplayContext %>"
 />
 
-<clay:container>
+<clay:container-fluid>
 	<aui:form method="post" name="fm">
 		<aui:input name="accountEntryId" type="hidden" value="<%= accountEntryId %>" />
 		<aui:input name="accountRoleId" type="hidden" value="<%= accountRoleId %>" />
@@ -76,9 +76,28 @@ ViewAccountRoleAssigneesManagementToolbarDisplayContext viewAccountRoleAssignees
 			/>
 		</liferay-ui:search-container>
 	</aui:form>
-</clay:container>
+</clay:container-fluid>
+
+<portlet:actionURL name="/account_admin/assign_account_role_users" var="assignAccountUsersURL">
+	<portlet:param name="redirect" value="<%= currentURL %>" />
+</portlet:actionURL>
+
+<portlet:renderURL var="selectAccountUsersURL" windowState="<%= LiferayWindowState.POP_UP.toString() %>">
+	<portlet:param name="mvcPath" value="/account_entries_admin/select_account_users.jsp" />
+	<portlet:param name="accountEntryId" value="<%= String.valueOf(accountEntryId) %>" />
+	<portlet:param name="accountRoleId" value="<%= String.valueOf(accountRoleId) %>" />
+</portlet:renderURL>
 
 <liferay-frontend:component
 	componentId="<%= viewAccountRoleAssigneesManagementToolbarDisplayContext.getDefaultEventHandler() %>"
+	context='<%=
+		HashMapBuilder.<String, Object>put(
+			"accountEntryName", role.getTitle(locale)
+		).put(
+			"assignAccountUsersURL", assignAccountUsersURL
+		).put(
+			"selectAccountUsersURL", selectAccountUsersURL
+		).build()
+	%>'
 	module="account_entries_admin/js/AccountUsersManagementToolbarDefaultEventHandler.es"
 />

@@ -20,7 +20,7 @@
 String redirect = PortalUtil.getLayoutFullURL(layout, themeDisplay);
 %>
 
-<clay:container>
+<clay:container-fluid>
 	<aui:fieldset-group markupView="lexicon">
 		<aui:fieldset>
 
@@ -68,15 +68,18 @@ String redirect = PortalUtil.getLayoutFullURL(layout, themeDisplay);
 							PortletURL portletURL = assetPublisherAddItemHolder.getPortletURL();
 
 							portletURL.setParameter("redirect", redirect);
-
-							Map<String, Object> data = HashMapBuilder.<String, Object>put(
-								"title", LanguageUtil.format((HttpServletRequest)pageContext.getRequest(), "new-x", HtmlUtil.escape(message), false)
-							).put(
-								"url", assetHelper.getAddURLPopUp(curGroupId, plid, portletURL, false, null)
-							).build();
 						%>
 
-							<aui:option data="<%= data %>" label="<%= HtmlUtil.escape(message) %>" />
+							<aui:option
+								data='<%=
+									HashMapBuilder.<String, Object>put(
+										"title", LanguageUtil.format((HttpServletRequest)pageContext.getRequest(), "new-x", HtmlUtil.escape(message), false)
+									).put(
+										"url", assetHelper.getAddURLPopUp(curGroupId, plid, portletURL, false, null)
+									).build()
+								%>'
+								label="<%= HtmlUtil.escape(message) %>"
+							/>
 
 						<%
 						}
@@ -101,11 +104,11 @@ String redirect = PortalUtil.getLayoutFullURL(layout, themeDisplay);
 	</aui:fieldset-group>
 
 	<aui:button-row>
-		<aui:button onClick='<%= renderResponse.getNamespace() + "addAssetEntry();" %>' primary="<%= true %>" value="add" />
+		<aui:button onClick='<%= liferayPortletResponse.getNamespace() + "addAssetEntry();" %>' primary="<%= true %>" value="add" />
 
 		<aui:button href="<%= redirect %>" type="cancel" />
 	</aui:button-row>
-</clay:container>
+</clay:container-fluid>
 
 <aui:script>
 	function <portlet:namespace />addAssetEntry() {

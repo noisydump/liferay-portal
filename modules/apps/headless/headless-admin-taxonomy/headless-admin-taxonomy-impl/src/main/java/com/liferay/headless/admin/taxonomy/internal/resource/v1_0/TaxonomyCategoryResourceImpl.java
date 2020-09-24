@@ -24,7 +24,7 @@ import com.liferay.headless.admin.taxonomy.dto.v1_0.TaxonomyCategory;
 import com.liferay.headless.admin.taxonomy.internal.dto.v1_0.converter.TaxonomyCategoryDTOConverter;
 import com.liferay.headless.admin.taxonomy.internal.odata.entity.v1_0.CategoryEntityModel;
 import com.liferay.headless.admin.taxonomy.resource.v1_0.TaxonomyCategoryResource;
-import com.liferay.headless.common.spi.service.context.ServiceContextUtil;
+import com.liferay.headless.common.spi.service.context.ServiceContextRequestUtil;
 import com.liferay.petra.function.UnsafeConsumer;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.dao.orm.DynamicQuery;
@@ -64,6 +64,7 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.core.MultivaluedMap;
@@ -144,33 +145,43 @@ public class TaxonomyCategoryResourceImpl
 			Pagination pagination, Sort[] sorts)
 		throws Exception {
 
-		AssetCategory assetCategory = _getAssetCategory(
-			parentTaxonomyCategoryId);
+		Map<String, Map<String, String>> actions = null;
 
-		return _getCategoriesPage(
-			HashMapBuilder.<String, Map<String, String>>put(
+		if (!Objects.equals(parentTaxonomyCategoryId, "0")) {
+			AssetCategory assetCategory = _getAssetCategory(
+				parentTaxonomyCategoryId);
+
+			parentTaxonomyCategoryId = String.valueOf(
+				assetCategory.getCategoryId());
+
+			actions = HashMapBuilder.<String, Map<String, String>>put(
 				"add-category",
 				addAction(
 					"ADD_CATEGORY", assetCategory.getCategoryId(),
-					AssetCategory.class.getName(), assetCategory.getUserId(),
 					"postTaxonomyCategoryTaxonomyCategory",
+					assetCategory.getUserId(), AssetCategory.class.getName(),
 					assetCategory.getGroupId())
 			).put(
 				"get",
 				addAction(
 					"VIEW", assetCategory.getCategoryId(),
-					AssetCategory.class.getName(), assetCategory.getUserId(),
 					"getTaxonomyCategoryTaxonomyCategoriesPage",
+					assetCategory.getUserId(), AssetCategory.class.getName(),
 					assetCategory.getGroupId())
-			).build(),
+			).build();
+		}
+
+		String taxonomyCategoryId = parentTaxonomyCategoryId;
+
+		return _getCategoriesPage(
+			actions,
 			booleanQuery -> {
 				BooleanFilter booleanFilter =
 					booleanQuery.getPreBooleanFilter();
 
 				booleanFilter.add(
 					new TermFilter(
-						Field.ASSET_PARENT_CATEGORY_ID,
-						String.valueOf(assetCategory.getCategoryId())),
+						Field.ASSET_PARENT_CATEGORY_ID, taxonomyCategoryId),
 					BooleanClauseOccur.MUST);
 			},
 			filter, search, pagination, sorts);
@@ -186,7 +197,7 @@ public class TaxonomyCategoryResourceImpl
 			taxonomyVocabularyId);
 
 		return _getCategoriesPage(
-			HashMapBuilder.<String, Map<String, String>>put(
+			HashMapBuilder.put(
 				"add-category",
 				addAction(
 					"ADD_CATEGORY", assetVocabulary,
@@ -343,8 +354,9 @@ public class TaxonomyCategoryResourceImpl
 		AssetCategory assetCategory = _assetCategoryService.addCategory(
 			groupId, taxonomyCategoryId, titleMap, descriptionMap,
 			taxonomyVocabularyId, null,
-			ServiceContextUtil.createServiceContext(
-				groupId, taxonomyCategory.getViewableByAsString()));
+			ServiceContextRequestUtil.createServiceContext(
+				groupId, contextHttpServletRequest,
+				taxonomyCategory.getViewableByAsString()));
 
 		if (taxonomyCategory.getExternalReferenceCode() != null) {
 			assetCategory.setExternalReferenceCode(
@@ -473,7 +485,7 @@ public class TaxonomyCategoryResourceImpl
 		return _taxonomyCategoryDTOConverter.toDTO(
 			new DefaultDTOConverterContext(
 				contextAcceptLanguage.isAcceptAllLanguages(),
-				HashMapBuilder.<String, Map<String, String>>put(
+				HashMapBuilder.put(
 					"add-category",
 					addAction(
 						"ADD_CATEGORY", assetCategory,

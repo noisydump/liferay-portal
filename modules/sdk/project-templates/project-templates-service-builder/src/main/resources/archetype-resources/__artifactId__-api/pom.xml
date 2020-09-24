@@ -22,7 +22,7 @@
 			<scope>provided</scope>
 		</dependency>
 #end
-#if (${liferayVersion.startsWith("7.2")} || ${liferayVersion.startsWith("7.3")})
+#if (${liferayVersion.startsWith("7.2")})
 		<dependency>
 			<groupId>com.liferay</groupId>
 			<artifactId>com.liferay.petra.lang</artifactId>
@@ -34,18 +34,21 @@
 			<scope>provided</scope>
 		</dependency>
 #end
+#if (${liferayVersion.startsWith("7.0")} || ${liferayVersion.startsWith("7.1")} || ${liferayVersion.startsWith("7.2")})
 		<dependency>
 			<groupId>com.liferay.portal</groupId>
 			<artifactId>com.liferay.portal.kernel</artifactId>
 			<scope>provided</scope>
 		</dependency>
-#if (${liferayVersion.startsWith("7.2")} || ${liferayVersion.startsWith("7.3")})
+#end
+#if (${liferayVersion.startsWith("7.2")})
 		<dependency>
 			<groupId>org.osgi</groupId>
 			<artifactId>org.osgi.annotation.versioning</artifactId>
 			<scope>provided</scope>
 		</dependency>
 #end
+#if (${liferayVersion.startsWith("7.0")} || ${liferayVersion.startsWith("7.1")} || ${liferayVersion.startsWith("7.2")})
 		<dependency>
 			<groupId>org.osgi</groupId>
 			<artifactId>org.osgi.core</artifactId>
@@ -56,5 +59,12 @@
 			<artifactId>org.osgi.service.component.annotations</artifactId>
 			<scope>provided</scope>
 		</dependency>
+#else
+		<dependency>
+			<groupId>com.liferay.portal</groupId>
+			<artifactId>release.${product}.api</artifactId>
+			<scope>provided</scope>
+		</dependency>
+#end
 	</dependencies>
 </project>

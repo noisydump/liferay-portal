@@ -14,24 +14,18 @@
 
 import ClayButton from '@clayui/button';
 import ClayForm, {ClayInput} from '@clayui/form';
-import ClayIcon from '@clayui/icon';
 import ClayModal, {useModal} from '@clayui/modal';
-import {ItemSelectorDialog, cancelDebounce, debounce} from 'frontend-js-web';
-import React, {useEffect, useRef, useState} from 'react';
+import {ItemSelectorDialog} from 'frontend-js-web';
+import React, {useState} from 'react';
 
-import {FieldBaseProxy} from '../FieldBase/ReactFieldBase.es';
-import getConnectedReactComponentAdapter from '../util/ReactComponentAdapter.es';
-import {connectStore} from '../util/connectStore.es';
+import {FieldBase} from '../FieldBase/ReactFieldBase.es';
+import {useSyncValue} from '../hooks/useSyncValue.es';
 
-const useDebounceCallback = (callback, milliseconds) => {
-	const callbackRef = useRef(debounce(callback, milliseconds));
-
-	return [callbackRef.current, () => cancelDebounce(callbackRef.current)];
-};
+const defaultValue = {description: '', title: '', url: ''};
 
 const ImagePicker = ({
 	id,
-	inputValue = '',
+	inputValue,
 	itemSelectorURL,
 	name,
 	onClearClick,
@@ -40,21 +34,14 @@ const ImagePicker = ({
 	portletNamespace,
 	readOnly,
 }) => {
-	const [imageValues, setImageValues] = useState({});
+	const [imageValues, setImageValues] = useSyncValue(inputValue);
 	const [modalVisible, setModalVisible] = useState(false);
-
-	useEffect(() => {
-		setImageValues({
-			...{description: '', title: '', url: ''},
-			...JSON.parse(inputValue || '{}'),
-		});
-	}, [inputValue]);
 
 	const {observer, onClose} = useModal({
 		onClose: () => setModalVisible(false),
 	});
 
-	const dispatchValue = ({clear, value}, callback = () => {}) => {
+	const dispatchValue = ({clear, value}, callback = () => {}) =>
 		setImageValues((oldValues) => {
 			let mergedValues = {...oldValues, ...value};
 
@@ -64,25 +51,6 @@ const ImagePicker = ({
 
 			return mergedValues;
 		});
-	};
-
-	const handleClearClick = (event) => {
-		dispatchValue(
-			{clear: true, value: {description: '', event, title: '', url: ''}},
-			(mergedValues) => {
-				onClearClick(mergedValues);
-			}
-		);
-	};
-
-	const [debounce] = useDebounceCallback(({event, value}) => {
-		dispatchValue({value: {description: value, event}}, (mergedValues) => {
-			onDescriptionChange(mergedValues);
-		});
-	}, 500);
-
-	const handleDescriptionChange = ({event, target: {value}}) =>
-		debounce({event, value});
 
 	const handleFieldChanged = (event) => {
 		const selectedItem = event.selectedItem;
@@ -107,9 +75,9 @@ const ImagePicker = ({
 					...item,
 				};
 
-				dispatchValue({value: imageData}, (mergedValues) => {
-					onFieldChanged(mergedValues);
-				});
+				dispatchValue({value: imageData}, (mergedValues) =>
+					onFieldChanged(mergedValues)
+				);
 			});
 			img.src = item.url;
 		}
@@ -133,15 +101,10 @@ const ImagePicker = ({
 		? ''
 		: Liferay.Language.get('add-image-description');
 
-	const {height = '0', width = '0'} = {
-		...JSON.parse(inputValue || '{}'),
-	};
-
 	return (
 		<>
 			<ClayForm.Group style={{marginBottom: '0.5rem'}}>
 				<input
-					id={id}
 					name={name}
 					type="hidden"
 					value={JSON.stringify(imageValues)}
@@ -149,10 +112,9 @@ const ImagePicker = ({
 				<ClayInput.Group>
 					<ClayInput.GroupItem className="d-none d-sm-block" prepend>
 						<ClayInput
-							className="bg-light"
-							disabled={readOnly}
-							onClick={handleItemSelectorTriggerClick}
-							readOnly
+							className="field"
+							disabled
+							id={id ? id : name}
 							type="text"
 							value={imageValues.title}
 						/>
@@ -174,7 +136,21 @@ const ImagePicker = ({
 							<ClayButton
 								disabled={readOnly}
 								displayType="secondary"
-								onClick={handleClearClick}
+								onClick={(event) =>
+									dispatchValue(
+										{
+											clear: true,
+											value: {
+												description: '',
+												event,
+												title: '',
+												url: '',
+											},
+										},
+										(mergedValues) =>
+											onClearClick(mergedValues)
+									)
+								}
 								type="button"
 							>
 								{Liferay.Language.get('clear')}
@@ -184,7 +160,7 @@ const ImagePicker = ({
 				</ClayInput.Group>
 			</ClayForm.Group>
 
-			{imageValues.url && modalVisible && (
+			{imageValues.url && modalVisible ? (
 				<ClayModal
 					className="image-picker-preview-modal"
 					observer={observer}
@@ -207,87 +183,118 @@ const ImagePicker = ({
 						</p>
 					</ClayModal.Body>
 				</ClayModal>
-			)}
-
-			{imageValues.url && (
-				<>
-					<div className="image-picker-preview">
-						<img
-							alt={imageValues.description}
-							className="d-block img-fluid mb-2 rounded"
-							src={imageValues.url}
-						/>
-						<div
-							className="image-picker-priview-backdor"
-							onClick={() => setModalVisible(true)}
-							style={{
-								height: `${height}px`,
-								width: `${width}px`,
-							}}
-						>
-							<ClayIcon symbol="search" />
+			) : (
+				imageValues.url && (
+					<>
+						<div className="image-picker-preview">
+							<img
+								alt={imageValues.description}
+								className="d-block img-fluid mb-2 rounded"
+								onClick={() => setModalVisible(true)}
+								src={imageValues.url}
+								style={{
+									cursor: 'pointer',
+								}}
+							/>
 						</div>
-					</div>
 
-					<ClayForm.Group>
-						<ClayInput
-							defaultValue={imageValues.description}
-							disabled={readOnly}
-							name={`${name}-description`}
-							onChange={handleDescriptionChange}
-							placeholder={placeholder}
-							type="text"
-						/>
-					</ClayForm.Group>
-				</>
+						<ClayForm.Group>
+							<ClayInput
+								disabled={readOnly}
+								name={`${name}-description`}
+								onChange={({event, target: {value}}) =>
+									dispatchValue(
+										{value: {description: value, event}},
+										(mergedValues) =>
+											onDescriptionChange(mergedValues)
+									)
+								}
+								placeholder={placeholder}
+								type="text"
+								value={imageValues.description}
+							/>
+						</ClayForm.Group>
+					</>
+				)
 			)}
 		</>
 	);
 };
 
-const ImagePickerProxy = connectStore(
-	({
-		emit,
-		id,
-		inputValue,
-		itemSelectorURL,
-		name,
-		portletNamespace,
-		readOnly,
-		...otherProps
-	}) => (
-		<FieldBaseProxy {...otherProps} id={id} name={name} readOnly={readOnly}>
+const Main = ({
+	displayErrors,
+	errorMessage,
+	id,
+	inputValue,
+	itemSelectorURL,
+	name,
+	onChange,
+	portletNamespace,
+	readOnly,
+	valid,
+	value,
+	...otherProps
+}) => {
+	const getErrorMessages = (errorMessage, isSignedIn) => {
+		const errorMessages = [errorMessage];
+
+		if (!isSignedIn) {
+			errorMessages.push(
+				Liferay.Language.get(
+					'you-need-to-be-signed-in-to-edit-this-field'
+				)
+			);
+		}
+
+		return errorMessages.join(' ');
+	};
+
+	const isSignedIn = Liferay.ThemeDisplay.isSignedIn();
+
+	const transformValue = (sourceValue) => {
+		if (sourceValue) {
+			if (typeof sourceValue === 'string') {
+				return JSON.parse(sourceValue);
+			}
+			else if (typeof sourceValue === 'object') {
+				return sourceValue;
+			}
+		}
+
+		return null;
+	};
+
+	return (
+		<FieldBase
+			{...otherProps}
+			displayErrors={isSignedIn ? displayErrors : true}
+			errorMessage={getErrorMessages(errorMessage, isSignedIn)}
+			id={id}
+			name={name}
+			readOnly={isSignedIn ? readOnly : true}
+			valid={isSignedIn ? valid : false}
+		>
 			<ImagePicker
 				id={id}
-				inputValue={inputValue}
+				inputValue={
+					transformValue(inputValue) ??
+					transformValue(value) ??
+					defaultValue
+				}
 				itemSelectorURL={itemSelectorURL}
 				name={name}
-				onClearClick={(data) => {
-					const {event} = data;
-
-					emit('fieldEdited', event, data);
-				}}
-				onDescriptionChange={(data) => {
-					const {event} = data;
-
-					emit('fieldEdited', event, data);
-				}}
-				onFieldChanged={(data) => {
-					const {event} = data;
-
-					emit('fieldEdited', event, data);
-				}}
+				onClearClick={({event, ...data}) => onChange(event, data)}
+				onDescriptionChange={({event, ...data}) =>
+					onChange(event, data)
+				}
+				onFieldChanged={({event, ...data}) => onChange(event, data)}
 				portletNamespace={portletNamespace}
-				readOnly={readOnly}
+				readOnly={isSignedIn ? readOnly : true}
 			/>
-		</FieldBaseProxy>
-	)
-);
+		</FieldBase>
+	);
+};
 
-const ReactImagePickerAdapter = getConnectedReactComponentAdapter(
-	ImagePickerProxy,
-	'image'
-);
+Main.displayName = 'ImagePicker';
 
-export {ReactImagePickerAdapter};
-export default ReactImagePickerAdapter;
+export default Main;

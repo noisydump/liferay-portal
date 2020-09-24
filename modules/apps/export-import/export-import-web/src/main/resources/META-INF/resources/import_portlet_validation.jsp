@@ -35,9 +35,9 @@ String redirect = ParamUtil.getString(request, "redirect");
 	%>
 
 	<div class="lfr-dynamic-uploader <%= (fileEntry == null) ? "hide-dialog-footer" : StringPool.BLANK %>">
-		<clay:container>
+		<clay:container-fluid>
 			<div class="lfr-upload-container" id="<portlet:namespace />fileUpload"></div>
-		</clay:container>
+		</clay:container-fluid>
 	</div>
 
 	<aui:button-row>
@@ -45,7 +45,7 @@ String redirect = ParamUtil.getString(request, "redirect");
 	</aui:button-row>
 
 	<%
-	Date expirationDate = new Date(System.currentTimeMillis() + PropsValues.SESSION_TIMEOUT * Time.MINUTE);
+	Date expirationDate = new Date(System.currentTimeMillis() + (PropsValues.SESSION_TIMEOUT * Time.MINUTE));
 
 	Ticket ticket = TicketLocalServiceUtil.addTicket(user.getCompanyId(), User.class.getName(), user.getUserId(), TicketConstants.TYPE_IMPERSONATE, null, expirationDate, new ServiceContext());
 	%>

@@ -103,6 +103,9 @@ import java.io.IOException;
 import java.io.InputStream;
 
 import java.net.IDN;
+import java.net.Inet6Address;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -146,8 +149,10 @@ public class CompanyLocalServiceImpl extends CompanyLocalServiceBaseImpl {
 	}
 
 	/**
-	 * Adds a company.
+	 * Adds a company with the primary key.
 	 *
+	 * @param  companyId the primary key of the company (optionally <code>null</code> or
+	 *         <code>0</code> to generate a key automatically)
 	 * @param  webId the the company's web domain
 	 * @param  virtualHostname the company's virtual host name
 	 * @param  mx the company's mail domain
@@ -160,8 +165,8 @@ public class CompanyLocalServiceImpl extends CompanyLocalServiceBaseImpl {
 	 */
 	@Override
 	public Company addCompany(
-			String webId, String virtualHostname, String mx, boolean system,
-			int maxUsers, boolean active)
+			Long companyId, String webId, String virtualHostname, String mx,
+			boolean system, int maxUsers, boolean active)
 		throws PortalException {
 
 		// Company
@@ -169,17 +174,15 @@ public class CompanyLocalServiceImpl extends CompanyLocalServiceBaseImpl {
 		virtualHostname = StringUtil.toLowerCase(
 			StringUtil.trim(virtualHostname));
 
-		if (Validator.isNull(webId) ||
-			(companyPersistence.fetchByWebId(webId) != null)) {
-
-			throw new CompanyWebIdException();
-		}
-
+		validateWebId(webId);
 		validateVirtualHost(webId, virtualHostname);
 		validateMx(-1, mx);
 
-		Company company = companyPersistence.create(
-			counterLocalService.increment());
+		if ((companyId == null) || (companyId == 0)) {
+			companyId = counterLocalService.increment();
+		}
+
+		Company company = companyPersistence.create(companyId);
 
 		if (webId.equals(PropsValues.COMPANY_DEFAULT_WEB_ID)) {
 			DBPartitionUtil.setDefaultCompanyId(company.getCompanyId());
@@ -242,6 +245,33 @@ public class CompanyLocalServiceImpl extends CompanyLocalServiceBaseImpl {
 
 			return _checkCompany(company, mx);
 		}
+	}
+
+	/**
+	 * Adds a company.
+	 *
+	 * @param      webId the the company's web domain
+	 * @param      virtualHostname the company's virtual host name
+	 * @param      mx the company's mail domain
+	 * @param      system whether the company is the very first company (i.e.,
+	 *             the super company)
+	 * @param      maxUsers the max number of company users (optionally
+	 *             <code>0</code>)
+	 * @param      active whether the company is active
+	 * @return     the company
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #addCompany(Long, String, String, String, boolean, int,
+	 *             boolean)}
+	 */
+	@Deprecated
+	@Override
+	public Company addCompany(
+			String webId, String virtualHostname, String mx, boolean system,
+			int maxUsers, boolean active)
+		throws PortalException {
+
+		return addCompany(
+			null, webId, virtualHostname, mx, system, maxUsers, active);
 	}
 
 	/**
@@ -315,7 +345,9 @@ public class CompanyLocalServiceImpl extends CompanyLocalServiceBaseImpl {
 	@Override
 	public Company deleteCompany(long companyId) throws PortalException {
 		if (companyId == PortalInstances.getDefaultCompanyId()) {
-			throw new RequiredCompanyException();
+			throw new RequiredCompanyException(
+				"Select another default company before deleting company " +
+					companyId);
 		}
 
 		Long currentCompanyId = CompanyThreadLocal.getCompanyId();
@@ -480,7 +512,7 @@ public class CompanyLocalServiceImpl extends CompanyLocalServiceBaseImpl {
 			virtualHostname = StringUtil.toLowerCase(
 				StringUtil.trim(virtualHostname));
 
-			VirtualHost virtualHost = virtualHostPersistence.findByHostname(
+			VirtualHost virtualHost = virtualHostLocalService.fetchVirtualHost(
 				virtualHostname);
 
 			if ((virtualHost == null) && virtualHostname.contains("xn--")) {
@@ -540,7 +572,7 @@ public class CompanyLocalServiceImpl extends CompanyLocalServiceBaseImpl {
 			catch (Exception exception) {
 				if (_log.isWarnEnabled()) {
 					_log.warn(
-						"Unable to get the company id for user " + userId,
+						"Unable to get the company ID for user " + userId,
 						exception);
 				}
 			}
@@ -667,7 +699,9 @@ public class CompanyLocalServiceImpl extends CompanyLocalServiceBaseImpl {
 			StringUtil.trim(virtualHostname));
 
 		if (!active && (companyId == PortalInstances.getDefaultCompanyId())) {
-			active = true;
+			throw new RequiredCompanyException(
+				"Select another default company before deactivating company " +
+					companyId);
 		}
 
 		Company company = companyPersistence.findByPrimaryKey(companyId);
@@ -892,16 +926,16 @@ public class CompanyLocalServiceImpl extends CompanyLocalServiceBaseImpl {
 	 * Update the company's logo.
 	 *
 	 * @param  companyId the primary key of the company
-	 * @param  is the input stream of the company's logo image
+	 * @param  inputStream the input stream of the company's logo image
 	 * @return the company with the primary key
 	 */
 	@Override
-	public Company updateLogo(long companyId, InputStream is)
+	public Company updateLogo(long companyId, InputStream inputStream)
 		throws PortalException {
 
 		Company company = checkLogo(companyId);
 
-		imageLocalService.updateImage(company.getLogoId(), is);
+		imageLocalService.updateImage(company.getLogoId(), inputStream);
 
 		return company;
 	}
@@ -911,7 +945,8 @@ public class CompanyLocalServiceImpl extends CompanyLocalServiceBaseImpl {
 	 * found in portal.properties.
 	 *
 	 * @param companyId the primary key of the company
-	 * @param unicodeProperties the company's properties. See {@link UnicodeProperties}
+	 * @param unicodeProperties the company's properties. See {@link
+	 *        UnicodeProperties}
 	 */
 	@Override
 	public void updatePreferences(
@@ -1146,9 +1181,8 @@ public class CompanyLocalServiceImpl extends CompanyLocalServiceBaseImpl {
 		String[] systemGroups = PortalUtil.getSystemGroups();
 
 		for (String groupName : systemGroups) {
-			Group group = groupLocalService.getGroup(companyId, groupName);
-
-			deleteGroupActionableDynamicQuery.deleteGroup(group);
+			deleteGroupActionableDynamicQuery.deleteGroup(
+				groupLocalService.getGroup(companyId, groupName));
 		}
 
 		deleteGroupActionableDynamicQuery.deleteGroup(
@@ -1370,6 +1404,23 @@ public class CompanyLocalServiceImpl extends CompanyLocalServiceBaseImpl {
 		throws CompanyVirtualHostException {
 
 		if (Validator.isNotNull(virtualHostname)) {
+			try {
+				if (Validator.isIPv6Address(virtualHostname)) {
+					Inet6Address address = (Inet6Address)InetAddress.getByName(
+						virtualHostname);
+
+					virtualHostname = address.getHostAddress();
+				}
+			}
+			catch (UnknownHostException unknownHostException) {
+				if (_log.isDebugEnabled()) {
+					_log.debug(unknownHostException, unknownHostException);
+				}
+
+				throw new CompanyVirtualHostException(
+					"Virtual hostname is not a valid IPv6 address");
+			}
+
 			VirtualHost virtualHost = virtualHostPersistence.fetchByHostname(
 				virtualHostname);
 
@@ -1429,7 +1480,7 @@ public class CompanyLocalServiceImpl extends CompanyLocalServiceBaseImpl {
 		throws PortalException {
 
 		if (Validator.isNull(mx) || !Validator.isDomain(mx)) {
-			throw new CompanyMxException();
+			throw new CompanyMxException("Invalid domain " + mx);
 		}
 
 		String emailAddress =
@@ -1439,7 +1490,8 @@ public class CompanyLocalServiceImpl extends CompanyLocalServiceBaseImpl {
 			EmailAddressValidatorFactory.getInstance();
 
 		if (!emailAddressValidator.validate(companyId, emailAddress)) {
-			throw new CompanyMxException();
+			throw new CompanyMxException(
+				"Invalid email address " + emailAddress);
 		}
 	}
 
@@ -1457,38 +1509,45 @@ public class CompanyLocalServiceImpl extends CompanyLocalServiceBaseImpl {
 		throws PortalException {
 
 		if (Validator.isNull(virtualHostname)) {
-			throw new CompanyVirtualHostException();
+			throw new CompanyVirtualHostException("Virtual hostname is null");
 		}
 		else if (virtualHostname.equals(_DEFAULT_VIRTUAL_HOST) &&
 				 !webId.equals(PropsValues.COMPANY_DEFAULT_WEB_ID)) {
 
-			throw new CompanyVirtualHostException();
+			throw new CompanyVirtualHostException(
+				"localhost can only be used with the default web ID " + webId);
 		}
-		else if (!Validator.isDomain(virtualHostname)) {
-			throw new CompanyVirtualHostException();
+		else if (!Validator.isDomain(virtualHostname) &&
+				 !Validator.isIPAddress(virtualHostname)) {
+
+			throw new CompanyVirtualHostException(
+				"Virtual hostname is invalid");
 		}
 		else {
-			try {
-				VirtualHost virtualHost = virtualHostPersistence.findByHostname(
-					virtualHostname);
+			VirtualHost virtualHost = virtualHostLocalService.fetchVirtualHost(
+				virtualHostname);
 
-				Company virtualHostnameCompany =
-					companyPersistence.findByPrimaryKey(
-						virtualHost.getCompanyId());
-
-				if (!webId.equals(virtualHostnameCompany.getWebId())) {
-					throw new CompanyVirtualHostException();
-				}
+			if (virtualHost == null) {
+				return;
 			}
-			catch (NoSuchVirtualHostException noSuchVirtualHostException) {
 
-				// LPS-52675
+			Company virtualHostnameCompany =
+				companyPersistence.findByPrimaryKey(virtualHost.getCompanyId());
 
-				if (_log.isDebugEnabled()) {
-					_log.debug(
-						noSuchVirtualHostException, noSuchVirtualHostException);
-				}
+			if (!webId.equals(virtualHostnameCompany.getWebId())) {
+				throw new CompanyVirtualHostException(
+					"Duplicate virtual hostname " + virtualHostname);
 			}
+		}
+	}
+
+	protected void validateWebId(String webId) throws CompanyWebIdException {
+		if (Validator.isNull(webId)) {
+			throw new CompanyWebIdException("Web ID is null");
+		}
+
+		if (companyPersistence.fetchByWebId(webId) != null) {
+			throw new CompanyWebIdException("Duplicate web ID " + webId);
 		}
 	}
 
@@ -1893,8 +1952,7 @@ public class CompanyLocalServiceImpl extends CompanyLocalServiceBaseImpl {
 					@Override
 					public Void call() throws Exception {
 						EntityCacheUtil.removeResult(
-							company.isEntityCacheEnabled(), company.getClass(),
-							company.getPrimaryKeyObj());
+							company.getClass(), company.getPrimaryKeyObj());
 
 						return null;
 					}

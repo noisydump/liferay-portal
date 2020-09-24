@@ -15,8 +15,8 @@
 package com.liferay.portal.model.impl;
 
 import com.liferay.exportimport.kernel.lar.PortletDataHandler;
-import com.liferay.exportimport.kernel.staging.StagingConstants;
 import com.liferay.exportimport.kernel.staging.StagingUtil;
+import com.liferay.exportimport.kernel.staging.constants.StagingConstants;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -148,10 +148,11 @@ public class GroupImpl extends GroupBaseImpl {
 
 	@Override
 	public List<Group> getChildrenWithLayouts(
-		boolean site, int start, int end, OrderByComparator<Group> obc) {
+		boolean site, int start, int end,
+		OrderByComparator<Group> orderByComparator) {
 
 		return GroupLocalServiceUtil.getLayoutsGroups(
-			getCompanyId(), getGroupId(), site, start, end, obc);
+			getCompanyId(), getGroupId(), site, start, end, orderByComparator);
 	}
 
 	@Override
@@ -320,7 +321,7 @@ public class GroupImpl extends GroupBaseImpl {
 		else if (isUser()) {
 			iconCss = "user";
 		}
-		else if (getType() == GroupConstants.TYPE_DEPOT) {
+		else if (isDepot()) {
 			iconCss = "books";
 		}
 
@@ -435,15 +436,34 @@ public class GroupImpl extends GroupBaseImpl {
 			}
 		}
 
-		if ((logoId == 0) && !useDefault) {
+		if ((logoId == 0) && !useDefault &&
+			(!isCompany() || isCompanyStagingGroup()) && !isControlPanel() &&
+			!isGuest()) {
+
 			return null;
+		}
+
+		if (logoId > 0) {
+			StringBundler sb = new StringBundler(5);
+
+			sb.append(themeDisplay.getPathImage());
+			sb.append("/layout_set_logo?img_id=");
+			sb.append(logoId);
+			sb.append("&t=");
+			sb.append(WebServerServletTokenUtil.getToken(logoId));
+
+			return sb.toString();
 		}
 
 		StringBundler sb = new StringBundler(5);
 
 		sb.append(themeDisplay.getPathImage());
-		sb.append("/layout_set_logo?img_id=");
-		sb.append(logoId);
+		sb.append("/company_logo?img_id=");
+
+		Company company = themeDisplay.getCompany();
+
+		sb.append(company.getLogoId());
+
 		sb.append("&t=");
 		sb.append(WebServerServletTokenUtil.getToken(logoId));
 
@@ -581,7 +601,7 @@ public class GroupImpl extends GroupBaseImpl {
 		throws PortalException {
 
 		if (getGroupId() == themeDisplay.getScopeGroupId()) {
-			if (getType() == GroupConstants.TYPE_DEPOT) {
+			if (isDepot()) {
 				return StringUtil.appendParentheticalSuffix(
 					themeDisplay.translate("current-asset-library"),
 					HtmlUtil.escape(
@@ -606,7 +626,7 @@ public class GroupImpl extends GroupBaseImpl {
 
 	@Override
 	public String getScopeLabel(ThemeDisplay themeDisplay) {
-		if (getType() == GroupConstants.TYPE_DEPOT) {
+		if (isDepot()) {
 			if (getGroupId() == themeDisplay.getScopeGroupId()) {
 				return "current-asset-library";
 			}
@@ -840,6 +860,15 @@ public class GroupImpl extends GroupBaseImpl {
 		String groupKey = getGroupKey();
 
 		if (groupKey.equals(GroupConstants.CONTROL_PANEL)) {
+			return true;
+		}
+
+		return false;
+	}
+
+	@Override
+	public boolean isDepot() {
+		if (getType() == GroupConstants.TYPE_DEPOT) {
 			return true;
 		}
 

@@ -266,7 +266,9 @@ definition {
 			pageName = "Staging Test Page",
 			siteName = "Site Name");
 
-		LAR.exportPortlet(larFileName = "Wiki.portlet.lar");
+		LAR.exportPortlet(
+			larFileName = "Wiki.portlet.lar",
+			wikiPortlet = "true");
 
 		JSONGroup.addGroup(groupName = "Second Site");
 
@@ -282,7 +284,9 @@ definition {
 
 		Navigator.openSiteURL(siteName = "Second Site");
 
-		LAR.importPortlet(larFileName = "Wiki.portlet.lar");
+		LAR.importPortlet(
+			larFileName = "Wiki.portlet.lar",
+			wikiPortlet = "true");
 
 		Navigator.openSiteURL(siteName = "Second Site");
 
@@ -471,7 +475,23 @@ definition {
 
 	@priority = "4"
 	test RateBlogsEntry {
+		property custom.properties = "jsonws.web.service.paths.excludes=";
 		property portal.acceptance = "true";
+
+		JSONUser.addUser(
+			userEmailAddress = "userea@liferay.com",
+			userFirstName = "userfn",
+			userLastName = "userln",
+			userScreenName = "usersn");
+
+		JSONUser.setFirstPassword(
+			agreeToTermsAndAnswerReminderQuery = "true",
+			requireReset = "false",
+			userEmailAddress = "userea@liferay.com");
+
+		JSONRole.assignRoleToUser(
+			roleTitle = "Administrator",
+			userEmailAddress = "userea@liferay.com");
 
 		JSONLayout.addPublicLayout(
 			groupName = "Guest",
@@ -493,7 +513,21 @@ definition {
 			entryContent = "Blogs Entry Content",
 			entryTitle = "Blogs Entry Title");
 
-		Ratings.rateThumb(ratingResult = "Rate this as good");
+		Ratings.rateThumb(
+			blogRating = "true",
+			ratingResult = "Rate this as bad");
+
+		Ratings.viewRateThumb(
+			ratingResult = "Rate this as good",
+			voteCount = "0");
+
+		Ratings.viewRateThumb(
+			ratingResult = "You have rated this as bad",
+			voteCount = "1");
+
+		Ratings.rateThumb(
+			blogRating = "true",
+			ratingResult = "Rate this as good");
 
 		Ratings.viewRateThumb(
 			ratingResult = "You have rated this as good",
@@ -503,11 +537,37 @@ definition {
 			ratingResult = "Rate this as bad",
 			voteCount = "0");
 
-		Ratings.rateThumb(ratingResult = "Rate this as bad");
+		User.logoutPG();
+
+		User.loginUserPG(
+			password = "test",
+			userEmailAddress = "userea@liferay.com");
+
+		Navigator.gotoPage(pageName = "Blogs Page");
+
+		BlogsNavigator.gotoEntryPG(
+			entryContent = "Blogs Entry Content",
+			entryTitle = "Blogs Entry Title");
+
+		Ratings.rateThumb(
+			blogRating = "true",
+			ratingResult = "Rate this as good");
+
+		Ratings.viewRateThumb(
+			ratingResult = "You have rated this as good",
+			voteCount = "2");
+
+		Ratings.viewRateThumb(
+			ratingResult = "Rate this as bad",
+			voteCount = "0");
+
+		Ratings.rateThumb(
+			blogRating = "true",
+			ratingResult = "Rate this as bad");
 
 		Ratings.viewRateThumb(
 			ratingResult = "Rate this as good",
-			voteCount = "0");
+			voteCount = "1");
 
 		Ratings.viewRateThumb(
 			ratingResult = "You have rated this as bad",
@@ -515,36 +575,9 @@ definition {
 	}
 
 	@priority = "4"
-	test RateBlogsEntryWithStackedStarsRatings {
-		Ratings.configureRatingType(
-			applications = "Blogs",
-			ratingType = "Stacked Stars");
-
-		JSONLayout.addPublicLayout(
-			groupName = "Guest",
-			layoutName = "Blogs Page");
-
-		JSONLayout.addWidgetToPublicLayout(
-			column = "1",
-			groupName = "Guest",
-			layoutName = "Blogs Page",
-			widgetName = "Blogs");
-
-		JSONBlog.addEntry(
-			entryContent = "Blogs Entry Content",
-			entryTitle = "Blogs Entry Title");
-
-		Navigator.gotoPage(pageName = "Blogs Page");
-
-		Ratings.rateStackedStars(ratingStarCount = "3");
-
-		Navigator.gotoPage(pageName = "Blogs Page");
-
-		Ratings.viewRateStackedStar(ratingStarCount = "3");
-	}
-
-	@priority = "4"
 	test RateBookmarksWithLikeStyle {
+		property portal.release = "false";
+
 		JSONLayout.addPublicLayout(
 			groupName = "Guest",
 			layoutName = "Bookmarks Page");
@@ -619,7 +652,8 @@ definition {
 		ProductMenu.gotoPortlet(
 			category = "Site Builder",
 			panel = "Site Administration",
-			portlet = "Pages");
+			portlet = "Pages",
+			site = "Guest");
 
 		SitePages.configurePage(
 			columnName = "1 Column",
@@ -708,6 +742,106 @@ definition {
 		Ratings.viewRateStar(
 			averageRatingStarCount = "4.0",
 			ratingStarCount = "4");
+	}
+
+	@description = "This test covers LPS-117741. It ensures that the rated stacked stars can be removed from the blog entry."
+	@priority = "4"
+	test RemoveRatedStackedStarsFromBlogsEntry {
+		Ratings.configureRatingType(
+			applications = "Blogs",
+			ratingType = "Stacked Stars");
+
+		JSONLayout.addPublicLayout(
+			groupName = "Guest",
+			layoutName = "Blogs Page");
+
+		JSONLayout.addWidgetToPublicLayout(
+			column = "1",
+			groupName = "Guest",
+			layoutName = "Blogs Page",
+			widgetName = "Blogs");
+
+		JSONBlog.addEntry(
+			entryContent = "Blogs Entry Content",
+			entryTitle = "Blogs Entry Title");
+
+		Navigator.gotoPage(pageName = "Blogs Page");
+
+		Ratings.rateStackedStars(ratingStarCount = "3");
+
+		Navigator.gotoPage(pageName = "Blogs Page");
+
+		Ratings.viewRateStackedStar(
+			averageStarCount = "3.0",
+			ratingStarCount = "3");
+
+		Ratings.revokeStackedStarsRating();
+
+		Ratings.viewNoRateStackedStar(averageStarCount = "0.0");
+	}
+
+	@description = "This ensures that the stars rating can be revoked."
+	@priority = "5"
+	test RevokeBlogsStarsRating {
+		property custom.properties = "jsonws.web.service.paths.excludes=";
+
+		JSONLayout.addPublicLayout(
+			groupName = "Guest",
+			layoutName = "Blogs Page");
+
+		JSONLayout.addWidgetToPublicLayout(
+			column = "1",
+			groupName = "Guest",
+			layoutName = "Blogs Page",
+			widgetName = "Blogs");
+
+		JSONBlog.addEntry(
+			entryContent = "Blogs Entry Content",
+			entryTitle = "Blogs Entry Title",
+			groupName = "Guest");
+
+		JSONUser.addUser(
+			userEmailAddress = "userea@liferay.com",
+			userFirstName = "userfn",
+			userLastName = "userln",
+			userScreenName = "usersn");
+
+		JSONUser.setFirstPassword(
+			agreeToTermsAndAnswerReminderQuery = "true",
+			requireReset = "false",
+			userEmailAddress = "userea@liferay.com");
+
+		User.openUsersAdmin();
+
+		User.assignRegularRoleCP(
+			roleTitle = "Administrator",
+			userScreenName = "usersn");
+
+		Ratings.configureRatingType(
+			applications = "Blogs",
+			ratingType = "Stars");
+
+		Navigator.gotoPage(pageName = "Blogs Page");
+
+		Ratings.rateStar(
+			checkDeleteButton = "true",
+			ratingStarCount = "3");
+
+		Ratings.revokeStarsRating();
+
+		Ratings.rateStar(ratingStarCount = "4");
+
+		User.logoutAndLoginPG(
+			userLoginEmailAddress = "userea@liferay.com",
+			userLoginFullName = "userfn userln");
+
+		Navigator.gotoPage(pageName = "Blogs Page");
+
+		Ratings.rateStar(ratingStarCount = "5");
+
+		Ratings.viewRateStar(
+			averageRatingStarCount = "4.5 (2 Votes)",
+			ratingStarCount = "5");
 	}
 
 	@priority = "3"

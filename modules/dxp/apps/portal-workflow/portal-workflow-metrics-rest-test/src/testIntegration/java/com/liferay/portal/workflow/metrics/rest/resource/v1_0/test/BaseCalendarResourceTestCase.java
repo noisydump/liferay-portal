@@ -107,7 +107,9 @@ public abstract class BaseCalendarResourceTestCase {
 
 		CalendarResource.Builder builder = CalendarResource.builder();
 
-		calendarResource = builder.locale(
+		calendarResource = builder.authentication(
+			"test@liferay.com", "test"
+		).locale(
 			LocaleUtil.getDefault()
 		).build();
 	}
@@ -248,7 +250,7 @@ public abstract class BaseCalendarResourceTestCase {
 		}
 	}
 
-	protected void assertValid(Calendar calendar) {
+	protected void assertValid(Calendar calendar) throws Exception {
 		boolean valid = true;
 
 		for (String additionalAssertFieldName :

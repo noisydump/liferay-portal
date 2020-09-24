@@ -89,18 +89,17 @@ public class GitWorkingDirectory {
 		_gitRemotes.put(gitRemoteName, newGitRemote);
 
 		if (write) {
-			String[] commands = {
-				JenkinsResultsParserUtil.combine(
-					"if [ \"$(git remote | grep ", gitRemoteName,
-					")\" != \"\" ] ; then git remote remove ", gitRemoteName,
-					" ; fi"),
-				JenkinsResultsParserUtil.combine(
-					"git remote add ", gitRemoteName, " ", remoteURL)
-			};
-
 			GitUtil.ExecutionResult executionResult = executeBashCommands(
 				GitUtil.RETRIES_SIZE_MAX, GitUtil.MILLIS_RETRY_DELAY,
-				GitUtil.MILLIS_TIMEOUT, commands);
+				GitUtil.MILLIS_TIMEOUT,
+				new String[] {
+					JenkinsResultsParserUtil.combine(
+						"if [ \"$(git remote | grep ", gitRemoteName,
+						")\" != \"\" ] ; then git remote remove ",
+						gitRemoteName, " ; fi"),
+					JenkinsResultsParserUtil.combine(
+						"git remote add ", gitRemoteName, " ", remoteURL)
+				});
 
 			if (executionResult.getExitValue() != 0) {
 				throw new RuntimeException(
@@ -111,6 +110,44 @@ public class GitWorkingDirectory {
 		}
 
 		return newGitRemote;
+	}
+
+	public LocalGitBranch checkoutLocalGitBranch(
+		Build.BranchInformation branchInformation) {
+
+		checkoutUpstreamLocalGitBranch();
+
+		LocalGitBranch localGitBranch = createLocalGitBranch(
+			JenkinsResultsParserUtil.combine(
+				branchInformation.getUpstreamBranchName(), "-temp-",
+				String.valueOf(System.currentTimeMillis())),
+			true);
+
+		try {
+			RemoteGitRef cacheBranchFromGitHubDev =
+				GitHubDevSyncUtil.fetchCacheBranchFromGitHubDev(
+					this, branchInformation.getCachedRemoteGitRefName());
+
+			localGitBranch = createLocalGitBranch(
+				localGitBranch.getName(), true,
+				cacheBranchFromGitHubDev.getSHA());
+		}
+		catch (Exception exception) {
+			RemoteGitRef senderRemoteGitRef =
+				branchInformation.getSenderRemoteGitRef();
+
+			localGitBranch = getRebasedLocalGitBranch(
+				localGitBranch.getName(),
+				branchInformation.getSenderBranchName(),
+				senderRemoteGitRef.getRemoteURL(),
+				branchInformation.getSenderBranchSHA(),
+				branchInformation.getUpstreamBranchName(),
+				branchInformation.getUpstreamBranchSHA());
+		}
+
+		checkoutLocalGitBranch(localGitBranch);
+
+		return localGitBranch;
 	}
 
 	public void checkoutLocalGitBranch(LocalGitBranch localGitBranch) {
@@ -559,6 +596,13 @@ public class GitWorkingDirectory {
 		LocalGitBranch localGitBranch, boolean noTags,
 		RemoteGitRef remoteGitRef) {
 
+		return fetch(localGitBranch, noTags, remoteGitRef, 3);
+	}
+
+	public LocalGitBranch fetch(
+		LocalGitBranch localGitBranch, boolean noTags,
+		RemoteGitRef remoteGitRef, int retries) {
+
 		if (remoteGitRef == null) {
 			throw new IllegalArgumentException("Remote Git reference is null");
 		}
@@ -642,7 +686,7 @@ public class GitWorkingDirectory {
 		long start = System.currentTimeMillis();
 
 		GitUtil.ExecutionResult executionResult = executeBashCommands(
-			3, GitUtil.MILLIS_RETRY_DELAY, 1000 * 60 * 15, sb.toString());
+			retries, GitUtil.MILLIS_RETRY_DELAY, 1000 * 60 * 15, sb.toString());
 
 		long duration = System.currentTimeMillis() - start;
 
@@ -673,25 +717,33 @@ public class GitWorkingDirectory {
 			(remoteGitRef instanceof RemoteGitBranch) &&
 			remoteURL.contains("github.com:liferay/")) {
 
-			LocalGitBranch liferayGitHubLocalGitBranch = createLocalGitBranch(
-				JenkinsResultsParserUtil.combine(
-					"temp-", remoteGitRef.getName()),
-				true, remoteGitRef.getSHA());
+			String upstreamBranchSHA = getRemoteGitBranchSHA(
+				remoteGitRef.getName(), getUpstreamGitRemote());
 
-			List<GitRemote> gitHubDevGitRemotes =
-				GitHubDevSyncUtil.getGitHubDevGitRemotes(this);
+			if ((upstreamBranchSHA != null) &&
+				upstreamBranchSHA.equals(remoteGitRef.getSHA())) {
 
-			try {
-				GitHubDevSyncUtil.pushToAllRemotes(
-					true, liferayGitHubLocalGitBranch, remoteGitRef.getName(),
-					gitHubDevGitRemotes);
-			}
-			finally {
-				if (localGitBranch == null) {
-					deleteLocalGitBranch(liferayGitHubLocalGitBranch);
+				LocalGitBranch liferayGitHubLocalGitBranch =
+					createLocalGitBranch(
+						JenkinsResultsParserUtil.combine(
+							"temp-", remoteGitRef.getName()),
+						true, remoteGitRef.getSHA());
+
+				List<GitRemote> gitHubDevGitRemotes =
+					GitHubDevSyncUtil.getGitHubDevGitRemotes(this);
+
+				try {
+					GitHubDevSyncUtil.pushToAllRemotes(
+						true, liferayGitHubLocalGitBranch,
+						remoteGitRef.getName(), gitHubDevGitRemotes);
 				}
+				finally {
+					if (localGitBranch == null) {
+						deleteLocalGitBranch(liferayGitHubLocalGitBranch);
+					}
 
-				removeGitRemotes(gitHubDevGitRemotes);
+					removeGitRemotes(gitHubDevGitRemotes);
+				}
 			}
 		}
 
@@ -711,6 +763,10 @@ public class GitWorkingDirectory {
 
 	public LocalGitBranch fetch(RemoteGitRef remoteGitRef) {
 		return fetch(null, true, remoteGitRef);
+	}
+
+	public LocalGitBranch fetch(RemoteGitRef remoteGitRef, int retries) {
+		return fetch(null, true, remoteGitRef, retries);
 	}
 
 	public void fetch(RemoteGitRepository remoteGitRepository) {
@@ -962,7 +1018,9 @@ public class GitWorkingDirectory {
 		String currentBranchName = getCurrentBranchName();
 
 		if (currentBranchName == null) {
-			return null;
+			checkoutUpstreamLocalGitBranch();
+
+			return getUpstreamLocalGitBranch();
 		}
 
 		return getLocalGitBranch(currentBranchName);
@@ -1118,10 +1176,10 @@ public class GitWorkingDirectory {
 
 			System.out.println(sb);
 		}
-		catch (Throwable t) {
+		catch (Throwable throwable) {
 			System.out.println("Unable to parse git remotes\n" + standardOut);
 
-			throw t;
+			throw throwable;
 		}
 
 		return _gitRemotes;
@@ -2026,11 +2084,9 @@ public class GitWorkingDirectory {
 	}
 
 	protected Map<String, String> getLocalGitBranchesShaMap() {
-		File workingDirectory = getWorkingDirectory();
-
 		String command = JenkinsResultsParserUtil.combine(
 			"git ls-remote -h ",
-			JenkinsResultsParserUtil.getCanonicalPath(workingDirectory));
+			JenkinsResultsParserUtil.getCanonicalPath(getWorkingDirectory()));
 
 		GitUtil.ExecutionResult executionResult = executeBashCommands(
 			GitUtil.RETRIES_SIZE_MAX, GitUtil.MILLIS_RETRY_DELAY,

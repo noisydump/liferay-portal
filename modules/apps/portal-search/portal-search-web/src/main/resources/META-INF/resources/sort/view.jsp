@@ -29,9 +29,6 @@ page import="com.liferay.portal.search.web.internal.sort.configuration.SortPortl
 page import="com.liferay.portal.search.web.internal.sort.display.context.SortDisplayContext" %><%@
 page import="com.liferay.portal.search.web.internal.sort.display.context.SortTermDisplayContext" %>
 
-<%@ page import="java.util.List" %><%@
-page import="java.util.Map" %>
-
 <liferay-theme:defineObjects />
 
 <%
@@ -42,12 +39,6 @@ if (sortDisplayContext.isRenderNothing()) {
 }
 
 SortPortletInstanceConfiguration sortPortletInstanceConfiguration = sortDisplayContext.getSortPortletInstanceConfiguration();
-
-Map<String, Object> contextObjects = HashMapBuilder.<String, Object>put(
-	"sortDisplayContext", sortDisplayContext
-).build();
-
-List<SortTermDisplayContext> sortTermDisplayContexts = sortDisplayContext.getSortTermDisplayContexts();
 %>
 
 <c:choose>
@@ -64,10 +55,14 @@ List<SortTermDisplayContext> sortTermDisplayContexts = sortDisplayContext.getSor
 
 			<liferay-ddm:template-renderer
 				className="<%= SortDisplayContext.class.getName() %>"
-				contextObjects="<%= contextObjects %>"
+				contextObjects='<%=
+					HashMapBuilder.<String, Object>put(
+						"sortDisplayContext", sortDisplayContext
+					).build()
+				%>'
 				displayStyle="<%= sortPortletInstanceConfiguration.displayStyle() %>"
 				displayStyleGroupId="<%= sortDisplayContext.getDisplayStyleGroupId() %>"
-				entries="<%= sortTermDisplayContexts %>"
+				entries="<%= sortDisplayContext.getSortTermDisplayContexts() %>"
 			>
 				<aui:fieldset>
 					<aui:select class="sort-term" label="sort-by" name="sortSelection">
@@ -90,25 +85,25 @@ List<SortTermDisplayContext> sortTermDisplayContexts = sortDisplayContext.getSor
 </c:choose>
 
 <aui:script use="liferay-search-sort-util">
-AUI().ready('aui-base', 'node', 'event', function (A) {
-	A.one('#<portlet:namespace />sortSelection').on('change', function () {
-		var selections = [];
+	AUI().ready('aui-base', 'node', 'event', function (A) {
+		A.one('#<portlet:namespace />sortSelection').on('change', function () {
+			var selections = [];
 
-		var sortSelect = A.one('#<portlet:namespace />sortSelection').get(
-			'value'
-		);
+			var sortSelect = A.one('#<portlet:namespace />sortSelection').get(
+				'value'
+			);
 
-		selections.push(sortSelect);
+			selections.push(sortSelect);
 
-		var key = A.one('#<portlet:namespace />sort-parameter-name').get(
-			'value'
-		);
+			var key = A.one('#<portlet:namespace />sort-parameter-name').get(
+				'value'
+			);
 
-		document.location.search = Liferay.Search.SortUtil.updateQueryString(
-			key,
-			selections,
-			document.location.search
-		);
+			document.location.search = Liferay.Search.SortUtil.updateQueryString(
+				key,
+				selections,
+				document.location.search
+			);
+		});
 	});
-});
 </aui:script>

@@ -19,6 +19,7 @@ import {DataDefinitionUtils} from 'data-engine-taglib';
 import React, {useContext} from 'react';
 
 import {getItem} from '../../utils/client.es';
+import {getLocalizedValue} from '../../utils/lang.es';
 import FormViewContext from './FormViewContext.es';
 
 export default (callback) => {
@@ -27,18 +28,30 @@ export default (callback) => {
 	);
 	const [{onClose}, dispatchModal] = useContext(ClayModalContext);
 
-	return (fieldName) => {
-		const {fieldType, label} = DataDefinitionUtils.getDataDefinitionField(
+	return (event) => {
+		const {
+			customProperties: {ddmStructureId},
+			fieldType,
+			label,
+		} = DataDefinitionUtils.getDataDefinitionField(
 			dataDefinition,
-			fieldName
+			event.fieldName
 		);
-		const {label: fieldTypeLabel} = fieldTypes.find(({name}) => {
+
+		let {label: fieldTypeLabel} = fieldTypes.find(({name}) => {
 			return name === fieldType;
 		});
 
+		if (fieldType === 'fieldset' && ddmStructureId) {
+			fieldTypeLabel = Liferay.Language.get('fieldset');
+		}
+
 		return getItem(
-			`/o/data-engine/v2.0/data-definitions/${dataDefinitionId}/data-definition-field-links?fieldName=${fieldName}`
-		).then(({dataLayouts, dataListViews}) => {
+			`/o/data-engine/v2.0/data-definitions/${dataDefinitionId}/data-definition-field-links?fieldName=${event.fieldName}`
+		).then(({items}) => {
+			const {dataDefinition = {}, dataLayouts = [], dataListViews = []} =
+				items[0] || {};
+
 			dispatchModal({
 				payload: {
 					body: (
@@ -53,7 +66,7 @@ export default (callback) => {
 										<label>
 											{Liferay.Language.get('name')}:
 										</label>
-										<span>{fieldName}</span>
+										<span>{event.fieldName}</span>
 									</div>
 									<div>
 										<label>
@@ -96,16 +109,17 @@ export default (callback) => {
 									displayType="secondary"
 								>
 									<ClayPanel.Body>
-										{dataLayouts.map(
-											(dataLayoutName, index) => (
-												<label
-													className="d-block"
-													key={index}
-												>{`${
-													index + 1
-												}. ${dataLayoutName}`}</label>
-											)
-										)}
+										{dataLayouts.map(({name}, index) => (
+											<label
+												className="d-block"
+												key={index}
+											>{`${
+												index + 1
+											}. ${getLocalizedValue(
+												dataDefinition.defaultLanguageId,
+												name
+											)}`}</label>
+										))}
 									</ClayPanel.Body>
 								</ClayPanel>
 							)}
@@ -119,16 +133,17 @@ export default (callback) => {
 									displayType="secondary"
 								>
 									<ClayPanel.Body>
-										{dataListViews.map(
-											(dataListViewName, index) => (
-												<label
-													className="d-block"
-													key={index}
-												>{`${
-													index + 1
-												}. ${dataListViewName}`}</label>
-											)
-										)}
+										{dataListViews.map(({name}, index) => (
+											<label
+												className="d-block"
+												key={index}
+											>{`${
+												index + 1
+											}. ${getLocalizedValue(
+												dataDefinition.defaultLanguageId,
+												name
+											)}`}</label>
+										))}
 									</ClayPanel.Body>
 								</ClayPanel>
 							)}
@@ -148,7 +163,7 @@ export default (callback) => {
 							<ClayButton
 								key={2}
 								onClick={() => {
-									callback(fieldName);
+									callback(event);
 
 									onClose();
 								}}

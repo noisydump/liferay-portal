@@ -17,26 +17,27 @@ import React, {useContext} from 'react';
 import {CollectionItemContext} from '../CollectionItemContext';
 import TopperEmpty from '../TopperEmpty';
 
-const CollectionItemWithControls = React.forwardRef(
-	({children, item, layoutData}, ref) => {
-		const {collectionItem} = useContext(CollectionItemContext);
+const CollectionItemWithControls = React.forwardRef(({children, item}, ref) => {
+	const {collectionItem} = useContext(CollectionItemContext);
 
-		return (
-			<div className="page-editor__collection__block">
+	return (
+		<div className="page-editor__collection__block">
+			<TopperEmpty item={item}>
 				{React.Children.count(children) === 0 ? (
-					<TopperEmpty item={item} layoutData={layoutData}>
-						<div className="page-editor__collection-item" ref={ref}>
+					<div className="page-editor__collection-item" ref={ref}>
+						<div className="page-editor__collection-item__border">
 							<p className="page-editor__collection-item__title">
-								{collectionItem.title}
+								{collectionItem.title ||
+									collectionItem.defaultTitle}
 							</p>
 						</div>
-					</TopperEmpty>
+					</div>
 				) : (
-					children
+					<div ref={ref}>{children}</div>
 				)}
-			</div>
-		);
-	}
-);
+			</TopperEmpty>
+		</div>
+	);
+});
 
 export default CollectionItemWithControls;

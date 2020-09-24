@@ -73,6 +73,10 @@ public class SearchBarPortletSharedSearchContributor
 			return;
 		}
 
+		searchRequestBuilder.withSearchContext(
+			searchContext -> searchContext.setIncludeInternalAssetCategories(
+				false));
+
 		setKeywords(
 			searchRequestBuilder, searchBarPortletPreferences,
 			portletSharedSearchSettings);
@@ -249,11 +253,9 @@ public class SearchBarPortletSharedSearchContributor
 			return false;
 		}
 
-		SearchBarPortletPreferences searchBarPortletPreferences =
-			getSearchBarPortletPreferences(portlet, themeDisplay);
-
 		if (!SearchBarPortletDestinationUtil.isSameDestination(
-				searchBarPortletPreferences, themeDisplay)) {
+				getSearchBarPortletPreferences(portlet, themeDisplay),
+				themeDisplay)) {
 
 			return false;
 		}

@@ -60,6 +60,20 @@ definition {
 	}
 
 	@summary = "Directly calls the JSON WS API to add a user to a group"
+	macro _assignUserGroupToGroup {
+		Variables.assertDefined(parameterList = "${groupId},${userGroupId}");
+
+		var portalURL = JSONCompany.getPortalURL();
+
+		var curl = '''
+			${portalURL}/api/jsonws/usergroup/add-group-user-groups/group-id/${groupId}/user-group-ids/${userGroupId} \
+				-u test@liferay.com:test
+		''';
+
+		com.liferay.poshi.runner.util.JSONCurlUtil.post("${curl}");
+	}
+
+	@summary = "Directly calls the JSON WS API to add a user to a group"
 	macro _assignUserToGroup {
 		Variables.assertDefined(parameterList = "${groupId},${userId}");
 
@@ -88,6 +102,30 @@ definition {
 		''';
 
 		com.liferay.poshi.runner.util.JSONCurlUtil.post("${curl}");
+	}
+
+	@summary = "Get the depotId from any existing depot by using depotName"
+	macro _getDepotIdByName {
+		Variables.assertDefined(parameterList = "${depotName}");
+
+		var companyId = JSONCompany.getCompanyId();
+
+		var portalURL = JSONCompany.getPortalURL();
+
+		var curl = '''
+			${portalURL}/api/jsonws/group/get-groups/company-id/${companyId}/parent-group-id/0/site/false \
+				-u test@liferay.com:test
+		''';
+
+		var depotId = JSONCurlUtil.get("${curl}", "$.[?(@['nameCurrentValue'] == '${depotName}')]['classPK']");
+		var depotId = StringUtil.replace("${depotId}", "[&quot;", "");
+		var depotId = StringUtil.replace("${depotId}", "&quot;]", "");
+
+		if ("${depotId}" == "[]") {
+			fail("FAIL. Cannot find group.");
+		}
+
+		return "${depotId}";
 	}
 
 	@summary = "Get the groupId from any existing group by using groupKey"

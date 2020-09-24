@@ -133,13 +133,11 @@ public class JournalArticleAtomCollectionProvider
 			AtomRequestContext atomRequestContext)
 		throws Exception {
 
-		List<JournalArticle> journalArticles = new ArrayList<>();
-
 		long companyId = CompanyThreadLocal.getCompanyId();
 		long groupId = atomRequestContext.getLongParameter("groupId");
 
 		if ((companyId <= 0) || (groupId <= 0)) {
-			return journalArticles;
+			return new ArrayList<>();
 		}
 
 		List<Long> folderIds = Collections.emptyList();
@@ -153,7 +151,8 @@ public class JournalArticleAtomCollectionProvider
 		int status = WorkflowConstants.STATUS_APPROVED;
 		Date reviewDate = null;
 
-		OrderByComparator<JournalArticle> obc = new ArticleVersionComparator();
+		OrderByComparator<JournalArticle> orderByComparator =
+			new ArticleVersionComparator();
 
 		int count = _journalArticleService.searchCount(
 			companyId, groupId, folderIds, classNameId, keywords, version,
@@ -168,7 +167,7 @@ public class JournalArticleAtomCollectionProvider
 			companyId, groupId, folderIds, classNameId, keywords, version,
 			ddmStructureKey, ddmTemplateKey, displayDateGT, displayDateLT,
 			status, reviewDate, atomPager.getStart(), atomPager.getEnd() + 1,
-			obc);
+			orderByComparator);
 	}
 
 	@Override

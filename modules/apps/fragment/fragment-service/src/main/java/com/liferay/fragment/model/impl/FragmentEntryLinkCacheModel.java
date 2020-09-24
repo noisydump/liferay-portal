@@ -37,17 +37,17 @@ public class FragmentEntryLinkCacheModel
 	implements CacheModel<FragmentEntryLink>, Externalizable, MVCCModel {
 
 	@Override
-	public boolean equals(Object obj) {
-		if (this == obj) {
+	public boolean equals(Object object) {
+		if (this == object) {
 			return true;
 		}
 
-		if (!(obj instanceof FragmentEntryLinkCacheModel)) {
+		if (!(object instanceof FragmentEntryLinkCacheModel)) {
 			return false;
 		}
 
 		FragmentEntryLinkCacheModel fragmentEntryLinkCacheModel =
-			(FragmentEntryLinkCacheModel)obj;
+			(FragmentEntryLinkCacheModel)object;
 
 		if ((fragmentEntryLinkId ==
 				fragmentEntryLinkCacheModel.fragmentEntryLinkId) &&
@@ -78,10 +78,12 @@ public class FragmentEntryLinkCacheModel
 
 	@Override
 	public String toString() {
-		StringBundler sb = new StringBundler(49);
+		StringBundler sb = new StringBundler(53);
 
 		sb.append("{mvccVersion=");
 		sb.append(mvccVersion);
+		sb.append(", ctCollectionId=");
+		sb.append(ctCollectionId);
 		sb.append(", uuid=");
 		sb.append(uuid);
 		sb.append(", fragmentEntryLinkId=");
@@ -108,6 +110,8 @@ public class FragmentEntryLinkCacheModel
 		sb.append(classNameId);
 		sb.append(", classPK=");
 		sb.append(classPK);
+		sb.append(", plid=");
+		sb.append(plid);
 		sb.append(", css=");
 		sb.append(css);
 		sb.append(", html=");
@@ -139,6 +143,7 @@ public class FragmentEntryLinkCacheModel
 			new FragmentEntryLinkImpl();
 
 		fragmentEntryLinkImpl.setMvccVersion(mvccVersion);
+		fragmentEntryLinkImpl.setCtCollectionId(ctCollectionId);
 
 		if (uuid == null) {
 			fragmentEntryLinkImpl.setUuid("");
@@ -179,6 +184,7 @@ public class FragmentEntryLinkCacheModel
 		fragmentEntryLinkImpl.setSegmentsExperienceId(segmentsExperienceId);
 		fragmentEntryLinkImpl.setClassNameId(classNameId);
 		fragmentEntryLinkImpl.setClassPK(classPK);
+		fragmentEntryLinkImpl.setPlid(plid);
 
 		if (css == null) {
 			fragmentEntryLinkImpl.setCss("");
@@ -256,6 +262,8 @@ public class FragmentEntryLinkCacheModel
 		throws ClassNotFoundException, IOException {
 
 		mvccVersion = objectInput.readLong();
+
+		ctCollectionId = objectInput.readLong();
 		uuid = objectInput.readUTF();
 
 		fragmentEntryLinkId = objectInput.readLong();
@@ -278,6 +286,8 @@ public class FragmentEntryLinkCacheModel
 		classNameId = objectInput.readLong();
 
 		classPK = objectInput.readLong();
+
+		plid = objectInput.readLong();
 		css = (String)objectInput.readObject();
 		html = (String)objectInput.readObject();
 		js = (String)objectInput.readObject();
@@ -294,6 +304,8 @@ public class FragmentEntryLinkCacheModel
 	@Override
 	public void writeExternal(ObjectOutput objectOutput) throws IOException {
 		objectOutput.writeLong(mvccVersion);
+
+		objectOutput.writeLong(ctCollectionId);
 
 		if (uuid == null) {
 			objectOutput.writeUTF("");
@@ -329,6 +341,8 @@ public class FragmentEntryLinkCacheModel
 		objectOutput.writeLong(classNameId);
 
 		objectOutput.writeLong(classPK);
+
+		objectOutput.writeLong(plid);
 
 		if (css == null) {
 			objectOutput.writeObject("");
@@ -386,6 +400,7 @@ public class FragmentEntryLinkCacheModel
 	}
 
 	public long mvccVersion;
+	public long ctCollectionId;
 	public String uuid;
 	public long fragmentEntryLinkId;
 	public long groupId;
@@ -399,6 +414,7 @@ public class FragmentEntryLinkCacheModel
 	public long segmentsExperienceId;
 	public long classNameId;
 	public long classPK;
+	public long plid;
 	public String css;
 	public String html;
 	public String js;

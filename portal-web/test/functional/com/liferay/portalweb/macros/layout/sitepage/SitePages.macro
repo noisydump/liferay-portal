@@ -6,11 +6,6 @@ definition {
 			pageTemplateName = "${pageTemplateName}",
 			sitePageType = "${sitePageType}");
 
-		LiferayEvent.waitForLiferayEvent(
-			attributeName = "src",
-			attributeValue = "dialog-iframe-popup",
-			eventName = "modalIframeLoaded");
-
 		SelectFrame(locator1 = "IFrame#MODAL_BODY");
 
 		SitePages._addPageToNavigationMenu(
@@ -50,15 +45,6 @@ definition {
 		}
 
 		Button.click(button = "Save");
-
-		WaitForSPARefresh();
-
-		// TODO find a better fix as we should not be navigating like this for every test. Workaround caused by LPS-104246
-
-		ProductMenu.gotoPortlet(
-			category = "Site Builder",
-			panel = "Site Administration",
-			portlet = "Pages");
 	}
 
 	@summary = "Add newly created pages to specified navigation menus or assert that the option to add the pages to navigation menus is missing."
@@ -167,6 +153,8 @@ definition {
 			key_pageName = "${parentPageName}",
 			locator1 = "SitePages#LIST_GROUP_ITEM_PLUS_ICON");
 
+		DropdownMenuItem.click(menuItem = "Add Page");
+
 		SitePages._addPage(
 			assertCheckboxMissing = "${assertCheckboxMissing}",
 			navigationMenus = "${navigationMenus}",
@@ -176,6 +164,12 @@ definition {
 	}
 
 	macro addPrivateChildPage {
+		if (IsTextNotEqual(locator1 = "ControlMenu#HEADING", value1 = "Pages")) {
+			ProductMenu.gotoPortlet(
+				category = "Site Builder",
+				portlet = "Pages");
+		}
+
 		SitePages.togglePrivacy(privacy = "Private Pages");
 
 		SitePages.addChildPage(
@@ -188,12 +182,18 @@ definition {
 	}
 
 	macro addPrivatePage {
+		if (IsTextNotEqual(locator1 = "ControlMenu#HEADING", value1 = "Pages")) {
+			ProductMenu.gotoPortlet(
+				category = "Site Builder",
+				portlet = "Pages");
+		}
+
 		Pause(locator1 = "3000");
 
 		var key_breadcrumbName="Pages";
 
 		if ("${siteTemplate}" == "true") {
-			LexiconEntry.gotoAdd();
+			LexiconEntry.gotoAddMenuItem(menuItem = "Add Site Template Page");
 		}
 		else if (IsElementPresent(locator1 = "Message#EMPTY_INFO_TAGLIB")) {
 			SitePages.gotoAddFirstPage(pageType = "Private Page");
@@ -215,6 +215,12 @@ definition {
 	}
 
 	macro addPublicChildPage {
+		if (IsTextNotEqual(locator1 = "ControlMenu#HEADING", value1 = "Pages")) {
+			ProductMenu.gotoPortlet(
+				category = "Site Builder",
+				portlet = "Pages");
+		}
+
 		SitePages.togglePrivacy(privacy = "Public Pages");
 
 		SitePages.addChildPage(
@@ -227,6 +233,12 @@ definition {
 	}
 
 	macro addPublicPage {
+		if (IsTextNotEqual(locator1 = "ControlMenu#HEADING", value1 = "Pages")) {
+			ProductMenu.gotoPortlet(
+				category = "Site Builder",
+				portlet = "Pages");
+		}
+
 		Pause(locator1 = "3000");
 
 		var key_breadcrumbName="Pages";
@@ -258,6 +270,31 @@ definition {
 			vocabularyName = "${vocabularyName}");
 	}
 
+	macro addPublicPageUnderSitePagesVariation {
+		LexiconEntry.gotoAddMenuItem(menuItem = "Public Page");
+
+		SitePages._selectPageType(
+			collectionName = "${collectionName}",
+			pageTemplateName = "${pageTemplateName}",
+			sitePageType = "${sitePageType}");
+
+		SelectFrame(locator1 = "IFrame#MODAL_BODY");
+
+		PortletEntry.inputName(name = "${pageName}");
+
+		Button.clickAdd();
+
+		SelectFrame.selectFrameTop();
+
+		VerifyElementPresent(locator1 = "Message#SUCCESS");
+
+		AssertVisible(locator1 = "TextInput#NAME");
+
+		Button.click(button = "Save");
+
+		WaitForSPARefresh();
+	}
+
 	macro checkPage {
 		var key_pageName = "${pageName}";
 
@@ -265,6 +302,12 @@ definition {
 	}
 
 	macro configureChildPage {
+		if (IsTextNotEqual(locator1 = "ControlMenu#HEADING", value1 = "Pages")) {
+			ProductMenu.gotoPortlet(
+				category = "Site Builder",
+				portlet = "Pages");
+		}
+
 		SitePages.gotoPageMenuItem(
 			menuItem = "Configure",
 			pageName = "${pageName}",
@@ -282,10 +325,11 @@ definition {
 	}
 
 	macro configurePage {
-		ProductMenu.gotoPortlet(
-			category = "Site Builder",
-			panel = "Site Administration",
-			portlet = "Pages");
+		if (IsTextNotEqual(locator1 = "ControlMenu#HEADING", value1 = "Pages")) {
+			ProductMenu.gotoPortlet(
+				category = "Site Builder",
+				portlet = "Pages");
+		}
 
 		SitePages.togglePrivacy(privacy = "${privacy}");
 
@@ -397,6 +441,16 @@ definition {
 		}
 
 		MenuItem.click(menuItem = "${menuItem}");
+	}
+
+	macro movePageToPageUp {
+		var key_pageName = "${pageName}";
+		var key_pageNameTo = "${pageNameTo}";
+
+		DragAndDrop.javaScriptDragAndDropToUp(
+			locator1 = "SitePages#LIST_GROUP_ITEM_DRAG_HANDLER",
+			locator2 = "SitePages#LIST_GROUP_ITEM_DROP_TARGET",
+			value1 = "");
 	}
 
 	macro openPagesAdmin {

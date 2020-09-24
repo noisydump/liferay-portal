@@ -25,7 +25,7 @@ FileVersion fileVersion = (FileVersion)request.getAttribute("file_entry_upper_tb
 
 <div class="upper-tbar-container-fixed">
 	<div class="tbar upper-tbar">
-		<clay:container>
+		<clay:container-fluid>
 			<ul class="tbar-nav">
 				<li class="tbar-item tbar-item-expand">
 					<div class="tbar-section text-left">
@@ -48,12 +48,12 @@ FileVersion fileVersion = (FileVersion)request.getAttribute("file_entry_upper_tb
 				</li>
 				<li class="tbar-item">
 					<clay:button
-						elementClasses="btn-outline-borderless btn-outline-secondary"
+						borderless="<%= true %>"
+						data-qa-id="infoButton"
+						displayType="secondary"
 						icon="info-circle-open"
 						id='<%= liferayPortletResponse.getNamespace() + "OpenContextualSidebar" %>'
-						monospaced="true"
-						size="sm"
-						style="<%= false %>"
+						small="<%= true %>"
 						title='<%= LanguageUtil.get(resourceBundle, "info") %>'
 					/>
 				</li>
@@ -69,21 +69,15 @@ FileVersion fileVersion = (FileVersion)request.getAttribute("file_entry_upper_tb
 
 				<c:if test="<%= dlViewFileVersionDisplayContext.isDownloadLinkVisible() %>">
 					<li class="d-none d-sm-flex tbar-item">
-
-						<%
-						Map<String, String> data = HashMapBuilder.put(
-							"analytics-file-entry-id", String.valueOf(fileEntry.getFileEntryId())
-						).build();
-						%>
-
 						<clay:link
-							buttonStyle="primary"
-							data="<%= data %>"
-							elementClasses="btn-sm"
+							data-analytics-file-entry-id="<%= fileEntry.getFileEntryId() %>"
+							displayType="primary"
 							href="<%= DLURLHelperUtil.getDownloadURL(fileEntry, fileVersion, themeDisplay, StringPool.BLANK, false, true) %>"
 							icon="download"
-							label='<%= LanguageUtil.get(resourceBundle, "download") %>'
+							label="download"
+							small="<%= true %>"
 							title='<%= LanguageUtil.format(resourceBundle, "file-size-x", LanguageUtil.formatStorageSize(fileVersion.getSize(), locale), false) %>'
+							type="button"
 						/>
 					</li>
 				</c:if>
@@ -94,6 +88,6 @@ FileVersion fileVersion = (FileVersion)request.getAttribute("file_entry_upper_tb
 					/>
 				</li>
 			</ul>
-		</clay:container>
+		</clay:container-fluid>
 	</div>
 </div>

@@ -14,7 +14,8 @@
 
 package com.liferay.analytics.message.sender.internal.model.listener;
 
-import com.liferay.analytics.message.sender.model.EntityModelListener;
+import com.liferay.analytics.message.sender.model.listener.BaseEntityModelListener;
+import com.liferay.analytics.message.sender.model.listener.EntityModelListener;
 import com.liferay.expando.kernel.model.ExpandoRow;
 import com.liferay.expando.kernel.service.ExpandoRowLocalService;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
@@ -41,7 +42,7 @@ public class ExpandoRowModelListener
 	extends BaseEntityModelListener<ExpandoRow> {
 
 	@Override
-	public List<String> getAttributeNames() {
+	public List<String> getAttributeNames(long companyId) {
 		return Collections.singletonList("modifiedDate");
 	}
 
@@ -100,7 +101,7 @@ public class ExpandoRowModelListener
 
 			if (user != null) {
 				JSONObject jsonObject = super.serialize(
-					user, getUserAttributeNames());
+					user, getUserAttributeNames(user.getCompanyId()));
 
 				jsonObject.remove(getPrimaryKeyName());
 

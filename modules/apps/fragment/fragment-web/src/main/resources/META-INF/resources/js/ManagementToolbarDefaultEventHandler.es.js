@@ -12,7 +12,11 @@
  * details.
  */
 
-import {DefaultEventHandler, openSimpleInputModal} from 'frontend-js-web';
+import {
+	DefaultEventHandler,
+	openSelectionModal,
+	openSimpleInputModal,
+} from 'frontend-js-web';
 import {Config} from 'metal-state';
 
 class ManagementToolbarDefaultEventHandler extends DefaultEventHandler {
@@ -50,19 +54,9 @@ class ManagementToolbarDefaultEventHandler extends DefaultEventHandler {
 			this.ns('allRowIds')
 		);
 
-		Liferay.Util.selectEntity(
-			{
-				dialog: {
-					constrain: true,
-					destroyOnHide: true,
-					modal: true,
-				},
-				eventName: this.ns('selectFragmentCollection'),
-				id: this.ns('selectFragmentCollection'),
-				title: Liferay.Language.get('select-collection'),
-				uri: this.selectFragmentCollectionURL,
-			},
-			(selectedItem) => {
+		openSelectionModal({
+			id: this.ns('selectFragmentCollection'),
+			onSelect: (selectedItem) => {
 				if (selectedItem) {
 					this.one('#fragmentCollectionId').value = selectedItem.id;
 					this.one('#fragmentEntryKeys').value = fragmentEntryKeys;
@@ -72,8 +66,11 @@ class ManagementToolbarDefaultEventHandler extends DefaultEventHandler {
 						this.copyContributedFragmentEntryURL
 					);
 				}
-			}
-		);
+			},
+			selectEventName: this.ns('selectFragmentCollection'),
+			title: Liferay.Language.get('select-collection'),
+			url: this.selectFragmentCollectionURL,
+		});
 	}
 
 	deleteFragmentCompositionsAndFragmentEntries() {
@@ -115,19 +112,9 @@ class ManagementToolbarDefaultEventHandler extends DefaultEventHandler {
 			this.ns('rowIdsFragmentEntry')
 		);
 
-		Liferay.Util.selectEntity(
-			{
-				dialog: {
-					constrain: true,
-					destroyOnHide: true,
-					modal: true,
-				},
-				eventName: this.ns('selectFragmentCollection'),
-				id: this.ns('selectFragmentCollection'),
-				title: Liferay.Language.get('select-collection'),
-				uri: this.selectFragmentCollectionURL,
-			},
-			(selectedItem) => {
+		openSelectionModal({
+			id: this.ns('selectFragmentCollection'),
+			onSelect: (selectedItem) => {
 				if (selectedItem) {
 					const form = this.one('#fragmentEntryFm');
 
@@ -143,8 +130,11 @@ class ManagementToolbarDefaultEventHandler extends DefaultEventHandler {
 
 					submitForm(form, targetFragmentEntryURL);
 				}
-			}
-		);
+			},
+			selectEventName: this.ns('selectFragmentCollection'),
+			title: Liferay.Language.get('select-collection'),
+			url: this.selectFragmentCollectionURL,
+		});
 	}
 }
 

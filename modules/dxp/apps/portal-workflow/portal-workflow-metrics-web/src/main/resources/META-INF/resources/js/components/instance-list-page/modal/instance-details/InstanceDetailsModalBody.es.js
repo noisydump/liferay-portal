@@ -11,13 +11,14 @@
  */
 
 import ClayIcon from '@clayui/icon';
+import ClayLayout from '@clayui/layout';
 import ClayModal from '@clayui/modal';
+import {ClayTooltipProvider} from '@clayui/tooltip';
 import React, {useMemo} from 'react';
 
 import ContentView from '../../../../shared/components/content-view/ContentView.es';
 import RetryButton from '../../../../shared/components/list/RetryButton.es';
 import moment from '../../../../shared/util/moment.es';
-import {Item} from './InstanceDetailsModalItem.es';
 
 const Body = ({
 	assetTitle,
@@ -82,7 +83,7 @@ const Body = ({
 				)}
 
 				{SLAs.open.map((item) => (
-					<Body.Item key={item.id} {...item} />
+					<Body.SLAResultItem key={item.id} {...item} />
 				))}
 
 				{SLAs.resolved.length > 0 && (
@@ -94,7 +95,7 @@ const Body = ({
 				)}
 
 				{SLAs.resolved.map((item) => (
-					<Body.Item key={item.id} {...item} />
+					<Body.SLAResultItem key={item.id} {...item} />
 				))}
 
 				<Body.SectionTitle className="mt-5">
@@ -157,18 +158,23 @@ const Body = ({
 					/>
 				)}
 
-				<a
-					className="btn btn-secondary btn-sm font-weight-medium mb-1 mt-3"
-					data-testid="submissionPageButton"
-					href={`/group/control_panel/manage/-/workflow_instance/view/${id}`}
-					target="_blank"
-				>
-					{Liferay.Language.get('go-to-submission-page')}
+				<ClayTooltipProvider>
+					<a
+						className="btn btn-secondary btn-sm font-weight-medium mb-1 mt-3"
+						data-testid="submissionPageButton"
+						data-tooltip-align="bottom"
+						data-tooltip-delay="0"
+						href={`/group/control_panel/manage/-/workflow_instance/view/${id}`}
+						target="_blank"
+						title={Liferay.Language.get('open-page-in-a-new-tab')}
+					>
+						{Liferay.Language.get('go-to-submission-page')}
 
-					<span className="inline-item inline-item-after">
-						<ClayIcon symbol="shortcut" />
-					</span>
-				</a>
+						<span className="inline-item inline-item-after">
+							<ClayIcon symbol="shortcut" />
+						</span>
+					</a>
+				</ClayTooltipProvider>
 			</ContentView>
 		</ClayModal.Body>
 	);
@@ -193,19 +199,89 @@ const SectionSubTitle = ({children}) => {
 
 const SectionAttribute = ({description, detail}) => {
 	return (
-		<p className="row">
-			<span className="col-2 font-weight-medium small text-secondary">
+		<ClayLayout.Row containerElement="p">
+			<ClayLayout.Col
+				className="font-weight-medium small text-secondary"
+				containerElement="span"
+				size="2"
+			>
 				{`${description}`}
-			</span>
+			</ClayLayout.Col>
 
-			<span className="col small" data-testid="instanceDetailSpan">
+			<ClayLayout.Col
+				className="small"
+				containerElement="span"
+				data-testid="instanceDetailSpan"
+			>
 				{detail}
-			</span>
-		</p>
+			</ClayLayout.Col>
+		</ClayLayout.Row>
 	);
 };
 
-Body.Item = Item;
+const SLAResultItem = ({dateOverdue, name, onTime, remainingTime, status}) => {
+	const bgColor = onTime ? 'success' : 'danger';
+	const iconName = onTime ? 'check-circle' : 'exclamation-circle';
+
+	const getStatusText = (status) => {
+		switch (status) {
+			case 'Paused': {
+				return `(${Liferay.Language.get('sla-paused')})`;
+			}
+			case 'Running': {
+				const remainingTimePositive = onTime
+					? remainingTime
+					: remainingTime * -1;
+
+				const remainingTimeUTC = moment.utc(remainingTimePositive);
+
+				const durationText =
+					remainingTimeUTC.format('D') -
+					1 +
+					remainingTimeUTC.format('[d] HH[h] mm[min]');
+
+				const onTimeText = onTime
+					? Liferay.Language.get('left')
+					: Liferay.Language.get('overdue');
+
+				return `${moment
+					.utc(dateOverdue)
+					.format(
+						Liferay.Language.get('mmm-dd-yyyy-lt')
+					)} (${durationText} ${onTimeText})`;
+			}
+			default: {
+				if (status === 'Stopped' && onTime) {
+					return `(${Liferay.Language.get('resolved-on-time')})`;
+				}
+
+				return `(${Liferay.Language.get('resolved-overdue')})`;
+			}
+		}
+	};
+
+	return (
+		<div className="sla-result">
+			<span className={`bg-${bgColor}-light inline-item sticker`}>
+				<ClayIcon
+					className={`text-${bgColor}`}
+					data-testid="resultIcon"
+					symbol={iconName}
+				/>
+			</span>
+
+			<span className="font-weight-medium small text-secondary">
+				{`${name}`}{' '}
+			</span>
+
+			<span className="small" data-testid="resultStatus">
+				{getStatusText(status)}
+			</span>
+		</div>
+	);
+};
+
+Body.SLAResultItem = SLAResultItem;
 Body.SectionTitle = SectionTitle;
 Body.SectionSubTitle = SectionSubTitle;
 Body.SectionAttribute = SectionAttribute;

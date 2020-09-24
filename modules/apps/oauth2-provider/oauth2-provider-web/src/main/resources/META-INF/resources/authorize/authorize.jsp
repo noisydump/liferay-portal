@@ -30,8 +30,8 @@ if (Validator.isNotNull(replyTo) && !replyTo.startsWith(PortalUtil.getPortalURL(
 }
 %>
 
-<clay:container
-	className="closed consent"
+<clay:container-fluid
+	cssClass="closed consent"
 >
 	<aui:form action="<%= replyTo %>" data-senna-off="true" method="post" name="fm">
 		<aui:fieldset-group markupView="lexicon">
@@ -86,15 +86,17 @@ if (Validator.isNotNull(replyTo) && !replyTo.startsWith(PortalUtil.getPortalURL(
 							%>
 
 								<li class="list-group-item list-group-item-flex">
-									<div class="autofit-col">
+									<clay:content-col>
 										<clay:icon
 											symbol="check"
 										/>
-									</div>
+									</clay:content-col>
 
-									<div class="autofit-col autofit-col-expand">
+									<clay:content-col
+										expand="<%= true %>"
+									>
 										<liferay-ui:message arguments="<%= messageArguments %>" key="for-x-y" />
-									</div>
+									</clay:content-col>
 								</li>
 
 							<%
@@ -159,4 +161,4 @@ if (Validator.isNotNull(replyTo) && !replyTo.startsWith(PortalUtil.getPortalURL(
 			</div>
 		</aui:fieldset-group>
 	</aui:form>
-</clay:container>
+</clay:container-fluid>

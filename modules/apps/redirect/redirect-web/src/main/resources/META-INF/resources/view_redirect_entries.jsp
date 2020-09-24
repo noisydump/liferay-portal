@@ -17,6 +17,10 @@
 <%@ include file="/init.jsp" %>
 
 <%
+StagingGroupHelper stagingGroupHelper = StagingGroupHelperUtil.getStagingGroupHelper();
+
+boolean stagingGroup = stagingGroupHelper.isLocalStagingGroup(themeDisplay.getScopeGroup()) || stagingGroupHelper.isRemoteStagingGroup(themeDisplay.getScopeGroup());
+
 RedirectDisplayContext redirectDisplayContext = new RedirectDisplayContext(request, liferayPortletRequest, liferayPortletResponse);
 
 SearchContainer<RedirectEntry> redirectSearchContainer = redirectDisplayContext.searchContainer();
@@ -24,13 +28,15 @@ SearchContainer<RedirectEntry> redirectSearchContainer = redirectDisplayContext.
 RedirectManagementToolbarDisplayContext redirectManagementToolbarDisplayContext = new RedirectManagementToolbarDisplayContext(request, liferayPortletRequest, liferayPortletResponse, redirectSearchContainer);
 %>
 
-<clay:management-toolbar
-	displayContext="<%= redirectManagementToolbarDisplayContext %>"
-/>
+<c:if test="<%= !stagingGroup %>">
+	<clay:management-toolbar
+		displayContext="<%= redirectManagementToolbarDisplayContext %>"
+	/>
+</c:if>
 
-<clay:container
-	className="closed redirect-entries sidenav-container sidenav-right"
-	id='<%= renderResponse.getNamespace() + "infoPanelId" %>'
+<clay:container-fluid
+	cssClass="closed redirect-entries sidenav-container sidenav-right"
+	id='<%= liferayPortletResponse.getNamespace() + "infoPanelId" %>'
 >
 	<liferay-portlet:resourceURL copyCurrentRenderParameters="<%= false %>" id="/redirect/info_panel" var="sidebarPanelURL" />
 
@@ -42,6 +48,15 @@ RedirectManagementToolbarDisplayContext redirectManagementToolbarDisplayContext 
 	</liferay-frontend:sidebar-panel>
 
 	<div class="sidenav-content">
+		<c:if test="<%= stagingGroup %>">
+			<div class="lfr-search-container">
+				<clay:alert
+					displayType="info"
+					message="redirections-are-unavailable-in-staged-sites"
+				/>
+			</div>
+		</c:if>
+
 		<aui:form action="<%= redirectSearchContainer.getIteratorURL() %>" cssClass="container-fluid-1280" name="fm">
 			<aui:input name="redirect" type="hidden" value="<%= currentURL %>" />
 
@@ -56,7 +71,10 @@ RedirectManagementToolbarDisplayContext redirectManagementToolbarDisplayContext 
 				>
 
 					<%
-					row.setData(HashMapBuilder.<String, Object>put("actions", redirectManagementToolbarDisplayContext.getAvailableActions(redirectEntry)).build());
+					row.setData(
+						HashMapBuilder.<String, Object>put(
+							"actions", redirectManagementToolbarDisplayContext.getAvailableActions(redirectEntry)
+						).build());
 					%>
 
 					<liferay-ui:search-container-column-text
@@ -111,11 +129,17 @@ RedirectManagementToolbarDisplayContext redirectManagementToolbarDisplayContext 
 						</c:choose>
 					</liferay-ui:search-container-column-text>
 
-					<liferay-ui:search-container-column-text>
-						<clay:dropdown-actions
-							dropdownItems="<%= redirectDisplayContext.getActionDropdownItems(redirectEntry) %>"
-						/>
-					</liferay-ui:search-container-column-text>
+					<%
+					List<DropdownItem> dropdownItems = redirectDisplayContext.getActionDropdownItems(redirectEntry);
+					%>
+
+					<c:if test="<%= ListUtil.isNotEmpty(dropdownItems) %>">
+						<liferay-ui:search-container-column-text>
+							<clay:dropdown-actions
+								dropdownItems="<%= dropdownItems %>"
+							/>
+						</liferay-ui:search-container-column-text>
+					</c:if>
 				</liferay-ui:search-container-row>
 
 				<liferay-ui:search-iterator
@@ -125,7 +149,7 @@ RedirectManagementToolbarDisplayContext redirectManagementToolbarDisplayContext 
 			</liferay-ui:search-container>
 		</aui:form>
 	</div>
-</clay:container>
+</clay:container-fluid>
 
 <liferay-frontend:component
 	componentId="<%= redirectManagementToolbarDisplayContext.getDefaultEventHandler() %>"

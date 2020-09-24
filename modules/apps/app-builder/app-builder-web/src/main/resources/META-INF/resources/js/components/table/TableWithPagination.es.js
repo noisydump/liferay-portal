@@ -12,27 +12,44 @@
  * details.
  */
 
+import ClayLayout from '@clayui/layout';
 import {ClayPaginationBarWithBasicItems} from '@clayui/pagination-bar';
 import React, {useContext} from 'react';
 
+import {AppContext} from '../../AppContext.es';
 import {withLoading} from '../loading/Loading.es';
 import SearchContext from '../management-toolbar/SearchContext.es';
 import {withEmpty} from './EmptyState.es';
 import Table from './Table.es';
 
-const TableWithPagination = ({actions, columns, items, totalCount}) => {
+const TableWithPagination = ({
+	actions,
+	columns,
+	editMode,
+	items,
+	noActionsMessage,
+	totalCount,
+}) => {
+	const {deltaValues = [4, 8, 20, 40, 60]} = useContext(AppContext);
 	const [{page, pageSize}, dispatch] = useContext(SearchContext);
-	const deltas = [5, 10, 20, 30, 50, 75].map((size) => ({label: size}));
+
+	const deltas = deltaValues.map((label) => ({label}));
 
 	return (
-		<div className="container-fluid container-fluid-max-xl">
-			<Table actions={actions} columns={columns} items={items} />
+		<ClayLayout.ContainerFluid>
+			<Table
+				actions={actions}
+				columns={columns}
+				editMode={editMode}
+				items={items}
+				noActionsMessage={noActionsMessage}
+			/>
 
-			{totalCount > 5 && (
+			{totalCount > deltaValues[0] && (
 				<div className="taglib-search-iterator-page-iterator-bottom">
 					<ClayPaginationBarWithBasicItems
-						activeDelta={pageSize}
-						activePage={page}
+						activeDelta={Number(pageSize)}
+						activePage={Number(page)}
 						deltas={deltas}
 						ellipsisBuffer={3}
 						onDeltaChange={(pageSize) =>
@@ -45,7 +62,7 @@ const TableWithPagination = ({actions, columns, items, totalCount}) => {
 					/>
 				</div>
 			)}
-		</div>
+		</ClayLayout.ContainerFluid>
 	);
 };
 

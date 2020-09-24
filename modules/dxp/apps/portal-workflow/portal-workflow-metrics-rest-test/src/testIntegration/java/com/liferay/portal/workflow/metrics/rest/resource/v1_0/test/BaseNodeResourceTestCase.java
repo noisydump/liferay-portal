@@ -108,7 +108,9 @@ public abstract class BaseNodeResourceTestCase {
 
 		NodeResource.Builder builder = NodeResource.builder();
 
-		nodeResource = builder.locale(
+		nodeResource = builder.authentication(
+			"test@liferay.com", "test"
+		).locale(
 			LocaleUtil.getDefault()
 		).build();
 	}
@@ -329,7 +331,7 @@ public abstract class BaseNodeResourceTestCase {
 		}
 	}
 
-	protected void assertValid(Node node) {
+	protected void assertValid(Node node) throws Exception {
 		boolean valid = true;
 
 		if (node.getDateCreated() == null) {

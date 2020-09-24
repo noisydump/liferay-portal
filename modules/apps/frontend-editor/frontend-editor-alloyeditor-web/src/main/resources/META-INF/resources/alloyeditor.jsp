@@ -126,16 +126,6 @@ if (editorOptions != null) {
 <%
 String modules = "liferay-alloy-editor";
 
-String uploadURL = StringPool.BLANK;
-
-if (editorOptions != null) {
-	uploadURL = editorOptions.getUploadURL();
-
-	if ((data != null) && Validator.isNotNull(uploadURL)) {
-		modules += ",liferay-editor-image-uploader";
-	}
-}
-
 if (showSource) {
 	modules += ",liferay-alloy-editor-source";
 }
@@ -155,27 +145,16 @@ name = HtmlUtil.escapeJS(name);
 	var alloyEditor;
 
 	var documentBrowseLinkCallback = function (editor, linkHref, callback) {
-		Liferay.Loader.require(
-			'frontend-js-web/liferay/ItemSelectorDialog.es',
-			function (ItemSelectorDialog) {
-				var itemSelectorDialog = new ItemSelectorDialog.default({
-					eventName: editor.name + 'selectDocument',
-					singleSelect: true,
-					title: '<liferay-ui:message key="select-item" />',
-					url: linkHref,
-				});
-
-				itemSelectorDialog.open();
-
-				itemSelectorDialog.on('selectedItemChange', function (event) {
-					var selectedItem = event.selectedItem;
-
-					if (selectedItem) {
-						callback(selectedItem);
-					}
-				});
-			}
-		);
+		Liferay.Util.openSelectionModal({
+			onSelect: function (selectedItem) {
+				if (selectedItem) {
+					callback(selectedItem);
+				}
+			},
+			selectEventName: editor.name + 'selectDocument',
+			title: '<liferay-ui:message key="select-item" />',
+			url: linkHref,
+		});
 	};
 
 	var getInitialContent = function () {
@@ -235,7 +214,7 @@ name = HtmlUtil.escapeJS(name);
 			{
 				documentBrowseLinkCallback: documentBrowseLinkCallback,
 				htmlEncodeOutput: true,
-				spritemap: themeDisplay.getPathThemeImages() + '/lexicon/icons.svg',
+				spritemap: themeDisplay.getPathThemeImages() + '/clay/icons.svg',
 				title: false,
 				uiNode: uiNode,
 			},
@@ -244,17 +223,6 @@ name = HtmlUtil.escapeJS(name);
 
 		var plugins = [];
 
-		<c:if test="<%= Validator.isNotNull(data) && Validator.isNotNull(uploadURL) %>">
-			plugins.push({
-				cfg: {
-					uploadItemReturnType:
-						'<%= editorOptions.getUploadItemReturnType() %>',
-					uploadUrl: '<%= uploadURL %>',
-				},
-				fn: A.Plugin.LiferayEditorImageUploader,
-			});
-		</c:if>
-
 		<c:if test="<%= showSource %>">
 			plugins.push(A.Plugin.LiferayAlloyEditorSource);
 		</c:if>
@@ -262,6 +230,10 @@ name = HtmlUtil.escapeJS(name);
 		alloyEditor = new A.LiferayAlloyEditor({
 			contents: '<%= HtmlUtil.escapeJS(contents) %>',
 			editorConfig: editorConfig,
+			editorPaths: [
+				'<%= PortalWebResourcesUtil.getContextPath(PortalWebResourceConstants.RESOURCE_TYPE_EDITOR_ALLOYEDITOR) %>',
+				'<%= PortalWebResourcesUtil.getContextPath(PortalWebResourceConstants.RESOURCE_TYPE_EDITOR_CKEDITOR) %>',
+			],
 			namespace: '<%= name %>',
 
 			<c:if test="<%= Validator.isNotNull(onBlurMethod) %>">

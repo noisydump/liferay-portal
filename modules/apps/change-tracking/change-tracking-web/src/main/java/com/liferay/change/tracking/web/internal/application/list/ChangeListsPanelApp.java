@@ -16,13 +16,16 @@ package com.liferay.change.tracking.web.internal.application.list;
 
 import com.liferay.application.list.BasePanelApp;
 import com.liferay.application.list.PanelApp;
+import com.liferay.application.list.constants.PanelCategoryKeys;
 import com.liferay.change.tracking.constants.CTPortletKeys;
 import com.liferay.change.tracking.model.CTPreferences;
 import com.liferay.change.tracking.service.CTPreferencesLocalService;
-import com.liferay.change.tracking.web.internal.constants.CTPanelCategoryKeys;
+import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Portlet;
+import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
+import com.liferay.portal.kernel.service.permission.PortletPermission;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -33,8 +36,8 @@ import org.osgi.service.component.annotations.Reference;
 @Component(
 	immediate = true,
 	property = {
-		"panel.app.order:Integer=100",
-		"panel.category.key=" + CTPanelCategoryKeys.CONTROL_PANEL_CHANGE_LISTS
+		"panel.app.order:Integer=200",
+		"panel.category.key=" + PanelCategoryKeys.APPLICATIONS_MENU_APPLICATIONS_PUBLICATIONS
 	},
 	service = PanelApp.class
 )
@@ -46,7 +49,9 @@ public class ChangeListsPanelApp extends BasePanelApp {
 	}
 
 	@Override
-	public boolean isShow(PermissionChecker permissionChecker, Group group) {
+	public boolean isShow(PermissionChecker permissionChecker, Group group)
+		throws PortalException {
+
 		CTPreferences ctPreferences =
 			_ctPreferencesLocalService.fetchCTPreferences(
 				group.getCompanyId(), 0);
@@ -55,7 +60,8 @@ public class ChangeListsPanelApp extends BasePanelApp {
 			return false;
 		}
 
-		return true;
+		return _portletPermission.contains(
+			permissionChecker, CTPortletKeys.CHANGE_LISTS, ActionKeys.VIEW);
 	}
 
 	@Override
@@ -69,5 +75,8 @@ public class ChangeListsPanelApp extends BasePanelApp {
 
 	@Reference
 	private CTPreferencesLocalService _ctPreferencesLocalService;
+
+	@Reference
+	private PortletPermission _portletPermission;
 
 }

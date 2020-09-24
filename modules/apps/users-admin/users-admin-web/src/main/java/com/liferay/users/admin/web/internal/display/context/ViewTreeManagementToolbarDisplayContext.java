@@ -268,8 +268,7 @@ public class ViewTreeManagementToolbarDisplayContext {
 				dropdownGroupItem.setDropdownItems(
 					_getFilterNavigationDropdownItems());
 				dropdownGroupItem.setLabel(
-					LanguageUtil.get(
-						_httpServletRequest, "filter-by-navigation"));
+					LanguageUtil.get(_httpServletRequest, "filter-by-status"));
 			}
 		).addGroup(
 			dropdownGroupItem -> {
@@ -378,12 +377,12 @@ public class ViewTreeManagementToolbarDisplayContext {
 		return searchActionURL.toString();
 	}
 
-	public SearchContainer getSearchContainer() throws Exception {
+	public SearchContainer<Object> getSearchContainer() throws Exception {
 		if (_searchContainer != null) {
 			return _searchContainer;
 		}
 
-		SearchContainer searchContainer = new SearchContainer(
+		SearchContainer<Object> searchContainer = new SearchContainer(
 			_renderRequest,
 			PortletURLUtil.getCurrent(_renderRequest, _renderResponse),
 			ListUtil.fromString("name,type,status"), "no-results-were-found");
@@ -394,7 +393,7 @@ public class ViewTreeManagementToolbarDisplayContext {
 
 		searchContainer.setOrderByType(orderByType);
 
-		OrderByComparator orderByComparator =
+		OrderByComparator<Object> orderByComparator =
 			new OrganizationUserNameComparator(orderByType.equals("asc"));
 
 		searchContainer.setOrderByComparator(orderByComparator);
@@ -425,17 +424,15 @@ public class ViewTreeManagementToolbarDisplayContext {
 					_organization.getOrganizationId(), getKeywords(), status,
 					null);
 
-			Sort[] sorts = {
-				new Sort("name", orderByType.equals("desc")),
-				new Sort("lastName", orderByType.equals("desc"))
-			};
-
 			Hits hits =
 				OrganizationLocalServiceUtil.searchOrganizationsAndUsers(
 					themeDisplay.getCompanyId(),
 					_organization.getOrganizationId(), getKeywords(), status,
 					null, searchContainer.getStart(), searchContainer.getEnd(),
-					sorts);
+					new Sort[] {
+						new Sort("name", orderByType.equals("desc")),
+						new Sort("lastName", orderByType.equals("desc"))
+					});
 
 			results = new ArrayList<>(hits.getLength());
 
@@ -554,6 +551,6 @@ public class ViewTreeManagementToolbarDisplayContext {
 	private final PermissionChecker _permissionChecker;
 	private final RenderRequest _renderRequest;
 	private final RenderResponse _renderResponse;
-	private SearchContainer _searchContainer;
+	private SearchContainer<Object> _searchContainer;
 
 }

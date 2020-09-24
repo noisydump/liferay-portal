@@ -22,9 +22,12 @@ import com.liferay.dynamic.data.mapping.model.LocalizedValue;
 import com.liferay.headless.delivery.dto.v1_0.ContentStructure;
 import com.liferay.headless.delivery.dto.v1_0.ContentStructureField;
 import com.liferay.headless.delivery.dto.v1_0.Option;
+import com.liferay.portal.kernel.model.Group;
+import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.Portal;
+import com.liferay.portal.vulcan.util.GroupUtil;
 import com.liferay.portal.vulcan.util.LocalizedMapUtil;
 import com.liferay.portal.vulcan.util.TransformUtil;
 
@@ -40,16 +43,19 @@ import java.util.stream.Stream;
 public class ContentStructureUtil {
 
 	public static ContentStructure toContentStructure(
-			boolean acceptAllLanguages, Locale locale, Portal portal,
-			UserLocalService userLocalService, DDMStructure ddmStructure)
-		throws Exception {
+		boolean acceptAllLanguages, GroupLocalService groupLocalService,
+		Locale locale, Portal portal, UserLocalService userLocalService,
+		DDMStructure ddmStructure) {
 
 		if (ddmStructure == null) {
 			return null;
 		}
 
+		Group group = groupLocalService.fetchGroup(ddmStructure.getGroupId());
+
 		return new ContentStructure() {
 			{
+				assetLibraryKey = GroupUtil.getAssetLibraryKey(group);
 				availableLanguages = LocaleUtil.toW3cLanguageIds(
 					ddmStructure.getAvailableLanguageIds());
 				contentStructureFields = TransformUtil.transformToArray(
@@ -59,8 +65,8 @@ public class ContentStructureUtil {
 						ddmStructure.getDDMFormField(fieldName), locale),
 					ContentStructureField.class);
 				creator = CreatorUtil.toCreator(
-					portal,
-					userLocalService.getUserById(ddmStructure.getUserId()));
+					portal, Optional.empty(),
+					userLocalService.fetchUser(ddmStructure.getUserId()));
 				dateCreated = ddmStructure.getCreateDate();
 				dateModified = ddmStructure.getModifiedDate();
 				description = ddmStructure.getDescription(locale);
@@ -70,7 +76,7 @@ public class ContentStructureUtil {
 				name = ddmStructure.getName(locale);
 				name_i18n = LocalizedMapUtil.getI18nMap(
 					acceptAllLanguages, ddmStructure.getDescriptionMap());
-				siteId = ddmStructure.getGroupId();
+				siteId = GroupUtil.getSiteId(group);
 			}
 		};
 	}

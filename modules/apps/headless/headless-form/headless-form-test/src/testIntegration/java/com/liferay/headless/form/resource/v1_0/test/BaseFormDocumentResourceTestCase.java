@@ -111,7 +111,9 @@ public abstract class BaseFormDocumentResourceTestCase {
 
 		FormDocumentResource.Builder builder = FormDocumentResource.builder();
 
-		formDocumentResource = builder.locale(
+		formDocumentResource = builder.authentication(
+			"test@liferay.com", "test"
+		).locale(
 			LocaleUtil.getDefault()
 		).build();
 	}
@@ -382,7 +384,7 @@ public abstract class BaseFormDocumentResourceTestCase {
 		}
 	}
 
-	protected void assertValid(FormDocument formDocument) {
+	protected void assertValid(FormDocument formDocument) throws Exception {
 		boolean valid = true;
 
 		if (formDocument.getId() == null) {

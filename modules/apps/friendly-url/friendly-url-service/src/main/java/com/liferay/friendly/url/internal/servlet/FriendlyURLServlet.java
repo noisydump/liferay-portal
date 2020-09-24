@@ -84,6 +84,8 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
 import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ReferenceCardinality;
+import org.osgi.service.component.annotations.ReferencePolicyOption;
 
 /**
  * @author Brian Wing Shun Chan
@@ -180,15 +182,22 @@ public class FriendlyURLServlet extends HttpServlet {
 		if ((pos != -1) && ((pos + 1) != path.length())) {
 			friendlyURL = path.substring(pos);
 
-			RedirectEntry redirectEntry =
-				redirectEntryLocalService.fetchRedirectEntry(
-					group.getGroupId(), _normalizeFriendlyURL(friendlyURL),
-					true);
+			if (StringUtil.endsWith(friendlyURL, CharPool.SLASH)) {
+				friendlyURL = friendlyURL.substring(
+					0, friendlyURL.length() - 1);
+			}
 
-			if (redirectEntry != null) {
-				return new Redirect(
-					redirectEntry.getDestinationURL(), true,
-					redirectEntry.isPermanent());
+			if (redirectEntryLocalService != null) {
+				RedirectEntry redirectEntry =
+					redirectEntryLocalService.fetchRedirectEntry(
+						group.getGroupId(), _normalizeFriendlyURL(friendlyURL),
+						true);
+
+				if (redirectEntry != null) {
+					return new Redirect(
+						redirectEntry.getDestinationURL(), true,
+						redirectEntry.isPermanent());
+				}
 			}
 		}
 		else {
@@ -299,8 +308,11 @@ public class FriendlyURLServlet extends HttpServlet {
 				}
 			}
 
-			redirectNotFoundEntryLocalService.addOrUpdateRedirectNotFoundEntry(
-				group, _normalizeFriendlyURL(friendlyURL));
+			if (redirectNotFoundEntryLocalService != null) {
+				redirectNotFoundEntryLocalService.
+					addOrUpdateRedirectNotFoundEntry(
+						group, _normalizeFriendlyURL(friendlyURL));
+			}
 
 			if (Validator.isNotNull(
 					PropsValues.LAYOUT_FRIENDLY_URL_PAGE_NOT_FOUND)) {
@@ -509,16 +521,16 @@ public class FriendlyURLServlet extends HttpServlet {
 		}
 
 		@Override
-		public boolean equals(Object obj) {
-			if (this == obj) {
+		public boolean equals(Object object) {
+			if (this == object) {
 				return true;
 			}
 
-			if (!(obj instanceof Redirect)) {
+			if (!(object instanceof Redirect)) {
 				return false;
 			}
 
-			Redirect redirect = (Redirect)obj;
+			Redirect redirect = (Redirect)object;
 
 			if (Objects.equals(getPath(), redirect.getPath()) &&
 				(isForce() == redirect.isForce()) &&
@@ -661,10 +673,16 @@ public class FriendlyURLServlet extends HttpServlet {
 	@Reference
 	protected Portal portal;
 
-	@Reference
+	@Reference(
+		cardinality = ReferenceCardinality.OPTIONAL,
+		policyOption = ReferencePolicyOption.GREEDY
+	)
 	protected RedirectEntryLocalService redirectEntryLocalService;
 
-	@Reference
+	@Reference(
+		cardinality = ReferenceCardinality.OPTIONAL,
+		policyOption = ReferencePolicyOption.GREEDY
+	)
 	protected RedirectNotFoundEntryLocalService
 		redirectNotFoundEntryLocalService;
 

@@ -19,8 +19,18 @@
 	<td></td>
 </tr>
 <tr>
+	<td>ANY_DISABLED</td>
+	<td>//div[not(contains(@class,'hide'))]/div[contains(@class,'input-select-wrapper')][label[contains(.,'${key_selectFieldLabel}')]]/select[contains(@class,'disabled')]</td>
+	<td></td>
+</tr>
+<tr>
 	<td>ASSIGNMENT_TYPE</td>
 	<td>//select[@name='assignmentType']</td>
+	<td></td>
+</tr>
+<tr>
+	<td>BORDER_BOTTOM_SELECT_FIELD</td>
+	<td>//div[contains(@class,'label')][normalize-space()='${key_borderBottom}']/following-sibling::div[1]//div[label[contains(.,'${key_fieldLabel}')]]/select</td>
 	<td></td>
 </tr>
 <tr>
@@ -84,6 +94,11 @@
 	<td></td>
 </tr>
 <tr>
+	<td>EXPORT_FILE_FORMAT</td>
+	<td>//div[contains(.,'Export File Format')]//select</td>
+	<td></td>
+</tr>
+<tr>
 	<td>FEED_ITEM_CONTENT</td>
 	<td>//select[contains(@id,'contentFieldSelector')]</td>
 	<td></td>
@@ -96,6 +111,16 @@
 <tr>
 	<td>GENERIC_SELECT_FIELD</td>
 	<td>//div[label[contains(.,'${key_fieldLabel}')]]/select</td>
+	<td></td>
+</tr>
+<tr>
+	<td>GENERIC_SELECT_VALUE</td>
+	<td>//div[label[contains(.,'${key_fieldLabel}')]]/select//option[normalize-space(text())='${key_value}']</td>
+	<td></td>
+</tr>
+<tr>
+	<td>GROUPED_SELECT_VALUE</td>
+	<td>//div[label[contains(.,'${key_fieldLabel}')]]/select/optgroup[@label='${key_groupLabel}']/option[normalize-space(text())='${key_value}']</td>
 	<td></td>
 </tr>
 <tr>
@@ -191,6 +216,11 @@
 <tr>
 	<td>TYPE</td>
 	<td>//div[label[contains(.,'Type')]]/select</td>
+	<td></td>
+</tr>
+<tr>
+	<td>TYPE_SELECTED</td>
+	<td>//div[label[contains(.,'Type')]]//option[contains(.,'${key_typeName}')]</td>
 	<td></td>
 </tr>
 <tr>

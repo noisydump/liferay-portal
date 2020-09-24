@@ -26,14 +26,14 @@ ViewAccountRolesManagementToolbarDisplayContext viewAccountRolesManagementToolba
 portletDisplay.setShowBackIcon(true);
 portletDisplay.setURLBack(ParamUtil.getString(request, "backURL", String.valueOf(renderResponse.createRenderURL())));
 
-renderResponse.setTitle((accountEntryDisplay == null) ? "" : accountEntryDisplay.getName());
+renderResponse.setTitle(accountEntryDisplay.getName());
 %>
 
 <clay:management-toolbar
 	displayContext="<%= viewAccountRolesManagementToolbarDisplayContext %>"
 />
 
-<clay:container>
+<clay:container-fluid>
 	<aui:form method="post" name="fm">
 		<aui:input name="accountRoleIds" type="hidden" />
 
@@ -76,7 +76,7 @@ renderResponse.setTitle((accountEntryDisplay == null) ? "" : accountEntryDisplay
 			/>
 		</liferay-ui:search-container>
 	</aui:form>
-</clay:container>
+</clay:container-fluid>
 
 <liferay-frontend:component
 	componentId="<%= viewAccountRolesManagementToolbarDisplayContext.getDefaultEventHandler() %>"

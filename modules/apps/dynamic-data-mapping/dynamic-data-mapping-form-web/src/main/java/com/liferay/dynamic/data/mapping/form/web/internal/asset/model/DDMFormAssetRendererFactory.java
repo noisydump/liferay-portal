@@ -139,11 +139,11 @@ public class DDMFormAssetRendererFactory
 		DDMFormInstanceRecordVersion formInstanceRecordVersion, int type) {
 
 		DDMFormAssetRenderer ddmFormAssetRenderer = new DDMFormAssetRenderer(
-			formInstanceRecord, formInstanceRecordVersion,
-			_ddmFormInstanceRecordLocalService,
-			_ddmFormInstanceVersionLocalService, _ddmFormRenderer,
-			_ddmFormValuesFactory, _ddmFormValuesMerger,
-			_ddmFormInstanceModelResourcePermission, _portal);
+			formInstanceRecord, _ddmFormInstanceRecordLocalService,
+			_ddmFormInstanceRecordModelResourcePermission,
+			formInstanceRecordVersion, _ddmFormInstanceVersionLocalService,
+			_ddmFormRenderer, _ddmFormValuesFactory, _ddmFormValuesMerger,
+			_portal);
 
 		ddmFormAssetRenderer.setAssetRendererType(type);
 		ddmFormAssetRenderer.setServletContext(_servletContext);
@@ -160,6 +160,12 @@ public class DDMFormAssetRendererFactory
 	@Reference
 	private DDMFormInstanceRecordLocalService
 		_ddmFormInstanceRecordLocalService;
+
+	@Reference(
+		target = "(model.class.name=com.liferay.dynamic.data.mapping.model.DDMFormInstanceRecord)"
+	)
+	private ModelResourcePermission<DDMFormInstanceRecord>
+		_ddmFormInstanceRecordModelResourcePermission;
 
 	@Reference
 	private DDMFormInstanceRecordVersionLocalService

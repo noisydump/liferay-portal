@@ -118,7 +118,9 @@ public abstract class BaseAppResourceTestCase {
 
 		AppResource.Builder builder = AppResource.builder();
 
-		appResource = builder.locale(
+		appResource = builder.authentication(
+			"test@liferay.com", "test"
+		).locale(
 			LocaleUtil.getDefault()
 		).build();
 	}
@@ -189,6 +191,8 @@ public abstract class BaseAppResourceTestCase {
 		App app = randomApp();
 
 		app.setDataDefinitionName(regex);
+		app.setScope(regex);
+		app.setVersion(regex);
 
 		String json = AppSerDes.toJSON(app);
 
@@ -197,13 +201,15 @@ public abstract class BaseAppResourceTestCase {
 		app = AppSerDes.toDTO(json);
 
 		Assert.assertEquals(regex, app.getDataDefinitionName());
+		Assert.assertEquals(regex, app.getScope());
+		Assert.assertEquals(regex, app.getVersion());
 	}
 
 	@Test
 	public void testGetAppsPage() throws Exception {
 		Page<App> page = appResource.getAppsPage(
-			null, null, RandomTestUtil.randomString(), null,
-			Pagination.of(1, 2), null);
+			null, null, RandomTestUtil.randomString(),
+			RandomTestUtil.randomString(), null, Pagination.of(1, 2), null);
 
 		Assert.assertEquals(0, page.getTotalCount());
 
@@ -212,7 +218,7 @@ public abstract class BaseAppResourceTestCase {
 		App app2 = testGetAppsPage_addApp(randomApp());
 
 		page = appResource.getAppsPage(
-			null, null, null, null, Pagination.of(1, 2), null);
+			null, null, null, null, null, Pagination.of(1, 2), null);
 
 		Assert.assertEquals(2, page.getTotalCount());
 
@@ -234,14 +240,14 @@ public abstract class BaseAppResourceTestCase {
 		App app3 = testGetAppsPage_addApp(randomApp());
 
 		Page<App> page1 = appResource.getAppsPage(
-			null, null, null, null, Pagination.of(1, 2), null);
+			null, null, null, null, null, Pagination.of(1, 2), null);
 
 		List<App> apps1 = (List<App>)page1.getItems();
 
 		Assert.assertEquals(apps1.toString(), 2, apps1.size());
 
 		Page<App> page2 = appResource.getAppsPage(
-			null, null, null, null, Pagination.of(2, 2), null);
+			null, null, null, null, null, Pagination.of(2, 2), null);
 
 		Assert.assertEquals(3, page2.getTotalCount());
 
@@ -250,7 +256,7 @@ public abstract class BaseAppResourceTestCase {
 		Assert.assertEquals(apps2.toString(), 1, apps2.size());
 
 		Page<App> page3 = appResource.getAppsPage(
-			null, null, null, null, Pagination.of(1, 3), null);
+			null, null, null, null, null, Pagination.of(1, 3), null);
 
 		assertEqualsIgnoringOrder(
 			Arrays.asList(app1, app2, app3), (List<App>)page3.getItems());
@@ -353,14 +359,14 @@ public abstract class BaseAppResourceTestCase {
 
 		for (EntityField entityField : entityFields) {
 			Page<App> ascPage = appResource.getAppsPage(
-				null, null, null, null, Pagination.of(1, 2),
+				null, null, null, null, null, Pagination.of(1, 2),
 				entityField.getName() + ":asc");
 
 			assertEquals(
 				Arrays.asList(app1, app2), (List<App>)ascPage.getItems());
 
 			Page<App> descPage = appResource.getAppsPage(
-				null, null, null, null, Pagination.of(1, 2),
+				null, null, null, null, null, Pagination.of(1, 2),
 				entityField.getName() + ":desc");
 
 			assertEquals(
@@ -554,7 +560,8 @@ public abstract class BaseAppResourceTestCase {
 	public void testGetDataDefinitionAppsPage() throws Exception {
 		Page<App> page = appResource.getDataDefinitionAppsPage(
 			testGetDataDefinitionAppsPage_getDataDefinitionId(),
-			RandomTestUtil.randomString(), Pagination.of(1, 2), null);
+			RandomTestUtil.randomString(), RandomTestUtil.randomString(),
+			Pagination.of(1, 2), null);
 
 		Assert.assertEquals(0, page.getTotalCount());
 
@@ -568,7 +575,8 @@ public abstract class BaseAppResourceTestCase {
 				irrelevantDataDefinitionId, randomIrrelevantApp());
 
 			page = appResource.getDataDefinitionAppsPage(
-				irrelevantDataDefinitionId, null, Pagination.of(1, 2), null);
+				irrelevantDataDefinitionId, null, null, Pagination.of(1, 2),
+				null);
 
 			Assert.assertEquals(1, page.getTotalCount());
 
@@ -584,7 +592,7 @@ public abstract class BaseAppResourceTestCase {
 			dataDefinitionId, randomApp());
 
 		page = appResource.getDataDefinitionAppsPage(
-			dataDefinitionId, null, Pagination.of(1, 2), null);
+			dataDefinitionId, null, null, Pagination.of(1, 2), null);
 
 		Assert.assertEquals(2, page.getTotalCount());
 
@@ -612,14 +620,14 @@ public abstract class BaseAppResourceTestCase {
 			dataDefinitionId, randomApp());
 
 		Page<App> page1 = appResource.getDataDefinitionAppsPage(
-			dataDefinitionId, null, Pagination.of(1, 2), null);
+			dataDefinitionId, null, null, Pagination.of(1, 2), null);
 
 		List<App> apps1 = (List<App>)page1.getItems();
 
 		Assert.assertEquals(apps1.toString(), 2, apps1.size());
 
 		Page<App> page2 = appResource.getDataDefinitionAppsPage(
-			dataDefinitionId, null, Pagination.of(2, 2), null);
+			dataDefinitionId, null, null, Pagination.of(2, 2), null);
 
 		Assert.assertEquals(3, page2.getTotalCount());
 
@@ -628,7 +636,7 @@ public abstract class BaseAppResourceTestCase {
 		Assert.assertEquals(apps2.toString(), 1, apps2.size());
 
 		Page<App> page3 = appResource.getDataDefinitionAppsPage(
-			dataDefinitionId, null, Pagination.of(1, 3), null);
+			dataDefinitionId, null, null, Pagination.of(1, 3), null);
 
 		assertEqualsIgnoringOrder(
 			Arrays.asList(app1, app2, app3), (List<App>)page3.getItems());
@@ -738,14 +746,14 @@ public abstract class BaseAppResourceTestCase {
 
 		for (EntityField entityField : entityFields) {
 			Page<App> ascPage = appResource.getDataDefinitionAppsPage(
-				dataDefinitionId, null, Pagination.of(1, 2),
+				dataDefinitionId, null, null, Pagination.of(1, 2),
 				entityField.getName() + ":asc");
 
 			assertEquals(
 				Arrays.asList(app1, app2), (List<App>)ascPage.getItems());
 
 			Page<App> descPage = appResource.getDataDefinitionAppsPage(
-				dataDefinitionId, null, Pagination.of(1, 2),
+				dataDefinitionId, null, null, Pagination.of(1, 2),
 				entityField.getName() + ":desc");
 
 			assertEquals(
@@ -792,7 +800,7 @@ public abstract class BaseAppResourceTestCase {
 	public void testGetSiteAppsPage() throws Exception {
 		Page<App> page = appResource.getSiteAppsPage(
 			testGetSiteAppsPage_getSiteId(), RandomTestUtil.randomString(),
-			Pagination.of(1, 2), null);
+			RandomTestUtil.randomString(), Pagination.of(1, 2), null);
 
 		Assert.assertEquals(0, page.getTotalCount());
 
@@ -804,7 +812,7 @@ public abstract class BaseAppResourceTestCase {
 				irrelevantSiteId, randomIrrelevantApp());
 
 			page = appResource.getSiteAppsPage(
-				irrelevantSiteId, null, Pagination.of(1, 2), null);
+				irrelevantSiteId, null, null, Pagination.of(1, 2), null);
 
 			Assert.assertEquals(1, page.getTotalCount());
 
@@ -818,7 +826,7 @@ public abstract class BaseAppResourceTestCase {
 		App app2 = testGetSiteAppsPage_addApp(siteId, randomApp());
 
 		page = appResource.getSiteAppsPage(
-			siteId, null, Pagination.of(1, 2), null);
+			siteId, null, null, Pagination.of(1, 2), null);
 
 		Assert.assertEquals(2, page.getTotalCount());
 
@@ -842,14 +850,14 @@ public abstract class BaseAppResourceTestCase {
 		App app3 = testGetSiteAppsPage_addApp(siteId, randomApp());
 
 		Page<App> page1 = appResource.getSiteAppsPage(
-			siteId, null, Pagination.of(1, 2), null);
+			siteId, null, null, Pagination.of(1, 2), null);
 
 		List<App> apps1 = (List<App>)page1.getItems();
 
 		Assert.assertEquals(apps1.toString(), 2, apps1.size());
 
 		Page<App> page2 = appResource.getSiteAppsPage(
-			siteId, null, Pagination.of(2, 2), null);
+			siteId, null, null, Pagination.of(2, 2), null);
 
 		Assert.assertEquals(3, page2.getTotalCount());
 
@@ -858,7 +866,7 @@ public abstract class BaseAppResourceTestCase {
 		Assert.assertEquals(apps2.toString(), 1, apps2.size());
 
 		Page<App> page3 = appResource.getSiteAppsPage(
-			siteId, null, Pagination.of(1, 3), null);
+			siteId, null, null, Pagination.of(1, 3), null);
 
 		assertEqualsIgnoringOrder(
 			Arrays.asList(app1, app2, app3), (List<App>)page3.getItems());
@@ -963,14 +971,14 @@ public abstract class BaseAppResourceTestCase {
 
 		for (EntityField entityField : entityFields) {
 			Page<App> ascPage = appResource.getSiteAppsPage(
-				siteId, null, Pagination.of(1, 2),
+				siteId, null, null, Pagination.of(1, 2),
 				entityField.getName() + ":asc");
 
 			assertEquals(
 				Arrays.asList(app1, app2), (List<App>)ascPage.getItems());
 
 			Page<App> descPage = appResource.getSiteAppsPage(
-				siteId, null, Pagination.of(1, 2),
+				siteId, null, null, Pagination.of(1, 2),
 				entityField.getName() + ":desc");
 
 			assertEquals(
@@ -1039,7 +1047,7 @@ public abstract class BaseAppResourceTestCase {
 		}
 	}
 
-	protected void assertValid(App app) {
+	protected void assertValid(App app) throws Exception {
 		boolean valid = true;
 
 		if (app.getDateCreated() == null) {
@@ -1111,6 +1119,16 @@ public abstract class BaseAppResourceTestCase {
 				continue;
 			}
 
+			if (Objects.equals(
+					"dataRecordCollectionId", additionalAssertFieldName)) {
+
+				if (app.getDataRecordCollectionId() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
 			if (Objects.equals("name", additionalAssertFieldName)) {
 				if (app.getName() == null) {
 					valid = false;
@@ -1119,8 +1137,24 @@ public abstract class BaseAppResourceTestCase {
 				continue;
 			}
 
+			if (Objects.equals("scope", additionalAssertFieldName)) {
+				if (app.getScope() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
 			if (Objects.equals("userId", additionalAssertFieldName)) {
 				if (app.getUserId() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals("version", additionalAssertFieldName)) {
+				if (app.getVersion() == null) {
 					valid = false;
 				}
 
@@ -1284,6 +1318,19 @@ public abstract class BaseAppResourceTestCase {
 				continue;
 			}
 
+			if (Objects.equals(
+					"dataRecordCollectionId", additionalAssertFieldName)) {
+
+				if (!Objects.deepEquals(
+						app1.getDataRecordCollectionId(),
+						app2.getDataRecordCollectionId())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
 			if (Objects.equals("dateCreated", additionalAssertFieldName)) {
 				if (!Objects.deepEquals(
 						app1.getDateCreated(), app2.getDateCreated())) {
@@ -1320,8 +1367,24 @@ public abstract class BaseAppResourceTestCase {
 				continue;
 			}
 
+			if (Objects.equals("scope", additionalAssertFieldName)) {
+				if (!Objects.deepEquals(app1.getScope(), app2.getScope())) {
+					return false;
+				}
+
+				continue;
+			}
+
 			if (Objects.equals("userId", additionalAssertFieldName)) {
 				if (!Objects.deepEquals(app1.getUserId(), app2.getUserId())) {
+					return false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals("version", additionalAssertFieldName)) {
+				if (!Objects.deepEquals(app1.getVersion(), app2.getVersion())) {
 					return false;
 				}
 
@@ -1443,6 +1506,11 @@ public abstract class BaseAppResourceTestCase {
 				"Invalid entity field " + entityFieldName);
 		}
 
+		if (entityFieldName.equals("dataRecordCollectionId")) {
+			throw new IllegalArgumentException(
+				"Invalid entity field " + entityFieldName);
+		}
+
 		if (entityFieldName.equals("dateCreated")) {
 			if (operator.equals("between")) {
 				sb = new StringBundler();
@@ -1515,6 +1583,14 @@ public abstract class BaseAppResourceTestCase {
 				"Invalid entity field " + entityFieldName);
 		}
 
+		if (entityFieldName.equals("scope")) {
+			sb.append("'");
+			sb.append(String.valueOf(app.getScope()));
+			sb.append("'");
+
+			return sb.toString();
+		}
+
 		if (entityFieldName.equals("siteId")) {
 			throw new IllegalArgumentException(
 				"Invalid entity field " + entityFieldName);
@@ -1523,6 +1599,14 @@ public abstract class BaseAppResourceTestCase {
 		if (entityFieldName.equals("userId")) {
 			throw new IllegalArgumentException(
 				"Invalid entity field " + entityFieldName);
+		}
+
+		if (entityFieldName.equals("version")) {
+			sb.append("'");
+			sb.append(String.valueOf(app.getVersion()));
+			sb.append("'");
+
+			return sb.toString();
 		}
 
 		throw new IllegalArgumentException(
@@ -1575,11 +1659,14 @@ public abstract class BaseAppResourceTestCase {
 					RandomTestUtil.randomString());
 				dataLayoutId = RandomTestUtil.randomLong();
 				dataListViewId = RandomTestUtil.randomLong();
+				dataRecordCollectionId = RandomTestUtil.randomLong();
 				dateCreated = RandomTestUtil.nextDate();
 				dateModified = RandomTestUtil.nextDate();
 				id = RandomTestUtil.randomLong();
+				scope = StringUtil.toLowerCase(RandomTestUtil.randomString());
 				siteId = testGroup.getGroupId();
 				userId = RandomTestUtil.randomLong();
+				version = StringUtil.toLowerCase(RandomTestUtil.randomString());
 			}
 		};
 	}

@@ -12,11 +12,14 @@
  * details.
  */
 
+import ClayLayout from '@clayui/layout';
 import React, {useEffect, useReducer, useState} from 'react';
 
 import ControlMenu from '../../../components/control-menu/ControlMenu.es';
 import {Loading} from '../../../components/loading/Loading.es';
 import MultiStepNav from '../../../components/multi-step-nav/MultiStepNav.es';
+import useDataDefinition from '../../../hooks/useDataDefinition.es';
+import {toQuery} from '../../../hooks/useQuery.es';
 import {getItem} from '../../../utils/client.es';
 import DeployApp from './DeployApp.es';
 import EditAppBody from './EditAppBody.es';
@@ -25,13 +28,20 @@ import EditAppFooter from './EditAppFooter.es';
 import EditAppHeader from './EditAppHeader.es';
 
 export default ({
+	location: {search},
 	match: {
 		params: {appId, dataDefinitionId},
 	},
+	scope,
 }) => {
+	const {
+		availableLanguageIds = [],
+		defaultLanguageId = '',
+	} = useDataDefinition(dataDefinitionId);
+
 	const [currentStep, setCurrentStep] = useState(0);
 	const [isLoading, setLoading] = useState(false);
-
+	const [editingLanguageId, setEditingLanguageId] = useState('');
 	const [state, dispatch] = useReducer(reducer, {
 		app: {
 			active: true,
@@ -39,10 +49,19 @@ export default ({
 			dataLayoutId: null,
 			dataListViewId: null,
 			name: {
-				en_US: '',
+				[defaultLanguageId]: '',
 			},
+			scope,
 		},
 	});
+
+	const {backUrl} = toQuery(search, {backUrl: '../'});
+
+	useEffect(() => {
+		if (!editingLanguageId) {
+			setEditingLanguageId(defaultLanguageId);
+		}
+	}, [defaultLanguageId, editingLanguageId]);
 
 	useEffect(() => {
 		if (appId) {
@@ -73,32 +92,38 @@ export default ({
 		};
 	};
 
-	const onCurrentStepChange = (step) => {
-		setCurrentStep(step);
-	};
-
 	return (
 		<>
-			<ControlMenu backURL="../" title={title} />
+			<ControlMenu backURL={backUrl} title={title} />
 
 			<Loading isLoading={isLoading}>
 				<EditAppContext.Provider value={{dispatch, state}}>
-					<div className="container-fluid container-fluid-max-lg mt-4">
+					<ClayLayout.ContainerFluid className="mt-4" size="lg">
 						<div className="card card-root mb-0 shadowless-card">
-							<EditAppHeader />
+							<EditAppHeader
+								availableLanguageIds={availableLanguageIds}
+								defaultLanguageId={defaultLanguageId}
+								editingLanguageId={editingLanguageId}
+								onEditingLanguageIdChange={(
+									editingLanguageId
+								) => {
+									setEditingLanguageId(editingLanguageId);
+								}}
+							/>
 
 							<div className="card-body p-0 shadowless-card-body">
-								<div className="autofit-row">
-									<div className="col-md-12">
+								<ClayLayout.Row>
+									<ClayLayout.Col>
 										<MultiStepNav
 											currentStep={currentStep}
 											steps={['1', '2', '3']}
 										/>
-									</div>
-								</div>
+									</ClayLayout.Col>
+								</ClayLayout.Row>
 
 								{currentStep == 0 && (
 									<EditAppBody
+										defaultLanguageId={defaultLanguageId}
 										emptyState={getEmptyState(
 											Liferay.Language.get(
 												'create-one-or-more-forms-to-display-the-data-held-in-your-data-object'
@@ -117,6 +142,7 @@ export default ({
 
 								{currentStep == 1 && (
 									<EditAppBody
+										defaultLanguageId={defaultLanguageId}
 										emptyState={getEmptyState(
 											Liferay.Language.get(
 												'create-one-or-more-tables-to-display-the-data-held-in-your-data-object'
@@ -140,10 +166,14 @@ export default ({
 
 							<EditAppFooter
 								currentStep={currentStep}
-								onCurrentStepChange={onCurrentStepChange}
+								defaultLanguageId={defaultLanguageId}
+								editingLanguageId={editingLanguageId}
+								onCurrentStepChange={(step) => {
+									setCurrentStep(step);
+								}}
 							/>
 						</div>
-					</div>
+					</ClayLayout.ContainerFluid>
 				</EditAppContext.Provider>
 			</Loading>
 		</>

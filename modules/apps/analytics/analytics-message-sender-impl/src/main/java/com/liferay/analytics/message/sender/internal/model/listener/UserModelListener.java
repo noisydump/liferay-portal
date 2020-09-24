@@ -14,7 +14,8 @@
 
 package com.liferay.analytics.message.sender.internal.model.listener;
 
-import com.liferay.analytics.message.sender.model.EntityModelListener;
+import com.liferay.analytics.message.sender.model.listener.BaseEntityModelListener;
+import com.liferay.analytics.message.sender.model.listener.EntityModelListener;
 import com.liferay.portal.kernel.model.ModelListener;
 import com.liferay.portal.kernel.model.User;
 
@@ -31,8 +32,8 @@ import org.osgi.service.component.annotations.Component;
 public class UserModelListener extends BaseEntityModelListener<User> {
 
 	@Override
-	public List<String> getAttributeNames() {
-		return getUserAttributeNames();
+	public List<String> getAttributeNames(long companyId) {
+		return getUserAttributeNames(companyId);
 	}
 
 	@Override

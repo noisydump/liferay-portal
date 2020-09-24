@@ -22,11 +22,13 @@ import com.liferay.portal.kernel.model.role.RoleConstants;
 import com.liferay.portal.kernel.service.RoleLocalService;
 import com.liferay.portal.kernel.service.UserGroupRoleLocalService;
 import com.liferay.portal.kernel.service.UserLocalService;
+import com.liferay.portal.kernel.test.rule.DataGuard;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.Portal;
+import com.liferay.portal.search.test.util.SearchTestRule;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.workflow.metrics.rest.client.dto.v1_0.Assignee;
 import com.liferay.portal.workflow.metrics.rest.client.dto.v1_0.AssigneeMetric;
@@ -47,12 +49,14 @@ import org.apache.commons.lang.time.DateUtils;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
 /**
  * @author Rafael Praxedes
  */
+@DataGuard(scope = DataGuard.Scope.METHOD)
 @RunWith(Arquillian.class)
 public class AssigneeMetricResourceTest
 	extends BaseAssigneeMetricResourceTestCase {
@@ -471,6 +475,9 @@ public class AssigneeMetricResourceTest
 			(List<AssigneeMetric>)page.getItems());
 	}
 
+	@Rule
+	public SearchTestRule searchTestRule = new SearchTestRule();
+
 	@Override
 	protected String[] getAdditionalAssertFieldNames() {
 		return new String[] {
@@ -528,8 +535,9 @@ public class AssigneeMetricResourceTest
 
 		for (NodeMetric nodeMetric : nodeMetrics) {
 			_workflowMetricsRESTTestHelper.addNodeMetric(
-				assignee, testGroup.getCompanyId(), instanceSupplier, processId,
-				status, nodeMetric, "1.0");
+				assignee, testGroup.getCompanyId(), instanceSupplier,
+				nodeMetric, processId, status, TestPropsValues.getUser(),
+				"1.0");
 		}
 	}
 

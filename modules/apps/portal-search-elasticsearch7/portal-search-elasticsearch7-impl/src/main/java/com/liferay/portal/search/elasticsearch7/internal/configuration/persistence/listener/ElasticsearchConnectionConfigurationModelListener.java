@@ -14,6 +14,7 @@
 
 package com.liferay.portal.search.elasticsearch7.internal.configuration.persistence.listener;
 
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.configuration.persistence.listener.ConfigurationModelListener;
 import com.liferay.portal.configuration.persistence.listener.ConfigurationModelListenerException;
 import com.liferay.portal.kernel.log.Log;
@@ -24,6 +25,7 @@ import com.liferay.portal.kernel.util.ResourceBundleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.search.elasticsearch7.configuration.ElasticsearchConnectionConfiguration;
+import com.liferay.portal.search.elasticsearch7.internal.connection.constants.ConnectionConstants;
 
 import java.util.Dictionary;
 import java.util.ResourceBundle;
@@ -67,7 +69,7 @@ public class ElasticsearchConnectionConfigurationModelListener
 	@Reference
 	protected ConfigurationAdmin configurationAdmin;
 
-	private String _getCauseMessage(String key, Object... arguments) {
+	private String _getMessage(String key, Object... arguments) {
 		try {
 			ResourceBundle resourceBundle = _getResourceBundle();
 
@@ -100,18 +102,42 @@ public class ElasticsearchConnectionConfigurationModelListener
 		_log.error("Unable to validate network host addresses");
 
 		throw new Exception(
-			_getCauseMessage("please-set-at-least-one-network-host-address"));
+			_getMessage("please-set-at-least-one-network-host-address"));
 	}
 
 	private void _validateUniqueConnectionId(String pid, String connectionId)
 		throws Exception {
 
-		if (connectionId.equals("embedded")) {
+		if (Validator.isBlank(connectionId)) {
+			_log.error("Connection ID is blank");
+
+			throw new Exception(_getMessage("please-set-a-connection-id"));
+		}
+
+		if (connectionId.equals(ConnectionConstants.REMOTE_CONNECTION_ID) ||
+			connectionId.equals(ConnectionConstants.SIDECAR_CONNECTION_ID)) {
+
 			_log.error("The ID you entered is reserved: " + connectionId);
 
 			throw new Exception(
-				_getCauseMessage(
-					"the-id-you-entered-is-reserved-x", connectionId));
+				_getMessage("the-id-you-entered-is-reserved-x", connectionId));
+		}
+
+		Configuration configuration = configurationAdmin.getConfiguration(
+			pid, StringPool.QUESTION);
+
+		Dictionary<String, Object> properties = configuration.getProperties();
+
+		if (properties != null) {
+			String previousConnectionId = StringUtil.unquote(
+				(String)properties.get("connectionId"));
+
+			if (!previousConnectionId.equals(connectionId)) {
+				_log.error("The connection ID cannot be changed");
+
+				throw new Exception(
+					_getMessage("the-connection-id-cannot-be-changed"));
+			}
 		}
 
 		String filterString = String.format(
@@ -125,7 +151,7 @@ public class ElasticsearchConnectionConfigurationModelListener
 			return;
 		}
 
-		Configuration configuration = configurations[0];
+		configuration = configurations[0];
 
 		if (pid.equals(configuration.getPid())) {
 			return;
@@ -135,7 +161,7 @@ public class ElasticsearchConnectionConfigurationModelListener
 			"There is already a connection with the ID: " + connectionId);
 
 		throw new Exception(
-			_getCauseMessage(
+			_getMessage(
 				"there-is-already-a-connection-with-the-id-x", connectionId));
 	}
 

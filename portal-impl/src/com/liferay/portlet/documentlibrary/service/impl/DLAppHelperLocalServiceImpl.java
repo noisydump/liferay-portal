@@ -627,9 +627,8 @@ public class DLAppHelperLocalServiceImpl
 		String fileName = originalFileName;
 
 		if (!StringUtil.equals(title, originalTitle)) {
-			String extension = DLAppUtil.getExtension(title, originalFileName);
-
-			fileName = DLUtil.getSanitizedFileName(title, extension);
+			fileName = DLUtil.getSanitizedFileName(
+				title, DLAppUtil.getExtension(title, originalFileName));
 		}
 
 		dlFileEntry.setFileName(fileName);
@@ -1337,11 +1336,11 @@ public class DLAppHelperLocalServiceImpl
 			dlFileVersionPersistence.update(curDLFileVersion);
 		}
 
-		DLFileEntry dlFileEntry = (DLFileEntry)fileEntry.getModel();
-
 		if (!DLAppHelperThreadLocal.isEnabled()) {
 			return fileEntry;
 		}
+
+		DLFileEntry dlFileEntry = (DLFileEntry)fileEntry.getModel();
 
 		DLFileVersion oldDLFileVersion = (DLFileVersion)fileVersion.getModel();
 

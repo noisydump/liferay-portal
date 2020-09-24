@@ -58,30 +58,31 @@ public class FormFieldProjectTemplateCustomizer
 				"src/main/resources/META-INF/resources/" + name + ".es.js");
 		}
 
-		if (liferayVersion.startsWith("7.2")) {
+		if (liferayVersion.startsWith("7.2") ||
+			liferayVersion.startsWith("7.3")) {
+
 			fileNames.add("src/main/resources/META-INF/resources/config.js");
 			fileNames.add(
 				"src/main/resources/META-INF/resources/" + name + "_field.js");
 
-			StringBuilder sb = new StringBuilder();
-
-			String[] nameParts = name.split("-");
-
-			if (nameParts.length == 0) {
-				sb.append(name);
-			}
-			else {
-				for (String namePart : nameParts) {
-					sb.append(namePart);
-					sb.append("/");
-				}
-			}
-
 			String className = projectTemplatesArgs.getClassName();
+			String packageName = projectTemplatesArgs.getPackageName();
 
 			fileNames.add(
-				"src/main/java/" + sb.toString() + "form/field/" + className +
-					"DDMFormFieldRenderer.java");
+				"src/main/java/" + packageName.replaceAll("[.]", "/") +
+					"/form/field/" + className + "DDMFormFieldRenderer.java");
+
+			if (liferayVersion.startsWith("7.3") &&
+				_isReactFramework(
+					(FormFieldProjectTemplatesArgs)
+						projectTemplatesArgs.getProjectTemplatesArgsExt())) {
+
+				fileNames.add(
+					"src/main/resources/META-INF/resources/" + name + ".soy");
+				fileNames.add(
+					"src/main/resources/META-INF/resources/" + name +
+						"Register.soy");
+			}
 		}
 		else {
 			fileNames.add(
@@ -104,6 +105,25 @@ public class FormFieldProjectTemplateCustomizer
 			ProjectTemplatesArgs projectTemplatesArgs,
 			ArchetypeGenerationRequest archetypeGenerationRequest)
 		throws Exception {
+
+		setProperty(
+			archetypeGenerationRequest.getProperties(), "reactTemplate",
+			String.valueOf(
+				_isReactFramework(
+					(FormFieldProjectTemplatesArgs)
+						projectTemplatesArgs.getProjectTemplatesArgsExt())));
+	}
+
+	private boolean _isReactFramework(
+		FormFieldProjectTemplatesArgs formFieldProjectTemplatesArgs) {
+
+		String jsFramework = formFieldProjectTemplatesArgs.getJSFramework();
+
+		if (jsFramework == null) {
+			return false;
+		}
+
+		return jsFramework.equals("react");
 	}
 
 }

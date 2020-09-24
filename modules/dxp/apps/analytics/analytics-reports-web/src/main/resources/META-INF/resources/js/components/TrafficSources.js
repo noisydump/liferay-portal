@@ -11,11 +11,13 @@
 
 import ClayButton from '@clayui/button';
 import className from 'classnames';
+import {useIsMounted} from 'frontend-js-react-web';
 import PropTypes from 'prop-types';
-import React, {useEffect, useState} from 'react';
+import React, {useContext, useEffect, useMemo, useState} from 'react';
 import {Cell, Pie, PieChart, Tooltip} from 'recharts';
 
-import {useWarning} from '../context/store';
+import ConnectionContext from '../context/ConnectionContext';
+import {StoreContext, useWarning} from '../context/store';
 import {numberFormat} from '../utils/numberFormat';
 import EmptyPieChart from './EmptyPieChart';
 import Hint from './Hint';
@@ -41,18 +43,47 @@ const FALLBACK_COLOR = '#e92563';
 const getColorByName = (name) => COLORS_MAP[name] || FALLBACK_COLOR;
 
 export default function TrafficSources({
+	dataProvider,
 	languageTag,
 	onTrafficSourceClick,
-	trafficSources,
 }) {
 	const [highlighted, setHighlighted] = useState(null);
 
 	const [, addWarning] = useWarning();
 
-	const fullPieChart = trafficSources.some((source) => !!source.value);
+	const {validAnalyticsConnection} = useContext(ConnectionContext);
 
-	const missingTrafficSourceValue = trafficSources.some(
-		(trafficSource) => trafficSource.value === undefined
+	const [{publishedToday}] = useContext(StoreContext);
+
+	const [trafficSources, setTrafficSources] = useState([]);
+
+	const isMounted = useIsMounted();
+
+	useEffect(() => {
+		if (validAnalyticsConnection) {
+			dataProvider()
+				.then((trafficSources) => {
+					if (isMounted()) {
+						setTrafficSources(trafficSources);
+					}
+				})
+				.catch(() => {
+					setTrafficSources([]);
+					if (isMounted()) {
+						addWarning();
+					}
+				});
+		}
+	}, [addWarning, dataProvider, isMounted, validAnalyticsConnection]);
+
+	const fullPieChart = useMemo(
+		() => trafficSources.some(({value}) => value),
+		[trafficSources]
+	);
+
+	const missingTrafficSourceValue = useMemo(
+		() => trafficSources.some(({value}) => value === undefined),
+		[trafficSources]
 	);
 
 	useEffect(() => {
@@ -71,18 +102,19 @@ export default function TrafficSources({
 
 	return (
 		<>
-			<h5 className="mt-2 sheet-subtitle text-secondary">
+			<h5 className="mt-3 sheet-subtitle">
 				{Liferay.Language.get('search-engines-traffic')}
 				<Hint
 					message={Liferay.Language.get(
 						'search-engines-traffic-help'
 					)}
+					secondary={true}
 					title={Liferay.Language.get('search-engines-traffic')}
 				/>
 			</h5>
 
 			{!fullPieChart && !missingTrafficSourceValue && (
-				<div className="mb-2 text-secondary">
+				<div className="mb-3 text-secondary">
 					{Liferay.Language.get(
 						'your-page-has-no-incoming-traffic-from-search-engines-yet'
 					)}
@@ -122,18 +154,23 @@ export default function TrafficSources({
 												)
 											}
 										>
-											<ClayButton
-												className="font-weight-semi-bold px-0 py-1 text-secondary"
-												displayType="link"
-												onClick={() =>
-													onTrafficSourceClick(
-														entry.name
-													)
-												}
-												small
-											>
-												{entry.title}
-											</ClayButton>
+											{entry.value > 0 ? (
+												<ClayButton
+													className="font-weight-semi-bold px-0 py-1 text-primary"
+													displayType="link"
+													onClick={() =>
+														onTrafficSourceClick(
+															trafficSources,
+															entry.name
+														)
+													}
+													small
+												>
+													{entry.title}
+												</ClayButton>
+											) : (
+												<span>{entry.title}</span>
+											)}
 										</td>
 										<td className="text-secondary">
 											<Hint
@@ -142,7 +179,8 @@ export default function TrafficSources({
 											/>
 										</td>
 										<td className="font-weight-bold">
-											{entry.value !== undefined
+											{entry.value !== undefined &&
+											!publishedToday
 												? numberFormat(
 														languageTag,
 														entry.value
@@ -209,6 +247,7 @@ export default function TrafficSources({
 							</Pie>
 
 							<Tooltip
+								animationDuration={0}
 								content={<TrafficSourcesCustomTooltip />}
 								formatter={(value, name, iconType) => {
 									return [
@@ -268,7 +307,7 @@ function TrafficSourcesCustomTooltip(props) {
 }
 
 TrafficSources.propTypes = {
+	dataProvider: PropTypes.func.isRequired,
 	languageTag: PropTypes.string.isRequired,
 	onTrafficSourceClick: PropTypes.func.isRequired,
-	trafficSources: PropTypes.array.isRequired,
 };

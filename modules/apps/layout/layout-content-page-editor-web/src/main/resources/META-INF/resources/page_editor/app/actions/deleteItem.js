@@ -14,10 +14,11 @@
 
 import {DELETE_ITEM} from './types';
 
-export default function deleteItem({itemId, layoutData}) {
+export default function deleteItem({itemId, layoutData, portletIds = []}) {
 	return {
 		itemId,
 		layoutData,
+		portletIds,
 		type: DELETE_ITEM,
 	};
 }

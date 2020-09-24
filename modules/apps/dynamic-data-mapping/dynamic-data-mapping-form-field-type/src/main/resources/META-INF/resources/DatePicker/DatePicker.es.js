@@ -18,10 +18,8 @@ import React, {useEffect, useMemo, useRef, useState} from 'react';
 import {createAutoCorrectedDatePipe} from 'text-mask-addons';
 import {createTextMaskInputElement} from 'text-mask-core';
 
-import {FieldBaseProxy} from '../FieldBase/ReactFieldBase.es';
+import {FieldBase} from '../FieldBase/ReactFieldBase.es';
 import {useSyncValue} from '../hooks/useSyncValue.es';
-import getConnectedReactComponentAdapter from '../util/ReactComponentAdapter.es';
-import {connectStore} from '../util/connectStore.es';
 
 const getInputMask = (dateFormat, dateDelimiter) => {
 	const inputMaskArray = [];
@@ -52,13 +50,13 @@ const getDateMask = (dateFormat, dateDelimiter) => {
 			let currentFormat;
 
 			if (item === '%Y') {
-				currentFormat = 'YYYY';
+				currentFormat = 'yyyy';
 			}
 			else if (item === '%m') {
 				currentFormat = 'MM';
 			}
 			else {
-				currentFormat = 'DD';
+				currentFormat = 'dd';
 			}
 
 			return currentFormat;
@@ -80,16 +78,14 @@ const getDelimiter = (dateFormat) => {
 	return dateDelimiter;
 };
 
-const useDateFormat = () => {
-	return useMemo(() => {
-		const dateFormat = Liferay.AUI.getDateFormat();
-		const dateDelimiter = getDelimiter(dateFormat);
+const getDateFormat = () => {
+	const dateFormat = Liferay.AUI.getDateFormat();
+	const dateDelimiter = getDelimiter(dateFormat);
 
-		return {
-			dateMask: getDateMask(dateFormat, dateDelimiter),
-			inputMask: getInputMask(dateFormat, dateDelimiter),
-		};
-	}, []);
+	return {
+		dateMask: getDateMask(dateFormat, dateDelimiter),
+		inputMask: getInputMask(dateFormat, dateDelimiter),
+	};
 };
 
 const transformToDate = (date) => {
@@ -126,6 +122,8 @@ const DatePicker = ({
 	const inputRef = useRef(null);
 	const maskInstance = useRef(null);
 
+	const [expanded, setExpand] = useState(false);
+
 	const initialValueMemoized = useMemo(() => transformToDate(initialValue), [
 		initialValue,
 	]);
@@ -140,7 +138,7 @@ const DatePicker = ({
 		};
 	});
 
-	const {dateMask, inputMask} = useDateFormat();
+	const {dateMask, inputMask} = getDateFormat();
 
 	useEffect(() => {
 		if (inputRef.current && inputMask && dateMask) {
@@ -168,7 +166,7 @@ const DatePicker = ({
 	return (
 		<>
 			<input
-				aria-label="date_picker_hidden"
+				aria-hidden="true"
 				name={name}
 				type="hidden"
 				value={getValueForHidden(value)}
@@ -176,16 +174,32 @@ const DatePicker = ({
 			<ClayDatePicker
 				dateFormat={dateMask}
 				disabled={disabled}
+				expanded={expanded}
 				initialMonth={getInitialMonth(value)}
+				onExpandedChange={(expand) => {
+					setExpand(expand);
+				}}
 				onInput={(event) => {
 					maskInstance.current.update(event.target.value);
 				}}
 				onNavigation={handleNavigation}
-				onValueChange={(value) => {
+				onValueChange={(value, eventType) => {
 					setValue(value);
 
+					if (eventType === 'click') {
+						setExpand(false);
+						inputRef.current.focus();
+					}
+
+					if (
+						!value ||
+						value === maskInstance.current.state.previousPlaceholder
+					) {
+						return onChange('');
+					}
+
 					if (moment(value).isValid()) {
-						onChange(value);
+						onChange(moment(value).format(dateMask.toUpperCase()));
 					}
 				}}
 				ref={inputRef}
@@ -197,40 +211,33 @@ const DatePicker = ({
 	);
 };
 
-const DatePickerProxy = connectStore(
-	({
-		emit,
-		name,
-		placeholder,
-		predefinedValue,
-		readOnly,
-		spritemap,
-		value,
-		...otherProps
-	}) => (
-		<FieldBaseProxy
-			{...otherProps}
+const Main = ({
+	name,
+	onChange,
+	placeholder,
+	predefinedValue,
+	readOnly,
+	spritemap,
+	value,
+	...otherProps
+}) => (
+	<FieldBase
+		{...otherProps}
+		name={name}
+		readOnly={readOnly}
+		spritemap={spritemap}
+	>
+		<DatePicker
+			disabled={readOnly}
 			name={name}
-			readOnly={readOnly}
+			onChange={(value) => onChange({}, value)}
+			placeholder={placeholder}
 			spritemap={spritemap}
-		>
-			<DatePicker
-				disabled={readOnly}
-				name={name}
-				onChange={(value) => emit('fieldEdited', {}, value)}
-				placeholder={placeholder}
-				spritemap={spritemap}
-				value={value ? value : predefinedValue}
-			/>
-		</FieldBaseProxy>
-	)
+			value={value ? value : predefinedValue}
+		/>
+	</FieldBase>
 );
 
-const ReactDatePickerAdapter = getConnectedReactComponentAdapter(
-	DatePickerProxy,
-	'date'
-);
+Main.displayName = 'DatePicker';
 
-export {ReactDatePickerAdapter};
-
-export default ReactDatePickerAdapter;
+export default Main;

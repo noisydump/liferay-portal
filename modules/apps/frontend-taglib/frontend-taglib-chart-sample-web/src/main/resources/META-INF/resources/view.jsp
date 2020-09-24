@@ -27,7 +27,7 @@
 	}
 </style>
 
-<clay:container>
+<clay:container-fluid>
 	<clay:row>
 		<clay:col>
 			<chart:area-spline
@@ -43,9 +43,9 @@
 			/>
 		</clay:col>
 	</clay:row>
-</clay:container>
+</clay:container-fluid>
 
-<clay:container>
+<clay:container-fluid>
 	<clay:row>
 		<clay:col>
 			<chart:line
@@ -75,9 +75,9 @@
 			/>
 		</clay:col>
 	</clay:row>
-</clay:container>
+</clay:container-fluid>
 
-<clay:container>
+<clay:container-fluid>
 	<clay:row>
 		<clay:col>
 			<chart:bar
@@ -93,9 +93,9 @@
 			/>
 		</clay:col>
 	</clay:row>
-</clay:container>
+</clay:container-fluid>
 
-<clay:container>
+<clay:container-fluid>
 	<clay:row>
 		<clay:col>
 			<chart:donut
@@ -111,9 +111,9 @@
 			/>
 		</clay:col>
 	</clay:row>
-</clay:container>
+</clay:container-fluid>
 
-<clay:container>
+<clay:container-fluid>
 	<clay:row>
 		<clay:col>
 			<chart:gauge
@@ -122,12 +122,12 @@
 			/>
 		</clay:col>
 	</clay:row>
-</clay:container>
+</clay:container-fluid>
 
-<clay:container>
+<clay:container-fluid>
 	<clay:row>
 		<clay:col
-			className="geomap"
+			cssClass="geomap"
 		>
 			<chart:geomap
 				config="<%= chartSampleDisplayContext.getGeomapConfig1() %>"
@@ -136,7 +136,7 @@
 		</clay:col>
 
 		<clay:col
-			className="geomap"
+			cssClass="geomap"
 		>
 			<chart:geomap
 				config="<%= chartSampleDisplayContext.getGeomapConfig2() %>"
@@ -144,12 +144,12 @@
 			/>
 		</clay:col>
 	</clay:row>
-</clay:container>
+</clay:container-fluid>
 
-<clay:container>
+<clay:container-fluid>
 	<clay:row>
 		<clay:col
-			className="polling-interval"
+			cssClass="polling-interval"
 		>
 			<chart:line
 				componentId="polling-interval-line-chart"
@@ -158,12 +158,12 @@
 			/>
 		</clay:col>
 	</clay:row>
-</clay:container>
+</clay:container-fluid>
 
-<clay:container>
+<clay:container-fluid>
 	<clay:row>
 		<clay:col
-			className="predictive"
+			cssClass="predictive"
 		>
 			<chart:predictive
 				componentId="predictive-chart"
@@ -172,7 +172,7 @@
 			/>
 		</clay:col>
 	</clay:row>
-</clay:container>
+</clay:container-fluid>
 
 <aui:script>
 	Liferay.componentReady('polling-interval-line-chart').then(function (chart) {

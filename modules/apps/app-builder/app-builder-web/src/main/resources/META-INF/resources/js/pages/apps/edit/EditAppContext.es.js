@@ -20,6 +20,7 @@ export const REMOVE_DEPLOYMENT = 'REMOVE_DEPLOYMENT';
 export const SITE_ID_ALL = -1;
 export const TOGGLE_SETTINGS_SITE_ID = 'TOGGLE_SETTINGS_SITE_ID';
 export const UPDATE_APP = 'UPDATE_APP';
+export const UPDATE_DATA_DEFINITION_ID = 'UPDATE_DATA_DEFINITION_ID';
 export const UPDATE_DATA_LAYOUT_ID = 'UPDATE_DATA_LAYOUT_ID';
 export const UPDATE_DATA_LIST_VIEW_ID = 'UPDATE_DATA_LIST_VIEW_ID';
 export const UPDATE_NAME = 'UPDATE_NAME';
@@ -42,7 +43,7 @@ const reducer = (state, action) => {
 
 			if (action.deploymentType == PRODUCT_MENU) {
 				settings = {
-					scope: ['control_panel'],
+					scope: ['applications_menu.applications'],
 				};
 			}
 
@@ -108,6 +109,15 @@ const reducer = (state, action) => {
 				},
 			};
 		}
+		case UPDATE_DATA_DEFINITION_ID: {
+			return {
+				...state,
+				app: {
+					...state.app,
+					dataDefinitionId: action.id,
+				},
+			};
+		}
 		case UPDATE_DATA_LAYOUT_ID: {
 			return {
 				...state,
@@ -131,9 +141,7 @@ const reducer = (state, action) => {
 				...state,
 				app: {
 					...state.app,
-					name: {
-						en_US: action.appName,
-					},
+					name: action.name,
 				},
 			};
 		}

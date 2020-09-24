@@ -14,28 +14,33 @@
 
 package com.liferay.change.tracking.service.impl;
 
+import com.liferay.change.tracking.closure.CTClosure;
+import com.liferay.change.tracking.closure.CTClosureFactory;
 import com.liferay.change.tracking.conflict.ConflictInfo;
 import com.liferay.change.tracking.constants.CTConstants;
 import com.liferay.change.tracking.exception.CTCollectionDescriptionException;
 import com.liferay.change.tracking.exception.CTCollectionNameException;
+import com.liferay.change.tracking.internal.CTEnclosureUtil;
 import com.liferay.change.tracking.internal.CTServiceCopier;
 import com.liferay.change.tracking.internal.CTServiceRegistry;
 import com.liferay.change.tracking.internal.CTTableMapperHelper;
+import com.liferay.change.tracking.internal.closure.Node;
 import com.liferay.change.tracking.internal.conflict.CTConflictChecker;
 import com.liferay.change.tracking.internal.conflict.ConstraintResolverConflictInfo;
 import com.liferay.change.tracking.internal.conflict.ModificationConflictInfo;
+import com.liferay.change.tracking.internal.reference.TableReferenceDefinitionManager;
 import com.liferay.change.tracking.internal.resolver.ConstraintResolverKey;
 import com.liferay.change.tracking.model.CTAutoResolutionInfo;
 import com.liferay.change.tracking.model.CTCollection;
 import com.liferay.change.tracking.model.CTEntry;
 import com.liferay.change.tracking.model.CTPreferences;
 import com.liferay.change.tracking.model.CTProcess;
-import com.liferay.change.tracking.resolver.ConstraintResolver;
 import com.liferay.change.tracking.service.CTEntryLocalService;
 import com.liferay.change.tracking.service.CTPreferencesLocalService;
 import com.liferay.change.tracking.service.CTProcessLocalService;
 import com.liferay.change.tracking.service.base.CTCollectionLocalServiceBaseImpl;
 import com.liferay.change.tracking.service.persistence.CTAutoResolutionInfoPersistence;
+import com.liferay.change.tracking.spi.resolver.ConstraintResolver;
 import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMap;
 import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMapFactory;
 import com.liferay.petra.lang.SafeClosable;
@@ -64,9 +69,14 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
+import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -382,25 +392,8 @@ public class CTCollectionLocalServiceImpl
 		ctMessagePersistence.removeByCTCollectionId(
 			ctCollection.getCtCollectionId());
 
-		for (CTPreferences ctPreferences :
-				ctPreferencesPersistence.findByCollectionId(
-					ctCollection.getCtCollectionId())) {
-
-			ctPreferences.setCtCollectionId(
-				CTConstants.CT_COLLECTION_ID_PRODUCTION);
-
-			ctPreferencesPersistence.update(ctPreferences);
-		}
-
-		for (CTPreferences ctPreferences :
-				ctPreferencesPersistence.findByPreviousCollectionId(
-					ctCollection.getCtCollectionId())) {
-
-			ctPreferences.setPreviousCtCollectionId(
-				CTConstants.CT_COLLECTION_ID_PRODUCTION);
-
-			ctPreferencesPersistence.update(ctPreferences);
-		}
+		_ctPreferencesLocalService.resetCTPreferences(
+			ctCollection.getCtCollectionId());
 
 		List<CTProcess> ctProcesses = ctProcessPersistence.findByCollectionId(
 			ctCollection.getCtCollectionId());
@@ -429,6 +422,164 @@ public class CTCollectionLocalServiceImpl
 
 		return ctCollectionPersistence.findByC_S(
 			companyId, status, start, end, orderByComparator);
+	}
+
+	@Override
+	public List<CTEntry> getDiscardCTEntries(
+		long ctCollectionId, long modelClassNameId, long modelClassPK) {
+
+		CTClosure ctClosure = _ctClosureFactory.create(ctCollectionId);
+
+		Set<Node> nodes = new HashSet<>();
+
+		int rootCount = ctEntryPersistence.countByC_MCNI_MCPK(
+			ctCollectionId, modelClassNameId, modelClassPK);
+
+		if (rootCount == 0) {
+			Map<Long, List<Long>> pksMap = ctClosure.getChildPKsMap(
+				modelClassNameId, modelClassPK);
+
+			Deque<Map.Entry<Long, ? extends Collection<Long>>> queue =
+				new LinkedList<>(pksMap.entrySet());
+
+			Map.Entry<Long, ? extends Collection<Long>> entry = null;
+
+			while ((entry = queue.poll()) != null) {
+				long classNameId = entry.getKey();
+
+				for (long classPK : entry.getValue()) {
+					int count = ctEntryPersistence.countByC_MCNI_MCPK(
+						ctCollectionId, classNameId, classPK);
+
+					if (count == 0) {
+						Map<Long, ? extends Collection<Long>> childPKsMap =
+							ctClosure.getChildPKsMap(classNameId, classPK);
+
+						if (!childPKsMap.isEmpty()) {
+							queue.addAll(childPKsMap.entrySet());
+						}
+					}
+					else {
+						nodes.add(new Node(classNameId, classPK));
+					}
+				}
+			}
+		}
+		else {
+			nodes.add(new Node(modelClassNameId, modelClassPK));
+		}
+
+		Map<Long, Set<Long>> discardRootsMap = new HashMap<>();
+
+		CTEnclosureUtil.visitParentEntries(
+			ctClosure,
+			(classNameId, classPK, backtraceEntries) -> {
+				if (!nodes.contains(new Node(classNameId, classPK))) {
+					return false;
+				}
+
+				long previousModelClassNameId = classNameId;
+
+				Iterator<Map.Entry<Long, Long>> iterator =
+					backtraceEntries.iterator();
+
+				Map.Entry<Long, Long> highestRequiredBacktraceEntry = null;
+
+				while (iterator.hasNext()) {
+					Map.Entry<Long, Long> backtraceEntry = iterator.next();
+
+					long backtraceClassNameId = backtraceEntry.getKey();
+					long backtraceClassPK = backtraceEntry.getValue();
+
+					Set<Long> classPKs = discardRootsMap.get(
+						backtraceClassNameId);
+
+					if ((classPKs != null) &&
+						classPKs.contains(backtraceClassPK)) {
+
+						break;
+					}
+
+					CTEntry ctEntry = ctEntryPersistence.fetchByC_MCNI_MCPK(
+						ctCollectionId, backtraceClassNameId, backtraceClassPK);
+
+					if (ctEntry == null) {
+						break;
+					}
+
+					if ((ctEntry.getChangeType() !=
+							CTConstants.CT_CHANGE_TYPE_DELETION) &&
+						_tableReferenceDefinitionManager.isChildModelOptional(
+							previousModelClassNameId, backtraceClassNameId)) {
+
+						break;
+					}
+
+					highestRequiredBacktraceEntry = backtraceEntry;
+
+					previousModelClassNameId = backtraceClassNameId;
+				}
+
+				if (highestRequiredBacktraceEntry != null) {
+					Set<Long> classPKs = discardRootsMap.computeIfAbsent(
+						highestRequiredBacktraceEntry.getKey(),
+						key -> new HashSet<>());
+
+					classPKs.add(highestRequiredBacktraceEntry.getValue());
+				}
+
+				return true;
+			});
+
+		if (discardRootsMap.isEmpty()) {
+			discardRootsMap.put(
+				modelClassNameId, Collections.singleton(modelClassPK));
+		}
+
+		Map<Long, Set<Long>> discardEnclosureMap =
+			CTEnclosureUtil.getEnclosureMap(
+				ctClosure, discardRootsMap.entrySet());
+
+		List<CTEntry> ctEntries = new ArrayList<>(discardEnclosureMap.size());
+
+		for (Map.Entry<Long, Set<Long>> entry :
+				discardEnclosureMap.entrySet()) {
+
+			for (long classPK : entry.getValue()) {
+				CTEntry ctEntry = ctEntryPersistence.fetchByC_MCNI_MCPK(
+					ctCollectionId, entry.getKey(), classPK);
+
+				if (ctEntry != null) {
+					ctEntries.add(ctEntry);
+				}
+			}
+		}
+
+		return ctEntries;
+	}
+
+	@Override
+	public boolean isCTEntryEnclosed(
+		long ctCollectionId, long modelClassNameId, long modelClassPK) {
+
+		CTClosure ctClosure = _ctClosureFactory.create(ctCollectionId);
+
+		Map<Long, Set<Long>> enclosureMap = CTEnclosureUtil.getEnclosureMap(
+			ctClosure, modelClassNameId, modelClassPK);
+
+		for (Map.Entry<Long, Long> parentEntry :
+				CTEnclosureUtil.getEnclosureParentEntries(
+					ctClosure, enclosureMap)) {
+
+			int count = ctEntryPersistence.countByC_MCNI_MCPK(
+				ctCollectionId, parentEntry.getKey(), parentEntry.getValue());
+
+			if (count > 0) {
+				return false;
+			}
+		}
+
+		return true;
 	}
 
 	@Override
@@ -559,7 +710,9 @@ public class CTCollectionLocalServiceImpl
 	@Activate
 	protected void activate(BundleContext bundleContext) {
 		_serviceTrackerMap = ServiceTrackerMapFactory.openSingleValueMap(
-			bundleContext, ConstraintResolver.class, null,
+			bundleContext,
+			(Class<ConstraintResolver<?>>)(Class<?>)ConstraintResolver.class,
+			null,
 			(serviceReference, emitter) -> {
 				ConstraintResolver<?> constraintResolver =
 					bundleContext.getService(serviceReference);
@@ -611,6 +764,9 @@ public class CTCollectionLocalServiceImpl
 	private CTAutoResolutionInfoPersistence _ctAutoResolutionInfoPersistence;
 
 	@Reference
+	private CTClosureFactory _ctClosureFactory;
+
+	@Reference
 	private CTEntryLocalService _ctEntryLocalService;
 
 	@Reference
@@ -625,7 +781,10 @@ public class CTCollectionLocalServiceImpl
 	@Reference
 	private ResourceLocalService _resourceLocalService;
 
-	private ServiceTrackerMap<ConstraintResolverKey, ConstraintResolver>
+	private ServiceTrackerMap<ConstraintResolverKey, ConstraintResolver<?>>
 		_serviceTrackerMap;
+
+	@Reference
+	private TableReferenceDefinitionManager _tableReferenceDefinitionManager;
 
 }

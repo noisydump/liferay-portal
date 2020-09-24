@@ -14,12 +14,10 @@
 
 import ClayDropDown from '@clayui/drop-down';
 import {ClayCheckbox} from '@clayui/form';
-import React, {forwardRef, useMemo, useRef, useState} from 'react';
+import React, {forwardRef, useEffect, useMemo, useRef, useState} from 'react';
 
-import {FieldBaseProxy} from '../FieldBase/ReactFieldBase.es';
+import {FieldBase} from '../FieldBase/ReactFieldBase.es';
 import {useSyncValue} from '../hooks/useSyncValue.es';
-import getConnectedReactComponentAdapter from '../util/ReactComponentAdapter.es';
-import {connectStore} from '../util/connectStore.es';
 import HiddenSelectInput from './HiddenSelectInput.es';
 import VisibleSelectInput from './VisibleSelectInput.es';
 
@@ -35,6 +33,11 @@ const KEYCODES = {
 	SPACE: 32,
 	TAB: 9,
 };
+
+/**
+ * Maximum number of items to be shown without the Search bar
+ */
+const MAX_ITEMS = 11;
 
 /**
  * Appends a new value on the current value state
@@ -117,7 +120,7 @@ function assertOptionParameters({multiple, option, valueArray}) {
 function normalizeOptions({fixedOptions, multiple, options, valueArray}) {
 	const emptyOption = {
 		label: Liferay.Language.get('choose-an-option'),
-		value: '',
+		value: null,
 	};
 
 	const newOptions = [
@@ -158,6 +161,9 @@ function handleDropdownItemClick({currentValue, multiple, option}) {
 				valueToBeAppended: itemValue,
 			});
 		}
+	}
+	else if (itemValue === null) {
+		newValue = [];
 	}
 	else {
 		newValue = [itemValue];
@@ -217,6 +223,78 @@ const DropdownItem = ({
 	</>
 );
 
+const DropdownList = ({
+	currentValue,
+	expand,
+	handleSelect,
+	multiple,
+	options,
+}) => (
+	<ClayDropDown.ItemList>
+		{options.map((option, index) => (
+			<DropdownItem
+				currentValue={currentValue}
+				expand={expand}
+				index={index}
+				key={`${option.value}-${index}`}
+				multiple={multiple}
+				onSelect={handleSelect}
+				option={option}
+				options={options}
+			/>
+		))}
+	</ClayDropDown.ItemList>
+);
+
+const DropdownListWithSearch = ({
+	currentValue,
+	expand,
+	handleSelect,
+	multiple,
+	options,
+}) => {
+	const [query, setQuery] = useState('');
+	const [filteredOptions, setFilteredOptions] = useState([]);
+
+	const emptyOption = {
+		label: Liferay.Language.get('choose-an-option'),
+		value: null,
+	};
+
+	useEffect(() => {
+		const result = options.filter(
+			(option) =>
+				option.value &&
+				option.label.toLowerCase().includes(query.toLowerCase())
+		);
+
+		setFilteredOptions([emptyOption, ...result]);
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [options, query]);
+
+	return (
+		<>
+			<ClayDropDown.Search
+				onChange={(event) => setQuery(event.target.value)}
+				value={query}
+			/>
+			{filteredOptions.length > 1 ? (
+				<DropdownList
+					currentValue={currentValue}
+					expand={expand}
+					handleSelect={handleSelect}
+					multiple={multiple}
+					options={filteredOptions}
+				/>
+			) : (
+				<div className="dropdown-section text-muted">
+					{Liferay.Language.get('empty-list')}
+				</div>
+			)}
+		</>
+	);
+};
+
 const Trigger = forwardRef(
 	(
 		{
@@ -262,7 +340,7 @@ const Select = ({
 	const menuElementRef = useRef(null);
 	const triggerElementRef = useRef(null);
 
-	const [currentValue, setCurrentValue] = useSyncValue(value);
+	const [currentValue, setCurrentValue] = useSyncValue(value, false);
 	const [expand, setExpand] = useState(false);
 
 	const handleFocus = (event, direction) => {
@@ -310,6 +388,8 @@ const Select = ({
 			setExpand(false);
 
 			onExpand({event, expand: false});
+
+			triggerElementRef.current.firstChild.focus();
 		}
 	};
 
@@ -334,6 +414,10 @@ const Select = ({
 
 					setExpand(!expand);
 					onExpand({event, expand: !expand});
+
+					if (expand) {
+						triggerElementRef.current.firstChild.focus();
+					}
 				}}
 				onTriggerKeyDown={(event) => {
 					if (
@@ -362,6 +446,10 @@ const Select = ({
 						setExpand(!expand);
 
 						onExpand({event, expand: !expand});
+
+						if (expand) {
+							triggerElementRef.current.firstChild.focus();
+						}
 					}
 				}}
 				options={options}
@@ -393,20 +481,23 @@ const Select = ({
 				onSetActive={setExpand}
 				ref={menuElementRef}
 			>
-				<ClayDropDown.ItemList>
-					{options.map((option, index) => (
-						<DropdownItem
-							currentValue={currentValue}
-							expand={expand}
-							index={index}
-							key={`${option.value}-${index}`}
-							multiple={multiple}
-							onSelect={handleSelect}
-							option={option}
-							options={options}
-						/>
-					))}
-				</ClayDropDown.ItemList>
+				{options.length > MAX_ITEMS ? (
+					<DropdownListWithSearch
+						currentValue={currentValue}
+						expand={expand}
+						handleSelect={handleSelect}
+						multiple={multiple}
+						options={options}
+					/>
+				) : (
+					<DropdownList
+						currentValue={currentValue}
+						expand={expand}
+						handleSelect={handleSelect}
+						multiple={multiple}
+						options={options}
+					/>
+				)}
 			</ClayDropDown.Menu>
 		</>
 	);
@@ -418,8 +509,9 @@ const Main = ({
 	localizedValue = {},
 	multiple,
 	name,
+	onBlur = () => {},
 	onChange,
-	onExpand = () => {},
+	onFocus = () => {},
 	options = [],
 	predefinedValue = [],
 	readOnly = false,
@@ -452,7 +544,7 @@ const Main = ({
 	);
 
 	return (
-		<FieldBaseProxy
+		<FieldBase
 			label={label}
 			localizedValue={localizedValue}
 			name={name}
@@ -462,40 +554,30 @@ const Main = ({
 			<Select
 				multiple={multiple}
 				name={name}
-				onCloseButtonClicked={onChange}
-				onDropdownItemClicked={onChange}
-				onExpand={onExpand}
+				onCloseButtonClicked={({event, value}) =>
+					onChange(event, value)
+				}
+				onDropdownItemClicked={({event, value}) =>
+					onChange(event, value)
+				}
+				onExpand={({event, expand}) => {
+					if (expand) {
+						onFocus(event);
+					}
+					else {
+						onBlur(event);
+					}
+				}}
 				options={normalizedOptions}
 				predefinedValue={predefinedValueArray}
 				readOnly={readOnly}
 				value={value}
 				{...otherProps}
 			/>
-		</FieldBaseProxy>
+		</FieldBase>
 	);
 };
 
 Main.displayName = 'Select';
 
-const SelectProxy = connectStore(({emit, ...otherProps}) => (
-	<Main
-		{...otherProps}
-		onChange={({event, value}) => emit('fieldEdited', event, value)}
-		onExpand={({event, expand}) => {
-			if (expand) {
-				emit('fieldFocused', event, event.target.value);
-			}
-			else {
-				emit('fieldBlurred', event, event.target.value);
-			}
-		}}
-	/>
-));
-
-const ReactSelectAdapter = getConnectedReactComponentAdapter(
-	SelectProxy,
-	'select'
-);
-
-export {ReactSelectAdapter, Main};
-export default ReactSelectAdapter;
+export default Main;

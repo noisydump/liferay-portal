@@ -69,6 +69,26 @@
 	<td></td>
 </tr>
 <tr>
+	<td>PERFORMANCE_TOTAL_COMPLETED_ITEMS_VALUE</td>
+	<td>//div[@class='header'][span[contains(text(),'Total Completed')]]/following-sibling::div</td>
+	<td></td>
+</tr>
+<tr>
+	<td>PERFORMANCE_TOTAL_OVERDUE_ITEMS_VALUE</td>
+	<td>//div[@class='header'][span[contains(text(),'Overdue')]]/following-sibling::div</td>
+	<td></td>
+</tr>
+<tr>
+	<td>PERFORMANCE_TOTAL_ONTIME_ITEMS_VALUE</td>
+	<td>//div[@class='header'][span[contains(text(),'On Time')]]/following-sibling::div</td>
+	<td></td>
+</tr>
+<tr>
+	<td>PERFORMANCE_TOTAL_UNTRACKED_ITEMS_VALUE</td>
+	<td>//div[@class='header'][span[contains(text(),'Untracked')]]/following-sibling::div</td>
+	<td></td>
+</tr>
+<tr>
 	<td>METRICS_ALL_ITEMS_TABLE_INSTANCE</td>
 	<td>//td[contains(@data-testid,'assetInfoCell') and contains(text(),'${key_instanceInfo}')]</td>
 	<td></td>
@@ -110,7 +130,7 @@
 </tr>
 <tr>
 	<td>METRICS_COMPLETION_VELOCITY_CUSTOM_RANGE_APPLY</td>
-	<td>//button[@data-testid='applyButton']</td>
+	<td>//button[contains(text(),'Apply')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -190,7 +210,7 @@
 </tr>
 <tr>
 	<td>METRICS_PERFORMANCE_BY_STEP_AVG_COMPLETION_TIME_VALUE</td>
-	<td>//tr[contains(*, '${rowName}')]//td[@data-testid='avgCompletionTime'] | //tr[contains(*, '${rowName}')]//td[@data-testid='durationTaskAvg']</td>
+	<td>//tr[contains(*, '${key_rowName}')]//td[@data-testid='avgCompletionTime'] | //tr[contains(*, '${key_rowName}')]//td[@data-testid='durationTaskAvg']</td>
 	<td></td>
 </tr>
 <tr>
@@ -200,7 +220,22 @@
 </tr>
 <tr>
 	<td>METRICS_PERFORMANCE_BY_STEP_SLA_BREACHED_VALUE</td>
-	<td>//tr[contains(*, '${rowName}')]//td[@data-testid='slaBreached'] | //tr[contains(*, '${rowName}')]//td[@data-testid='stepSla']</td>
+	<td>//tr[contains(*, '${key_rowName}')]//td[@data-testid='slaBreached'] | //tr[contains(*, '${key_rowName}')]//td[@data-testid='stepSla']</td>
+	<td></td>
+</tr>
+<tr>
+	<td>METRICS_PERFORMANCE_BY_STEP_AVG_TIME_REORDER</td>
+	<td>//span[contains(text(),'Average Completion Time')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>METRICS_PERFORMANCE_BY_STEP_SLA_BREACHED_REORDER</td>
+	<td>//span[contains(text(),'SLA Breached (%)')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>METRICS_PERFORMANCE_BY_STEP_ROW_ORDER_CHECK</td>
+	<td>//tr[${key_rowNumber}]/td[contains(text(),'${key_rowName}')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -352,6 +387,11 @@
 <tr>
 	<td>METRICS_WORKLOAD_BY_ASSIGNEE_SEARCH_ASSIGNEE_NAME</td>
 	<td>//input[@placeholder='Search for Assignee Name']</td>
+	<td></td>
+</tr>
+<tr>
+	<td>KEBAB_BUTTON_DISABLED</td>
+	<td>//button[@data-testid="kebab" and @disabled]</td>
 	<td></td>
 </tr>
 </tbody>

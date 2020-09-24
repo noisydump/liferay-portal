@@ -16,9 +16,9 @@
 
 <%@ include file="/init.jsp" %>
 
-<h4 class="sheet-tertiary-title">
+<p class="h4 sheet-tertiary-title">
 	<liferay-ui:message key="show-and-set" />
-</h4>
+</p>
 
 <c:if test="<%= assetPublisherDisplayContext.isShowEnableAddContentButton() %>">
 	<aui:input helpMessage="show-add-content-button-help" name="preferences--showAddContentButton--" type="checkbox" value="<%= assetPublisherDisplayContext.isShowAddContentButton() %>" />
@@ -41,9 +41,9 @@ String helpMessage2 = "<em>" + LanguageUtil.format(request, "content-with-tag-x"
 
 <aui:input label="include-tags-specified-in-the-url" name="preferences--mergeUrlTags--" type="checkbox" value="<%= assetPublisherDisplayContext.isMergeURLTags() %>" />
 
-<h4 class="sheet-tertiary-title">
+<p class="h4 sheet-tertiary-title">
 	<liferay-ui:message key="enable" />
-</h4>
+</p>
 
 <clay:row>
 	<clay:col
@@ -74,7 +74,7 @@ String helpMessage2 = "<em>" + LanguageUtil.format(request, "content-with-tag-x"
 
 		<aui:input label="comment-ratings" name="preferences--enableCommentRatings--" type="checkbox" value="<%= assetPublisherDisplayContext.isEnableCommentRatings() %>" />
 
-		<c:if test="<%= PropsValues.ASSET_ENTRY_BUFFERED_INCREMENT_ENABLED %>">
+		<c:if test="<%= PropsValues.VIEW_COUNT_ENABLED %>">
 			<aui:input label="view-count-increment" name="preferences--enableViewCountIncrement--" type="checkbox" value="<%= assetPublisherDisplayContext.isEnableViewCountIncrement() %>" />
 		</c:if>
 
@@ -99,11 +99,11 @@ String helpMessage2 = "<em>" + LanguageUtil.format(request, "content-with-tag-x"
 	String[] conversions = DocumentConversionUtil.getConversions("html");
 	%>
 
-	<h4 class="sheet-tertiary-title">
+	<p class="h4 sheet-tertiary-title">
 		<liferay-ui:message key="enable-conversion-to" />
 
 		<liferay-ui:icon-help message="enabling-openoffice-integration-provides-document-conversion-functionality" />
-	</h4>
+	</p>
 
 	<clay:row>
 		<clay:col
@@ -142,9 +142,9 @@ String helpMessage2 = "<em>" + LanguageUtil.format(request, "content-with-tag-x"
 	</clay:row>
 </c:if>
 
-<h4 class="sheet-tertiary-title">
+<p class="h4 sheet-tertiary-title">
 	<liferay-ui:message key="social-bookmarks" />
-</h4>
+</p>
 
 <liferay-social-bookmarks:bookmarks-settings
 	displayStyle="<%= assetPublisherDisplayContext.getSocialBookmarksDisplayStyle() %>"

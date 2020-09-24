@@ -113,7 +113,8 @@ definition {
 		else {
 			var bodyContent = selenium.getText("MockMock#MOCKMOCK_MESSAGE_BODY");
 			var bodyContent = StringUtil.extractLast("${bodyContent}", "${specificText}");
-			var bodySpecificText = StringUtil.extractFirst("${bodyContent}", "&");
+			var bodySpecificText = StringUtil.extractFirst("${bodyContent}", "${extractFirstText}");
+			var bodySpecificText = StringUtil.trim("${bodySpecificText}");
 		}
 
 		return "${bodySpecificText}";
@@ -158,6 +159,29 @@ definition {
 			subject = "${subject}");
 
 		MockMock._backtoInbox();
+	}
+
+	macro viewMailForOTP {
+		MockMock._gotoMail();
+
+		var key_columnEntry = "${subject}";
+		var key_sender = "${sender}";
+
+		AssertTextEquals(
+			locator1 = "MockMock#MOCKMOCK_FROM_FIELD",
+			value1 = "${sender}");
+
+		AssertTextEquals(
+			locator1 = "MockMock#MOCKMOCK_SUBJECT_FIELD",
+			value1 = "${subject}");
+
+		MockMock._gotoMailMessage(asset = "${subject}");
+
+		var key_asset = "${content}";
+
+		AssertTextEquals.assertPartialText(
+			locator1 = "MockMock#MOCKMOCK_MESSAGE_BODY",
+			value1 = "${content}");
 	}
 
 }

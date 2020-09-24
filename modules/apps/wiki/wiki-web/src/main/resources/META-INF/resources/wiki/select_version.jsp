@@ -20,7 +20,6 @@
 WikiPage wikiPage = (WikiPage)request.getAttribute(WikiWebKeys.WIKI_PAGE);
 
 double sourceVersion = ParamUtil.getDouble(request, "sourceVersion");
-String eventName = ParamUtil.getString(request, "eventName", renderResponse.getNamespace() + "selectVersionFm");
 
 PortletURL portletURL = renderResponse.createRenderURL();
 
@@ -31,7 +30,7 @@ portletURL.setParameter("title", HtmlUtil.unescape(wikiPage.getTitle()));
 portletURL.setParameter("sourceVersion", String.valueOf(sourceVersion));
 %>
 
-<clay:container>
+<clay:container-fluid>
 	<aui:form action="<%= portletURL.toString() %>" method="post" name="selectVersionFm">
 		<liferay-ui:search-container
 			id="wikiPageVersionSearchContainer"
@@ -62,15 +61,19 @@ portletURL.setParameter("sourceVersion", String.valueOf(sourceVersion));
 								curTargetVersion = curSourceVersion;
 								curSourceVersion = tempVersion;
 							}
-
-							Map<String, Object> data = HashMapBuilder.<String, Object>put(
-								"sourceversion", curSourceVersion
-							).put(
-								"targetversion", curTargetVersion
-							).build();
 							%>
 
-							<aui:a cssClass="selector-button" data="<%= data %>" href="javascript:;">
+							<aui:a
+								cssClass="selector-button"
+								data='<%=
+									HashMapBuilder.<String, Object>put(
+										"sourceversion", curSourceVersion
+									).put(
+										"targetversion", curTargetVersion
+									).build()
+								%>'
+								href="javascript:;"
+							>
 								<%= String.valueOf(curWikiPage.getVersion()) %>
 							</aui:a>
 						</c:when>
@@ -91,11 +94,4 @@ portletURL.setParameter("sourceVersion", String.valueOf(sourceVersion));
 			/>
 		</liferay-ui:search-container>
 	</aui:form>
-</clay:container>
-
-<aui:script>
-	Liferay.Util.selectEntityHandler(
-		'#<portlet:namespace />selectVersionFm',
-		'<%= HtmlUtil.escapeJS(eventName) %>'
-	);
-</aui:script>
+</clay:container-fluid>

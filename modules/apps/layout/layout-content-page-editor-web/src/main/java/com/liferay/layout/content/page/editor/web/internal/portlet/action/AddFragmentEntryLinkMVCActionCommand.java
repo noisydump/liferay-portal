@@ -29,8 +29,6 @@ import com.liferay.layout.content.page.editor.listener.ContentPageEditorListener
 import com.liferay.layout.content.page.editor.listener.ContentPageEditorListenerTracker;
 import com.liferay.layout.content.page.editor.web.internal.util.FragmentEntryLinkUtil;
 import com.liferay.layout.content.page.editor.web.internal.util.layout.structure.LayoutStructureUtil;
-import com.liferay.layout.page.template.model.LayoutPageTemplateStructure;
-import com.liferay.layout.page.template.service.LayoutPageTemplateStructureLocalService;
 import com.liferay.layout.util.structure.LayoutStructure;
 import com.liferay.layout.util.structure.LayoutStructureItem;
 import com.liferay.petra.string.StringPool;
@@ -39,7 +37,6 @@ import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.language.LanguageUtil;
-import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextFactory;
@@ -108,18 +105,17 @@ public class AddFragmentEntryLinkMVCActionCommand
 			return _fragmentEntryLinkService.addFragmentEntryLink(
 				serviceContext.getScopeGroupId(), 0,
 				fragmentEntry.getFragmentEntryId(), segmentsExperienceId,
-				_portal.getClassNameId(Layout.class), serviceContext.getPlid(),
-				fragmentEntry.getCss(), fragmentEntry.getHtml(),
-				fragmentEntry.getJs(), fragmentEntry.getConfiguration(), null,
-				StringPool.BLANK, 0, contributedRendererKey, serviceContext);
+				serviceContext.getPlid(), fragmentEntry.getCss(),
+				fragmentEntry.getHtml(), fragmentEntry.getJs(),
+				fragmentEntry.getConfiguration(), null, StringPool.BLANK, 0,
+				contributedRendererKey, serviceContext);
 		}
 
 		return _fragmentEntryLinkService.addFragmentEntryLink(
 			serviceContext.getScopeGroupId(), 0, 0, segmentsExperienceId,
-			_portal.getClassNameId(Layout.class), serviceContext.getPlid(),
+			serviceContext.getPlid(), StringPool.BLANK, StringPool.BLANK,
 			StringPool.BLANK, StringPool.BLANK, StringPool.BLANK,
-			StringPool.BLANK, StringPool.BLANK, StringPool.BLANK, 0,
-			fragmentEntryKey, serviceContext);
+			StringPool.BLANK, 0, fragmentEntryKey, serviceContext);
 	}
 
 	@Override
@@ -155,7 +151,7 @@ public class AddFragmentEntryLinkMVCActionCommand
 
 	private JSONObject _addFragmentEntryLinkToLayoutDataJSONObject(
 			ActionRequest actionRequest, FragmentEntryLink fragmentEntryLink)
-		throws PortalException {
+		throws Exception {
 
 		ThemeDisplay themeDisplay = (ThemeDisplay)actionRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
@@ -190,16 +186,10 @@ public class AddFragmentEntryLinkMVCActionCommand
 			contentPageEditorListener.onAddFragmentEntryLink(fragmentEntryLink);
 		}
 
-		LayoutPageTemplateStructure layoutPageTemplateStructure =
-			_layoutPageTemplateStructureLocalService.
-				fetchLayoutPageTemplateStructure(
-					themeDisplay.getScopeGroupId(),
-					_portal.getClassNameId(Layout.class.getName()),
-					themeDisplay.getPlid(), true);
-
-		LayoutStructure layoutStructure = LayoutStructure.of(
-			layoutPageTemplateStructure.getData(
-				fragmentEntryLink.getSegmentsExperienceId()));
+		LayoutStructure layoutStructure =
+			LayoutStructureUtil.getLayoutStructure(
+				themeDisplay.getScopeGroupId(), themeDisplay.getPlid(),
+				fragmentEntryLink.getSegmentsExperienceId());
 
 		return jsonObject.put("layoutData", layoutStructure.toJSONObject());
 	}
@@ -245,10 +235,6 @@ public class AddFragmentEntryLinkMVCActionCommand
 
 	@Reference
 	private ItemSelector _itemSelector;
-
-	@Reference
-	private LayoutPageTemplateStructureLocalService
-		_layoutPageTemplateStructureLocalService;
 
 	@Reference
 	private Portal _portal;

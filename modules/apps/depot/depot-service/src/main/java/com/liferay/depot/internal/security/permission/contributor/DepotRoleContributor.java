@@ -22,10 +22,8 @@ import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Group;
-import com.liferay.portal.kernel.model.GroupConstants;
 import com.liferay.portal.kernel.model.Role;
 import com.liferay.portal.kernel.model.User;
-import com.liferay.portal.kernel.model.role.RoleConstants;
 import com.liferay.portal.kernel.security.permission.UserBag;
 import com.liferay.portal.kernel.security.permission.contributor.RoleCollection;
 import com.liferay.portal.kernel.security.permission.contributor.RoleContributor;
@@ -34,7 +32,6 @@ import com.liferay.portal.kernel.service.RoleLocalService;
 import com.liferay.portal.kernel.service.UserGroupRoleLocalService;
 
 import java.util.List;
-import java.util.Objects;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -55,7 +52,7 @@ public class DepotRoleContributor implements RoleContributor {
 			Group group = _groupLocalService.getGroup(
 				roleCollection.getGroupId());
 
-			if (!Objects.equals(GroupConstants.TYPE_DEPOT, group.getType())) {
+			if (!group.isDepot()) {
 				return;
 			}
 
@@ -64,8 +61,6 @@ public class DepotRoleContributor implements RoleContributor {
 			if (userBag.hasUserGroup(group)) {
 				_addRoleId(
 					roleCollection, DepotRolesConstants.ASSET_LIBRARY_MEMBER);
-
-				_addRoleId(roleCollection, RoleConstants.SITE_MEMBER);
 			}
 
 			User user = roleCollection.getUser();
@@ -73,25 +68,14 @@ public class DepotRoleContributor implements RoleContributor {
 			if (_userGroupRoleLocalService.hasUserGroupRole(
 					user.getUserId(), group.getGroupId(),
 					DepotRolesConstants.ASSET_LIBRARY_CONTENT_REVIEWER, true)) {
-
-				_addRoleId(roleCollection, RoleConstants.SITE_CONTENT_REVIEWER);
 			}
 
-			boolean assetLibraryOwner =
-				_userGroupRoleLocalService.hasUserGroupRole(
+			if (_userGroupRoleLocalService.hasUserGroupRole(
 					user.getUserId(), group.getGroupId(),
-					DepotRolesConstants.ASSET_LIBRARY_OWNER, true);
-
-			if (assetLibraryOwner ||
+					DepotRolesConstants.ASSET_LIBRARY_OWNER, true) ||
 				_userGroupRoleLocalService.hasUserGroupRole(
 					user.getUserId(), group.getGroupId(),
 					DepotRolesConstants.ASSET_LIBRARY_ADMINISTRATOR, true)) {
-
-				_addRoleId(roleCollection, RoleConstants.SITE_ADMINISTRATOR);
-			}
-
-			if (assetLibraryOwner) {
-				_addRoleId(roleCollection, RoleConstants.SITE_OWNER);
 			}
 
 			List<DepotEntryGroupRel> depotEntryGroupRels =

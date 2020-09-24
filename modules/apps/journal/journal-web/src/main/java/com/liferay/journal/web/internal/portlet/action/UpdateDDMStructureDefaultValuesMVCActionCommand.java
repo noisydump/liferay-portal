@@ -95,19 +95,19 @@ public class UpdateDDMStructureDefaultValuesMVCActionCommand
 				WebKeys.UPLOAD_EXCEPTION);
 
 		if (uploadException != null) {
-			Throwable cause = uploadException.getCause();
+			Throwable throwable = uploadException.getCause();
 
 			if (uploadException.isExceededLiferayFileItemSizeLimit()) {
-				throw new LiferayFileItemException(cause);
+				throw new LiferayFileItemException(throwable);
 			}
 
 			if (uploadException.isExceededFileSizeLimit() ||
 				uploadException.isExceededUploadRequestSizeLimit()) {
 
-				throw new ArticleContentSizeException(cause);
+				throw new ArticleContentSizeException(throwable);
 			}
 
-			throw new PortalException(cause);
+			throw new PortalException(throwable);
 		}
 
 		UploadPortletRequest uploadPortletRequest =
@@ -117,9 +117,6 @@ public class UpdateDDMStructureDefaultValuesMVCActionCommand
 			actionRequest, ActionRequest.ACTION_NAME);
 
 		long groupId = ParamUtil.getLong(uploadPortletRequest, "groupId");
-		long classNameId = ParamUtil.getLong(
-			uploadPortletRequest, "classNameId");
-		long classPK = ParamUtil.getLong(uploadPortletRequest, "classPK");
 		String articleId = ParamUtil.getString(
 			uploadPortletRequest, "articleId");
 		Map<Locale, String> titleMap = LocalizationUtil.getLocalizationMap(
@@ -216,6 +213,10 @@ public class UpdateDDMStructureDefaultValuesMVCActionCommand
 		if (actionName.equals("/journal/add_ddm_structure_default_values")) {
 
 			// Add article
+
+			long classNameId = ParamUtil.getLong(
+				uploadPortletRequest, "classNameId");
+			long classPK = ParamUtil.getLong(uploadPortletRequest, "classPK");
 
 			article = _journalArticleService.addArticleDefaultValues(
 				groupId, classNameId, classPK, titleMap, descriptionMap,

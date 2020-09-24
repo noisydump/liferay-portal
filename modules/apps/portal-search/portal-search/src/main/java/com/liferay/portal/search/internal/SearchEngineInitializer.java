@@ -27,8 +27,6 @@ import com.liferay.portal.kernel.search.IndexWriterHelperUtil;
 import com.liferay.portal.kernel.search.Indexer;
 import com.liferay.portal.kernel.search.SearchEngineHelperUtil;
 import com.liferay.portal.kernel.util.Time;
-import com.liferay.portal.search.ccr.CrossClusterReplicationHelper;
-import com.liferay.portal.search.index.IndexNameBuilder;
 import com.liferay.portal.util.PropsValues;
 
 import java.util.ArrayList;
@@ -50,14 +48,10 @@ public class SearchEngineInitializer implements Runnable {
 
 	public SearchEngineInitializer(
 		BundleContext bundleContext, long companyId,
-		CrossClusterReplicationHelper crossClusterReplicationHelper,
-		IndexNameBuilder indexNameBuilder,
 		PortalExecutorManager portalExecutorManager) {
 
 		_bundleContext = bundleContext;
 		_companyId = companyId;
-		_crossClusterReplicationHelper = crossClusterReplicationHelper;
-		_indexNameBuilder = indexNameBuilder;
 		_portalExecutorManager = portalExecutorManager;
 	}
 
@@ -91,7 +85,7 @@ public class SearchEngineInitializer implements Runnable {
 		}
 
 		if (_log.isInfoEnabled()) {
-			_log.info("Reindexing Lucene started");
+			_log.info("Reindexing started");
 		}
 
 		if (delay < 0) {
@@ -115,19 +109,9 @@ public class SearchEngineInitializer implements Runnable {
 		stopWatch.start();
 
 		try {
-			if (_crossClusterReplicationHelper != null) {
-				_crossClusterReplicationHelper.unfollow(
-					_indexNameBuilder.getIndexName(_companyId));
-			}
-
 			SearchEngineHelperUtil.removeCompany(_companyId);
 
 			SearchEngineHelperUtil.initialize(_companyId);
-
-			if (_crossClusterReplicationHelper != null) {
-				_crossClusterReplicationHelper.follow(
-					_indexNameBuilder.getIndexName(_companyId));
-			}
 
 			long backgroundTaskId =
 				BackgroundTaskThreadLocal.getBackgroundTaskId();
@@ -135,11 +119,13 @@ public class SearchEngineInitializer implements Runnable {
 
 			if (_companyId == CompanyConstants.SYSTEM) {
 				_indexers = ServiceTrackerListFactory.open(
-					_bundleContext, Indexer.class, "(system.index=true)");
+					_bundleContext, (Class<Indexer<?>>)(Class<?>)Indexer.class,
+					"(system.index=true)");
 			}
 			else {
 				_indexers = ServiceTrackerListFactory.open(
-					_bundleContext, Indexer.class, "(!(system.index=true))");
+					_bundleContext, (Class<Indexer<?>>)(Class<?>)Indexer.class,
+					"(!(system.index=true))");
 			}
 
 			for (Indexer<?> indexer : _indexers) {
@@ -174,7 +160,7 @@ public class SearchEngineInitializer implements Runnable {
 
 			if (_log.isInfoEnabled()) {
 				_log.info(
-					"Reindexing Lucene completed in " +
+					"Reindexing completed in " +
 						(stopWatch.getTime() / Time.SECOND) + " seconds");
 			}
 		}
@@ -182,7 +168,7 @@ public class SearchEngineInitializer implements Runnable {
 			_log.error("Error encountered while reindexing", exception);
 
 			if (_log.isInfoEnabled()) {
-				_log.info("Reindexing Lucene failed");
+				_log.info("Reindexing failed");
 			}
 		}
 
@@ -218,10 +204,8 @@ public class SearchEngineInitializer implements Runnable {
 
 	private final BundleContext _bundleContext;
 	private final long _companyId;
-	private final CrossClusterReplicationHelper _crossClusterReplicationHelper;
 	private boolean _finished;
-	private ServiceTrackerList<Indexer, Indexer> _indexers;
-	private final IndexNameBuilder _indexNameBuilder;
+	private ServiceTrackerList<Indexer<?>, Indexer<?>> _indexers;
 	private final PortalExecutorManager _portalExecutorManager;
 	private final Set<String> _usedSearchEngineIds = new HashSet<>();
 

@@ -24,24 +24,22 @@ DDMFormInstanceRecordVersion ddmFormInstanceRecordVersion = ddmFormAdminDisplayC
 portletDisplay.setShowBackIcon(true);
 portletDisplay.setURLBack(redirect);
 
-String title = ParamUtil.getString(request, "title");
-
-renderResponse.setTitle(GetterUtil.get(title, LanguageUtil.get(request, "view-form")));
+renderResponse.setTitle(LanguageUtil.get(request, "view-form"));
 %>
 
-<clay:container
-	className="ddm-form-builder-app editing-form-entry"
->
-	<div class="portlet-forms">
-		<div class="ddm-form-basic-info ddm-form-success-page">
-			<clay:container>
-				<h1 class="ddm-form-name"><%= ddmFormAdminDisplayContext.getFormName() %></h1>
+<clay:container-fluid>
+	<c:if test="<%= ddmFormInstanceRecordVersion != null %>">
+		<aui:model-context bean="<%= ddmFormInstanceRecordVersion %>" model="<%= DDMFormInstanceRecordVersion.class %>" />
 
-				<h5 class="ddm-form-description"><%= ddmFormAdminDisplayContext.getFormDescription() %></h5>
-			</clay:container>
+		<div class="panel text-center">
+			<aui:workflow-status markupView="lexicon" model="<%= DDMFormInstanceRecord.class %>" showHelpMessage="<%= false %>" showIcon="<%= false %>" showLabel="<%= false %>" status="<%= ddmFormInstanceRecordVersion.getStatus() %>" version="<%= ddmFormInstanceRecordVersion.getVersion() %>" />
 		</div>
-	</div>
+	</c:if>
+</clay:container-fluid>
 
+<clay:container-fluid
+	cssClass="editing-form-entry-admin"
+>
 	<portlet:actionURL name="addFormInstanceRecord" var="editFormInstanceRecordActionURL" />
 
 	<aui:form action="<%= editFormInstanceRecordActionURL %>" data-DDMFormInstanceId="<%= ddmFormInstanceRecordVersion.getFormInstanceId() %>" data-senna-off="true" method="post" name="fm">
@@ -49,6 +47,18 @@ renderResponse.setTitle(GetterUtil.get(title, LanguageUtil.get(request, "view-fo
 		<aui:input name="formInstanceRecordId" type="hidden" value="<%= ddmFormInstanceRecordVersion.getFormInstanceRecordId() %>" />
 		<aui:input name="formInstanceId" type="hidden" value="<%= ddmFormInstanceRecordVersion.getFormInstanceId() %>" />
 
+		<div class="ddm-form-basic-info">
+			<h1 class="ddm-form-name"><%= ddmFormAdminDisplayContext.getFormName() %></h1>
+
+			<%
+			String description = ddmFormAdminDisplayContext.getFormDescription();
+			%>
+
+			<c:if test="<%= Validator.isNotNull(description) %>">
+				<h5 class="ddm-form-description"><%= description %></h5>
+			</c:if>
+		</div>
+
 		<%= ddmFormAdminDisplayContext.getDDMFormHTML(renderRequest, false) %>
 	</aui:form>
-</clay:container>
+</clay:container-fluid>

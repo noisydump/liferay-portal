@@ -13,13 +13,31 @@
  */
 
 import {waitForElementToBeRemoved} from '@testing-library/dom';
-import {cleanup, render} from '@testing-library/react';
+import {render} from '@testing-library/react';
 import React from 'react';
 
 import ListApps from '../../../../src/main/resources/META-INF/resources/js/pages/apps/ListApps.es';
 import * as time from '../../../../src/main/resources/META-INF/resources/js/utils/time.es';
 import AppContextProviderWrapper from '../../AppContextProviderWrapper.es';
-import {RESPONSES} from '../../constants.es';
+import {DATA_DEFINITION_RESPONSES, RESPONSES} from '../../constants.es';
+
+const DROPDOWN_VALUES = {
+	items: [
+		{
+			defaultLanguageId: 'en_US',
+			id: 37568,
+			name: {
+				en_US: 'test',
+			},
+		},
+	],
+};
+
+const routeProps = {
+	match: {
+		params: {dataDefinitionId: '123', objectType: 'custom-object'},
+	},
+};
 
 describe('ListApps', () => {
 	beforeEach(() => {
@@ -27,17 +45,19 @@ describe('ListApps', () => {
 	});
 
 	afterEach(() => {
-		cleanup();
 		jest.restoreAllMocks();
 	});
 
 	it('renders', async () => {
-		fetch.mockResponse(JSON.stringify(RESPONSES.ONE_ITEM));
-
-		const {asFragment} = render(
-			<ListApps match={{params: {dataDefinitionId: ''}, url: '/'}} />,
-			{wrapper: AppContextProviderWrapper}
+		fetch.mockResponseOnce(JSON.stringify(RESPONSES.ONE_ITEM));
+		fetch.mockResponseOnce(
+			JSON.stringify(DATA_DEFINITION_RESPONSES.ONE_ITEM)
 		);
+		fetch.mockResponse(JSON.stringify(DROPDOWN_VALUES));
+
+		const {asFragment} = render(<ListApps {...routeProps} />, {
+			wrapper: AppContextProviderWrapper,
+		});
 
 		await waitForElementToBeRemoved(() =>
 			document.querySelector('span.loading-animation')
@@ -46,28 +66,16 @@ describe('ListApps', () => {
 		expect(asFragment()).toMatchSnapshot();
 	});
 
-	it('renders with dataDefinitionId and 5 apps in the list', async () => {
-		fetch.mockResponse(JSON.stringify(RESPONSES.MANY_ITEMS(5)));
-
-		const {container} = render(
-			<ListApps match={{params: {dataDefinitionId: '1'}, url: '/'}} />,
-			{wrapper: AppContextProviderWrapper}
+	it('renders with 5 apps in the list', async () => {
+		fetch.mockResponseOnce(JSON.stringify(RESPONSES.MANY_ITEMS(5)));
+		fetch.mockResponseOnce(
+			JSON.stringify(DATA_DEFINITION_RESPONSES.ONE_ITEM)
 		);
+		fetch.mockResponse(JSON.stringify(DROPDOWN_VALUES));
 
-		await waitForElementToBeRemoved(() =>
-			document.querySelector('span.loading-animation')
-		);
-
-		expect(container.querySelector('tbody').children.length).toEqual(5);
-	});
-
-	it('renders with no dataDefinitionId and 5 apps in the list', async () => {
-		fetch.mockResponse(JSON.stringify(RESPONSES.MANY_ITEMS(5)));
-
-		const {container} = render(
-			<ListApps match={{params: {dataDefinitionId: ''}, url: '/'}} />,
-			{wrapper: AppContextProviderWrapper}
-		);
+		const {container} = render(<ListApps {...routeProps} />, {
+			wrapper: AppContextProviderWrapper,
+		});
 
 		await waitForElementToBeRemoved(() =>
 			document.querySelector('span.loading-animation')
@@ -77,12 +85,15 @@ describe('ListApps', () => {
 	});
 
 	it('renders with empty state', async () => {
-		fetch.mockResponse(JSON.stringify(RESPONSES.NO_ITEMS));
-
-		const {container} = render(
-			<ListApps match={{params: {dataDefinitionId: ''}, url: '/'}} />,
-			{wrapper: AppContextProviderWrapper}
+		fetch.mockResponseOnce(JSON.stringify(RESPONSES.NO_ITEMS));
+		fetch.mockResponseOnce(
+			JSON.stringify(DATA_DEFINITION_RESPONSES.ONE_ITEM)
 		);
+		fetch.mockResponse(JSON.stringify(DROPDOWN_VALUES));
+
+		const {container} = render(<ListApps {...routeProps} />, {
+			wrapper: AppContextProviderWrapper,
+		});
 
 		await waitForElementToBeRemoved(() =>
 			document.querySelector('span.loading-animation')

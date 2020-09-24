@@ -34,6 +34,8 @@ import org.gradle.api.logging.Logger;
 import org.gradle.api.provider.ListProperty;
 import org.gradle.api.provider.Property;
 import org.gradle.api.tasks.TaskAction;
+import org.gradle.internal.jvm.Jvm;
+import org.gradle.process.JavaForkOptions;
 import org.gradle.util.GUtil;
 import org.gradle.workers.ClassLoaderWorkerSpec;
 import org.gradle.workers.ProcessWorkerSpec;
@@ -48,6 +50,10 @@ public abstract class ExecuteJavaTask extends DefaultTask {
 	@Inject
 	public ExecuteJavaTask(WorkerExecutor workerExecutor) {
 		_workerExecutor = workerExecutor;
+	}
+
+	public boolean debugForkedJVM() {
+		return _debugForkedJVM;
 	}
 
 	@TaskAction
@@ -76,6 +82,10 @@ public abstract class ExecuteJavaTask extends DefaultTask {
 
 	public ExecuteJavaTask jvmArgs(Object... jvmArgs) {
 		return jvmArgs(Arrays.asList(jvmArgs));
+	}
+
+	public void setDebugForkedJVM(boolean debugForkedJVM) {
+		_debugForkedJVM = debugForkedJVM;
 	}
 
 	public void setFork(boolean fork) {
@@ -116,7 +126,24 @@ public abstract class ExecuteJavaTask extends DefaultTask {
 					@Override
 					public void execute(ProcessWorkerSpec processWorkerSpec) {
 						processWorkerSpec.forkOptions(
-							forkOptions -> forkOptions.jvmArgs(jvmArgs));
+							new Action<JavaForkOptions>() {
+
+								@Override
+								public void execute(
+									JavaForkOptions javaForkOptions) {
+
+									javaForkOptions.jvmArgs(jvmArgs);
+
+									Jvm jvm = Jvm.current();
+
+									javaForkOptions.setEnvironment(
+										jvm.getInheritableEnvironmentVariables(
+											System.getenv()));
+
+									javaForkOptions.setDebug(debugForkedJVM());
+								}
+
+							});
 
 						if ((classpath != null) && !classpath.isEmpty()) {
 							ConfigurableFileCollection processWorkerClasspath =
@@ -209,6 +236,7 @@ public abstract class ExecuteJavaTask extends DefaultTask {
 			});
 	}
 
+	private boolean _debugForkedJVM;
 	private boolean _fork;
 	private final Set<Object> _jvmArgs = new HashSet<>();
 	private final WorkerExecutor _workerExecutor;

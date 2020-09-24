@@ -41,19 +41,22 @@ boolean previewBeforeRestore = WorkflowWebKeys.WORKFLOW_PREVIEW_BEFORE_RESTORE_S
 </liferay-portlet:renderURL>
 
 <liferay-frontend:info-bar>
-	<clay:container>
+	<clay:container-fluid>
 		<c:if test="<%= !previewBeforeRestore %>">
 			<div class="info-bar-item">
 				<c:choose>
 					<c:when test="<%= workflowDefinition.isActive() %>">
-						<span class="label label-info label-lg">
-							<liferay-ui:message key="published" />
-						</span>
+						<clay:label
+							displayType="info"
+							label="published"
+							large="<%= true %>"
+						/>
 					</c:when>
 					<c:otherwise>
-						<span class="label label-lg label-secondary">
-							<liferay-ui:message key="not-published" />
-						</span>
+						<clay:label
+							label="not-published"
+							large="<%= true %>"
+						/>
 					</c:otherwise>
 				</c:choose>
 			</div>
@@ -76,7 +79,7 @@ boolean previewBeforeRestore = WorkflowWebKeys.WORKFLOW_PREVIEW_BEFORE_RESTORE_S
 				</c:otherwise>
 			</c:choose>
 		</span>
-	</clay:container>
+	</clay:container-fluid>
 </liferay-frontend:info-bar>
 
 <div class="<%= previewBeforeRestore ? "" : "container-fluid-1280" %>" id="container">
@@ -99,8 +102,8 @@ boolean previewBeforeRestore = WorkflowWebKeys.WORKFLOW_PREVIEW_BEFORE_RESTORE_S
 					</clay:col>
 
 					<clay:col
-						className="workflow-definition-content-source-wrapper"
-						id='<%= renderResponse.getNamespace() + "contentSourceWrapper" %>'
+						cssClass="workflow-definition-content-source-wrapper"
+						id='<%= liferayPortletResponse.getNamespace() + "contentSourceWrapper" %>'
 					>
 						<div class="workflow-definition-content-source" id="<portlet:namespace />contentEditor"></div>
 					</clay:col>

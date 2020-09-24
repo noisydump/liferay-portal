@@ -19,9 +19,14 @@ import com.liferay.application.list.BasePanelApp;
 import com.liferay.application.list.constants.PanelCategoryKeys;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.Group;
+import com.liferay.portal.kernel.model.Portlet;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
+import com.liferay.portal.kernel.service.PortletLocalServiceUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
+
+import java.util.Locale;
+import java.util.Objects;
 
 import javax.portlet.PortletRequest;
 import javax.portlet.PortletURL;
@@ -46,6 +51,14 @@ public class ProductMenuPanelApp extends BasePanelApp {
 	@Override
 	public String getKey() {
 		return _portletId;
+	}
+
+	@Override
+	public String getLabel(Locale locale) {
+		Portlet portlet = PortletLocalServiceUtil.getPortletById(
+			_companyId, _portletId);
+
+		return PortalUtil.getPortletTitle(portlet, locale);
 	}
 
 	@Override
@@ -76,7 +89,11 @@ public class ProductMenuPanelApp extends BasePanelApp {
 
 		if ((_companyId == group.getCompanyId()) &&
 			super.isShow(permissionChecker, group) &&
-			(PanelCategoryKeys.CONTROL_PANEL.equals(_panelCategoryKey) ||
+			(Objects.equals(
+				PanelCategoryKeys.APPLICATIONS_MENU_APPLICATIONS,
+				_panelCategoryKey) ||
+			 Objects.equals(
+				 PanelCategoryKeys.CONTROL_PANEL, _panelCategoryKey) ||
 			 ArrayUtil.contains(_siteIds, AppBuilderAppConstants.SITE_ID_ALL) ||
 			 ArrayUtil.contains(_siteIds, group.getGroupId()))) {
 

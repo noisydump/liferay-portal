@@ -108,12 +108,11 @@ definition {
 
 	@priority = "4"
 	test DeleteMBCategories {
-		Navigator.openURL();
-
-		for (var categoryName : list "MB Category1 Name,MB Category2 Name,MB Category3 Name") {
-			MessageBoardsAdmin.openMessageBoardsAdmin(siteURLKey = "guest");
-
-			MessageboardsCategory.addCP(categoryName = "${categoryName}");
+		for (var num : list "1,2,3") {
+			JSONMBMessage.addCategory(
+				categoryDescription = "MB Category Description",
+				categoryName = "MB Category${num} Name",
+				userEmailAddress = "test@liferay.com");
 		}
 
 		MessageBoardsAdmin.openMessageBoardsAdmin(siteURLKey = "guest");
@@ -130,7 +129,6 @@ definition {
 	@priority = "3"
 	test DeleteMBThreadWithAttachment {
 		property custom.properties = "trash.entry.check.interval=1${line.separator}trash.entries.max.age=1";
-		property portal.upstream = "quarantine";
 
 		JSONGroup.addGroup(groupName = "Site Name");
 
@@ -160,8 +158,6 @@ definition {
 
 	@priority = "5"
 	test EditMBThreadSubjectAndBody {
-		property portal.acceptance = "quarantine";
-
 		JSONMBMessage.addMessage(
 			groupName = "Guest",
 			threadBody = "MB Thread Message Body",
@@ -185,9 +181,8 @@ definition {
 
 	@priority = "5"
 	test MoveToRecycleBinMBThread {
-		MessageBoardsAdmin.openMessageBoardsAdmin(siteURLKey = "guest");
-
-		MessageboardsThread.addCP(
+		JSONMBMessage.addMessage(
+			groupName = "Guest",
 			threadBody = "MB Thread Message Body",
 			threadSubject = "MB Thread Message Subject");
 

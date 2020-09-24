@@ -29,6 +29,11 @@ public class DocumentLibraryDataLayoutBuilderDefinition
 	implements DataLayoutBuilderDefinition {
 
 	@Override
+	public boolean allowFieldSets() {
+		return true;
+	}
+
+	@Override
 	public boolean allowMultiplePages() {
 		return false;
 	}
@@ -36,6 +41,13 @@ public class DocumentLibraryDataLayoutBuilderDefinition
 	@Override
 	public String[] getDisabledTabs() {
 		return new String[] {"Autocomplete"};
+	}
+
+	@Override
+	public String[] getUnimplementedProperties() {
+		return new String[] {
+			"fieldNamespace", "readOnly", "validation", "visibilityExpression"
+		};
 	}
 
 }

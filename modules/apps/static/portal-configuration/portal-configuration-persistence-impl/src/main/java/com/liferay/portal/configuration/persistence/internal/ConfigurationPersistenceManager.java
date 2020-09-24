@@ -25,6 +25,7 @@ import com.liferay.portal.kernel.dao.db.DBManagerUtil;
 import com.liferay.portal.kernel.io.unsync.UnsyncByteArrayInputStream;
 import com.liferay.portal.kernel.io.unsync.UnsyncByteArrayOutputStream;
 import com.liferay.portal.kernel.util.HashMapDictionary;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.util.PropsValues;
 
 import java.io.File;
@@ -180,10 +181,10 @@ public class ConfigurationPersistenceManager
 
 	public void start() {
 		try {
-			createConfigurationTable();
+			populateDictionaries();
 		}
 		catch (IOException | SQLException exception) {
-			populateDictionaries();
+			createConfigurationTable();
 		}
 	}
 
@@ -210,6 +211,11 @@ public class ConfigurationPersistenceManager
 
 			if (pidKey == null) {
 				pidKey = pid;
+			}
+
+			if (pidKey.endsWith(".scoped")) {
+				pidKey = StringUtil.replaceLast(
+					pidKey, ".scoped", StringPool.BLANK);
 			}
 
 			configurationModelListener = _getConfigurationModelListener(pidKey);
@@ -252,7 +258,7 @@ public class ConfigurationPersistenceManager
 		}
 	}
 
-	protected void createConfigurationTable() throws IOException, SQLException {
+	protected void createConfigurationTable() {
 		try (Connection connection = _dataSource.getConnection();
 			Statement statement = connection.createStatement()) {
 
@@ -260,6 +266,9 @@ public class ConfigurationPersistenceManager
 				_db.buildSQL(
 					"create table Configuration_ (configurationId " +
 						"VARCHAR(255) not null primary key, dictionary TEXT)"));
+		}
+		catch (IOException | SQLException exception) {
+			ReflectionUtil.throwException(exception);
 		}
 	}
 
@@ -328,7 +337,7 @@ public class ConfigurationPersistenceManager
 		}
 	}
 
-	protected void populateDictionaries() {
+	protected void populateDictionaries() throws IOException, SQLException {
 		try (Connection connection = _dataSource.getConnection();
 			PreparedStatement preparedStatement = connection.prepareStatement(
 				_db.buildSQL(
@@ -346,9 +355,6 @@ public class ConfigurationPersistenceManager
 					_dictionaries.putIfAbsent(pid, dictionary);
 				}
 			}
-		}
-		catch (IOException | SQLException exception) {
-			ReflectionUtil.throwException(exception);
 		}
 	}
 
@@ -419,10 +425,7 @@ public class ConfigurationPersistenceManager
 		String fileName = dictionary.get(_FELIX_FILE_INSTALL_FILENAME);
 
 		if (fileName != null) {
-			File file = new File(
-				PropsValues.MODULE_FRAMEWORK_CONFIGS_DIR, fileName);
-
-			file = file.getAbsoluteFile();
+			File file = _getCanonicalConfigFile(fileName);
 
 			URI uri = file.toURI();
 
@@ -437,15 +440,22 @@ public class ConfigurationPersistenceManager
 
 		Dictionary<Object, Object> newDictionary = new HashMapDictionary<>();
 
-		Enumeration<?> keys = dictionary.keys();
+		Enumeration<?> enumeration = dictionary.keys();
 
-		while (keys.hasMoreElements()) {
-			Object key = keys.nextElement();
+		while (enumeration.hasMoreElements()) {
+			Object key = enumeration.nextElement();
 
 			newDictionary.put(key, dictionary.get(key));
 		}
 
 		return newDictionary;
+	}
+
+	private File _getCanonicalConfigFile(String fileName) throws IOException {
+		File configFile = new File(
+			PropsValues.MODULE_FRAMEWORK_CONFIGS_DIR, fileName);
+
+		return configFile.getCanonicalFile();
 	}
 
 	private ConfigurationModelListener _getConfigurationModelListener(
@@ -490,7 +500,12 @@ public class ConfigurationPersistenceManager
 		File configFile = null;
 
 		if (felixFileInstallFileName.startsWith("file:")) {
-			configFile = new File(URI.create(felixFileInstallFileName));
+			try {
+				configFile = new File(URI.create(felixFileInstallFileName));
+			}
+			catch (Exception exception) {
+				configFile = new File(felixFileInstallFileName);
+			}
 
 			dictionary.put(_FELIX_FILE_INSTALL_FILENAME, configFile.getName());
 
@@ -502,11 +517,7 @@ public class ConfigurationPersistenceManager
 			needSave = false;
 		}
 		else {
-			configFile = new File(
-				PropsValues.MODULE_FRAMEWORK_CONFIGS_DIR,
-				felixFileInstallFileName);
-
-			configFile = configFile.getAbsoluteFile();
+			configFile = _getCanonicalConfigFile(felixFileInstallFileName);
 
 			URI uri = configFile.toURI();
 

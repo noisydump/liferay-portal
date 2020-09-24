@@ -27,8 +27,8 @@ portletDisplay.setURLBack(redirect);
 renderResponse.setTitle(LanguageUtil.get(request, "select-master-page"));
 %>
 
-<clay:container
-	className="mt-4"
+<clay:container-fluid
+	cssClass="mt-4"
 >
 	<div class="lfr-search-container-wrapper">
 		<ul class="card-page card-page-equal-height">
@@ -49,7 +49,7 @@ renderResponse.setTitle(LanguageUtil.get(request, "select-master-page"));
 
 		</ul>
 	</div>
-</clay:container>
+</clay:container-fluid>
 
 <%
 StringBundler sb = new StringBundler(3);
@@ -76,7 +76,7 @@ sb.append("/js/modal/openDisplayPageModal.es as openDisplayPageModal");
 				),
 				namespace: '<portlet:namespace />',
 				spritemap:
-					'<%= themeDisplay.getPathThemeImages() %>/lexicon/icons.svg',
+					'<%= themeDisplay.getPathThemeImages() %>/clay/icons.svg',
 				title: '<liferay-ui:message key="add-display-page-template" />',
 			});
 		}

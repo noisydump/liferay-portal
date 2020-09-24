@@ -28,12 +28,12 @@ public class DataLayoutValidationException extends RuntimeException {
 		super(msg);
 	}
 
-	public DataLayoutValidationException(String msg, Throwable cause) {
-		super(msg, cause);
+	public DataLayoutValidationException(String msg, Throwable throwable) {
+		super(msg, throwable);
 	}
 
-	public DataLayoutValidationException(Throwable cause) {
-		super(cause);
+	public DataLayoutValidationException(Throwable throwable) {
+		super(throwable);
 	}
 
 	public static class InvalidColumnSize
@@ -93,6 +93,15 @@ public class DataLayoutValidationException extends RuntimeException {
 			super(
 				"The default locale for the data layout's page title is not " +
 					"the same as the data layout's default locale");
+		}
+
+	}
+
+	public static class MustSetValidRuleExpression
+		extends DataLayoutValidationException {
+
+		public MustSetValidRuleExpression() {
+			super("There are invalid rule expressions");
 		}
 
 	}

@@ -38,7 +38,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 import java.util.ResourceBundle;
 
 import org.junit.Before;
@@ -74,6 +73,20 @@ public class DDMFormJSONSerializerTest extends BaseDDMFormSerializerTestCase {
 		ddmForm.setDDMFormRules(createDDMFormRules());
 		ddmForm.setDDMFormSuccessPageSettings(
 			createDDMFormSuccessPageSettings());
+
+		String actualJSON = serialize(ddmForm);
+
+		JSONAssert.assertEquals(expectedJSON, actualJSON, false);
+	}
+
+	@Test
+	public void testDDMFormSerializationWithSchemaVersion() throws Exception {
+		String expectedJSON = read(
+			"ddm-form-json-serializer-with-definition-schema-version.json");
+
+		DDMForm ddmForm = createDDMForm();
+
+		ddmForm.setDefinitionSchemaVersion("2.0");
 
 		String actualJSON = serialize(ddmForm);
 
@@ -137,19 +150,17 @@ public class DDMFormJSONSerializerTest extends BaseDDMFormSerializerTestCase {
 			_defaultDDMFormFieldType
 		);
 
-		Map<String, Object> properties = HashMapBuilder.<String, Object>put(
-			"ddm.form.field.type.icon", "my-icon"
-		).put(
-			"ddm.form.field.type.js.class.name", "myJavaScriptClass"
-		).put(
-			"ddm.form.field.type.js.module", "myJavaScriptModule"
-		).build();
-
 		when(
 			ddmFormFieldTypeServicesTracker.getDDMFormFieldTypeProperties(
 				Matchers.anyString())
 		).thenReturn(
-			properties
+			HashMapBuilder.<String, Object>put(
+				"ddm.form.field.type.icon", "my-icon"
+			).put(
+				"ddm.form.field.type.js.class.name", "myJavaScriptClass"
+			).put(
+				"ddm.form.field.type.js.module", "myJavaScriptModule"
+			).build()
 		);
 
 		return ddmFormFieldTypeServicesTracker;

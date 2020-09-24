@@ -61,11 +61,15 @@ public interface ChangesetEntryLocalService
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this interface directly. Always use {@link ChangesetEntryLocalServiceUtil} to access the changeset entry local service. Add custom service methods to <code>com.liferay.changeset.service.impl.ChangesetEntryLocalServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface.
+	 * Never modify this interface directly. Add custom service methods to <code>com.liferay.changeset.service.impl.ChangesetEntryLocalServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface. Consume the changeset entry local service via injection or a <code>org.osgi.util.tracker.ServiceTracker</code>. Use {@link ChangesetEntryLocalServiceUtil} if injection and service tracking are not available.
 	 */
 
 	/**
 	 * Adds the changeset entry to the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect ChangesetEntryLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param changesetEntry the changeset entry
 	 * @return the changeset entry that was added
@@ -93,14 +97,16 @@ public interface ChangesetEntryLocalService
 	public PersistedModel createPersistedModel(Serializable primaryKeyObj)
 		throws PortalException;
 
-	public void deleteChangesetEntries(long changesetCollectionId)
-		throws PortalException;
+	public void deleteChangesetEntries(long changesetCollectionId);
 
-	public void deleteChangesetEntries(Set<Long> changesetEntryIds)
-		throws PortalException;
+	public void deleteChangesetEntries(Set<Long> changesetEntryIds);
 
 	/**
 	 * Deletes the changeset entry from the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect ChangesetEntryLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param changesetEntry the changeset entry
 	 * @return the changeset entry that was removed
@@ -110,6 +116,10 @@ public interface ChangesetEntryLocalService
 
 	/**
 	 * Deletes the changeset entry with the primary key from the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect ChangesetEntryLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param changesetEntryId the primary key of the changeset entry
 	 * @return the changeset entry that was removed
@@ -285,6 +295,10 @@ public interface ChangesetEntryLocalService
 
 	/**
 	 * Updates the changeset entry in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect ChangesetEntryLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param changesetEntry the changeset entry
 	 * @return the changeset entry that was updated

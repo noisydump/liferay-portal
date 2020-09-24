@@ -18,8 +18,15 @@ AUI.add(
 
 		var KaleoDesignerRemoteServices = Liferay.KaleoDesignerRemoteServices;
 
+		var isArray = Lang.isArray;
 		var isObject = Lang.isObject;
 		var isValue = Lang.isValue;
+
+		var STR_BLANK = '';
+
+		var isNotEmptyValue = function (item) {
+			return isValue(item) && item !== STR_BLANK;
+		};
 
 		var COL_TYPES_ASSIGNMENT = [
 			'address',
@@ -47,8 +54,55 @@ AUI.add(
 		};
 
 		var populateUser = function (assignments) {
-			if (isValue(assignments.userId)) {
+			if (
+				isArray(assignments.emailAddress) &&
+				assignments.emailAddress.filter(isNotEmptyValue).length !== 0
+			) {
 				KaleoDesignerRemoteServices.getUser(
+					assignments.emailAddress,
+					null,
+					null,
+					(data) => {
+						AArray.each(data, (item) => {
+							if (item) {
+								var index = assignments.emailAddress.indexOf(
+									item.emailAddress
+								);
+
+								assignments.fullName[index] = item.fullName;
+							}
+						});
+					}
+				);
+			}
+			else if (
+				isArray(assignments.screenName) &&
+				assignments.screenName.filter(isNotEmptyValue).length !== 0
+			) {
+				KaleoDesignerRemoteServices.getUser(
+					null,
+					assignments.screenName,
+					null,
+					(data) => {
+						AArray.each(data, (item) => {
+							if (item) {
+								var index = assignments.screenName.indexOf(
+									item.screenName
+								);
+
+								assignments.fullName[index] = item.fullName;
+							}
+						});
+					}
+				);
+			}
+			else if (
+				isArray(assignments.userId) &&
+				assignments.userId.filter(isNotEmptyValue).length !== 0
+			) {
+				KaleoDesignerRemoteServices.getUser(
+					null,
+					null,
 					assignments.userId,
 					(data) => {
 						AArray.each(data, (item) => {
@@ -57,10 +111,7 @@ AUI.add(
 									item.userId
 								);
 
-								assignments.emailAddress[index] =
-									item.emailAddress;
 								assignments.fullName[index] = item.fullName;
-								assignments.screenName[index] = item.screenName;
 							}
 						});
 					}
@@ -87,11 +138,7 @@ AUI.add(
 
 				data.forEach((item1, index1) => {
 					A.each(item1, (item2, index2) => {
-						if (isValue(item2)) {
-							if (index2 === 'script') {
-								item2 = Lang.trim(item2);
-							}
-
+						if (isNotEmptyValue(item2)) {
 							_put(actions, index2, item2, index1);
 						}
 					});
@@ -107,7 +154,7 @@ AUI.add(
 					COL_TYPES_ASSIGNMENT.forEach((item1) => {
 						var value = data[0][item1];
 
-						if (!isValue(value)) {
+						if (!isNotEmptyValue(value)) {
 							return;
 						}
 
@@ -129,7 +176,7 @@ AUI.add(
 						if (
 							item1 !== 'receptionType' &&
 							AArray.some(assignmentValue, (item2) => {
-								var valid = isValue(item2);
+								var valid = isNotEmptyValue(item2);
 
 								if (
 									valid &&
@@ -139,7 +186,7 @@ AUI.add(
 								) {
 									valid = AArray.some(
 										AObject.values(item2),
-										isValue
+										isNotEmptyValue
 									);
 								}
 
@@ -168,7 +215,7 @@ AUI.add(
 
 				data.forEach((item1, index1) => {
 					A.each(item1, (item2, index2) => {
-						if (isValue(item2)) {
+						if (isNotEmptyValue(item2)) {
 							_put(delays, index2, item2, index1);
 						}
 					});
@@ -184,7 +231,7 @@ AUI.add(
 
 				data.forEach((item1, index1) => {
 					A.each(item1, (item2, index2) => {
-						if (isValue(item2)) {
+						if (isNotEmptyValue(item2)) {
 							if (index2 === 'recipients') {
 								if (item2[0] && item2[0].receptionType) {
 									_put(
@@ -214,7 +261,7 @@ AUI.add(
 
 				data.forEach((item1, index1) => {
 					A.each(item1, (item2, index2) => {
-						if (isValue(item2)) {
+						if (isNotEmptyValue(item2)) {
 							if (index2 === 'delay' || index2 === 'recurrence') {
 								return;
 							}

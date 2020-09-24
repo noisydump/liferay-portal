@@ -16,12 +16,13 @@ package com.liferay.fragment.internal.util.configuration;
 
 import com.liferay.fragment.util.configuration.FragmentConfigurationField;
 import com.liferay.fragment.util.configuration.FragmentEntryConfigurationParser;
-import com.liferay.info.display.contributor.InfoDisplayContributor;
-import com.liferay.info.display.contributor.InfoDisplayContributorTracker;
-import com.liferay.info.display.contributor.InfoDisplayObjectProvider;
+import com.liferay.info.item.ClassPKInfoItemIdentifier;
+import com.liferay.info.item.InfoItemServiceTracker;
+import com.liferay.info.item.provider.InfoItemObjectProvider;
 import com.liferay.layout.list.retriever.DefaultLayoutListRetrieverContext;
 import com.liferay.layout.list.retriever.LayoutListRetriever;
 import com.liferay.layout.list.retriever.LayoutListRetrieverTracker;
+import com.liferay.layout.list.retriever.ListObjectReference;
 import com.liferay.layout.list.retriever.ListObjectReferenceFactory;
 import com.liferay.layout.list.retriever.ListObjectReferenceFactoryTracker;
 import com.liferay.petra.string.StringPool;
@@ -308,17 +309,17 @@ public class FragmentEntryConfigurationParserImpl
 		List<FragmentConfigurationField> fragmentConfigurationFields =
 			new ArrayList<>();
 
-		Iterator<JSONObject> iteratorFieldSet = fieldSetsJSONArray.iterator();
+		Iterator<JSONObject> iterator1 = fieldSetsJSONArray.iterator();
 
-		iteratorFieldSet.forEachRemaining(
+		iterator1.forEachRemaining(
 			fieldSetJSONObject -> {
 				JSONArray fieldSetFieldsJSONArray =
 					fieldSetJSONObject.getJSONArray("fields");
 
-				Iterator<JSONObject> iteratorFieldSetFields =
+				Iterator<JSONObject> iterator2 =
 					fieldSetFieldsJSONArray.iterator();
 
-				iteratorFieldSetFields.forEachRemaining(
+				iterator2.forEachRemaining(
 					fieldSetFieldsJSONObject -> fragmentConfigurationFields.add(
 						new FragmentConfigurationField(
 							fieldSetFieldsJSONObject)));
@@ -506,22 +507,18 @@ public class FragmentEntryConfigurationParserImpl
 			String className = GetterUtil.getString(
 				jsonObject.getString("className"));
 
-			InfoDisplayContributor infoDisplayContributor =
-				_infoDisplayContributorTracker.getInfoDisplayContributor(
-					className);
+			InfoItemObjectProvider<?> infoItemObjectProvider =
+				_infoItemServiceTracker.getFirstInfoItemService(
+					InfoItemObjectProvider.class, className);
 
-			if (infoDisplayContributor == null) {
+			if (infoItemObjectProvider == null) {
 				return null;
 			}
 
 			long classPK = GetterUtil.getLong(jsonObject.getString("classPK"));
 
-			InfoDisplayObjectProvider infoDisplayObjectProvider =
-				infoDisplayContributor.getInfoDisplayObjectProvider(classPK);
-
-			if (infoDisplayObjectProvider != null) {
-				return infoDisplayObjectProvider.getDisplayObject();
-			}
+			return infoItemObjectProvider.getInfoItem(
+				new ClassPKInfoItemIdentifier(classPK));
 		}
 		catch (Exception exception) {
 			if (_log.isDebugEnabled()) {
@@ -593,14 +590,15 @@ public class FragmentEntryConfigurationParserImpl
 
 			String type = jsonObject.getString("type");
 
-			LayoutListRetriever layoutListRetriever =
-				_layoutListRetrieverTracker.getLayoutListRetriever(type);
+			LayoutListRetriever<?, ListObjectReference> layoutListRetriever =
+				(LayoutListRetriever<?, ListObjectReference>)
+					_layoutListRetrieverTracker.getLayoutListRetriever(type);
 
 			if (layoutListRetriever == null) {
 				return Collections.emptyList();
 			}
 
-			ListObjectReferenceFactory listObjectReferenceFactory =
+			ListObjectReferenceFactory<?> listObjectReferenceFactory =
 				_listObjectReferenceFactoryTracker.getListObjectReference(type);
 
 			if (listObjectReferenceFactory == null) {
@@ -652,7 +650,7 @@ public class FragmentEntryConfigurationParserImpl
 		FragmentEntryConfigurationParserImpl.class);
 
 	@Reference
-	private InfoDisplayContributorTracker _infoDisplayContributorTracker;
+	private InfoItemServiceTracker _infoItemServiceTracker;
 
 	@Reference
 	private LayoutListRetrieverTracker _layoutListRetrieverTracker;

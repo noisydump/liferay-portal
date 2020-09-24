@@ -17,18 +17,20 @@ import ClayIcon from '@clayui/icon';
 import ClayLoadingIndicator from '@clayui/loading-indicator';
 import {ClayTooltipProvider} from '@clayui/tooltip';
 import classNames from 'classnames';
-import {useIsMounted} from 'frontend-js-react-web';
+import {useIsMounted, useStateSafe} from 'frontend-js-react-web';
 import React from 'react';
+import {createPortal} from 'react-dom';
 
 import useLazy from '../../core/hooks/useLazy';
 import useLoad from '../../core/hooks/useLoad';
 import usePlugins from '../../core/hooks/usePlugins';
-import useStateSafe from '../../core/hooks/useStateSafe';
 import * as Actions from '../actions/index';
 import {config} from '../config/index';
 import selectAvailablePanels from '../selectors/selectAvailablePanels';
 import selectAvailableSidebarPanels from '../selectors/selectAvailableSidebarPanels';
 import {useDispatch, useSelector} from '../store/index';
+import {useDropClear} from '../utils/dragAndDrop/useDragAndDrop';
+import {useId} from '../utils/useId';
 import {useSelectItem} from './Controls';
 
 const {Suspense, useCallback, useEffect} = React;
@@ -40,15 +42,16 @@ const {Suspense, useCallback, useEffect} = React;
 const swallow = [(value) => value, (_error) => undefined];
 
 export default function Sidebar() {
-	const dispatch = useDispatch();
-	const store = useSelector((state) => state);
+	const dropClearRef = useDropClear();
 	const [hasError, setHasError] = useStateSafe(false);
-	const isMounted = useIsMounted();
-	const selectItem = useSelectItem();
-	const load = useLoad();
 	const {getInstance, register} = usePlugins();
+	const dispatch = useDispatch();
+	const isMounted = useIsMounted();
+	const load = useLoad();
+	const selectItem = useSelectItem();
+	const sidebarId = useId();
+	const store = useSelector((state) => state);
 
-	const languageId = useSelector((state) => state.languageId);
 	const panels = useSelector(selectAvailablePanels(config.panels));
 	const sidebarPanels = useSelector(
 		selectAvailableSidebarPanels(config.sidebarPanels)
@@ -178,11 +181,13 @@ export default function Sidebar() {
 		}
 	};
 
-	return (
+	return createPortal(
 		<ClayTooltipProvider>
-			<div className="page-editor__sidebar">
+			<div className="page-editor__sidebar" ref={dropClearRef}>
 				<div
-					className="page-editor__sidebar__buttons"
+					className={classNames('page-editor__sidebar__buttons', {
+						light: true,
+					})}
 					onClick={deselectItem}
 				>
 					{panels.reduce((elements, group, groupIndex) => {
@@ -225,11 +230,12 @@ export default function Sidebar() {
 									className={classNames({active})}
 									data-tooltip-align="left"
 									displayType="unstyled"
-									id={panel.sidebarPanelId}
+									id={`${sidebarId}${panel.sidebarPanelId}`}
 									key={panel.sidebarPanelId}
 									onClick={() => handleClick(panel)}
 									onFocus={prefetch}
 									onMouseEnter={prefetch}
+									small={true}
 									symbol={icon}
 									title={label}
 								/>
@@ -253,7 +259,10 @@ export default function Sidebar() {
 					className={classNames({
 						'page-editor__sidebar__content': true,
 						'page-editor__sidebar__content--open': sidebarOpen,
-						rtl: config.languageDirection[languageId] === 'rtl',
+						rtl:
+							config.languageDirection[
+								themeDisplay?.getLanguageId()
+							] === 'rtl',
 					})}
 					onClick={deselectItem}
 				>
@@ -293,7 +302,8 @@ export default function Sidebar() {
 					)}
 				</div>
 			</div>
-		</ClayTooltipProvider>
+		</ClayTooltipProvider>,
+		document.body
 	);
 }
 

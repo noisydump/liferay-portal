@@ -36,6 +36,9 @@ import com.liferay.asset.list.service.AssetListEntryAssetEntryRelLocalService;
 import com.liferay.asset.list.service.AssetListEntrySegmentsEntryRelLocalService;
 import com.liferay.asset.util.AssetHelper;
 import com.liferay.asset.util.AssetRendererFactoryClassProvider;
+import com.liferay.document.library.kernel.model.DLFileEntryType;
+import com.liferay.document.library.kernel.service.DLFileEntryTypeLocalService;
+import com.liferay.dynamic.data.mapping.kernel.DDMStructure;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
@@ -279,11 +282,40 @@ public class AssetListAssetEntryProviderImpl
 			Validator.isNotNull(ddmStructureFieldValue) &&
 			(classTypeIds.length == 1)) {
 
-			assetEntryQuery.setAttribute(
-				"ddmStructureFieldName",
-				DDMIndexerUtil.encodeName(
-					classTypeIds[0], ddmStructureFieldName,
-					LocaleUtil.getMostRelevantLocale()));
+			DLFileEntryType dlFileEntryType =
+				_dlFileEntryTypeLocalService.fetchFileEntryType(
+					classTypeIds[0]);
+
+			if (dlFileEntryType != null) {
+				List<DDMStructure> ddmStructures =
+					dlFileEntryType.getDDMStructures();
+
+				if (!ddmStructures.isEmpty()) {
+					DDMStructure ddmStructure = ddmStructures.get(0);
+
+					assetEntryQuery.setAttribute(
+						"ddmStructureFieldName",
+						DDMIndexerUtil.encodeName(
+							ddmStructure.getStructureId(),
+							ddmStructureFieldName,
+							LocaleUtil.getMostRelevantLocale()));
+				}
+				else {
+					assetEntryQuery.setAttribute(
+						"ddmStructureFieldName",
+						DDMIndexerUtil.encodeName(
+							classTypeIds[0], ddmStructureFieldName,
+							LocaleUtil.getMostRelevantLocale()));
+				}
+			}
+			else {
+				assetEntryQuery.setAttribute(
+					"ddmStructureFieldName",
+					DDMIndexerUtil.encodeName(
+						classTypeIds[0], ddmStructureFieldName,
+						LocaleUtil.getMostRelevantLocale()));
+			}
+
 			assetEntryQuery.setAttribute(
 				"ddmStructureFieldValue", ddmStructureFieldValue);
 		}
@@ -308,7 +340,9 @@ public class AssetListAssetEntryProviderImpl
 
 		assetEntryQuery.setOrderByType2(orderByType2);
 
-		_processAssetEntryQuery(userId, unicodeProperties, assetEntryQuery);
+		_processAssetEntryQuery(
+			assetListEntry.getCompanyId(), userId, unicodeProperties,
+			assetEntryQuery);
 
 		return assetEntryQuery;
 	}
@@ -480,7 +514,7 @@ public class AssetListAssetEntryProviderImpl
 
 		long[] availableClassTypeIds = {};
 
-		AssetRendererFactory assetRendererFactory =
+		AssetRendererFactory<?> assetRendererFactory =
 			AssetRendererFactoryRegistryUtil.getAssetRendererFactoryByClassName(
 				className);
 
@@ -691,7 +725,7 @@ public class AssetListAssetEntryProviderImpl
 	}
 
 	private void _processAssetEntryQuery(
-		String userId, UnicodeProperties unicodeProperties,
+		long companyId, String userId, UnicodeProperties unicodeProperties,
 		AssetEntryQuery assetEntryQuery) {
 
 		for (AssetListAssetEntryQueryProcessor
@@ -699,7 +733,7 @@ public class AssetListAssetEntryProviderImpl
 					_assetListAssetEntryQueryProcessors) {
 
 			assetListAssetEntryQueryProcessor.processAssetEntryQuery(
-				userId, unicodeProperties, assetEntryQuery);
+				companyId, userId, unicodeProperties, assetEntryQuery);
 		}
 	}
 
@@ -945,6 +979,9 @@ public class AssetListAssetEntryProviderImpl
 
 	@Reference
 	private AssetTagLocalService _assetTagLocalService;
+
+	@Reference
+	private DLFileEntryTypeLocalService _dlFileEntryTypeLocalService;
 
 	@Reference
 	private Portal _portal;

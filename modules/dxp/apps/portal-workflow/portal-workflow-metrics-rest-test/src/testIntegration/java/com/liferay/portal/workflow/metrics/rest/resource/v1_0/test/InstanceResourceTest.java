@@ -17,11 +17,13 @@ package com.liferay.portal.workflow.metrics.rest.resource.v1_0.test;
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.petra.function.UnsafeTriConsumer;
 import com.liferay.portal.kernel.model.User;
-import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
+import com.liferay.portal.kernel.test.rule.DataGuard;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
+import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.LocaleUtil;
+import com.liferay.portal.search.test.util.SearchTestRule;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.workflow.metrics.rest.client.dto.v1_0.Assignee;
 import com.liferay.portal.workflow.metrics.rest.client.dto.v1_0.Creator;
@@ -39,12 +41,14 @@ import java.util.List;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
 /**
  * @author Rafael Praxedes
  */
+@DataGuard(scope = DataGuard.Scope.METHOD)
 @RunWith(Arquillian.class)
 public class InstanceResourceTest extends BaseInstanceResourceTestCase {
 
@@ -53,6 +57,7 @@ public class InstanceResourceTest extends BaseInstanceResourceTestCase {
 	public void setUp() throws Exception {
 		super.setUp();
 
+		_classPK = RandomTestUtil.nextLong();
 		_process = _workflowMetricsRESTTestHelper.addProcess(
 			testGroup.getCompanyId());
 		_user = UserTestUtil.addUser();
@@ -77,30 +82,38 @@ public class InstanceResourceTest extends BaseInstanceResourceTestCase {
 		super.testGetProcessInstancesPage();
 
 		_testGetProcessInstancesPage(
-			new Long[] {_user.getUserId()}, null,
+			new Long[] {_user.getUserId()}, null, null,
 			(instance1, instance2, page) -> assertEquals(
 				Collections.singletonList(instance2),
 				(List<Instance>)page.getItems()));
 		_testGetProcessInstancesPage(
-			null, true,
+			null, new Long[] {_classPK}, null,
 			(instance1, instance2, page) -> assertEquals(
 				Collections.singletonList(instance1),
 				(List<Instance>)page.getItems()));
 		_testGetProcessInstancesPage(
-			null, null,
+			null, null, true,
+			(instance1, instance2, page) -> assertEquals(
+				Collections.singletonList(instance1),
+				(List<Instance>)page.getItems()));
+		_testGetProcessInstancesPage(
+			null, null, null,
 			(instance1, instance2, page) -> assertEqualsIgnoringOrder(
 				Arrays.asList(instance1, instance2),
 				(List<Instance>)page.getItems()));
 		_testGetProcessInstancesPage(
-			null, false,
+			null, null, false,
 			(instance1, instance2, page) -> assertEquals(
 				Collections.singletonList(instance2),
 				(List<Instance>)page.getItems()));
 	}
 
+	@Rule
+	public SearchTestRule searchTestRule = new SearchTestRule();
+
 	@Override
 	protected String[] getAdditionalAssertFieldNames() {
-		return new String[] {"assetTitle", "assetType", "processId"};
+		return new String[] {"assetTitle", "assetType", "classPK", "processId"};
 	}
 
 	@Override
@@ -161,7 +174,8 @@ public class InstanceResourceTest extends BaseInstanceResourceTestCase {
 
 		for (Assignee assignee : instance.getAssignees()) {
 			_workflowMetricsRESTTestHelper.addTask(
-				assignee, testGroup.getCompanyId(), instance);
+				assignee, testGroup.getCompanyId(), instance,
+				TestPropsValues.getUser());
 		}
 
 		if (instance.getCompleted()) {
@@ -211,7 +225,7 @@ public class InstanceResourceTest extends BaseInstanceResourceTestCase {
 	}
 
 	private void _testGetProcessInstancesPage(
-			Long[] assigneeIds, Boolean completed,
+			Long[] assigneeIds, Long[] classPKs, Boolean completed,
 			UnsafeTriConsumer<Instance, Instance, Page<Instance>, Exception>
 				unsafeTriConsumer)
 		throws Exception {
@@ -220,6 +234,7 @@ public class InstanceResourceTest extends BaseInstanceResourceTestCase {
 
 		Instance instance1 = randomInstance();
 
+		instance1.setClassPK(_classPK);
 		instance1.setCompleted(true);
 		instance1.setDateCompletion(RandomTestUtil.nextDate());
 
@@ -239,16 +254,15 @@ public class InstanceResourceTest extends BaseInstanceResourceTestCase {
 		testGetProcessInstancesPage_addInstance(_process.getId(), instance2);
 
 		Page<Instance> page = instanceResource.getProcessInstancesPage(
-			_process.getId(), assigneeIds, completed, null, null, null, null,
-			Pagination.of(1, 2));
+			_process.getId(), assigneeIds, classPKs, completed, null, null,
+			null, null, Pagination.of(1, 2));
 
 		unsafeTriConsumer.accept(instance1, instance2, page);
 	}
 
+	private Long _classPK;
 	private final List<Instance> _instances = new ArrayList<>();
 	private Process _process;
-
-	@DeleteAfterTestRun
 	private User _user;
 
 	@Inject

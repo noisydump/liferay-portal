@@ -18,9 +18,9 @@ import com.liferay.counter.kernel.service.CounterLocalServiceUtil;
 import com.liferay.fragment.model.FragmentEntryLink;
 import com.liferay.fragment.processor.PortletRegistry;
 import com.liferay.fragment.service.FragmentEntryLinkLocalServiceUtil;
-import com.liferay.layout.page.template.model.LayoutPageTemplateStructure;
+import com.liferay.layout.content.page.editor.web.internal.util.layout.structure.LayoutStructureUtil;
 import com.liferay.layout.page.template.service.LayoutPageTemplateStructureLocalServiceUtil;
-import com.liferay.layout.util.structure.FragmentLayoutStructureItem;
+import com.liferay.layout.util.structure.FragmentStyledLayoutStructureItem;
 import com.liferay.layout.util.structure.LayoutStructure;
 import com.liferay.layout.util.structure.LayoutStructureItem;
 import com.liferay.portal.kernel.comment.CommentManager;
@@ -54,41 +54,39 @@ import java.util.stream.Stream;
 public class SegmentsExperienceUtil {
 
 	public static void copySegmentsExperienceData(
-			long classNameId, long classPK, CommentManager commentManager,
-			long groupId, PortletRegistry portletRegistry,
-			long sourceSegmentsExperienceId, long targetSegmentsExperienceId,
+			long plid, CommentManager commentManager, long groupId,
+			PortletRegistry portletRegistry, long sourceSegmentsExperienceId,
+			long targetSegmentsExperienceId,
 			Function<String, ServiceContext> serviceContextFunction,
 			long userId)
 		throws PortalException {
 
 		_copyLayoutData(
-			classNameId, classPK, commentManager, groupId, portletRegistry,
+			plid, commentManager, groupId, portletRegistry,
 			sourceSegmentsExperienceId, targetSegmentsExperienceId,
 			serviceContextFunction, userId);
 	}
 
 	private static void _copyLayoutData(
-			long classNameId, long classPK, CommentManager commentManager,
-			long groupId, PortletRegistry portletRegistry,
-			long sourceSegmentsExperienceId, long targetSegmentsExperienceId,
+			long plid, CommentManager commentManager, long groupId,
+			PortletRegistry portletRegistry, long sourceSegmentsExperienceId,
+			long targetSegmentsExperienceId,
 			Function<String, ServiceContext> serviceContextFunction,
 			long userId)
 		throws PortalException {
 
-		LayoutPageTemplateStructure layoutPageTemplateStructure =
-			LayoutPageTemplateStructureLocalServiceUtil.
-				fetchLayoutPageTemplateStructure(
-					groupId, classNameId, classPK, true);
+		LayoutStructure layoutStructure =
+			LayoutStructureUtil.getLayoutStructure(
+				groupId, plid, sourceSegmentsExperienceId);
 
 		JSONObject dataJSONObject = _updateLayoutDataJSONObject(
-			classNameId, classPK, commentManager,
-			layoutPageTemplateStructure.getData(sourceSegmentsExperienceId),
-			groupId, portletRegistry, sourceSegmentsExperienceId,
-			serviceContextFunction, targetSegmentsExperienceId, userId);
+			plid, commentManager, layoutStructure, groupId, portletRegistry,
+			sourceSegmentsExperienceId, serviceContextFunction,
+			targetSegmentsExperienceId, userId);
 
 		LayoutPageTemplateStructureLocalServiceUtil.
-			updateLayoutPageTemplateStructure(
-				groupId, classNameId, classPK, targetSegmentsExperienceId,
+			updateLayoutPageTemplateStructureData(
+				groupId, plid, targetSegmentsExperienceId,
 				dataJSONObject.toString());
 	}
 
@@ -197,19 +195,17 @@ public class SegmentsExperienceUtil {
 	}
 
 	private static JSONObject _updateLayoutDataJSONObject(
-			long classNameId, long classPK, CommentManager commentManager,
-			String data, long groupId, PortletRegistry portletRegistry,
-			long sourceSegmentsExperienceId,
+			long plid, CommentManager commentManager,
+			LayoutStructure layoutStructure, long groupId,
+			PortletRegistry portletRegistry, long sourceSegmentsExperienceId,
 			Function<String, ServiceContext> serviceContextFunction,
 			long targetSegmentsExperienceId, long userId)
 		throws PortalException {
 
-		LayoutStructure layoutStructure = LayoutStructure.of(data);
-
 		List<FragmentEntryLink> fragmentEntryLinks =
 			FragmentEntryLinkLocalServiceUtil.
 				getFragmentEntryLinksBySegmentsExperienceId(
-					groupId, sourceSegmentsExperienceId, classNameId, classPK);
+					groupId, sourceSegmentsExperienceId, plid);
 
 		Stream<FragmentEntryLink> stream = fragmentEntryLinks.stream();
 
@@ -221,15 +217,18 @@ public class SegmentsExperienceUtil {
 		for (LayoutStructureItem layoutStructureItem :
 				layoutStructure.getLayoutStructureItems()) {
 
-			if (!(layoutStructureItem instanceof FragmentLayoutStructureItem)) {
+			if (!(layoutStructureItem instanceof
+					FragmentStyledLayoutStructureItem)) {
+
 				continue;
 			}
 
-			FragmentLayoutStructureItem fragmentLayoutStructureItem =
-				(FragmentLayoutStructureItem)layoutStructureItem;
+			FragmentStyledLayoutStructureItem
+				fragmentStyledLayoutStructureItem =
+					(FragmentStyledLayoutStructureItem)layoutStructureItem;
 
 			FragmentEntryLink fragmentEntryLink = fragmentEntryLinkMap.get(
-				fragmentLayoutStructureItem.getFragmentEntryLinkId());
+				fragmentStyledLayoutStructureItem.getFragmentEntryLinkId());
 
 			if (fragmentEntryLink == null) {
 				continue;
@@ -243,7 +242,8 @@ public class SegmentsExperienceUtil {
 				CounterLocalServiceUtil.increment());
 			newFragmentEntryLink.setCreateDate(new Date());
 			newFragmentEntryLink.setModifiedDate(new Date());
-			newFragmentEntryLink.setOriginalFragmentEntryLinkId(0);
+			newFragmentEntryLink.setOriginalFragmentEntryLinkId(
+				fragmentEntryLink.getFragmentEntryLinkId());
 			newFragmentEntryLink.setSegmentsExperienceId(
 				targetSegmentsExperienceId);
 
@@ -252,7 +252,7 @@ public class SegmentsExperienceUtil {
 			newFragmentEntryLink.setEditableValues(
 				_getNewEditableValues(
 					fragmentEntryLink.getEditableValues(),
-					fragmentEntryLink.getNamespace(), newNamespace, classPK));
+					fragmentEntryLink.getNamespace(), newNamespace, plid));
 
 			newFragmentEntryLink.setNamespace(newNamespace);
 
@@ -262,7 +262,7 @@ public class SegmentsExperienceUtil {
 				FragmentEntryLinkLocalServiceUtil.addFragmentEntryLink(
 					newFragmentEntryLink);
 
-			fragmentLayoutStructureItem.setFragmentEntryLinkId(
+			fragmentStyledLayoutStructureItem.setFragmentEntryLinkId(
 				newFragmentEntryLink.getFragmentEntryLinkId());
 
 			commentManager.copyDiscussion(
@@ -272,8 +272,7 @@ public class SegmentsExperienceUtil {
 				serviceContextFunction);
 
 			_copyPortletPreferences(
-				fragmentEntryLink, newFragmentEntryLink, classPK,
-				portletRegistry);
+				fragmentEntryLink, newFragmentEntryLink, plid, portletRegistry);
 		}
 
 		return layoutStructure.toJSONObject();

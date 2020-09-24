@@ -64,7 +64,7 @@ public interface RedirectEntryLocalService
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this interface directly. Always use {@link RedirectEntryLocalServiceUtil} to access the redirect entry local service. Add custom service methods to <code>com.liferay.redirect.service.impl.RedirectEntryLocalServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface.
+	 * Never modify this interface directly. Add custom service methods to <code>com.liferay.redirect.service.impl.RedirectEntryLocalServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface. Consume the redirect entry local service via injection or a <code>org.osgi.util.tracker.ServiceTracker</code>. Use {@link RedirectEntryLocalServiceUtil} if injection and service tracking are not available.
 	 */
 	public void addEntryResources(
 			RedirectEntry entry, boolean addGroupPermissions,
@@ -90,6 +90,10 @@ public interface RedirectEntryLocalService
 
 	/**
 	 * Adds the redirect entry to the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect RedirectEntryLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param redirectEntry the redirect entry
 	 * @return the redirect entry that was added
@@ -122,6 +126,10 @@ public interface RedirectEntryLocalService
 	/**
 	 * Deletes the redirect entry with the primary key from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect RedirectEntryLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param redirectEntryId the primary key of the redirect entry
 	 * @return the redirect entry that was removed
 	 * @throws PortalException if a redirect entry with the primary key could not be found
@@ -132,6 +140,10 @@ public interface RedirectEntryLocalService
 
 	/**
 	 * Deletes the redirect entry from the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect RedirectEntryLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param redirectEntry the redirect entry
 	 * @return the redirect entry that was removed
@@ -270,7 +282,8 @@ public interface RedirectEntryLocalService
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<RedirectEntry> getRedirectEntries(
-		long groupId, int start, int end, OrderByComparator<RedirectEntry> obc);
+		long groupId, int start, int end,
+		OrderByComparator<RedirectEntry> orderByComparator);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<RedirectEntry> getRedirectEntries(
@@ -352,6 +365,10 @@ public interface RedirectEntryLocalService
 
 	/**
 	 * Updates the redirect entry in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect RedirectEntryLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param redirectEntry the redirect entry
 	 * @return the redirect entry that was updated

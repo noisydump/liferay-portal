@@ -16,34 +16,28 @@ package com.liferay.headless.discovery.internal.jaxrs.application;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import com.liferay.headless.discovery.internal.configuration.HeadlessDiscoveryConfiguration;
 import com.liferay.headless.discovery.internal.dto.Hint;
 import com.liferay.headless.discovery.internal.dto.Resource;
 import com.liferay.headless.discovery.internal.dto.Resources;
-import com.liferay.petra.string.StringPool;
-import com.liferay.portal.events.ServicePreAction;
-import com.liferay.portal.events.ThemeServicePreAction;
-import com.liferay.portal.kernel.io.unsync.UnsyncStringWriter;
-import com.liferay.portal.kernel.servlet.DummyHttpServletResponse;
-import com.liferay.portal.kernel.servlet.ServletContextPool;
-import com.liferay.portal.kernel.template.Template;
-import com.liferay.portal.kernel.template.TemplateConstants;
-import com.liferay.portal.kernel.template.TemplateManagerUtil;
-import com.liferay.portal.kernel.template.URLTemplateResource;
-import com.liferay.portal.kernel.theme.ThemeDisplay;
+import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
+import com.liferay.portal.kernel.security.auth.AuthTokenUtil;
 import com.liferay.portal.kernel.util.StringUtil;
-import com.liferay.portal.kernel.util.WebKeys;
 
-import java.net.URI;
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
+
+import java.net.URL;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Scanner;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.stream.Stream;
 
-import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -54,9 +48,14 @@ import javax.ws.rs.core.Application;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.StreamingOutput;
 import javax.ws.rs.core.UriInfo;
 
+import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleContext;
+import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Modified;
 import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.jaxrs.runtime.JaxrsServiceRuntime;
 import org.osgi.service.jaxrs.runtime.dto.ApplicationDTO;
@@ -69,6 +68,7 @@ import org.osgi.service.jaxrs.whiteboard.JaxrsWhiteboardConstants;
  * @author Javier Gamarra
  */
 @Component(
+	configurationPid = "com.liferay.headless.discovery.internal.configuration.HeadlessDiscoveryConfiguration",
 	property = {
 		JaxrsWhiteboardConstants.JAX_RS_APPLICATION_BASE + "=/api",
 		JaxrsWhiteboardConstants.JAX_RS_EXTENSION_SELECT + "=(osgi.jaxrs.name=Liferay.Vulcan)",
@@ -80,15 +80,46 @@ import org.osgi.service.jaxrs.whiteboard.JaxrsWhiteboardConstants;
 public class HeadlessDiscoveryAPIApplication extends Application {
 
 	@GET
-	@Produces({"application/json", "application/xml"})
+	@Produces({"application/json", "application/xml", "text/html"})
 	public Response discovery(
 			@HeaderParam("Accept") String accept,
 			@Context HttpServletRequest httpServletRequest,
 			@Context HttpServletResponse httpServletResponse)
 		throws Exception {
 
-		if ((accept != null) && accept.contains(MediaType.TEXT_HTML)) {
-			return _getHTMLResponse(httpServletRequest, httpServletResponse);
+		if ((accept != null) && accept.contains(MediaType.TEXT_HTML) &&
+			_headlessDiscoveryConfiguration.enableAPIExplorer()) {
+
+			URL url = _getURL();
+
+			if (url == null) {
+				return Response.serverError(
+				).build();
+			}
+
+			InputStream urlInputStream = url.openStream();
+
+			Scanner scanner = new Scanner(urlInputStream, "UTF-8");
+
+			scanner.useDelimiter("\\A");
+
+			String html = StringUtil.replace(
+				scanner.next(), "%CSRF-TOKEN%",
+				AuthTokenUtil.getToken(httpServletRequest));
+
+			return Response.ok(
+				(StreamingOutput)streamingOutput -> {
+					InputStream htmlInputStream = new ByteArrayInputStream(
+						html.getBytes());
+
+					byte[] buffer = new byte[1024];
+					int read = 0;
+
+					while ((read = htmlInputStream.read(buffer)) != -1) {
+						streamingOutput.write(buffer, 0, read);
+					}
+				}
+			).build();
 		}
 
 		Map<String, List<ResourceMethodInfoDTO>> resourceMethodInfoDTOsMap =
@@ -127,42 +158,14 @@ public class HeadlessDiscoveryAPIApplication extends Application {
 		return Collections.singleton(this);
 	}
 
-	private Response _getHTMLResponse(
-			HttpServletRequest httpServletRequest,
-			HttpServletResponse httpServletResponse)
-		throws Exception {
+	@Activate
+	@Modified
+	protected void activate(
+		BundleContext bundleContext, Map<String, Object> properties) {
 
-		UnsyncStringWriter unsyncStringWriter = new UnsyncStringWriter();
-
-		String templateId = "/headless-discovery-web.ftl";
-		Class<?> clazz = getClass();
-
-		Template template = TemplateManagerUtil.getTemplate(
-			TemplateConstants.LANG_TYPE_FTL,
-			new URLTemplateResource(templateId, clazz.getResource(templateId)),
-			false);
-
-		ServletContext servletContext = ServletContextPool.get(
-			StringPool.BLANK);
-
-		httpServletRequest.setAttribute(WebKeys.CTX, servletContext);
-
-		httpServletRequest.setAttribute(
-			WebKeys.THEME_DISPLAY, _getThemeDisplay(httpServletRequest));
-
-		template.prepare(httpServletRequest);
-
-		template.put("themeServletContext", servletContext);
-
-		template.prepareTaglib(httpServletRequest, httpServletResponse);
-
-		template.put(TemplateConstants.WRITER, unsyncStringWriter);
-
-		template.processTemplate(unsyncStringWriter);
-
-		return Response.ok(
-			unsyncStringWriter.toString()
-		).build();
+		_bundleContext = bundleContext;
+		_headlessDiscoveryConfiguration = ConfigurableUtil.createConfigurable(
+			HeadlessDiscoveryConfiguration.class, properties);
 	}
 
 	private Resource _getResource(
@@ -201,9 +204,7 @@ public class HeadlessDiscoveryAPIApplication extends Application {
 
 		Map<String, List<ResourceMethodInfoDTO>> resourcesMap = new TreeMap<>();
 
-		URI uri = _uriInfo.getAbsolutePath();
-
-		String absolutePath = uri.toString();
+		String absolutePath = String.valueOf(_uriInfo.getAbsolutePath());
 
 		String serverURL = StringUtil.removeSubstring(absolutePath, "/api/");
 
@@ -236,25 +237,21 @@ public class HeadlessDiscoveryAPIApplication extends Application {
 		return resourcesMap;
 	}
 
-	private ThemeDisplay _getThemeDisplay(HttpServletRequest httpServletRequest)
-		throws Exception {
+	private URL _getURL() {
+		for (Bundle bundle : _bundleContext.getBundles()) {
+			if (StringUtil.equals(
+					bundle.getSymbolicName(),
+					"com.liferay.headless.discovery.web")) {
 
-		ServicePreAction servicePreAction = new ServicePreAction();
+				return bundle.getEntry("META-INF/resources/dist/index.html");
+			}
+		}
 
-		HttpServletResponse httpServletResponse =
-			new DummyHttpServletResponse();
-
-		servicePreAction.servicePre(
-			httpServletRequest, httpServletResponse, false);
-
-		ThemeServicePreAction themeServicePreAction =
-			new ThemeServicePreAction();
-
-		themeServicePreAction.run(httpServletRequest, httpServletResponse);
-
-		return (ThemeDisplay)httpServletRequest.getAttribute(
-			WebKeys.THEME_DISPLAY);
+		return null;
 	}
+
+	private BundleContext _bundleContext;
+	private HeadlessDiscoveryConfiguration _headlessDiscoveryConfiguration;
 
 	@Reference
 	private JaxrsServiceRuntime _jaxrsServiceRuntime;

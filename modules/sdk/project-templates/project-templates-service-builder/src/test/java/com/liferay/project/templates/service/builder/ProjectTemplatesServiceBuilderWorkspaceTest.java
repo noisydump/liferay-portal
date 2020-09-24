@@ -62,7 +62,7 @@ public class ProjectTemplatesServiceBuilderWorkspaceTest
 				{"spring", "guestbook", "com.liferay.docs.guestbook", "7.0.6"},
 				{"spring", "guestbook", "com.liferay.docs.guestbook", "7.1.3"},
 				{"ds", "guestbook", "com.liferay.docs.guestbook", "7.2.1"},
-				{"ds", "guestbook", "com.liferay.docs.guestbook", "7.3.1"},
+				{"ds", "guestbook", "com.liferay.docs.guestbook", "7.3.4"},
 				{
 					"spring", "backend-integration",
 					"com.liferay.docs.guestbook", "7.0.6"
@@ -77,7 +77,7 @@ public class ProjectTemplatesServiceBuilderWorkspaceTest
 				},
 				{
 					"ds", "backend-integration", "com.liferay.docs.guestbook",
-					"7.3.1"
+					"7.3.4"
 				},
 				{
 					"spring", "backend-integration",
@@ -85,12 +85,12 @@ public class ProjectTemplatesServiceBuilderWorkspaceTest
 				},
 				{
 					"spring", "backend-integration",
-					"com.liferay.docs.guestbook", "7.3.1"
+					"com.liferay.docs.guestbook", "7.3.4"
 				},
 				{"spring", "sample", "com.test.sample", "7.0.6"},
 				{"spring", "sample", "com.test.sample", "7.1.3"},
 				{"ds", "sample", "com.test.sample", "7.2.1"},
-				{"ds", "sample", "com.test.sample", "7.3.1"}
+				{"ds", "sample", "com.test.sample", "7.3.4"}
 			});
 	}
 
@@ -157,17 +157,9 @@ public class ProjectTemplatesServiceBuilderWorkspaceTest
 			testContains(
 				gradleProjectDir, _name + "-service/bnd.bnd",
 				"-dsannotations-options: inherit");
-
-			testNotContains(
-				gradleProjectDir, _name + "-service/build.gradle",
-				"com.liferay.portal.spring.extender");
 		}
 
 		if (_dependencyInjector.equals("spring")) {
-			testContains(
-				gradleProjectDir, _name + "-service/build.gradle",
-				"com.liferay.portal.spring.extender");
-
 			testNotContains(
 				gradleProjectDir, _name + "-service/bnd.bnd",
 				"-dsannotations-options: inherit");
@@ -193,22 +185,27 @@ public class ProjectTemplatesServiceBuilderWorkspaceTest
 				gradleProjectDir, _name + "-service/build.gradle",
 				"org.osgi.annotation.versioning");
 		}
+		else if (_liferayVersion.startsWith("7.2")) {
+			testContains(
+				gradleProjectDir, _name + "-api/build.gradle",
+				DEPENDENCY_PORTAL_KERNEL, "org.osgi.annotation.versioning");
+			testContains(
+				gradleProjectDir, _name + "-service/build.gradle",
+				DEPENDENCY_PORTAL_KERNEL, "org.osgi.annotation.versioning");
+
+			testNotContains(
+				gradleProjectDir, _name + "-api/build.gradle", "biz.aQute.bnd");
+			testNotContains(
+				gradleProjectDir, _name + "-service/build.gradle",
+				"biz.aQute.bnd");
+		}
 		else {
 			testContains(
 				gradleProjectDir, _name + "-api/build.gradle",
-				DEPENDENCY_PORTAL_KERNEL, "com.liferay.petra.lang",
-				"com.liferay.petra.string", "org.osgi.annotation.versioning");
+				DEPENDENCY_RELEASE_PORTAL_API);
 			testContains(
 				gradleProjectDir, _name + "-service/build.gradle",
-				DEPENDENCY_PORTAL_KERNEL, "com.liferay.petra.lang",
-				"com.liferay.petra.string", "org.osgi.annotation.versioning",
-				"com.liferay.portal.aop.api");
-
-			if (_liferayVersion.equals("7.3.1")) {
-				testContains(
-					gradleProjectDir, _name + "-service/build.gradle",
-					"com.liferay.petra.sql.dsl.api");
-			}
+				DEPENDENCY_RELEASE_PORTAL_API);
 
 			testNotContains(
 				gradleProjectDir, _name + "-api/build.gradle", "biz.aQute.bnd");
@@ -285,7 +282,7 @@ public class ProjectTemplatesServiceBuilderWorkspaceTest
 					executeGradle(
 						rootProject, _gradleDistribution,
 						projectPath + ":" + serviceProjectName +
-							_GRADLE_TASK_PATH_BUILD_SERVICE);
+							GRADLE_TASK_PATH_BUILD_SERVICE);
 
 					return null;
 				}
@@ -379,9 +376,6 @@ public class ProjectTemplatesServiceBuilderWorkspaceTest
 			"Changes in " + file + " incorrectly overridden", newContent,
 			FileUtil.read(path));
 	}
-
-	private static final String _GRADLE_TASK_PATH_BUILD_SERVICE =
-		":buildService";
 
 	private static URI _gradleDistribution;
 

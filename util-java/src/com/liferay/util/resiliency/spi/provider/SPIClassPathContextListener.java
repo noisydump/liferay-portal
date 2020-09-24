@@ -43,7 +43,7 @@ import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
 
 /**
- * @author Shuyang Zhou
+ * @author     Shuyang Zhou
  * @deprecated As of Athanasius (7.3.x), with no direct replacement
  */
 @Deprecated
@@ -92,7 +92,7 @@ public class SPIClassPathContextListener implements ServletContextListener {
 
 		addJarFiles(jarFiles, new File(spiEmbeddedLibDir, "ext"));
 
-		StringBundler sb = new StringBundler(jarFiles.size() * 2 + 2);
+		StringBundler sb = new StringBundler((jarFiles.size() * 2) + 2);
 
 		for (File file : jarFiles) {
 			sb.append(file.getAbsolutePath());

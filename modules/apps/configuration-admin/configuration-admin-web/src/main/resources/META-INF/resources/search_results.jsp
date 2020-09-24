@@ -47,8 +47,8 @@ renderResponse.setTitle(LanguageUtil.get(request, "search-results"));
 	showSearch="<%= true %>"
 />
 
-<clay:container
-	className="container-view"
+<clay:container-fluid
+	cssClass="container-view"
 >
 	<liferay-ui:search-container
 		emptyResultsMessage="no-configurations-were-found"
@@ -180,4 +180,4 @@ renderResponse.setTitle(LanguageUtil.get(request, "search-results"));
 			markupView="lexicon"
 		/>
 	</liferay-ui:search-container>
-</clay:container>
+</clay:container-fluid>

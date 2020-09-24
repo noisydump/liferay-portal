@@ -27,22 +27,28 @@ export const createField = (props, event) => {
 		fieldNameGenerator,
 		spritemap,
 	} = props;
-	const {fieldType, skipFieldNameGeneration = false} = event;
+	const {
+		fieldType,
+		skipFieldNameGeneration = false,
+		useFieldName = '',
+	} = event;
 
-	let newFieldName;
+	let newFieldName = useFieldName;
 
-	if (skipFieldNameGeneration) {
-		const {settingsContext} = fieldType;
-		const visitor = new PagesVisitor(settingsContext.pages);
+	if (!useFieldName) {
+		if (skipFieldNameGeneration) {
+			const {settingsContext} = fieldType;
+			const visitor = new PagesVisitor(settingsContext.pages);
 
-		visitor.mapFields(({fieldName, value}) => {
-			if (fieldName === 'name') {
-				newFieldName = value;
-			}
-		});
-	}
-	else {
-		newFieldName = fieldNameGenerator(fieldType.label);
+			visitor.mapFields(({fieldName, value}) => {
+				if (fieldName === 'name') {
+					newFieldName = value;
+				}
+			});
+		}
+		else {
+			newFieldName = fieldNameGenerator(getDefaultFieldName());
+		}
 	}
 
 	const newField = {
@@ -53,6 +59,7 @@ export const createField = (props, event) => {
 			...fieldType.settingsContext,
 			pages: normalizeSettingsContextPages(
 				fieldType.settingsContext.pages,
+				defaultLanguageId,
 				editingLanguageId,
 				fieldType,
 				newFieldName
@@ -82,17 +89,30 @@ export const formatFieldName = (instanceId, languageId, value) => {
 	return `ddm$$${value}$${instanceId}$0$$${languageId}`;
 };
 
-export const generateInstanceId = (length) => {
+export const generateId = (length, allowOnlyNumbers = false) => {
 	let text = '';
 
-	const possible =
-		'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+	const possible = allowOnlyNumbers
+		? '0123456789'
+		: 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
 
 	for (let i = 0; i < length; i++) {
 		text += possible.charAt(Math.floor(Math.random() * possible.length));
 	}
 
 	return text;
+};
+
+export const generateInstanceId = (length) => {
+	return generateId(length);
+};
+
+export const getDefaultFieldName = (isOptionField = false) => {
+	const defaultFieldName = isOptionField
+		? Liferay.Language.get('option')
+		: Liferay.Language.get('field');
+
+	return defaultFieldName + generateId(8, true);
 };
 
 export const getField = (pages, fieldName) => {
@@ -111,7 +131,10 @@ export const getFieldProperties = (
 
 	visitor.mapFields(
 		({fieldName, localizable, localizedValue = {}, type, value}) => {
-			if (localizable && localizedValue[editingLanguageId]) {
+			if (
+				localizable &&
+				localizedValue[editingLanguageId] !== undefined
+			) {
 				properties[fieldName] = localizedValue[editingLanguageId];
 			}
 			else if (localizable && localizedValue[defaultLanguageId]) {
@@ -124,6 +147,19 @@ export const getFieldProperties = (
 				else {
 					properties[fieldName] = value[editingLanguageId];
 				}
+			}
+			else if (type == 'validation') {
+				if (!value.errorMessage[editingLanguageId]) {
+					value.errorMessage[editingLanguageId] =
+						value.errorMessage[defaultLanguageId];
+				}
+
+				if (!value.parameter[editingLanguageId]) {
+					value.parameter[editingLanguageId] =
+						value.parameter[defaultLanguageId];
+				}
+
+				properties[fieldName] = value;
 			}
 			else {
 				properties[fieldName] = value;
@@ -166,7 +202,7 @@ export const getParentFieldSet = (pages, fieldName) => {
 };
 
 export const isFieldSet = (field) =>
-	field.type === FIELD_TYPE_FIELDSET && field.dataDefinitionId;
+	field.type === FIELD_TYPE_FIELDSET && field.ddmStructureId;
 
 export const isFieldSetChild = (pages, fieldName) => {
 	return !!getParentFieldSet(pages, fieldName);
@@ -214,6 +250,7 @@ export const localizeField = (field, defaultLanguageId, editingLanguageId) => {
 
 export const normalizeSettingsContextPages = (
 	pages,
+	defaultLanguageId,
 	editingLanguageId,
 	fieldType,
 	generatedFieldName
@@ -231,12 +268,21 @@ export const normalizeSettingsContextPages = (
 				};
 			}
 			else if (fieldName === 'label') {
+				const localizedValue = {
+					...field.localizedValue,
+					[editingLanguageId]: fieldType.label,
+				};
+
+				if (
+					editingLanguageId !== defaultLanguageId &&
+					!localizedValue[defaultLanguageId]
+				) {
+					localizedValue[defaultLanguageId] = fieldType.label;
+				}
+
 				field = {
 					...field,
-					localizedValue: {
-						...field.localizedValue,
-						[editingLanguageId]: fieldType.label,
-					},
+					localizedValue,
 					type: 'text',
 					value: fieldType.label,
 				};

@@ -177,11 +177,11 @@ class StateSyncronizer extends Component {
 			);
 		});
 
-		if (settingsDDMForm) {
+		if (settingsDDMForm && settingsDDMForm.reactComponentRef.current) {
 			document.querySelector(
 				`#${namespace}serializedSettingsContext`
 			).value = JSON.stringify({
-				pages: settingsDDMForm.pages,
+				pages: settingsDDMForm.reactComponentRef.current.get('pages'),
 			});
 		}
 

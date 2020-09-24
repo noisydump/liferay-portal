@@ -7,6 +7,7 @@ import com.github.jengelman.gradle.plugins.shadow.transformers.AppendingTransfor
 import com.liferay.gradle.plugins.change.log.builder.BuildChangeLogTask
 import com.liferay.gradle.plugins.defaults.internal.util.GradleUtil
 import com.liferay.gradle.util.FileUtil
+import com.liferay.gradle.util.Validator
 
 import groovy.io.FileType
 import groovy.io.FileVisitResult
@@ -75,6 +76,7 @@ task buildFixPackChangeLog(type: BuildChangeLogTask)
 task cherryPickArtifacts
 task cleanReleng
 task cleanVersionOverride
+task lockBOMDependencyVersion
 task lockDependencyVersion
 task lockPrivateDependencyVersions
 task portalArtifactsJar(type: ShadowJar)
@@ -171,6 +173,118 @@ cleanVersionOverride {
 
 		delete bndBndFileTree.collect {
 			new File(gitRepoDir.parentFile, ".version-override-${it.parentFile.name}.properties")
+		}
+	}
+
+	group = "releng"
+}
+
+lockBOMDependencyVersion {
+	description = "Replaces 'default' or project dependencies in all 'apps', 'dxp', and 'core' modules with the published artifact version."
+
+	doLast {
+		Map<String, String> dependenciesMap = [:]
+
+		fileTree(dir: file(".releng"), excludes: ["/sdk/**", "**/test/**", "/third-party/**", "/util/**"], include: "**/*.properties").each {
+			File relengFile ->
+
+			String relativePath = FileUtil.relativize(relengFile.parentFile, file(".releng"))
+
+			if (Validator.isNotNull(relativePath)) {
+				File relengIgnoreMarkerDir = GradleUtil.getRootDir(file(relativePath), ".lfrbuild-releng-ignore")
+
+				if (relengIgnoreMarkerDir) {
+					return
+				}
+
+				if (!_exists(file(relativePath), ".lfrbuild-portal")) {
+					return
+				}
+			}
+			else if (relengFile.name == "artifact.properties") {
+				return
+			}
+
+			Properties relengProperties = GUtil.loadProperties(relengFile)
+
+			String artifactURL = relengProperties.getProperty("artifact.url")
+
+			if (!artifactURL || !artifactURL.endsWith(".jar")) {
+				return
+			}
+
+			int x = artifactURL.lastIndexOf("/")
+
+			int y = artifactURL.lastIndexOf("/", x - 1)
+
+			int z = artifactURL.lastIndexOf("/", y - 1)
+
+			String dependencyName = artifactURL.substring(z + 1, y)
+			String dependencyVersion = artifactURL.substring(y + 1, x)
+
+			if (relengFile.name != "artifact.properties") {
+				dependenciesMap.put(dependencyName, "com.liferay.portal:" + dependencyName + ":" + dependencyVersion)
+			}
+			else if (dependencyName.startsWith("com.liferay.commerce.") || dependencyName.startsWith("com.liferay.headless.commerce.")) {
+				dependenciesMap.put(dependencyName, "com.liferay.commerce:" + dependencyName + ":" + dependencyVersion)
+			}
+			else {
+				dependenciesMap.put(dependencyName, "com.liferay:" + dependencyName + ":" + dependencyVersion)
+			}
+		}
+
+		FileTree buildGradleFileTree = fileTree(dir: projectDir, excludes: ["**/build/", "**/classes/", "**/node_modules/", "**/node_modules_cache/"], includes: ["apps/**/build.gradle", "core/**/build.gradle", "dxp/**/build.gradle"])
+
+		buildGradleFileTree.each {
+			File buildGradleFile ->
+
+			File moduleDir = buildGradleFile.parentFile
+
+			if (moduleDir.name.endsWith("-test") || _isGitRepoReadOnly(moduleDir)) {
+				return
+			}
+
+			logger.lifecycle "Locking dependencies: {}", moduleDir
+
+			dependenciesMap.each {
+				String dependencyName, String dependency ->
+
+				String[] dependencyArray = dependency.split(":")
+
+				String dependencyGroup = dependencyArray[0]
+				String dependencyVersion = dependencyArray[2]
+
+				Pattern dependencyPattern = null
+
+				if (dependencyGroup != "com.liferay.portal") {
+					String dependencyProjectName = dependencyName.substring(12)
+
+					dependencyProjectName = dependencyProjectName.replace('.' as char, '-' as char)
+
+					dependencyProjectName = dependencyProjectName.replace("exportimport", "export-import")
+
+					dependencyPattern = ~/(compileOnly|provided) project\(".+:${dependencyProjectName}"\)/
+				}
+				else {
+					dependencyPattern = ~/(compileOnly|provided)\s+group:\s*"${dependencyGroup}",\s*name:\s*"${dependencyName}",\s*version:\s*"default"/
+				}
+
+				String dependencyReplacement = "\$1 group: \"${dependencyGroup}\", name: \"${dependencyName}\", version: \"${dependencyVersion}\""
+
+				List<String> buildGradleExcludes = ["**/build/", "**/classes/", "**/node_modules/"]
+
+				if ((dependencyName in ["com.liferay.portal.impl", "com.liferay.portal.kernel"]) && moduleDir.name.equals("portal-bootstrap")) {
+					return
+				}
+
+				String buildGradle = buildGradleFile.text
+
+				String newBuildGradle = buildGradle.replaceFirst(dependencyPattern, dependencyReplacement)
+
+				if (buildGradle != newBuildGradle) {
+					buildGradleFile.text = newBuildGradle
+				}
+			}
 		}
 	}
 
@@ -1397,6 +1511,7 @@ private List<Dependency> _getPortalArtifactsDependencies(List<File> relengProper
 			for (String artifact : enforceVersionArtifacts.split(",")) {
 				if (!artifact.startsWith("com.fasterxml") &&
 					!artifact.startsWith("com.liferay:biz.aQute.bnd.annotation:") &&
+					!artifact.startsWith("com.liferay.portletmvc4spring:com.liferay.portletmvc4spring.test:") &&
 					!artifact.startsWith("io.swagger") &&
 					!artifact.startsWith("javax") &&
 					!artifact.startsWith("org.jsoup") &&
@@ -1419,9 +1534,7 @@ private List<Dependency> _getPortalArtifactsDependencies(List<File> relengProper
 				String version = array[2]
 
 				String[] urls = [
-					"https://repository-cdn.liferay.com/nexus/service/local/repositories/gradle-plugins/content/${groupPath}/${name}/${version}/${name}-${version}.jar",
-					"https://repository-cdn.liferay.com/nexus/service/local/repositories/liferay-public-releases/content/${groupPath}/${name}/${version}/${name}-${version}.jar",
-					"https://repository-cdn.liferay.com/nexus/service/local/repositories/maven2/content/${groupPath}/${name}/${version}/${name}-${version}.jar"
+					"https://repository-cdn.liferay.com/nexus/content/groups/public/${groupPath}/${name}/${version}/${name}-${version}.jar"
 				]
 
 				artifactURLs.add(_downloadFile(cacheDir, urls))
@@ -1598,6 +1711,59 @@ private List<File> _getPortalSourcesDependencies(List<File> relengPropertiesFile
 		}
 	}
 
+	File sourceFormatterPropertiesFile = new File(projectDir, "source-formatter.properties")
+
+	if (sourceFormatterPropertiesFile.exists()) {
+		Properties sourceFormatterProperties = GUtil.loadProperties(sourceFormatterPropertiesFile)
+
+		String enforceVersionArtifacts = sourceFormatterProperties.getProperty("source.check.GradleDependencyArtifactsCheck.enforceVersionArtifacts");
+
+		if (enforceVersionArtifacts != null) {
+			for (String artifact : enforceVersionArtifacts.split(",")) {
+				if (!artifact.startsWith("com.fasterxml") &&
+					!artifact.startsWith("com.liferay:biz.aQute.bnd.annotation:") &&
+					!artifact.startsWith("com.liferay.portletmvc4spring:com.liferay.portletmvc4spring.test:") &&
+					!artifact.startsWith("io.swagger") &&
+					!artifact.startsWith("javax") &&
+					!artifact.startsWith("org.jsoup") &&
+					!artifact.startsWith("org.osgi")) {
+
+					continue
+				}
+
+				String[] array = artifact.split(":")
+
+				if (array.length != 3) {
+					continue;
+				}
+
+				String group = array[0]
+
+				String groupPath = group.replace('.' as char, '/' as char)
+
+				String name = array[1]
+				String version = array[2]
+
+				_downloadFile(cacheDir, "https://repository-cdn.liferay.com/nexus/content/groups/public/${groupPath}/${name}/${version}/${name}-${version}-sources.jar")
+
+				File jarFile = new File(cacheDir, "${name}-${version}-sources.jar")
+
+				File dir = new File(portalSourcesDir, jarFile.name[0 .. -5])
+
+				copy {
+					from zipTree(jarFile)
+					into dir
+				}
+
+				DependencyHandler dependencyHandler = project.getDependencies()
+
+				dependencies.add(dependencyHandler.create(files(dir)))
+
+				logger.lifecycle "Added {}", jarFile.name
+			}
+		}
+	}
+
 	return dependencies
 }
 
@@ -1632,6 +1798,16 @@ private List<File> _getRelengPropertiesFiles() {
 
 	fileTree(dir: file(".releng"), excludes: excludes, include: "**/*.properties").each {
 		File relengFile ->
+
+		String relativePath = FileUtil.relativize(relengFile.parentFile, file(".releng"))
+
+		if (Validator.isNotNull(relativePath)) {
+			File relengIgnoreMarkerDir = GradleUtil.getRootDir(file(relativePath), ".lfrbuild-releng-ignore")
+
+			if (relengIgnoreMarkerDir) {
+				return
+			}
+		}
 
 		Properties relengProperties = GUtil.loadProperties(relengFile)
 

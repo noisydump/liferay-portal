@@ -12,9 +12,12 @@
  * details.
  */
 
-import React, {useContext} from 'react';
+import {ClayButtonWithIcon} from '@clayui/button';
+import {ClayDropDownWithItems} from '@clayui/drop-down';
+import ClayIcon from '@clayui/icon';
+import classNames from 'classnames';
+import React from 'react';
 
-import {AppContext} from '../AppContext.es';
 import {
 	dateToInternationalHuman,
 	normalizeRating,
@@ -27,15 +30,21 @@ import SectionLabel from './SectionLabel.es';
 import TagList from './TagList.es';
 import UserIcon from './UserIcon.es';
 
-export default ({question}) => {
-	const context = useContext(AppContext);
-
-	const sectionTitle = context.section;
+export default ({currentSection, items, question, showSectionLabel}) => {
+	const sectionTitle =
+		currentSection || currentSection === '0'
+			? currentSection
+			: question.messageBoardSection &&
+			  question.messageBoardSection.title;
 
 	return (
 		<div className="c-mt-4 c-p-3 position-relative question-row text-secondary">
 			<div className="align-items-center d-flex flex-wrap justify-content-between">
-				<SectionLabel section={question.messageBoardSection} />
+				<span>
+					{showSectionLabel && (
+						<SectionLabel section={question.messageBoardSection} />
+					)}
+				</span>
 
 				<ul className="c-mb-0 d-flex flex-wrap list-unstyled stretched-link-layer">
 					<li>
@@ -45,6 +54,7 @@ export default ({question}) => {
 									? 'caret-bottom'
 									: 'caret-top'
 							}
+							tooltip={Liferay.Language.get('votes')}
 							value={normalizeRating(question.aggregateRating)}
 						/>
 					</li>
@@ -52,11 +62,12 @@ export default ({question}) => {
 					<li>
 						<QuestionBadge
 							symbol="view"
+							tooltip={Liferay.Language.get('view-count')}
 							value={question.viewCount}
 						/>
 					</li>
 
-					<li>
+					<li data-testid="has-valid-answer-badge">
 						<QuestionBadge
 							className={
 								question.hasValidAnswer
@@ -68,9 +79,26 @@ export default ({question}) => {
 									? 'check-circle-full'
 									: 'message'
 							}
+							tooltip={Liferay.Language.get('number-of-replies')}
 							value={question.numberOfMessageBoardMessages}
 						/>
 					</li>
+
+					{items && items.length && (
+						<li>
+							<ClayDropDownWithItems
+								className="c-py-1"
+								items={items}
+								trigger={
+									<ClayButtonWithIcon
+										displayType="unstyled"
+										small
+										symbol="ellipsis-v"
+									/>
+								}
+							/>
+						</li>
+					)}
 				</ul>
 			</div>
 
@@ -78,8 +106,23 @@ export default ({question}) => {
 				className="questions-title stretched-link"
 				to={`/questions/${sectionTitle}/${question.friendlyUrlPath}`}
 			>
-				<h2 className="c-mb-0 stretched-link-layer text-dark">
+				<h2
+					className={classNames(
+						'c-mb-0',
+						'stretched-link-layer',
+						'text-dark',
+						{
+							'question-seen': question.seen,
+						}
+					)}
+				>
 					{question.headline}
+
+					{!!question.locked && (
+						<span className="c-ml-2">
+							<ClayIcon symbol="lock" />
+						</span>
+					)}
 				</h2>
 			</Link>
 
@@ -87,6 +130,7 @@ export default ({question}) => {
 				<ArticleBodyRenderer
 					{...question}
 					articleBody={stripHTML(question.articleBody)}
+					compactMode={true}
 				/>
 			</div>
 
@@ -112,7 +156,7 @@ export default ({question}) => {
 					</span>
 				</div>
 
-				<TagList tags={question.keywords} />
+				<TagList sectionTitle={sectionTitle} tags={question.keywords} />
 			</div>
 		</div>
 	);

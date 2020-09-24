@@ -252,11 +252,6 @@ definition {
 			Pause(locator1 = "1000");
 		}
 
-		LiferayEvent.waitForLiferayEvent(
-			attributeName = "src",
-			attributeValue = "dialog-iframe-popup",
-			eventName = "modalIframeLoaded");
-
 		SelectFrame(locator1 = "DocumentsAndMediaSelectDocument#SELECT_DOCUMENT_IFRAME");
 
 		if ("${userRole}" == "Guest") {
@@ -432,11 +427,6 @@ definition {
 		AssertClick(
 			locator1 = "Button#SELECT_CONTENT",
 			value1 = "Select");
-
-		LiferayEvent.waitForLiferayEvent(
-			attributeName = "src",
-			attributeValue = "dialog-iframe-popup",
-			eventName = "modalIframeLoaded");
 
 		SelectFrame(locator1 = "IFrame#MODAL_BODY");
 
@@ -774,7 +764,7 @@ definition {
 
 	macro viewFirstRecordSearchResult {
 		AssertTextEquals(
-			locator1 = "Portlet#H3_HEADER",
+			locator1 = "Portlet#H4_COMPONENT_TITLE",
 			value1 = "New Data Definition Name for List: ${ddlListName}");
 
 		AssertTextEquals(
@@ -898,7 +888,7 @@ definition {
 
 	macro viewSecondRecordSearchResult {
 		AssertTextEquals(
-			locator1 = "Portlet#H3_HEADER",
+			locator1 = "Portlet#H4_COMPONENT_TITLE",
 			value1 = "New Data Definition Name for List: ${ddlListName}");
 
 		AssertTextEquals(

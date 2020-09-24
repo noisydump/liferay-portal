@@ -14,7 +14,6 @@
 
 package com.liferay.exportimport.internal.staging;
 
-import com.liferay.change.tracking.service.CTPreferencesLocalService;
 import com.liferay.changeset.model.ChangesetCollection;
 import com.liferay.changeset.model.ChangesetEntry;
 import com.liferay.changeset.service.ChangesetCollectionLocalService;
@@ -27,9 +26,9 @@ import com.liferay.document.library.kernel.util.DLValidator;
 import com.liferay.exportimport.configuration.ExportImportServiceConfiguration;
 import com.liferay.exportimport.internal.util.StagingGroupServiceTunnelUtil;
 import com.liferay.exportimport.kernel.background.task.BackgroundTaskExecutorNames;
-import com.liferay.exportimport.kernel.configuration.ExportImportConfigurationConstants;
 import com.liferay.exportimport.kernel.configuration.ExportImportConfigurationParameterMapFactory;
 import com.liferay.exportimport.kernel.configuration.ExportImportConfigurationSettingsMapFactory;
+import com.liferay.exportimport.kernel.configuration.constants.ExportImportConfigurationConstants;
 import com.liferay.exportimport.kernel.exception.ExportImportContentProcessorException;
 import com.liferay.exportimport.kernel.exception.ExportImportContentValidationException;
 import com.liferay.exportimport.kernel.exception.ExportImportDocumentException;
@@ -59,8 +58,8 @@ import com.liferay.exportimport.kernel.service.ExportImportConfigurationLocalSer
 import com.liferay.exportimport.kernel.service.StagingLocalService;
 import com.liferay.exportimport.kernel.staging.LayoutStagingUtil;
 import com.liferay.exportimport.kernel.staging.Staging;
-import com.liferay.exportimport.kernel.staging.StagingConstants;
 import com.liferay.exportimport.kernel.staging.StagingURLHelper;
+import com.liferay.exportimport.kernel.staging.constants.StagingConstants;
 import com.liferay.exportimport.staged.model.repository.StagedModelRepository;
 import com.liferay.exportimport.staged.model.repository.StagedModelRepositoryHelper;
 import com.liferay.exportimport.staged.model.repository.StagedModelRepositoryRegistryUtil;
@@ -106,6 +105,7 @@ import com.liferay.portal.kernel.model.WorkflowedModel;
 import com.liferay.portal.kernel.model.adapter.StagedTheme;
 import com.liferay.portal.kernel.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.scheduler.SchedulerEngineHelperUtil;
+import com.liferay.portal.kernel.scheduler.SchedulerException;
 import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.security.auth.HttpPrincipal;
 import com.liferay.portal.kernel.security.auth.PrincipalException;
@@ -240,7 +240,7 @@ public class StagingImpl implements Staging {
 			String className = ExportImportClassedModelUtil.getClassName(
 				stagedGroupedModel);
 
-			StagedModelDataHandler stagedModelDataHandler =
+			StagedModelDataHandler<?> stagedModelDataHandler =
 				StagedModelDataHandlerRegistryUtil.getStagedModelDataHandler(
 					className);
 
@@ -611,10 +611,11 @@ public class StagingImpl implements Staging {
 		ResourceBundle resourceBundle = ResourceBundleUtil.getBundle(
 			"content.Language", locale, getClass());
 
-		Throwable cause = exception.getCause();
+		Throwable throwable = exception.getCause();
 
 		if (exception.getCause() instanceof ConnectException) {
-			Map settingsMap = exportImportConfiguration.getSettingsMap();
+			Map<String, Serializable> settingsMap =
+				exportImportConfiguration.getSettingsMap();
 
 			String remoteAddress = MapUtil.getString(
 				settingsMap, "remoteAddress");
@@ -674,11 +675,13 @@ public class StagingImpl implements Staging {
 			if (exportImportContentValidationException.getType() ==
 					ExportImportContentValidationException.ARTICLE_NOT_FOUND) {
 
-				if ((cause != null) && (cause.getLocalizedMessage() != null)) {
+				if ((throwable != null) &&
+					(throwable.getLocalizedMessage() != null)) {
+
 					errorMessage = LanguageUtil.format(
 						resourceBundle,
 						"unable-to-validate-referenced-journal-article-x",
-						cause.getLocalizedMessage());
+						throwable.getLocalizedMessage());
 				}
 				else {
 					errorMessage = LanguageUtil.get(
@@ -880,8 +883,8 @@ public class StagingImpl implements Staging {
 			errorType = ServletResponseConstants.SC_FILE_CUSTOM_EXCEPTION;
 		}
 		else if ((exception instanceof ExportImportIOException) ||
-				 ((cause instanceof SystemException) &&
-				  (cause.getCause() instanceof ExportImportIOException))) {
+				 ((throwable instanceof SystemException) &&
+				  (throwable.getCause() instanceof ExportImportIOException))) {
 
 			ExportImportIOException exportImportIOException = null;
 
@@ -890,7 +893,7 @@ public class StagingImpl implements Staging {
 			}
 			else {
 				exportImportIOException =
-					(ExportImportIOException)cause.getCause();
+					(ExportImportIOException)throwable.getCause();
 			}
 
 			if (exportImportIOException.getType() ==
@@ -1185,7 +1188,7 @@ public class StagingImpl implements Staging {
 			errorType = ServletResponseConstants.SC_FILE_CUSTOM_EXCEPTION;
 		}
 		else if ((exception instanceof LayoutImportException) ||
-				 (cause instanceof LayoutImportException)) {
+				 (throwable instanceof LayoutImportException)) {
 
 			LayoutImportException layoutImportException = null;
 
@@ -1193,7 +1196,7 @@ public class StagingImpl implements Staging {
 				layoutImportException = (LayoutImportException)exception;
 			}
 			else {
-				layoutImportException = (LayoutImportException)cause;
+				layoutImportException = (LayoutImportException)throwable;
 			}
 
 			if (layoutImportException.getType() ==
@@ -1901,11 +1904,7 @@ public class StagingImpl implements Staging {
 
 	@Override
 	public String getSchedulerGroupName(String destinationName, long groupId) {
-		return destinationName.concat(
-			StringPool.SLASH
-		).concat(
-			String.valueOf(groupId)
-		);
+		return StringBundler.concat(destinationName, StringPool.SLASH, groupId);
 	}
 
 	@Override
@@ -2278,6 +2277,8 @@ public class StagingImpl implements Staging {
 			long userId, ExportImportConfiguration exportImportConfiguration)
 		throws PortalException {
 
+		_checkPermission(exportImportConfiguration);
+
 		Map<String, Serializable> settingsMap =
 			exportImportConfiguration.getSettingsMap();
 
@@ -2287,22 +2288,20 @@ public class StagingImpl implements Staging {
 		String backgroundTaskName = MapUtil.getString(
 			parameterMap, "name", exportImportConfiguration.getName());
 
-		Map<String, Serializable> taskContextMap =
-			HashMapBuilder.<String, Serializable>put(
-				"exportImportConfigurationId",
-				exportImportConfiguration.getExportImportConfigurationId()
-			).put(
-				"privateLayout",
-				MapUtil.getBoolean(settingsMap, "privateLayout")
-			).build();
-
 		BackgroundTask backgroundTask =
 			_backgroundTaskManager.addBackgroundTask(
 				userId, exportImportConfiguration.getGroupId(),
 				backgroundTaskName,
 				BackgroundTaskExecutorNames.
 					LAYOUT_STAGING_BACKGROUND_TASK_EXECUTOR,
-				taskContextMap, new ServiceContext());
+				HashMapBuilder.<String, Serializable>put(
+					"exportImportConfigurationId",
+					exportImportConfiguration.getExportImportConfigurationId()
+				).put(
+					"privateLayout",
+					MapUtil.getBoolean(settingsMap, "privateLayout")
+				).build(),
+				new ServiceContext());
 
 		return backgroundTask.getBackgroundTaskId();
 	}
@@ -3413,6 +3412,8 @@ public class StagingImpl implements Staging {
 			boolean secureConnection, boolean remotePrivateLayout)
 		throws PortalException {
 
+		_checkPermission(exportImportConfiguration);
+
 		Map<String, Serializable> settingsMap =
 			exportImportConfiguration.getSettingsMap();
 
@@ -3427,29 +3428,27 @@ public class StagingImpl implements Staging {
 
 		User user = permissionChecker.getUser();
 
-		Map<String, Serializable> taskContextMap =
-			HashMapBuilder.<String, Serializable>put(
-				"exportImportConfigurationId",
-				exportImportConfiguration.getExportImportConfigurationId()
-			).put(
-				"httpPrincipal",
-				new HttpPrincipal(
-					_stagingURLHelper.buildRemoteURL(
-						remoteAddress, remotePort, remotePathContext,
-						secureConnection),
-					user.getLogin(), user.getPassword(),
-					user.isPasswordEncrypted())
-			).put(
-				"privateLayout", remotePrivateLayout
-			).build();
-
 		BackgroundTask backgroundTask =
 			_backgroundTaskManager.addBackgroundTask(
 				user.getUserId(), exportImportConfiguration.getGroupId(),
 				backgroundTaskName,
 				BackgroundTaskExecutorNames.
 					LAYOUT_REMOTE_STAGING_BACKGROUND_TASK_EXECUTOR,
-				taskContextMap, new ServiceContext());
+				HashMapBuilder.<String, Serializable>put(
+					"exportImportConfigurationId",
+					exportImportConfiguration.getExportImportConfigurationId()
+				).put(
+					"httpPrincipal",
+					new HttpPrincipal(
+						_stagingURLHelper.buildRemoteURL(
+							remoteAddress, remotePort, remotePathContext,
+							secureConnection),
+						user.getLogin(), user.getPassword(),
+						user.isPasswordEncrypted())
+				).put(
+					"privateLayout", remotePrivateLayout
+				).build(),
+				new ServiceContext());
 
 		return backgroundTask.getBackgroundTaskId();
 	}
@@ -3602,7 +3601,8 @@ public class StagingImpl implements Staging {
 	}
 
 	protected ScheduleInformation getScheduleInformation(
-		PortletRequest portletRequest, long targetGroupId, boolean remote) {
+			PortletRequest portletRequest, long targetGroupId, boolean remote)
+		throws SchedulerException {
 
 		ScheduleInformation scheduleInformation = new ScheduleInformation();
 
@@ -3611,6 +3611,18 @@ public class StagingImpl implements Staging {
 
 		Calendar startCalendar = ExportImportDateUtil.getCalendar(
 			portletRequest, "schedulerStartDate", true);
+
+		Calendar currentCalendar = Calendar.getInstance(
+			startCalendar.getTimeZone());
+
+		if (startCalendar.before(currentCalendar)) {
+			SchedulerException schedulerException = new SchedulerException();
+
+			schedulerException.setType(
+				SchedulerException.TYPE_INVALID_START_DATE);
+
+			throw schedulerException;
+		}
 
 		String cronText = SchedulerEngineHelperUtil.getCronText(
 			portletRequest, startCalendar, false, recurrenceType);
@@ -3950,6 +3962,15 @@ public class StagingImpl implements Staging {
 		ProxiedLayoutsThreadLocal.clearProxiedLayouts();
 	}
 
+	private void _checkPermission(
+			ExportImportConfiguration exportImportConfiguration)
+		throws PortalException {
+
+		GroupPermissionUtil.check(
+			PermissionThreadLocal.getPermissionChecker(),
+			exportImportConfiguration.getGroupId(), ActionKeys.PUBLISH_STAGING);
+	}
+
 	private void _setGroupTypeSetting(long groupId, String key, String value) {
 		Group group = _groupLocalService.fetchGroup(groupId);
 
@@ -3991,9 +4012,6 @@ public class StagingImpl implements Staging {
 	private CompanyLocalService _companyLocalService;
 
 	private ConfigurationProvider _configurationProvider;
-
-	@Reference
-	private CTPreferencesLocalService _ctPreferencesLocalService;
 
 	@Reference
 	private DLValidator _dlValidator;

@@ -22,6 +22,8 @@ public class FollowInfoCCRRequest
 
 	public FollowInfoCCRRequest(String indexName) {
 		_indexName = indexName;
+
+		setPreferLocalCluster(true);
 	}
 
 	@Override

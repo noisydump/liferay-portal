@@ -111,7 +111,9 @@ public abstract class BaseFormResourceTestCase {
 
 		FormResource.Builder builder = FormResource.builder();
 
-		formResource = builder.locale(
+		formResource = builder.authentication(
+			"test@liferay.com", "test"
+		).locale(
 			LocaleUtil.getDefault()
 		).build();
 	}
@@ -450,7 +452,7 @@ public abstract class BaseFormResourceTestCase {
 		}
 	}
 
-	protected void assertValid(Form form) {
+	protected void assertValid(Form form) throws Exception {
 		boolean valid = true;
 
 		if (form.getDateCreated() == null) {

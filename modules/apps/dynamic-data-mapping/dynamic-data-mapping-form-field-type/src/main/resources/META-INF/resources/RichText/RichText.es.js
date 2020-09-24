@@ -12,88 +12,50 @@
  * details.
  */
 
-import {Editor} from 'frontend-editor-ckeditor-web';
+import {ClassicEditor} from 'frontend-editor-ckeditor-web';
 import React from 'react';
 
-import {FieldBaseProxy} from '../FieldBase/ReactFieldBase.es';
+import {FieldBase} from '../FieldBase/ReactFieldBase.es';
 import {useSyncValue} from '../hooks/useSyncValue.es';
-import getConnectedReactComponentAdapter from '../util/ReactComponentAdapter.es';
-import {connectStore} from '../util/connectStore.es';
 
-const CKEDITOR_CONFIG = {
-	toolbar: [
-		{items: ['Undo', 'Redo'], name: 'clipboard'},
-		'/',
-		{
-			items: [
-				'Bold',
-				'Italic',
-				'Underline',
-				'Strike',
-				'-',
-				'CopyFormatting',
-				'RemoveFormat',
-			],
-			name: 'basicstyles',
-		},
-		{
-			items: [
-				'NumberedList',
-				'BulletedList',
-				'-',
-				'Outdent',
-				'Indent',
-				'-',
-				'Blockquote',
-				'-',
-				'JustifyLeft',
-				'JustifyCenter',
-				'JustifyRight',
-				'JustifyBlock',
-			],
-			name: 'paragraph',
-		},
-		{items: ['Link', 'Unlink', 'Anchor'], name: 'links'},
-		{
-			items: ['Image', 'Table', 'HorizontalRule', 'SpecialChar'],
-			name: 'insert',
-		},
-		'/',
-		{items: ['Styles', 'Format', 'Font', 'FontSize'], name: 'styles'},
-		{items: ['TextColor', 'BGColor'], name: 'colors'},
-		{items: ['Maximize'], name: 'tools'},
-		{
-			items: ['Source'],
-			name: 'document',
-		},
-	],
-};
-
-const RichText = ({data, id, name, onChange, readOnly}) => {
-	const [currentValue, setCurrentValue] = useSyncValue(data);
-
-	const editorProps = {
-		config: CKEDITOR_CONFIG,
-		data: currentValue,
-	};
-
-	if (readOnly) {
-		editorProps.readOnly = true;
-		editorProps.style = {pointerEvents: 'none'};
-	}
-	else {
-		editorProps.onChange = (event) => {
-			const newValue = event.editor.getData();
-
-			setCurrentValue(newValue);
-
-			onChange({data: newValue, event});
-		};
-	}
+const RichText = ({
+	editorConfig,
+	id,
+	name,
+	onChange,
+	predefinedValue,
+	readOnly,
+	value,
+	visible,
+	...otherProps
+}) => {
+	const [currentValue, setCurrentValue] = useSyncValue(
+		value ? value : predefinedValue
+	);
 
 	return (
-		<>
-			<Editor {...editorProps} />
+		<FieldBase
+			{...otherProps}
+			id={id}
+			name={name}
+			readOnly={readOnly}
+			style={readOnly ? {pointerEvents: 'none'} : null}
+			visible={visible}
+		>
+			<ClassicEditor
+				contents={currentValue}
+				data={currentValue}
+				editorConfig={editorConfig.JSONObject}
+				name={name}
+				onChange={(data) => {
+					if (currentValue !== data) {
+						setCurrentValue(data);
+
+						onChange({}, data);
+					}
+				}}
+				readOnly={readOnly}
+			/>
 
 			<input
 				defaultValue={currentValue}
@@ -101,43 +63,8 @@ const RichText = ({data, id, name, onChange, readOnly}) => {
 				name={name}
 				type="hidden"
 			/>
-		</>
+		</FieldBase>
 	);
 };
 
-const Main = ({
-	id,
-	name,
-	onChange,
-	predefinedValue,
-	readOnly,
-	value,
-	...otherProps
-}) => {
-	return (
-		<FieldBaseProxy {...otherProps} id={id} name={name} readOnly={readOnly}>
-			<RichText
-				data={value || predefinedValue}
-				id={id}
-				name={name}
-				onChange={onChange}
-				readOnly={readOnly}
-			/>
-		</FieldBaseProxy>
-	);
-};
-
-const RichTextProxy = connectStore(({emit, ...otherProps}) => (
-	<Main
-		{...otherProps}
-		onChange={({data, event}) => emit('fieldEdited', event, data)}
-	/>
-));
-
-const ReactRichTextAdapter = getConnectedReactComponentAdapter(
-	RichTextProxy,
-	'rich_text'
-);
-
-export {ReactRichTextAdapter};
-export default ReactRichTextAdapter;
+export default RichText;

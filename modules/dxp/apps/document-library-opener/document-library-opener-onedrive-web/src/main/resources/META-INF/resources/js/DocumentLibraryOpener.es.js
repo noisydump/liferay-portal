@@ -76,7 +76,6 @@ class DocumentLibraryOpener {
 	_showError(message) {
 		openToast({
 			message,
-			title: Liferay.Language.get('error'),
 			type: 'danger',
 		});
 	}
@@ -128,8 +127,7 @@ class DocumentLibraryOpener {
 				}
 			},
 			spritemap:
-				Liferay.ThemeDisplay.getPathThemeImages() +
-				'/lexicon/icons.svg',
+				Liferay.ThemeDisplay.getPathThemeImages() + '/clay/icons.svg',
 		});
 	}
 

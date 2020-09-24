@@ -24,6 +24,7 @@ const createItems = (size) => {
 					type: 'standalone',
 				},
 			],
+			dataDefinitionId: '123',
 			dataDefinitionName: 'Object',
 			dateCreated: '2020-03-26T11:26:54.262Z',
 			dateModified: '2020-03-26T11:26:54.262Z',
@@ -66,6 +67,27 @@ export const EMPTY_STATE = {
 
 export const ENDPOINT = '/endpoint';
 
+export const FILTERS = [
+	{
+		items: [
+			{label: 'Product Menu', value: 'productMenu'},
+			{label: 'Standalone', value: 'standalone'},
+			{label: 'Widget', value: 'widget'},
+		],
+		key: 'deploymentTypes',
+		multiple: true,
+		name: 'deployment-type',
+	},
+	{
+		items: [
+			{label: 'Deployed', value: 'true'},
+			{label: 'Undeployed', value: 'false'},
+		],
+		key: 'active',
+		name: 'status',
+	},
+];
+
 export const ITEMS = {
 	MANY: (size) => createItems(size),
 	ONE: createItems(1),
@@ -103,5 +125,89 @@ export const RESPONSES = {
 		page: 1,
 		pageSize: 20,
 		totalCount: ITEMS.TWENTY.length + 1,
+	},
+};
+
+const dataDefinitionField = {
+	customProperties: {
+		autocomplete: false,
+		dataSourceType: 'manual',
+		dataType: 'string',
+		ddmDataProviderInstanceId: '[]',
+		ddmDataProviderInstanceOutput: '[]',
+		displayStyle: 'singleline',
+		fieldNamespace: '',
+		options: {
+			en_US: [
+				{
+					label: 'Option',
+					value: 'Option',
+				},
+			],
+		},
+		placeholder: {
+			en_US: '',
+		},
+		tooltip: {
+			en_US: '',
+		},
+		visibilityExpression: '',
+	},
+	defaultValue: {
+		en_US: '',
+	},
+	description: {
+		en_US: 'Enter your name',
+	},
+	fieldType: 'text',
+	indexType: 'keyword',
+	indexable: true,
+	label: {
+		en_US: 'Name',
+	},
+	localizable: true,
+	name: 'Text',
+	nestedDataDefinitionFields: [],
+	readOnly: false,
+	repeatable: false,
+	required: false,
+	showLabel: true,
+	tip: {
+		en_US: '',
+	},
+};
+
+const dataDefinition = {
+	availableLanguageIds: ['en_US'],
+	dataDefinitionFields: [dataDefinitionField],
+	dataDefinitionKey: '36601',
+	dateCreated: '2020-04-24T13:50:04Z',
+	dateModified: '2020-04-24T13:50:13Z',
+	defaultLanguageId: 'en_US',
+	description: {},
+	id: 36602,
+	name: {
+		en_US: 'My Custom Object',
+	},
+	siteId: 20125,
+	storageType: 'json',
+	userId: 20127,
+};
+
+export const DATA_DEFINITION_RESPONSES = {
+	ONE_ITEM: dataDefinition,
+	TWO_ITEMS: {
+		...dataDefinition,
+		dataDefinitionFields: [
+			dataDefinitionField,
+			{
+				...dataDefinitionField,
+				fieldType: 'select',
+				label: {
+					en_US: 'Options',
+				},
+				name: 'SelectFromList',
+			},
+		],
 	},
 };

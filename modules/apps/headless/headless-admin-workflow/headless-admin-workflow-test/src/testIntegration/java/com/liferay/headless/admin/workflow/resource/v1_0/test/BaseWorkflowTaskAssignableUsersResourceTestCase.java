@@ -106,7 +106,9 @@ public abstract class BaseWorkflowTaskAssignableUsersResourceTestCase {
 		WorkflowTaskAssignableUsersResource.Builder builder =
 			WorkflowTaskAssignableUsersResource.builder();
 
-		workflowTaskAssignableUsersResource = builder.locale(
+		workflowTaskAssignableUsersResource = builder.authentication(
+			"test@liferay.com", "test"
+		).locale(
 			LocaleUtil.getDefault()
 		).build();
 	}
@@ -287,7 +289,8 @@ public abstract class BaseWorkflowTaskAssignableUsersResourceTestCase {
 	}
 
 	protected void assertValid(
-		WorkflowTaskAssignableUsers workflowTaskAssignableUsers) {
+			WorkflowTaskAssignableUsers workflowTaskAssignableUsers)
+		throws Exception {
 
 		boolean valid = true;
 

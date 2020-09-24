@@ -114,7 +114,9 @@ public abstract class BaseNodeMetricResourceTestCase {
 
 		NodeMetricResource.Builder builder = NodeMetricResource.builder();
 
-		nodeMetricResource = builder.locale(
+		nodeMetricResource = builder.authentication(
+			"test@liferay.com", "test"
+		).locale(
 			LocaleUtil.getDefault()
 		).build();
 	}
@@ -470,7 +472,7 @@ public abstract class BaseNodeMetricResourceTestCase {
 		}
 	}
 
-	protected void assertValid(NodeMetric nodeMetric) {
+	protected void assertValid(NodeMetric nodeMetric) throws Exception {
 		boolean valid = true;
 
 		for (String additionalAssertFieldName :

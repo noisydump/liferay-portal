@@ -30,7 +30,6 @@ boolean showEditPluginHREF = true;
 %>
 
 <clay:navigation-bar
-	inverted="<%= true %>"
 	navigationItems='<%=
 		new JSPNavigationItemList(pageContext) {
 			{
@@ -59,7 +58,7 @@ boolean showEditPluginHREF = true;
 	%>'
 />
 
-<clay:container>
+<clay:container-fluid>
 	<c:choose>
 		<c:when test='<%= tabs2.equals("themes") %>'>
 			<%@ include file="/themes.jspf" %>
@@ -75,4 +74,4 @@ boolean showEditPluginHREF = true;
 			<%@ include file="/portlets.jspf" %>
 		</c:otherwise>
 	</c:choose>
-</clay:container>
+</clay:container-fluid>

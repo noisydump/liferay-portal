@@ -23,7 +23,7 @@ Set<String> groupTypes = groupSelectorDisplayContext.getGroupTypes();
 %>
 
 <c:if test="<%= groupTypes.size() > 1 %>">
-	<clay:container>
+	<clay:container-fluid>
 		<div class="btn-group btn-group-sm my-3" role="group">
 
 			<%
@@ -37,11 +37,11 @@ Set<String> groupTypes = groupSelectorDisplayContext.getGroupTypes();
 			%>
 
 		</div>
-	</clay:container>
+	</clay:container-fluid>
 </c:if>
 
-<clay:container
-	className="lfr-item-viewer"
+<clay:container-fluid
+	cssClass="lfr-item-viewer"
 >
 	<liferay-ui:search-container
 		searchContainer="<%= groupSelectorDisplayContext.getSearchContainer() %>"
@@ -62,11 +62,9 @@ Set<String> groupTypes = groupSelectorDisplayContext.getGroupTypes();
 					<liferay-frontend:horizontal-card-col>
 						<c:choose>
 							<c:when test="<%= Validator.isNotNull(curGroup.getLogoURL(themeDisplay, false)) %>">
-								<span class="sticker sticker-rounded">
-									<span class="sticker-overlay">
-										<img alt="" class="sticker-img" src="<%= curGroup.getLogoURL(themeDisplay, false) %>" />
-									</span>
-								</span>
+								<clay:sticker>
+									<img alt="" class="sticker-img" src="<%= curGroup.getLogoURL(themeDisplay, false) %>" />
+								</clay:sticker>
 							</c:when>
 							<c:otherwise>
 								<liferay-frontend:horizontal-card-icon
@@ -84,4 +82,4 @@ Set<String> groupTypes = groupSelectorDisplayContext.getGroupTypes();
 			markupView="lexicon"
 		/>
 	</liferay-ui:search-container>
-</clay:container>
+</clay:container-fluid>

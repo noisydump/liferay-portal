@@ -210,7 +210,7 @@ public interface WorkflowTaskResource {
 				Long workflowTaskId, ChangeTransition changeTransition)
 		throws Exception;
 
-	public String getWorkflowTaskHasAssignableUsers(Long workflowTaskId)
+	public Boolean getWorkflowTaskHasAssignableUsers(Long workflowTaskId)
 		throws Exception;
 
 	public HttpInvoker.HttpResponse
@@ -270,8 +270,8 @@ public interface WorkflowTaskResource {
 		private Map<String, String> _headers = new LinkedHashMap<>();
 		private String _host = "localhost";
 		private Locale _locale;
-		private String _login = "test@liferay.com";
-		private String _password = "test";
+		private String _login = "";
+		private String _password = "";
 		private Map<String, String> _parameters = new LinkedHashMap<>();
 		private int _port = 8080;
 		private String _scheme = "http";
@@ -1618,7 +1618,7 @@ public interface WorkflowTaskResource {
 			return httpInvoker.invoke();
 		}
 
-		public String getWorkflowTaskHasAssignableUsers(Long workflowTaskId)
+		public Boolean getWorkflowTaskHasAssignableUsers(Long workflowTaskId)
 			throws Exception {
 
 			HttpInvoker.HttpResponse httpResponse =
@@ -1633,7 +1633,7 @@ public interface WorkflowTaskResource {
 				"HTTP response status code: " + httpResponse.getStatusCode());
 
 			try {
-				return content;
+				return Boolean.valueOf(content);
 			}
 			catch (Exception e) {
 				_logger.log(

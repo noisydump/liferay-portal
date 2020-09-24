@@ -122,13 +122,10 @@ definition {
 	@description = "This ensures that an MB thread can be searched via category."
 	@priority = "5"
 	test SearchMBThreadCategory {
-		property portal.acceptance = "quarantine";
-
 		Navigator.openURL();
 
 		ProductMenu.gotoPortlet(
 			category = "Categorization",
-			panel = "Site Administration",
 			portlet = "Categories");
 
 		Vocabulary.addCP(vocabularyName = "Vocabulary Name");
@@ -289,7 +286,7 @@ definition {
 
 	@priority = "3"
 	test ViewCorrectViewPermissionsInMessageBoardsQuickReplyInPrivateSite {
-		ProductMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Sites",
 			panel = "Control Panel",
 			portlet = "Sites");
@@ -300,7 +297,6 @@ definition {
 
 		ProductMenu.gotoPortlet(
 			category = "Site Builder",
-			panel = "Site Administration",
 			portlet = "Pages");
 
 		SitePages.addPublicPage(
@@ -358,8 +354,8 @@ definition {
 
 		var siteName = TestCase.getSiteName(siteName = "${siteName}");
 
-		ProductMenu.gotoPortlet(
-			category = "Configuration",
+		ApplicationsMenu.gotoPortlet(
+			category = "System",
 			panel = "Control Panel",
 			portlet = "Server Administration");
 
@@ -370,8 +366,8 @@ definition {
 
 		Navigator.openURL();
 
-		ProductMenu.gotoPortlet(
-			category = "Configuration",
+		ApplicationsMenu.gotoPortlet(
+			category = "System",
 			panel = "Control Panel",
 			portlet = "Virtual Instances");
 
@@ -390,7 +386,7 @@ definition {
 			requireReset = "false",
 			userEmailAddress = PropsUtil.get("email.address.3"));
 
-		ProductMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Users",
 			panel = "Control Panel",
 			portlet = "Users and Organizations");
@@ -407,7 +403,6 @@ definition {
 
 		ProductMenu.gotoPortlet(
 			category = "Site Builder",
-			panel = "Site Administration",
 			portlet = "Pages");
 
 		SitePages.addPublicPage(
@@ -594,11 +589,15 @@ definition {
 
 		Navigator.gotoPage(pageName = "Message Boards Page");
 
-		MessageboardsPortlet.viewBannedUserCP(userScreenName = "userfn1 userln1");
+		MessageboardsPortlet.viewBannedUserCP(
+			site = "Guest",
+			userScreenName = "userfn1 userln1");
 
 		Navigator.gotoPage(pageName = "Message Boards Page");
 
-		MessageboardsPortlet.viewBannedUserCP(userScreenName = "userfn2 userln2");
+		MessageboardsPortlet.viewBannedUserCP(
+			site = "Guest",
+			userScreenName = "userfn2 userln2");
 	}
 
 	@ignore = "true"
@@ -947,7 +946,7 @@ definition {
 			locator1 = "MessageBoards#CATEGORY_LIST_CATEGORY",
 			value1 = "MB Category6 Name");
 
-		AssertTextEquals(
+		AssertTextEquals.assertPartialText(
 			key_threadSubject = "MB Thread Message 1 Subject",
 			locator1 = "MessageBoards#THREAD_LIST_THREAD",
 			value1 = "MB Thread Message 1 Subject");

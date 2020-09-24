@@ -14,7 +14,10 @@
 
 package com.liferay.layout.content.page.editor.web.internal.portlet.action;
 
+import com.liferay.fragment.processor.PortletRegistry;
 import com.liferay.layout.content.page.editor.constants.ContentPageEditorPortletKeys;
+import com.liferay.layout.content.page.editor.listener.ContentPageEditorListenerTracker;
+import com.liferay.layout.content.page.editor.web.internal.util.layout.structure.LayoutStructureUtil;
 import com.liferay.layout.page.template.constants.LayoutPageTemplateEntryTypeConstants;
 import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
 import com.liferay.layout.page.template.service.LayoutPageTemplateEntryLocalService;
@@ -78,28 +81,13 @@ public class PublishLayoutPageTemplateEntryMVCActionCommand
 		Layout draftLayout = _layoutLocalService.getLayout(
 			themeDisplay.getPlid());
 
-		draftLayout.setStatus(WorkflowConstants.STATUS_APPROVED);
-
-		draftLayout = _layoutLocalService.updateLayout(draftLayout);
-
 		Layout layout = _layoutLocalService.getLayout(draftLayout.getClassPK());
 
 		LayoutPermissionUtil.check(
 			themeDisplay.getPermissionChecker(), layout, ActionKeys.UPDATE);
 
 		LayoutPageTemplateEntry layoutPageTemplateEntry =
-			_layoutPageTemplateEntryLocalService.
-				fetchLayoutPageTemplateEntryByPlid(draftLayout.getClassPK());
-
-		_layoutCopyHelper.copyLayout(draftLayout, layout);
-
-		_layoutPageTemplateEntryService.updateStatus(
-			layoutPageTemplateEntry.getLayoutPageTemplateEntryId(),
-			WorkflowConstants.STATUS_APPROVED);
-
-		_layoutLocalService.updateLayout(
-			layout.getGroupId(), layout.isPrivateLayout(), layout.getLayoutId(),
-			new Date());
+			_publishLayoutPageTemplateEntry(draftLayout, layout);
 
 		String portletId = _portal.getPortletId(actionRequest);
 
@@ -118,11 +106,50 @@ public class PublishLayoutPageTemplateEntryMVCActionCommand
 
 			key = "displayPagePublished";
 		}
+		else if (layoutPageTemplateEntry.getType() ==
+					LayoutPageTemplateEntryTypeConstants.TYPE_MASTER_LAYOUT) {
+
+			key = "masterPagePublished";
+		}
 
 		MultiSessionMessages.add(actionRequest, key);
 
 		sendRedirect(actionRequest, actionResponse);
 	}
+
+	private LayoutPageTemplateEntry _publishLayoutPageTemplateEntry(
+			Layout draftLayout, Layout layout)
+		throws Exception {
+
+		LayoutStructureUtil.deleteMarkedForDeletionItems(
+			draftLayout.getCompanyId(), _contentPageEditorListenerTracker,
+			draftLayout.getGroupId(), draftLayout.getPlid(), _portletRegistry);
+
+		draftLayout = _layoutLocalService.fetchLayout(draftLayout.getPlid());
+
+		draftLayout.setStatus(WorkflowConstants.STATUS_APPROVED);
+
+		draftLayout = _layoutLocalService.updateLayout(draftLayout);
+
+		LayoutPageTemplateEntry layoutPageTemplateEntry =
+			_layoutPageTemplateEntryLocalService.
+				fetchLayoutPageTemplateEntryByPlid(draftLayout.getClassPK());
+
+		_layoutCopyHelper.copyLayout(draftLayout, layout);
+
+		_layoutPageTemplateEntryService.updateStatus(
+			layoutPageTemplateEntry.getLayoutPageTemplateEntryId(),
+			WorkflowConstants.STATUS_APPROVED);
+
+		_layoutLocalService.updateLayout(
+			layout.getGroupId(), layout.isPrivateLayout(), layout.getLayoutId(),
+			new Date());
+
+		return layoutPageTemplateEntry;
+	}
+
+	@Reference
+	private ContentPageEditorListenerTracker _contentPageEditorListenerTracker;
 
 	@Reference
 	private LayoutCopyHelper _layoutCopyHelper;
@@ -139,5 +166,8 @@ public class PublishLayoutPageTemplateEntryMVCActionCommand
 
 	@Reference
 	private Portal _portal;
+
+	@Reference
+	private PortletRegistry _portletRegistry;
 
 }

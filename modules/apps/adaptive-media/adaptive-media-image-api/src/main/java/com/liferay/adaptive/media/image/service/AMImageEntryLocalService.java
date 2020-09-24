@@ -62,7 +62,7 @@ public interface AMImageEntryLocalService
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this interface directly. Always use {@link AMImageEntryLocalServiceUtil} to access the am image entry local service. Add custom service methods to <code>com.liferay.adaptive.media.image.service.impl.AMImageEntryLocalServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface.
+	 * Never modify this interface directly. Add custom service methods to <code>com.liferay.adaptive.media.image.service.impl.AMImageEntryLocalServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface. Consume the am image entry local service via injection or a <code>org.osgi.util.tracker.ServiceTracker</code>. Use {@link AMImageEntryLocalServiceUtil} if injection and service tracking are not available.
 	 */
 
 	/**
@@ -90,6 +90,10 @@ public interface AMImageEntryLocalService
 
 	/**
 	 * Adds the am image entry to the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect AMImageEntryLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param amImageEntry the am image entry
 	 * @return the am image entry that was added
@@ -127,6 +131,10 @@ public interface AMImageEntryLocalService
 	/**
 	 * Deletes the am image entry from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect AMImageEntryLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param amImageEntry the am image entry
 	 * @return the am image entry that was removed
 	 */
@@ -135,6 +143,10 @@ public interface AMImageEntryLocalService
 
 	/**
 	 * Deletes the am image entry with the primary key from the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect AMImageEntryLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param amImageEntryId the primary key of the am image entry
 	 * @return the am image entry that was removed
@@ -422,6 +434,10 @@ public interface AMImageEntryLocalService
 
 	/**
 	 * Updates the am image entry in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect AMImageEntryLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param amImageEntry the am image entry
 	 * @return the am image entry that was updated

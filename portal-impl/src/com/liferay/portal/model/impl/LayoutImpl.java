@@ -190,6 +190,12 @@ public class LayoutImpl extends LayoutBaseImpl {
 		}
 	}
 
+	@Override
+	public Layout fetchDraftLayout() {
+		return LayoutLocalServiceUtil.fetchLayout(
+			PortalUtil.getClassNameId(Layout.class), getPlid());
+	}
+
 	/**
 	 * Returns all layouts that are direct or indirect children of the current
 	 * layout.
@@ -319,16 +325,16 @@ public class LayoutImpl extends LayoutBaseImpl {
 
 		List<Layout> layouts = ListUtil.copy(getChildren());
 
-		Iterator<Layout> itr = layouts.iterator();
+		Iterator<Layout> iterator = layouts.iterator();
 
-		while (itr.hasNext()) {
-			Layout layout = itr.next();
+		while (iterator.hasNext()) {
+			Layout layout = iterator.next();
 
 			if (layout.isHidden() ||
 				!LayoutPermissionUtil.contains(
 					permissionChecker, layout, ActionKeys.VIEW)) {
 
-				itr.remove();
+				iterator.remove();
 			}
 		}
 
@@ -1168,7 +1174,8 @@ public class LayoutImpl extends LayoutBaseImpl {
 
 	@Override
 	public boolean isTypeContent() {
-		if (Objects.equals(getType(), LayoutConstants.TYPE_CONTENT) ||
+		if (Objects.equals(getType(), LayoutConstants.TYPE_COLLECTION) ||
+			Objects.equals(getType(), LayoutConstants.TYPE_CONTENT) ||
 			Objects.equals(
 				_getLayoutTypeControllerType(), LayoutConstants.TYPE_CONTENT)) {
 

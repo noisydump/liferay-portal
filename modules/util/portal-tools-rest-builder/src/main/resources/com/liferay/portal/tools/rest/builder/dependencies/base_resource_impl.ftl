@@ -14,6 +14,7 @@ import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
+import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.ResourceActionLocalService;
 import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
@@ -88,7 +89,11 @@ import javax.ws.rs.core.UriInfo;
 public abstract class Base${schemaName}ResourceImpl
 	implements ${schemaName}Resource
 
-	<#if configYAML.generateBatch>
+	<#assign
+		generateBatch = configYAML.generateBatch && freeMarkerTool.getJavaDataType(configYAML, openAPIYAML, schemaName)??
+	/>
+
+	<#if generateBatch>
 		, EntityModelResource, VulcanBatchEngineTaskItemDelegate<${schemaName}>
 	</#if>
 
@@ -131,7 +136,7 @@ public abstract class Base${schemaName}ResourceImpl
 		public ${javaMethodSignature.returnType} ${javaMethodSignature.methodName}(${freeMarkerTool.getResourceParameters(javaMethodSignature.javaMethodParameters, openAPIYAML, javaMethodSignature.operation, true)}) throws Exception {
 			<#if stringUtil.equals(javaMethodSignature.returnType, "boolean")>
 				return false;
-			<#elseif configYAML.generateBatch && stringUtil.equals(javaMethodSignature.methodName, "delete" + schemaName + "Batch")>
+			<#elseif generateBatch && stringUtil.equals(javaMethodSignature.methodName, "delete" + schemaName + "Batch")>
 				vulcanBatchEngineImportTaskResource.setContextAcceptLanguage(contextAcceptLanguage);
 				vulcanBatchEngineImportTaskResource.setContextCompany(contextCompany);
 				vulcanBatchEngineImportTaskResource.setContextHttpServletRequest(contextHttpServletRequest);
@@ -143,7 +148,7 @@ public abstract class Base${schemaName}ResourceImpl
 				return responseBuilder.entity(
 					vulcanBatchEngineImportTaskResource.deleteImportTask(${schemaName}.class.getName(), callbackURL, object)
 				).build();
-			<#elseif configYAML.generateBatch && stringUtil.equals(javaMethodSignature.methodName, "post" + parentSchemaName + schemaName + "Batch")>
+			<#elseif generateBatch && (stringUtil.equals(javaMethodSignature.methodName, "post" + parentSchemaName + schemaName + "Batch") || stringUtil.equals(javaMethodSignature.methodName, "post" + parentSchemaName + "Id" + schemaName + "Batch"))>
 				vulcanBatchEngineImportTaskResource.setContextAcceptLanguage(contextAcceptLanguage);
 				vulcanBatchEngineImportTaskResource.setContextCompany(contextCompany);
 				vulcanBatchEngineImportTaskResource.setContextHttpServletRequest(contextHttpServletRequest);
@@ -155,7 +160,7 @@ public abstract class Base${schemaName}ResourceImpl
 				return responseBuilder.entity(
 					vulcanBatchEngineImportTaskResource.postImportTask(${schemaName}.class.getName(), callbackURL, null, object)
 				).build();
-			<#elseif configYAML.generateBatch && stringUtil.equals(javaMethodSignature.methodName, "put" + schemaName + "Batch")>
+			<#elseif generateBatch && stringUtil.equals(javaMethodSignature.methodName, "put" + schemaName + "Batch")>
 				vulcanBatchEngineImportTaskResource.setContextAcceptLanguage(contextAcceptLanguage);
 				vulcanBatchEngineImportTaskResource.setContextCompany(contextCompany);
 				vulcanBatchEngineImportTaskResource.setContextHttpServletRequest(contextHttpServletRequest);
@@ -199,8 +204,26 @@ public abstract class Base${schemaName}ResourceImpl
 				PermissionUtil.checkPermission(ActionKeys.PERMISSIONS, groupLocalService, portletName, siteId, siteId);
 
 				resourcePermissionLocalService.updateResourcePermissions(contextCompany.getCompanyId(), siteId, portletName, String.valueOf(siteId), ModelPermissionsUtil.toModelPermissions(contextCompany.getCompanyId(), permissions, siteId, portletName, resourceActionLocalService, resourcePermissionLocalService, roleLocalService));
+			<#elseif stringUtil.equals(javaMethodSignature.returnType, "java.lang.Boolean")>
+				return false;
+			<#elseif stringUtil.equals(javaMethodSignature.returnType, "java.lang.Double") ||
+					 stringUtil.equals(javaMethodSignature.returnType, "java.lang.Number")>
+
+				return 0.0;
+			<#elseif stringUtil.equals(javaMethodSignature.returnType, "java.lang.Float")>
+				return 0f;
+			<#elseif stringUtil.equals(javaMethodSignature.returnType, "java.lang.Integer")>
+				return 0;
+			<#elseif stringUtil.equals(javaMethodSignature.returnType, "java.lang.Long")>
+				return 0L;
+			<#elseif stringUtil.equals(javaMethodSignature.returnType, "java.lang.Object")>
+				return null;
 			<#elseif stringUtil.equals(javaMethodSignature.returnType, "java.lang.String")>
 				return StringPool.BLANK;
+			<#elseif stringUtil.equals(javaMethodSignature.returnType, "java.math.BigDecimal")>
+				return java.math.BigDecimal.ZERO;
+			<#elseif stringUtil.equals(javaMethodSignature.returnType, "java.util.Date")>
+				return new java.util.Date();
 			<#elseif stringUtil.equals(javaMethodSignature.returnType, "javax.ws.rs.core.Response")>
 				Response.ResponseBuilder responseBuilder = Response.ok();
 
@@ -208,13 +231,17 @@ public abstract class Base${schemaName}ResourceImpl
 			<#elseif stringUtil.equals(javaMethodSignature.returnType, "void")>
 			<#elseif javaMethodSignature.returnType?contains("Page<")>
 				return Page.of(Collections.emptyList());
-			<#elseif freeMarkerTool.hasHTTPMethod(javaMethodSignature, "patch") && freeMarkerTool.hasJavaMethodSignature(javaMethodSignatures, "get" + javaMethodSignature.methodName?remove_beginning("patch")) && !javaMethodSignature.operation.requestBody.content?keys?seq_contains("multipart/form-data")>
+			<#elseif freeMarkerTool.hasHTTPMethod(javaMethodSignature, "patch") && freeMarkerTool.hasJavaMethodSignature(javaMethodSignatures, "get" + javaMethodSignature.methodName?remove_beginning("patch")) && freeMarkerTool.hasJavaMethodSignature(javaMethodSignatures, "put" + javaMethodSignature.methodName?remove_beginning("patch")) && !javaMethodSignature.operation.requestBody.content?keys?seq_contains("multipart/form-data")>
 				<#assign
 					generatePatchMethods = true
 					firstJavaMethodParameter = javaMethodSignature.javaMethodParameters[0]
 				/>
 
-				${schemaName} existing${schemaName} = get${schemaName}(${firstJavaMethodParameter.parameterName});
+				<#if javaMethodSignature.methodName?contains("ByExternalReferenceCode")>
+					${schemaName} existing${schemaName} = get${schemaName}ByExternalReferenceCode(${firstJavaMethodParameter.parameterName});
+				<#else>
+					${schemaName} existing${schemaName} = get${schemaName}(${firstJavaMethodParameter.parameterName});
+				</#if>
 
 				<#assign properties = freeMarkerTool.getDTOProperties(configYAML, openAPIYAML, schema) />
 
@@ -228,14 +255,18 @@ public abstract class Base${schemaName}ResourceImpl
 
 				preparePatch(${schemaVarName}, existing${schemaName});
 
-				return put${schemaName}(${firstJavaMethodParameter.parameterName}, existing${schemaName});
+				<#if javaMethodSignature.methodName?contains("ByExternalReferenceCode")>
+					return put${schemaName}ByExternalReferenceCode(${firstJavaMethodParameter.parameterName}, existing${schemaName});
+				<#else>
+					return put${schemaName}(${firstJavaMethodParameter.parameterName}, existing${schemaName});
+				</#if>
 			<#else>
 				return new ${javaMethodSignature.returnType}();
 			</#if>
 		}
 	</#list>
 
-	<#if configYAML.generateBatch>
+	<#if generateBatch>
 		@Override
 		@SuppressWarnings("PMD.UnusedLocalVariable")
 		public void create(java.util.Collection<${schemaName}> ${schemaVarNames}, Map<String, Serializable> parameters) throws Exception {
@@ -264,7 +295,9 @@ public abstract class Base${schemaName}ResourceImpl
 
 		@Override
 		public void delete(java.util.Collection<${schemaName}> ${schemaVarNames}, Map<String, Serializable> parameters) throws Exception {
-			<#if deleteBatchJavaMethodSignature??>
+			<#assign properties = freeMarkerTool.getDTOProperties(configYAML, openAPIYAML, schema) />
+
+			<#if deleteBatchJavaMethodSignature?? && properties?keys?seq_contains('id')??>
 				for (${schemaName} ${schemaVarName} : ${schemaVarNames}) {
 					delete${schemaName}(${schemaVarName}.getId());
 				}
@@ -286,7 +319,9 @@ public abstract class Base${schemaName}ResourceImpl
 			<#if getBatchJavaMethodSignature??>
 				return get${getBatchJavaMethodSignature.parentSchemaName!}${schemaName}sPage(
 					<#list getBatchJavaMethodSignature.javaMethodParameters as javaMethodParameter>
-						<#if stringUtil.equals(javaMethodParameter.parameterName, "filter") || stringUtil.equals(javaMethodParameter.parameterName, "pagination") || stringUtil.equals(javaMethodParameter.parameterName, "search") || stringUtil.equals(javaMethodParameter.parameterName, "sorts") || stringUtil.equals(javaMethodParameter.parameterName, "user")>
+						<#if stringUtil.equals(javaMethodParameter.parameterName, "aggregation")>
+							null
+						<#elseif stringUtil.equals(javaMethodParameter.parameterName, "filter") || stringUtil.equals(javaMethodParameter.parameterName, "pagination") || stringUtil.equals(javaMethodParameter.parameterName, "search") || stringUtil.equals(javaMethodParameter.parameterName, "sorts") || stringUtil.equals(javaMethodParameter.parameterName, "user")>
 							${javaMethodParameter.parameterName}
 						<#else>
 							<#if javaMethodParameter.parameterType?contains("java.lang.Boolean")>
@@ -417,12 +452,24 @@ public abstract class Base${schemaName}ResourceImpl
 		this.contextUser = contextUser;
 	}
 
+	public void setGroupLocalService(GroupLocalService groupLocalService) {
+		this.groupLocalService = groupLocalService;
+	}
+
+	public void setRoleLocalService(RoleLocalService roleLocalService) {
+		this.roleLocalService = roleLocalService;
+	}
+
 	protected Map<String, String> addAction(String actionName, GroupedModel groupedModel, String methodName) {
 		return ActionUtil.addAction(actionName, getClass(), groupedModel, methodName, contextScopeChecker, contextUriInfo);
 	}
 
 	protected Map<String, String> addAction(String actionName, Long id, String methodName, Long ownerId, String permissionName, Long siteId) {
 		return ActionUtil.addAction(actionName, getClass(), id, methodName, contextScopeChecker, ownerId, permissionName, siteId, contextUriInfo);
+	}
+
+	protected Map<String, String> addAction(String actionName, Long id, String methodName, ModelResourcePermission modelResourcePermission) {
+		return ActionUtil.addAction(actionName, getClass(), id, methodName, contextScopeChecker, modelResourcePermission, contextUriInfo);
 	}
 
 	protected Map<String, String> addAction(String actionName, String methodName, String permissionName, Long siteId) {
@@ -462,7 +509,7 @@ public abstract class Base${schemaName}ResourceImpl
 	protected ResourcePermissionLocalService resourcePermissionLocalService;
 	protected RoleLocalService roleLocalService;
 
-	<#if configYAML.generateBatch>
+	<#if generateBatch>
 		protected VulcanBatchEngineImportTaskResource vulcanBatchEngineImportTaskResource;
 	</#if>
 

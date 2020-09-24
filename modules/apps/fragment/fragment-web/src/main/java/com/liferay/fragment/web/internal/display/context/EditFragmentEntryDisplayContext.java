@@ -152,8 +152,18 @@ public class EditFragmentEntryDisplayContext {
 			return _fragmentEntryId;
 		}
 
-		_fragmentEntryId = ParamUtil.getLong(
+		long fragmentEntryId = ParamUtil.getLong(
 			_httpServletRequest, "fragmentEntryId");
+
+		FragmentEntry draftFragmentEntry =
+			FragmentEntryLocalServiceUtil.fetchDraft(fragmentEntryId);
+
+		if (draftFragmentEntry == null) {
+			_fragmentEntryId = fragmentEntryId;
+		}
+		else {
+			_fragmentEntryId = draftFragmentEntry.getFragmentEntryId();
+		}
 
 		return _fragmentEntryId;
 	}
@@ -247,16 +257,6 @@ public class EditFragmentEntryDisplayContext {
 
 		if (fragmentEntry != null) {
 			_cssContent = fragmentEntry.getCss();
-
-			if (Validator.isNull(_cssContent)) {
-				StringBundler sb = new StringBundler(3);
-
-				sb.append(".fragment_");
-				sb.append(fragmentEntry.getFragmentEntryId());
-				sb.append(" {\n}");
-
-				_cssContent = sb.toString();
-			}
 		}
 
 		return _cssContent;
@@ -294,16 +294,6 @@ public class EditFragmentEntryDisplayContext {
 
 		if (fragmentEntry != null) {
 			_htmlContent = fragmentEntry.getHtml();
-
-			if (Validator.isNull(_htmlContent)) {
-				StringBundler sb = new StringBundler(3);
-
-				sb.append("<div class=\"fragment_");
-				sb.append(fragmentEntry.getFragmentEntryId());
-				sb.append("\">\n</div>");
-
-				_htmlContent = sb.toString();
-			}
 		}
 
 		return _htmlContent;
@@ -352,6 +342,18 @@ public class EditFragmentEntryDisplayContext {
 
 		freeMarkerVariables.add("configuration");
 
+		FragmentCollection fragmentCollection =
+			FragmentCollectionServiceUtil.fetchFragmentCollection(
+				getFragmentCollectionId());
+
+		List<String> resources = new ArrayList<>();
+
+		if (fragmentCollection != null) {
+			for (FileEntry fileEntry : fragmentCollection.getResources()) {
+				resources.add(fileEntry.getFileName());
+			}
+		}
+
 		return HashMapBuilder.<String, Object>put(
 			"allowedStatus",
 			HashMapBuilder.<String, Object>put(
@@ -399,6 +401,15 @@ public class EditFragmentEntryDisplayContext {
 						"start", "${"
 					).build());
 
+				htmlEditorCustomEntities.add(
+					HashMapBuilder.<String, Object>put(
+						"content", resources
+					).put(
+						"end", "]"
+					).put(
+						"start", "[resources:"
+					).build());
+
 				return htmlEditorCustomEntities;
 			}
 		).put(
@@ -426,27 +437,9 @@ public class EditFragmentEntryDisplayContext {
 		).put(
 			"readOnly", _isReadOnlyFragmentEntry()
 		).put(
-			"resources",
-			() -> {
-				FragmentCollection fragmentCollection =
-					FragmentCollectionServiceUtil.fetchFragmentCollection(
-						getFragmentCollectionId());
-
-				if (fragmentCollection == null) {
-					return Collections.<String>emptyList();
-				}
-
-				List<String> resources = new ArrayList<>();
-
-				for (FileEntry fileEntry : fragmentCollection.getResources()) {
-					resources.add(fileEntry.getFileName());
-				}
-
-				return resources;
-			}
+			"resources", resources
 		).put(
-			"spritemap",
-			_themeDisplay.getPathThemeImages() + "/lexicon/icons.svg"
+			"spritemap", _themeDisplay.getPathThemeImages() + "/clay/icons.svg"
 		).put(
 			"status",
 			() -> {
@@ -474,12 +467,27 @@ public class EditFragmentEntryDisplayContext {
 				"preview",
 				_getFragmentEntryRenderURL("/fragment/preview_fragment_entry")
 			).put(
+				"publish", _getPublishFragmentEntryActionURL()
+			).put(
 				"redirect", getRedirect()
 			).put(
 				"render",
 				_getFragmentEntryRenderURL("/fragment/render_fragment_entry")
 			).build()
 		).build();
+	}
+
+	private String _getPublishFragmentEntryActionURL() {
+		PortletURL publishFragmentEntryURL = PortletURLFactoryUtil.create(
+			_httpServletRequest, FragmentPortletKeys.FRAGMENT,
+			PortletRequest.ACTION_PHASE);
+
+		publishFragmentEntryURL.setParameter(
+			ActionRequest.ACTION_NAME, "/fragment/publish_fragment_entry");
+		publishFragmentEntryURL.setParameter(
+			"fragmentEntryId", String.valueOf(getFragmentEntryId()));
+
+		return publishFragmentEntryURL.toString();
 	}
 
 	private boolean _isReadOnlyFragmentEntry() {

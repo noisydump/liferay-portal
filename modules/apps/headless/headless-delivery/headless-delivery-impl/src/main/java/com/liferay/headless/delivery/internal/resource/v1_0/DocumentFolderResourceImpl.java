@@ -19,7 +19,7 @@ import com.liferay.document.library.kernel.model.DLFolderConstants;
 import com.liferay.document.library.kernel.service.DLAppService;
 import com.liferay.expando.kernel.service.ExpandoColumnLocalService;
 import com.liferay.expando.kernel.service.ExpandoTableLocalService;
-import com.liferay.headless.common.spi.service.context.ServiceContextUtil;
+import com.liferay.headless.common.spi.service.context.ServiceContextRequestUtil;
 import com.liferay.headless.delivery.dto.v1_0.CustomField;
 import com.liferay.headless.delivery.dto.v1_0.DocumentFolder;
 import com.liferay.headless.delivery.internal.dto.v1_0.converter.DocumentFolderDTOConverter;
@@ -38,6 +38,7 @@ import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.odata.entity.EntityModel;
+import com.liferay.portal.vulcan.aggregation.Aggregation;
 import com.liferay.portal.vulcan.dto.converter.DTOConverterRegistry;
 import com.liferay.portal.vulcan.dto.converter.DefaultDTOConverterContext;
 import com.liferay.portal.vulcan.pagination.Page;
@@ -70,6 +71,18 @@ public class DocumentFolderResourceImpl
 	}
 
 	@Override
+	public Page<DocumentFolder> getAssetLibraryDocumentFoldersPage(
+			Long assetLibraryId, Boolean flatten, String search,
+			Aggregation aggregation, Filter filter, Pagination pagination,
+			Sort[] sorts)
+		throws Exception {
+
+		return getSiteDocumentFoldersPage(
+			assetLibraryId, flatten, search, aggregation, filter, pagination,
+			sorts);
+	}
+
+	@Override
 	public DocumentFolder getDocumentFolder(Long documentFolderId)
 		throws Exception {
 
@@ -79,15 +92,14 @@ public class DocumentFolderResourceImpl
 	@Override
 	public Page<DocumentFolder> getDocumentFolderDocumentFoldersPage(
 			Long parentDocumentFolderId, Boolean flatten, String search,
-			Filter filter, Pagination pagination, Sort[] sorts)
+			Aggregation aggregation, Filter filter, Pagination pagination,
+			Sort[] sorts)
 		throws Exception {
 
 		Folder folder = _dlAppService.getFolder(parentDocumentFolderId);
 
-		DocumentFolder parentDocumentFolder = _toDocumentFolder(folder);
-
 		return _getDocumentFoldersPage(
-			HashMapBuilder.<String, Map<String, String>>put(
+			HashMapBuilder.put(
 				"create",
 				addAction(
 					"ADD_SUBFOLDER", folder.getFolderId(),
@@ -100,8 +112,8 @@ public class DocumentFolderResourceImpl
 					"getDocumentFolderDocumentFoldersPage", folder.getUserId(),
 					"com.liferay.document.library", folder.getGroupId())
 			).build(),
-			parentDocumentFolder.getId(), parentDocumentFolder.getSiteId(),
-			flatten, filter, search, pagination, sorts);
+			folder.getFolderId(), folder.getGroupId(), flatten, search,
+			aggregation, filter, pagination, sorts);
 	}
 
 	@Override
@@ -115,8 +127,9 @@ public class DocumentFolderResourceImpl
 
 	@Override
 	public Page<DocumentFolder> getSiteDocumentFoldersPage(
-			Long siteId, Boolean flatten, String search, Filter filter,
-			Pagination pagination, Sort[] sorts)
+			Long siteId, Boolean flatten, String search,
+			Aggregation aggregation, Filter filter, Pagination pagination,
+			Sort[] sorts)
 		throws Exception {
 
 		Long documentFolderId = null;
@@ -126,7 +139,7 @@ public class DocumentFolderResourceImpl
 		}
 
 		return _getDocumentFoldersPage(
-			HashMapBuilder.<String, Map<String, String>>put(
+			HashMapBuilder.put(
 				"create",
 				addAction(
 					"ADD_FOLDER", "postSiteDocumentFolder",
@@ -137,8 +150,8 @@ public class DocumentFolderResourceImpl
 					"VIEW", "getSiteDocumentFoldersPage",
 					"com.liferay.document.library", siteId)
 			).build(),
-			documentFolderId, siteId, flatten, filter, search, pagination,
-			sorts);
+			documentFolderId, siteId, flatten, search, aggregation, filter,
+			pagination, sorts);
 	}
 
 	@Override
@@ -163,16 +176,22 @@ public class DocumentFolderResourceImpl
 	}
 
 	@Override
+	public DocumentFolder postAssetLibraryDocumentFolder(
+			Long assetLibraryId, DocumentFolder documentFolder)
+		throws Exception {
+
+		return postSiteDocumentFolder(assetLibraryId, documentFolder);
+	}
+
+	@Override
 	public DocumentFolder postDocumentFolderDocumentFolder(
 			Long parentDocumentFolderId, DocumentFolder documentFolder)
 		throws Exception {
 
-		DocumentFolder parentDocumentFolder = _toDocumentFolder(
-			_dlAppService.getFolder(parentDocumentFolderId));
+		Folder folder = _dlAppService.getFolder(parentDocumentFolderId);
 
 		return _addFolder(
-			parentDocumentFolder.getSiteId(), parentDocumentFolder.getId(),
-			documentFolder);
+			folder.getGroupId(), folder.getFolderId(), documentFolder);
 	}
 
 	@Override
@@ -222,18 +241,20 @@ public class DocumentFolderResourceImpl
 			_dlAppService.addFolder(
 				siteId, parentDocumentFolderId, documentFolder.getName(),
 				documentFolder.getDescription(),
-				ServiceContextUtil.createServiceContext(
+				ServiceContextRequestUtil.createServiceContext(
 					CustomFieldsUtil.toMap(
 						DLFolder.class.getName(), contextCompany.getCompanyId(),
 						documentFolder.getCustomFields(),
 						contextAcceptLanguage.getPreferredLocale()),
-					siteId, documentFolder.getViewableByAsString())));
+					siteId, contextHttpServletRequest,
+					documentFolder.getViewableByAsString())));
 	}
 
 	private Page<DocumentFolder> _getDocumentFoldersPage(
 			Map<String, Map<String, String>> actions,
-			Long parentDocumentFolderId, Long siteId, Boolean flatten,
-			Filter filter, String keywords, Pagination pagination, Sort[] sorts)
+			Long parentDocumentFolderId, Long groupId, Boolean flatten,
+			String keywords, Aggregation aggregation, Filter filter,
+			Pagination pagination, Sort[] sorts)
 		throws Exception {
 
 		return SearchUtil.search(
@@ -263,8 +284,9 @@ public class DocumentFolderResourceImpl
 			queryConfig -> queryConfig.setSelectedFieldNames(
 				Field.ENTRY_CLASS_PK),
 			searchContext -> {
+				searchContext.addVulcanAggregation(aggregation);
 				searchContext.setCompanyId(contextCompany.getCompanyId());
-				searchContext.setGroupIds(new long[] {siteId});
+				searchContext.setGroupIds(new long[] {groupId});
 			},
 			sorts,
 			document -> _toDocumentFolder(
@@ -276,7 +298,7 @@ public class DocumentFolderResourceImpl
 		return _documentFolderDTOConverter.toDTO(
 			new DefaultDTOConverterContext(
 				contextAcceptLanguage.isAcceptAllLanguages(),
-				HashMapBuilder.<String, Map<String, String>>put(
+				HashMapBuilder.put(
 					"delete",
 					addAction(
 						"DELETE", folder.getFolderId(), "deleteDocumentFolder",
@@ -332,12 +354,12 @@ public class DocumentFolderResourceImpl
 		return _toDocumentFolder(
 			_dlAppService.updateFolder(
 				documentFolderId, name, description,
-				ServiceContextUtil.createServiceContext(
+				ServiceContextRequestUtil.createServiceContext(
 					CustomFieldsUtil.toMap(
 						DLFolder.class.getName(), contextCompany.getCompanyId(),
 						customFields,
 						contextAcceptLanguage.getPreferredLocale()),
-					0, null)));
+					0, contextHttpServletRequest, null)));
 	}
 
 	@Reference

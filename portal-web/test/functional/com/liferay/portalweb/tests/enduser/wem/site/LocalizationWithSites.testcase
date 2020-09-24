@@ -75,7 +75,7 @@ definition {
 
 	@priority = "5"
 	test AvailableSiteLocalesSubsetNotAllowed {
-		property portal.acceptance = "false";
+		property portal.acceptance = "true";
 		property test.name.skip.portal.instance = "LocalizationWithSites#AvailableSiteLocalesSubsetOfAvailablePortalLocales";
 		property testray.component.names = "Site Localization";
 
@@ -214,6 +214,7 @@ definition {
 
 	@priority = "3"
 	test LocalizeCountryName {
+		property custom.properties = "jsonws.web.service.paths.excludes=";
 		property testray.component.names = "Site Localization,Users and Organizations";
 
 		JSONUser.addUser(
@@ -222,11 +223,10 @@ definition {
 			userLastName = "userln",
 			userScreenName = "usersn");
 
-		User.openUsersAdmin();
-
-		User.editPasswordCP(
-			userEmailAddress = "userea@liferay.com",
-			userScreenName = "usersn");
+		JSONUser.setFirstPassword(
+			agreeToTermsAndAnswerReminderQuery = "true",
+			requireReset = "false",
+			userEmailAddress = "userea@liferay.com");
 
 		User.openUsersAdmin();
 
@@ -244,9 +244,9 @@ definition {
 			password = "test",
 			userEmailAddress = "userea@liferay.com");
 
-		ProductMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Usuarios",
-			panel = "Control Panel",
+			panel = "Panel de control",
 			portlet = "Usuarios y organizaciones");
 
 		Organization.addWithLocalizedCountryCP(
@@ -260,9 +260,9 @@ definition {
 			password = "test",
 			userEmailAddress = "userea@liferay.com");
 
-		ProductMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Usuarios",
-			panel = "Control Panel",
+			panel = "Panel de control",
 			portlet = "Usuarios y organizaciones");
 
 		Organization.viewLocalizedCountryCP(
@@ -274,6 +274,7 @@ definition {
 
 	@priority = "3"
 	test NoLocalePrependedWhenLocaleMatchMyPreferredLocalization {
+		property custom.properties = "jsonws.web.service.paths.excludes=";
 		property test.name.skip.portal.instance = "LocalizationWithSites#NoLocalePrependedWhenLocaleMatchMyPreferredLocalization";
 		property testray.component.names = "Site Localization";
 		var portalURL = PropsUtil.get("portal.url");
@@ -304,11 +305,10 @@ definition {
 			userLastName = "userln",
 			userScreenName = "usersn");
 
-		User.openUsersAdmin();
-
-		User.editPasswordCP(
-			userEmailAddress = "userea@liferay.com",
-			userScreenName = "usersn");
+		JSONUser.setFirstPassword(
+			agreeToTermsAndAnswerReminderQuery = "true",
+			requireReset = "false",
+			userEmailAddress = "userea@liferay.com");
 
 		User.openUsersAdmin();
 
@@ -399,7 +399,6 @@ definition {
 
 		ProductMenu.gotoPortlet(
 			category = "Generador del sitio",
-			panel = "Site Administration",
 			portlet = "Páginas del sitio web");
 
 		SitePages.gotoPageMenuItem(
@@ -420,7 +419,6 @@ definition {
 
 		ProductMenu.gotoPortlet(
 			category = "Generador del sitio",
-			panel = "Site Administration",
 			portlet = "Páginas del sitio web");
 
 		SitePages.gotoPageMenuItem(
@@ -437,9 +435,11 @@ definition {
 			pageName = "Site Page 1",
 			siteName = "Site Name");
 
-		ProductMenu.gotoPortlet(
+		ProductMenuHelper.closeProductMenu();
+
+		ApplicationsMenu.gotoPortlet(
 			category = "Configuración",
-			panel = "Control Panel",
+			panel = "Panel de control",
 			portlet = "Configuración de instancia");
 
 		PortalSettings.viewCurrentDefaultPortalLanguageCP(
@@ -453,7 +453,6 @@ definition {
 
 		ProductMenu.gotoPortlet(
 			category = "Configuración",
-			panel = "Site Administration",
 			portlet = "Ajustes del sitio");
 
 		Site.configureCurrentLanguagesCP(
@@ -490,7 +489,6 @@ definition {
 
 		ProductMenu.gotoPortlet(
 			category = "Configuración",
-			panel = "Site Administration",
 			portlet = "Ajustes del sitio");
 
 		Site.configureCurrentLanguagesCP(
@@ -564,14 +562,14 @@ definition {
 			siteTemplateActive = "Yes",
 			siteTemplateName = "Site Template Name");
 
-		ProductMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Sites",
 			panel = "Control Panel",
 			portlet = "Site Templates");
 
 		SiteTemplates.viewNoSiteOrWorkflowLinksCP();
 
-		ProductMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Sites",
 			panel = "Control Panel",
 			portlet = "Sites");
@@ -600,6 +598,7 @@ definition {
 
 	@priority = "4"
 	test ViewAvailableSiteLocaleAlternatives {
+		property custom.properties = "jsonws.web.service.paths.excludes=";
 		property test.name.skip.portal.instance = "LocalizationWithSites#ViewAvailableSiteLocaleAlternatives";
 		property testray.component.names = "Site Localization";
 
@@ -609,11 +608,10 @@ definition {
 			userLastName = "userln",
 			userScreenName = "usersn");
 
-		User.openUsersAdmin();
-
-		User.editPasswordCP(
-			userEmailAddress = "userea@liferay.com",
-			userScreenName = "usersn");
+		JSONUser.setFirstPassword(
+			agreeToTermsAndAnswerReminderQuery = "true",
+			requireReset = "false",
+			userEmailAddress = "userea@liferay.com");
 
 		User.openUsersAdmin();
 
@@ -758,7 +756,6 @@ definition {
 
 		ProductMenu.gotoPortlet(
 			category = "Generador del sitio",
-			panel = "Site Administration",
 			portlet = "Páginas del sitio web");
 
 		SitePages.gotoPageMenuItem(

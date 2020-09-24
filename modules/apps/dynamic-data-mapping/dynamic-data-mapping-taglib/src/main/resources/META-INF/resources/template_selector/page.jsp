@@ -25,11 +25,16 @@ long ddmTemplateGroupId = PortletDisplayTemplateUtil.getDDMTemplateGroupId(theme
 Group ddmTemplateGroup = GroupLocalServiceUtil.getGroup(ddmTemplateGroupId);
 %>
 
-<div class="autofit-row autofit-row-center">
-	<div class="autofit-col inline-item-before">
+<clay:content-row
+	floatElements=""
+	verticalAlign="center"
+>
+	<clay:content-col
+		cssClass="inline-item-before"
+	>
 		<aui:input id="displayStyleGroupId" name="preferences--displayStyleGroupId--" type="hidden" value="<%= String.valueOf(displayStyleGroupId) %>" />
 
-		<aui:select id="displayStyle" inlineField="<%= true %>" label="<%= HtmlUtil.escape(label) %>" name="preferences--displayStyle--">
+		<aui:select id="displayStyle" label="<%= HtmlUtil.escape(label) %>" name="preferences--displayStyle--" wrapperCssClass="c-mb-4">
 			<c:if test="<%= showEmptyOption %>">
 				<aui:option label="default" selected="<%= Validator.isNull(displayStyle) %>" />
 			</c:if>
@@ -56,9 +61,9 @@ Group ddmTemplateGroup = GroupLocalServiceUtil.getGroup(ddmTemplateGroupId);
 					continue;
 				}
 
-						Map<String, Object> data = HashMapBuilder.<String, Object>put(
-							"displaystylegroupid", curDDMTemplate.getGroupId()
-						).build();
+				Map<String, Object> data = HashMapBuilder.<String, Object>put(
+					"displaystylegroupid", curDDMTemplate.getGroupId()
+				).build();
 			%>
 
 				<aui:option data="<%= data %>" label="<%= HtmlUtil.escape(curDDMTemplate.getName(locale)) %>" selected="<%= (portletDisplayDDMTemplate != null) && (curDDMTemplate.getTemplateId() == portletDisplayDDMTemplate.getTemplateId()) %>" value="<%= PortletDisplayTemplate.DISPLAY_STYLE_PREFIX + HtmlUtil.escape(curDDMTemplate.getTemplateKey()) %>" />
@@ -68,10 +73,10 @@ Group ddmTemplateGroup = GroupLocalServiceUtil.getGroup(ddmTemplateGroupId);
 			%>
 
 		</aui:select>
-	</div>
+	</clay:content-col>
 
 	<c:if test="<%= !ddmTemplateGroup.isLayoutPrototype() %>">
-		<div class="autofit-col">
+		<clay:content-col>
 			<liferay-ui:icon
 				icon="<%= HtmlUtil.escapeCSS(icon) %>"
 				id="selectDDMTemplate"
@@ -80,9 +85,9 @@ Group ddmTemplateGroup = GroupLocalServiceUtil.getGroup(ddmTemplateGroupId);
 				message='<%= LanguageUtil.get(request, "manage-templates") %>'
 				url="javascript:;"
 			/>
-		</div>
+		</clay:content-col>
 	</c:if>
-</div>
+</clay:content-row>
 
 <liferay-portlet:renderURL plid="<%= themeDisplay.getPlid() %>" portletName="<%= PortletProviderUtil.getPortletId(DDMTemplate.class.getName(), PortletProvider.Action.VIEW) %>" var="basePortletURL">
 	<portlet:param name="showHeader" value="<%= Boolean.FALSE.toString() %>" />

@@ -14,6 +14,7 @@
 
 package com.liferay.change.tracking.web.internal.servlet.taglib;
 
+import com.liferay.change.tracking.constants.CTActionKeys;
 import com.liferay.change.tracking.constants.CTConstants;
 import com.liferay.change.tracking.constants.CTPortletKeys;
 import com.liferay.change.tracking.model.CTCollection;
@@ -24,11 +25,17 @@ import com.liferay.change.tracking.service.CTPreferencesLocalService;
 import com.liferay.frontend.js.loader.modules.extender.npm.NPMResolver;
 import com.liferay.petra.reflect.ReflectionUtil;
 import com.liferay.petra.string.StringBundler;
+import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.language.Language;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.portlet.LiferayWindowState;
+import com.liferay.portal.kernel.security.permission.ActionKeys;
+import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
+import com.liferay.portal.kernel.service.permission.PortletPermission;
 import com.liferay.portal.kernel.servlet.taglib.BaseDynamicInclude;
 import com.liferay.portal.kernel.servlet.taglib.DynamicInclude;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
@@ -80,7 +87,20 @@ public class ChangeTrackingIndicatorDynamicInclude extends BaseDynamicInclude {
 			_ctPreferencesLocalService.fetchCTPreferences(
 				themeDisplay.getCompanyId(), 0);
 
-		if (ctPreferences == null) {
+		try {
+			if ((ctPreferences == null) ||
+				!_portletPermission.contains(
+					themeDisplay.getPermissionChecker(),
+					CTPortletKeys.CHANGE_LISTS, ActionKeys.VIEW)) {
+
+				return;
+			}
+		}
+		catch (PortalException portalException) {
+			if (_log.isWarnEnabled()) {
+				_log.warn(portalException, portalException);
+			}
+
 			return;
 		}
 
@@ -153,8 +173,8 @@ public class ChangeTrackingIndicatorDynamicInclude extends BaseDynamicInclude {
 
 			writer.write("</div>");
 		}
-		catch (JspException jspException) {
-			ReflectionUtil.throwException(jspException);
+		catch (JspException | PortalException exception) {
+			ReflectionUtil.throwException(exception);
 		}
 	}
 
@@ -165,8 +185,9 @@ public class ChangeTrackingIndicatorDynamicInclude extends BaseDynamicInclude {
 	}
 
 	private Map<String, Object> _getReactData(
-		HttpServletRequest httpServletRequest, CTCollection ctCollection,
-		CTPreferences ctPreferences, ThemeDisplay themeDisplay) {
+			HttpServletRequest httpServletRequest, CTCollection ctCollection,
+			CTPreferences ctPreferences, ThemeDisplay themeDisplay)
+		throws PortalException {
 
 		PortletURL checkoutURL = _portal.getControlPanelPortletURL(
 			httpServletRequest, themeDisplay.getScopeGroup(),
@@ -223,15 +244,15 @@ public class ChangeTrackingIndicatorDynamicInclude extends BaseDynamicInclude {
 		JSONArray jsonArray = JSONFactoryUtil.createJSONArray();
 
 		if (ctPreferences != null) {
-			long previousCtCollectionId =
-				ctPreferences.getPreviousCtCollectionId();
-
 			if (ctCollectionId == CTConstants.CT_COLLECTION_ID_PRODUCTION) {
-				CTCollection previousCtCollection =
+				long previousCtCollectionId =
+					ctPreferences.getPreviousCtCollectionId();
+
+				CTCollection previousCTCollection =
 					_ctCollectionLocalService.fetchCTCollection(
 						previousCtCollectionId);
 
-				if (previousCtCollection != null) {
+				if (previousCTCollection != null) {
 					checkoutURL.setParameter(
 						"ctCollectionId",
 						String.valueOf(previousCtCollectionId));
@@ -243,7 +264,7 @@ public class ChangeTrackingIndicatorDynamicInclude extends BaseDynamicInclude {
 							"label",
 							_language.format(
 								resourceBundle, "work-on-x",
-								previousCtCollection.getName(), false)
+								previousCTCollection.getName(), false)
 						).put(
 							"symbolLeft", "radio-button"
 						));
@@ -272,7 +293,7 @@ public class ChangeTrackingIndicatorDynamicInclude extends BaseDynamicInclude {
 				StringBundler.concat(
 					"javascript:Liferay.fire('",
 					_portal.getPortletNamespace(CTPortletKeys.CHANGE_LISTS),
-					"openDialog', {});")
+					"openDialog', {}); void(0);")
 			).put(
 				"label", _language.get(resourceBundle, "select-a-publication")
 			).put(
@@ -327,28 +348,42 @@ public class ChangeTrackingIndicatorDynamicInclude extends BaseDynamicInclude {
 			int count = _ctEntryLocalService.getCTCollectionCTEntriesCount(
 				ctCollection.getCtCollectionId());
 
-			if (count > 0) {
+			if ((count > 0) &&
+				_ctCollectionModelResourcePermission.contains(
+					themeDisplay.getPermissionChecker(), ctCollection,
+					CTActionKeys.PUBLISH)) {
+
 				jsonArray.put(JSONUtil.put("type", "divider"));
 
-				PortletURL conflictsURL = _portal.getControlPanelPortletURL(
+				PortletURL publishURL = _portal.getControlPanelPortletURL(
 					httpServletRequest, themeDisplay.getScopeGroup(),
 					CTPortletKeys.CHANGE_LISTS, 0, 0,
 					PortletRequest.RENDER_PHASE);
 
-				conflictsURL.setParameter(
+				publishURL.setParameter(
 					"mvcRenderCommandName", "/change_lists/view_conflicts");
-				conflictsURL.setParameter(
+				publishURL.setParameter(
 					"ctCollectionId",
 					String.valueOf(ctCollection.getCtCollectionId()));
 
 				jsonArray.put(
 					JSONUtil.put(
-						"href", conflictsURL.toString()
+						"href", publishURL.toString()
 					).put(
-						"label",
-						_language.get(resourceBundle, "prepare-to-publish")
+						"label", _language.get(resourceBundle, "publish")
 					).put(
 						"symbolLeft", "change"
+					));
+
+				publishURL.setParameter("schedule", Boolean.TRUE.toString());
+
+				jsonArray.put(
+					JSONUtil.put(
+						"href", publishURL.toString()
+					).put(
+						"label", _language.get(resourceBundle, "schedule")
+					).put(
+						"symbolLeft", "calendar"
 					));
 			}
 		}
@@ -358,8 +393,17 @@ public class ChangeTrackingIndicatorDynamicInclude extends BaseDynamicInclude {
 		return data;
 	}
 
+	private static final Log _log = LogFactoryUtil.getLog(
+		ChangeTrackingIndicatorDynamicInclude.class);
+
 	@Reference
 	private CTCollectionLocalService _ctCollectionLocalService;
+
+	@Reference(
+		target = "(model.class.name=com.liferay.change.tracking.model.CTCollection)"
+	)
+	private ModelResourcePermission<CTCollection>
+		_ctCollectionModelResourcePermission;
 
 	@Reference
 	private CTEntryLocalService _ctEntryLocalService;
@@ -378,6 +422,9 @@ public class ChangeTrackingIndicatorDynamicInclude extends BaseDynamicInclude {
 
 	@Reference
 	private Portal _portal;
+
+	@Reference
+	private PortletPermission _portletPermission;
 
 	@Reference
 	private ReactRenderer _reactRenderer;

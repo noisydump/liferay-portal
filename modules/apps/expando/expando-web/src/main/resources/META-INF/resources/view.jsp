@@ -29,8 +29,8 @@ List<CustomAttributesDisplay> customAttributesDisplays = PortletLocalServiceUtil
 Collections.sort(customAttributesDisplays, new CustomAttributesDisplayComparator(locale));
 %>
 
-<clay:container
-	className="container-view"
+<clay:container-fluid
+	cssClass="container-view"
 >
 	<liferay-ui:search-container
 		emptyResultsMessage='<%= LanguageUtil.get(request, "custom-fields-are-not-enabled-for-any-resource") %>'
@@ -80,4 +80,4 @@ Collections.sort(customAttributesDisplays, new CustomAttributesDisplayComparator
 			paginate="<%= false %>"
 		/>
 	</liferay-ui:search-container>
-</clay:container>
+</clay:container-fluid>

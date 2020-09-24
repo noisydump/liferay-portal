@@ -21,6 +21,7 @@ import com.liferay.fragment.exception.DuplicateFragmentCollectionKeyException;
 import com.liferay.fragment.exception.DuplicateFragmentCompositionKeyException;
 import com.liferay.fragment.exception.DuplicateFragmentEntryKeyException;
 import com.liferay.fragment.exception.FragmentCollectionNameException;
+import com.liferay.fragment.exception.FragmentEntryConfigurationException;
 import com.liferay.fragment.importer.FragmentsImporter;
 import com.liferay.fragment.importer.FragmentsImporterResultEntry;
 import com.liferay.fragment.model.FragmentCollection;
@@ -257,6 +258,7 @@ public class FragmentsImporterImpl implements FragmentsImporter {
 		}
 
 		int status = WorkflowConstants.STATUS_APPROVED;
+		String errorMessage = null;
 
 		try {
 			_fragmentEntryProcessorRegistry.validateFragmentEntryHTML(
@@ -268,6 +270,24 @@ public class FragmentsImporterImpl implements FragmentsImporter {
 			}
 
 			status = WorkflowConstants.STATUS_DRAFT;
+			errorMessage = portalException.getLocalizedMessage();
+		}
+
+		try {
+			_fragmentEntryValidator.validateConfiguration(configuration);
+		}
+		catch (FragmentEntryConfigurationException
+					fragmentEntryConfigurationException) {
+
+			if (_log.isDebugEnabled()) {
+				_log.debug(
+					fragmentEntryConfigurationException,
+					fragmentEntryConfigurationException);
+			}
+
+			status = WorkflowConstants.STATUS_DRAFT;
+			errorMessage =
+				fragmentEntryConfigurationException.getLocalizedMessage();
 		}
 
 		int type = FragmentConstants.getTypeFromLabel(
@@ -283,8 +303,8 @@ public class FragmentsImporterImpl implements FragmentsImporter {
 			}
 			else {
 				fragmentEntry = _fragmentEntryService.updateFragmentEntry(
-					fragmentEntry.getFragmentEntryId(), name, css, html, js,
-					cacheable, configuration,
+					fragmentEntry.getFragmentEntryId(), fragmentCollectionId,
+					name, css, html, js, cacheable, configuration,
 					fragmentEntry.getPreviewFileEntryId(), status);
 			}
 
@@ -302,12 +322,14 @@ public class FragmentsImporterImpl implements FragmentsImporter {
 					FragmentsImporterResultEntry.Status.IMPORTED_DRAFT;
 			}
 
+			fragmentEntry = _fragmentEntryLocalService.updateFragmentEntry(
+				fragmentEntry);
+
 			_fragmentsImporterResultEntries.add(
 				new FragmentsImporterResultEntry(
-					name, fragmentsImporterResultEntryStatus));
+					name, fragmentsImporterResultEntryStatus, errorMessage));
 
-			return _fragmentEntryLocalService.updateFragmentEntry(
-				fragmentEntry);
+			return fragmentEntry;
 		}
 		catch (PortalException portalException) {
 			_fragmentsImporterResultEntries.add(
@@ -654,8 +676,8 @@ public class FragmentsImporterImpl implements FragmentsImporter {
 			else {
 				fragmentComposition =
 					_fragmentCompositionService.updateFragmentComposition(
-						fragmentComposition.getFragmentCompositionId(), name,
-						description, definitionData,
+						fragmentComposition.getFragmentCompositionId(),
+						fragmentCollectionId, name, description, definitionData,
 						fragmentComposition.getPreviewFileEntryId(),
 						fragmentComposition.getStatus());
 			}

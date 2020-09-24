@@ -19,14 +19,17 @@ import com.liferay.dynamic.data.mapping.form.evaluator.DDMFormEvaluatorFieldCont
 import com.liferay.dynamic.data.mapping.form.field.type.DDMFormFieldTemplateContextContributor;
 import com.liferay.dynamic.data.mapping.form.field.type.DDMFormFieldTypeServicesTracker;
 import com.liferay.dynamic.data.mapping.form.field.type.DDMFormFieldValueAccessor;
-import com.liferay.dynamic.data.mapping.form.renderer.DDMFormRendererConstants;
 import com.liferay.dynamic.data.mapping.form.renderer.DDMFormRenderingContext;
-import com.liferay.dynamic.data.mapping.model.DDMForm;
+import com.liferay.dynamic.data.mapping.form.renderer.constants.DDMFormRendererConstants;
 import com.liferay.dynamic.data.mapping.model.DDMFormField;
 import com.liferay.dynamic.data.mapping.model.DDMFormFieldOptions;
 import com.liferay.dynamic.data.mapping.model.DDMFormFieldValidation;
 import com.liferay.dynamic.data.mapping.model.DDMFormFieldValidationExpression;
 import com.liferay.dynamic.data.mapping.model.DDMFormLayout;
+import com.liferay.dynamic.data.mapping.model.DDMFormLayoutColumn;
+import com.liferay.dynamic.data.mapping.model.DDMFormLayoutPage;
+import com.liferay.dynamic.data.mapping.model.DDMFormLayoutRow;
+import com.liferay.dynamic.data.mapping.model.DDMStructure;
 import com.liferay.dynamic.data.mapping.model.LocalizedValue;
 import com.liferay.dynamic.data.mapping.model.Value;
 import com.liferay.dynamic.data.mapping.render.DDMFormFieldRenderingContext;
@@ -36,8 +39,13 @@ import com.liferay.dynamic.data.mapping.storage.DDMFormFieldValue;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.language.LanguageConstants;
+import com.liferay.portal.kernel.json.JSONArray;
+import com.liferay.portal.kernel.json.JSONException;
+import com.liferay.portal.kernel.json.JSONFactory;
+import com.liferay.portal.kernel.json.JSONObject;
+import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.language.constants.LanguageConstants;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
@@ -73,7 +81,8 @@ public class DDMFormFieldTemplateContextFactory {
 		DDMFormRenderingContext ddmFormRenderingContext,
 		DDMStructureLayoutLocalService ddmStructureLayoutLocalService,
 		DDMStructureLocalService ddmStructureLocalService,
-		boolean pageEnabled) {
+		JSONFactory jsonFactory, boolean pageEnabled,
+		DDMFormLayout parentDDMFormLayout) {
 
 		_ddmFormEvaluator = ddmFormEvaluator;
 		_ddmFormFieldName = ddmFormFieldName;
@@ -83,7 +92,9 @@ public class DDMFormFieldTemplateContextFactory {
 		_ddmFormRenderingContext = ddmFormRenderingContext;
 		_ddmStructureLayoutLocalService = ddmStructureLayoutLocalService;
 		_ddmStructureLocalService = ddmStructureLocalService;
+		_jsonFactory = jsonFactory;
 		_pageEnabled = pageEnabled;
+		_parentDDMFormLayout = parentDDMFormLayout;
 
 		_locale = ddmFormRenderingContext.getLocale();
 	}
@@ -241,17 +252,23 @@ public class DDMFormFieldTemplateContextFactory {
 		Map<String, List<DDMFormFieldValue>> nestedDDMFormFieldValuesMap =
 			parentDDMFormFieldValue.getNestedDDMFormFieldValuesMap();
 
-		for (DDMFormFieldValue nestedDDMFormFieldValue :
-				parentDDMFormFieldValue.getNestedDDMFormFieldValues()) {
+		List<DDMFormFieldValue> nestedDDMFormFieldValues =
+			parentDDMFormFieldValue.getNestedDDMFormFieldValues();
 
-			List<DDMFormFieldValue> nestedDDMFormFieldValues =
-				nestedDDMFormFieldValuesMap.get(
-					nestedDDMFormFieldValue.getName());
+		Stream<DDMFormFieldValue> nestedDDMFormFieldValuesStream =
+			nestedDDMFormFieldValues.stream();
 
-			nestedDDMFormFieldTemplateContext.addAll(
-				createDDMFormFieldTemplateContexts(
-					nestedDDMFormFieldValues, parentDDMFormFieldParameterName));
-		}
+		nestedDDMFormFieldValuesStream.map(
+			DDMFormFieldValue::getName
+		).distinct(
+		).map(
+			nestedDDMFormFieldValuesMap::get
+		).map(
+			ddmFormFieldValues -> createDDMFormFieldTemplateContexts(
+				ddmFormFieldValues, parentDDMFormFieldParameterName)
+		).forEach(
+			nestedDDMFormFieldTemplateContext::addAll
+		);
 
 		return nestedDDMFormFieldTemplateContext;
 	}
@@ -284,13 +301,12 @@ public class DDMFormFieldTemplateContextFactory {
 		List<Map<String, String>> list = new ArrayList<>();
 
 		for (KeyValuePair keyValuePair : keyValuePairs) {
-			Map<String, String> option = HashMapBuilder.put(
-				"label", keyValuePair.getValue()
-			).put(
-				"value", keyValuePair.getKey()
-			).build();
-
-			list.add(option);
+			list.add(
+				HashMapBuilder.put(
+					"label", keyValuePair.getValue()
+				).put(
+					"value", keyValuePair.getKey()
+				).build());
 		}
 
 		return list;
@@ -794,20 +810,6 @@ public class DDMFormFieldTemplateContextFactory {
 		return columns.stream();
 	}
 
-	private DDMForm _getDDMForm(long ddmStructureId) {
-		try {
-			return _ddmStructureLocalService.getStructureDDMForm(
-				_ddmStructureLocalService.getStructure(ddmStructureId));
-		}
-		catch (PortalException portalException) {
-			if (_log.isDebugEnabled()) {
-				_log.debug(portalException, portalException);
-			}
-		}
-
-		return new DDMForm();
-	}
-
 	private DDMFormLayout _getDDMFormLayout(long ddmStructureLayoutId) {
 		try {
 			return _ddmStructureLayoutLocalService.
@@ -822,6 +824,13 @@ public class DDMFormFieldTemplateContextFactory {
 		}
 
 		return new DDMFormLayout();
+	}
+
+	private long _getDefaultDDMFormLayoutId(long ddmStructureId) {
+		DDMStructure ddmStructure = _ddmStructureLocalService.fetchDDMStructure(
+			ddmStructureId);
+
+		return ddmStructure.getDefaultDDMStructureLayoutId();
 	}
 
 	private Stream<Map<String, Object>> _getFieldsStream(
@@ -882,23 +891,41 @@ public class DDMFormFieldTemplateContextFactory {
 		DDMFormField ddmFormField,
 		DDMFormFieldRenderingContext ddmFormFieldRenderingContext) {
 
+		Map<String, Object> properties =
+			ddmFormFieldRenderingContext.getProperties();
+
 		if (Validator.isNotNull(ddmFormField.getProperty("ddmStructureId")) &&
-			Validator.isNotNull(
-				ddmFormField.getProperty("ddmStructureLayoutId"))) {
+			!properties.containsKey("nestedFields")) {
+
+			long ddmStructureLayoutId = GetterUtil.getLong(
+				ddmFormField.getProperty("ddmStructureLayoutId"));
+
+			if (ddmStructureLayoutId == 0) {
+				ddmStructureLayoutId = _getDefaultDDMFormLayoutId(
+					GetterUtil.getLong(
+						ddmFormField.getProperty("ddmStructureId")));
+			}
+
+			DDMFormLayout ddmFormLayout = _getDDMFormLayout(
+				ddmStructureLayoutId);
+
+			ddmFormLayout.setDDMFormRules(
+				_parentDDMFormLayout.getDDMFormRules());
+
+			String rows = MapUtil.getString(
+				ddmFormField.getProperties(), "rows");
+
+			if (Validator.isNotNull(rows)) {
+				_updateDDMFormLayoutRows(ddmFormLayout, rows);
+			}
 
 			DDMFormPagesTemplateContextFactory
 				ddmFormPagesTemplateContextFactory =
 					new DDMFormPagesTemplateContextFactory(
-						_getDDMForm(
-							GetterUtil.getLong(
-								ddmFormField.getProperty("ddmStructureId"))),
-						_getDDMFormLayout(
-							GetterUtil.getLong(
-								ddmFormField.getProperty(
-									"ddmStructureLayoutId"))),
+						ddmFormField.getDDMForm(), ddmFormLayout,
 						_ddmFormRenderingContext,
 						_ddmStructureLayoutLocalService,
-						_ddmStructureLocalService);
+						_ddmStructureLocalService, _jsonFactory);
 
 			ddmFormPagesTemplateContextFactory.setDDMFormEvaluator(
 				_ddmFormEvaluator);
@@ -910,6 +937,68 @@ public class DDMFormFieldTemplateContextFactory {
 				"nestedFields",
 				_getNestedFieldsContext(
 					ddmFormPagesTemplateContextFactory.create()));
+		}
+	}
+
+	private DDMFormLayoutColumn _toDDMFormLayoutColumn(JSONObject jsonObject) {
+		DDMFormLayoutColumn ddmFormLayoutColumn = new DDMFormLayoutColumn();
+
+		ddmFormLayoutColumn.setDDMFormFieldNames(
+			JSONUtil.toStringList(jsonObject.getJSONArray("fields")));
+		ddmFormLayoutColumn.setSize(jsonObject.getInt("size"));
+
+		return ddmFormLayoutColumn;
+	}
+
+	private List<DDMFormLayoutColumn> _toDDMFormLayoutColumns(
+		JSONArray jsonArray) {
+
+		List<DDMFormLayoutColumn> ddmFormLayoutColumns = new ArrayList<>(
+			jsonArray.length());
+
+		for (int i = 0; i < jsonArray.length(); i++) {
+			ddmFormLayoutColumns.add(
+				_toDDMFormLayoutColumn(jsonArray.getJSONObject(i)));
+		}
+
+		return ddmFormLayoutColumns;
+	}
+
+	private DDMFormLayoutRow _toDDMFormLayoutRow(JSONObject jsonObject) {
+		DDMFormLayoutRow ddmFormLayoutRow = new DDMFormLayoutRow();
+
+		ddmFormLayoutRow.setDDMFormLayoutColumns(
+			_toDDMFormLayoutColumns(jsonObject.getJSONArray("columns")));
+
+		return ddmFormLayoutRow;
+	}
+
+	private List<DDMFormLayoutRow> _toDDMFormLayoutRows(JSONArray jsonArray) {
+		List<DDMFormLayoutRow> ddmFormLayoutRows = new ArrayList<>(
+			jsonArray.length());
+
+		for (int i = 0; i < jsonArray.length(); i++) {
+			ddmFormLayoutRows.add(
+				_toDDMFormLayoutRow(jsonArray.getJSONObject(i)));
+		}
+
+		return ddmFormLayoutRows;
+	}
+
+	private void _updateDDMFormLayoutRows(
+		DDMFormLayout ddmFormLayout, String rowsJSON) {
+
+		try {
+			DDMFormLayoutPage ddmFormLayoutPage =
+				ddmFormLayout.getDDMFormLayoutPage(0);
+
+			ddmFormLayoutPage.setDDMFormLayoutRows(
+				_toDDMFormLayoutRows(_jsonFactory.createJSONArray(rowsJSON)));
+		}
+		catch (JSONException jsonException) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(jsonException, jsonException);
+			}
 		}
 	}
 
@@ -927,7 +1016,9 @@ public class DDMFormFieldTemplateContextFactory {
 	private final DDMStructureLayoutLocalService
 		_ddmStructureLayoutLocalService;
 	private final DDMStructureLocalService _ddmStructureLocalService;
+	private final JSONFactory _jsonFactory;
 	private final Locale _locale;
 	private final boolean _pageEnabled;
+	private final DDMFormLayout _parentDDMFormLayout;
 
 }

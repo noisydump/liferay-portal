@@ -107,7 +107,9 @@ public abstract class BaseIndexResourceTestCase {
 
 		IndexResource.Builder builder = IndexResource.builder();
 
-		indexResource = builder.locale(
+		indexResource = builder.authentication(
+			"test@liferay.com", "test"
+		).locale(
 			LocaleUtil.getDefault()
 		).build();
 	}
@@ -250,7 +252,7 @@ public abstract class BaseIndexResourceTestCase {
 		}
 	}
 
-	protected void assertValid(Index index) {
+	protected void assertValid(Index index) throws Exception {
 		boolean valid = true;
 
 		for (String additionalAssertFieldName :

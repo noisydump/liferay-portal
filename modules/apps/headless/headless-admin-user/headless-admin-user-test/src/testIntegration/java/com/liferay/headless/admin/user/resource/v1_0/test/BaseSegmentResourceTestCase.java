@@ -109,7 +109,9 @@ public abstract class BaseSegmentResourceTestCase {
 
 		SegmentResource.Builder builder = SegmentResource.builder();
 
-		segmentResource = builder.locale(
+		segmentResource = builder.authentication(
+			"test@liferay.com", "test"
+		).locale(
 			LocaleUtil.getDefault()
 		).build();
 	}
@@ -463,7 +465,7 @@ public abstract class BaseSegmentResourceTestCase {
 		}
 	}
 
-	protected void assertValid(Segment segment) {
+	protected void assertValid(Segment segment) throws Exception {
 		boolean valid = true;
 
 		if (segment.getDateCreated() == null) {

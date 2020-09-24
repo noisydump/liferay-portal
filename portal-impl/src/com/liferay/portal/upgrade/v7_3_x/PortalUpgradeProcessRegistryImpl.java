@@ -84,6 +84,54 @@ public class PortalUpgradeProcessRegistryImpl
 				"DLFileEntry", "DLFileEntryMetadata", "DLFileEntryType",
 				"DLFileEntryTypes_DLFolders", "DLFileShortcut", "DLFileVersion",
 				"DLFolder"));
+
+		upgradeProcesses.put(
+			new Version(8, 7, 0), new UpgradeSocialMVCCVersion());
+
+		upgradeProcesses.put(
+			new Version(8, 8, 0), new UpgradeExpandoMVCCVersion());
+
+		upgradeProcesses.put(
+			new Version(8, 9, 0), new UpgradeRatingsMVCCVersion());
+
+		upgradeProcesses.put(
+			new Version(8, 10, 0), new UpgradeResourceAction());
+
+		upgradeProcesses.put(
+			new Version(8, 11, 0),
+			new UpgradeCTModel(
+				"ExpandoColumn", "ExpandoRow", "ExpandoTable", "ExpandoValue"));
+
+		upgradeProcesses.put(
+			new Version(8, 12, 0),
+			new UpgradeCTModel("RatingsEntry", "RatingsStats"));
+
+		upgradeProcesses.put(
+			new Version(8, 13, 0),
+			new UpgradeCTModel(
+				"WorkflowDefinitionLink", "WorkflowInstanceLink"));
+
+		upgradeProcesses.put(
+			new Version(8, 14, 0),
+			new UpgradeCTModel(
+				"SocialActivity", "SocialActivityAchievement",
+				"SocialActivityCounter", "SocialActivityLimit",
+				"SocialActivitySet", "SocialActivitySetting", "SocialRelation",
+				"SocialRequest"));
+
+		upgradeProcesses.put(
+			new Version(8, 15, 0), new UpgradeCTModel("SystemEvent"));
+
+		upgradeProcesses.put(
+			new Version(8, 16, 0), new UpgradeDLFileEntryType());
+
+		upgradeProcesses.put(
+			new Version(8, 17, 0), new UpgradeAssetVocabulary());
+
+		upgradeProcesses.put(
+			new Version(8, 18, 0), new UpgradeLayoutStyleBookEntry());
+
+		upgradeProcesses.put(new Version(8, 18, 1), new UpgradeModules());
 	}
 
 }

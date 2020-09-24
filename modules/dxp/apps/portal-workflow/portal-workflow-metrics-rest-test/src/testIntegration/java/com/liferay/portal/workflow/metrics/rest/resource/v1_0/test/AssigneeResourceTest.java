@@ -16,9 +16,12 @@ package com.liferay.portal.workflow.metrics.rest.resource.v1_0.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.portal.kernel.model.User;
+import com.liferay.portal.kernel.test.rule.DataGuard;
+import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.Portal;
+import com.liferay.portal.search.test.util.SearchTestRule;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.workflow.metrics.rest.client.dto.v1_0.Assignee;
 import com.liferay.portal.workflow.metrics.rest.client.dto.v1_0.AssigneeBulkSelection;
@@ -33,11 +36,14 @@ import java.util.List;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
 import org.junit.runner.RunWith;
 
 /**
  * @author Rafael Praxedes
  */
+@DataGuard(scope = DataGuard.Scope.METHOD)
 @RunWith(Arquillian.class)
 public class AssigneeResourceTest extends BaseAssigneeResourceTestCase {
 
@@ -70,16 +76,19 @@ public class AssigneeResourceTest extends BaseAssigneeResourceTestCase {
 	}
 
 	@Override
+	@Test
 	public void testPostProcessAssigneesPage() throws Exception {
 		Assignee assignee1 = randomAssignee();
 
 		_workflowMetricsRESTTestHelper.addTask(
-			assignee1, testGroup.getCompanyId(), _instance);
+			assignee1, testGroup.getCompanyId(), _instance,
+			TestPropsValues.getUser());
 
 		Assignee assignee2 = randomAssignee();
 
 		_workflowMetricsRESTTestHelper.addTask(
-			assignee2, testGroup.getCompanyId(), _instance);
+			assignee2, testGroup.getCompanyId(), _instance,
+			TestPropsValues.getUser());
 
 		Page<Assignee> page = assigneeResource.postProcessAssigneesPage(
 			_process.getId(), new AssigneeBulkSelection());
@@ -116,6 +125,9 @@ public class AssigneeResourceTest extends BaseAssigneeResourceTestCase {
 
 		Assert.assertEquals(0, page.getTotalCount());
 	}
+
+	@Rule
+	public SearchTestRule searchTestRule = new SearchTestRule();
 
 	@Override
 	protected Assignee randomAssignee() throws Exception {

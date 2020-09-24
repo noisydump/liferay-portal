@@ -24,8 +24,8 @@ OAuth2Application oAuth2Application = oAuth2AdminPortletDisplayContext.getOAuth2
 AssignScopesDisplayContext assignScopesDisplayContext = (AssignScopesDisplayContext)oAuth2AdminPortletDisplayContext;
 %>
 
-<clay:container
-	className="container-view"
+<clay:container-fluid
+	cssClass="container-view"
 >
 	<liferay-ui:error exception="<%= OAuth2ApplicationClientCredentialUserIdException.class %>">
 
@@ -90,7 +90,7 @@ AssignScopesDisplayContext assignScopesDisplayContext = (AssignScopesDisplayCont
 			</aui:form>
 		</clay:col>
 	</clay:row>
-</clay:container>
+</clay:container-fluid>
 
 <aui:script require="metal-dom/src/dom as dom">
 	AUI().use('node', 'aui-modal', function (A) {

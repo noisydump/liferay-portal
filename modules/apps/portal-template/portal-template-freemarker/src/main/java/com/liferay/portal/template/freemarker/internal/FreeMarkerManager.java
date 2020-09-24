@@ -585,7 +585,7 @@ public class FreeMarkerManager extends BaseTemplateManager {
 				return _getResource((String)args[0]);
 			}
 			else if (methodName.equals("getResourceAsStream")) {
-				return _getResourceAsStream((String)args[0]);
+				return _getResourceAsInputStream((String)args[0]);
 			}
 			else if (methodName.equals("getResourcePaths")) {
 				return _getResourcePaths((String)args[0]);
@@ -648,7 +648,7 @@ public class FreeMarkerManager extends BaseTemplateManager {
 			return url;
 		}
 
-		private InputStream _getResourceAsStream(String path) {
+		private InputStream _getResourceAsInputStream(String path) {
 			URL url = _getResource(path);
 
 			if (url == null) {
@@ -664,16 +664,17 @@ public class FreeMarkerManager extends BaseTemplateManager {
 		}
 
 		private Set<String> _getResourcePaths(String path) {
-			Enumeration<URL> entries = _bundle.findEntries(path, null, true);
+			Enumeration<URL> enumeration = _bundle.findEntries(
+				path, null, true);
 
-			if (entries == null) {
+			if (enumeration == null) {
 				return null;
 			}
 
 			Set<String> resourcePaths = new HashSet<>();
 
-			while (entries.hasMoreElements()) {
-				URL url = entries.nextElement();
+			while (enumeration.hasMoreElements()) {
+				URL url = enumeration.nextElement();
 
 				resourcePaths.add(url.getPath());
 			}

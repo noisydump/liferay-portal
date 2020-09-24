@@ -112,19 +112,33 @@ public class HttpImplTest {
 	}
 
 	@Test
-	public void testDecodeMultipleCharacterEncodedPath() {
+	public void testDecodePathControlPanel() {
+		Assert.assertEquals(
+			"/group/guest/~/control_panel/manage",
+			_httpImpl.decodePath("/group/guest/~/control_panel/manage"));
+	}
+
+	@Test
+	public void testDecodePathMultipleCharacterEncoded() {
 		Assert.assertEquals(
 			"http://foo?p=$param",
 			_httpImpl.decodePath("http://foo%3Fp%3D%24param"));
 	}
 
 	@Test
-	public void testDecodeNoCharacterEncodedPath() {
+	public void testDecodePathNoAscii() {
+		Assert.assertEquals(
+			"/web/guest/página1",
+			_httpImpl.decodePath("/web/guest/p%C3%83%C2%A1gina1"));
+	}
+
+	@Test
+	public void testDecodePathNoCharacterEncoded() {
 		Assert.assertEquals("http://foo", _httpImpl.decodePath("http://foo"));
 	}
 
 	@Test
-	public void testDecodeSingleCharacterEncodedPath() {
+	public void testDecodePathSingleCharacterEncoded() {
 		Assert.assertEquals(
 			"http://foo#anchor", _httpImpl.decodePath("http://foo%23anchor"));
 	}
@@ -149,21 +163,42 @@ public class HttpImplTest {
 	}
 
 	@Test
-	public void testEncodeMultipleCharacterEncodedPath() {
+	public void testEncodePathControlPanel() {
+		Assert.assertEquals(
+			"/group/guest/~/control_panel/manage",
+			_httpImpl.encodePath("/group/guest/~/control_panel/manage"));
+	}
+
+	@Test
+	public void testEncodePathMultipleCharacterEncoded() {
 		Assert.assertEquals(
 			"http%3A//foo%3Fp%3D%24param",
 			_httpImpl.encodePath("http://foo?p=$param"));
 	}
 
 	@Test
-	public void testEncodeNoCharacterEncodedPath() {
+	public void testEncodePathNoAscii() {
+		Assert.assertEquals(
+			"/web/guest/p%C3%83%C2%A1gina1",
+			_httpImpl.encodePath("/web/guest/página1"));
+	}
+
+	@Test
+	public void testEncodePathNoCharacterEncoded() {
 		Assert.assertEquals("http%3A//foo", _httpImpl.encodePath("http://foo"));
 	}
 
 	@Test
-	public void testEncodeSingleCharacterEncodedPath() {
+	public void testEncodePathSingleCharacterEncoded() {
 		Assert.assertEquals(
 			"http%3A//foo%23anchor", _httpImpl.encodePath("http://foo#anchor"));
+	}
+
+	@Test
+	public void testEncodePathWikiFriendlyURL() {
+		Assert.assertEquals(
+			"/web/guest/wiki/-/wiki/Main/test+test",
+			_httpImpl.encodePath("/web/guest/wiki/-/wiki/Main/test+test"));
 	}
 
 	@Test
@@ -253,6 +288,15 @@ public class HttpImplTest {
 		Assert.assertEquals("", _httpImpl.getProtocol("1a://foo.com"));
 		Assert.assertEquals("", _httpImpl.getProtocol("#%://foo.com"));
 		Assert.assertEquals("", _httpImpl.getProtocol("foo.com"));
+	}
+
+	@Test
+	public void testGetQueryString() {
+		String queryString = "doAsUserId=tUaJhZHZbDYaV0WQmKNRig%3D%3D&foo=bar";
+
+		Assert.assertEquals(
+			queryString,
+			_httpImpl.getQueryString("http://localhost:8080/?" + queryString));
 	}
 
 	@Test
@@ -506,14 +550,14 @@ public class HttpImplTest {
 
 		// Remove redirect two deep
 
-		String encodedURL = URLCodec.encodeURL(
+		String encodedURL1 = URLCodec.encodeURL(
 			"www.liferay.com?key1=value1&redirect=" + paramValue);
 
 		Assert.assertEquals(
 			"www.liferay.com?key1=value1&redirect=" +
 				URLCodec.encodeURL("www.liferay.com?key1=value1"),
 			_httpImpl.shortenURL(
-				"www.liferay.com?key1=value1&redirect=" + encodedURL));
+				"www.liferay.com?key1=value1&redirect=" + encodedURL1));
 
 		// Remove redirect three deep
 
@@ -522,7 +566,7 @@ public class HttpImplTest {
 				URLCodec.encodeURL("www.liferay.com?key1=value1"));
 
 		String encodedURL3 = URLCodec.encodeURL(
-			"www.liferay.com?key1=value1&redirect=" + encodedURL);
+			"www.liferay.com?key1=value1&redirect=" + encodedURL1);
 
 		Assert.assertEquals(
 			"www.liferay.com?key1=value1&redirect=" + encodedURL2,
@@ -537,7 +581,7 @@ public class HttpImplTest {
 
 		String encodedURL5 = URLCodec.encodeURL(
 			"www.liferay.com?_returnToFullPageURL=test&key1=value1&redirect=" +
-				encodedURL);
+				encodedURL1);
 
 		Assert.assertEquals(
 			"www.liferay.com?key1=value1&redirect=" + encodedURL4,
@@ -573,7 +617,7 @@ public class HttpImplTest {
 	private void _testDecodeURL(String url, String expectedMessage) {
 		try (CaptureHandler captureHandler =
 				JDKLoggerTestUtil.configureJDKLogger(
-					HttpImpl.class.getName(), Level.SEVERE)) {
+					HttpImpl.class.getName(), Level.WARNING)) {
 
 			String decodeURL = _httpImpl.decodeURL(url);
 

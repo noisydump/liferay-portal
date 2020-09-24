@@ -23,7 +23,7 @@ WikiNode node = wikiPageItemSelectorViewDisplayContext.getNode();
 
 String keywords = ParamUtil.getString(request, "keywords");
 
-SearchContainer wikiPagesSearchContainer = new SearchContainer(renderRequest, null, null, SearchContainer.DEFAULT_CUR_PARAM, SearchContainer.DEFAULT_DELTA, wikiPageItemSelectorViewDisplayContext.getPortletURL(request, liferayPortletResponse), null, wikiPageItemSelectorViewDisplayContext.isSearch() ? LanguageUtil.format(locale, "no-pages-were-found-that-matched-the-keywords-x", "<strong>" + HtmlUtil.escape(keywords) + "</strong>", false) : "there-are-no-pages");
+SearchContainer<WikiPage> wikiPagesSearchContainer = new SearchContainer(renderRequest, null, null, SearchContainer.DEFAULT_CUR_PARAM, SearchContainer.DEFAULT_DELTA, wikiPageItemSelectorViewDisplayContext.getPortletURL(request, liferayPortletResponse), null, wikiPageItemSelectorViewDisplayContext.isSearch() ? LanguageUtil.format(locale, "no-pages-were-found-that-matched-the-keywords-x", "<strong>" + HtmlUtil.escape(keywords) + "</strong>", false) : "there-are-no-pages");
 
 if (wikiPageItemSelectorViewDisplayContext.isSearch()) {
 	Indexer<WikiPage> indexer = IndexerRegistryUtil.getIndexer(WikiPage.class);
@@ -80,9 +80,9 @@ String searchURL = HttpUtil.removeParameter(searchBaseURL.toString(), liferayPor
 	showCreationMenu="<%= false %>"
 />
 
-<clay:container
-	className="lfr-item-viewer"
-	id='<%= renderResponse.getNamespace() + "wikiPagesSelectorContainer" %>'
+<clay:container-fluid
+	cssClass="lfr-item-viewer"
+	id='<%= liferayPortletResponse.getNamespace() + "wikiPagesSelectorContainer" %>'
 >
 	<liferay-ui:search-container
 		id="wikiPagesSearchContainer"
@@ -119,7 +119,7 @@ String searchURL = HttpUtil.removeParameter(searchBaseURL.toString(), liferayPor
 							<liferay-ui:message arguments="<%= new String[] {HtmlUtil.escape(curPage.getUserName()), modifiedDateDescription} %>" key="x-modified-x-ago" />
 						</c:when>
 						<c:otherwise>
-							<liferay-ui:message arguments="<%= new String[] {modifiedDateDescription} %>" key="modified-x-ago" />
+							<liferay-ui:message arguments="<%= modifiedDateDescription %>" key="modified-x-ago" />
 						</c:otherwise>
 					</c:choose>
 				</h5>
@@ -146,7 +146,7 @@ String searchURL = HttpUtil.removeParameter(searchBaseURL.toString(), liferayPor
 			searchContainer="<%= wikiPagesSearchContainer %>"
 		/>
 	</liferay-ui:search-container>
-</clay:container>
+</clay:container-fluid>
 
 <aui:script use="liferay-search-container">
 	var Util = Liferay.Util;

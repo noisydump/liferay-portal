@@ -265,7 +265,10 @@ public class JournalTransformer {
 					template.prepare(httpServletRequest);
 				}
 				finally {
-					if (portletRequestModel != null) {
+					if ((originalPortletRequest != null) &&
+						(originalPortletResponse != null) &&
+						(portletRequestModel != null)) {
+
 						httpServletRequest.setAttribute(
 							JavaConstants.JAVAX_PORTLET_REQUEST,
 							originalPortletRequest);
@@ -568,10 +571,10 @@ public class JournalTransformer {
 				JSONObject dataJSONObject = JSONFactoryUtil.createJSONObject(
 					data);
 
-				Iterator<String> itr = dataJSONObject.keys();
+				Iterator<String> iterator = dataJSONObject.keys();
 
-				while (itr.hasNext()) {
-					String key = itr.next();
+				while (iterator.hasNext()) {
+					String key = iterator.next();
 
 					String value = dataJSONObject.getString(key);
 

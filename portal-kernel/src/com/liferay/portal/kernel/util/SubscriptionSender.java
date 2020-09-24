@@ -23,6 +23,7 @@ import com.liferay.mail.kernel.template.MailTemplateContext;
 import com.liferay.mail.kernel.template.MailTemplateContextBuilder;
 import com.liferay.mail.kernel.template.MailTemplateFactoryUtil;
 import com.liferay.petra.lang.ClassLoaderPool;
+import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -302,12 +303,40 @@ public class SubscriptionSender implements Serializable {
 		setContextAttribute("[$COMPANY_ID$]", company.getCompanyId());
 		setContextAttribute("[$COMPANY_MX$]", company.getMx());
 		setContextAttribute("[$COMPANY_NAME$]", company.getName());
-		setContextAttribute(
-			"[$PORTAL_URL$]",
-			company.getPortalURL(
-				groupId,
-				_entryURL.contains(
-					_LAYOUT_FRIENDLY_URL_PRIVATE_GROUP_SERVLET_MAPPING)));
+
+		if (Validator.isNotNull(_entryURL)) {
+			boolean secureConnection = HttpUtil.isSecure(_entryURL);
+
+			String portalURL = PortalUtil.getPortalURL(
+				company.getVirtualHostname(),
+				PortalUtil.getPortalServerPort(secureConnection),
+				secureConnection);
+
+			if (_entryURL.startsWith(portalURL)) {
+				setContextAttribute(
+					"[$PORTAL_URL$]",
+					company.getPortalURL(
+						groupId,
+						_entryURL.contains(
+							_LAYOUT_FRIENDLY_URL_PRIVATE_GROUP_SERVLET_MAPPING)));
+			}
+			else {
+				int endIndex = _entryURL.indexOf(
+					CharPool.FORWARD_SLASH, Http.HTTPS_WITH_SLASH.length());
+
+				if (endIndex == -1) {
+					setContextAttribute("[$PORTAL_URL$]", _entryURL);
+				}
+				else {
+					setContextAttribute(
+						"[$PORTAL_URL$]", _entryURL.substring(0, endIndex));
+				}
+			}
+		}
+		else {
+			setContextAttribute(
+				"[$PORTAL_URL$]", company.getPortalURL(groupId));
+		}
 
 		if (groupId > 0) {
 			Group group = GroupLocalServiceUtil.getGroup(groupId);
@@ -519,6 +548,10 @@ public class SubscriptionSender implements Serializable {
 		}
 
 		this.scopeGroupId = scopeGroupId;
+	}
+
+	public void setSendToCurrentUser(boolean sendToCurrentUser) {
+		_sendToCurrentUser = sendToCurrentUser;
 	}
 
 	public void setServiceContext(ServiceContext serviceContext) {
@@ -925,7 +958,7 @@ public class SubscriptionSender implements Serializable {
 	protected void sendNotification(User user, boolean notifyImmediately)
 		throws Exception {
 
-		if (currentUserId == user.getUserId()) {
+		if (!_sendToCurrentUser && (currentUserId == user.getUserId())) {
 			if (_log.isDebugEnabled()) {
 				_log.debug("Skip user " + currentUserId);
 			}
@@ -1151,6 +1184,7 @@ public class SubscriptionSender implements Serializable {
 	private final List<Tuple> _persistedSubscribersTuples = new ArrayList<>();
 	private final List<ObjectValuePair<String, String>>
 		_runtimeSubscribersOVPs = new ArrayList<>();
+	private boolean _sendToCurrentUser;
 	private final Set<String> _sentEmailAddresses = new HashSet<>();
 
 	private static class HTMLAtributeEscapableObject<T>

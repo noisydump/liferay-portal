@@ -22,6 +22,8 @@ public class UnfollowCCRRequest
 
 	public UnfollowCCRRequest(String indexName) {
 		_indexName = indexName;
+
+		setPreferLocalCluster(true);
 	}
 
 	@Override

@@ -60,7 +60,7 @@ OAuth2Application oAuth2Application = oAuth2AdminPortletDisplayContext.getOAuth2
 		%>
 
 		<clay:col
-			id='<%= renderResponse.getNamespace() + "allowedGrantTypesSection" %>'
+			id='<%= liferayPortletResponse.getNamespace() + "allowedGrantTypesSection" %>'
 			lg="7"
 		>
 			<h3 class="sheet-subtitle"><liferay-ui:message key="allowed-grant-types" /></h3>
@@ -81,7 +81,9 @@ OAuth2Application oAuth2Application = oAuth2AdminPortletDisplayContext.getOAuth2
 						Set<String> cssClasses = new HashSet<>();
 
 						for (ClientProfile clientProfile : ClientProfile.values()) {
-							if (clientProfile.grantTypes().contains(grantType)) {
+							Set<GrantType> grantTypes = clientProfile.grantTypes();
+
+							if (grantTypes.contains(grantType)) {
 								cssClasses.add("client-profile-" + clientProfile.id());
 							}
 						}
@@ -114,7 +116,7 @@ OAuth2Application oAuth2Application = oAuth2AdminPortletDisplayContext.getOAuth2
 						<div class="allowedGrantType <%= cssClassesStr %>">
 							<c:choose>
 								<c:when test="<%= grantType.equals(GrantType.CLIENT_CREDENTIALS) %>">
-									<aui:input checked="<%= checked %>" data="<%= data %>" helpMessage="the-client-will-impersonate-the-selected-client-credential-user-but-will-be-restricted-to-the-selected-scopes" label="<%= grantType.name() %>" name="<%= clientCredentialsCheckboxName %>" onchange='<%= renderResponse.getNamespace() + "updateClientCredentialsSection();" %>' type="checkbox" />
+									<aui:input checked="<%= checked %>" data="<%= data %>" helpMessage="the-client-will-impersonate-the-selected-client-credential-user-but-will-be-restricted-to-the-selected-scopes" label="<%= grantType.name() %>" name="<%= clientCredentialsCheckboxName %>" onchange='<%= liferayPortletResponse.getNamespace() + "updateClientCredentialsSection();" %>' type="checkbox" />
 								</c:when>
 								<c:otherwise>
 									<aui:input checked="<%= checked %>" data="<%= data %>" label="<%= grantType.name() %>" name="<%= name %>" type="checkbox" />
@@ -151,7 +153,7 @@ OAuth2Application oAuth2Application = oAuth2AdminPortletDisplayContext.getOAuth2
 
 		<c:if test="<%= clientCredentialsCheckboxName != null %>">
 			<clay:col
-				id='<%= renderResponse.getNamespace() + "clientCredentialsSection" %>'
+				id='<%= liferayPortletResponse.getNamespace() + "clientCredentialsSection" %>'
 				lg="5"
 			>
 				<h3 class="sheet-subtitle"><liferay-ui:message key="client-credentials-user" /></h3>
@@ -199,35 +201,26 @@ OAuth2Application oAuth2Application = oAuth2AdminPortletDisplayContext.getOAuth2
 
 					if (selectUserButton) {
 						selectUserButton.addEventListener('click', function (event) {
-							Liferay.Util.selectEntity(
-								{
-									dialog: {
-										modal: true,
-										destroyOnHide: true,
-									},
-
-									<%
-									SelectUsersDisplayContext selectUsersDisplayContext = new SelectUsersDisplayContext(request, renderRequest, renderResponse);
-									%>
-
-									eventName:
-										'<%= HtmlUtil.escapeJS(selectUsersDisplayContext.getEventName()) %>',
-									id:
-										'<%= HtmlUtil.escapeJS(selectUsersDisplayContext.getEventName()) %>',
-
-									title: '<liferay-ui:message key="users" />',
-									uri:
-										'<%= HtmlUtil.escapeJS(String.valueOf(selectUsersDisplayContext.getPortletURL())) %>',
-								},
-								function (event) {
+							Liferay.Util.openSelectionModal({
+								onSelect: function (event) {
 									A.one('#<portlet:namespace />clientCredentialUserId').val(
 										event.userid
 									);
 									A.one('#<portlet:namespace />clientCredentialUserName').val(
 										event.screenname
 									);
-								}
-							);
+								},
+
+								<%
+								SelectUsersDisplayContext selectUsersDisplayContext = new SelectUsersDisplayContext(request, renderRequest, renderResponse);
+								%>
+
+								selectEventName:
+									'<%= HtmlUtil.escapeJS(selectUsersDisplayContext.getEventName()) %>',
+								title: '<liferay-ui:message key="users" />',
+								url:
+									'<%= HtmlUtil.escapeJS(String.valueOf(selectUsersDisplayContext.getPortletURL())) %>',
+							});
 						});
 					}
 				</aui:script>

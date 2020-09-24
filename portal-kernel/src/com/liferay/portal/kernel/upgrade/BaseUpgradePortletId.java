@@ -14,9 +14,11 @@
 
 package com.liferay.portal.kernel.upgrade;
 
-import com.liferay.exportimport.kernel.staging.StagingConstants;
+import com.liferay.exportimport.kernel.staging.constants.StagingConstants;
 import com.liferay.layout.admin.kernel.model.LayoutTypePortletConstants;
 import com.liferay.petra.string.StringBundler;
+import com.liferay.portal.kernel.dao.db.DBType;
+import com.liferay.portal.kernel.dao.db.DBTypeToSQLMap;
 import com.liferay.portal.kernel.dao.jdbc.AutoBatchPreparedStatementUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -192,8 +194,6 @@ public abstract class BaseUpgradePortletId extends UpgradeProcess {
 			ResultSet rs = ps1.executeQuery()) {
 
 			while (rs.next()) {
-				long groupId = rs.getLong("groupId");
-
 				String typeSettings = rs.getString("typeSettings");
 
 				String newTypeSettings = getNewTypeSettings(
@@ -203,7 +203,7 @@ public abstract class BaseUpgradePortletId extends UpgradeProcess {
 				if (!Objects.equals(typeSettings, newTypeSettings)) {
 					ps2.setString(1, newTypeSettings);
 
-					ps2.setLong(2, groupId);
+					ps2.setLong(2, rs.getLong("groupId"));
 
 					ps2.addBatch();
 				}
@@ -222,6 +222,23 @@ public abstract class BaseUpgradePortletId extends UpgradeProcess {
 				"update PortletPreferences set portletId = '", newRootPortletId,
 				"' where portletId = '", oldRootPortletId, "'"));
 
+		DBTypeToSQLMap cssDBTypeToSQLMap = new DBTypeToSQLMap(
+			StringBundler.concat(
+				"update PortletPreferences set preferences = replace(",
+				"preferences, '#portlet_", oldRootPortletId, "', '#portlet_",
+				newRootPortletId, "') where portletId = '", newRootPortletId,
+				"'"));
+
+		cssDBTypeToSQLMap.add(
+			DBType.SYBASE,
+			StringBundler.concat(
+				"update PortletPreferences set preferences = replace(",
+				"CAST_TEXT(preferences), '#portlet_", oldRootPortletId,
+				"', '#portlet_", newRootPortletId, "') where portletId = '",
+				newRootPortletId, "'"));
+
+		runSQL(cssDBTypeToSQLMap);
+
 		if (!newRootPortletId.contains("_INSTANCE_")) {
 			runSQL(
 				StringBundler.concat(
@@ -229,6 +246,24 @@ public abstract class BaseUpgradePortletId extends UpgradeProcess {
 					"portletId, '", oldRootPortletId, "_INSTANCE_', '",
 					newRootPortletId, "_INSTANCE_') where portletId like '",
 					oldRootPortletId, "_INSTANCE_%'"));
+
+			DBTypeToSQLMap instanceCSSDBTypeToSQLMap = new DBTypeToSQLMap(
+				StringBundler.concat(
+					"update PortletPreferences set preferences = replace(",
+					"preferences, '#portlet_", oldRootPortletId, "_INSTANCE_',",
+					"'#portlet_", newRootPortletId, "_INSTANCE_') where ",
+					"portletId like '", newRootPortletId, "_INSTANCE_%'"));
+
+			instanceCSSDBTypeToSQLMap.add(
+				DBType.SYBASE,
+				StringBundler.concat(
+					"update PortletPreferences set preferences = replace(",
+					"CAST_TEXT(preferences), '#portlet_", oldRootPortletId,
+					"_INSTANCE_','#portlet_", newRootPortletId,
+					"_INSTANCE_') where portletId like '", newRootPortletId,
+					"_INSTANCE_%'"));
+
+			runSQL(instanceCSSDBTypeToSQLMap);
 		}
 
 		runSQL(
@@ -237,6 +272,23 @@ public abstract class BaseUpgradePortletId extends UpgradeProcess {
 				"'", oldRootPortletId, "_USER_', '", newRootPortletId,
 				"_USER_') where portletId like '", oldRootPortletId,
 				"_USER_%'"));
+
+		DBTypeToSQLMap userCSSDBTypeToSQLMap = new DBTypeToSQLMap(
+			StringBundler.concat(
+				"update PortletPreferences set preferences = replace(",
+				"preferences, '#portlet_", oldRootPortletId, "_USER_', ",
+				"'#portlet_", newRootPortletId, "_USER_') where portletId ",
+				"like '", newRootPortletId, "_USER_%'"));
+
+		userCSSDBTypeToSQLMap.add(
+			DBType.SYBASE,
+			StringBundler.concat(
+				"update PortletPreferences set preferences = replace(",
+				"CAST_TEXT(preferences), '#portlet_", oldRootPortletId,
+				"_USER_', '#portlet_", newRootPortletId, "_USER_') where ",
+				"portletId like '", newRootPortletId, "_USER_%'"));
+
+		runSQL(userCSSDBTypeToSQLMap);
 	}
 
 	protected void updateLayout(long plid, String typeSettings)
@@ -321,8 +373,6 @@ public abstract class BaseUpgradePortletId extends UpgradeProcess {
 			ResultSet rs = ps1.executeQuery()) {
 
 			while (rs.next()) {
-				long layoutRevisionId = rs.getLong("layoutRevisionId");
-
 				String typeSettings = rs.getString("typeSettings");
 
 				String newTypeSettings = getNewTypeSettings(
@@ -332,7 +382,7 @@ public abstract class BaseUpgradePortletId extends UpgradeProcess {
 				if (!Objects.equals(typeSettings, newTypeSettings)) {
 					ps2.setString(1, newTypeSettings);
 
-					ps2.setLong(2, layoutRevisionId);
+					ps2.setLong(2, rs.getLong("layoutRevisionId"));
 
 					ps2.addBatch();
 				}
@@ -359,8 +409,6 @@ public abstract class BaseUpgradePortletId extends UpgradeProcess {
 			ResultSet rs = ps1.executeQuery()) {
 
 			while (rs.next()) {
-				long plid = rs.getLong("plid");
-
 				String typeSettings = rs.getString("typeSettings");
 
 				String newTypeSettings = getNewTypeSettings(
@@ -370,7 +418,7 @@ public abstract class BaseUpgradePortletId extends UpgradeProcess {
 				if (!Objects.equals(typeSettings, newTypeSettings)) {
 					ps2.setString(1, newTypeSettings);
 
-					ps2.setLong(2, plid);
+					ps2.setLong(2, rs.getLong("plid"));
 
 					ps2.addBatch();
 				}
@@ -386,6 +434,8 @@ public abstract class BaseUpgradePortletId extends UpgradeProcess {
 
 		try {
 			updatePortletId(oldRootPortletId, newRootPortletId);
+
+			updatePortletItem(oldRootPortletId, newRootPortletId);
 
 			updateResourceAction(oldRootPortletId, newRootPortletId);
 
@@ -415,6 +465,16 @@ public abstract class BaseUpgradePortletId extends UpgradeProcess {
 				"' where portletId = '", oldRootPortletId, "'"));
 	}
 
+	protected void updatePortletItem(
+			String oldRootPortletId, String newRootPortletId)
+		throws Exception {
+
+		runSQL(
+			StringBundler.concat(
+				"update PortletItem set portletId = '", newRootPortletId,
+				"' where portletId = '", oldRootPortletId, "'"));
+	}
+
 	protected void updateResourceAction(String oldName, String newName)
 		throws Exception {
 
@@ -437,7 +497,7 @@ public abstract class BaseUpgradePortletId extends UpgradeProcess {
 					"' where name = '", oldName, "'"));
 		}
 		else {
-			StringBundler sb = new StringBundler(5 + 3 * actionIds.size());
+			StringBundler sb = new StringBundler(5 + (3 * actionIds.size()));
 
 			sb.append("update ResourceAction set name = '");
 			sb.append(newName);

@@ -14,12 +14,8 @@
 
 import ClayButton from '@clayui/button';
 import ClayForm, {ClayInput} from '@clayui/form';
-import {
-	FieldBaseProxy,
-	connectStore,
-	getConnectedReactComponentAdapter,
-} from 'dynamic-data-mapping-form-field-type';
-import {ItemSelectorDialog} from 'frontend-js-web';
+import {ReactFieldBase} from 'dynamic-data-mapping-form-field-type';
+import {openSelectionDialog} from 'frontend-js-web';
 import React, {useEffect, useState} from 'react';
 
 const LayoutSelector = ({
@@ -53,16 +49,12 @@ const LayoutSelector = ({
 	const handleItemSelectorTriggerClick = (event) => {
 		event.preventDefault();
 
-		const itemSelectorDialog = new ItemSelectorDialog({
-			eventName: `${portletNamespace}selectLayout`,
-			singleSelect: true,
+		openSelectionDialog({
+			onSelect: handleFieldChanged,
+			selectEventName: `${portletNamespace}selectLayout`,
 			title: Liferay.Language.get('page'),
 			url: itemSelectorURL,
 		});
-
-		itemSelectorDialog.on('selectedItemChange', handleFieldChanged);
-
-		itemSelectorDialog.open();
 	};
 
 	return (
@@ -113,34 +105,28 @@ const LayoutSelector = ({
 	);
 };
 
-const LayoutSelectorProxy = connectStore(
-	({
-		emit,
-		itemSelectorURL,
-		name,
-		portletNamespace,
-		predefinedValue,
-		readOnly,
-		value,
-		...otherProps
-	}) => (
-		<FieldBaseProxy {...otherProps} name={name} readOnly={readOnly}>
-			<LayoutSelector
-				disabled={readOnly}
-				inputValue={value && value !== '' ? value : predefinedValue}
-				itemSelectorURL={itemSelectorURL}
-				name={name}
-				onChange={(value) => emit('fieldEdited', {}, value)}
-				portletNamespace={portletNamespace}
-			/>
-		</FieldBaseProxy>
-	)
+const Main = ({
+	itemSelectorURL,
+	name,
+	onChange,
+	portletNamespace,
+	predefinedValue,
+	readOnly,
+	value,
+	...otherProps
+}) => (
+	<ReactFieldBase {...otherProps} name={name} readOnly={readOnly}>
+		<LayoutSelector
+			disabled={readOnly}
+			inputValue={value && value !== '' ? value : predefinedValue}
+			itemSelectorURL={itemSelectorURL}
+			name={name}
+			onChange={(value) => onChange({}, value)}
+			portletNamespace={portletNamespace}
+		/>
+	</ReactFieldBase>
 );
 
-const ReactLayoutSelectorAdapter = getConnectedReactComponentAdapter(
-	LayoutSelectorProxy,
-	'link_to_layout'
-);
+Main.displayName = 'LayoutSelector';
 
-export {ReactLayoutSelectorAdapter};
-export default ReactLayoutSelectorAdapter;
+export default Main;

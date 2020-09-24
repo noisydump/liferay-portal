@@ -327,6 +327,7 @@ definition {
 
 	@priority = "5"
 	test AssetPublisherCategoriesNavigation {
+		property portal.acceptance = "true";
 		property testray.component.names = "Training";
 
 		JSONCategory.addVocabulary(
@@ -422,6 +423,7 @@ definition {
 
 	@priority = "5"
 	test AssetPublisherFilterAndOrderByFieldType {
+		property portal.acceptance = "true";
 		property testray.component.names = "Training";
 
 		WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name");
@@ -563,6 +565,7 @@ definition {
 		AssetPublisherPortlet.configureFilterByFieldPG(
 			assetSubtype = "WC Structure Name",
 			fieldFilter = "Integer",
+			fieldValue = "",
 			selectedAsset = "Web Content Article");
 
 		Navigator.gotoSitePage(
@@ -577,10 +580,15 @@ definition {
 			pageName = "Asset Publisher Page",
 			siteName = "Test Site Name");
 
-		AssetPublisherPortlet.viewOrderedFieldPG(
-			firstAsset = "Web Content2 Title",
-			secondAsset = "Web Content1 Title",
-			thirdAsset = "Web Content3 Title");
+		var n = "1";
+
+		for (var title : list "Web Content2 Title,Web Content1 Title,Web Content3 Title") {
+			AssetPublisherPortlet.viewDisplayOrderPG(
+				assetTitle = "${title}",
+				rowNumber = "${n}");
+
+			var n = ${n} + 1;
+		}
 
 		Portlet.addPG(portletName = "Language Selector");
 
@@ -592,10 +600,15 @@ definition {
 			pageName = "Asset Publisher Page",
 			siteName = "Test Site Name");
 
-		AssetPublisherPortlet.viewOrderedFieldPG(
-			firstAsset = "Netz Inhalt1 Titel",
-			secondAsset = "Netz Inhalt3 Titel",
-			thirdAsset = "Netz Inhalt2 Titel");
+		var n = "1";
+
+		for (var title : list "Netz Inhalt1 Titel,Netz Inhalt3 Titel,Netz Inhalt2 Titel") {
+			AssetPublisherPortlet.viewDisplayOrderPG(
+				assetTitle = "${title}",
+				rowNumber = "${n}");
+
+			var n = ${n} + 1;
+		}
 
 		LanguagePortlet.selectLanguagePG(
 			locale = "en_US",
@@ -661,10 +674,15 @@ definition {
 			pageName = "Asset Publisher Page",
 			siteName = "Test Site Name");
 
-		AssetPublisherPortlet.viewOrderedFieldPG(
-			firstAsset = "Web Content1 Title",
-			secondAsset = "Web Content2 Title",
-			thirdAsset = "Web Content3 Title");
+		var n = "1";
+
+		for (var title : list "Web Content1 Title,Web Content2 Title,Web Content3 Title") {
+			AssetPublisherPortlet.viewDisplayOrderPG(
+				assetTitle = "${title}",
+				rowNumber = "${n}");
+
+			var n = ${n} + 1;
+		}
 
 		AssetPublisherPortlet.viewAssetPG(
 			assetContent = "Web Content4 Content",
@@ -938,7 +956,7 @@ definition {
 			assetContent = "Web Content Category Content",
 			assetTitle = "Web Content Category Title");
 
-		AssetPublisherPortlet.editConfigureTagsFilterPG(tagNameList = "tagname");
+		AssetPublisherPortlet.configureTagsFilterPG(tagNameList = "tagname");
 
 		Navigator.gotoSitePage(
 			pageName = "Asset Publisher Page",
@@ -1011,6 +1029,7 @@ definition {
 
 	@priority = "5"
 	test ViewAssetPaginationAndShowContentAddButtonViaAP {
+		property portal.acceptance = "true";
 		property testray.component.names = "Training";
 
 		Navigator.gotoSitePage(
@@ -1141,6 +1160,7 @@ definition {
 				userScreenName = "${userScreenName}");
 
 			JSONUser.setFirstPassword(
+				agreeToTermsAndAnswerReminderQuery = "true",
 				requireReset = "false",
 				userEmailAddress = "${userEmailAddress}");
 
@@ -1243,11 +1263,21 @@ definition {
 			entryContent = "Blogs Entry1 Content",
 			entryTitle = "Blogs Entry1 Title");
 
-		AssertElementNotPresent(locator1 = "Relatedassets#ASSET_TITLE_IMAGE_2");
+		AssertElementPresent(
+			locator1 = "Relatedassets#ASSET_ENTRY_STICKER",
+			rowNumber = "1");
 
-		AssertElementNotPresent(locator1 = "Relatedassets#ASSET_TITLE_2");
+		AssertElementNotPresent(
+			locator1 = "Relatedassets#ASSET_ENTRY_STICKER",
+			rowNumber = "2");
 
-		AssertElementNotPresent(locator1 = "Relatedassets#ASSET_EDIT_2");
+		AssertElementNotPresent(
+			locator1 = "Relatedassets#ASSET_TITLE",
+			rowNumber = "2");
+
+		AssertElementNotPresent(
+			locator1 = "Relatedassets#ASSET_EDIT",
+			rowNumber = "2");
 
 		Navigator.gotoSitePage(
 			pageName = "Blogs Page",
@@ -1266,11 +1296,21 @@ definition {
 			assetType = "Blogs Entry",
 			entryTitle = "Blogs Entry2 Title");
 
-		AssertElementNotPresent(locator1 = "Relatedassets#ASSET_TITLE_IMAGE_2");
+		AssertElementPresent(
+			locator1 = "Relatedassets#ASSET_ENTRY_STICKER",
+			rowNumber = "1");
 
-		AssertElementNotPresent(locator1 = "Relatedassets#ASSET_TITLE_2");
+		AssertElementNotPresent(
+			locator1 = "Relatedassets#ASSET_ENTRY_STICKER",
+			rowNumber = "2");
 
-		AssertElementNotPresent(locator1 = "Relatedassets#ASSET_EDIT_2");
+		AssertElementNotPresent(
+			locator1 = "Relatedassets#ASSET_TITLE",
+			rowNumber = "2");
+
+		AssertElementNotPresent(
+			locator1 = "Relatedassets#ASSET_EDIT",
+			rowNumber = "2");
 	}
 
 	@priority = "4"

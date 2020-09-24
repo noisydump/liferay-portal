@@ -19,6 +19,9 @@ import com.liferay.bean.portlet.extension.ScopedBean;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
+
+import javax.mvc.RedirectScoped;
 
 import javax.portlet.MutableRenderParameters;
 import javax.portlet.PortletConfig;
@@ -26,6 +29,7 @@ import javax.portlet.PortletRequest;
 import javax.portlet.PortletResponse;
 import javax.portlet.PortletSession;
 import javax.portlet.RenderParameters;
+import javax.portlet.RenderResponse;
 import javax.portlet.StateAwareResponse;
 import javax.portlet.annotations.PortletSerializable;
 import javax.portlet.annotations.RenderStateScoped;
@@ -49,11 +53,11 @@ public class SpringScopedBeanManager {
 			StateAwareResponse stateAwareResponse =
 				(StateAwareResponse)_portletResponse;
 
-			Enumeration<String> attributeNames =
+			Enumeration<String> enumeration =
 				_portletRequest.getAttributeNames();
 
-			while (attributeNames.hasMoreElements()) {
-				String attributeName = attributeNames.nextElement();
+			while (enumeration.hasMoreElements()) {
+				String attributeName = enumeration.nextElement();
 
 				if (!attributeName.startsWith(_ATTRIBUTE_NAME_PREFIX)) {
 					continue;
@@ -92,6 +96,33 @@ public class SpringScopedBeanManager {
 				mutableRenderParameters.setValues(
 					_getParameterName(portletSerializable),
 					portletSerializable.serialize());
+			}
+		}
+
+		if (_portletResponse instanceof RenderResponse) {
+			PortletSession portletSession = _portletRequest.getPortletSession(
+				true);
+
+			Enumeration<String> enumeration =
+				portletSession.getAttributeNames();
+
+			while (enumeration.hasMoreElements()) {
+				String name = enumeration.nextElement();
+
+				Object value = portletSession.getAttribute(name);
+
+				if (value instanceof ScopedBean) {
+					SpringScopedBean springScopedBean = (SpringScopedBean)value;
+
+					if (Objects.equals(
+							springScopedBean.getScopeName(),
+							RedirectScoped.class.getSimpleName())) {
+
+						springScopedBean.destroy();
+
+						portletSession.removeAttribute(name);
+					}
+				}
 			}
 		}
 
@@ -141,6 +172,13 @@ public class SpringScopedBeanManager {
 			_ATTRIBUTE_NAME_PREFIX.concat(name), subscope);
 	}
 
+	public SpringScopedBean getRedirectScopedBean(String name) {
+		PortletSession portletSession = _portletRequest.getPortletSession(true);
+
+		return (SpringScopedBean)portletSession.getAttribute(
+			_ATTRIBUTE_NAME_PREFIX.concat(name));
+	}
+
 	public SpringScopedBean getRenderStateScopedBean(String name) {
 		return getPortletRequestScopedBean(name);
 	}
@@ -168,6 +206,15 @@ public class SpringScopedBeanManager {
 			_ATTRIBUTE_NAME_PREFIX.concat(name), springScopedBean, subscope);
 	}
 
+	public void setRedirectScopedBean(
+		String name, SpringScopedBean springScopedBean) {
+
+		PortletSession portletSession = _portletRequest.getPortletSession(true);
+
+		portletSession.setAttribute(
+			_ATTRIBUTE_NAME_PREFIX.concat(name), springScopedBean);
+	}
+
 	public void setRenderStateScopedBean(
 		String name, SpringScopedBean springScopedBean) {
 
@@ -176,10 +223,11 @@ public class SpringScopedBeanManager {
 
 		String parameterName = _getParameterName(portletSerializable);
 
-		SpringScopedBeanManager scopedBeanManager =
+		SpringScopedBeanManager springScopedBeanManager =
 			SpringScopedBeanManagerThreadLocal.getCurrentScopedBeanManager();
 
-		PortletRequest portletRequest = scopedBeanManager.getPortletRequest();
+		PortletRequest portletRequest =
+			springScopedBeanManager.getPortletRequest();
 
 		RenderParameters renderParameters =
 			portletRequest.getRenderParameters();

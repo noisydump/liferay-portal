@@ -18,13 +18,16 @@ import uuidv1 from 'uuid/v1';
 
 import Client from './client';
 import EventQueue from './eventQueue';
+import MessageQueue from './messageQueue';
 import middlewares from './middlewares/defaults';
 import defaultPlugins from './plugins/defaults';
 import {
 	FLUSH_INTERVAL,
+	QUEUE_PRIORITY_IDENTITY,
 	STORAGE_KEY_CONTEXTS,
 	STORAGE_KEY_EVENTS,
 	STORAGE_KEY_IDENTITY,
+	STORAGE_KEY_MESSAGE_IDENTITY,
 	STORAGE_KEY_USER_ID,
 } from './utils/constants';
 import {normalizeEvent} from './utils/events';
@@ -57,22 +60,27 @@ class Analytics {
 			return instance;
 		}
 
-		const client = new Client();
+		instance.delay = config.flushInterval || FLUSH_INTERVAL;
+
+		const client = new Client({
+			delay: instance.delay,
+		});
 
 		const endpointUrl = (config.endpointUrl || '').replace(/\/$/, '');
 
 		instance.client = client;
 		instance.config = config;
 		instance.identityEndpoint = `${endpointUrl}/identity`;
-		instance.delay = config.flushInterval || FLUSH_INTERVAL;
+		instance._disposed = false;
 
 		// Register initial middlewares
 
-		middlewares.map((middleware) =>
+		middlewares.forEach((middleware) =>
 			instance.registerMiddleware(middleware)
 		);
 
 		this._initializeEventQueue();
+		this._initializeIdentityQueue();
 
 		// Initializes default plugins
 
@@ -96,6 +104,8 @@ class Analytics {
 				if (!unflushedEvents.length) {
 					this.resetContext();
 				}
+
+				instance.client.flush();
 			},
 			shouldFlush: () => {
 				if (this._isTrackingDisabled()) {
@@ -110,6 +120,21 @@ class Analytics {
 		});
 
 		instance._eventQueue = eventQueue;
+	}
+
+	/**
+	 * Create member instance of MessageQueue to store identity messages.
+	 */
+	_initializeIdentityQueue() {
+		const identityQueue = new MessageQueue(STORAGE_KEY_MESSAGE_IDENTITY);
+
+		instance._identityQueue = identityQueue;
+
+		instance.client.addQueue(identityQueue, {
+			endpointUrl: instance.identityEndpoint,
+			name: STORAGE_KEY_MESSAGE_IDENTITY,
+			priority: QUEUE_PRIORITY_IDENTITY,
+		});
 	}
 
 	/**
@@ -196,7 +221,7 @@ class Analytics {
 		}
 
 		if (typeof middleware === 'function') {
-			this.client.use(middleware);
+			middlewares.push(middleware);
 		}
 	}
 
@@ -207,7 +232,11 @@ class Analytics {
 	 * @param {Object} eventProps Complementary information about the event
 	 */
 	send(eventId, applicationId, eventProps) {
-		if (this._isTrackingDisabled() || !applicationId) {
+		if (
+			this._isTrackingDisabled() ||
+			!applicationId ||
+			instance._disposed
+		) {
 			return;
 		}
 
@@ -255,7 +284,9 @@ class Analytics {
 	 * Clears interval and calls plugins disposers if available
 	 */
 	disposeInternal() {
+		instance._disposed = true;
 		instance._eventQueue.dispose();
+		instance.client.dispose();
 
 		if (instance._pluginDisposers) {
 			instance._pluginDisposers
@@ -404,17 +435,17 @@ class Analytics {
 		if (newIdentityHash !== storedIdentityHash) {
 			setItem(STORAGE_KEY_IDENTITY, newIdentityHash);
 
-			identityHash = instance.client
-				.send({
-					payload: {
-						channelId,
-						dataSourceId,
-						identity,
-						userId,
-					},
-					url: this.identityEndpoint,
-				})
-				.then(() => newIdentityHash);
+			instance._identityQueue.addItem({
+				channelId,
+				dataSourceId,
+				id: newIdentityHash,
+				identity,
+				userId,
+			});
+
+			instance.client.flush();
+
+			identityHash = newIdentityHash;
 		}
 
 		return identityHash;

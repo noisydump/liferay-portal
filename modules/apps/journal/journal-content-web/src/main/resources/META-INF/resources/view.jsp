@@ -159,18 +159,13 @@ if (journalContentDisplayContext.isShowArticle()) {
 							/>
 
 							<c:if test="<%= articleDisplay.isPaginate() %>">
-
-								<%
-								PortletURL portletURL = renderResponse.createRenderURL();
-								%>
-
 								<liferay-ui:page-iterator
 									cur="<%= articleDisplay.getCurrentPage() %>"
 									curParam="page"
 									delta="<%= 1 %>"
 									id="articleDisplayPages"
 									maxPages="<%= 25 %>"
-									portletURL="<%= portletURL %>"
+									portletURL="<%= renderResponse.createRenderURL() %>"
 									total="<%= articleDisplay.getNumberOfPages() %>"
 									type="article"
 								/>
@@ -206,14 +201,17 @@ if (journalContentDisplayContext.isShowArticle()) {
 	<c:if test="<%= ListUtil.isNotEmpty(selectedUserToolAssetAddonEntries) || (ratingsContentMetadataAssetAddonEntry != null) %>">
 		<div class="separator"><!-- --></div>
 
-		<div class="autofit-float autofit-row autofit-row-center mb-4 user-tool-asset-addon-entries">
-
+		<clay:content-row
+			cssClass="mb-4 user-tool-asset-addon-entries"
+			floatElements=""
+			verticalAlign="center"
+		>
 			<c:if test="<%= ratingsContentMetadataAssetAddonEntry != null %>">
-				<div class="autofit-col">
+				<clay:content-row>
 					<liferay-asset:asset-addon-entry-display
 						assetAddonEntries="<%= Collections.singletonList(ratingsContentMetadataAssetAddonEntry) %>"
 					/>
-				</div>
+				</clay:content-row>
 			</c:if>
 
 			<c:if test="<%= ListUtil.isNotEmpty(selectedUserToolAssetAddonEntries) %>">
@@ -221,7 +219,7 @@ if (journalContentDisplayContext.isShowArticle()) {
 					assetAddonEntries="<%= selectedUserToolAssetAddonEntries %>"
 				/>
 			</c:if>
-		</div>
+		</clay:content-row>
 	</c:if>
 
 	<%

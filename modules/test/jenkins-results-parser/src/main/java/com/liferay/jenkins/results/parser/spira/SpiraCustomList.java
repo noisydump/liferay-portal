@@ -14,11 +14,13 @@
 
 package com.liferay.jenkins.results.parser.spira;
 
+import com.liferay.jenkins.results.parser.JenkinsResultsParserUtil;
 import com.liferay.jenkins.results.parser.JenkinsResultsParserUtil.HttpRequestMethod;
 
 import java.io.IOException;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -128,11 +130,9 @@ public class SpiraCustomList extends BaseSpiraArtifact {
 	}
 
 	public List<SpiraCustomList.Value> getSpiraCustomListValues() {
-		if (_spiraCustomListValues != null) {
+		if (!_spiraCustomListValues.isEmpty()) {
 			return _spiraCustomListValues;
 		}
-
-		_spiraCustomListValues = new ArrayList<>();
 
 		SpiraProject spiraProject = getSpiraProject();
 
@@ -168,10 +168,28 @@ public class SpiraCustomList extends BaseSpiraArtifact {
 		return _spiraCustomListValues;
 	}
 
+	@Override
+	public String getURL() {
+		SpiraProject spiraProject = getSpiraProject();
+
+		return JenkinsResultsParserUtil.combine(
+			SPIRA_BASE_URL, "/pt/",
+			String.valueOf(spiraProject.getProjectTemplateID()),
+			"/Administration/CustomListDetails.aspx?customPropertyListId=",
+			String.valueOf(getID()));
+	}
+
 	public static class Value extends BaseSpiraArtifact {
 
 		public SpiraCustomList getSpiraCustomList() {
 			return _spiraCustomList;
+		}
+
+		@Override
+		public String getURL() {
+			SpiraCustomList spiraCustomList = getSpiraCustomList();
+
+			return spiraCustomList.getURL();
 		}
 
 		protected Value(
@@ -185,7 +203,7 @@ public class SpiraCustomList extends BaseSpiraArtifact {
 			_spiraCustomList = spiraCustomList;
 		}
 
-		protected static final String ID_KEY = "CustomPropertyValueId";
+		protected static final String KEY_ID = "CustomPropertyValueId";
 
 		private final SpiraCustomList _spiraCustomList;
 
@@ -200,7 +218,7 @@ public class SpiraCustomList extends BaseSpiraArtifact {
 			new SearchQuery.SearchParameter[searchParameters.length + 1];
 
 		customSearchParameters[0] = new SearchQuery.SearchParameter(
-			SpiraProject.ID_KEY, spiraProject.getID());
+			SpiraProject.KEY_ID, spiraProject.getID());
 
 		for (int i = 0; i < searchParameters.length; i++) {
 			customSearchParameters[i + 1] = searchParameters[i];
@@ -230,7 +248,7 @@ public class SpiraCustomList extends BaseSpiraArtifact {
 
 	protected static final String ARTIFACT_TYPE_NAME = "custompropertylist";
 
-	protected static final String ID_KEY = "CustomPropertyListId";
+	protected static final String KEY_ID = "CustomPropertyListId";
 
 	private static List<JSONObject> _requestSpiraCustomLists(
 		SpiraProject spiraProject) {
@@ -253,7 +271,7 @@ public class SpiraCustomList extends BaseSpiraArtifact {
 					i);
 
 				responseJSONObject.put(
-					SpiraProject.ID_KEY, spiraProject.getID());
+					SpiraProject.KEY_ID, spiraProject.getID());
 
 				spiraCustomLists.add(responseJSONObject);
 			}
@@ -288,6 +306,7 @@ public class SpiraCustomList extends BaseSpiraArtifact {
 	}
 
 	private final Class<? extends SpiraArtifact> _spiraArtifactClass;
-	private List<SpiraCustomList.Value> _spiraCustomListValues;
+	private final List<SpiraCustomList.Value> _spiraCustomListValues =
+		Collections.synchronizedList(new ArrayList<Value>());
 
 }

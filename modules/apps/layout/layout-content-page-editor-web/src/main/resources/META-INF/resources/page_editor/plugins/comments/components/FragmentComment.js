@@ -21,6 +21,7 @@ import {openToast} from 'frontend-js-web';
 import PropTypes from 'prop-types';
 import React, {useEffect, useState} from 'react';
 
+import {HIGHLIGHTED_COMMENT_ID_KEY} from '../../../app/config/constants/highlightedCommentIdKey';
 import FragmentService from '../../../app/services/FragmentService';
 import {useDispatch, useSelector} from '../../../app/store/index';
 import deleteFragmentComment from '../../../app/thunks/deleteFragmentComment';
@@ -100,7 +101,6 @@ export default function FragmentComment({
 						: Liferay.Language.get(
 								'the-comment-could-not-be-resolved'
 						  ),
-					title: Liferay.Language.get('error'),
 					type: 'danger',
 				});
 
@@ -124,11 +124,11 @@ export default function FragmentComment({
 
 	useEffect(() => {
 		const highlightMessageId = window.sessionStorage.getItem(
-			'HIGHLIGHTED_COMMENT_ID_KEY'
+			HIGHLIGHTED_COMMENT_ID_KEY
 		);
 
 		if (highlightMessageId === commentId) {
-			window.sessionStorage.removeItem('HIGHLIGHTED_COMMENT_ID_KEY');
+			window.sessionStorage.removeItem(HIGHLIGHTED_COMMENT_ID_KEY);
 
 			setHighlighted(true);
 		}
@@ -276,7 +276,6 @@ export default function FragmentComment({
 								message: Liferay.Language.get(
 									'the-comment-could-not-be-deleted'
 								),
-								title: Liferay.Language.get('error'),
 								type: 'danger',
 							});
 						})

@@ -57,11 +57,15 @@ public interface LayoutBranchLocalService
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this interface directly. Always use {@link LayoutBranchLocalServiceUtil} to access the layout branch local service. Add custom service methods to <code>com.liferay.portal.service.impl.LayoutBranchLocalServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface.
+	 * Never modify this interface directly. Add custom service methods to <code>com.liferay.portal.service.impl.LayoutBranchLocalServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface. Consume the layout branch local service via injection or a <code>org.osgi.util.tracker.ServiceTracker</code>. Use {@link LayoutBranchLocalServiceUtil} if injection and service tracking are not available.
 	 */
 
 	/**
 	 * Adds the layout branch to the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect LayoutBranchLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param layoutBranch the layout branch
 	 * @return the layout branch that was added
@@ -97,6 +101,10 @@ public interface LayoutBranchLocalService
 	/**
 	 * Deletes the layout branch from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect LayoutBranchLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param layoutBranch the layout branch
 	 * @return the layout branch that was removed
 	 */
@@ -105,6 +113,10 @@ public interface LayoutBranchLocalService
 
 	/**
 	 * Deletes the layout branch with the primary key from the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect LayoutBranchLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param layoutBranchId the primary key of the layout branch
 	 * @return the layout branch that was removed
@@ -270,6 +282,10 @@ public interface LayoutBranchLocalService
 
 	/**
 	 * Updates the layout branch in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect LayoutBranchLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param layoutBranch the layout branch
 	 * @return the layout branch that was updated

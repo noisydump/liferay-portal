@@ -23,19 +23,19 @@ export default function TimeSpanSelector({
 	onNextTimeSpanClick,
 	onPreviousTimeSpanClick,
 	onTimeSpanChange,
-	timeSpanOption,
+	timeSpanKey,
 	timeSpanOptions,
 }) {
 	const {validAnalyticsConnection} = useContext(ConnectionContext);
 
 	return (
-		<div className="d-flex mb-3 mt-3">
+		<div className="d-flex mb-3 mt-4">
 			<ClaySelect
 				aria-label={Liferay.Language.get('select-date-range')}
 				className="bg-white"
 				disabled={!validAnalyticsConnection}
 				onChange={onTimeSpanChange}
-				value={timeSpanOption}
+				value={timeSpanKey}
 			>
 				{timeSpanOptions.map((option) => {
 					return (
@@ -90,7 +90,7 @@ TimeSpanSelector.proptypes = {
 	onNextTimeSpanClick: PropTypes.func.isRequired,
 	onPreviousTimeSpanClick: PropTypes.func.isRequired,
 	onTimeSpanChange: PropTypes.func.isRequired,
-	timeSpanOption: PropTypes.string.isRequired,
+	timeSpanKey: PropTypes.string.isRequired,
 	timeSpanOptions: PropTypes.arrayOf(
 		PropTypes.shape({
 			key: PropTypes.string.isRequired,

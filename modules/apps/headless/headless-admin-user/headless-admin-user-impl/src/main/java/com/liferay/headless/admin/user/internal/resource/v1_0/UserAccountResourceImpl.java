@@ -199,8 +199,8 @@ public class UserAccountResourceImpl
 
 		User user = _userService.addUser(
 			contextCompany.getCompanyId(), true, null, null, false,
-			userAccount.getAlternateName(), userAccount.getEmailAddress(), 0,
-			null, contextAcceptLanguage.getPreferredLocale(),
+			userAccount.getAlternateName(), userAccount.getEmailAddress(),
+			contextAcceptLanguage.getPreferredLocale(),
 			userAccount.getGivenName(), userAccount.getAdditionalName(),
 			userAccount.getFamilyName(), _getPrefixId(userAccount),
 			_getSuffixId(userAccount), true, _getBirthdayMonth(userAccount),
@@ -260,14 +260,14 @@ public class UserAccountResourceImpl
 			_userService.updateUser(
 				userAccountId, null, null, null, false, null, null,
 				userAccount.getAlternateName(), userAccount.getEmailAddress(),
-				user.getFacebookId(), user.getOpenId(), false, null,
-				user.getLanguageId(), user.getTimeZoneId(), user.getGreeting(),
-				user.getComments(), userAccount.getGivenName(),
-				userAccount.getAdditionalName(), userAccount.getFamilyName(),
-				_getPrefixId(userAccount), _getSuffixId(userAccount), true,
-				_getBirthdayMonth(userAccount), _getBirthdayDay(userAccount),
-				_getBirthdayYear(userAccount), sms, facebook, jabber, skype,
-				twitter, userAccount.getJobTitle(), user.getGroupIds(),
+				false, null, user.getLanguageId(), user.getTimeZoneId(),
+				user.getGreeting(), user.getComments(),
+				userAccount.getGivenName(), userAccount.getAdditionalName(),
+				userAccount.getFamilyName(), _getPrefixId(userAccount),
+				_getSuffixId(userAccount), true, _getBirthdayMonth(userAccount),
+				_getBirthdayDay(userAccount), _getBirthdayYear(userAccount),
+				sms, facebook, jabber, skype, twitter,
+				userAccount.getJobTitle(), user.getGroupIds(),
 				user.getOrganizationIds(), user.getRoleIds(),
 				_userGroupRoleLocalService.getUserGroupRoles(userAccountId),
 				user.getUserGroupIds(), _getAddresses(userAccount),
@@ -277,6 +277,66 @@ public class UserAccountResourceImpl
 				_announcementsDeliveryLocalService.getUserDeliveries(
 					userAccountId),
 				ServiceContextFactory.getInstance(contextHttpServletRequest)));
+	}
+
+	@Override
+	protected void preparePatch(
+		UserAccount userAccount, UserAccount existingUserAccount) {
+
+		UserAccountContactInformation userAccountContactInformation =
+			userAccount.getUserAccountContactInformation();
+
+		if (userAccountContactInformation != null) {
+			UserAccountContactInformation
+				existingUserAccountContactInformation =
+					existingUserAccount.getUserAccountContactInformation();
+
+			Optional.ofNullable(
+				userAccountContactInformation.getEmailAddresses()
+			).ifPresent(
+				existingUserAccountContactInformation::setEmailAddresses
+			);
+			Optional.ofNullable(
+				userAccountContactInformation.getFacebook()
+			).ifPresent(
+				existingUserAccountContactInformation::setFacebook
+			);
+			Optional.ofNullable(
+				userAccountContactInformation.getJabber()
+			).ifPresent(
+				existingUserAccountContactInformation::setJabber
+			);
+			Optional.ofNullable(
+				userAccountContactInformation.getPostalAddresses()
+			).ifPresent(
+				existingUserAccountContactInformation::setPostalAddresses
+			);
+			Optional.ofNullable(
+				userAccountContactInformation.getSkype()
+			).ifPresent(
+				existingUserAccountContactInformation::setSkype
+			);
+			Optional.ofNullable(
+				userAccountContactInformation.getSms()
+			).ifPresent(
+				existingUserAccountContactInformation::setSms
+			);
+			Optional.ofNullable(
+				userAccountContactInformation.getTelephones()
+			).ifPresent(
+				existingUserAccountContactInformation::setTelephones
+			);
+			Optional.ofNullable(
+				userAccountContactInformation.getTwitter()
+			).ifPresent(
+				existingUserAccountContactInformation::setTwitter
+			);
+			Optional.ofNullable(
+				userAccountContactInformation.getWebUrls()
+			).ifPresent(
+				existingUserAccountContactInformation::setWebUrls
+			);
+		}
 	}
 
 	private List<Address> _getAddresses(UserAccount userAccount) {

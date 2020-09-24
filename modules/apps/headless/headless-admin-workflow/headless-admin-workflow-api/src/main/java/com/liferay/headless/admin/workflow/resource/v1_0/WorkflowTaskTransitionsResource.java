@@ -14,7 +14,10 @@
 
 package com.liferay.headless.admin.workflow.resource.v1_0;
 
+import com.liferay.headless.admin.workflow.dto.v1_0.WorkflowTaskIds;
 import com.liferay.headless.admin.workflow.dto.v1_0.WorkflowTaskTransitions;
+import com.liferay.portal.kernel.service.GroupLocalService;
+import com.liferay.portal.kernel.service.RoleLocalService;
 import com.liferay.portal.vulcan.accept.language.AcceptLanguage;
 
 import java.util.Locale;
@@ -44,8 +47,8 @@ public interface WorkflowTaskTransitionsResource {
 		return FactoryHolder.factory.create();
 	}
 
-	public WorkflowTaskTransitions getWorkflowTaskTransition(
-			Long[] workflowTaskIds)
+	public WorkflowTaskTransitions postWorkflowTaskTransition(
+			WorkflowTaskIds workflowTaskIds)
 		throws Exception;
 
 	public default void setContextAcceptLanguage(
@@ -68,6 +71,10 @@ public interface WorkflowTaskTransitionsResource {
 
 	public void setContextUser(
 		com.liferay.portal.kernel.model.User contextUser);
+
+	public void setGroupLocalService(GroupLocalService groupLocalService);
+
+	public void setRoleLocalService(RoleLocalService roleLocalService);
 
 	public static class FactoryHolder {
 

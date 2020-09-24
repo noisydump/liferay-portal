@@ -13,6 +13,7 @@
  */
 
 import ClayButton from '@clayui/button';
+import ClayLayout from '@clayui/layout';
 import {FieldArray, withFormik} from 'formik';
 import {debounce, fetch, openModal} from 'frontend-js-web';
 import PropTypes from 'prop-types';
@@ -143,7 +144,6 @@ class SegmentEdit extends Component {
 					message: Liferay.Language.get(
 						'an-unexpected-error-occurred'
 					),
-					title: Liferay.Language.get('error'),
 					type: 'danger',
 				});
 			});
@@ -311,7 +311,6 @@ class SegmentEdit extends Component {
 				errorMessages.forEach((message) => {
 					Liferay.Util.openToast({
 						message,
-						title: Liferay.Language.get('error'),
 						type: 'danger',
 					});
 				});
@@ -396,7 +395,7 @@ class SegmentEdit extends Component {
 				/>
 
 				<div className="form-header">
-					<div className="container-fluid container-fluid-max-xl form-header-container">
+					<ClayLayout.ContainerFluid className="form-header-container">
 						<div className="form-header-section-left">
 							<FieldArray
 								name="values.name"
@@ -476,7 +475,7 @@ class SegmentEdit extends Component {
 								</div>
 							</div>
 						)}
-					</div>
+					</ClayLayout.ContainerFluid>
 				</div>
 
 				<div className="form-body">

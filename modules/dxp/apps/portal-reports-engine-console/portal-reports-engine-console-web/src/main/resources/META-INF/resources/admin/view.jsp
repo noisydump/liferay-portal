@@ -18,8 +18,8 @@
 
 <liferay-util:include page="/admin/toolbar.jsp" servletContext="<%= application %>" />
 
-<clay:container
-	className="main-content-body"
+<clay:container-fluid
+	cssClass="main-content-body"
 >
 	<c:choose>
 		<c:when test="<%= hasAddSourcePermission && reportsEngineDisplayContext.isSourcesTabSelected() %>">
@@ -32,4 +32,4 @@
 			<liferay-util:include page="/admin/report/entries.jsp" servletContext="<%= application %>" />
 		</c:otherwise>
 	</c:choose>
-</clay:container>
+</clay:container-fluid>

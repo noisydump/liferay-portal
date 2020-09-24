@@ -14,16 +14,19 @@
 
 package com.liferay.layout.page.template.admin.web.internal.headless.delivery.dto.v1_0.structure.exporter;
 
+import com.liferay.headless.delivery.dto.v1_0.ClassNameReference;
+import com.liferay.headless.delivery.dto.v1_0.ClassPKReference;
+import com.liferay.headless.delivery.dto.v1_0.CollectionConfig;
 import com.liferay.headless.delivery.dto.v1_0.PageCollectionDefinition;
 import com.liferay.headless.delivery.dto.v1_0.PageElement;
-import com.liferay.layout.util.structure.CollectionLayoutStructureItem;
+import com.liferay.info.list.provider.item.selector.criterion.InfoListProviderItemSelectorReturnType;
+import com.liferay.item.selector.criteria.InfoListItemSelectorReturnType;
+import com.liferay.layout.util.structure.CollectionStyledLayoutStructureItem;
 import com.liferay.layout.util.structure.LayoutStructureItem;
 import com.liferay.portal.kernel.json.JSONObject;
+import com.liferay.portal.kernel.util.Validator;
 
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Set;
+import java.util.Objects;
 
 import org.osgi.service.component.annotations.Component;
 
@@ -32,11 +35,11 @@ import org.osgi.service.component.annotations.Component;
  */
 @Component(service = LayoutStructureItemExporter.class)
 public class CollectionLayoutStructureItemExporter
-	implements LayoutStructureItemExporter {
+	extends BaseStyledLayoutStructureItemExporter {
 
 	@Override
 	public String getClassName() {
-		return CollectionLayoutStructureItem.class.getName();
+		return CollectionStyledLayoutStructureItem.class.getName();
 	}
 
 	@Override
@@ -44,20 +47,52 @@ public class CollectionLayoutStructureItemExporter
 		long groupId, LayoutStructureItem layoutStructureItem,
 		boolean saveInlineContent, boolean saveMappingConfiguration) {
 
-		CollectionLayoutStructureItem collectionLayoutStructureItem =
-			(CollectionLayoutStructureItem)layoutStructureItem;
+		CollectionStyledLayoutStructureItem
+			collectionStyledLayoutStructureItem =
+				(CollectionStyledLayoutStructureItem)layoutStructureItem;
 
 		return new PageElement() {
 			{
 				definition = new PageCollectionDefinition() {
 					{
-						collectionConfig = _getConfigAsMap(
-							collectionLayoutStructureItem.
-								getCollectionJSONObject());
+						collectionConfig = _getCollectionConfig(
+							collectionStyledLayoutStructureItem);
+						listItemStyle =
+							collectionStyledLayoutStructureItem.
+								getListItemStyle();
+						listStyle =
+							collectionStyledLayoutStructureItem.getListStyle();
 						numberOfColumns =
-							collectionLayoutStructureItem.getNumberOfColumns();
+							collectionStyledLayoutStructureItem.
+								getNumberOfColumns();
 						numberOfItems =
-							collectionLayoutStructureItem.getNumberOfItems();
+							collectionStyledLayoutStructureItem.
+								getNumberOfItems();
+						templateKey =
+							collectionStyledLayoutStructureItem.
+								getTemplateKey();
+
+						setFragmentStyle(
+							() -> {
+								JSONObject itemConfigJSONObject =
+									collectionStyledLayoutStructureItem.
+										getItemConfigJSONObject();
+
+								return toFragmentStyle(
+									itemConfigJSONObject.getJSONObject(
+										"styles"),
+									saveMappingConfiguration);
+							});
+
+						setFragmentViewports(
+							() -> {
+								JSONObject itemConfigJSONObject =
+									collectionStyledLayoutStructureItem.
+										getItemConfigJSONObject();
+
+								return getFragmentViewPorts(
+									itemConfigJSONObject);
+							});
 					}
 				};
 				type = PageElement.Type.COLLECTION;
@@ -65,24 +100,57 @@ public class CollectionLayoutStructureItemExporter
 		};
 	}
 
-	private Map<String, Object> _getConfigAsMap(JSONObject jsonObject) {
+	private CollectionConfig _getCollectionConfig(
+		CollectionStyledLayoutStructureItem
+			collectionStyledLayoutStructureItem) {
+
+		JSONObject jsonObject =
+			collectionStyledLayoutStructureItem.getCollectionJSONObject();
+
 		if (jsonObject == null) {
 			return null;
 		}
 
-		return new HashMap<String, Object>() {
-			{
-				Set<String> keys = jsonObject.keySet();
+		String type = jsonObject.getString("type");
 
-				Iterator<String> iterator = keys.iterator();
+		if (Validator.isNull(type)) {
+			return null;
+		}
 
-				while (iterator.hasNext()) {
-					String key = iterator.next();
+		if (Objects.equals(
+				type, InfoListItemSelectorReturnType.class.getName())) {
 
-					put(key, jsonObject.get(key));
+			return new CollectionConfig() {
+				{
+					collectionReference = new ClassPKReference() {
+						{
+							className = portal.getClassName(
+								jsonObject.getInt("classNameId"));
+							classPK = jsonObject.getLong("classPK");
+						}
+					};
+					collectionType = CollectionType.COLLECTION;
 				}
-			}
-		};
+			};
+		}
+		else if (Objects.equals(
+					type,
+					InfoListProviderItemSelectorReturnType.class.getName())) {
+
+			return new CollectionConfig() {
+				{
+					collectionReference = new ClassNameReference() {
+						{
+							className = jsonObject.getString("key");
+						}
+					};
+					collectionType =
+						CollectionConfig.CollectionType.COLLECTION_PROVIDER;
+				}
+			};
+		}
+
+		return null;
 	}
 
 }

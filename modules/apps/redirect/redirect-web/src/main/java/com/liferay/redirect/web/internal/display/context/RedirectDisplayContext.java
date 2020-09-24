@@ -17,10 +17,10 @@ package com.liferay.redirect.web.internal.display.context;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemList;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemListBuilder;
 import com.liferay.portal.kernel.dao.search.SearchContainer;
-import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.portlet.LiferayPortletRequest;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
+import com.liferay.portal.kernel.portlet.PortletURLUtil;
 import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.search.Hits;
 import com.liferay.portal.kernel.search.Indexer;
@@ -60,6 +60,7 @@ import java.util.stream.Stream;
 
 import javax.portlet.ActionRequest;
 import javax.portlet.ActionURL;
+import javax.portlet.PortletException;
 import javax.portlet.PortletURL;
 import javax.portlet.RenderURL;
 
@@ -170,9 +171,7 @@ public class RedirectDisplayContext {
 		return "redirectEntries";
 	}
 
-	public SearchContainer<RedirectEntry> searchContainer()
-		throws PortalException {
-
+	public SearchContainer<RedirectEntry> searchContainer() throws Exception {
 		if (_redirectEntrySearch != null) {
 			return _redirectEntrySearch;
 		}
@@ -191,7 +190,7 @@ public class RedirectDisplayContext {
 		return _redirectEntrySearch;
 	}
 
-	private OrderByComparator _getOrderByComparator() {
+	private OrderByComparator<RedirectEntry> _getOrderByComparator() {
 		boolean orderByAsc = StringUtil.equals(
 			_redirectEntrySearch.getOrderByType(), "asc");
 
@@ -232,8 +231,11 @@ public class RedirectDisplayContext {
 			!orderByAsc);
 	}
 
-	private PortletURL _getPortletURL() {
-		return _liferayPortletResponse.createRenderURL();
+	private PortletURL _getPortletURL() throws PortletException {
+		return PortletURLUtil.clone(
+			PortletURLUtil.getCurrent(
+				_liferayPortletRequest, _liferayPortletResponse),
+			_liferayPortletResponse);
 	}
 
 	private Sort _getSorts() {
@@ -276,27 +278,27 @@ public class RedirectDisplayContext {
 	}
 
 	private void _populateWithDatabase(RedirectEntrySearch redirectEntrySearch)
-		throws PortalException {
+		throws Exception {
 
 		ThemeDisplay themeDisplay =
 			(ThemeDisplay)_httpServletRequest.getAttribute(
 				WebKeys.THEME_DISPLAY);
 
-		redirectEntrySearch.setTotal(
-			_redirectEntryService.getRedirectEntriesCount(
-				themeDisplay.getScopeGroupId()));
-
 		redirectEntrySearch.setResults(
 			_redirectEntryService.getRedirectEntries(
 				themeDisplay.getScopeGroupId(), _redirectEntrySearch.getStart(),
 				_redirectEntrySearch.getEnd(), _getOrderByComparator()));
+		redirectEntrySearch.setTotal(
+			_redirectEntryService.getRedirectEntriesCount(
+				themeDisplay.getScopeGroupId()));
 	}
 
 	private void _populateWithSearchIndex(
 			RedirectEntrySearch redirectEntrySearch)
-		throws PortalException {
+		throws Exception {
 
-		Indexer indexer = IndexerRegistryUtil.getIndexer(RedirectEntry.class);
+		Indexer<RedirectEntry> indexer = IndexerRegistryUtil.getIndexer(
+			RedirectEntry.class);
 
 		SearchContext searchContext = SearchContextFactory.getInstance(
 			PortalUtil.getHttpServletRequest(_liferayPortletRequest));

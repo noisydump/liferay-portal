@@ -117,19 +117,19 @@ public class UpdateArticleMVCActionCommand extends BaseMVCActionCommand {
 				WebKeys.UPLOAD_EXCEPTION);
 
 		if (uploadException != null) {
-			Throwable cause = uploadException.getCause();
+			Throwable throwable = uploadException.getCause();
 
 			if (uploadException.isExceededLiferayFileItemSizeLimit()) {
-				throw new LiferayFileItemException(cause);
+				throw new LiferayFileItemException(throwable);
 			}
 
 			if (uploadException.isExceededFileSizeLimit() ||
 				uploadException.isExceededUploadRequestSizeLimit()) {
 
-				throw new ArticleContentSizeException(cause);
+				throw new ArticleContentSizeException(throwable);
 			}
 
-			throw new PortalException(cause);
+			throw new PortalException(throwable);
 		}
 
 		UploadPortletRequest uploadPortletRequest =
@@ -146,13 +146,8 @@ public class UpdateArticleMVCActionCommand extends BaseMVCActionCommand {
 
 		long groupId = ParamUtil.getLong(uploadPortletRequest, "groupId");
 		long folderId = ParamUtil.getLong(uploadPortletRequest, "folderId");
-		long classNameId = ParamUtil.getLong(
-			uploadPortletRequest, "classNameId");
-		long classPK = ParamUtil.getLong(uploadPortletRequest, "classPK");
 		String articleId = ParamUtil.getString(
 			uploadPortletRequest, "articleId");
-		boolean autoArticleId = ParamUtil.getBoolean(
-			uploadPortletRequest, "autoArticleId");
 		double version = ParamUtil.getDouble(uploadPortletRequest, "version");
 		Map<Locale, String> titleMap = LocalizationUtil.getLocalizationMap(
 			actionRequest, "titleMapAsXML");
@@ -182,7 +177,8 @@ public class UpdateArticleMVCActionCommand extends BaseMVCActionCommand {
 				ddmStructure.getStructureId(), serviceContext);
 		}
 
-		String content = _journalConverter.getContent(ddmStructure, fields);
+		String content = _journalConverter.getContent(
+			ddmStructure, fields, groupId);
 
 		Map<Locale, String> descriptionMap =
 			LocalizationUtil.getLocalizationMap(
@@ -319,6 +315,12 @@ public class UpdateArticleMVCActionCommand extends BaseMVCActionCommand {
 		if (actionName.equals("/journal/add_article")) {
 
 			// Add article
+
+			long classNameId = ParamUtil.getLong(
+				uploadPortletRequest, "classNameId");
+			long classPK = ParamUtil.getLong(uploadPortletRequest, "classPK");
+			boolean autoArticleId = ParamUtil.getBoolean(
+				uploadPortletRequest, "autoArticleId");
 
 			article = _journalArticleService.addArticle(
 				groupId, folderId, classNameId, classPK, articleId,

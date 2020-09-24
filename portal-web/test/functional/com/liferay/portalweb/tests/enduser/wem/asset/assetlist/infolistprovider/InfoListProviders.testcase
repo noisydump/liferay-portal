@@ -27,6 +27,8 @@ definition {
 	@description = "This is a use case for LPS-110191. The related assets should be in AP when select Related Assets as Collection Provider."
 	@priority = "5"
 	test DisplayRelatedAssetsInAssetPublisher {
+		property portal.acceptance = "true";
+
 		task ("Add a Web Content Article, a Blogs Entry and a Document") {
 			JSONWebcontent.addWebContent(
 				content = "Web Content Content",
@@ -117,12 +119,7 @@ definition {
 
 			MenuItem.click(menuItem = "Configuration");
 
-			LiferayEvent.waitForLiferayEvent(
-				attributeName = "src",
-				attributeValue = "dialog-iframe-popup",
-				eventName = "modalIframeLoaded");
-
-			SelectFrame(locator1 = "IFrame#DIALOG");
+			SelectFrame(locator1 = "IFrame#MODAL_BODY");
 
 			Navigator.gotoNavTab(navTab = "Asset Selection");
 
@@ -154,17 +151,17 @@ definition {
 		task ("Click the title of Web Content Article on Asset Publisher in Column 1") {
 			AssertClick(
 				key_assetTitle = "Web Content Title",
-				locator1 = "APAsset#ASSET_TITLE",
+				locator1 = "AP#ASSET_ABSTRACT_TITLE",
 				value1 = "Web Content Title");
 		}
 
 		task ("Assert Blogs Entry and Document are shown on Asset Publisher in Column 2") {
 			AssertTextEquals(
-				locator1 = "//div[@id='column-2']//section[contains(@id,'AssetPublisher')]//h4/*[contains(@class,'asset-title')][contains(.,'Blogs Entry Title')]",
+				locator1 = "//div[@id='column-2']//section[contains(@id,'AssetPublisher')]//*[contains(@class,'asset-title')][normalize-space(text())='Blogs Entry Title']",
 				value1 = "Blogs Entry Title");
 
 			AssertTextEquals(
-				locator1 = "//div[@id='column-2']//section[contains(@id,'AssetPublisher')]//h4/*[contains(@class,'asset-title')][contains(.,'Document_1.png')]",
+				locator1 = "//div[@id='column-2']//section[contains(@id,'AssetPublisher')]//*[contains(@class,'asset-title')][normalize-space(text())='Document_1.png']",
 				value1 = "Document_1.png");
 		}
 	}

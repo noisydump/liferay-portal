@@ -20,8 +20,8 @@
 PreviewSegmentsEntryUsersDisplayContext previewSegmentsEntryUsersDisplayContext = (PreviewSegmentsEntryUsersDisplayContext)request.getAttribute(SegmentsWebKeys.PREVIEW_SEGMENTS_ENTRY_USERS_DISPLAY_CONTEXT);
 %>
 
-<clay:container
-	className="main-content-body"
+<clay:container-fluid
+	cssClass="main-content-body"
 >
 	<liferay-ui:search-container
 		searchContainer="<%= previewSegmentsEntryUsersDisplayContext.getSearchContainer() %>"
@@ -52,4 +52,4 @@ PreviewSegmentsEntryUsersDisplayContext previewSegmentsEntryUsersDisplayContext 
 			markupView="lexicon"
 		/>
 	</liferay-ui:search-container>
-</clay:container>
+</clay:container-fluid>

@@ -375,6 +375,24 @@ public class ProjectTemplatesFormFieldTest
 	}
 
 	@Test
+	public void testBuildTemplateFormField72CustomPackage() throws Exception {
+		String liferayVersion = "7.2.1";
+		String name = "foobar";
+
+		File workspaceDir = buildWorkspace(temporaryFolder, liferayVersion);
+
+		File gradleProjectDir = buildTemplateWithGradle(
+			new File(workspaceDir, "modules"), "form-field", name,
+			"--liferay-version", liferayVersion, "--package-name",
+			"com.liferay.test.form");
+
+		testNotExists(
+			gradleProjectDir,
+			"src/main/java/com/liferay/test/form/form/field" +
+				"/FooBarDDMFormFieldRenderer.java");
+	}
+
+	@Test
 	public void testBuildTemplateFormField72Maven() throws Exception {
 		String groupId = "com.test";
 		String liferayVersion = "7.2.1";
@@ -388,6 +406,20 @@ public class ProjectTemplatesFormFieldTest
 
 		completeArgs.add("archetype:generate");
 		completeArgs.add("--batch-mode");
+
+		if (Validator.isNotNull(System.getenv("JENKINS_HOME"))) {
+			completeArgs.add("--settings");
+
+			String content = FileTestUtil.read(
+				BaseProjectTemplatesTestCase.class.getClassLoader(),
+				"com/liferay/project/templates/dependencies/settings.xml");
+
+			Path tempPath = Files.createTempFile("settings", "xml");
+
+			Files.write(tempPath, content.getBytes());
+
+			completeArgs.add(tempPath.toString());
+		}
 
 		String archetypeArtifactId =
 			"com.liferay.project.templates." + template.replace('-', '.');
@@ -416,7 +448,129 @@ public class ProjectTemplatesFormFieldTest
 		Assert.assertTrue(
 			mavenOutput,
 			mavenOutput.contains(
-				"Form Field project is not supported 7.2 for Maven"));
+				"Form Field project in Maven is only supported in 7.0 and " +
+					"7.1"));
+	}
+
+	@Test
+	public void testBuildTemplateFormField73() throws Exception {
+		String liferayVersion = "7.3.3";
+		String name = "foobar";
+
+		File workspaceDir = buildWorkspace(temporaryFolder, liferayVersion);
+
+		File gradleProjectDir = buildTemplateWithGradle(
+			new File(workspaceDir, "modules"), "form-field", name,
+			"--liferay-version", liferayVersion);
+
+		testContains(
+			gradleProjectDir, "bnd.bnd", "Provide-Capability:", "soy;",
+			"type:String=\"LiferayFormField\"");
+		testContains(
+			gradleProjectDir, "build.gradle",
+			"compileOnly group: \"com.liferay\", name: " +
+				"\"com.liferay.dynamic.data.mapping.api\"",
+			"compileOnly group: \"com.liferay\", name: " +
+				"\"com.liferay.frontend.js.loader.modules.extender.api\"",
+			"jsCompile group: \"com.liferay\", name: " +
+				"\"com.liferay.dynamic.data.mapping.form.field.type\"",
+			DEPENDENCY_PORTAL_KERNEL);
+		testContains(
+			gradleProjectDir,
+			"src/main/java/foobar/form/field/FoobarDDMFormFieldType.java",
+			"com.liferay.frontend.js.loader.modules.extender.npm.NPMResolver;",
+			"org.osgi.service.component.annotations.Reference;",
+			"ddm.form.field.type.description=foobar-description",
+			"ddm.form.field.type.display.order:Integer=13",
+			"ddm.form.field.type.group=customized",
+			"public String getModuleName()",
+			"public boolean isCustomDDMFormFieldType()",
+			"private NPMResolver _npmResolver;");
+		testContains(
+			gradleProjectDir,
+			"src/main/resources/META-INF/resources/foobar.soy",
+			"{template .content}", "ddm-field-foobar", "form-control foobar");
+		testContains(
+			gradleProjectDir,
+			"src/main/resources/META-INF/resources/foobar.es.js",
+			"'dynamic-data-mapping-form-field-type/FieldBase/FieldBase.es';",
+			"import './foobarRegister.soy.js';",
+			"import {Config} from 'metal-state'",
+			"import templates from './foobar.soy.js';", "* Foobar Component",
+			"class Foobar extends Component", "Foobar.STATE",
+			"Soy.register(Foobar, templates);");
+
+		testNotContains(
+			gradleProjectDir, "build.gradle", true, "^repositories \\{.*");
+		testNotContains(gradleProjectDir, "build.gradle", "version: \"[0-9].*");
+
+		if (isBuildProjects()) {
+			executeGradle(
+				workspaceDir, _gradleDistribution,
+				":modules:" + name + GRADLE_TASK_PATH_BUILD);
+
+			File gradleOutputDir = new File(gradleProjectDir, "build/libs");
+
+			Path gradleOutputPath = FileTestUtil.getFile(
+				gradleOutputDir.toPath(), OUTPUT_FILE_NAME_GLOB_REGEX, 1);
+
+			Assert.assertNotNull(gradleOutputPath);
+
+			Assert.assertTrue(Files.exists(gradleOutputPath));
+		}
+	}
+
+	@Test
+	public void testBuildTemplateFormField73WithReactFramework()
+		throws Exception {
+
+		String jsFramework = "react";
+		String liferayVersion = "7.3.3";
+		String name = "foobar";
+
+		File workspaceDir = buildWorkspace(temporaryFolder, liferayVersion);
+
+		File gradleProjectDir = buildTemplateWithGradle(
+			new File(workspaceDir, "modules"), "form-field", name,
+			"--liferay-version", liferayVersion, "--js-framework", jsFramework);
+
+		testContains(
+			gradleProjectDir, "build.gradle",
+			"compileOnly group: \"com.liferay\", name: " +
+				"\"com.liferay.dynamic.data.mapping.api\"",
+			"compileOnly group: \"com.liferay\", name: " +
+				"\"com.liferay.frontend.js.loader.modules.extender.api\"",
+			"jsCompile group: \"com.liferay\", name: " +
+				"\"com.liferay.dynamic.data.mapping.form.field.type\"",
+			DEPENDENCY_PORTAL_KERNEL);
+		testContains(
+			gradleProjectDir,
+			"src/main/java/foobar/form/field/FoobarDDMFormFieldType.java",
+			"com.liferay.frontend.js.loader.modules.extender.npm.NPMResolver;",
+			"org.osgi.service.component.annotations.Reference;",
+			"ddm.form.field.type.description=foobar-description",
+			"ddm.form.field.type.display.order:Integer=13",
+			"ddm.form.field.type.group=customized",
+			"public String getModuleName()",
+			"public boolean isCustomDDMFormFieldType()",
+			"private NPMResolver _npmResolver;");
+		testContains(
+			gradleProjectDir,
+			"src/main/resources/META-INF/resources/foobar.es.js",
+			"import React from 'react';",
+			"import {FieldBase} from 'dynamic-data-mapping-form-field-type" +
+				"/FieldBase/ReactFieldBase.es';",
+			"import {useSyncValue} from " +
+				"'dynamic-data-mapping-form-field-type/hooks/useSyncValue.es';",
+			"const Foobar = ({name, onChange, predefinedValue, readOnly, " +
+				"value})",
+			"const Main = ({label, name, onChange, predefinedValue, " +
+				"readOnly, value, ...otherProps})",
+			"Main.displayName = 'Foobar';", "export default Main;");
+
+		testNotContains(
+			gradleProjectDir, "build.gradle", true, "^repositories \\{.*");
+		testNotContains(gradleProjectDir, "build.gradle", "version: \"[0-9].*");
 	}
 
 	@Rule

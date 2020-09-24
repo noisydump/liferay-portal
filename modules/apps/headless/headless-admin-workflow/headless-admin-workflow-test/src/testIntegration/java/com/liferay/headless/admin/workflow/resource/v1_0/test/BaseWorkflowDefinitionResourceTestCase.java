@@ -109,7 +109,9 @@ public abstract class BaseWorkflowDefinitionResourceTestCase {
 		WorkflowDefinitionResource.Builder builder =
 			WorkflowDefinitionResource.builder();
 
-		workflowDefinitionResource = builder.locale(
+		workflowDefinitionResource = builder.authentication(
+			"test@liferay.com", "test"
+		).locale(
 			LocaleUtil.getDefault()
 		).build();
 	}
@@ -297,28 +299,6 @@ public abstract class BaseWorkflowDefinitionResourceTestCase {
 			"This method needs to be implemented");
 	}
 
-	@Test
-	public void testPostWorkflowDefinitionUpdateTitle() throws Exception {
-		WorkflowDefinition randomWorkflowDefinition =
-			randomWorkflowDefinition();
-
-		WorkflowDefinition postWorkflowDefinition =
-			testPostWorkflowDefinitionUpdateTitle_addWorkflowDefinition(
-				randomWorkflowDefinition);
-
-		assertEquals(randomWorkflowDefinition, postWorkflowDefinition);
-		assertValid(postWorkflowDefinition);
-	}
-
-	protected WorkflowDefinition
-			testPostWorkflowDefinitionUpdateTitle_addWorkflowDefinition(
-				WorkflowDefinition workflowDefinition)
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
 	protected void assertHttpResponseStatusCode(
 		int expectedHttpResponseStatusCode,
 		HttpInvoker.HttpResponse actualHttpResponse) {
@@ -380,7 +360,9 @@ public abstract class BaseWorkflowDefinitionResourceTestCase {
 		}
 	}
 
-	protected void assertValid(WorkflowDefinition workflowDefinition) {
+	protected void assertValid(WorkflowDefinition workflowDefinition)
+		throws Exception {
+
 		boolean valid = true;
 
 		if (workflowDefinition.getDateModified() == null) {

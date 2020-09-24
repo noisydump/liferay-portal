@@ -112,7 +112,9 @@ public abstract class BaseExperimentResourceTestCase {
 
 		ExperimentResource.Builder builder = ExperimentResource.builder();
 
-		experimentResource = builder.locale(
+		experimentResource = builder.authentication(
+			"test@liferay.com", "test"
+		).locale(
 			LocaleUtil.getDefault()
 		).build();
 	}
@@ -380,7 +382,7 @@ public abstract class BaseExperimentResourceTestCase {
 		}
 	}
 
-	protected void assertValid(Experiment experiment) {
+	protected void assertValid(Experiment experiment) throws Exception {
 		boolean valid = true;
 
 		if (experiment.getDateCreated() == null) {

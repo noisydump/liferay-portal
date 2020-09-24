@@ -55,10 +55,10 @@ if (comment instanceof WorkflowableComment) {
 	title='<%= (comment == null) ? "new-message" : "edit-message" %>'
 />
 
-<clay:container>
-	<aui:form action='<%= themeDisplay.getPathMain() + "/portal/comment/discussion/edit" %>' enctype="multipart/form-data" method="post" name="fm" onSubmit='<%= "event.preventDefault(); " + renderResponse.getNamespace() + "saveComment();" %>'>
+<clay:container-fluid>
+	<aui:form action='<%= themeDisplay.getPathMain() + "/portal/comment/discussion/edit" %>' enctype="multipart/form-data" method="post" name="fm" onSubmit='<%= "event.preventDefault(); " + liferayPortletResponse.getNamespace() + "saveComment();" %>'>
 		<input name="p_auth" type="hidden" value="<%= AuthTokenUtil.getToken(request) %>" />
-		<input name="namespace" type="hidden" value="<%= renderResponse.getNamespace() %>" />
+		<input name="namespace" type="hidden" value="<%= liferayPortletResponse.getNamespace() %>" />
 
 		<aui:input name="<%= Constants.CMD %>" type="hidden" value="<%= Constants.UPDATE %>" />
 		<aui:input name="redirect" type="hidden" value="<%= redirect %>" />
@@ -121,7 +121,7 @@ if (comment instanceof WorkflowableComment) {
 			<aui:button href="<%= redirect %>" type="cancel" />
 		</aui:button-row>
 	</aui:form>
-</clay:container>
+</clay:container-fluid>
 
 <aui:script>
 	function <portlet:namespace />saveComment() {

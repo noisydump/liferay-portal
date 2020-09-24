@@ -45,11 +45,10 @@ definition {
 			DepotNavigator.openDepotAdmin();
 
 			DepotNavigator.gotoDepotPortlet(
-				category = "People",
 				depotName = "Test Depot Name",
 				portlet = "Memberships");
 
-			Site.assignUserAsMemberCP(
+			Depot.assignUserAsMember(
 				depotName = "Test Depot Name",
 				userFirstName = "userfn${i}",
 				userLastName = "userln${i}",
@@ -91,12 +90,11 @@ definition {
 		DepotNavigator.openDepotAdmin();
 
 		DepotNavigator.gotoDepotPortlet(
-			category = "People",
 			depotName = "Test Depot Name",
 			portlet = "Memberships");
 
 		for (var i : list "1,2") {
-			Site.viewMemberCP(
+			Depot.viewMember(
 				userFirstName = "userfn${i}",
 				userLastName = "userln${i}",
 				userScreenName = "usersn${i}");
@@ -104,7 +102,7 @@ definition {
 
 		Click.waitForMenuToggleJSClick(
 			key_card = "usersn1",
-			locator1 = "LexiconCard#CARD_ELLIPSIS");
+			locator1 = "Card#CARD_ELLIPSIS");
 
 		for (var item : list "Remove Membership,Assign Roles") {
 			AssertVisible(
@@ -116,25 +114,6 @@ definition {
 	@description = "This ensures that the user can only view memberships with view permissions."
 	@priority = "5"
 	test AccessMembershipWithViewOnlyPermissions {
-		JSONUser.addUser(
-			userEmailAddress = "userea1@liferay.com",
-			userFirstName = "userfn1",
-			userLastName = "userln1",
-			userScreenName = "usersn1");
-
-		DepotNavigator.openDepotAdmin();
-
-		DepotNavigator.gotoDepotPortlet(
-			category = "People",
-			depotName = "Test Depot Name",
-			portlet = "Memberships");
-
-		Site.assignUserAsMemberCP(
-			depotName = "Test Depot Name",
-			userFirstName = "userfn1",
-			userLastName = "userln1",
-			userScreenName = "usersn1");
-
 		Permissions.setUpRegRoleLoginUserCP(
 			roleTitle = "Depot Regrole Name",
 			userEmailAddress = "userea1@liferay.com",
@@ -163,6 +142,23 @@ definition {
 				roleTitle = "Depot Regrole Name");
 		}
 
+		Permissions.definePermissionViaJSONAPI(
+			resourceAction = "ACCESS_IN_CONTROL_PANEL",
+			resourceName = "com_liferay_site_memberships_web_portlet_SiteMembershipsPortlet",
+			roleTitle = "Depot Regrole Name");
+
+		DepotNavigator.openDepotAdmin();
+
+		DepotNavigator.gotoDepotPortlet(
+			depotName = "Test Depot Name",
+			portlet = "Memberships");
+
+		Depot.assignUserAsMember(
+			depotName = "Test Depot Name",
+			userFirstName = "userfn1",
+			userLastName = "userln1",
+			userScreenName = "usersn1");
+
 		User.logoutAndLoginPG(
 			userLoginEmailAddress = "userea1@liferay.com",
 			userLoginFullName = "userfn1 userln1");
@@ -170,18 +166,17 @@ definition {
 		DepotNavigator.openDepotAdmin();
 
 		DepotNavigator.gotoDepotPortlet(
-			category = "People",
 			depotName = "Test Depot Name",
 			portlet = "Memberships");
 
-		Site.viewMemberCP(
+		Depot.viewMember(
 			userFirstName = "userfn1",
 			userLastName = "userln1",
 			userScreenName = "usersn1");
 
 		Click.waitForMenuToggleJSClick(
 			key_card = "usersn1",
-			locator1 = "LexiconCard#CARD_ELLIPSIS");
+			locator1 = "Card#CARD_ELLIPSIS");
 
 		for (var item : list "Remove Membership,Assign Roles") {
 			AssertElementNotPresent(
@@ -208,7 +203,7 @@ definition {
 			userLoginFullName = "test test",
 			userScreenName = "usersn");
 
-		ProductMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Users",
 			panel = "Control Panel",
 			portlet = "Users and Organizations");
@@ -217,7 +212,7 @@ definition {
 			siteName = "Site Name",
 			userScreenName = "usersn");
 
-		ProductMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Users",
 			panel = "Control Panel",
 			portlet = "Roles");
@@ -258,7 +253,7 @@ definition {
 			userLoginEmailAddress = "userea@liferay.com",
 			userLoginFullName = "userfn userln");
 
-		WebContentNavigator.openWebContentAdmin(siteURLKey = "test-depot-name");
+		DepotNavigator.openDepotWebContentAdmin(depotName = "Test Depot Name");
 
 		Pause(locator1 = "3000");
 
@@ -270,7 +265,7 @@ definition {
 
 		PortletEntry.publish();
 
-		WebContentNavigator.openWebContentAdmin(siteURLKey = "test-depot-name-2");
+		DepotNavigator.openDepotWebContentAdmin(depotName = "Test Depot Name 2");
 
 		AssertElementNotPresent(locator1 = "Button#PLUS");
 
@@ -325,7 +320,7 @@ definition {
 
 		AssertTextEquals(
 			key_card = "Test Depot Name",
-			locator1 = "LexiconCard#CARD_TITLE",
+			locator1 = "Card#CARD_TITLE",
 			value1 = "Test Depot Name");
 
 		DepotNavigator.gotoEdit(depotName = "Test Depot Name");
@@ -390,7 +385,7 @@ definition {
 
 		AssertTextEquals(
 			key_card = "Test Depot Name",
-			locator1 = "LexiconCard#CARD_TITLE",
+			locator1 = "Card#CARD_TITLE",
 			value1 = "Test Depot Name");
 
 		AssertElementNotPresent(
@@ -398,6 +393,72 @@ definition {
 			locator1 = "Icon#ROW_VERTICAL_ELLIPSIS");
 
 		AssertElementNotPresent(locator1 = "Button#PLUS");
+	}
+
+	@description = "This test covers LPS-120011. This ensures that no asset libraries be returned when a user without view permission searches the asset library."
+	@priority = "4"
+	test SearchAssetLibraryWithoutViewPermissions {
+		Permissions.setUpRegRoleLoginUserCP(
+			roleTitle = "Depot Regrole Name",
+			userEmailAddress = "userea1@liferay.com",
+			userFirstName = "userfn1",
+			userLastName = "userln1",
+			userLoginEmailAddress = "test@liferay.com",
+			userLoginFullName = "test test",
+			userScreenName = "usersn1");
+
+		Permissions.definePermissionViaJSONAPI(
+			resourceAction = "VIEW_CONTROL_PANEL",
+			resourceName = "90",
+			roleTitle = "Depot Regrole Name");
+
+		Permissions.definePermissionViaJSONAPI(
+			resourceAction = "ACCESS_IN_CONTROL_PANEL",
+			resourceName = "com_liferay_depot_web_portlet_DepotAdminPortlet",
+			roleTitle = "Depot Regrole Name");
+
+		User.logoutAndLoginPG(
+			userLoginEmailAddress = "userea1@liferay.com",
+			userLoginFullName = "userfn1 userln1");
+
+		DepotNavigator.openDepotAdmin();
+
+		Pause(locator1 = "3000");
+
+		Search.searchCP(searchTerm = "Depot");
+
+		AssertTextEquals.assertPartialText(
+			locator1 = "ManagementBar#SEARCH_RESULT_SUMMARY",
+			value1 = "0 Results for Depot");
+
+		AssertElementNotPresent(
+			key_card = "Test Depot Name",
+			locator1 = "Card#CARD_TITLE");
+
+		User.logoutAndLoginPG(
+			userLoginEmailAddress = "test@liferay.com",
+			userLoginFullName = "test test");
+
+		Permissions.definePermissionViaJSONAPI(
+			resourceAction = "VIEW",
+			resourceName = "com_liferay_depot_web_portlet_DepotAdminPortlet",
+			roleTitle = "Depot Regrole Name");
+
+		Permissions.definePermissionViaJSONAPI(
+			resourceAction = "VIEW",
+			resourceName = "com.liferay.depot.model.DepotEntry",
+			roleTitle = "Depot Regrole Name");
+
+		DepotNavigator.openDepotAdmin();
+
+		Pause(locator1 = "3000");
+
+		Search.searchCP(searchTerm = "Depot");
+
+		Depot.viewSearchResult(
+			includedResults = "Test Depot Name",
+			resultCount = "1",
+			searchTerm = "Depot");
 	}
 
 	@description = "This ensures that able to select specific asset libraries scope from Collections permissions."
@@ -412,14 +473,14 @@ definition {
 			userLoginFullName = "test test",
 			userScreenName = "usersn");
 
-		ProductMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Users",
 			panel = "Control Panel",
 			portlet = "Roles");
 
 		Role.definePermissionCP(
 			assetLibrariesScope = "true",
-			permissionDefinitionKey = "SITE_ADMIN_CONTENT_COLLECTIONS_ASSET_LIST_ENTRY_DELETE_CHECKBOX",
+			permissionDefinitionKey = "SITE_ADMIN_BUILDER_COLLECTIONS_ASSET_LIST_ENTRY_DELETE_CHECKBOX",
 			permissionDefinitionValue = "Delete",
 			roleTitle = "Depot Regrole Name",
 			siteNameScope = "Test Depot Name");
@@ -437,7 +498,7 @@ definition {
 			userLoginFullName = "test test",
 			userScreenName = "usersn");
 
-		ProductMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Users",
 			panel = "Control Panel",
 			portlet = "Roles");
@@ -462,7 +523,7 @@ definition {
 			userLoginFullName = "test test",
 			userScreenName = "usersn");
 
-		ProductMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Users",
 			panel = "Control Panel",
 			portlet = "Roles");
@@ -473,6 +534,73 @@ definition {
 			permissionDefinitionValue = "View",
 			roleTitle = "Depot Regrole Name",
 			siteNameScope = "Test Depot Name");
+	}
+
+	@description = "This test covers LPS-119994. It ensures that the user with access application permission can view the depot dashboard."
+	@priority = "4"
+	test ViewDashBoardWithAccessApplicationPermissions {
+		property custom.properties = "jsonws.web.service.paths.excludes=";
+
+		JSONUser.addUser(
+			userEmailAddress = "userea@liferay.com",
+			userFirstName = "userfn",
+			userLastName = "userln",
+			userScreenName = "usersn");
+
+		JSONUser.setFirstPassword(
+			agreeToTermsAndAnswerReminderQuery = "true",
+			requireReset = "false",
+			userEmailAddress = "userea@liferay.com");
+
+		JSONRole.addRegularRole(roleTitle = "Depot Regrole Name");
+
+		JSONRole.assignRoleToUser(
+			roleTitle = "Depot Regrole Name",
+			userEmailAddress = "userea@liferay.com");
+
+		Permissions.definePermissionViaJSONAPI(
+			resourceAction = "VIEW_CONTROL_PANEL",
+			resourceName = "90",
+			roleTitle = "Depot Regrole Name");
+
+		Permissions.definePermissionViaJSONAPI(
+			resourceAction = "ACCESS_IN_CONTROL_PANEL",
+			resourceName = "com_liferay_depot_web_portlet_DepotAdminPortlet",
+			roleTitle = "Depot Regrole Name");
+
+		Permissions.definePermissionViaJSONAPI(
+			resourceAction = "VIEW",
+			resourceName = "com.liferay.depot.model.DepotEntry",
+			roleTitle = "Depot Regrole Name");
+
+		User.logoutAndLoginPG(
+			userLoginEmailAddress = "userea@liferay.com",
+			userLoginFullName = "userfn userln");
+
+		DepotNavigator.openDepotAdmin();
+
+		DepotNavigator.gotoDepot(
+			depotName = "Test Depot Name",
+			noViewApplicationPermission = "true");
+
+		User.logoutAndLoginPG(
+			userLoginEmailAddress = "test@liferay.com",
+			userLoginFullName = "Test Test");
+
+		for (var resourceName : list "com_liferay_journal_web_portlet_JournalPortlet,com_liferay_document_library_web_portlet_DLAdminPortlet,com_liferay_asset_list_web_portlet_AssetListPortlet,com_liferay_asset_categories_admin_web_portlet_AssetCategoriesAdminPortlet,com_liferay_asset_tags_admin_web_portlet_AssetTagsAdminPortlet,com_liferay_trash_web_portlet_TrashPortlet,com_liferay_site_memberships_web_portlet_SiteMembershipsPortlet,com_liferay_depot_web_portlet_DepotSettingsPortlet,com_liferay_portal_workflow_web_internal_portlet_SiteAdministrationWorkflowPortlet,com_liferay_exportimport_web_portlet_ExportPortlet,com_liferay_exportimport_web_portlet_ImportPortlet") {
+			Permissions.definePermissionViaJSONAPI(
+				resourceAction = "ACCESS_IN_CONTROL_PANEL",
+				resourceName = "${resourceName}",
+				roleTitle = "Depot Regrole Name");
+		}
+
+		User.logoutAndLoginPG(
+			userLoginEmailAddress = "userea@liferay.com",
+			userLoginFullName = "userfn userln");
+
+		DepotNavigator.openDepotAdmin();
+
+		DepotNavigator.gotoDepot(depotName = "Test Depot Name");
 	}
 
 	@description = "This ensures that the user can view documents on site and library with all sites and libraries scope view permissions."
@@ -499,7 +627,7 @@ definition {
 			userLoginFullName = "test test",
 			userScreenName = "usersn");
 
-		ProductMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Users",
 			panel = "Control Panel",
 			portlet = "Users and Organizations");
@@ -558,7 +686,7 @@ definition {
 
 		DMDocument.viewCP(dmDocumentTitle = "Site DM Document Title");
 
-		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "test-depot-name");
+		DepotNavigator.openDepotDocumentsAndMediaAdmin(depotName = "Test Depot Name");
 
 		DMNavigator.gotoDocumentCP(dmDocumentTitle = "Depot DM Document Title");
 

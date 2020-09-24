@@ -20,7 +20,9 @@
 Map<Long, List<ConflictInfo>> conflictInfoMap = (Map<Long, List<ConflictInfo>>)request.getAttribute(CTWebKeys.CONFLICT_INFO_MAP);
 CTCollection ctCollection = (CTCollection)request.getAttribute(CTWebKeys.CT_COLLECTION);
 
-renderResponse.setTitle(StringBundler.concat(LanguageUtil.get(request, "publish"), ": ", ctCollection.getName()));
+boolean schedule = ParamUtil.getBoolean(request, "schedule");
+
+renderResponse.setTitle(StringBundler.concat(LanguageUtil.get(request, schedule ? "schedule-to-publish-later" : "publish"), ": ", ctCollection.getName()));
 %>
 
 <liferay-portlet:renderURL var="backURL">
@@ -33,11 +35,30 @@ portletDisplay.setShowBackIcon(true);
 portletDisplay.setURLBack(backURL);
 %>
 
-<clay:container
-	className="container-form-lg"
+<clay:container-fluid
+	cssClass="container-form-lg"
 >
 	<div class="sheet-lg table-responsive">
 		<table class="change-lists-conflicts-table table table-autofit table-list">
+			<tr>
+				<td class="text-muted" id="changeListsHeader">
+					<div class="autofit-row">
+						<div class="autofit-col autofit-col-expand">
+							<span>
+								<h5>
+									<liferay-ui:message key="resolve-any-conflicts" />
+								</h5>
+							</span>
+						</div>
+
+						<div class="autofit-col">
+							<span>
+								<h5><liferay-ui:message arguments="<%= new Object[] {1, schedule ? 2 : 1} %>" key="step-x-of-x" translateArguments="<%= false %>" /></h5>
+							</span>
+						</div>
+					</div>
+				</td>
+			</tr>
 			<tr>
 				<td>
 					<h2><liferay-ui:message key="conflicting-changes" /></h2>
@@ -75,77 +96,85 @@ portletDisplay.setURLBack(backURL);
 
 						<tr class="table-divider"><td><liferay-ui:message key="automatically-resolved" /></td></tr>
 
-			<%
+					<%
 					}
-			%>
+					%>
 
 					<tr>
 						<td>
-							<div class="autofit-row">
-								<div class="autofit-col user-portrait-wrapper">
+							<clay:content-row>
+								<clay:content-col
+									cssClass="user-portrait-wrapper"
+								>
 									<liferay-ui:user-portrait
 										userId="<%= ctEntry.getUserId() %>"
 									/>
-								</div>
+								</clay:content-col>
 
-								<div class="autofit-col-expand">
-									<p class="entry-title text-muted"><%= ctDisplayRendererRegistry.getEntryTitle(ctEntry, request) %></p>
+								<clay:content-col
+									expand="<%= true %>"
+								>
+									<p class="entry-title text-muted"><%= HtmlUtil.escape(ctDisplayRendererRegistry.getEntryDescription(request, ctEntry)) %></p>
 
 									<div>
-										<div class="alert alert-success autofit-row" role="alert">
-											<div class="autofit-col autofit-col-expand">
-												<div class="autofit-section">
-													<span class="alert-indicator">
-														<aui:icon image="check-circle-full" markupView="lexicon" />
-													</span>
+										<div class="alert alert-success" role="alert">
+											<clay:content-row>
+												<clay:content-col
+													expand="<%= true %>"
+												>
+													<clay:content-section>
+														<span class="alert-indicator">
+															<aui:icon image="check-circle-full" markupView="lexicon" />
+														</span>
 
-													<%
-													ResourceBundle conflictInfoResourceBundle = conflictInfo.getResourceBundle(locale);
-													%>
+														<%
+														ResourceBundle conflictInfoResourceBundle = conflictInfo.getResourceBundle(locale);
+														%>
 
-													<strong class="lead">
-														<%= conflictInfo.getConflictDescription(conflictInfoResourceBundle) + ":" %>
-													</strong>
-													<%= conflictInfo.getResolutionDescription(conflictInfoResourceBundle) %>
-												</div>
-											</div>
+														<strong class="lead">
+															<%= conflictInfo.getConflictDescription(conflictInfoResourceBundle) + ":" %>
+														</strong>
+														<%= conflictInfo.getResolutionDescription(conflictInfoResourceBundle) %>
+													</clay:content-section>
+												</clay:content-col>
 
-											<liferay-portlet:actionURL name="/change_lists/delete_ct_auto_resolution_info" var="dismissURL">
-												<liferay-portlet:param name="redirect" value="<%= currentURL %>" />
-												<liferay-portlet:param name="ctAutoResolutionInfoId" value="<%= String.valueOf(conflictInfo.getCTAutoResolutionInfoId()) %>" />
-											</liferay-portlet:actionURL>
+												<%
+												boolean viewDiff = false;
 
-											<div class="autofit-col">
-												<div class="autofit-section">
-													<a class="btn btn-secondary btn-sm" href="<%= dismissURL %>" type="button">
-														<liferay-ui:message key="dismiss" />
-													</a>
-												</div>
-											</div>
+												if (conflictInfo.getSourcePrimaryKey() == conflictInfo.getTargetPrimaryKey()) {
+													viewDiff = true;
+												}
 
-											<%
-											boolean viewDiff = false;
+												String viewURL = ctDisplayRendererRegistry.getViewURL(liferayPortletRequest, liferayPortletResponse, ctEntry, viewDiff);
+												%>
 
-											if (conflictInfo.getSourcePrimaryKey() == conflictInfo.getTargetPrimaryKey()) {
-												viewDiff = true;
-											}
+												<c:if test="<%= Validator.isNotNull(viewURL) %>">
+													<clay:content-col>
+														<clay:content-section>
+															<a class="btn btn-secondary btn-sm" href="<%= viewURL %>" type="button">
+																<liferay-ui:message key="view" />
+															</a>
+														</clay:content-section>
+													</clay:content-col>
+												</c:if>
 
-											String viewURL = ctDisplayRendererRegistry.getViewURL(liferayPortletRequest, liferayPortletResponse, ctEntry, viewDiff);
-											%>
+												<liferay-portlet:actionURL name="/change_lists/delete_ct_auto_resolution_info" var="dismissURL">
+													<liferay-portlet:param name="redirect" value="<%= currentURL %>" />
+													<liferay-portlet:param name="ctAutoResolutionInfoId" value="<%= String.valueOf(conflictInfo.getCTAutoResolutionInfoId()) %>" />
+												</liferay-portlet:actionURL>
 
-											<c:if test="<%= Validator.isNotNull(viewURL) %>">
-												<div class="autofit-col">
-													<div class="autofit-section">
-														<a class="btn btn-secondary btn-sm" href="<%= viewURL %>" type="button">
-															<liferay-ui:message key="view" />
+												<clay:content-col>
+													<clay:content-section>
+														<a class="btn btn-secondary btn-sm" href="<%= dismissURL %>" type="button">
+															<liferay-ui:message key="ok" />
 														</a>
-													</div>
-												</div>
-											</c:if>
+													</clay:content-section>
+												</clay:content-col>
+											</clay:content-row>
 										</div>
 									</div>
-								</div>
-							</div>
+								</clay:content-col>
+							</clay:content-row>
 						</td>
 					</tr>
 
@@ -173,82 +202,106 @@ portletDisplay.setURLBack(backURL);
 
 						<tr class="table-divider"><td><liferay-ui:message key="needs-manual-resolution" /></td></tr>
 
-			<%
+					<%
 					}
-			%>
+					%>
 
 					<tr>
 						<td>
-							<div class="autofit-row">
-								<div class="autofit-col user-portrait-wrapper">
+							<clay:content-row>
+								<clay:content-col
+									cssClass="user-portrait-wrapper"
+								>
 									<liferay-ui:user-portrait
 										userId="<%= ctEntry.getUserId() %>"
 									/>
-								</div>
+								</clay:content-col>
 
-								<div class="autofit-col-expand">
-									<p class="entry-title text-muted"><%= ctDisplayRendererRegistry.getEntryTitle(ctEntry, request) %></p>
+								<clay:content-col
+									expand="<%= true %>"
+								>
+									<p class="entry-title text-muted"><%= HtmlUtil.escape(ctDisplayRendererRegistry.getEntryDescription(request, ctEntry)) %></p>
 
 									<div>
-										<div class="alert alert-warning autofit-row" role="alert">
-											<div class="autofit-col autofit-col-expand">
-												<div class="autofit-section">
-													<span class="alert-indicator">
-														<aui:icon image="warning-full" markupView="lexicon" />
-													</span>
+										<div class="alert alert-warning" role="alert">
+											<clay:content-row>
+												<clay:content-col
+													expand="<%= true %>"
+												>
+													<clay:content-section>
+														<span class="alert-indicator">
+															<aui:icon image="warning-full" markupView="lexicon" />
+														</span>
 
-													<%
-													ResourceBundle conflictInfoResourceBundle = conflictInfo.getResourceBundle(locale);
-													%>
+														<%
+														ResourceBundle conflictInfoResourceBundle = conflictInfo.getResourceBundle(locale);
+														%>
 
-													<strong class="lead">
-														<%= conflictInfo.getConflictDescription(conflictInfoResourceBundle) + ":" %>
-													</strong>
-													<%= conflictInfo.getResolutionDescription(conflictInfoResourceBundle) %>
-												</div>
-											</div>
+														<strong class="lead">
+															<%= conflictInfo.getConflictDescription(conflictInfoResourceBundle) + ":" %>
+														</strong>
+														<%= conflictInfo.getResolutionDescription(conflictInfoResourceBundle) %>
+													</clay:content-section>
+												</clay:content-col>
 
-											<%
-											String editURL = ctDisplayRendererRegistry.getEditURL(request, ctEntry);
-											%>
+												<%
+												String editURL = ctDisplayRendererRegistry.getEditURL(request, ctEntry);
+												%>
 
-											<c:choose>
-												<c:when test="<%= Validator.isNotNull(editURL) %>">
-													<div class="autofit-col">
-														<div class="autofit-section">
-															<a class="btn btn-secondary btn-sm" href="<%= editURL %>" type="button">
-																<liferay-ui:message key="edit" />
-															</a>
-														</div>
-													</div>
-												</c:when>
-												<c:otherwise>
-
-													<%
-													boolean viewDiff = false;
-
-													if (conflictInfo.getSourcePrimaryKey() == conflictInfo.getTargetPrimaryKey()) {
-														viewDiff = true;
-													}
-
-													String viewURL = ctDisplayRendererRegistry.getViewURL(liferayPortletRequest, liferayPortletResponse, ctEntry, viewDiff);
-													%>
-
-													<c:if test="<%= Validator.isNotNull(viewURL) %>">
+												<c:choose>
+													<c:when test="<%= Validator.isNotNull(editURL) %>">
 														<div class="autofit-col">
 															<div class="autofit-section">
-																<a class="btn btn-secondary btn-sm" href="<%= viewURL %>" type="button">
-																	<liferay-ui:message key="view" />
+																<a class="btn btn-secondary btn-sm" href="<%= editURL %>" type="button">
+																	<liferay-ui:message key="edit" />
 																</a>
 															</div>
 														</div>
-													</c:if>
-												</c:otherwise>
-											</c:choose>
+													</c:when>
+													<c:otherwise>
+
+														<%
+														boolean viewDiff = false;
+
+														if (conflictInfo.getSourcePrimaryKey() == conflictInfo.getTargetPrimaryKey()) {
+															viewDiff = true;
+														}
+
+														String viewURL = ctDisplayRendererRegistry.getViewURL(liferayPortletRequest, liferayPortletResponse, ctEntry, viewDiff);
+														%>
+
+														<c:if test="<%= Validator.isNotNull(viewURL) %>">
+															<clay:content-col>
+																<clay:content-section>
+																	<a class="btn btn-secondary btn-sm" href="<%= viewURL %>" type="button">
+																		<liferay-ui:message key="view" />
+																	</a>
+																</clay:content-section>
+															</clay:content-col>
+														</c:if>
+													</c:otherwise>
+												</c:choose>
+
+												<clay:content-col>
+													<clay:content-section>
+														<liferay-portlet:renderURL var="discardURL">
+															<portlet:param name="mvcRenderCommandName" value="/change_lists/view_discard" />
+															<portlet:param name="redirect" value="<%= currentURL %>" />
+															<portlet:param name="ctCollectionId" value="<%= String.valueOf(ctEntry.getCtCollectionId()) %>" />
+															<portlet:param name="modelClassNameId" value="<%= String.valueOf(ctEntry.getModelClassNameId()) %>" />
+															<portlet:param name="modelClassPK" value="<%= String.valueOf(ctEntry.getModelClassPK()) %>" />
+														</liferay-portlet:renderURL>
+
+														<a class="btn btn-secondary btn-sm" href="<%= discardURL %>" type="button">
+															<liferay-ui:message key="discard" />
+														</a>
+													</clay:content-section>
+												</clay:content-col>
+											</clay:content-row>
 										</div>
 									</div>
-								</div>
-							</div>
+								</clay:content-col>
+							</clay:content-row>
 						</td>
 					</tr>
 
@@ -257,16 +310,39 @@ portletDisplay.setURLBack(backURL);
 			}
 			%>
 
-			<liferay-portlet:actionURL name="/change_lists/publish_ct_collection" var="publishURL">
-				<portlet:param name="ctCollectionId" value="<%= String.valueOf(ctCollection.getCtCollectionId()) %>" />
-				<portlet:param name="name" value="<%= ctCollection.getName() %>" />
-			</liferay-portlet:actionURL>
+			<tr><td id="changeListsFooter">
+				<div class="autofit-row">
+					<div class="autofit-col autofit-col-expand">
+						<span>
+							<aui:button href="<%= backURL %>" type="cancel" />
+						</span>
+					</div>
 
-			<tr><td>
-				<aui:button disabled="<%= unresolved %>" href="<%= publishURL %>" primary="true" value="publish" />
+					<div class="autofit-col">
+						<span>
+							<c:choose>
+								<c:when test="<%= schedule %>">
+									<liferay-portlet:renderURL var="scheduleURL">
+										<portlet:param name="mvcRenderCommandName" value="/change_lists/schedule_publication" />
+										<portlet:param name="redirect" value="<%= backURL %>" />
+										<portlet:param name="ctCollectionId" value="<%= String.valueOf(ctCollection.getCtCollectionId()) %>" />
+									</liferay-portlet:renderURL>
 
-				<aui:button href="<%= backURL %>" type="cancel" />
+									<aui:button disabled="<%= unresolved %>" href="<%= scheduleURL %>" primary="true" value="next" />
+								</c:when>
+								<c:otherwise>
+									<liferay-portlet:actionURL name="/change_lists/publish_ct_collection" var="publishURL">
+										<portlet:param name="ctCollectionId" value="<%= String.valueOf(ctCollection.getCtCollectionId()) %>" />
+										<portlet:param name="name" value="<%= ctCollection.getName() %>" />
+									</liferay-portlet:actionURL>
+
+									<aui:button disabled="<%= unresolved %>" href="<%= publishURL %>" primary="true" value="publish" />
+								</c:otherwise>
+							</c:choose>
+						</span>
+					</div>
+				</div>
 			</td></tr>
 		</table>
 	</div>
-</clay:container>
+</clay:container-fluid>

@@ -67,9 +67,9 @@ AUI.add(
 									cssClass: 'close',
 									discardDefaultButtonCssClasses: true,
 									labelHTML:
-										'<svg class="lexicon-icon" focusable="false"><use data-href="' +
+										'<svg class="lexicon-icon" focusable="false"><use href="' +
 										Liferay.ThemeDisplay.getPathThemeImages() +
-										'/lexicon/icons.svg#times" /><title>' +
+										'/clay/icons.svg#times" /><title>' +
 										Liferay.Language.get('close') +
 										'</title></svg>',
 									on: {
@@ -154,17 +154,21 @@ AUI.add(
 							event.dialog = modal;
 							event.details[0].dialog = modal;
 
-							if (event.doc) {
-								Util.afterIframeLoaded(event);
+							var iframeNode = modal.iframe.node;
 
+							var iframeElement = iframeNode.getDOM();
+
+							if (event.doc) {
 								var modalUtil = event.win.Liferay.Util;
 
 								modalUtil.Window._opener = modal._opener;
 
 								modalUtil.Window._name = id;
-							}
 
-							var iframeNode = modal.iframe.node;
+								iframeElement.onload = function () {
+									Util.afterIframeLoaded(event);
+								};
+							}
 
 							iframeNode.focus();
 

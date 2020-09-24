@@ -24,24 +24,26 @@ const {assignees, items, processSteps} = {
 	assignees: [{id: 1, name: 'Test Test'}],
 	items: [
 		{
-			assigneePerson: {
+			assetTitle: 'Blog 1',
+			assetType: 'Blog',
+			assignee: {
 				id: 1,
 				name: 'Test Test',
 			},
 			id: 1,
+			instanceId: 1,
 			label: 'Review',
-			objectReviewed: {assetTitle: 'Blog 1', assetType: 'Blog'},
-			workflowInstanceId: 1,
 		},
 		{
-			assigneePerson: {
+			assetTitle: 'Blog 2',
+			assetType: 'Blog',
+			assignee: {
 				id: 1,
 				name: 'Test Test',
 			},
 			id: 2,
+			instanceId: 2,
 			label: 'Update',
-			objectReviewed: {assetTitle: 'Blog 2', assetType: 'Blog'},
-			workflowInstanceId: 2,
 		},
 	],
 	processSteps: [
@@ -76,53 +78,12 @@ const ContainerMock = ({children}) => {
 	const [updateDueDate, setUpdateDueDate] = useState({});
 	const processId = '12345';
 	const [selectAll, setSelectAll] = useState(false);
-	const [visibleModal, setVisibleModal] = useState('bulkUpdateDueDate');
-	const task = (id) => ({
-		assignees: [{id, name: 'Test Test'}],
-		items: [
-			{
-				assigneePerson: {
-					id,
-					name: 'Test Test',
-				},
-				id,
-				label: 'Review',
-				objectReviewed: {
-					assetTitle: 'Blog 1',
-					assetType: 'Blog',
-				},
-				workflowInstanceId: 1,
-			},
-			{
-				assigneePerson: {
-					id,
-					name: 'Test Test',
-				},
-				id: id + 1,
-				label: 'Update',
-				objectReviewed: {
-					assetTitle: 'Blog 2',
-					assetType: 'Blog',
-				},
-				workflowInstanceId: 2,
-			},
-		],
-		processSteps: [
-			{key: 'review', name: 'Review'},
-			{key: 'update', name: 'Update'},
-		],
-	});
-
 	const [selectTasks, setSelectTasks] = useState({
 		selectAll: false,
 		tasks: [],
 	});
 
-	const [selectedItems, setSelectedItems] = useState([
-		task(1),
-		task(2),
-		task(3),
-	]);
+	const [selectedItems, setSelectedItems] = useState([]);
 
 	return (
 		<MockRouter client={clientMock}>
@@ -140,9 +101,8 @@ const ContainerMock = ({children}) => {
 						selectTasks,
 						setSelectTasks,
 						setUpdateDueDate,
-						setVisibleModal,
 						updateDueDate,
-						visibleModal,
+						visibleModal: 'bulkUpdateDueDate',
 					}}
 				>
 					<ToasterProvider>{children}</ToasterProvider>
@@ -153,7 +113,7 @@ const ContainerMock = ({children}) => {
 };
 
 describe('The BulkReassignModal component should', () => {
-	let getAllByTestId, getByTestId, renderResult;
+	let getAllByTestId, getAllByText, getByTestId, getByText, renderResult;
 
 	beforeAll(() => {
 		renderResult = render(<BulkUpdateDueDateModal />, {
@@ -161,7 +121,9 @@ describe('The BulkReassignModal component should', () => {
 		});
 
 		getAllByTestId = renderResult.getAllByTestId;
+		getAllByText = renderResult.getAllByText;
 		getByTestId = renderResult.getByTestId;
+		getByText = renderResult.getByText;
 
 		jest.runAllTimers();
 	});
@@ -191,18 +153,17 @@ describe('The BulkReassignModal component should', () => {
 		const table = getByTestId('selectTaskStepTable');
 		const checkbox = getAllByTestId('itemCheckbox');
 		const checkAllButton = getByTestId('checkAllButton');
-		const processStepFilter = getByTestId('processStepFilter');
-		const assigneeFilter = getByTestId('assigneeFilter');
+		const assigneeFilter = getByText('assignee');
 
-		const content = modal.children[0].children[0].children[0];
-		const header = content.children[0].children[0];
+		const content = modal.children[0].children[0];
+		const header = content.children[0];
 
 		expect(header).toHaveTextContent('select-tasks-to-update');
 
 		expect(stepBar.children[0]).toHaveTextContent('select-tasks');
 		expect(stepBar.children[1]).toHaveTextContent('step-x-of-x');
 
-		expect(processStepFilter).not.toBeUndefined();
+		expect(getAllByText('process-step').length).toBe(2);
 		expect(assigneeFilter).not.toBeUndefined();
 
 		expect(cancelBtn).toHaveTextContent('cancel');
@@ -300,8 +261,8 @@ describe('The BulkReassignModal component should', () => {
 		const previousBtn = getByTestId('previousButton');
 		const nextBtn = getByTestId('nextButton');
 
-		const content = modal.children[0].children[0].children[0];
-		const header = content.children[0].children[0];
+		const content = modal.children[0].children[0];
+		const header = content.children[0];
 
 		expect(header).toHaveTextContent('update-tasks-due-dates');
 

@@ -16,13 +16,13 @@ package com.liferay.analytics.settings.internal.configuration;
 
 import com.liferay.analytics.message.sender.constants.AnalyticsMessagesDestinationNames;
 import com.liferay.analytics.message.sender.constants.AnalyticsMessagesProcessorCommand;
-import com.liferay.analytics.message.sender.model.EntityModelListener;
-import com.liferay.analytics.message.sender.util.EntityModelListenerRegistry;
+import com.liferay.analytics.message.sender.model.listener.EntityModelListener;
 import com.liferay.analytics.message.storage.service.AnalyticsMessageLocalService;
 import com.liferay.analytics.settings.configuration.AnalyticsConfiguration;
 import com.liferay.analytics.settings.configuration.AnalyticsConfigurationTracker;
 import com.liferay.analytics.settings.internal.model.AnalyticsUserImpl;
 import com.liferay.analytics.settings.internal.security.auth.verifier.AnalyticsSecurityAuthVerifier;
+import com.liferay.analytics.settings.internal.util.EntityModelListenerTracker;
 import com.liferay.analytics.settings.security.constants.AnalyticsSecurityConstants;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
@@ -257,7 +257,7 @@ public class AnalyticsConfigurationTrackerImpl
 		user = _userLocalService.addUser(
 			0, companyId, true, null, null, false,
 			AnalyticsSecurityConstants.SCREEN_NAME_ANALYTICS_ADMIN,
-			"analytics.administrator@" + company.getMx(), 0, "",
+			"analytics.administrator@" + company.getMx(),
 			LocaleUtil.getDefault(), "Analytics", "", "Administrator", 0, 0,
 			true, 0, 1, 1970, "", null, null, new long[] {role.getRoleId()},
 			null, false, new ServiceContext());
@@ -274,11 +274,11 @@ public class AnalyticsConfigurationTrackerImpl
 
 		message.put("command", AnalyticsMessagesProcessorCommand.ADD);
 
-		BaseModel baseModel = baseModels.get(0);
+		BaseModel<?> baseModel = baseModels.get(0);
 
 		message.put(
 			"entityModelListener",
-			_entityModelListenerRegistry.getEntityModelListener(
+			_entityModelListenerTracker.getEntityModelListener(
 				baseModel.getModelClassName()));
 
 		message.setPayload(baseModels);
@@ -323,8 +323,8 @@ public class AnalyticsConfigurationTrackerImpl
 		for (User user : users) {
 			Map<String, long[]> memberships = new HashMap<>();
 
-			for (EntityModelListener entityModelListener :
-					_entityModelListenerRegistry.getEntityModelListeners()) {
+			for (EntityModelListener<?> entityModelListener :
+					_entityModelListenerTracker.getEntityModelListeners()) {
 
 				try {
 					long[] membershipIds = entityModelListener.getMembershipIds(
@@ -449,10 +449,10 @@ public class AnalyticsConfigurationTrackerImpl
 		if (Validator.isNotNull(dictionary.get("token")) &&
 			Validator.isNull(dictionary.get("previousToken"))) {
 
-			Collection<EntityModelListener> entityModelListeners =
-				_entityModelListenerRegistry.getEntityModelListeners();
+			Collection<EntityModelListener<?>> entityModelListeners =
+				_entityModelListenerTracker.getEntityModelListeners();
 
-			for (EntityModelListener entityModelListener :
+			for (EntityModelListener<?> entityModelListener :
 					entityModelListeners) {
 
 				try {
@@ -619,7 +619,7 @@ public class AnalyticsConfigurationTrackerImpl
 	private ConfigurationAdmin _configurationAdmin;
 
 	@Reference
-	private EntityModelListenerRegistry _entityModelListenerRegistry;
+	private EntityModelListenerTracker _entityModelListenerTracker;
 
 	private final Set<Long> _initializedCompanyIds = new HashSet<>();
 

@@ -118,7 +118,9 @@ public abstract class BaseDataRecordResourceTestCase {
 
 		DataRecordResource.Builder builder = DataRecordResource.builder();
 
-		dataRecordResource = builder.locale(
+		dataRecordResource = builder.authentication(
+			"test@liferay.com", "test"
+		).locale(
 			LocaleUtil.getDefault()
 		).build();
 	}
@@ -940,7 +942,7 @@ public abstract class BaseDataRecordResourceTestCase {
 		}
 	}
 
-	protected void assertValid(DataRecord dataRecord) {
+	protected void assertValid(DataRecord dataRecord) throws Exception {
 		boolean valid = true;
 
 		if (dataRecord.getId() == null) {

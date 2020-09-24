@@ -9,14 +9,22 @@ definition {
 	setUp {
 		TestCase.setUpPortalInstance();
 
+		var testPortalInstance = PropsUtil.get("test.portal.instance");
+
+		var siteName = TestCase.getSiteName(siteName = "${siteName}");
+
 		User.firstLoginPG();
 
-		ProductMenu.gotoPortlet(
-			category = "Configuration",
-			panel = "Control Panel",
-			portlet = "Search");
+		if ("${testPortalInstance}" != "true") {
+			ApplicationsMenu.gotoPortlet(
+				category = "Configuration",
+				panel = "Control Panel",
+				portlet = "Search");
 
-		SearchAdministration.executeSearchActions(actionsDescription = "Reindex all search indexes.");
+			SearchAdministration.executeSearchActions(actionsDescription = "Reindex all search indexes.");
+
+			ApplicationsMenu.gotoSite(site = "${siteName}");
+		}
 
 		ProductMenu.gotoPortlet(
 			category = "Site Builder",
@@ -87,7 +95,6 @@ definition {
 	test ApproveEventWithInvitedUser {
 		property app.server.types = "jboss,tcserver,tomcat,weblogic,websphere,wildfly";
 		property database.types = "db2,hypersonic,mariadb,mysql,oracle,postgresql,sqlserver,sybase";
-		property portal.acceptance = "true";
 
 		var siteName = TestCase.getSiteName();
 
@@ -303,13 +310,13 @@ definition {
 			eventTitle = "Calendar Event Title",
 			siteCalendarName = "${siteName}");
 
-		CalendarEvent.viewNotVisibleUserInviteWithUnapprovedWorkflow(
+		CalendarEvent.viewNoUserInviteWithUnapprovedWorkflow(
 			eventTitle = "Calendar Event Title",
 			siteCalendarName = "${siteName}",
 			userCalendarName = "Test Test");
 	}
 
-	@priority = "2"
+	@priority = "3"
 	test ViewPendingStatusInEventDetails {
 		CalendarNavigator.gotoView(viewType = "Week");
 

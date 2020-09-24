@@ -33,12 +33,12 @@ public class DataDefinitionValidationException extends RuntimeException {
 		super(msg);
 	}
 
-	public DataDefinitionValidationException(String msg, Throwable cause) {
-		super(msg, cause);
+	public DataDefinitionValidationException(String msg, Throwable throwable) {
+		super(msg, throwable);
 	}
 
-	public DataDefinitionValidationException(Throwable cause) {
-		super(cause);
+	public DataDefinitionValidationException(Throwable throwable) {
+		super(throwable);
 	}
 
 	public static class MustNotDuplicateFieldName
@@ -58,6 +58,25 @@ public class DataDefinitionValidationException extends RuntimeException {
 		}
 
 		private final Set<String> _duplicatedFieldNames;
+
+	}
+
+	public static class MustNotRemoveNativeField
+		extends DataDefinitionValidationException {
+
+		public MustNotRemoveNativeField(Set<String> removedFieldNames) {
+			super(
+				String.format(
+					"Native fields %s were removed", removedFieldNames));
+
+			_removedFieldNames = removedFieldNames;
+		}
+
+		public Set<String> getRemovedFieldNames() {
+			return _removedFieldNames;
+		}
+
+		private final Set<String> _removedFieldNames;
 
 	}
 
@@ -101,6 +120,15 @@ public class DataDefinitionValidationException extends RuntimeException {
 		}
 
 		private final Locale _defaultLocale;
+
+	}
+
+	public static class MustSetFields
+		extends DataDefinitionValidationException {
+
+		public MustSetFields() {
+			super("There are no fields for the data definition");
+		}
 
 	}
 
@@ -299,6 +327,24 @@ public class DataDefinitionValidationException extends RuntimeException {
 		}
 
 		private final String _expression;
+
+	}
+
+	public static class MustSetValidType
+		extends DataDefinitionValidationException {
+
+		public MustSetValidType(String fieldType) {
+			super(
+				String.format("Invalid type set for field type %s", fieldType));
+
+			_fieldType = fieldType;
+		}
+
+		public String getFieldType() {
+			return _fieldType;
+		}
+
+		private final String _fieldType;
 
 	}
 

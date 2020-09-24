@@ -6,14 +6,14 @@ definition {
 	@summary-ignore = "true"
 	macro runSmoke {
 		task ("Ensure that the super admin can add a Blank Site") {
-			ProductMenu.gotoPortlet(
+			ApplicationsMenu.gotoPortlet(
 				category = "Sites",
 				panel = "Control Panel",
 				portlet = "Sites");
 
 			Site.addBlankCP(siteName = "Site Name");
 
-			ProductMenu.gotoPortlet(
+			ApplicationsMenu.gotoPortlet(
 				category = "Sites",
 				panel = "Control Panel",
 				portlet = "Sites");
@@ -23,8 +23,8 @@ definition {
 
 		ProductMenu.gotoPortlet(
 			category = "Site Builder",
-			panel = "Site Administration",
-			portlet = "Pages");
+			portlet = "Pages",
+			site = "Site Name");
 
 		SitePages.addPublicPage(pageName = "Test Page1");
 
@@ -104,7 +104,6 @@ definition {
 
 			ProductMenu.gotoPortlet(
 				category = "Content &amp; Data",
-				panel = "Site Administration",
 				portlet = "${portlet}");
 
 			SiteAdmin.viewPortletTitle(portletTitle = "${portlet}");
@@ -124,6 +123,21 @@ definition {
 
 			WebContent.viewTitle(webContentTitle = "${webContentTitle}");
 		}
+	}
+
+	@summary = "View default welcome content page while signed in as '${userFirstName} ${userLastName}'"
+	macro viewWelcomeContentPage {
+		AssertTextPresent(
+			locator1 = "HelloWorld#PORTLET_TITLE",
+			value1 = "Hello World");
+
+		AssertTextEquals.assertPartialText(
+			locator1 = "HelloWorld#PORTLET_CONTENT",
+			value1 = "Welcome to Liferay");
+
+		AssertElementPresent(
+			key_imageName = "welcome_bg.jpg",
+			locator1 = "Fragment#FRAGMENT_SECTION_BACKGROUND_IMAGE");
 	}
 
 	@summary = "View default welcome page while signed in as '${userFirstName} ${userLastName}'"

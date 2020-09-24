@@ -38,6 +38,7 @@ import com.liferay.portal.kernel.dao.db.DBType;
 import com.liferay.portal.kernel.dao.orm.Dialect;
 import com.liferay.portal.kernel.dao.orm.DynamicQuery;
 import com.liferay.portal.kernel.dao.orm.EntityCache;
+import com.liferay.portal.kernel.dao.orm.FinderCache;
 import com.liferay.portal.kernel.dao.orm.ORMException;
 import com.liferay.portal.kernel.dao.orm.OrderFactoryUtil;
 import com.liferay.portal.kernel.dao.orm.Projection;
@@ -51,6 +52,7 @@ import com.liferay.portal.kernel.dao.orm.SessionFactory;
 import com.liferay.portal.kernel.dao.orm.Type;
 import com.liferay.portal.kernel.exception.NoSuchModelException;
 import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.internal.spring.transaction.ReadOnlyTransactionThreadLocal;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.BaseModel;
@@ -67,6 +69,7 @@ import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.PropsKeys;
 import com.liferay.portal.kernel.util.PropsUtil;
+import com.liferay.portal.kernel.util.ProxyFactory;
 
 import java.io.Serializable;
 
@@ -263,7 +266,7 @@ public class BasePersistenceImpl<T extends BaseModel<T>>
 		EntityCache entityCache = getEntityCache();
 
 		Serializable serializable = entityCache.getResult(
-			entityCacheEnabled, _modelImplClass, primaryKey);
+			_modelImplClass, primaryKey);
 
 		if (serializable == nullModel) {
 			return null;
@@ -281,17 +284,13 @@ public class BasePersistenceImpl<T extends BaseModel<T>>
 
 				if (model == null) {
 					entityCache.putResult(
-						entityCacheEnabled, _modelImplClass, primaryKey,
-						nullModel);
+						_modelImplClass, primaryKey, nullModel);
 				}
 				else {
 					cacheResult(model);
 				}
 			}
 			catch (Exception exception) {
-				entityCache.removeResult(
-					entityCacheEnabled, _modelImplClass, primaryKey);
-
 				throw processException(exception);
 			}
 			finally {
@@ -345,7 +344,7 @@ public class BasePersistenceImpl<T extends BaseModel<T>>
 
 		for (Serializable primaryKey : primaryKeys) {
 			Serializable serializable = entityCache.getResult(
-				entityCacheEnabled, _modelImplClass, primaryKey);
+				_modelImplClass, primaryKey);
 
 			if (serializable != nullModel) {
 				if (serializable == null) {
@@ -366,7 +365,7 @@ public class BasePersistenceImpl<T extends BaseModel<T>>
 		}
 
 		StringBundler sb = new StringBundler(
-			2 * uncachedPrimaryKeys.size() + 4);
+			(2 * uncachedPrimaryKeys.size()) + 4);
 
 		sb.append(getSelectSQL());
 		sb.append(" WHERE ");
@@ -418,8 +417,7 @@ public class BasePersistenceImpl<T extends BaseModel<T>>
 			}
 
 			for (Serializable primaryKey : uncachedPrimaryKeys) {
-				entityCache.putResult(
-					entityCacheEnabled, _modelImplClass, primaryKey, nullModel);
+				entityCache.putResult(_modelImplClass, primaryKey, nullModel);
 			}
 		}
 		catch (Exception exception) {
@@ -581,6 +579,11 @@ public class BasePersistenceImpl<T extends BaseModel<T>>
 
 	@Override
 	public T remove(T model) {
+		if (ReadOnlyTransactionThreadLocal.isReadOnly()) {
+			throw new IllegalStateException(
+				"Remove called with read only transaction");
+		}
+
 		while (model instanceof ModelWrapper) {
 			ModelWrapper<T> modelWrapper = (ModelWrapper<T>)model;
 
@@ -602,17 +605,21 @@ public class BasePersistenceImpl<T extends BaseModel<T>>
 		return model;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
 	public void setConfiguration(Configuration configuration) {
 		String modelClassName = _modelClass.getName();
 
 		entityCacheEnabled = GetterUtil.getBoolean(
 			configuration.get(
 				"value.object.entity.cache.enabled.".concat(modelClassName)),
-			true);
+			entityCacheEnabled);
 		finderCacheEnabled = GetterUtil.getBoolean(
 			configuration.get(
 				"value.object.finder.cache.enabled.".concat(modelClassName)),
-			true);
+			finderCacheEnabled);
 	}
 
 	@Override
@@ -645,6 +652,11 @@ public class BasePersistenceImpl<T extends BaseModel<T>>
 
 	@Override
 	public T update(T model) {
+		if (ReadOnlyTransactionThreadLocal.isReadOnly()) {
+			throw new IllegalStateException(
+				"Update called with read only transaction");
+		}
+
 		while (model instanceof ModelWrapper) {
 			ModelWrapper<T> modelWrapper = (ModelWrapper<T>)model;
 
@@ -779,11 +791,8 @@ public class BasePersistenceImpl<T extends BaseModel<T>>
 		}
 
 		if (type == Types.CLOB) {
-			fieldName = CAST_CLOB_TEXT_OPEN.concat(
-				fieldName
-			).concat(
-				StringPool.CLOSE_PARENTHESIS
-			);
+			fieldName = StringBundler.concat(
+				CAST_CLOB_TEXT_OPEN, fieldName, StringPool.CLOSE_PARENTHESIS);
 		}
 
 		return fieldName;
@@ -891,12 +900,26 @@ public class BasePersistenceImpl<T extends BaseModel<T>>
 
 	protected static final String WHERE_OR = " OR ";
 
+	protected static EntityCache dummyEntityCache =
+		ProxyFactory.newDummyInstance(EntityCache.class);
+	protected static FinderCache dummyFinderCache =
+		ProxyFactory.newDummyInstance(FinderCache.class);
 	protected static final NullModel nullModel = new NullModel();
 
 	protected int databaseInMaxParameters;
 	protected Map<String, String> dbColumnNames;
-	protected boolean entityCacheEnabled;
-	protected boolean finderCacheEnabled;
+
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
+	protected boolean entityCacheEnabled = true;
+
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
+	protected boolean finderCacheEnabled = true;
 
 	private static Type _getType(Expression<?> expression) {
 		if (expression instanceof Column) {
@@ -918,8 +941,8 @@ public class BasePersistenceImpl<T extends BaseModel<T>>
 		}
 
 		if (expression instanceof AggregateExpression) {
-			AggregateExpression aggregateExpression =
-				(AggregateExpression)expression;
+			AggregateExpression<?> aggregateExpression =
+				(AggregateExpression<?>)expression;
 
 			if (Objects.equals(aggregateExpression.getName(), "count")) {
 				return Type.LONG;
@@ -1070,6 +1093,10 @@ public class BasePersistenceImpl<T extends BaseModel<T>>
 			throw new UnsupportedOperationException();
 		}
 
+		/**
+		 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+		 */
+		@Deprecated
 		@Override
 		public boolean isEntityCacheEnabled() {
 			throw new UnsupportedOperationException();
@@ -1080,6 +1107,10 @@ public class BasePersistenceImpl<T extends BaseModel<T>>
 			throw new UnsupportedOperationException();
 		}
 
+		/**
+		 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+		 */
+		@Deprecated
 		@Override
 		public boolean isFinderCacheEnabled() {
 			throw new UnsupportedOperationException();

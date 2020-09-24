@@ -15,7 +15,9 @@
 package com.liferay.journal.service;
 
 import com.liferay.journal.model.JournalContentSearch;
+import com.liferay.petra.function.UnsafeFunction;
 import com.liferay.petra.sql.dsl.query.DSLQuery;
+import com.liferay.portal.kernel.change.tracking.CTAware;
 import com.liferay.portal.kernel.dao.orm.ActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.DynamicQuery;
 import com.liferay.portal.kernel.dao.orm.IndexableActionableDynamicQuery;
@@ -27,6 +29,8 @@ import com.liferay.portal.kernel.search.Indexable;
 import com.liferay.portal.kernel.search.IndexableType;
 import com.liferay.portal.kernel.service.BaseLocalService;
 import com.liferay.portal.kernel.service.PersistedModelLocalService;
+import com.liferay.portal.kernel.service.change.tracking.CTService;
+import com.liferay.portal.kernel.service.persistence.change.tracking.CTPersistence;
 import com.liferay.portal.kernel.transaction.Isolation;
 import com.liferay.portal.kernel.transaction.Propagation;
 import com.liferay.portal.kernel.transaction.Transactional;
@@ -48,22 +52,28 @@ import org.osgi.annotation.versioning.ProviderType;
  * @see JournalContentSearchLocalServiceUtil
  * @generated
  */
+@CTAware
 @ProviderType
 @Transactional(
 	isolation = Isolation.PORTAL,
 	rollbackFor = {PortalException.class, SystemException.class}
 )
 public interface JournalContentSearchLocalService
-	extends BaseLocalService, PersistedModelLocalService {
+	extends BaseLocalService, CTService<JournalContentSearch>,
+			PersistedModelLocalService {
 
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this interface directly. Always use {@link JournalContentSearchLocalServiceUtil} to access the journal content search local service. Add custom service methods to <code>com.liferay.journal.service.impl.JournalContentSearchLocalServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface.
+	 * Never modify this interface directly. Add custom service methods to <code>com.liferay.journal.service.impl.JournalContentSearchLocalServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface. Consume the journal content search local service via injection or a <code>org.osgi.util.tracker.ServiceTracker</code>. Use {@link JournalContentSearchLocalServiceUtil} if injection and service tracking are not available.
 	 */
 
 	/**
 	 * Adds the journal content search to the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect JournalContentSearchLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param journalContentSearch the journal content search
 	 * @return the journal content search that was added
@@ -102,6 +112,10 @@ public interface JournalContentSearchLocalService
 	/**
 	 * Deletes the journal content search from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect JournalContentSearchLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param journalContentSearch the journal content search
 	 * @return the journal content search that was removed
 	 */
@@ -111,6 +125,10 @@ public interface JournalContentSearchLocalService
 
 	/**
 	 * Deletes the journal content search with the primary key from the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect JournalContentSearchLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param contentSearchId the primary key of the journal content search
 	 * @return the journal content search that was removed
@@ -303,11 +321,30 @@ public interface JournalContentSearchLocalService
 	/**
 	 * Updates the journal content search in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect JournalContentSearchLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param journalContentSearch the journal content search
 	 * @return the journal content search that was updated
 	 */
 	@Indexable(type = IndexableType.REINDEX)
 	public JournalContentSearch updateJournalContentSearch(
 		JournalContentSearch journalContentSearch);
+
+	@Override
+	@Transactional(enabled = false)
+	public CTPersistence<JournalContentSearch> getCTPersistence();
+
+	@Override
+	@Transactional(enabled = false)
+	public Class<JournalContentSearch> getModelClass();
+
+	@Override
+	@Transactional(rollbackFor = Throwable.class)
+	public <R, E extends Throwable> R updateWithUnsafeFunction(
+			UnsafeFunction<CTPersistence<JournalContentSearch>, R, E>
+				updateUnsafeFunction)
+		throws E;
 
 }

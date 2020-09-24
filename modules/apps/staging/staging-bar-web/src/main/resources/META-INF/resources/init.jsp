@@ -37,6 +37,7 @@ page import="com.liferay.portal.kernel.dao.orm.QueryUtil" %><%@
 page import="com.liferay.portal.kernel.dao.search.ResultRow" %><%@
 page import="com.liferay.portal.kernel.exception.LayoutBranchNameException" %><%@
 page import="com.liferay.portal.kernel.exception.LayoutSetBranchNameException" %><%@
+page import="com.liferay.portal.kernel.exception.PortalException" %><%@
 page import="com.liferay.portal.kernel.language.LanguageUtil" %><%@
 page import="com.liferay.portal.kernel.model.Group" %><%@
 page import="com.liferay.portal.kernel.model.Layout" %><%@
@@ -50,6 +51,7 @@ page import="com.liferay.portal.kernel.portlet.LiferayWindowState" %><%@
 page import="com.liferay.portal.kernel.security.auth.AuthException" %><%@
 page import="com.liferay.portal.kernel.security.permission.ActionKeys" %><%@
 page import="com.liferay.portal.kernel.service.LayoutBranchLocalServiceUtil" %><%@
+page import="com.liferay.portal.kernel.service.LayoutLocalServiceUtil" %><%@
 page import="com.liferay.portal.kernel.service.LayoutRevisionLocalServiceUtil" %><%@
 page import="com.liferay.portal.kernel.service.LayoutSetBranchLocalServiceUtil" %><%@
 page import="com.liferay.portal.kernel.service.UserLocalServiceUtil" %><%@
@@ -102,6 +104,40 @@ privateLayout = (boolean)renderRequest.getAttribute(WebKeys.PRIVATE_LAYOUT);
 
 LayoutBranchDisplayContext layoutBranchDisplayContext = new LayoutBranchDisplayContext(request);
 LayoutSetBranchDisplayContext layoutSetBranchDisplayContext = new LayoutSetBranchDisplayContext(request);
+%>
+
+<%!
+private long _getLastImportLayoutRevisionId(Group group, Layout layout) {
+	long lastImportLayoutRevisionId = 0;
+
+	try {
+		if (group.isStagingGroup()) {
+			Layout liveLayout = LayoutLocalServiceUtil.fetchLayoutByUuidAndGroupId(layout.getUuid(), group.getLiveGroupId(), layout.isPrivateLayout());
+
+			UnicodeProperties typeSettingsProperties = liveLayout.getTypeSettingsProperties();
+
+			lastImportLayoutRevisionId = GetterUtil.getLong(typeSettingsProperties.getProperty("last-import-layout-revision-id"));
+		}
+	}
+	catch (Exception exception) {
+	}
+
+	return lastImportLayoutRevisionId;
+}
+
+private String _getStatusMessage(LayoutRevision layoutRevision, Group group, Layout layout) {
+	String statusMessage = null;
+
+	if (layoutRevision.isHead()) {
+		statusMessage = "ready-for-publication";
+	}
+
+	if (layoutRevision.getLayoutRevisionId() == _getLastImportLayoutRevisionId(group, layout)) {
+		statusMessage = "in-live";
+	}
+
+	return statusMessage;
+}
 %>
 
 <%@ include file="/init-ext.jsp" %>

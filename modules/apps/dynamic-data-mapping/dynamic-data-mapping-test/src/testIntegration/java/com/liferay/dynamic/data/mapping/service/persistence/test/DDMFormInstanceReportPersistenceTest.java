@@ -26,6 +26,7 @@ import com.liferay.portal.kernel.dao.orm.DynamicQueryFactoryUtil;
 import com.liferay.portal.kernel.dao.orm.ProjectionFactoryUtil;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.dao.orm.RestrictionsFactoryUtil;
+import com.liferay.portal.kernel.dao.orm.Session;
 import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
@@ -130,6 +131,8 @@ public class DDMFormInstanceReportPersistenceTest {
 
 		newDDMFormInstanceReport.setMvccVersion(RandomTestUtil.nextLong());
 
+		newDDMFormInstanceReport.setCtCollectionId(RandomTestUtil.nextLong());
+
 		newDDMFormInstanceReport.setGroupId(RandomTestUtil.nextLong());
 
 		newDDMFormInstanceReport.setCompanyId(RandomTestUtil.nextLong());
@@ -152,6 +155,9 @@ public class DDMFormInstanceReportPersistenceTest {
 		Assert.assertEquals(
 			existingDDMFormInstanceReport.getMvccVersion(),
 			newDDMFormInstanceReport.getMvccVersion());
+		Assert.assertEquals(
+			existingDDMFormInstanceReport.getCtCollectionId(),
+			newDDMFormInstanceReport.getCtCollectionId());
 		Assert.assertEquals(
 			existingDDMFormInstanceReport.getFormInstanceReportId(),
 			newDDMFormInstanceReport.getFormInstanceReportId());
@@ -212,9 +218,10 @@ public class DDMFormInstanceReportPersistenceTest {
 
 	protected OrderByComparator<DDMFormInstanceReport> getOrderByComparator() {
 		return OrderByComparatorFactoryUtil.create(
-			"DDMFormInstanceReport", "mvccVersion", true,
-			"formInstanceReportId", true, "groupId", true, "companyId", true,
-			"createDate", true, "modifiedDate", true, "formInstanceId", true);
+			"DDMFormInstanceReport", "mvccVersion", true, "ctCollectionId",
+			true, "formInstanceReportId", true, "groupId", true, "companyId",
+			true, "createDate", true, "modifiedDate", true, "formInstanceId",
+			true);
 	}
 
 	@Test
@@ -460,15 +467,61 @@ public class DDMFormInstanceReportPersistenceTest {
 
 		_persistence.clearCache();
 
-		DDMFormInstanceReport existingDDMFormInstanceReport =
+		_assertOriginalValues(
 			_persistence.findByPrimaryKey(
-				newDDMFormInstanceReport.getPrimaryKey());
+				newDDMFormInstanceReport.getPrimaryKey()));
+	}
+
+	@Test
+	public void testResetOriginalValuesWithDynamicQueryLoadFromDatabase()
+		throws Exception {
+
+		_testResetOriginalValuesWithDynamicQuery(true);
+	}
+
+	@Test
+	public void testResetOriginalValuesWithDynamicQueryLoadFromSession()
+		throws Exception {
+
+		_testResetOriginalValuesWithDynamicQuery(false);
+	}
+
+	private void _testResetOriginalValuesWithDynamicQuery(boolean clearSession)
+		throws Exception {
+
+		DDMFormInstanceReport newDDMFormInstanceReport =
+			addDDMFormInstanceReport();
+
+		if (clearSession) {
+			Session session = _persistence.openSession();
+
+			session.flush();
+
+			session.clear();
+		}
+
+		DynamicQuery dynamicQuery = DynamicQueryFactoryUtil.forClass(
+			DDMFormInstanceReport.class, _dynamicQueryClassLoader);
+
+		dynamicQuery.add(
+			RestrictionsFactoryUtil.eq(
+				"formInstanceReportId",
+				newDDMFormInstanceReport.getFormInstanceReportId()));
+
+		List<DDMFormInstanceReport> result = _persistence.findWithDynamicQuery(
+			dynamicQuery);
+
+		_assertOriginalValues(result.get(0));
+	}
+
+	private void _assertOriginalValues(
+		DDMFormInstanceReport ddmFormInstanceReport) {
 
 		Assert.assertEquals(
-			Long.valueOf(existingDDMFormInstanceReport.getFormInstanceId()),
+			Long.valueOf(ddmFormInstanceReport.getFormInstanceId()),
 			ReflectionTestUtil.<Long>invoke(
-				existingDDMFormInstanceReport, "getOriginalFormInstanceId",
-				new Class<?>[0]));
+				ddmFormInstanceReport, "getColumnOriginalValue",
+				new Class<?>[] {String.class}, "formInstanceId"));
 	}
 
 	protected DDMFormInstanceReport addDDMFormInstanceReport()
@@ -479,6 +532,8 @@ public class DDMFormInstanceReportPersistenceTest {
 		DDMFormInstanceReport ddmFormInstanceReport = _persistence.create(pk);
 
 		ddmFormInstanceReport.setMvccVersion(RandomTestUtil.nextLong());
+
+		ddmFormInstanceReport.setCtCollectionId(RandomTestUtil.nextLong());
 
 		ddmFormInstanceReport.setGroupId(RandomTestUtil.nextLong());
 

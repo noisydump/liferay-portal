@@ -14,15 +14,50 @@
 
 import {openToast} from 'frontend-js-web';
 
-export default function ({getRedirectEntryChainCauseURL, namespace}) {
-	var form = document[`${namespace}fm`];
+export default function ({
+	getRedirectEntryChainCauseURL,
+	initialDestinationURL,
+	initialIsPermanent,
+	namespace,
+}) {
+	const form = document[`${namespace}fm`];
 	form.addEventListener('submit', saveRedirectEntry);
+	const typeInfoAlert = document.getElementById(`${namespace}typeInfoAlert`);
+	const destinationURLInput = document.getElementById(
+		`${namespace}destinationURL`
+	);
+	const permanentSelect = document.getElementById(`${namespace}permanent`);
+
+	if (typeInfoAlert && initialIsPermanent) {
+		destinationURLInput.addEventListener('input', showTypeInfoAlert);
+		permanentSelect.addEventListener('input', showTypeInfoAlert);
+	}
+
+	function showTypeInfoAlert() {
+		typeInfoAlert.classList.toggle(
+			'hide',
+			permanentSelect.value === 'true' &&
+				destinationURLInput.value === initialDestinationURL
+		);
+	}
 
 	function saveRedirectEntry() {
-		var destinationURL = form.elements[`${namespace}destinationURL`];
-		var sourceURL = form.elements[`${namespace}sourceURL`];
+		const destinationURL = form.elements[`${namespace}destinationURL`];
+		const sourceURL = form.elements[`${namespace}sourceURL`];
 
-		if (destinationURL.value && sourceURL.value) {
+		if (!sourceURL.value) {
+			sourceURL.focus();
+		}
+		else if (
+			!destinationURL.value ||
+			destinationURL
+				.closest('.form-group')
+				.classList.contains('has-error')
+		) {
+			destinationURL.focus();
+			destinationURL.blur();
+		}
+		else {
 			Liferay.Util.fetch(
 				Liferay.Util.PortletURL.createResourceURL(
 					getRedirectEntryChainCauseURL,
@@ -48,14 +83,9 @@ export default function ({getRedirectEntryChainCauseURL, namespace}) {
 						message: Liferay.Language.get(
 							'an-unexpected-error-occurred'
 						),
-						title: `${Liferay.Language.get('error')}:`,
 						type: 'danger',
 					});
 				});
-		}
-		else {
-			destinationURL.focus();
-			destinationURL.blur();
 		}
 	}
 

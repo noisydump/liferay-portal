@@ -84,7 +84,8 @@ public class DepotEntryLocalServiceImpl extends DepotEntryLocalServiceBaseImpl {
 			DepotEntry.class.getName(), depotEntry.getDepotEntryId(),
 			GroupConstants.DEFAULT_LIVE_GROUP_ID, nameMap, descriptionMap,
 			GroupConstants.TYPE_DEPOT, true,
-			GroupConstants.DEFAULT_MEMBERSHIP_RESTRICTION, null, false, false,
+			GroupConstants.DEFAULT_MEMBERSHIP_RESTRICTION,
+			"/asset-library-" + depotEntry.getDepotEntryId(), false, false,
 			true, serviceContext);
 
 		_userLocalService.addGroupUsers(
@@ -122,6 +123,27 @@ public class DepotEntryLocalServiceImpl extends DepotEntryLocalServiceBaseImpl {
 	@Override
 	public DepotEntry fetchGroupDepotEntry(long groupId) {
 		return depotEntryPersistence.fetchByGroupId(groupId);
+	}
+
+	@Override
+	public List<DepotEntry> getGroupConnectedDepotEntries(
+			long groupId, boolean ddmStructuresAvailable, int start, int end)
+		throws PortalException {
+
+		List<DepotEntry> depotEntries = new ArrayList<>();
+
+		List<DepotEntryGroupRel> depotEntryGroupRels =
+			_depotEntryGroupRelPersistence.findByDDMSA_TGI(
+				ddmStructuresAvailable, groupId, start, end);
+
+		for (DepotEntryGroupRel depotEntryGroupRel : depotEntryGroupRels) {
+			DepotEntry depotEntry = depotEntryLocalService.getDepotEntry(
+				depotEntryGroupRel.getDepotEntryId());
+
+			depotEntries.add(depotEntry);
+		}
+
+		return depotEntries;
 	}
 
 	@Override

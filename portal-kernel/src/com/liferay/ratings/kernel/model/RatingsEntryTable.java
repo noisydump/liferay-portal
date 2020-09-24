@@ -32,6 +32,10 @@ public class RatingsEntryTable extends BaseTable<RatingsEntryTable> {
 
 	public static final RatingsEntryTable INSTANCE = new RatingsEntryTable();
 
+	public final Column<RatingsEntryTable, Long> mvccVersion = createColumn(
+		"mvccVersion", Long.class, Types.BIGINT, Column.FLAG_NULLITY);
+	public final Column<RatingsEntryTable, Long> ctCollectionId = createColumn(
+		"ctCollectionId", Long.class, Types.BIGINT, Column.FLAG_PRIMARY);
 	public final Column<RatingsEntryTable, String> uuid = createColumn(
 		"uuid_", String.class, Types.VARCHAR, Column.FLAG_DEFAULT);
 	public final Column<RatingsEntryTable, Long> entryId = createColumn(

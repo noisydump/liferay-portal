@@ -109,7 +109,9 @@ public abstract class BaseWorkflowLogResourceTestCase {
 
 		WorkflowLogResource.Builder builder = WorkflowLogResource.builder();
 
-		workflowLogResource = builder.locale(
+		workflowLogResource = builder.authentication(
+			"test@liferay.com", "test"
+		).locale(
 			LocaleUtil.getDefault()
 		).build();
 	}
@@ -547,7 +549,7 @@ public abstract class BaseWorkflowLogResourceTestCase {
 		}
 	}
 
-	protected void assertValid(WorkflowLog workflowLog) {
+	protected void assertValid(WorkflowLog workflowLog) throws Exception {
 		boolean valid = true;
 
 		if (workflowLog.getDateCreated() == null) {

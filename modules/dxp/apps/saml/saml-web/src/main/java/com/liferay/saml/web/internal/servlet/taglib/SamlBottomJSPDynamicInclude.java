@@ -16,6 +16,7 @@ package com.liferay.saml.web.internal.servlet.taglib;
 
 import com.liferay.portal.kernel.exception.ContactNameException;
 import com.liferay.portal.kernel.exception.UserEmailAddressException;
+import com.liferay.portal.kernel.exception.UserEmailAddressException.MustNotUseCompanyMx;
 import com.liferay.portal.kernel.exception.UserScreenNameException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -94,7 +95,7 @@ public class SamlBottomJSPDynamicInclude extends BaseJSPDynamicInclude {
 	public void register(
 		DynamicInclude.DynamicIncludeRegistry dynamicIncludeRegistry) {
 
-		dynamicIncludeRegistry.register("/html/common/themes/bottom.jsp#post");
+		dynamicIncludeRegistry.register("/html/common/themes/bottom.jsp#pre");
 	}
 
 	@Override
@@ -107,6 +108,7 @@ public class SamlBottomJSPDynamicInclude extends BaseJSPDynamicInclude {
 		return _log;
 	}
 
+	@Override
 	@Reference(
 		target = "(osgi.web.symbolicname=com.liferay.saml.web)", unbind = "-"
 	)
@@ -116,6 +118,7 @@ public class SamlBottomJSPDynamicInclude extends BaseJSPDynamicInclude {
 
 	private static final String[] _ERRORS = {
 		ContactNameException.class.getSimpleName(),
+		MustNotUseCompanyMx.class.getSimpleName(),
 		PrincipalException.MustBeAuthenticated.class.getSimpleName(),
 		SubjectException.class.getSimpleName(),
 		UserEmailAddressException.class.getSimpleName(),

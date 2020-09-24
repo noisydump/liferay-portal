@@ -12,53 +12,40 @@
  * details.
  */
 
-import {DataLayoutBuilderActions} from 'data-engine-taglib';
-import React, {useContext, useState} from 'react';
+import {
+	DataLayoutBuilderActions,
+	DataLayoutVisitor,
+	TranslationManager,
+	saveDataDefinition,
+} from 'data-engine-taglib';
+import React, {useCallback, useContext, useEffect, useState} from 'react';
 
 import {AppContext} from '../../AppContext.es';
-import TranslationManager from '../../components/translation-manager/TranslationManager.es';
 import UpperToolbar from '../../components/upper-toolbar/UpperToolbar.es';
 import {errorToast, successToast} from '../../utils/toast.es';
+import {getValidName} from '../../utils/utils.es';
 import FormViewContext from './FormViewContext.es';
-import saveFormView from './saveFormView.es';
 
-export default ({newCustomObject}) => {
+export default ({newCustomObject, showTranslationManager}) => {
+	const [defaultLanguageId, setDefaultLanguageId] = useState('');
+	const [editingLanguageId, setEditingLanguageId] = useState('');
+	const [isLoading, setLoading] = useState(false);
+
 	const [state, dispatch] = useContext(FormViewContext);
-	const {dataDefinitionId, dataLayout} = state;
+	const {dataDefinition, dataDefinitionId, dataLayout} = state;
 
-	const [editingLanguageId, setEditingLanguageId] = useState(
-		Liferay.ThemeDisplay.getLanguageId()
-	);
+	useEffect(() => {
+		if (dataDefinition.defaultLanguageId) {
+			setDefaultLanguageId(dataDefinition.defaultLanguageId);
+
+			onEditingLanguageIdChange(dataDefinition.defaultLanguageId);
+		}
+	}, [dataDefinition.defaultLanguageId, onEditingLanguageIdChange]);
 
 	const {basePortletURL} = useContext(AppContext);
 	const listUrl = `${basePortletURL}/#/custom-object/${dataDefinitionId}/form-views`;
 
-	const onCancel = () => {
-		if (newCustomObject) {
-			Liferay.Util.navigate(basePortletURL);
-		}
-		else {
-			Liferay.Util.navigate(listUrl);
-		}
-	};
-
-	const onError = (error) => {
-		const {title = ''} = error;
-
-		errorToast(`${title}.`);
-	};
-
-	const onSuccess = () => {
-		successToast(
-			Liferay.Language.get('the-form-view-was-saved-successfully')
-		);
-
-		Liferay.Util.navigate(listUrl);
-	};
-
-	const onInput = ({target}) => {
-		const {value} = target;
-
+	const onDataLayoutNameChange = ({target: {value}}) => {
 		dispatch({
 			payload: {
 				name: {
@@ -70,6 +57,18 @@ export default ({newCustomObject}) => {
 		});
 	};
 
+	const onEditingLanguageIdChange = useCallback(
+		(editingLanguageId) => {
+			setEditingLanguageId(editingLanguageId);
+
+			dispatch({
+				payload: editingLanguageId,
+				type: DataLayoutBuilderActions.UPDATE_EDITING_LANGUAGE_ID,
+			});
+		},
+		[dispatch]
+	);
+
 	const onKeyDown = (event) => {
 		if (event.keyCode === 13) {
 			event.preventDefault();
@@ -78,53 +77,72 @@ export default ({newCustomObject}) => {
 		}
 	};
 
+	const onCancel = () => {
+		if (newCustomObject) {
+			Liferay.Util.navigate(basePortletURL);
+		}
+		else {
+			Liferay.Util.navigate(listUrl);
+		}
+	};
+
+	const onError = (error) => {
+		const {title} = error;
+
+		errorToast(title);
+	};
+
+	const onSuccess = () => {
+		successToast(
+			Liferay.Language.get('the-form-view-was-saved-successfully')
+		);
+
+		Liferay.Util.navigate(listUrl);
+	};
+
 	const onSave = () => {
-		const {dataLayout} = state;
-		const newState = {
-			...state,
-			dataLayout: {
-				...dataLayout,
-				dataRules: dataLayout.dataRules.map((rule) => {
-					delete rule.ruleEditedIndex;
+		if (!dataLayout.name[defaultLanguageId]) {
+			dataLayout.name[defaultLanguageId] =
+				dataLayout.name[editingLanguageId];
+		}
 
-					return rule;
-				}),
-			},
-		};
+		dataLayout.name[defaultLanguageId] = getValidName(
+			Liferay.Language.get('untitled-form-view'),
+			dataLayout.name[defaultLanguageId]
+		);
 
-		saveFormView(newState)
+		setLoading(true);
+
+		saveDataDefinition(state)
 			.then(onSuccess)
 			.catch((error) => {
 				onError(error);
+				setLoading(false);
 			});
 	};
 
-	const defaultLanguageId = Liferay.ThemeDisplay.getDefaultLanguageId();
-
-	const {
-		name: {
-			[defaultLanguageId]: dataLayoutDefaultName,
-			[editingLanguageId]: dataLayoutEditingName,
-		},
-	} = dataLayout;
+	if (!defaultLanguageId) {
+		return null;
+	}
 
 	return (
 		<UpperToolbar>
-			<UpperToolbar.Group>
-				<TranslationManager
-					editingLanguageId={editingLanguageId}
-					onChangeLanguageId={(languageId) =>
-						setEditingLanguageId(languageId)
-					}
-					translatedLanguageIds={dataLayout.name}
-				/>
-			</UpperToolbar.Group>
+			{showTranslationManager && (
+				<UpperToolbar.Group>
+					<TranslationManager
+						defaultLanguageId={defaultLanguageId}
+						editingLanguageId={editingLanguageId}
+						onEditingLanguageIdChange={onEditingLanguageIdChange}
+						translatedLanguageIds={dataLayout.name}
+					/>
+				</UpperToolbar.Group>
+			)}
 
 			<UpperToolbar.Input
-				onInput={onInput}
+				onInput={onDataLayoutNameChange}
 				onKeyDown={onKeyDown}
 				placeholder={Liferay.Language.get('untitled-form-view')}
-				value={dataLayoutEditingName}
+				value={dataLayout.name[editingLanguageId] || ''}
 			/>
 
 			<UpperToolbar.Group>
@@ -133,7 +151,13 @@ export default ({newCustomObject}) => {
 				</UpperToolbar.Button>
 
 				<UpperToolbar.Button
-					disabled={!dataLayoutEditingName || !dataLayoutDefaultName}
+					disabled={
+						isLoading ||
+						!dataLayout.name[editingLanguageId] ||
+						DataLayoutVisitor.isDataLayoutEmpty(
+							dataLayout.dataLayoutPages
+						)
+					}
 					onClick={onSave}
 				>
 					{Liferay.Language.get('save')}

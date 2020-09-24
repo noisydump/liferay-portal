@@ -113,7 +113,9 @@ public abstract class BaseSLAResourceTestCase {
 
 		SLAResource.Builder builder = SLAResource.builder();
 
-		slaResource = builder.locale(
+		slaResource = builder.authentication(
+			"test@liferay.com", "test"
+		).locale(
 			LocaleUtil.getDefault()
 		).build();
 	}
@@ -486,7 +488,7 @@ public abstract class BaseSLAResourceTestCase {
 		}
 	}
 
-	protected void assertValid(SLA sla) {
+	protected void assertValid(SLA sla) throws Exception {
 		boolean valid = true;
 
 		if (sla.getDateModified() == null) {

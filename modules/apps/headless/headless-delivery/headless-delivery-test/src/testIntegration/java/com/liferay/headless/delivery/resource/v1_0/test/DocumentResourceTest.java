@@ -24,8 +24,8 @@ import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.repository.model.Folder;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.UserLocalServiceUtil;
+import com.liferay.portal.kernel.test.constants.TestDataConstants;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
-import com.liferay.portal.kernel.test.util.TestDataConstants;
 import com.liferay.portal.kernel.util.FileUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 
@@ -35,6 +35,7 @@ import java.util.Arrays;
 import java.util.Map;
 
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -44,6 +45,15 @@ import org.junit.runner.RunWith;
 @RunWith(Arquillian.class)
 public class DocumentResourceTest extends BaseDocumentResourceTestCase {
 
+	@Before
+	@Override
+	public void setUp() throws Exception {
+		super.setUp();
+
+		testGroup = testDepotEntry.getGroup();
+	}
+
+	@Override
 	@Test
 	public void testGraphQLGetSiteDocumentsPage() throws Exception {
 		Document document1 = testGraphQLDocument_addDocument();
@@ -95,7 +105,7 @@ public class DocumentResourceTest extends BaseDocumentResourceTestCase {
 	}
 
 	@Override
-	protected Map<String, File> getMultipartFiles() throws Exception {
+	protected Map<String, File> getMultipartFiles() {
 		return HashMapBuilder.<String, File>put(
 			"file",
 			() -> FileUtil.createTempFile(TestDataConstants.TEST_BYTE_ARRAY)
@@ -106,6 +116,7 @@ public class DocumentResourceTest extends BaseDocumentResourceTestCase {
 	protected Document randomDocument() throws Exception {
 		Document document = super.randomDocument();
 
+		document.setDocumentFolderId(0L);
 		document.setViewableBy(Document.ViewableBy.ANYONE);
 
 		return document;

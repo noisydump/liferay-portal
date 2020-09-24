@@ -26,8 +26,8 @@ DepotAdminManagementToolbarDisplayContext depotAdminManagementToolbarDisplayCont
 	displayContext="<%= depotAdminManagementToolbarDisplayContext %>"
 />
 
-<clay:container
-	className="closed sidenav-container sidenav-right"
+<clay:container-fluid
+	cssClass="closed sidenav-container sidenav-right"
 >
 	<div class="sidenav-content">
 		<portlet:actionURL name="deleteGroups" var="deleteGroupsURL" />
@@ -72,6 +72,15 @@ DepotAdminManagementToolbarDisplayContext depotAdminManagementToolbarDisplayCont
 										<%= HtmlUtil.escape(depotEntryGroup.getDescriptiveName(locale)) %>
 									</aui:a>
 								</h5>
+
+								<h6>
+
+									<%
+									int depotEntryConnectedGroupsCount = depotAdminDisplayContext.getDepotEntryConnectedGroupsCount(depotEntry);
+									%>
+
+									<liferay-ui:message arguments="<%= depotEntryConnectedGroupsCount %>" key='<%= (depotEntryConnectedGroupsCount != 1) ? "x-connected-sites" : "x-connected-site" %>' />
+								</h6>
 							</liferay-ui:search-container-column-text>
 
 							<liferay-ui:search-container-column-text>
@@ -120,7 +129,7 @@ DepotAdminManagementToolbarDisplayContext depotAdminManagementToolbarDisplayCont
 			</liferay-ui:search-container>
 		</aui:form>
 	</div>
-</clay:container>
+</clay:container-fluid>
 
 <liferay-frontend:component
 	componentId="<%= DepotAdminWebKeys.DEPOT_ENTRY_DROPDOWN_DEFAULT_EVENT_HANDLER %>"

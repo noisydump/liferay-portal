@@ -106,7 +106,9 @@ public abstract class BaseWorkflowTaskTransitionsResourceTestCase {
 		WorkflowTaskTransitionsResource.Builder builder =
 			WorkflowTaskTransitionsResource.builder();
 
-		workflowTaskTransitionsResource = builder.locale(
+		workflowTaskTransitionsResource = builder.authentication(
+			"test@liferay.com", "test"
+		).locale(
 			LocaleUtil.getDefault()
 		).build();
 	}
@@ -191,20 +193,26 @@ public abstract class BaseWorkflowTaskTransitionsResourceTestCase {
 	}
 
 	@Test
-	public void testGetWorkflowTaskTransition() throws Exception {
-		Assert.assertTrue(false);
+	public void testPostWorkflowTaskTransition() throws Exception {
+		WorkflowTaskTransitions randomWorkflowTaskTransitions =
+			randomWorkflowTaskTransitions();
+
+		WorkflowTaskTransitions postWorkflowTaskTransitions =
+			testPostWorkflowTaskTransition_addWorkflowTaskTransitions(
+				randomWorkflowTaskTransitions);
+
+		assertEquals(
+			randomWorkflowTaskTransitions, postWorkflowTaskTransitions);
+		assertValid(postWorkflowTaskTransitions);
 	}
 
-	@Test
-	public void testGraphQLGetWorkflowTaskTransition() throws Exception {
-		Assert.assertTrue(true);
-	}
-
-	@Test
-	public void testGraphQLGetWorkflowTaskTransitionNotFound()
+	protected WorkflowTaskTransitions
+			testPostWorkflowTaskTransition_addWorkflowTaskTransitions(
+				WorkflowTaskTransitions workflowTaskTransitions)
 		throws Exception {
 
-		Assert.assertTrue(true);
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
 	}
 
 	protected void assertHttpResponseStatusCode(
@@ -275,8 +283,8 @@ public abstract class BaseWorkflowTaskTransitionsResourceTestCase {
 		}
 	}
 
-	protected void assertValid(
-		WorkflowTaskTransitions workflowTaskTransitions) {
+	protected void assertValid(WorkflowTaskTransitions workflowTaskTransitions)
+		throws Exception {
 
 		boolean valid = true;
 

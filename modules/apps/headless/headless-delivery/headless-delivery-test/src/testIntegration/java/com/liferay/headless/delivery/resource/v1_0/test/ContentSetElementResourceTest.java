@@ -21,10 +21,12 @@ import com.liferay.asset.list.service.AssetListEntryLocalServiceUtil;
 import com.liferay.blogs.model.BlogsEntry;
 import com.liferay.blogs.service.BlogsEntryLocalServiceUtil;
 import com.liferay.headless.delivery.client.dto.v1_0.ContentSetElement;
+import com.liferay.journal.model.JournalArticle;
+import com.liferay.journal.test.util.JournalTestUtil;
 import com.liferay.portal.kernel.service.ServiceContext;
-import com.liferay.portal.kernel.service.UserLocalServiceUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
+import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.search.test.util.SearchTestRule;
 
 import org.junit.Before;
@@ -43,21 +45,56 @@ public class ContentSetElementResourceTest
 	public void setUp() throws Exception {
 		super.setUp();
 
-		_serviceContext = new ServiceContext();
-
-		_serviceContext.setScopeGroupId(testGroup.getGroupId());
-
-		long userId = TestPropsValues.getUserId();
-
-		_serviceContext.setUserId(userId);
+		_serviceContext = _getServiceContext();
 
 		_assetListEntry = AssetListEntryLocalServiceUtil.addAssetListEntry(
-			userId, testGroup.getGroupId(), RandomTestUtil.randomString(),
+			TestPropsValues.getUserId(), testGroup.getGroupId(),
+			RandomTestUtil.randomString(),
+			AssetListEntryTypeConstants.TYPE_DYNAMIC, _serviceContext);
+		_depotAssetListEntry = AssetListEntryLocalServiceUtil.addAssetListEntry(
+			TestPropsValues.getUserId(), testDepotEntry.getGroupId(),
+			RandomTestUtil.randomString(),
 			AssetListEntryTypeConstants.TYPE_DYNAMIC, _serviceContext);
 	}
 
 	@Rule
 	public SearchTestRule searchTestRule = new SearchTestRule();
+
+	@Override
+	protected ContentSetElement
+			testGetAssetLibraryContentSetByKeyContentSetElementsPage_addContentSetElement(
+				Long assetLibraryId, String key,
+				ContentSetElement contentSetElement)
+		throws Exception {
+
+		return _toContentSetElement(
+			JournalTestUtil.addArticle(_depotAssetListEntry.getGroupId(), 0));
+	}
+
+	@Override
+	protected String
+		testGetAssetLibraryContentSetByKeyContentSetElementsPage_getKey() {
+
+		return _depotAssetListEntry.getAssetListEntryKey();
+	}
+
+	@Override
+	protected ContentSetElement
+			testGetAssetLibraryContentSetByUuidContentSetElementsPage_addContentSetElement(
+				Long assetLibraryId, String uuid,
+				ContentSetElement contentSetElement)
+		throws Exception {
+
+		return _toContentSetElement(
+			JournalTestUtil.addArticle(_depotAssetListEntry.getGroupId(), 0));
+	}
+
+	@Override
+	protected String
+		testGetAssetLibraryContentSetByUuidContentSetElementsPage_getUuid() {
+
+		return _depotAssetListEntry.getUuid();
+	}
 
 	@Override
 	protected ContentSetElement
@@ -105,9 +142,20 @@ public class ContentSetElementResourceTest
 
 	private BlogsEntry _addBlogsEntry() throws Exception {
 		return BlogsEntryLocalServiceUtil.addEntry(
-			UserLocalServiceUtil.getDefaultUserId(testGroup.getCompanyId()),
-			RandomTestUtil.randomString(), RandomTestUtil.randomString(),
-			_serviceContext);
+			TestPropsValues.getUserId(), RandomTestUtil.randomString(),
+			RandomTestUtil.randomString(), _serviceContext);
+	}
+
+	private ServiceContext _getServiceContext() throws Exception {
+		ServiceContext serviceContext = new ServiceContext();
+
+		serviceContext.setAttribute(
+			WorkflowConstants.CONTEXT_USER_ID, TestPropsValues.getUserId());
+		serviceContext.setCompanyId(testGroup.getCompanyId());
+		serviceContext.setScopeGroupId(testGroup.getGroupId());
+		serviceContext.setUserId(TestPropsValues.getUserId());
+
+		return serviceContext;
 	}
 
 	private ContentSetElement _toContentSetElement(BlogsEntry blogsEntry) {
@@ -119,7 +167,19 @@ public class ContentSetElementResourceTest
 		};
 	}
 
+	private ContentSetElement _toContentSetElement(
+		JournalArticle journalArticle) {
+
+		return new ContentSetElement() {
+			{
+				id = journalArticle.getId();
+				title = journalArticle.getTitle();
+			}
+		};
+	}
+
 	private AssetListEntry _assetListEntry;
+	private AssetListEntry _depotAssetListEntry;
 	private ServiceContext _serviceContext;
 
 }

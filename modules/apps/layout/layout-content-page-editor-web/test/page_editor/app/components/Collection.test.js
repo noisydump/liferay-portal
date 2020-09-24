@@ -16,13 +16,13 @@ import '@testing-library/jest-dom/extend-expect';
 import {act, cleanup, getByText, render} from '@testing-library/react';
 import React from 'react';
 import {DndProvider} from 'react-dnd';
-import HTML5Backend from 'react-dnd-html5-backend';
+import {HTML5Backend} from 'react-dnd-html5-backend';
 
 import {CollectionItemWithControls} from '../../../../src/main/resources/META-INF/resources/page_editor/app/components/layout-data-items';
 import Collection from '../../../../src/main/resources/META-INF/resources/page_editor/app/components/layout-data-items/Collection';
 import CollectionService from '../../../../src/main/resources/META-INF/resources/page_editor/app/services/CollectionService';
 import {StoreAPIContextProvider} from '../../../../src/main/resources/META-INF/resources/page_editor/app/store';
-import {DragAndDropContextProvider} from '../../../../src/main/resources/META-INF/resources/page_editor/app/utils/useDragAndDrop';
+import {DragAndDropContextProvider} from '../../../../src/main/resources/META-INF/resources/page_editor/app/utils/dragAndDrop/useDragAndDrop';
 
 jest.mock(
 	'../../../../src/main/resources/META-INF/resources/page_editor/app/services/CollectionService',
@@ -54,7 +54,11 @@ function renderCollection(itemConfig = {}) {
 	return render(
 		<DndProvider backend={HTML5Backend}>
 			<StoreAPIContextProvider dispatch={() => {}} getState={() => state}>
-				<DragAndDropContextProvider>
+				<DragAndDropContextProvider
+					layoutData={{
+						items: [],
+					}}
+				>
 					<Collection
 						item={{
 							config: {...defaultConfig, ...itemConfig},
@@ -101,7 +105,7 @@ describe('Collection', () => {
 		).toBeInTheDocument();
 	});
 
-	it('renders no items message when a collection without items is selected', async () => {
+	it('renders an item when the collection is empty', async () => {
 		CollectionService.getCollectionField.mockImplementation(() =>
 			Promise.resolve({
 				items: [],
@@ -118,12 +122,7 @@ describe('Collection', () => {
 			});
 		});
 
-		expect(
-			getByText(
-				document.body,
-				'you-do-not-have-any-items-in-this-collection'
-			)
-		).toBeInTheDocument();
+		expect(getByText(document.body, 'title')).toBeInTheDocument();
 	});
 
 	it('renders empty collection items', async () => {

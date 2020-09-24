@@ -20,7 +20,7 @@ export default function (
 	editableId,
 	processorType,
 	languageId,
-	getFieldValue = InfoItemService.getAssetFieldValue
+	getFieldValue = InfoItemService.getInfoItemFieldValue
 ) {
 	const editableValue = editableValues[processorType][editableId];
 
@@ -75,6 +75,10 @@ function selectEditableValueContent(editableValue, languageId) {
 	}
 	else if (content[config.defaultLanguageId]) {
 		content = content[config.defaultLanguageId];
+	}
+
+	if (content.url) {
+		content = content.url;
 	}
 
 	if (typeof content !== 'string') {

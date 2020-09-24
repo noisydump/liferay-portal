@@ -14,7 +14,7 @@
 
 package com.liferay.headless.delivery.internal.resource.v1_0;
 
-import com.liferay.headless.common.spi.service.context.ServiceContextUtil;
+import com.liferay.headless.common.spi.service.context.ServiceContextRequestUtil;
 import com.liferay.headless.delivery.dto.v1_0.KnowledgeBaseFolder;
 import com.liferay.headless.delivery.internal.dto.v1_0.util.CreatorUtil;
 import com.liferay.headless.delivery.internal.dto.v1_0.util.CustomFieldsUtil;
@@ -32,6 +32,7 @@ import com.liferay.portal.vulcan.pagination.Pagination;
 import java.io.Serializable;
 
 import java.util.Map;
+import java.util.Optional;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -73,7 +74,7 @@ public class KnowledgeBaseFolderResourceImpl
 			parentKnowledgeBaseFolderId);
 
 		return Page.of(
-			HashMapBuilder.<String, Map<String, String>>put(
+			HashMapBuilder.put(
 				"create",
 				addAction(
 					"ADD_KB_FOLDER",
@@ -101,7 +102,7 @@ public class KnowledgeBaseFolderResourceImpl
 		throws Exception {
 
 		return Page.of(
-			HashMapBuilder.<String, Map<String, String>>put(
+			HashMapBuilder.put(
 				"create",
 				addAction(
 					"ADD_KB_FOLDER", "postSiteKnowledgeBaseFolder",
@@ -134,9 +135,9 @@ public class KnowledgeBaseFolderResourceImpl
 				parentKBFolder.getGroupId(), _getClassNameId(),
 				parentKnowledgeBaseFolderId, knowledgeBaseFolder.getName(),
 				knowledgeBaseFolder.getDescription(),
-				ServiceContextUtil.createServiceContext(
+				ServiceContextRequestUtil.createServiceContext(
 					_getExpandoBridgeAttributes(knowledgeBaseFolder),
-					parentKBFolder.getGroupId(),
+					parentKBFolder.getGroupId(), contextHttpServletRequest,
 					knowledgeBaseFolder.getViewableByAsString())));
 	}
 
@@ -149,8 +150,9 @@ public class KnowledgeBaseFolderResourceImpl
 			_kbFolderService.addKBFolder(
 				siteId, _getClassNameId(), 0, knowledgeBaseFolder.getName(),
 				knowledgeBaseFolder.getDescription(),
-				ServiceContextUtil.createServiceContext(
+				ServiceContextRequestUtil.createServiceContext(
 					_getExpandoBridgeAttributes(knowledgeBaseFolder), siteId,
+					contextHttpServletRequest,
 					knowledgeBaseFolder.getViewableByAsString())));
 	}
 
@@ -171,9 +173,9 @@ public class KnowledgeBaseFolderResourceImpl
 				_getClassNameId(), parentKnowledgeBaseFolderId,
 				knowledgeBaseFolderId, knowledgeBaseFolder.getName(),
 				knowledgeBaseFolder.getDescription(),
-				ServiceContextUtil.createServiceContext(
+				ServiceContextRequestUtil.createServiceContext(
 					_getExpandoBridgeAttributes(knowledgeBaseFolder), 0,
-					null)));
+					contextHttpServletRequest, null)));
 	}
 
 	private long _getClassNameId() {
@@ -198,7 +200,7 @@ public class KnowledgeBaseFolderResourceImpl
 
 		return new KnowledgeBaseFolder() {
 			{
-				actions = HashMapBuilder.<String, Map<String, String>>put(
+				actions = HashMapBuilder.put(
 					"delete",
 					addAction("DELETE", kbFolder, "deleteKnowledgeBaseFolder")
 				).put(
@@ -208,7 +210,8 @@ public class KnowledgeBaseFolderResourceImpl
 					addAction("UPDATE", kbFolder, "putKnowledgeBaseFolder")
 				).build();
 				creator = CreatorUtil.toCreator(
-					_portal, _userLocalService.getUser(kbFolder.getUserId()));
+					_portal, Optional.of(contextUriInfo),
+					_userLocalService.fetchUser(kbFolder.getUserId()));
 				customFields = CustomFieldsUtil.toCustomFields(
 					contextAcceptLanguage.isAcceptAllLanguages(),
 					KBFolder.class.getName(), kbFolder.getKbFolderId(),

@@ -14,6 +14,7 @@
 
 package com.liferay.portal.search.solr7.internal.search.response;
 
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.search.Document;
 import com.liferay.portal.kernel.search.DocumentImpl;
@@ -119,11 +120,8 @@ public class DefaultSearchSearchResponseAssemblerHelperImpl
 		}
 
 		document.addText(
-			Field.SNIPPET.concat(
-				StringPool.UNDERLINE
-			).concat(
-				snippetFieldName
-			),
+			StringBundler.concat(
+				Field.SNIPPET, StringPool.UNDERLINE, snippetFieldName),
 			StringUtil.merge(list, StringPool.TRIPLE_PERIOD));
 	}
 
@@ -152,7 +150,7 @@ public class DefaultSearchSearchResponseAssemblerHelperImpl
 	}
 
 	protected FacetCollector getFacetCollector(
-		Facet facet, NamedList namedList) {
+		Facet facet, NamedList<?> namedList) {
 
 		if (facet instanceof RangeFacet) {
 			return new SolrFacetQueryCollector(facet, namedList);
@@ -350,9 +348,9 @@ public class DefaultSearchSearchResponseAssemblerHelperImpl
 	protected void updateFacetCollectors(
 		QueryResponse queryResponse, SearchSearchRequest searchSearchRequest) {
 
-		NamedList namedList1 = queryResponse.getResponse();
+		NamedList<Object> namedList1 = queryResponse.getResponse();
 
-		NamedList namedList2 = (NamedList)namedList1.get("facets");
+		NamedList<?> namedList2 = (NamedList)namedList1.get("facets");
 
 		if (namedList2 == null) {
 			return;

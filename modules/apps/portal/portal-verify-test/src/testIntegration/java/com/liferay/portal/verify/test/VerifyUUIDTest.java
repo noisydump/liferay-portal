@@ -203,9 +203,7 @@ public class VerifyUUIDTest extends BaseVerifyProcessTestCase {
 
 		DB db = DBManagerUtil.getDB();
 
-		DBType dbType = db.getDBType();
-
-		String expectedMessagePrefix = expectedMessages.get(dbType);
+		String expectedMessagePrefix = expectedMessages.get(db.getDBType());
 
 		if (expectedMessagePrefix == null) {
 			throw exception;
@@ -236,8 +234,8 @@ public class VerifyUUIDTest extends BaseVerifyProcessTestCase {
 			try {
 				UnsafeConsumer.accept(callables, Callable<Void>::call);
 			}
-			catch (Throwable t) {
-				ReflectionUtil.throwException(t);
+			catch (Throwable throwable) {
+				ReflectionUtil.throwException(throwable);
 			}
 		}
 

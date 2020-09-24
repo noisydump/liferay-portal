@@ -118,6 +118,11 @@ public class SearchBarPortlet extends MVCPortlet {
 			portletSharedSearchResponse.getSearchSettings(),
 			searchBarPortletPreferences, themeDisplay);
 
+		SearchResponse searchResponse = getSearchResponse(
+			portletSharedSearchResponse, searchBarPortletPreferences);
+
+		SearchRequest searchRequest = searchResponse.getRequest();
+
 		return searchBarPortletDisplayBuilder.setDestination(
 			searchBarPortletPreferences.getDestinationString()
 		).setEmptySearchEnabled(
@@ -125,11 +130,11 @@ public class SearchBarPortlet extends MVCPortlet {
 		).setInvisible(
 			searchBarPortletPreferences.isInvisible()
 		).setKeywords(
-			portletSharedSearchResponse.getKeywordsOptional()
+			Optional.ofNullable(searchRequest.getQueryString())
 		).setKeywordsParameterName(
 			keywordsParameterName
 		).setPaginationStartParameterName(
-			getPaginationStartParameterName(portletSharedSearchResponse)
+			searchRequest.getPaginationStartParameterName()
 		).setScopeParameterName(
 			scopeParameterName
 		).setScopeParameterValue(
@@ -159,17 +164,6 @@ public class SearchBarPortlet extends MVCPortlet {
 			searchBarPortletPreferences.getKeywordsParameterName());
 	}
 
-	protected String getPaginationStartParameterName(
-		PortletSharedSearchResponse portletSharedSearchResponse) {
-
-		SearchResponse searchResponse =
-			portletSharedSearchResponse.getSearchResponse();
-
-		SearchRequest request = searchResponse.getRequest();
-
-		return request.getPaginationStartParameterName();
-	}
-
 	protected String getScopeParameterName(
 		SearchSettings searchSettings,
 		SearchBarPortletPreferences searchBarPortletPreferences,
@@ -187,15 +181,23 @@ public class SearchBarPortlet extends MVCPortlet {
 			searchBarPortletPreferences.getScopeParameterName());
 	}
 
+	protected SearchResponse getSearchResponse(
+		PortletSharedSearchResponse portletSharedSearchResponse,
+		SearchBarPortletPreferences searchBarPortletPreferences) {
+
+		return portletSharedSearchResponse.getFederatedSearchResponse(
+			searchBarPortletPreferences.getFederatedSearchKeyOptional());
+	}
+
 	protected boolean isEmptySearchEnabled(
 		PortletSharedSearchResponse portletSharedSearchResponse) {
 
 		SearchResponse searchResponse =
 			portletSharedSearchResponse.getSearchResponse();
 
-		SearchRequest request = searchResponse.getRequest();
+		SearchRequest searchRequest = searchResponse.getRequest();
 
-		return request.isEmptySearchEnabled();
+		return searchRequest.isEmptySearchEnabled();
 	}
 
 	@Reference

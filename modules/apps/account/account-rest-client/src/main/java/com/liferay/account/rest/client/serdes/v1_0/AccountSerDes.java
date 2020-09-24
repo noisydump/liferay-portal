@@ -91,6 +91,20 @@ public class AccountSerDes {
 			sb.append("]");
 		}
 
+		if (account.getExternalReferenceCode() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"externalReferenceCode\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(account.getExternalReferenceCode()));
+
+			sb.append("\"");
+		}
+
 		if (account.getId() != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -187,6 +201,15 @@ public class AccountSerDes {
 			map.put("domains", String.valueOf(account.getDomains()));
 		}
 
+		if (account.getExternalReferenceCode() == null) {
+			map.put("externalReferenceCode", null);
+		}
+		else {
+			map.put(
+				"externalReferenceCode",
+				String.valueOf(account.getExternalReferenceCode()));
+		}
+
 		if (account.getId() == null) {
 			map.put("id", null);
 		}
@@ -257,6 +280,14 @@ public class AccountSerDes {
 						toStrings((Object[])jsonParserFieldValue));
 				}
 			}
+			else if (Objects.equals(
+						jsonParserFieldName, "externalReferenceCode")) {
+
+				if (jsonParserFieldValue != null) {
+					account.setExternalReferenceCode(
+						(String)jsonParserFieldValue);
+				}
+			}
 			else if (Objects.equals(jsonParserFieldName, "id")) {
 				if (jsonParserFieldValue != null) {
 					account.setId(Long.valueOf((String)jsonParserFieldValue));
@@ -285,9 +316,8 @@ public class AccountSerDes {
 						Integer.valueOf((String)jsonParserFieldValue));
 				}
 			}
-			else {
-				throw new IllegalArgumentException(
-					"Unsupported field name " + jsonParserFieldName);
+			else if (jsonParserFieldName.equals("status")) {
+				throw new IllegalArgumentException();
 			}
 		}
 

@@ -25,6 +25,7 @@ import com.liferay.friendly.url.service.FriendlyURLEntryLocalService;
 import com.liferay.friendly.url.service.persistence.FriendlyURLEntryLocalizationPersistence;
 import com.liferay.friendly.url.service.persistence.FriendlyURLEntryMappingPersistence;
 import com.liferay.friendly.url.service.persistence.FriendlyURLEntryPersistence;
+import com.liferay.petra.function.UnsafeFunction;
 import com.liferay.petra.sql.dsl.query.DSLQuery;
 import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.dao.db.DB;
@@ -48,7 +49,9 @@ import com.liferay.portal.kernel.search.Indexable;
 import com.liferay.portal.kernel.search.IndexableType;
 import com.liferay.portal.kernel.service.BaseLocalServiceImpl;
 import com.liferay.portal.kernel.service.PersistedModelLocalService;
+import com.liferay.portal.kernel.service.change.tracking.CTService;
 import com.liferay.portal.kernel.service.persistence.BasePersistence;
+import com.liferay.portal.kernel.service.persistence.change.tracking.CTPersistence;
 import com.liferay.portal.kernel.transaction.Transactional;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.PortalUtil;
@@ -89,6 +92,10 @@ public abstract class FriendlyURLEntryLocalServiceBaseImpl
 	/**
 	 * Adds the friendly url entry to the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect FriendlyURLEntryLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param friendlyURLEntry the friendly url entry
 	 * @return the friendly url entry that was added
 	 */
@@ -117,6 +124,10 @@ public abstract class FriendlyURLEntryLocalServiceBaseImpl
 	/**
 	 * Deletes the friendly url entry with the primary key from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect FriendlyURLEntryLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param friendlyURLEntryId the primary key of the friendly url entry
 	 * @return the friendly url entry that was removed
 	 * @throws PortalException if a friendly url entry with the primary key could not be found
@@ -131,6 +142,10 @@ public abstract class FriendlyURLEntryLocalServiceBaseImpl
 
 	/**
 	 * Deletes the friendly url entry from the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect FriendlyURLEntryLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param friendlyURLEntry the friendly url entry
 	 * @return the friendly url entry that was removed
@@ -517,6 +532,10 @@ public abstract class FriendlyURLEntryLocalServiceBaseImpl
 	/**
 	 * Updates the friendly url entry in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect FriendlyURLEntryLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param friendlyURLEntry the friendly url entry
 	 * @return the friendly url entry that was updated
 	 */
@@ -617,6 +636,8 @@ public abstract class FriendlyURLEntryLocalServiceBaseImpl
 					friendlyURLEntryLocalization);
 			}
 			else {
+				friendlyURLEntryLocalization.setCtCollectionId(
+					friendlyURLEntry.getCtCollectionId());
 				friendlyURLEntryLocalization.setGroupId(
 					friendlyURLEntry.getGroupId());
 				friendlyURLEntryLocalization.setCompanyId(
@@ -648,6 +669,8 @@ public abstract class FriendlyURLEntryLocalServiceBaseImpl
 			FriendlyURLEntryLocalization friendlyURLEntryLocalization =
 				friendlyURLEntryLocalizationPersistence.create(++batchCounter);
 
+			friendlyURLEntryLocalization.setCtCollectionId(
+				friendlyURLEntry.getCtCollectionId());
 			friendlyURLEntryLocalization.setFriendlyURLEntryId(
 				friendlyURLEntry.getFriendlyURLEntryId());
 			friendlyURLEntryLocalization.setGroupId(
@@ -690,6 +713,8 @@ public abstract class FriendlyURLEntryLocalServiceBaseImpl
 			friendlyURLEntryLocalization.setLanguageId(languageId);
 		}
 
+		friendlyURLEntryLocalization.setCtCollectionId(
+			friendlyURLEntry.getCtCollectionId());
 		friendlyURLEntryLocalization.setGroupId(friendlyURLEntry.getGroupId());
 		friendlyURLEntryLocalization.setCompanyId(
 			friendlyURLEntry.getCompanyId());
@@ -707,7 +732,7 @@ public abstract class FriendlyURLEntryLocalServiceBaseImpl
 	public Class<?>[] getAopInterfaces() {
 		return new Class<?>[] {
 			FriendlyURLEntryLocalService.class, IdentifiableOSGiService.class,
-			PersistedModelLocalService.class
+			CTService.class, PersistedModelLocalService.class
 		};
 	}
 
@@ -726,8 +751,23 @@ public abstract class FriendlyURLEntryLocalServiceBaseImpl
 		return FriendlyURLEntryLocalService.class.getName();
 	}
 
-	protected Class<?> getModelClass() {
+	@Override
+	public CTPersistence<FriendlyURLEntry> getCTPersistence() {
+		return friendlyURLEntryPersistence;
+	}
+
+	@Override
+	public Class<FriendlyURLEntry> getModelClass() {
 		return FriendlyURLEntry.class;
+	}
+
+	@Override
+	public <R, E extends Throwable> R updateWithUnsafeFunction(
+			UnsafeFunction<CTPersistence<FriendlyURLEntry>, R, E>
+				updateUnsafeFunction)
+		throws E {
+
+		return updateUnsafeFunction.apply(friendlyURLEntryPersistence);
 	}
 
 	protected String getModelClassName() {

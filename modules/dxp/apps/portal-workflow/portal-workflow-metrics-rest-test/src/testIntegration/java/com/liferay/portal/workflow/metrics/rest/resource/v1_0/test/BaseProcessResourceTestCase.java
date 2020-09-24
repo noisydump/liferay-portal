@@ -112,7 +112,9 @@ public abstract class BaseProcessResourceTestCase {
 
 		ProcessResource.Builder builder = ProcessResource.builder();
 
-		processResource = builder.locale(
+		processResource = builder.authentication(
+			"test@liferay.com", "test"
+		).locale(
 			LocaleUtil.getDefault()
 		).build();
 	}
@@ -405,7 +407,7 @@ public abstract class BaseProcessResourceTestCase {
 		}
 	}
 
-	protected void assertValid(Process process) {
+	protected void assertValid(Process process) throws Exception {
 		boolean valid = true;
 
 		if (process.getDateCreated() == null) {

@@ -14,28 +14,31 @@
 
 package com.liferay.layout.content.page.editor.web.internal.display.context;
 
-import com.liferay.asset.kernel.AssetRendererFactoryRegistryUtil;
-import com.liferay.asset.kernel.model.AssetRendererFactory;
-import com.liferay.asset.kernel.model.ClassType;
-import com.liferay.asset.kernel.model.ClassTypeReader;
 import com.liferay.fragment.contributor.FragmentCollectionContributorTracker;
 import com.liferay.fragment.renderer.FragmentRendererController;
 import com.liferay.fragment.renderer.FragmentRendererTracker;
 import com.liferay.fragment.util.configuration.FragmentEntryConfigurationParser;
-import com.liferay.info.display.contributor.InfoDisplayContributor;
-import com.liferay.info.display.contributor.InfoDisplayContributorTracker;
+import com.liferay.frontend.token.definition.FrontendTokenDefinitionRegistry;
+import com.liferay.info.item.InfoItemClassDetails;
+import com.liferay.info.item.InfoItemFormVariation;
+import com.liferay.info.item.InfoItemServiceTracker;
+import com.liferay.info.item.provider.InfoItemDetailsProvider;
+import com.liferay.info.item.provider.InfoItemFormProvider;
+import com.liferay.info.item.provider.InfoItemFormVariationsProvider;
 import com.liferay.item.selector.ItemSelector;
 import com.liferay.layout.content.page.editor.sidebar.panel.ContentPageEditorSidebarPanel;
 import com.liferay.layout.content.page.editor.web.internal.configuration.FFLayoutContentPageEditorConfiguration;
+import com.liferay.layout.content.page.editor.web.internal.configuration.PageEditorConfiguration;
 import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
 import com.liferay.layout.page.template.service.LayoutPageTemplateEntryLocalServiceUtil;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.comment.CommentManager;
-import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.Validator;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -61,19 +64,22 @@ public class ContentPageEditorLayoutPageTemplateDisplayContext
 		FragmentEntryConfigurationParser fragmentEntryConfigurationParser,
 		FragmentRendererController fragmentRendererController,
 		FragmentRendererTracker fragmentRendererTracker,
+		FrontendTokenDefinitionRegistry frontendTokenDefinitionRegistry,
 		HttpServletRequest httpServletRequest,
-		InfoDisplayContributorTracker infoDisplayContributorTracker,
-		ItemSelector itemSelector, boolean pageIsDisplayPage,
-		PortletRequest portletRequest, RenderResponse renderResponse) {
+		InfoItemServiceTracker infoItemServiceTracker,
+		ItemSelector itemSelector,
+		PageEditorConfiguration pageEditorConfiguration,
+		boolean pageIsDisplayPage, PortletRequest portletRequest,
+		RenderResponse renderResponse) {
 
 		super(
 			commentManager, contentPageEditorSidebarPanels,
 			ffLayoutContentPageEditorConfiguration,
 			fragmentCollectionContributorTracker,
 			fragmentEntryConfigurationParser, fragmentRendererController,
-			fragmentRendererTracker, httpServletRequest,
-			infoDisplayContributorTracker, itemSelector, portletRequest,
-			renderResponse);
+			fragmentRendererTracker, frontendTokenDefinitionRegistry,
+			httpServletRequest, infoItemServiceTracker, itemSelector,
+			pageEditorConfiguration, portletRequest, renderResponse);
 
 		_pageIsDisplayPage = pageIsDisplayPage;
 	}
@@ -104,11 +110,6 @@ public class ContentPageEditorLayoutPageTemplateDisplayContext
 	}
 
 	@Override
-	public List<Map<String, Object>> getSidebarPanels() {
-		return getSidebarPanels(_pageIsDisplayPage);
-	}
-
-	@Override
 	public boolean isWorkflowEnabled() {
 		return false;
 	}
@@ -127,42 +128,64 @@ public class ContentPageEditorLayoutPageTemplateDisplayContext
 		return _layoutPageTemplateEntry;
 	}
 
-	private String _getMappingSubtypeLabel() throws PortalException {
+	private String _getMappingSubtypeLabel() {
 		LayoutPageTemplateEntry layoutPageTemplateEntry =
 			_getLayoutPageTemplateEntry();
 
-		AssetRendererFactory assetRendererFactory =
-			AssetRendererFactoryRegistryUtil.getAssetRendererFactoryByClassName(
+		InfoItemFormVariationsProvider infoItemFormVariationsProvider =
+			infoItemServiceTracker.getFirstInfoItemService(
+				InfoItemFormVariationsProvider.class,
 				layoutPageTemplateEntry.getClassName());
 
-		if ((assetRendererFactory == null) ||
-			!assetRendererFactory.isSupportsClassTypes()) {
+		if (infoItemFormVariationsProvider != null) {
+			Collection<InfoItemFormVariation> infoItemFormVariations =
+				infoItemFormVariationsProvider.getInfoItemFormVariations(
+					layoutPageTemplateEntry.getGroupId());
 
-			return null;
+			for (InfoItemFormVariation infoItemFormVariation :
+					infoItemFormVariations) {
+
+				String key = infoItemFormVariation.getKey();
+
+				if (key.equals(
+						String.valueOf(
+							layoutPageTemplateEntry.getClassTypeId()))) {
+
+					return infoItemFormVariation.getLabel(
+						themeDisplay.getLocale());
+				}
+			}
 		}
 
-		ClassTypeReader classTypeReader =
-			assetRendererFactory.getClassTypeReader();
-
-		ClassType classType = classTypeReader.getClassType(
-			layoutPageTemplateEntry.getClassTypeId(), themeDisplay.getLocale());
-
-		return classType.getName();
+		return null;
 	}
 
 	private String _getMappingTypeLabel() {
 		LayoutPageTemplateEntry layoutPageTemplateEntry =
 			_getLayoutPageTemplateEntry();
 
-		InfoDisplayContributor infoDisplayContributor =
-			infoDisplayContributorTracker.getInfoDisplayContributor(
+		InfoItemFormProvider<?> infoItemFormProvider =
+			infoItemServiceTracker.getFirstInfoItemService(
+				InfoItemFormProvider.class,
 				layoutPageTemplateEntry.getClassName());
 
-		if (infoDisplayContributor == null) {
+		if (infoItemFormProvider == null) {
 			return null;
 		}
 
-		return infoDisplayContributor.getLabel(themeDisplay.getLocale());
+		InfoItemDetailsProvider<?> infoItemDetailsProvider =
+			infoItemServiceTracker.getFirstInfoItemService(
+				InfoItemDetailsProvider.class,
+				layoutPageTemplateEntry.getClassName());
+
+		if (infoItemDetailsProvider == null) {
+			return null;
+		}
+
+		InfoItemClassDetails infoItemClassDetails =
+			infoItemDetailsProvider.getInfoItemClassDetails();
+
+		return infoItemClassDetails.getLabel(themeDisplay.getLocale());
 	}
 
 	private Map<String, Object> _getSelectedMappingTypes() {
@@ -176,8 +199,16 @@ public class ContentPageEditorLayoutPageTemplateDisplayContext
 		}
 
 		return HashMapBuilder.<String, Object>put(
+			"mappingDescription",
+			LanguageUtil.get(
+				httpServletRequest,
+				"content-source-selected-for-this-display-page-template")
+		).put(
 			"type",
 			HashMapBuilder.<String, Object>put(
+				"groupTypeTitle",
+				LanguageUtil.get(httpServletRequest, "content-type")
+			).put(
 				"id", layoutPageTemplateEntry.getClassNameId()
 			).put(
 				"label", _getMappingTypeLabel()
@@ -192,6 +223,9 @@ public class ContentPageEditorLayoutPageTemplateDisplayContext
 				}
 
 				return HashMapBuilder.<String, Object>put(
+					"groupSubtypeTitle",
+					LanguageUtil.get(httpServletRequest, "subtype")
+				).put(
 					"id", layoutPageTemplateEntry.getClassTypeId()
 				).put(
 					"label", subtypeLabel

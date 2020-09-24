@@ -30,6 +30,10 @@ public class SocialRequestTable extends BaseTable<SocialRequestTable> {
 
 	public static final SocialRequestTable INSTANCE = new SocialRequestTable();
 
+	public final Column<SocialRequestTable, Long> mvccVersion = createColumn(
+		"mvccVersion", Long.class, Types.BIGINT, Column.FLAG_NULLITY);
+	public final Column<SocialRequestTable, Long> ctCollectionId = createColumn(
+		"ctCollectionId", Long.class, Types.BIGINT, Column.FLAG_PRIMARY);
 	public final Column<SocialRequestTable, String> uuid = createColumn(
 		"uuid_", String.class, Types.VARCHAR, Column.FLAG_DEFAULT);
 	public final Column<SocialRequestTable, Long> requestId = createColumn(

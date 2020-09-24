@@ -28,7 +28,7 @@ const parseJSON = (response, resolve, reject) =>
 		.then((text) => resolve(text ? JSON.parse(text) : {}))
 		.catch((error) => reject(error));
 
-const parseResponse = (response) =>
+export const parseResponse = (response) =>
 	new Promise((resolve, reject) => {
 		if (response.ok) {
 			parseJSON(response, resolve, reject);
@@ -45,26 +45,28 @@ export const addItem = (endpoint, item) =>
 		method: 'POST',
 	}).then((response) => parseResponse(response));
 
-export const confirmDelete = (endpoint) => (item) =>
+export const confirmDelete = (endpoint, options = {}) => (item) =>
 	new Promise((resolve, reject) => {
-		const confirmed = confirm(
-			Liferay.Language.get('are-you-sure-you-want-to-delete-this')
-		);
+		const {
+			confirmMessage = Liferay.Language.get(
+				'are-you-sure-you-want-to-delete-this'
+			),
+			errorMessage = Liferay.Language.get(
+				'the-item-could-not-be-deleted'
+			),
+			successMessage = Liferay.Language.get(
+				'the-item-was-deleted-successfully'
+			),
+		} = options;
+
+		const confirmed = confirm(confirmMessage);
 
 		if (confirmed) {
 			deleteItem(endpoint + item.id)
 				.then(() => resolve(true))
-				.then(() =>
-					successToast(
-						Liferay.Language.get(
-							'the-item-was-deleted-successfully'
-						)
-					)
-				)
+				.then(() => successToast(successMessage))
 				.catch((error) => {
-					errorToast(
-						Liferay.Language.get('the-item-could-not-be-deleted')
-					);
+					errorToast(errorMessage);
 					reject(error);
 				});
 		}
@@ -95,13 +97,20 @@ export const getURL = (path, params) => {
 	const uri = new URL(`${window.location.origin}${path}`);
 	const keys = Object.keys(params);
 
-	keys.forEach((key) => uri.searchParams.set(key, params[key]));
+	keys.forEach((key) => {
+		if (Array.isArray(params[key])) {
+			params[key].forEach((value) => uri.searchParams.append(key, value));
+		}
+		else {
+			uri.searchParams.set(key, params[key]);
+		}
+	});
 
 	return uri.toString();
 };
 
-export const request = (endpoint, method = 'GET') =>
-	fetch(getURL(endpoint), {
+export const request = ({endpoint, method = 'GET', params = {}}) =>
+	fetch(getURL(endpoint, params), {
 		headers: HEADERS,
 		method,
 	}).then((response) => parseResponse(response));

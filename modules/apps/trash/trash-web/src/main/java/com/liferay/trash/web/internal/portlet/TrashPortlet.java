@@ -31,10 +31,10 @@ import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.trash.TrashHelper;
+import com.liferay.trash.constants.TrashEntryConstants;
 import com.liferay.trash.constants.TrashPortletKeys;
 import com.liferay.trash.kernel.exception.RestoreEntryException;
 import com.liferay.trash.model.TrashEntry;
-import com.liferay.trash.model.TrashEntryConstants;
 import com.liferay.trash.service.TrashEntryLocalService;
 import com.liferay.trash.service.TrashEntryService;
 import com.liferay.trash.web.internal.constants.TrashWebKeys;
@@ -322,11 +322,11 @@ public class TrashPortlet extends MVCPortlet {
 	}
 
 	@Override
-	protected boolean isSessionErrorException(Throwable cause) {
-		if (cause instanceof
+	protected boolean isSessionErrorException(Throwable throwable) {
+		if (throwable instanceof
 				com.liferay.trash.exception.RestoreEntryException ||
-			cause instanceof RestoreEntryException ||
-			cause instanceof TrashPermissionException) {
+			throwable instanceof RestoreEntryException ||
+			throwable instanceof TrashPermissionException) {
 
 			return true;
 		}

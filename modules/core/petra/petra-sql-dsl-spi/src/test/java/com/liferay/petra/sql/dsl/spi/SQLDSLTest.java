@@ -187,26 +187,26 @@ public class SQLDSLTest {
 
 		Assert.assertSame(fromStep, from.getChild());
 
-		OrderBy orderBy = new OrderBy(
+		OrderBy orderBy1 = new OrderBy(
 			from,
 			new OrderByExpression[] {
 				MainExampleTable.INSTANCE.mainExampleId.ascending()
 			});
 
-		Assert.assertSame(from, orderBy.getChild());
+		Assert.assertSame(from, orderBy1.getChild());
 
 		Assert.assertEquals(
 			"select * from MainExample order by MainExample.mainExampleId asc",
-			orderBy.toString());
+			orderBy1.toString());
 
 		JoinStep joinStep = from.innerJoinON(
 			ReferenceExampleTable.INSTANCE,
 			ReferenceExampleTable.INSTANCE.mainExampleId.eq(
 				MainExampleTable.INSTANCE.mainExampleId));
 
-		OrderBy orderBy2 = orderBy.withNewChild(joinStep);
+		OrderBy orderBy2 = orderBy1.withNewChild(joinStep);
 
-		Assert.assertNotSame(orderBy, orderBy2);
+		Assert.assertNotSame(orderBy1, orderBy2);
 
 		Assert.assertEquals(
 			"select * from MainExample inner join ReferenceExample on " +
@@ -238,9 +238,8 @@ public class SQLDSLTest {
 			Assert.fail();
 		}
 		catch (RuntimeException runtimeException) {
-			Throwable cause = runtimeException.getCause();
-
-			Assert.assertSame(cloneNotSupportedException, cause);
+			Assert.assertSame(
+				cloneNotSupportedException, runtimeException.getCause());
 		}
 	}
 
@@ -1150,11 +1149,9 @@ public class SQLDSLTest {
 				"MainExample.mainExampleId desc"),
 			orderBy.toSQL(defaultASTNodeListener));
 
-		String[] tableNames = defaultASTNodeListener.getTableNames();
-
 		Assert.assertArrayEquals(
 			new String[] {MainExampleTable.INSTANCE.getTableName()},
-			tableNames);
+			defaultASTNodeListener.getTableNames());
 
 		Assert.assertEquals(
 			Arrays.asList("test", 0L),

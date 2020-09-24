@@ -23,8 +23,8 @@ String className = GetterUtil.getString(request.getAttribute("liferay-asset:asse
 AssetEntryUsagesDisplayContext assetEntryUsagesDisplayContext = new AssetEntryUsagesDisplayContext(renderRequest, renderResponse, className, classPK);
 %>
 
-<clay:container
-	className="container-form-lg"
+<clay:container-fluid
+	cssClass="container-form-lg"
 >
 	<clay:row>
 		<clay:col
@@ -99,7 +99,9 @@ AssetEntryUsagesDisplayContext assetEntryUsagesDisplayContext = new AssetEntryUs
 		<clay:col
 			lg="9"
 		>
-			<div class="sheet">
+			<clay:sheet
+				size="full"
+			>
 				<h3 class="sheet-title">
 					<c:choose>
 						<c:when test='<%= Objects.equals(assetEntryUsagesDisplayContext.getNavigation(), "pages") %>'>
@@ -178,7 +180,7 @@ AssetEntryUsagesDisplayContext assetEntryUsagesDisplayContext = new AssetEntryUs
 						searchResultCssClass="show-quick-actions-on-hover table table-autofit"
 					/>
 				</liferay-ui:search-container>
-			</div>
+			</clay:sheet>
 		</clay:col>
 	</clay:row>
-</clay:container>
+</clay:container-fluid>

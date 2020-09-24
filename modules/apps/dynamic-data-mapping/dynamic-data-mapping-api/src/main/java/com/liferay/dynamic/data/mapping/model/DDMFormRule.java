@@ -52,7 +52,8 @@ public class DDMFormRule implements Serializable {
 	}
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #DDMFormRule(List, String)}
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #DDMFormRule(List, String)}
 	 */
 	@Deprecated
 	public DDMFormRule(String condition, List<String> actions) {
@@ -61,7 +62,8 @@ public class DDMFormRule implements Serializable {
 	}
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #DDMFormRule(List, String, LocalizedValue)}
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #DDMFormRule(List, String, LocalizedValue)}
 	 */
 	@Deprecated
 	public DDMFormRule(
@@ -73,7 +75,8 @@ public class DDMFormRule implements Serializable {
 	}
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #DDMFormRule(List, String)}
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #DDMFormRule(List, String)}
 	 */
 	@Deprecated
 	public DDMFormRule(String condition, String... actions) {
@@ -81,16 +84,16 @@ public class DDMFormRule implements Serializable {
 	}
 
 	@Override
-	public boolean equals(Object obj) {
-		if (this == obj) {
+	public boolean equals(Object object) {
+		if (this == object) {
 			return true;
 		}
 
-		if (!(obj instanceof DDMFormRule)) {
+		if (!(object instanceof DDMFormRule)) {
 			return false;
 		}
 
-		DDMFormRule ddmFormRule = (DDMFormRule)obj;
+		DDMFormRule ddmFormRule = (DDMFormRule)object;
 
 		if (Objects.equals(_actions, ddmFormRule._actions) &&
 			Objects.equals(_condition, ddmFormRule._condition) &&

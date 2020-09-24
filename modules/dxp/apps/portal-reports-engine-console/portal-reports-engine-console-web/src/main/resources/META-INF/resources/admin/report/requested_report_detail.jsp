@@ -36,7 +36,7 @@ portletDisplay.setURLBack(searchRequestURL.toString());
 renderResponse.setTitle(definition.getName(locale));
 %>
 
-<clay:container>
+<clay:container-fluid>
 	<c:choose>
 		<c:when test="<%= status.equals(ReportStatus.ERROR.getValue()) %>">
 			<div class="portlet-msg-error">
@@ -53,7 +53,7 @@ renderResponse.setTitle(definition.getName(locale));
 	<aui:fieldset-group markupView="lexicon">
 		<aui:fieldset>
 			<clay:row
-				className="lfr-asset-column lfr-asset-column-details"
+				cssClass="lfr-asset-column lfr-asset-column-details"
 			>
 				<clay:col
 					md="6"
@@ -226,4 +226,4 @@ renderResponse.setTitle(definition.getName(locale));
 			</liferay-ui:search-container>
 		</aui:fieldset>
 	</aui:fieldset-group>
-</clay:container>
+</clay:container-fluid>

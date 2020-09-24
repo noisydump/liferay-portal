@@ -14,20 +14,21 @@
 
 package com.liferay.journal.web.internal.portlet.action;
 
-import com.liferay.data.engine.rest.client.dto.v2_0.DataDefinition;
-import com.liferay.data.engine.rest.client.serdes.v2_0.DataDefinitionSerDes;
-import com.liferay.data.engine.rest.client.serdes.v2_0.DataLayoutSerDes;
-import com.liferay.data.engine.rest.dto.v2_0.util.DataEngineUtil;
+import com.liferay.data.engine.rest.dto.v2_0.DataDefinition;
+import com.liferay.data.engine.rest.dto.v2_0.DataLayout;
+import com.liferay.data.engine.rest.resource.exception.DataDefinitionValidationException;
 import com.liferay.data.engine.rest.resource.v2_0.DataDefinitionResource;
 import com.liferay.journal.constants.JournalPortletKeys;
-import com.liferay.portal.kernel.portlet.bridges.mvc.BaseMVCActionCommand;
+import com.liferay.portal.kernel.portlet.bridges.mvc.BaseTransactionalMVCActionCommand;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
+import com.liferay.portal.kernel.servlet.SessionErrors;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 
 import javax.portlet.ActionRequest;
 import javax.portlet.ActionResponse;
+import javax.portlet.PortletException;
 
 import org.osgi.service.component.annotations.Component;
 
@@ -42,10 +43,40 @@ import org.osgi.service.component.annotations.Component;
 	},
 	service = MVCActionCommand.class
 )
-public class AddDataDefinitionMVCActionCommand extends BaseMVCActionCommand {
+public class AddDataDefinitionMVCActionCommand
+	extends BaseTransactionalMVCActionCommand {
 
 	@Override
-	protected void doProcessAction(
+	public boolean processAction(
+			ActionRequest actionRequest, ActionResponse actionResponse)
+		throws PortletException {
+
+		try {
+			return super.processAction(actionRequest, actionResponse);
+		}
+		catch (PortletException portletException) {
+			if (portletException.getCause() instanceof
+					DataDefinitionValidationException) {
+
+				DataDefinitionValidationException
+					dataDefinitionValidationException =
+						(DataDefinitionValidationException)
+							portletException.getCause();
+
+				SessionErrors.add(
+					actionRequest,
+					dataDefinitionValidationException.getClass());
+			}
+			else {
+				throw portletException;
+			}
+		}
+
+		return false;
+	}
+
+	@Override
+	protected void doTransactionalCommand(
 			ActionRequest actionRequest, ActionResponse actionResponse)
 		throws Exception {
 
@@ -53,9 +84,6 @@ public class AddDataDefinitionMVCActionCommand extends BaseMVCActionCommand {
 			WebKeys.THEME_DISPLAY);
 
 		long groupId = ParamUtil.getLong(actionRequest, "groupId");
-		String dataDefinitionString = ParamUtil.getString(
-			actionRequest, "dataDefinition");
-		String dataLayout = ParamUtil.getString(actionRequest, "dataLayout");
 
 		DataDefinitionResource dataDefinitionResource =
 			DataDefinitionResource.builder(
@@ -63,14 +91,22 @@ public class AddDataDefinitionMVCActionCommand extends BaseMVCActionCommand {
 				themeDisplay.getUser()
 			).build();
 
-		DataDefinition dataDefinition = DataDefinitionSerDes.toDTO(
-			dataDefinitionString);
+		DataDefinition dataDefinition = DataDefinition.toDTO(
+			ParamUtil.getString(actionRequest, "dataDefinition"));
 
-		dataDefinition.setDefaultDataLayout(DataLayoutSerDes.toDTO(dataLayout));
+		dataDefinition.setDefaultDataLayout(
+			DataLayout.toDTO(ParamUtil.getString(actionRequest, "dataLayout")));
 
-		dataDefinitionResource.postSiteDataDefinitionByContentType(
-			groupId, "journal",
-			DataEngineUtil.toDataDefinition(dataDefinition));
+		try {
+			dataDefinitionResource.postSiteDataDefinitionByContentType(
+				groupId, "journal", dataDefinition);
+		}
+		catch (DataDefinitionValidationException
+					dataDefinitionValidationException) {
+
+			SessionErrors.add(
+				actionRequest, dataDefinitionValidationException.getClass());
+		}
 	}
 
 }

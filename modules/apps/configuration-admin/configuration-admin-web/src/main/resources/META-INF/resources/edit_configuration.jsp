@@ -81,7 +81,7 @@ renderResponse.setTitle(categoryDisplayName);
 <portlet:actionURL name="bindConfiguration" var="bindConfigurationActionURL" />
 <portlet:actionURL name="deleteConfiguration" var="deleteConfigurationActionURL" />
 
-<clay:container>
+<clay:container-fluid>
 	<clay:col
 		size="12"
 	>
@@ -92,9 +92,9 @@ renderResponse.setTitle(categoryDisplayName);
 			showParentGroups="<%= false %>"
 		/>
 	</clay:col>
-</clay:container>
+</clay:container-fluid>
 
-<clay:container>
+<clay:container-fluid>
 	<clay:row>
 		<clay:col
 			md="3"
@@ -105,7 +105,9 @@ renderResponse.setTitle(categoryDisplayName);
 		<clay:col
 			md="9"
 		>
-			<div class="sheet sheet-lg">
+			<clay:sheet
+				size="full"
+			>
 				<aui:form action="<%= bindConfigurationActionURL %>" method="post" name="fm">
 					<aui:input name="redirect" type="hidden" value="<%= bindRedirectURL %>" />
 					<aui:input name="factoryPid" type="hidden" value="<%= configurationModel.getFactoryPid() %>" />
@@ -114,8 +116,7 @@ renderResponse.setTitle(categoryDisplayName);
 					<%
 					String configurationTitle = null;
 
-					ConfigurationScopeDisplayContext
-						configurationScopeDisplayContext = ConfigurationScopeDisplayContextFactory.create(renderRequest);
+					ConfigurationScopeDisplayContext configurationScopeDisplayContext = ConfigurationScopeDisplayContextFactory.create(renderRequest);
 
 					if (configurationModel.isFactory()) {
 						if (configurationModel.hasScopeConfiguration(configurationScopeDisplayContext.getScope())) {
@@ -243,7 +244,7 @@ renderResponse.setTitle(categoryDisplayName);
 						<aui:button href="<%= redirect %>" name="cancel" type="cancel" />
 					</aui:button-row>
 				</aui:form>
-			</div>
+			</clay:sheet>
 		</clay:col>
 	</clay:row>
-</clay:container>
+</clay:container-fluid>

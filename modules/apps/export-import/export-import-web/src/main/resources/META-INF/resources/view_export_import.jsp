@@ -31,11 +31,11 @@ if (Validator.isNotNull(backURL)) {
 renderResponse.setTitle(LanguageUtil.get(request, "process-details"));
 %>
 
-<clay:container
-	id='<%= renderResponse.getNamespace() + "exportImportProcessContainer" %>'
+<clay:container-fluid
+	id='<%= liferayPortletResponse.getNamespace() + "exportImportProcessContainer" %>'
 >
 	<liferay-util:include page="/export_import_process.jsp" servletContext="<%= application %>" />
-</clay:container>
+</clay:container-fluid>
 
 <aui:script use="liferay-export-import-export-import">
 	<liferay-portlet:resourceURL copyCurrentRenderParameters="<%= false %>" id="exportImport" var="exportImportProcessURL">

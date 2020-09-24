@@ -87,6 +87,7 @@ AssetCategory category = (AssetCategory)row.getObject();
 		</portlet:actionURL>
 
 		<liferay-ui:icon-delete
+			confirmation="this-category-might-be-being-used-in-some-contents"
 			url="<%= deleteCategoryURL %>"
 		/>
 	</c:if>
@@ -104,7 +105,8 @@ AssetCategory category = (AssetCategory)row.getObject();
 					eventName: '<portlet:namespace />selectCategory',
 					title:
 						'<liferay-ui:message arguments="<%= category.getTitle(locale) %>" key="move-x" />',
-					url: '<%= assetCategoriesDisplayContext.getSelectCategoryURL() %>',
+					url:
+						'<%= assetCategoriesDisplayContext.getSelectCategoryURL(category.getVocabularyId()) %>',
 				});
 
 				itemSelectorDialog.open();

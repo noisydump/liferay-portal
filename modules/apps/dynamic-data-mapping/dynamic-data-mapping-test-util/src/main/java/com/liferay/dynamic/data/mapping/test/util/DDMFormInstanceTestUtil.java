@@ -29,9 +29,6 @@ import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 
-import java.util.Locale;
-import java.util.Map;
-
 /**
  * @author Gabriel Ibson
  */
@@ -49,17 +46,15 @@ public class DDMFormInstanceTestUtil {
 			DDMStructure ddmStructure = ddmStructureTestHelper.addStructure(
 				ddmForm, StorageType.JSON.toString());
 
-			Map<Locale, String> descriptionMap = HashMapBuilder.put(
-				LocaleUtil.US, RandomTestUtil.randomString()
-			).build();
-
-			Map<Locale, String> nameMap = HashMapBuilder.put(
-				LocaleUtil.US, RandomTestUtil.randomString()
-			).build();
-
 			return DDMFormInstanceLocalServiceUtil.addFormInstance(
 				userId, group.getGroupId(), ddmStructure.getStructureId(),
-				nameMap, descriptionMap, settingsDDMFormValues,
+				HashMapBuilder.put(
+					LocaleUtil.US, RandomTestUtil.randomString()
+				).build(),
+				HashMapBuilder.put(
+					LocaleUtil.US, RandomTestUtil.randomString()
+				).build(),
+				settingsDDMFormValues,
 				ServiceContextTestUtil.getServiceContext());
 		}
 		catch (Exception exception) {
@@ -67,6 +62,17 @@ public class DDMFormInstanceTestUtil {
 		}
 
 		return null;
+	}
+
+	public static DDMFormInstance addDDMFormInstance(
+			DDMForm ddmForm, Group group, long userId)
+		throws Exception {
+
+		DDMFormValues settingsDDMFormValues =
+			DDMFormValuesTestUtil.createDDMFormValues(ddmForm);
+
+		return addDDMFormInstance(
+			ddmForm, group, settingsDDMFormValues, userId);
 	}
 
 	public static DDMFormInstance addDDMFormInstance(Group group, long userId)

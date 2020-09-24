@@ -120,7 +120,9 @@ public abstract class BaseWikiNodeResourceTestCase {
 
 		WikiNodeResource.Builder builder = WikiNodeResource.builder();
 
-		wikiNodeResource = builder.locale(
+		wikiNodeResource = builder.authentication(
+			"test@liferay.com", "test"
+		).locale(
 			LocaleUtil.getDefault()
 		).build();
 	}
@@ -207,7 +209,7 @@ public abstract class BaseWikiNodeResourceTestCase {
 	public void testGetSiteWikiNodesPage() throws Exception {
 		Page<WikiNode> page = wikiNodeResource.getSiteWikiNodesPage(
 			testGetSiteWikiNodesPage_getSiteId(), RandomTestUtil.randomString(),
-			null, Pagination.of(1, 2), null);
+			null, null, Pagination.of(1, 2), null);
 
 		Assert.assertEquals(0, page.getTotalCount());
 
@@ -219,7 +221,7 @@ public abstract class BaseWikiNodeResourceTestCase {
 				irrelevantSiteId, randomIrrelevantWikiNode());
 
 			page = wikiNodeResource.getSiteWikiNodesPage(
-				irrelevantSiteId, null, null, Pagination.of(1, 2), null);
+				irrelevantSiteId, null, null, null, Pagination.of(1, 2), null);
 
 			Assert.assertEquals(1, page.getTotalCount());
 
@@ -236,7 +238,7 @@ public abstract class BaseWikiNodeResourceTestCase {
 			siteId, randomWikiNode());
 
 		page = wikiNodeResource.getSiteWikiNodesPage(
-			siteId, null, null, Pagination.of(1, 2), null);
+			siteId, null, null, null, Pagination.of(1, 2), null);
 
 		Assert.assertEquals(2, page.getTotalCount());
 
@@ -269,7 +271,7 @@ public abstract class BaseWikiNodeResourceTestCase {
 
 		for (EntityField entityField : entityFields) {
 			Page<WikiNode> page = wikiNodeResource.getSiteWikiNodesPage(
-				siteId, null,
+				siteId, null, null,
 				getFilterString(entityField, "between", wikiNode1),
 				Pagination.of(1, 2), null);
 
@@ -301,7 +303,8 @@ public abstract class BaseWikiNodeResourceTestCase {
 
 		for (EntityField entityField : entityFields) {
 			Page<WikiNode> page = wikiNodeResource.getSiteWikiNodesPage(
-				siteId, null, getFilterString(entityField, "eq", wikiNode1),
+				siteId, null, null,
+				getFilterString(entityField, "eq", wikiNode1),
 				Pagination.of(1, 2), null);
 
 			assertEquals(
@@ -324,14 +327,14 @@ public abstract class BaseWikiNodeResourceTestCase {
 			siteId, randomWikiNode());
 
 		Page<WikiNode> page1 = wikiNodeResource.getSiteWikiNodesPage(
-			siteId, null, null, Pagination.of(1, 2), null);
+			siteId, null, null, null, Pagination.of(1, 2), null);
 
 		List<WikiNode> wikiNodes1 = (List<WikiNode>)page1.getItems();
 
 		Assert.assertEquals(wikiNodes1.toString(), 2, wikiNodes1.size());
 
 		Page<WikiNode> page2 = wikiNodeResource.getSiteWikiNodesPage(
-			siteId, null, null, Pagination.of(2, 2), null);
+			siteId, null, null, null, Pagination.of(2, 2), null);
 
 		Assert.assertEquals(3, page2.getTotalCount());
 
@@ -340,7 +343,7 @@ public abstract class BaseWikiNodeResourceTestCase {
 		Assert.assertEquals(wikiNodes2.toString(), 1, wikiNodes2.size());
 
 		Page<WikiNode> page3 = wikiNodeResource.getSiteWikiNodesPage(
-			siteId, null, null, Pagination.of(1, 3), null);
+			siteId, null, null, null, Pagination.of(1, 3), null);
 
 		assertEqualsIgnoringOrder(
 			Arrays.asList(wikiNode1, wikiNode2, wikiNode3),
@@ -446,7 +449,7 @@ public abstract class BaseWikiNodeResourceTestCase {
 
 		for (EntityField entityField : entityFields) {
 			Page<WikiNode> ascPage = wikiNodeResource.getSiteWikiNodesPage(
-				siteId, null, null, Pagination.of(1, 2),
+				siteId, null, null, null, Pagination.of(1, 2),
 				entityField.getName() + ":asc");
 
 			assertEquals(
@@ -454,7 +457,7 @@ public abstract class BaseWikiNodeResourceTestCase {
 				(List<WikiNode>)ascPage.getItems());
 
 			Page<WikiNode> descPage = wikiNodeResource.getSiteWikiNodesPage(
-				siteId, null, null, Pagination.of(1, 2),
+				siteId, null, null, null, Pagination.of(1, 2),
 				entityField.getName() + ":desc");
 
 			assertEquals(
@@ -873,7 +876,7 @@ public abstract class BaseWikiNodeResourceTestCase {
 		}
 	}
 
-	protected void assertValid(WikiNode wikiNode) {
+	protected void assertValid(WikiNode wikiNode) throws Exception {
 		boolean valid = true;
 
 		if (wikiNode.getDateCreated() == null) {

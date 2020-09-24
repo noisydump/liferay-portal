@@ -97,17 +97,18 @@ public class Entity implements Comparable<Entity> {
 	public Entity(ServiceBuilder serviceBuilder, String name) {
 		this(
 			serviceBuilder, null, null, null, name, null, null, null, null,
-			false, false, false, false, true, true, null, null, null, null,
-			null, true, false, false, false, false, false, null, false, null,
-			null, false, null, null, null, null, null, null, null, null, null,
-			null, false);
+			null, null, false, false, false, false, true, true, null, null,
+			null, null, null, true, false, false, false, false, false, null,
+			false, null, null, false, null, null, null, null, null, null, null,
+			null, null, null, false);
 	}
 
 	public Entity(
 		ServiceBuilder serviceBuilder, String packagePath,
 		String apiPackagePath, String portletShortName, String name,
-		String pluralName, String humanName, String table, String alias,
-		boolean uuid, boolean uuidAccessor, boolean externalReferenceCode,
+		String variableName, String pluralName, String pluralVariableName,
+		String humanName, String table, String alias, boolean uuid,
+		boolean uuidAccessor, boolean externalReferenceCode,
 		boolean localService, boolean remoteService, boolean persistence,
 		String persistenceClassName, String finderClassName, String dataSource,
 		String sessionFactory, String txManager, boolean cacheEnabled,
@@ -129,8 +130,23 @@ public class Entity implements Comparable<Entity> {
 		_apiPackagePath = apiPackagePath;
 		_portletShortName = portletShortName;
 		_name = name;
+		_variableName = GetterUtil.getString(
+			variableName, TextFormatter.format(name, TextFormatter.I));
+
 		_pluralName = GetterUtil.getString(
 			pluralName, serviceBuilder.formatPlural(name));
+
+		if (Validator.isNotNull(pluralVariableName)) {
+			_pluralVariableName = pluralVariableName;
+		}
+		else if (Validator.isNotNull(pluralName)) {
+			_pluralVariableName = TextFormatter.format(
+				pluralName, TextFormatter.I);
+		}
+		else {
+			_pluralVariableName = serviceBuilder.formatPlural(_variableName);
+		}
+
 		_humanName = GetterUtil.getString(
 			humanName, ServiceBuilder.toHumanName(name));
 		_table = table;
@@ -232,16 +248,16 @@ public class Entity implements Comparable<Entity> {
 	}
 
 	@Override
-	public boolean equals(Object obj) {
-		if (this == obj) {
+	public boolean equals(Object object) {
+		if (this == object) {
 			return true;
 		}
 
-		if (!(obj instanceof Entity)) {
+		if (!(object instanceof Entity)) {
 			return false;
 		}
 
-		Entity entity = (Entity)obj;
+		Entity entity = (Entity)object;
 
 		if (_name.equals(entity.getName())) {
 			return true;
@@ -551,7 +567,7 @@ public class Entity implements Comparable<Entity> {
 
 	public String getPKDBName() {
 		if (hasCompoundPK()) {
-			return getVarName() + "PK";
+			return getVariableName() + "PK";
 		}
 
 		EntityColumn entityColumn = _getPKEntityColumn();
@@ -580,9 +596,9 @@ public class Entity implements Comparable<Entity> {
 		return entityColumn.getMethodName();
 	}
 
-	public String getPKVarName() {
+	public String getPKVariableName() {
 		if (hasCompoundPK()) {
-			return getVarName() + "PK";
+			return getVariableName() + "PK";
 		}
 
 		EntityColumn entityColumn = _getPKEntityColumn();
@@ -598,9 +614,9 @@ public class Entity implements Comparable<Entity> {
 		return _pluralName;
 	}
 
-	public String getPluralPKVarName() {
+	public String getPluralPKVariableName() {
 		if (hasCompoundPK()) {
-			return getVarName() + "PKs";
+			return getVariableName() + "PKs";
 		}
 
 		EntityColumn entityColumn = _getPKEntityColumn();
@@ -608,8 +624,8 @@ public class Entity implements Comparable<Entity> {
 		return entityColumn.getPluralName();
 	}
 
-	public String getPluralVarName() {
-		return TextFormatter.format(_pluralName, TextFormatter.I);
+	public String getPluralVariableName() {
+		return _pluralVariableName;
 	}
 
 	public String getPortletShortName() {
@@ -773,8 +789,8 @@ public class Entity implements Comparable<Entity> {
 		return _unresolvedReferenceEntityNames;
 	}
 
-	public String getVarName() {
-		return TextFormatter.format(_name, TextFormatter.I);
+	public String getVariableName() {
+		return _variableName;
 	}
 
 	public Entity getVersionedEntity() {
@@ -991,10 +1007,10 @@ public class Entity implements Comparable<Entity> {
 	}
 
 	public boolean isGroupedModel() {
-		String pkVarName = getPKVarName();
+		String pkVariableName = getPKVariableName();
 
 		if (isAuditedModel() && hasEntityColumn("groupId") &&
-			!pkVarName.equals("groupId")) {
+			!pkVariableName.equals("groupId")) {
 
 			return true;
 		}
@@ -1121,10 +1137,10 @@ public class Entity implements Comparable<Entity> {
 	}
 
 	public boolean isResourcedModel() {
-		String pkVarName = getPKVarName();
+		String pkVariableName = getPKVariableName();
 
 		if (hasEntityColumn("resourcePrimKey") &&
-			!pkVarName.equals("resourcePrimKey")) {
+			!pkVariableName.equals("resourcePrimKey")) {
 
 			return true;
 		}
@@ -1308,6 +1324,7 @@ public class Entity implements Comparable<Entity> {
 	private final String _persistenceClassName;
 	private final List<EntityColumn> _pkEntityColumns;
 	private final String _pluralName;
+	private final String _pluralVariableName;
 	private boolean _portalReference;
 	private final String _portletShortName;
 	private final List<Entity> _referenceEntities;
@@ -1328,6 +1345,7 @@ public class Entity implements Comparable<Entity> {
 	private List<String> _unresolvedReferenceEntityNames;
 	private final boolean _uuid;
 	private final boolean _uuidAccessor;
+	private final String _variableName;
 	private Entity _versionedEntity;
 	private Entity _versionEntity;
 

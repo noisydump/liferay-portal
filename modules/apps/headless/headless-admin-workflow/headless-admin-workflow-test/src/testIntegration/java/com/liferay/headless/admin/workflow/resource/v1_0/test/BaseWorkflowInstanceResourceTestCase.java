@@ -114,7 +114,9 @@ public abstract class BaseWorkflowInstanceResourceTestCase {
 		WorkflowInstanceResource.Builder builder =
 			WorkflowInstanceResource.builder();
 
-		workflowInstanceResource = builder.locale(
+		workflowInstanceResource = builder.authentication(
+			"test@liferay.com", "test"
+		).locale(
 			LocaleUtil.getDefault()
 		).build();
 	}
@@ -563,7 +565,9 @@ public abstract class BaseWorkflowInstanceResourceTestCase {
 		}
 	}
 
-	protected void assertValid(WorkflowInstance workflowInstance) {
+	protected void assertValid(WorkflowInstance workflowInstance)
+		throws Exception {
+
 		boolean valid = true;
 
 		if (workflowInstance.getDateCreated() == null) {

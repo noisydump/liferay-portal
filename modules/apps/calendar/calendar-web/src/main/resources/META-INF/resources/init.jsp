@@ -34,10 +34,12 @@ taglib uri="http://liferay.com/tld/ui" prefix="liferay-ui" %><%@
 taglib uri="http://liferay.com/tld/util" prefix="liferay-util" %>
 
 <%@ page import="com.liferay.asset.kernel.model.AssetEntry" %><%@
+page import="com.liferay.asset.kernel.model.AssetVocabularyConstants" %><%@
 page import="com.liferay.asset.kernel.service.AssetEntryLocalServiceUtil" %><%@
 page import="com.liferay.calendar.configuration.CalendarServiceConfigurationValues" %><%@
 page import="com.liferay.calendar.constants.CalendarActionKeys" %><%@
 page import="com.liferay.calendar.constants.CalendarConstants" %><%@
+page import="com.liferay.calendar.constants.CalendarNotificationTemplateConstants" %><%@
 page import="com.liferay.calendar.exception.CalendarBookingDurationException" %><%@
 page import="com.liferay.calendar.exception.CalendarBookingRecurrenceException" %><%@
 page import="com.liferay.calendar.exception.CalendarNameException" %><%@
@@ -48,7 +50,6 @@ page import="com.liferay.calendar.exception.NoSuchResourceException" %><%@
 page import="com.liferay.calendar.model.Calendar" %><%@
 page import="com.liferay.calendar.model.CalendarBooking" %><%@
 page import="com.liferay.calendar.model.CalendarNotificationTemplate" %><%@
-page import="com.liferay.calendar.model.CalendarNotificationTemplateConstants" %><%@
 page import="com.liferay.calendar.model.CalendarResource" %><%@
 page import="com.liferay.calendar.notification.NotificationField" %><%@
 page import="com.liferay.calendar.notification.NotificationTemplateType" %><%@
@@ -76,7 +77,7 @@ page import="com.liferay.calendar.web.internal.security.permission.resource.Cale
 page import="com.liferay.calendar.web.internal.util.CalendarResourceUtil" %><%@
 page import="com.liferay.calendar.web.internal.util.CalendarUtil" %><%@
 page import="com.liferay.calendar.web.internal.util.ColorUtil" %><%@
-page import="com.liferay.calendar.workflow.CalendarBookingWorkflowConstants" %><%@
+page import="com.liferay.calendar.workflow.constants.CalendarBookingWorkflowConstants" %><%@
 page import="com.liferay.petra.string.StringBundler" %><%@
 page import="com.liferay.petra.string.StringPool" %><%@
 page import="com.liferay.portal.kernel.bean.BeanParamUtil" %><%@

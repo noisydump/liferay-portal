@@ -57,6 +57,7 @@ import com.liferay.journal.internal.upgrade.v2_0_0.util.JournalArticleTable;
 import com.liferay.journal.internal.upgrade.v2_0_0.util.JournalFeedTable;
 import com.liferay.journal.internal.upgrade.v2_0_0.util.JournalFolderTable;
 import com.liferay.journal.internal.upgrade.v3_2_1.UpgradeJournalArticleLocalization;
+import com.liferay.journal.internal.upgrade.v3_3_0.UpgradeStorageLinks;
 import com.liferay.journal.model.JournalArticle;
 import com.liferay.portal.change.tracking.store.CTStoreFactory;
 import com.liferay.portal.configuration.upgrade.PrefsPropsToConfigurationUpgradeHelper;
@@ -201,8 +202,8 @@ public class JournalServiceUpgrade implements UpgradeStepRegistrator {
 		registry.register(
 			"1.1.6", "1.1.7",
 			new UpgradeDiscussionSubscriptionClassName(
-				_classNameLocalService, _subscriptionLocalService,
-				JournalArticle.class.getName(),
+				_assetEntryLocalService, _classNameLocalService,
+				_subscriptionLocalService, JournalArticle.class.getName(),
 				UpgradeDiscussionSubscriptionClassName.DeletionMode.UPDATE));
 
 		registry.register("1.1.7", "1.1.8", new UpgradeJournalArticle());
@@ -252,6 +253,20 @@ public class JournalServiceUpgrade implements UpgradeStepRegistrator {
 			"3.2.1", "3.2.2",
 			new com.liferay.journal.internal.upgrade.v3_2_2.
 				UpgradeJournalArticleLocalization());
+
+		registry.register("3.2.2", "3.2.3", new DummyUpgradeStep());
+
+		registry.register(
+			"3.2.3", "3.2.4",
+			new com.liferay.journal.internal.upgrade.v3_2_4.
+				UpgradeJournalArticle());
+
+		registry.register(
+			"3.2.4", "3.3.0",
+			new UpgradeCTModel("JournalContentSearch", "JournalFeed"));
+
+		registry.register(
+			"3.3.0", "3.4.0", new UpgradeStorageLinks(_classNameLocalService));
 	}
 
 	protected void deleteTempImages() throws Exception {

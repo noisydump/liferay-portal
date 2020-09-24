@@ -241,7 +241,8 @@ public class BlogEntriesDisplayContext {
 			}
 		}
 		else {
-			Indexer indexer = IndexerRegistryUtil.getIndexer(BlogsEntry.class);
+			Indexer<BlogsEntry> indexer = IndexerRegistryUtil.getIndexer(
+				BlogsEntry.class);
 
 			SearchContext searchContext = SearchContextFactory.getInstance(
 				_httpServletRequest);
@@ -250,6 +251,7 @@ public class BlogEntriesDisplayContext {
 				Field.STATUS, WorkflowConstants.STATUS_ANY);
 			searchContext.setEnd(searchContainer.getEnd());
 			searchContext.setIncludeDiscussions(true);
+			searchContext.setIncludeInternalAssetCategories(true);
 			searchContext.setKeywords(keywords);
 			searchContext.setStart(searchContainer.getStart());
 

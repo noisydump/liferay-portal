@@ -68,7 +68,7 @@ public class MessageBoardMessageDTOConverter
 		MBMessage mbMessage = _mbMessageService.getMessage(
 			(Long)dtoConverterContext.getId());
 
-		User user = _userLocalService.getUserById(mbMessage.getUserId());
+		User user = _userLocalService.fetchUser(mbMessage.getUserId());
 
 		return new MessageBoardMessage() {
 			{
@@ -93,6 +93,7 @@ public class MessageBoardMessageDTOConverter
 						MBMessage.class.getName(), mbMessage.getMessageId()),
 					AssetTag.NAME_ACCESSOR);
 				messageBoardSectionId = mbMessage.getCategoryId();
+				messageBoardThreadId = mbMessage.getThreadId();
 				numberOfMessageBoardAttachments =
 					mbMessage.getAttachmentsFileEntriesCount();
 				numberOfMessageBoardMessages =
@@ -116,7 +117,9 @@ public class MessageBoardMessageDTOConverter
 							return null;
 						}
 
-						return CreatorUtil.toCreator(_portal, user);
+						return CreatorUtil.toCreator(
+							_portal, dtoConverterContext.getUriInfoOptional(),
+							user);
 					});
 				setCreatorStatistics(
 					() -> {
@@ -130,8 +133,9 @@ public class MessageBoardMessageDTOConverter
 							dtoConverterContext.getUriInfoOptional();
 
 						return CreatorStatisticsUtil.toCreatorStatistics(
-							_mbStatsUserLocalService,
+							mbMessage.getGroupId(),
 							String.valueOf(dtoConverterContext.getLocale()),
+							_mbStatsUserLocalService,
 							uriInfoOptional.orElse(null), user);
 					});
 				setParentMessageBoardMessageId(

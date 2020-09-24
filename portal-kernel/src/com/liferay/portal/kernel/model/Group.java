@@ -63,7 +63,8 @@ public interface Group extends GroupModel, PersistedModel, TreeModel {
 
 	public java.util.List<Group> getChildrenWithLayouts(
 		boolean site, int start, int end,
-		com.liferay.portal.kernel.util.OrderByComparator<Group> obc);
+		com.liferay.portal.kernel.util.OrderByComparator<Group>
+			orderByComparator);
 
 	public int getChildrenWithLayoutsCount(boolean site);
 
@@ -159,6 +160,8 @@ public interface Group extends GroupModel, PersistedModel, TreeModel {
 	public boolean isCompanyStagingGroup();
 
 	public boolean isControlPanel();
+
+	public boolean isDepot();
 
 	public boolean isGuest();
 

@@ -447,14 +447,14 @@ public class PingbackMethodImplTest {
 		InetAddress publicIpAddress = InetAddress.getByAddress(
 			new byte[] {1, 2, 3, 4});
 
-		URI sourceUri = new URI(_SOURCE_URI);
+		URI sourceURI = new URI(_SOURCE_URI);
 
 		Mockito.doReturn(
 			publicIpAddress
 		).when(
 			_inetAddressLookup
 		).getInetAddressByName(
-			Mockito.eq(sourceUri.getHost())
+			Mockito.eq(sourceURI.getHost())
 		);
 
 		for (InetAddress localAddress : _localAddresses) {
@@ -558,13 +558,13 @@ public class PingbackMethodImplTest {
 	}
 
 	protected void setUpPropsTestUtil() {
-		Map<String, Object> propertiesMap = HashMapBuilder.<String, Object>put(
-			PropsKeys.DNS_SECURITY_ADDRESS_TIMEOUT_SECONDS, String.valueOf(2)
-		).put(
-			PropsKeys.DNS_SECURITY_THREAD_LIMIT, String.valueOf(10)
-		).build();
-
-		PropsTestUtil.setProps(propertiesMap);
+		PropsTestUtil.setProps(
+			HashMapBuilder.<String, Object>put(
+				PropsKeys.DNS_SECURITY_ADDRESS_TIMEOUT_SECONDS,
+				String.valueOf(2)
+			).put(
+				PropsKeys.DNS_SECURITY_THREAD_LIMIT, String.valueOf(10)
+			).build());
 	}
 
 	protected void setUpUserLocalService() throws Exception {

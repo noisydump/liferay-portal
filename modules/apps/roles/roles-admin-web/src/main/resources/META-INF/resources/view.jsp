@@ -30,13 +30,12 @@ else {
 
 ViewRolesManagementToolbarDisplayContext viewRolesManagementToolbarDisplayContext = new ViewRolesManagementToolbarDisplayContext(request, renderRequest, renderResponse, displayStyle);
 
-SearchContainer searchContainer = viewRolesManagementToolbarDisplayContext.getSearchContainer();
+SearchContainer<Role> searchContainer = viewRolesManagementToolbarDisplayContext.getSearchContainer();
 
 PortletURL portletURL = viewRolesManagementToolbarDisplayContext.getPortletURL();
 %>
 
 <clay:navigation-bar
-	inverted="<%= true %>"
 	navigationItems="<%= roleDisplayContext.getViewRoleNavigationItems(liferayPortletResponse, portletURL) %>"
 />
 
@@ -84,7 +83,10 @@ PortletURL portletURL = viewRolesManagementToolbarDisplayContext.getPortletURL()
 
 				rowURL.setParameter("mvcPath", "/edit_role.jsp");
 				rowURL.setParameter("tabs1", "details");
-				rowURL.setParameter("backURL", roleSearchContainer.getIteratorURL().toString());
+
+				PortletURL searchContainerPortletURL = roleSearchContainer.getIteratorURL();
+
+				rowURL.setParameter("backURL", searchContainerPortletURL.toString());
 				rowURL.setParameter("roleId", String.valueOf(role.getRoleId()));
 			}
 			%>

@@ -14,14 +14,14 @@
 
 package com.liferay.portal.template;
 
+import com.liferay.petra.io.unsync.UnsyncStringWriter;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
-import com.liferay.portal.kernel.io.unsync.UnsyncStringWriter;
 import com.liferay.portal.kernel.template.Template;
 import com.liferay.portal.kernel.template.TemplateConstants;
 import com.liferay.portal.kernel.template.TemplateException;
 import com.liferay.portal.kernel.template.TemplateResource;
 import com.liferay.portal.kernel.template.TemplateResourceCache;
-import com.liferay.portal.kernel.util.StringBundler;
 
 import java.io.Writer;
 
@@ -142,6 +142,7 @@ public abstract class BaseTemplate implements Template {
 		}
 	}
 
+	@Override
 	public void processTemplate(
 			Writer writer,
 			Supplier<TemplateResource> errorTemplateResourceSupplier)
@@ -248,11 +249,9 @@ public abstract class BaseTemplate implements Template {
 	protected String getTemplateResourceUUID(
 		TemplateResource templateResource) {
 
-		return TemplateConstants.TEMPLATE_RESOURCE_UUID_PREFIX.concat(
-			StringPool.POUND
-		).concat(
-			templateResource.getTemplateId()
-		);
+		return StringBundler.concat(
+			TemplateConstants.TEMPLATE_RESOURCE_UUID_PREFIX, StringPool.POUND,
+			templateResource.getTemplateId());
 	}
 
 	protected abstract void handleException(

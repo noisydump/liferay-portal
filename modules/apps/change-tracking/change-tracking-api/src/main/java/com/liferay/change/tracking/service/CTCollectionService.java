@@ -50,7 +50,7 @@ public interface CTCollectionService extends BaseService {
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this interface directly. Always use {@link CTCollectionServiceUtil} to access the ct collection remote service. Add custom service methods to <code>com.liferay.change.tracking.service.impl.CTCollectionServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface.
+	 * Never modify this interface directly. Add custom service methods to <code>com.liferay.change.tracking.service.impl.CTCollectionServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface. Consume the ct collection remote service via injection or a <code>org.osgi.util.tracker.ServiceTracker</code>. Use {@link CTCollectionServiceUtil} if injection and service tracking are not available.
 	 */
 	public CTCollection addCTCollection(
 			long companyId, long userId, String name, String description)
@@ -62,6 +62,14 @@ public interface CTCollectionService extends BaseService {
 	public CTCollection deleteCTCollection(CTCollection ctCollection)
 		throws PortalException;
 
+	public void discardCTEntries(
+			long ctCollectionId, long modelClassNameId, long modelClassPK)
+		throws PortalException;
+
+	public void discardCTEntry(
+			long ctCollectionId, long modelClassNameId, long modelClassPK)
+		throws PortalException;
+
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<CTCollection> getCTCollections(
 		long companyId, int status, int start, int end,
@@ -70,7 +78,7 @@ public interface CTCollectionService extends BaseService {
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<CTCollection> getCTCollections(
 		long companyId, int status, String keywords, int start, int end,
-		OrderByComparator<CTCollection> obc);
+		OrderByComparator<CTCollection> orderByComparator);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public int getCTCollectionsCount(

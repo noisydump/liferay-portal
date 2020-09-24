@@ -50,11 +50,6 @@ definition {
 
 		SelectFrame(value1 = "relative=top");
 
-		LiferayEvent.waitForLiferayEvent(
-			attributeName = "src",
-			attributeValue = "dialog-iframe-popup",
-			eventName = "modalIframeLoaded");
-
 		SelectFrame(locator1 = "IFrame#MODAL_BODY");
 
 		if (isSet(scopeSite)) {
@@ -101,8 +96,12 @@ definition {
 	}
 
 	macro viewPG {
-		if (IsElementPresent(locator1 = "Relatedassets#ASSET_TITLE_IMAGE_1")) {
-			AssertVisible(locator1 = "Relatedassets#ASSET_TITLE_IMAGE_1");
+		if (!(isSet(rowNumber))) {
+			var rowNumber = "1";
+		}
+
+		if (IsElementPresent(locator1 = "Relatedassets#ASSET_ENTRY_STICKER")) {
+			AssertVisible(locator1 = "Relatedassets#ASSET_ENTRY_STICKER");
 		}
 
 		AssertTextEquals(

@@ -7,13 +7,13 @@ definition {
 			Click.waitForMenuToggleJSClick(locator1 = "Dropdown#EMPTY_MESSAGE_DROPDOWN");
 
 			Click(
-				key_menuItem = "Dynamic Selection",
+				key_menuItem = "Dynamic Collection",
 				locator1 = "MenuItem#DROPDOWN_MENU_ITEM");
 		}
 
 		else {
 
-			LexiconEntry.gotoAddMenuItem(menuItem = "Dynamic Selection");
+			LexiconEntry.gotoAddMenuItem(menuItem = "Dynamic Collection");
 
 		}
 
@@ -27,6 +27,14 @@ definition {
 	}
 
 	macro addKeywordsFilter {
+		Panel.expandPanel(panel = "Source");
+
+		if (!(IsSelectedLabel(locator1 = "APConfiguration#SOURCE_SCOPE_ASSET_TYPE_SELECT", value1 = "All Types"))) {
+			Select(
+				locator1 = "APConfiguration#SOURCE_SCOPE_ASSET_TYPE_SELECT",
+				value1 = "All Types");
+		}
+
 		Panel.expandPanel(panel = "Filter");
 
 		Select(
@@ -59,13 +67,13 @@ definition {
 			Click.waitForMenuToggleJSClick(locator1 = "Dropdown#EMPTY_MESSAGE_DROPDOWN");
 
 			Click(
-				key_menuItem = "Manual Selection",
+				key_menuItem = "Manual Collection",
 				locator1 = "MenuItem#DROPDOWN_MENU_ITEM");
 		}
 
 		else {
 
-			LexiconEntry.gotoAddMenuItem(menuItem = "Manual Selection");
+			LexiconEntry.gotoAddMenuItem(menuItem = "Manual Collection");
 
 		}
 
@@ -74,6 +82,28 @@ definition {
 			text = "${assetListTitle}");
 
 		Button.clickSave();
+
+		Alert.viewSuccessMessage();
+	}
+
+	macro addSelection {
+		Click(locator1 = "Button#NEW");
+
+		MenuItem.click(menuItem = "${menuItem}");
+
+		PortletEntry.inputText(
+			fieldLabel = "Title",
+			text = "${collectionName}");
+
+		Button.clickSave();
+
+		Select(
+			locator1 = "APConfiguration#SOURCE_SCOPE_ASSET_TYPE_SELECT",
+			value1 = "${selectedAsset}");
+
+		Pause(locator1 = "3000");
+
+		PortletEntry.save();
 
 		Alert.viewSuccessMessage();
 	}
@@ -97,7 +127,33 @@ definition {
 			locator1 = "APConfiguration#FILTER_CATEGORIZATION_SELECT",
 			value1 = "Tags");
 
-		AssetCategorization.selectTag(tagNameList = "${tagNameList}");
+		Click(locator1 = "AssetCategorization#TAGS_SELECT_BUTTON");
+
+		SelectFrame(locator1 = "IFrame#MODAL_BODY");
+
+		for (var tagName : list "${tagNameList}") {
+			Check(
+				key_rowEntry = "${tagName}",
+				locator1 = "ContentRow#ENTRY_CONTENT_ENTRY_CHECKBOX");
+		}
+
+		SelectFrameTop();
+
+		AssertClick(
+			locator1 = "Button#DONE",
+			value1 = "Done");
+
+		PortletEntry.save();
+	}
+
+	macro configureAssetEntrySubtype {
+		Panel.expandPanel(panel = "Source");
+
+		Select(
+			locator1 = "APConfiguration#SOURCE_SCOPE_ASSET_SUBTYPE_SELECT",
+			value1 = "${selectedSubtype}");
+
+		Pause(locator1 = "3000");
 
 		PortletEntry.save();
 	}
@@ -114,10 +170,54 @@ definition {
 		PortletEntry.save();
 	}
 
+	macro configureFilterByField {
+		Check.checkToggleSwitch(locator1 = "APConfiguration#SOURCE_SCOPE_FILTER_BY_FIELD_CHECKBOX");
+
+		Pause(locator1 = "3000");
+
+		Click(locator1 = "APConfiguration#SOURCE_SCOPE_FILTER_BY_FIELD_SELECT_BUTTON");
+
+		Pause(locator1 = "3000");
+
+		SelectFrame(locator1 = "IFrame#MODAL_BODY");
+
+		Check(
+			key_fieldName = "${fieldName}",
+			locator1 = "APConfigurationFilterbyfield#FIELD_FILTER_RADIO_BUTTON");
+	}
+
+	macro configureItemTypeInManualCollection {
+		if (isSet(itemType)) {
+			Select(
+				locator1 = "APConfiguration#SOURCE_SCOPE_ASSET_TYPE_SELECT",
+				value1 = "${itemType}");
+
+			Pause(locator1 = "3000");
+		}
+
+		if (isSet(itemSubtype)) {
+			Select(
+				locator1 = "APConfiguration#SOURCE_SCOPE_ASSET_SUBTYPE_SELECT",
+				value1 = "${itemSubtype}");
+
+			Pause(locator1 = "3000");
+		}
+
+		PortletEntry.save();
+	}
+
 	macro configureScope {
 		Click(
 			key_title = "${assetListTitle}",
 			locator1 = "AssetLists#ASSET_LIST_ENTRY_TITLE");
+
+		if (isSet(selectedAsset)) {
+			Panel.expandPanel(panel = "Source");
+
+			Select(
+				locator1 = "APConfiguration#SOURCE_SCOPE_ASSET_TYPE_SELECT",
+				value1 = "${selectedAsset}");
+		}
 
 		Panel.expandPanel(panel = "Scope");
 
@@ -129,11 +229,6 @@ definition {
 			MenuItem.click(menuItem = "Other Site or Asset Library...");
 
 			SelectFrame(value1 = "relative=top");
-
-			LiferayEvent.waitForLiferayEvent(
-				attributeName = "src",
-				attributeValue = "dialog-iframe-popup",
-				eventName = "modalIframeLoaded");
 
 			SelectFrame(locator1 = "IFrame#SELECT_SITES");
 
@@ -178,6 +273,12 @@ definition {
 		AssetListsAdmin.gotoEntryMenuItem(
 			assetListTitle = "${assetListTitle}",
 			item = "Edit");
+	}
+
+	macro gotoEntry {
+		Click(
+			key_title = "${assetListName}",
+			locator1 = "AssetLists#ASSET_LIST_ENTRY_TITLE");
 	}
 
 	macro gotoEntryMenuItem {
@@ -237,14 +338,17 @@ definition {
 
 		Click(locator1 = "AssetLists#ASSET_LIST_ENTRY_TITLE");
 
+		Pause(locator1 = "3000");
+
+		if (IsElementPresent(locator1 = "APConfiguration#SOURCE_SCOPE_ASSET_TYPE_SELECT")) {
+			AssetListsAdmin.configureItemTypeInManualCollection(
+				itemSubtype = "${itemSubtype}",
+				itemType = "${itemType}");
+		}
+
 		Click(locator1 = "AssetLists#ASSET_LIST_SELECT_BUTTON");
 
 		Click(locator1 = "AssetLists#ASSET_TYPE_DROPDOWN_ITEM");
-
-		LiferayEvent.waitForLiferayEvent(
-			attributeName = "src",
-			attributeValue = "dialog-iframe-popup",
-			eventName = "modalIframeLoaded");
 
 		SelectFrame(locator1 = "IFrame#MODAL_BODY");
 
@@ -302,6 +406,24 @@ definition {
 		Click(locator1 = "AssetLists#ASSET_LIST_ENTRY_TITLE");
 
 		if (isSet(manualSelection)) {
+			if (IsElementPresent(locator1 = "APConfiguration#SOURCE_SCOPE_ASSET_TYPE_SELECT")) {
+				if (isSet(itemType)) {
+					Select(
+						locator1 = "APConfiguration#SOURCE_SCOPE_ASSET_TYPE_SELECT",
+						value1 = "${itemType}");
+				}
+
+				if (isSet(itemSubtype)) {
+					Select(
+						locator1 = "APConfiguration#SOURCE_SCOPE_ASSET_SUBTYPE_SELECT",
+						value1 = "${itemSubtype}");
+				}
+
+				Pause(locator1 = "3000");
+
+				PortletEntry.save();
+			}
+
 			if (isSet(allAssetsDisabled)) {
 				AssertElementNotPresent(locator1 = "AssetLists#ASSET_LIST_SELECT_BUTTON");
 			}
@@ -346,13 +468,8 @@ definition {
 		Click(locator1 = "AssetLists#ASSET_LIST_ELLIPSIS");
 
 		Click(
-			key_menuItem = "View Content",
+			key_menuItem = "View Items",
 			locator1 = "AssetLists#PERSONALIZATION_DROPDOWN_ITEM");
-
-		LiferayEvent.waitForLiferayEvent(
-			attributeName = "src",
-			attributeValue = "dialog-iframe-popup",
-			eventName = "modalIframeLoaded");
 
 		SelectFrame(locator1 = "IFrame#MODAL_BODY");
 
@@ -379,13 +496,8 @@ definition {
 		Click(locator1 = "AssetLists#ASSET_LIST_ELLIPSIS");
 
 		Click(
-			key_menuItem = "View Content",
+			key_menuItem = "View Items",
 			locator1 = "AssetLists#PERSONALIZATION_DROPDOWN_ITEM");
-
-		LiferayEvent.waitForLiferayEvent(
-			attributeName = "src",
-			attributeValue = "dialog-iframe-popup",
-			eventName = "modalIframeLoaded");
 
 		SelectFrame(locator1 = "IFrame#MODAL_BODY");
 

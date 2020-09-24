@@ -14,7 +14,6 @@
 
 package com.liferay.depot.web.internal.servlet.taglib;
 
-import com.liferay.depot.configuration.DepotConfiguration;
 import com.liferay.depot.web.internal.display.context.DepotAdminMembershipsDisplayContext;
 import com.liferay.item.selector.ItemSelector;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -49,10 +48,6 @@ public class UserMembershipsPostJSPDynamicInclude
 			HttpServletRequest httpServletRequest,
 			HttpServletResponse httpServletResponse, String key)
 		throws IOException {
-
-		if (!_depotConfiguration.isEnabled()) {
-			return;
-		}
 
 		try {
 			PortletRequest portletRequest =
@@ -105,9 +100,6 @@ public class UserMembershipsPostJSPDynamicInclude
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		UserMembershipsPostJSPDynamicInclude.class);
-
-	@Reference
-	private DepotConfiguration _depotConfiguration;
 
 	@Reference
 	private ItemSelector _itemSelector;

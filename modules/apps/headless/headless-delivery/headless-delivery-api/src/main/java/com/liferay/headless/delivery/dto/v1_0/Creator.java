@@ -243,7 +243,9 @@ public class Creator {
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected String name;
 
-	@Schema(description = "A relative URL to the author's user profile.")
+	@Schema(
+		description = "A relative URL to the author's user profile. Optional field, can be embedded with nestedFields"
+	)
 	public String getProfileURL() {
 		return profileURL;
 	}
@@ -267,7 +269,9 @@ public class Creator {
 		}
 	}
 
-	@GraphQLField(description = "A relative URL to the author's user profile.")
+	@GraphQLField(
+		description = "A relative URL to the author's user profile. Optional field, can be embedded with nestedFields"
+	)
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected String profileURL;
 
@@ -423,6 +427,16 @@ public class Creator {
 		return string.replaceAll("\"", "\\\\\"");
 	}
 
+	private static boolean _isArray(Object value) {
+		if (value == null) {
+			return false;
+		}
+
+		Class<?> clazz = value.getClass();
+
+		return clazz.isArray();
+	}
+
 	private static String _toJSON(Map<String, ?> map) {
 		StringBuilder sb = new StringBuilder("{");
 
@@ -441,9 +455,7 @@ public class Creator {
 
 			Object value = entry.getValue();
 
-			Class<?> clazz = value.getClass();
-
-			if (clazz.isArray()) {
+			if (_isArray(value)) {
 				sb.append("[");
 
 				Object[] valueArray = (Object[])value;

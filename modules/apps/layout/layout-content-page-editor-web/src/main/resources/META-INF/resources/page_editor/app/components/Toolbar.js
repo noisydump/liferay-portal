@@ -12,23 +12,28 @@
  * details.
  */
 
-import ClayButton from '@clayui/button';
-import classNames from 'classnames';
+import {ClayButtonWithIcon, default as ClayButton} from '@clayui/button';
+import ClayLayout from '@clayui/layout';
+import {useModal} from '@clayui/modal';
 import {useIsMounted} from 'frontend-js-react-web';
-import React, {useEffect, useState} from 'react';
+import React, {useState} from 'react';
 import ReactDOM from 'react-dom';
 
 import useLazy from '../../core/hooks/useLazy';
 import useLoad from '../../core/hooks/useLoad';
 import usePlugins from '../../core/hooks/usePlugins';
 import * as Actions from '../actions/index';
-import {PAGE_TYPES} from '../config/constants/pageTypes';
+import {LAYOUT_TYPES} from '../config/constants/layoutTypes';
 import {config} from '../config/index';
 import {useDispatch, useSelector} from '../store/index';
+import redo from '../thunks/redo';
 import undo from '../thunks/undo';
+import {useDropClear} from '../utils/dragAndDrop/useDragAndDrop';
 import {useSelectItem} from './Controls';
+import EditModeSelector from './EditModeSelector';
 import ExperimentsLabel from './ExperimentsLabel';
 import NetworkStatusBar from './NetworkStatusBar';
+import PreviewModal from './PreviewModal';
 import Translation from './Translation';
 import UnsafeHTML from './UnsafeHTML';
 import ViewportSizeSelector from './ViewportSizeSelector';
@@ -38,6 +43,7 @@ const {Suspense, useCallback, useRef} = React;
 
 function ToolbarBody() {
 	const dispatch = useDispatch();
+	const dropClearRef = useDropClear();
 	const {getInstance, register} = usePlugins();
 	const isMounted = useIsMounted();
 	const load = useLoad();
@@ -45,20 +51,21 @@ function ToolbarBody() {
 	const store = useSelector((state) => state);
 
 	const {
-		layoutData,
 		network,
 		segmentsExperienceId,
 		segmentsExperimentStatus,
 		selectedViewportSize,
 	} = store;
 
-	const [enableDiscard, setEnableDiscard] = useState(false);
+	const [openPreviewModal, setOpenPreviewModal] = useState(false);
 
-	useEffect(() => {
-		const isConversionPage = config.pageType === PAGE_TYPES.conversion;
-
-		setEnableDiscard(network.lastFetch || config.draft || isConversionPage);
-	}, [layoutData, network.lastFetch]);
+	const {observer} = useModal({
+		onClose: () => {
+			if (isMounted()) {
+				setOpenPreviewModal(false);
+			}
+		},
+	});
 
 	const loading = useRef(() => {
 		Promise.all(
@@ -115,7 +122,7 @@ function ToolbarBody() {
 		}, [])
 	);
 
-	const handleDiscardDraft = (event) => {
+	const handleDiscardVariant = (event) => {
 		if (
 			!confirm(
 				Liferay.Language.get(
@@ -144,24 +151,19 @@ function ToolbarBody() {
 		dispatch(undo({store}));
 	};
 
+	const onRedo = () => {
+		dispatch(redo({store}));
+	};
+
 	const deselectItem = (event) => {
 		if (event.target === event.currentTarget) {
 			selectItem(null);
 		}
 	};
 
-	let draftButtonLabel = Liferay.Language.get('discard-draft');
-
-	if (config.pageType === PAGE_TYPES.conversion) {
-		draftButtonLabel = Liferay.Language.get('discard-conversion-draft');
-	}
-	else if (config.singleSegmentsExperienceMode) {
-		draftButtonLabel = Liferay.Language.get('discard-variant');
-	}
-
 	let publishButtonLabel = Liferay.Language.get('publish');
 
-	if (config.pageType === PAGE_TYPES.master) {
+	if (config.layoutType === LAYOUT_TYPES.master) {
 		publishButtonLabel = Liferay.Language.get('publish-master');
 	}
 	else if (config.singleSegmentsExperienceMode) {
@@ -172,16 +174,8 @@ function ToolbarBody() {
 	}
 
 	return (
-		<div
-			className="container-fluid container-fluid-max-xl"
-			onClick={deselectItem}
-		>
-			<ul
-				className={classNames('navbar-nav', {
-					'responsive-mode': config.responsiveEnabled,
-				})}
-				onClick={deselectItem}
-			>
+		<ClayLayout.ContainerFluid onClick={deselectItem} ref={dropClearRef}>
+			<ul className="navbar-nav responsive-mode" onClick={deselectItem}>
 				{config.toolbarPlugins.map(
 					({loadingPlaceholder, pluginEntryPoint}) => {
 						return (
@@ -214,13 +208,6 @@ function ToolbarBody() {
 						segmentsExperienceId={segmentsExperienceId}
 					/>
 				</li>
-				{config.responsiveEnabled && (
-					<li className="nav-item">
-						<ViewportSizeSelector
-							selectedSize={selectedViewportSize}
-						/>
-					</li>
-				)}
 				{!config.singleSegmentsExperienceMode &&
 					segmentsExperimentStatus && (
 						<li className="nav-item pl-2">
@@ -230,31 +217,59 @@ function ToolbarBody() {
 							/>
 						</li>
 					)}
+				<li className="nav-item">
+					<ViewportSizeSelector
+						onSizeSelected={(size) =>
+							dispatch(Actions.switchViewportSize({size}))
+						}
+						selectedSize={selectedViewportSize}
+					/>
+				</li>
 			</ul>
 
 			<ul className="navbar-nav" onClick={deselectItem}>
 				<NetworkStatusBar {...network} />
-				{config.undoEnabled && <Undo onUndo={onUndo} />}
-				<li className="nav-item">
-					<form action={config.discardDraftURL} method="POST">
-						<input
-							name={`${config.portletNamespace}redirect`}
-							type="hidden"
-							value={config.discardDraftRedirectURL}
-						/>
+				<Undo onRedo={onRedo} onUndo={onUndo} />
 
-						<ClayButton
-							className="btn btn-secondary mr-3"
-							disabled={!enableDiscard}
-							displayType="secondary"
-							onClick={handleDiscardDraft}
-							small
-							type="submit"
-						>
-							{draftButtonLabel}
-						</ClayButton>
-					</form>
+				<li className="nav-item">
+					<EditModeSelector />
 				</li>
+
+				<li className="nav-item">
+					<ClayButtonWithIcon
+						className="btn btn-secondary mr-3"
+						displayType="secondary"
+						onClick={() => setOpenPreviewModal(true)}
+						small
+						symbol="view"
+						title={Liferay.Language.get('preview')}
+						type="button"
+					>
+						{Liferay.Language.get('preview')}
+					</ClayButtonWithIcon>
+				</li>
+				{config.singleSegmentsExperienceMode && (
+					<li className="nav-item">
+						<form action={config.discardDraftURL} method="POST">
+							<input
+								name={`${config.portletNamespace}redirect`}
+								type="hidden"
+								value={config.discardDraftRedirectURL}
+							/>
+
+							<ClayButton
+								className="btn btn-secondary mr-3"
+								displayType="secondary"
+								onClick={handleDiscardVariant}
+								small
+								type="submit"
+							>
+								{Liferay.Language.get('discard-variant')}
+							</ClayButton>
+						</form>
+					</li>
+				)}
+
 				<li className="nav-item">
 					<form action={config.publishURL} method="POST">
 						<input
@@ -275,7 +290,9 @@ function ToolbarBody() {
 					</form>
 				</li>
 			</ul>
-		</div>
+
+			{openPreviewModal && <PreviewModal observer={observer} />}
+		</ClayLayout.ContainerFluid>
 	);
 }
 

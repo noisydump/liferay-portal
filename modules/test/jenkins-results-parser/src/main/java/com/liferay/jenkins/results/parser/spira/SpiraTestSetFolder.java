@@ -14,6 +14,7 @@
 
 package com.liferay.jenkins.results.parser.spira;
 
+import com.liferay.jenkins.results.parser.JenkinsResultsParserUtil;
 import com.liferay.jenkins.results.parser.JenkinsResultsParserUtil.HttpRequestMethod;
 
 import java.io.IOException;
@@ -84,7 +85,7 @@ public class SpiraTestSetFolder extends PathSpiraArtifact {
 				requestJSONObject.toString());
 
 			return spiraProject.getSpiraTestSetFolderByID(
-				responseJSONObject.getInt(ID_KEY));
+				responseJSONObject.getInt(KEY_ID));
 		}
 		catch (IOException ioException) {
 			throw new RuntimeException(ioException);
@@ -121,7 +122,7 @@ public class SpiraTestSetFolder extends PathSpiraArtifact {
 
 		List<SpiraTestSetFolder> spiraTestSetFolders = getSpiraTestSetFolders(
 			spiraProject,
-			new SearchQuery.SearchParameter(ID_KEY, testSetFolderID));
+			new SearchQuery.SearchParameter(KEY_ID, testSetFolderID));
 
 		if (spiraTestSetFolders.isEmpty()) {
 			return;
@@ -182,6 +183,15 @@ public class SpiraTestSetFolder extends PathSpiraArtifact {
 		return _parentSpiraTestSetFolder;
 	}
 
+	@Override
+	public String getURL() {
+		SpiraProject spiraProject = getSpiraProject();
+
+		return JenkinsResultsParserUtil.combine(
+			SPIRA_BASE_URL, String.valueOf(spiraProject.getID()),
+			"/TestSet/List/", String.valueOf(getID()), ".aspx");
+	}
+
 	protected static List<SpiraTestSetFolder> getSpiraTestSetFolders(
 		final SpiraProject spiraProject,
 		SearchQuery.SearchParameter... searchParameters) {
@@ -214,7 +224,7 @@ public class SpiraTestSetFolder extends PathSpiraArtifact {
 
 	protected static final String ARTIFACT_TYPE_NAME = "testsetfolder";
 
-	protected static final String ID_KEY = "TestSetFolderId";
+	protected static final String KEY_ID = "TestSetFolderId";
 
 	private static List<JSONObject> _requestSpiraTestSetFolders(
 		SpiraProject spiraProject) {
@@ -236,7 +246,7 @@ public class SpiraTestSetFolder extends PathSpiraArtifact {
 					i);
 
 				responseJSONObject.put(
-					SpiraProject.ID_KEY, spiraProject.getID());
+					SpiraProject.KEY_ID, spiraProject.getID());
 
 				spiraTestSetFolders.add(responseJSONObject);
 			}

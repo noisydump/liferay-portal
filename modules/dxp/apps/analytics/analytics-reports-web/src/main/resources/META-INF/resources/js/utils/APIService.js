@@ -11,114 +11,22 @@
 
 import {fetch} from 'frontend-js-web';
 
-const MOCK_TRAFFIC_SOURCES_DETAILS = {
-	organic: {
-		keywords: [
-			{
-				position: 1,
-				title: 'commerce',
-				value: 90000,
-				volume: 12300,
-			},
-			{
-				position: 2,
-				title: 'e-commerce',
-				value: 14800,
-				volume: 9800,
-			},
-			{
-				position: 3,
-				title: 'what is commerce',
-				value: 14000,
-				volume: 9500,
-			},
-			{
-				position: 4,
-				title: 'what is e-commerce',
-				value: 12100,
-				volume: 8700,
-			},
-			{
-				position: 5,
-				title: 'commerce definition for new business strategy',
-				value: 10100,
-				volume: 7100,
-			},
-		],
-		title: 'Organic Traffic',
+function APIService({
+	endpoints: {
+		analyticsReportsHistoricalReadsURL,
+		analyticsReportsHistoricalViewsURL,
+		analyticsReportsTotalReadsURL,
+		analyticsReportsTotalViewsURL,
+		analyticsReportsTrafficSourcesURL,
 	},
-	paid: {
-		keywords: [
-			{
-				position: 1,
-				title: 'commerce',
-				value: 90000,
-				volume: 12300,
-			},
-			{
-				position: 2,
-				title: 'e-commerce',
-				value: 14800,
-				volume: 9800,
-			},
-			{
-				position: 3,
-				title: 'what is commerce',
-				value: 14000,
-				volume: 9500,
-			},
-			{
-				position: 4,
-				title: 'what is e-commerce',
-				value: 12100,
-				volume: 8700,
-			},
-			{
-				position: 5,
-				title: 'commerce definition for new business strategy',
-				value: 10100,
-				volume: 7100,
-			},
-		],
-		title: 'Paid Traffic',
-	},
-};
-
-function APIService({endpoints, namespace, page}) {
-	const {
-		getAnalyticsReportsHistoricalReadsURL,
-		getAnalyticsReportsHistoricalViewsURL,
-		getAnalyticsReportsTotalReadsURL,
-		getAnalyticsReportsTotalViewsURL,
-	} = endpoints;
-	const {plid} = page;
-
-	function getTotalReads() {
-		const body = {plid};
-
-		return _fetchWithError(getAnalyticsReportsTotalReadsURL, {
-			body: _getFormDataRequest(body, namespace),
-			credentials: 'include',
-			method: 'POST',
-		});
-	}
-
-	function getTotalViews() {
-		const body = {plid};
-
-		return _fetchWithError(getAnalyticsReportsTotalViewsURL, {
-			body: _getFormDataRequest(body, namespace),
-			credentials: 'include',
-			method: 'POST',
-		});
-	}
-
+	namespace,
+	page: {plid},
+}) {
 	function getHistoricalReads({timeSpanKey, timeSpanOffset}) {
 		const body = {plid, timeSpanKey, timeSpanOffset};
 
-		return _fetchWithError(getAnalyticsReportsHistoricalReadsURL, {
+		return _fetchWithError(analyticsReportsHistoricalReadsURL, {
 			body: _getFormDataRequest(body, namespace),
-			credentials: 'include',
 			method: 'POST',
 		});
 	}
@@ -126,22 +34,37 @@ function APIService({endpoints, namespace, page}) {
 	function getHistoricalViews({timeSpanKey, timeSpanOffset}) {
 		const body = {plid, timeSpanKey, timeSpanOffset};
 
-		return _fetchWithError(getAnalyticsReportsHistoricalViewsURL, {
+		return _fetchWithError(analyticsReportsHistoricalViewsURL, {
 			body: _getFormDataRequest(body, namespace),
-			credentials: 'include',
 			method: 'POST',
 		});
 	}
 
-	function getTrafficSourceDetails(name) {
+	function getTotalReads() {
+		const body = {plid};
 
-		// TODO remove frontend mock
+		return _fetchWithError(analyticsReportsTotalReadsURL, {
+			body: _getFormDataRequest(body, namespace),
+			method: 'POST',
+		});
+	}
 
-		return new Promise((resolve) =>
-			setTimeout(() => {
-				resolve(MOCK_TRAFFIC_SOURCES_DETAILS[name]);
-			}, 900)
-		);
+	function getTotalViews() {
+		const body = {plid};
+
+		return _fetchWithError(analyticsReportsTotalViewsURL, {
+			body: _getFormDataRequest(body, namespace),
+			method: 'POST',
+		});
+	}
+
+	function getTrafficSources() {
+		const body = {plid};
+
+		return _fetchWithError(analyticsReportsTrafficSourcesURL, {
+			body: _getFormDataRequest(body, namespace),
+			method: 'POST',
+		});
 	}
 
 	return {
@@ -149,7 +72,7 @@ function APIService({endpoints, namespace, page}) {
 		getHistoricalViews,
 		getTotalReads,
 		getTotalViews,
-		getTrafficSourceDetails,
+		getTrafficSources,
 	};
 }
 

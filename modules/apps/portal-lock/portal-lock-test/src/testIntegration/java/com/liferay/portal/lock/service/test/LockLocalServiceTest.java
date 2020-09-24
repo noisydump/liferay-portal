@@ -186,7 +186,7 @@ public class LockLocalServiceTest {
 
 		// Set lock to be expired
 
-		expirationDate = new Date(System.currentTimeMillis() - 10 * Time.DAY);
+		expirationDate = new Date(System.currentTimeMillis() - (10 * Time.DAY));
 
 		lock.setExpirationDate(expirationDate);
 
@@ -217,9 +217,9 @@ public class LockLocalServiceTest {
 		final CountDownLatch createdCountDownLatch = new CountDownLatch(1);
 		final CountDownLatch continueCountDownLatch = new CountDownLatch(1);
 
-		ServiceRegistration<ModelListener> serviceRegistration =
+		ServiceRegistration<ModelListener<Lock>> serviceRegistration =
 			bundleContext.registerService(
-				ModelListener.class,
+				(Class<ModelListener<Lock>>)(Class<?>)ModelListener.class,
 				new BaseModelListener<Lock>() {
 
 					@Override
@@ -460,18 +460,18 @@ public class LockLocalServiceTest {
 		private boolean _isExpectedException(
 			RuntimeException runtimeException) {
 
-			Throwable cause = runtimeException.getCause();
+			Throwable throwable = runtimeException.getCause();
 
 			DB db = DBManagerUtil.getDB();
 
 			if ((db.getDBType() == DBType.SYBASE) &&
-				(cause instanceof GenericJDBCException)) {
+				(throwable instanceof GenericJDBCException)) {
 
-				cause = cause.getCause();
+				throwable = throwable.getCause();
 
-				String message = cause.getMessage();
+				String message = throwable.getMessage();
 
-				if ((cause instanceof BatchUpdateException) &&
+				if ((throwable instanceof BatchUpdateException) &&
 					message.contains(
 						"Attempt to insert duplicate key row in object " +
 							"'Lock_' with unique index 'IX_228562AD'\n")) {

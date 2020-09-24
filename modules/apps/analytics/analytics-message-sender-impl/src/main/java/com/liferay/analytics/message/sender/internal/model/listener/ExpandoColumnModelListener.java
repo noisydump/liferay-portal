@@ -14,7 +14,8 @@
 
 package com.liferay.analytics.message.sender.internal.model.listener;
 
-import com.liferay.analytics.message.sender.model.EntityModelListener;
+import com.liferay.analytics.message.sender.model.listener.BaseEntityModelListener;
+import com.liferay.analytics.message.sender.model.listener.EntityModelListener;
 import com.liferay.expando.kernel.model.ExpandoColumn;
 import com.liferay.expando.kernel.model.ExpandoColumnConstants;
 import com.liferay.expando.kernel.model.ExpandoTableConstants;
@@ -51,7 +52,7 @@ public class ExpandoColumnModelListener
 	extends BaseEntityModelListener<ExpandoColumn> {
 
 	@Override
-	public List<String> getAttributeNames() {
+	public List<String> getAttributeNames(long companyId) {
 		return _attributeNames;
 	}
 
@@ -75,7 +76,9 @@ public class ExpandoColumnModelListener
 			return;
 		}
 
-		addAnalyticsMessage("update", getAttributeNames(), expandoColumn);
+		addAnalyticsMessage(
+			"update", getAttributeNames(expandoColumn.getCompanyId()),
+			expandoColumn);
 	}
 
 	@Override
@@ -147,7 +150,7 @@ public class ExpandoColumnModelListener
 		return JSONUtil.put(
 			"className", className
 		).put(
-			"companyId", expandoColumn.getColumnId()
+			"companyId", expandoColumn.getCompanyId()
 		).put(
 			"dataType", dataType
 		).put(

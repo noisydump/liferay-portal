@@ -107,7 +107,9 @@ public abstract class BaseAssigneeMetricResourceTestCase {
 		AssigneeMetricResource.Builder builder =
 			AssigneeMetricResource.builder();
 
-		assigneeMetricResource = builder.locale(
+		assigneeMetricResource = builder.authentication(
+			"test@liferay.com", "test"
+		).locale(
 			LocaleUtil.getDefault()
 		).build();
 	}
@@ -242,7 +244,7 @@ public abstract class BaseAssigneeMetricResourceTestCase {
 		}
 	}
 
-	protected void assertValid(AssigneeMetric assigneeMetric) {
+	protected void assertValid(AssigneeMetric assigneeMetric) throws Exception {
 		boolean valid = true;
 
 		for (String additionalAssertFieldName :

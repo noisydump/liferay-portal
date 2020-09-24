@@ -279,9 +279,8 @@ public class CSSBuilder implements AutoCloseable {
 	}
 
 	private String[] _getScssFragments(String baseDir) throws Exception {
-		String[] includes = {"**/_*.scss"};
-
-		return FileUtil.getFilesFromDirectory(baseDir, includes, _excludes);
+		return FileUtil.getFilesFromDirectory(
+			baseDir, new String[] {"**/_*.scss"}, _excludes);
 	}
 
 	private void _initSassCompiler(String sassCompilerClassName)
@@ -298,7 +297,7 @@ public class CSSBuilder implements AutoCloseable {
 
 				System.out.println("Using native Sass compiler");
 			}
-			catch (Throwable t) {
+			catch (Throwable throwable) {
 				System.out.println(
 					"Unable to load native compiler, falling back to Ruby");
 
@@ -313,7 +312,7 @@ public class CSSBuilder implements AutoCloseable {
 
 				System.out.println("Using native 32-bit Sass compiler");
 			}
-			catch (Throwable t) {
+			catch (Throwable throwable) {
 				System.out.println(
 					"Unable to load native compiler, falling back to Ruby");
 
@@ -367,9 +366,7 @@ public class CSSBuilder implements AutoCloseable {
 	private String _parseSass(String fileName) throws Exception {
 		File sassFile = new File(_cssBuilderArgs.getBaseDir(), fileName);
 
-		Path path = sassFile.toPath();
-
-		String filePath = path.toString();
+		String filePath = String.valueOf(sassFile.toPath());
 
 		String cssBasePath = filePath;
 

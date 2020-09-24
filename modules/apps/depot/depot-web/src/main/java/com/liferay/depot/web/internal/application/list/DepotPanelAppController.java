@@ -18,14 +18,12 @@ import com.liferay.application.list.GroupProvider;
 import com.liferay.application.list.PanelApp;
 import com.liferay.application.list.PanelAppRegistry;
 import com.liferay.application.list.PanelCategoryRegistry;
-import com.liferay.application.list.constants.PanelCategoryKeys;
 import com.liferay.application.list.display.context.logic.PanelCategoryHelper;
 import com.liferay.depot.web.internal.application.controller.DepotApplicationController;
 import com.liferay.depot.web.internal.constants.DepotPortletKeys;
 import com.liferay.osgi.util.ServiceTrackerFactory;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.Group;
-import com.liferay.portal.kernel.model.GroupConstants;
 import com.liferay.portal.kernel.model.Portlet;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
@@ -95,8 +93,8 @@ public class DepotPanelAppController {
 	private boolean _isAlwaysShow(String portletId) {
 		if (portletId.equals(DepotPortletKeys.DEPOT_ADMIN) ||
 			portletId.equals(DepotPortletKeys.DEPOT_SETTINGS) ||
-			_panelCategoryHelper.containsPortlet(
-				portletId, PanelCategoryKeys.CONTROL_PANEL)) {
+			_panelCategoryHelper.isControlPanelApp(portletId) ||
+			_panelCategoryHelper.isApplicationsMenuApp(portletId)) {
 
 			return true;
 		}
@@ -224,7 +222,7 @@ public class DepotPanelAppController {
 		public boolean isShow(PermissionChecker permissionChecker, Group group)
 			throws PortalException {
 
-			if ((group.getType() == GroupConstants.TYPE_DEPOT) &&
+			if (group.isDepot() &&
 				!DepotPanelAppController.this.isShow(
 					_panelApp, group.getGroupId())) {
 

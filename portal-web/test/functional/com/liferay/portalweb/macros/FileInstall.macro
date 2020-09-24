@@ -1,0 +1,36 @@
+definition {
+
+	macro deleteJarOffline {
+		AntCommand(
+			locator1 = "build-test.xml",
+			value1 = "delete-dependency-file  -Dliferay.dependency.jars=${liferayDependencyJars}");
+
+		Pause(locator1 = "10000");
+	}
+
+	macro deleteWarOffline {
+		AntCommand(
+			locator1 = "build-test.xml",
+			value1 = "delete-dependency-file  -Dliferay.dependency.wars=${liferayDependencyWars}");
+
+		Pause(locator1 = "10000");
+	}
+
+	macro deployFileOnServer {
+		var liferayHome = PropsUtil.get("liferay.home.dir.name");
+		var testBaseDirName = PropsUtil.get("test.base.dir.name");
+		var testDependenciesDirName = PropsUtil.get("test.dependencies.dir.name");
+
+		if (("${bundleIndex}" == "0") || (!(isSet(bundleIndex)))) {
+			var deployDir = "${liferayHome}/deploy";
+		}
+		else {
+			var deployDir = "${liferayHome}-${bundleIndex}/deploy";
+		}
+
+		ArchiveUtil.archive("${testBaseDirName}/${testDependenciesDirName}/${liferayDependencyJars}", "${deployDir}/${liferayDependencyJars}");
+
+		Pause(locator1 = "10000");
+	}
+
+}

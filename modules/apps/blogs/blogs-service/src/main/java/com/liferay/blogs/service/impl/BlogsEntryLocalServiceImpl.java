@@ -17,6 +17,7 @@ package com.liferay.blogs.service.impl;
 import com.liferay.asset.kernel.model.AssetEntry;
 import com.liferay.asset.kernel.model.AssetLinkConstants;
 import com.liferay.blogs.configuration.BlogsFileUploadsConfiguration;
+import com.liferay.blogs.configuration.BlogsGroupServiceConfiguration;
 import com.liferay.blogs.constants.BlogsConstants;
 import com.liferay.blogs.exception.EntryContentException;
 import com.liferay.blogs.exception.EntryCoverImageCropException;
@@ -55,6 +56,7 @@ import com.liferay.portal.kernel.model.Repository;
 import com.liferay.portal.kernel.model.ResourceConstants;
 import com.liferay.portal.kernel.model.SystemEventConstants;
 import com.liferay.portal.kernel.model.User;
+import com.liferay.portal.kernel.module.configuration.ConfigurationProviderUtil;
 import com.liferay.portal.kernel.notifications.UserNotificationDefinition;
 import com.liferay.portal.kernel.portlet.PortletProvider;
 import com.liferay.portal.kernel.portlet.PortletProviderUtil;
@@ -69,6 +71,7 @@ import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.permission.ModelPermissions;
 import com.liferay.portal.kernel.servlet.taglib.ui.ImageSelector;
 import com.liferay.portal.kernel.servlet.taglib.ui.ImageSelectorProcessor;
+import com.liferay.portal.kernel.settings.GroupServiceSettingsLocator;
 import com.liferay.portal.kernel.settings.LocalizedValuesMap;
 import com.liferay.portal.kernel.social.SocialActivityManagerUtil;
 import com.liferay.portal.kernel.systemevent.SystemEvent;
@@ -96,7 +99,6 @@ import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.kernel.workflow.WorkflowHandlerRegistryUtil;
 import com.liferay.portal.linkback.LinkbackProducerUtil;
-import com.liferay.portal.util.LayoutURLUtil;
 import com.liferay.portal.util.PropsValues;
 import com.liferay.social.kernel.model.SocialActivityConstants;
 import com.liferay.subscription.service.SubscriptionLocalService;
@@ -154,7 +156,7 @@ public class BlogsEntryLocalServiceImpl extends BlogsEntryLocalServiceBaseImpl {
 	@Override
 	public FileEntry addAttachmentFileEntry(
 			BlogsEntry blogsEntry, long userId, String fileName,
-			String mimeType, InputStream is)
+			String mimeType, InputStream inputStream)
 		throws PortalException {
 
 		Folder folder = addAttachmentsFolder(userId, blogsEntry.getGroupId());
@@ -166,7 +168,7 @@ public class BlogsEntryLocalServiceImpl extends BlogsEntryLocalServiceBaseImpl {
 
 		return _portletFileRepository.addPortletFileEntry(
 			blogsEntry.getGroupId(), userId, null, 0,
-			BlogsConstants.SERVICE_NAME, folder.getFolderId(), is,
+			BlogsConstants.SERVICE_NAME, folder.getFolderId(), inputStream,
 			uniqueFileName, mimeType, true);
 	}
 
@@ -663,7 +665,10 @@ public class BlogsEntryLocalServiceImpl extends BlogsEntryLocalServiceBaseImpl {
 
 		// Expando
 
-		expandoRowLocalService.deleteRows(entry.getEntryId());
+		expandoRowLocalService.deleteRows(
+			entry.getCompanyId(),
+			_classNameLocalService.getClassNameId(BlogsEntry.class.getName()),
+			entry.getEntryId());
 
 		// Friendly URL
 
@@ -1666,6 +1671,16 @@ public class BlogsEntryLocalServiceImpl extends BlogsEntryLocalServiceBaseImpl {
 			BlogsEntry.class.getName(), entry.getEntryId());
 	}
 
+	private BlogsGroupServiceConfiguration _getBlogsGroupServiceConfiguration(
+			long groupId)
+		throws PortalException {
+
+		return ConfigurationProviderUtil.getConfiguration(
+			BlogsGroupServiceConfiguration.class,
+			new GroupServiceSettingsLocator(
+				groupId, BlogsConstants.SERVICE_NAME));
+	}
+
 	private String _getEntryURL(BlogsEntry entry, ServiceContext serviceContext)
 		throws PortalException {
 
@@ -1686,8 +1701,8 @@ public class BlogsEntryLocalServiceImpl extends BlogsEntryLocalServiceBaseImpl {
 			BlogsEntry.class.getName(), PortletProvider.Action.VIEW);
 
 		if (Validator.isNotNull(portletId)) {
-			String layoutURL = LayoutURLUtil.getLayoutURL(
-				entry.getGroupId(), portletId, serviceContext);
+			String layoutURL = _portal.getLayoutFullURL(
+				entry.getGroupId(), portletId);
 
 			if (Validator.isNotNull(layoutURL)) {
 				return StringBundler.concat(
@@ -1827,10 +1842,12 @@ public class BlogsEntryLocalServiceImpl extends BlogsEntryLocalServiceBaseImpl {
 			fileEntry.getMimeType());
 
 		if (Stream.of(
-				_blogsFileUploadsConfiguration.imageExtensions()).anyMatch(
-					extension ->
-						extension.equals(StringPool.STAR) ||
-						extensions.contains(extension))) {
+				_blogsFileUploadsConfiguration.imageExtensions()
+			).anyMatch(
+				extension ->
+					extension.equals(StringPool.STAR) ||
+					extensions.contains(extension)
+			)) {
 
 			return true;
 		}
@@ -1976,6 +1993,16 @@ public class BlogsEntryLocalServiceImpl extends BlogsEntryLocalServiceBaseImpl {
 
 		subscriptionSender.setReplyToAddress(fromAddress);
 		subscriptionSender.setScopeGroupId(entry.getGroupId());
+
+		User user = userLocalService.getUser(userId);
+
+		BlogsGroupServiceConfiguration blogsGroupServiceConfiguration =
+			_getBlogsGroupServiceConfiguration(user.getGroupId());
+
+		subscriptionSender.setSendToCurrentUser(
+			blogsGroupServiceConfiguration.
+				sendNotificationsToBlogsEntryCreator());
+
 		subscriptionSender.setServiceContext(serviceContext);
 
 		_unsubscribeHelper.registerHooks(subscriptionSender);

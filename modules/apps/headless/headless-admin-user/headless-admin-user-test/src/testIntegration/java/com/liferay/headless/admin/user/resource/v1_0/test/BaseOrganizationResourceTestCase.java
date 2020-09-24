@@ -119,7 +119,9 @@ public abstract class BaseOrganizationResourceTestCase {
 
 		OrganizationResource.Builder builder = OrganizationResource.builder();
 
-		organizationResource = builder.locale(
+		organizationResource = builder.authentication(
+			"test@liferay.com", "test"
+		).locale(
 			LocaleUtil.getDefault()
 		).build();
 	}
@@ -1081,7 +1083,7 @@ public abstract class BaseOrganizationResourceTestCase {
 		}
 	}
 
-	protected void assertValid(Organization organization) {
+	protected void assertValid(Organization organization) throws Exception {
 		boolean valid = true;
 
 		if (organization.getDateCreated() == null) {

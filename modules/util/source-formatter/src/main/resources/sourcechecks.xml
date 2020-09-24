@@ -93,6 +93,7 @@
 			<description name="Checks for unnesecarry including of `test-classes/integration`" />
 			<property name="checkTestIncludeResource" value="true" />
 		</check>
+		<check name="BNDLiferayEnterpriseAppCheck" />
 		<check name="BNDWebContextPathCheck">
 			<category name="Bug Prevention" />
 			<description name="Checks if the property value for `Web-ContextPath` matches the module directory" />
@@ -212,6 +213,7 @@
 		<check name="JavaAssertEqualsCheck" />
 		<check name="JavaBooleanStatementCheck" />
 		<check name="JavaBooleanUsageCheck" />
+		<check name="JavaClassNameCheck" />
 		<check name="JavaCollatorUtilCheck">
 			<category name="Bug Prevention" />
 			<description name="Checks for correct use of `Collator`" />
@@ -231,6 +233,7 @@
 		<check name="JavaConstructorSuperCallCheck" />
 		<check name="JavaDeserializationSecurityCheck" />
 		<check name="JavaDiamondOperatorCheck" />
+		<check name="JavaDuplicateVariableCheck" />
 		<check name="JavaElseStatementCheck" />
 		<check name="JavaEmptyLineAfterSuperCallCheck" />
 		<check name="JavaEmptyLinesCheck" />
@@ -378,13 +381,19 @@
 		<check name="JavaStagedModelDataHandlerCheck" />
 		<check name="JavaStringBundlerConcatCheck" />
 		<check name="JavaStringBundlerInitialCapacityCheck" />
+		<check name="JavaStringStartsWithSubstringCheck">
+			<category name="Bug Prevention" />
+			<description name="Checks for uses of `contains` followed by `substring`, which should be `startsWith` instead" />
+		</check>
 		<check name="JavaSwitchCheck" />
 		<check name="JavaSystemEventAnnotationCheck" />
 		<check name="JavaTaglibMethodCheck" />
 		<check name="JavaTestMethodAnnotationsCheck">
 			<category name="Naming Conventions" />
 			<description name="Checks if methods with test annotations follow the naming conventions" />
+			<property name="enabled" value="false" />
 		</check>
+		<check name="JavaTransactionBoundaryCheck" />
 		<check name="JavaUnsafeCastingCheck">
 			<category name="Bug Prevention" />
 			<description name="Checks for potential ClassCastException" />
@@ -489,9 +498,15 @@
 		<check name="JSPImportsCheck" />
 		<check name="JSPIncludeCheck" />
 		<check name="JSPIndentationCheck" />
+		<check name="JSPJavaParserCheck">
+			<property name="enabled" value="false" />
+		</check>
 		<check name="JSPLanguageUtilCheck" />
 		<check name="JSPLineBreakCheck" />
 		<check name="JSPLogFileNameCheck" />
+		<check name="JSPMethodCallsCheck">
+			<property name="enabled" value="false" />
+		</check>
 		<check name="JSPParenthesesCheck" />
 		<check name="JSPRedirectBackURLCheck" />
 		<check name="JSPSessionKeysCheck" />
@@ -611,6 +626,7 @@
 
 		<!-- Liferay Source Checks -->
 
+		<check name="PropertiesArchivedModulesCheck" />
 		<check name="PropertiesBuildIncludeDirsCheck" />
 		<check name="PropertiesLanguageKeysCheck">
 			<category name="Bug Prevention" />
@@ -649,6 +665,7 @@
 	</source-processor>
 	<source-processor name="XMLSourceProcessor">
 		<check name="XMLBuildFileCheck" />
+		<check name="XMLCDATACheck" />
 		<check name="XMLCustomSQLOrderCheck" />
 		<check name="XMLCustomSQLStylingCheck" />
 		<check name="XMLDDLStructuresFileCheck" />

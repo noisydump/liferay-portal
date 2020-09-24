@@ -19,7 +19,7 @@ import com.liferay.fragment.service.FragmentEntryLinkLocalService;
 import com.liferay.headless.delivery.dto.v1_0.PageElement;
 import com.liferay.layout.page.template.admin.web.internal.headless.delivery.dto.v1_0.converter.PageFragmentInstanceDefinitionDTOConverter;
 import com.liferay.layout.page.template.admin.web.internal.headless.delivery.dto.v1_0.converter.PageWidgetInstanceDefinitionDTOConverter;
-import com.liferay.layout.util.structure.FragmentLayoutStructureItem;
+import com.liferay.layout.util.structure.FragmentStyledLayoutStructureItem;
 import com.liferay.layout.util.structure.LayoutStructureItem;
 import com.liferay.portal.kernel.json.JSONException;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
@@ -35,11 +35,11 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(service = LayoutStructureItemExporter.class)
 public class FragmentLayoutStructureItemExporter
-	implements LayoutStructureItemExporter {
+	extends BaseStyledLayoutStructureItemExporter {
 
 	@Override
 	public String getClassName() {
-		return FragmentLayoutStructureItem.class.getName();
+		return FragmentStyledLayoutStructureItem.class.getName();
 	}
 
 	@Override
@@ -47,12 +47,12 @@ public class FragmentLayoutStructureItemExporter
 		long groupId, LayoutStructureItem layoutStructureItem,
 		boolean saveInlineContent, boolean saveMappingConfiguration) {
 
-		FragmentLayoutStructureItem fragmentLayoutStructureItem =
-			(FragmentLayoutStructureItem)layoutStructureItem;
+		FragmentStyledLayoutStructureItem fragmentStyledLayoutStructureItem =
+			(FragmentStyledLayoutStructureItem)layoutStructureItem;
 
 		FragmentEntryLink fragmentEntryLink =
 			_fragmentEntryLinkLocalService.fetchFragmentEntryLink(
-				fragmentLayoutStructureItem.getFragmentEntryLinkId());
+				fragmentStyledLayoutStructureItem.getFragmentEntryLinkId());
 
 		if (fragmentEntryLink == null) {
 			return null;
@@ -70,13 +70,20 @@ public class FragmentLayoutStructureItemExporter
 
 		String portletId = editableValuesJSONObject.getString("portletId");
 
+		JSONObject itemConfigJSONObject =
+			fragmentStyledLayoutStructureItem.getItemConfigJSONObject();
+
 		if (Validator.isNull(portletId)) {
 			return new PageElement() {
 				{
 					definition =
 						_pageFragmentInstanceDefinitionDTOConverter.toDTO(
-							fragmentLayoutStructureItem, saveInlineContent,
-							saveMappingConfiguration);
+							fragmentStyledLayoutStructureItem,
+							toFragmentStyle(
+								itemConfigJSONObject.getJSONObject("styles"),
+								saveMappingConfiguration),
+							getFragmentViewPorts(itemConfigJSONObject),
+							saveInlineContent, saveMappingConfiguration);
 					type = PageElement.Type.FRAGMENT;
 				}
 			};
@@ -88,6 +95,11 @@ public class FragmentLayoutStructureItemExporter
 			{
 				definition = _pageWidgetInstanceDefinitionDTOConverter.toDTO(
 					fragmentEntryLink,
+					toFragmentStyle(
+						itemConfigJSONObject.getJSONObject("styles"),
+						saveMappingConfiguration),
+					getFragmentViewPorts(
+						itemConfigJSONObject.getJSONObject("style")),
 					PortletIdCodec.encode(portletId, instanceId));
 				type = PageElement.Type.WIDGET;
 			}

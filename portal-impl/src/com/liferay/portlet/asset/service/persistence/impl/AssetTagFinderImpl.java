@@ -82,10 +82,10 @@ public class AssetTagFinderImpl
 
 			sqlQuery.addScalar(COUNT_COLUMN_NAME, Type.LONG);
 
-			Iterator<Long> itr = sqlQuery.iterate();
+			Iterator<Long> iterator = sqlQuery.iterate();
 
-			if (itr.hasNext()) {
-				Long count = itr.next();
+			if (iterator.hasNext()) {
+				Long count = iterator.next();
 
 				if (count != null) {
 					return count.intValue();
@@ -150,10 +150,10 @@ public class AssetTagFinderImpl
 
 			sqlQuery.addScalar(COUNT_COLUMN_NAME, Type.LONG);
 
-			Iterator<Long> itr = sqlQuery.iterate();
+			Iterator<Long> iterator = sqlQuery.iterate();
 
-			if (itr.hasNext()) {
-				Long count = itr.next();
+			if (iterator.hasNext()) {
+				Long count = iterator.next();
 
 				if (count != null) {
 					return count.intValue();
@@ -173,7 +173,7 @@ public class AssetTagFinderImpl
 	@Override
 	public List<AssetTag> findByG_C_N(
 		long groupId, long classNameId, String name, int start, int end,
-		OrderByComparator<AssetTag> obc) {
+		OrderByComparator<AssetTag> orderByComparator) {
 
 		Session session = null;
 
@@ -217,12 +217,13 @@ public class AssetTagFinderImpl
 				}
 			).orderBy(
 				orderByStep -> {
-					if (obc == null) {
+					if (orderByComparator == null) {
 						return orderByStep.orderBy(
 							AssetTagTable.INSTANCE.name.ascending());
 					}
 
-					return orderByStep.orderBy(AssetTagTable.INSTANCE, obc);
+					return orderByStep.orderBy(
+						AssetTagTable.INSTANCE, orderByComparator);
 				}
 			);
 
@@ -295,10 +296,10 @@ public class AssetTagFinderImpl
 
 			List<AssetTag> assetTags = new ArrayList<>();
 
-			Iterator<Object[]> itr = sqlQuery.iterate();
+			Iterator<Object[]> iterator = sqlQuery.iterate();
 
-			while (itr.hasNext()) {
-				Object[] array = itr.next();
+			while (iterator.hasNext()) {
+				Object[] array = iterator.next();
 
 				AssetTag assetTag = new AssetTagImpl();
 

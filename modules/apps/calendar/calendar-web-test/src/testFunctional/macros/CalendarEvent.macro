@@ -7,14 +7,20 @@ definition {
 		var panelNamePath = StringUtil.upperCase("${panelNamePath}");
 
 		if (IsElementPresent(locator1 = "CalendarEditEvent#${panelNamePath}_PANEL_COLLAPSED")) {
+			ScrollWebElementIntoView(locator1 = "CalendarEditEvent#${panelNamePath}_PANEL_COLLAPSED");
+
 			Click(locator1 = "CalendarEditEvent#${panelNamePath}_PANEL_COLLAPSED");
 
 			AssertElementPresent(locator1 = "CalendarEditEvent#${panelNamePath}_PANEL_EXPANDED");
 		}
 		else if (IsElementPresent(locator1 = "CalendarEditEvent#${panelNamePath}_PANEL_EXPANDED")) {
+			ScrollWebElementIntoView(locator1 = "CalendarEditEvent#${panelNamePath}_PANEL_EXPANDED");
+
 			Click(locator1 = "CalendarEditEvent#${panelNamePath}_PANEL_EXPANDED");
 
 			if (IsElementPresent(locator1 = "CalendarEditEvent#${panelNamePath}_PANEL_COLLAPSED")) {
+				ScrollWebElementIntoView(locator1 = "CalendarEditEvent#${panelNamePath}_PANEL_COLLAPSED");
+
 				Click(locator1 = "CalendarEditEvent#${panelNamePath}_PANEL_COLLAPSED");
 
 				AssertElementPresent(locator1 = "CalendarEditEvent#${panelNamePath}_PANEL_EXPANDED");
@@ -982,11 +988,6 @@ definition {
 	}
 
 	macro selectEventIframe {
-		LiferayEvent.waitForLiferayEvent(
-			attributeName = "src",
-			attributeValue = "dialog-iframe-popup",
-			eventName = "modalIframeLoaded");
-
 		SelectFrame(locator1 = "IFrame#METADATA_SETS_IFRAME");
 	}
 
@@ -1247,7 +1248,6 @@ definition {
 		if ("${marketplace}" == "true") {
 			ProductMenu.gotoPortlet(
 				category = "Site Builder",
-				panel = "Site Administration",
 				portlet = "Pages");
 
 			SitePages.addPublicPage(pageName = "Marketplace Calendar Testing");
@@ -1269,6 +1269,29 @@ definition {
 		if (IsElementPresent(locator1 = "Button#CLOSE_MESSAGE")) {
 			Click.clickNoWaitForVisible(locator1 = "Button#CLOSE_MESSAGE");
 		}
+	}
+
+	macro tearDownNoCloseMessage {
+		if ("${marketplace}" == "true") {
+			ProductMenu.gotoPortlet(
+				category = "Site Builder",
+				portlet = "Pages");
+
+			SitePages.addPublicPage(pageName = "Marketplace Calendar Testing");
+
+			Navigator.gotoPage(pageName = "Marketplace Calendar Testing");
+
+			Portlet.addPG(
+				i = "${i}",
+				pageName = "Marketplace Calendar Testing",
+				portletName = "Calendar");
+
+			Navigator.gotoPage(pageName = "Marketplace Calendar Testing");
+		}
+
+		CalendarEvent.delete();
+
+		VerifyElementPresent(locator1 = "Message#SUCCESS_DISMISSIBLE");
 	}
 
 	macro view {
@@ -1318,7 +1341,7 @@ definition {
 	macro viewApprovedRSVP {
 		CalendarNavigator.gotoView(viewType = "Week");
 
-		CalendarScheduler.selectSpecificEvent(eventTitle = "${eventTitle}");
+		CalendarScheduler.selectSpecificEventNoRefresh(eventTitle = "${eventTitle}");
 
 		AssertTextEquals(
 			locator1 = "Calendar#SCHEDULER_EVENT_DIALOG_BOX_EVENT_TITLE",
@@ -1523,34 +1546,24 @@ definition {
 		AssertElementNotPresent(locator1 = "xpath=(//div[contains(@class,'scheduler-view-agenda-event') and contains(@data-clientid,'scheduler-event')])[${eventNumber}]");
 	}
 
-	macro viewNotVisibleUserInviteWithUnapprovedWorkflow {
-		var siteName = TestCase.getSiteName(siteName = "${siteName}");
-
-		var key_siteCalendarName = "${siteCalendarName}";
-		var key_siteName = "${siteName}";
-
-		AssertClick(
-			locator1 = "Calendar#CURRENT_SITE_CALENDARS_CALENDAR",
-			value1 = "${siteCalendarName}");
-
-		CalendarScheduler.viewSpecificEventNotVisible(eventTitle = "${eventTitle}");
-
-		AssertClick(
-			locator1 = "Calendar#CURRENT_SITE_CALENDARS_CALENDAR",
-			value1 = "${siteCalendarName}");
-	}
-
 	macro viewNoUserInviteWithUnapprovedWorkflow {
 		var siteName = TestCase.getSiteName(siteName = "${siteName}");
 
 		var key_siteCalendarName = "${siteCalendarName}";
 		var key_siteName = "${siteName}";
 
+		var key_eventTitle = "${eventTitle}";
+
 		AssertClick(
 			locator1 = "Calendar#CURRENT_SITE_CALENDARS_CALENDAR",
 			value1 = "${siteCalendarName}");
 
-		CalendarScheduler.viewSpecificEventNotPresent(eventTitle = "${eventTitle}");
+		if (IsElementPresent(locator1 = "Calendar#SCHEDULER_EVENT_SPECIFIC")) {
+			CalendarScheduler.viewSpecificEventNotVisible(eventTitle = "${eventTitle}");
+		}
+		else {
+			CalendarScheduler.viewSpecificEventNotPresent(eventTitle = "${eventTitle}");
+		}
 
 		AssertClick(
 			locator1 = "Calendar#CURRENT_SITE_CALENDARS_CALENDAR",

@@ -14,6 +14,7 @@
 
 package com.liferay.jenkins.results.parser.spira;
 
+import com.liferay.jenkins.results.parser.JenkinsResultsParserUtil;
 import com.liferay.jenkins.results.parser.JenkinsResultsParserUtil.HttpRequestMethod;
 
 import java.io.IOException;
@@ -38,6 +39,15 @@ public class SpiraCustomProperty extends BaseSpiraArtifact {
 		final SpiraProject spiraProject,
 		final Class<? extends SpiraArtifact> spiraArtifactClass,
 		String customPropertyName, Type type) {
+
+		return createSpiraCustomProperty(
+			spiraProject, spiraArtifactClass, customPropertyName, type, false);
+	}
+
+	public static SpiraCustomProperty createSpiraCustomProperty(
+		final SpiraProject spiraProject,
+		final Class<? extends SpiraArtifact> spiraArtifactClass,
+		String customPropertyName, Type type, boolean enableRichText) {
 
 		List<SpiraCustomProperty> spiraCustomProperties =
 			getSpiraCustomProperties(
@@ -70,6 +80,20 @@ public class SpiraCustomProperty extends BaseSpiraArtifact {
 			"ArtifactTypeId", getArtifactTypeID(spiraArtifactClass));
 		requestJSONObject.put("CustomPropertyTypeId", type.getID());
 		requestJSONObject.put("Name", customPropertyName);
+
+		if (enableRichText) {
+			JSONArray optionsJSONArray = new JSONArray();
+
+			JSONObject enableRichTextJSONObject = new JSONObject();
+
+			enableRichTextJSONObject.put("CustomPropertyOptionId", 4);
+			enableRichTextJSONObject.put("Value", "Y");
+
+			optionsJSONArray.put(enableRichTextJSONObject);
+
+			requestJSONObject.put("Options", optionsJSONArray);
+		}
+
 		requestJSONObject.put("ProjectTemplateId", projectTemplateID);
 
 		spiraCustomProperties = getSpiraCustomProperties(
@@ -162,6 +186,10 @@ public class SpiraCustomProperty extends BaseSpiraArtifact {
 		}
 	}
 
+	public int getArtifactTypeId() {
+		return jsonObject.getInt("ArtifactTypeId");
+	}
+
 	public int getPropertyNumber() {
 		return jsonObject.getInt("PropertyNumber");
 	}
@@ -224,6 +252,17 @@ public class SpiraCustomProperty extends BaseSpiraArtifact {
 		return Type.get(jsonObject.getInt("CustomPropertyTypeId"));
 	}
 
+	@Override
+	public String getURL() {
+		SpiraProject spiraProject = getSpiraProject();
+
+		return JenkinsResultsParserUtil.combine(
+			SPIRA_BASE_URL, "/pt/",
+			String.valueOf(spiraProject.getProjectTemplateID()),
+			"/Administration/CustomProperties.aspx?artifactTypeId=",
+			String.valueOf(getArtifactTypeId()));
+	}
+
 	public static enum Type {
 
 		BOOLEAN(4), DATE(5), DECIMAL(3), INTEGER(2), LIST(6), MULTILIST(7),
@@ -259,6 +298,13 @@ public class SpiraCustomProperty extends BaseSpiraArtifact {
 			return _spiraCustomProperty;
 		}
 
+		@Override
+		public String getURL() {
+			SpiraCustomProperty spiraCustomProperty = getSpiraCustomProperty();
+
+			return spiraCustomProperty.getURL();
+		}
+
 		protected Value(
 			SpiraCustomList.Value spiraCustomValue,
 			SpiraCustomProperty spiraCustomProperty) {
@@ -274,7 +320,7 @@ public class SpiraCustomProperty extends BaseSpiraArtifact {
 			_spiraCustomProperty = spiraCustomProperty;
 		}
 
-		protected static final String ID_KEY = "CustomPropertyValueId";
+		protected static final String KEY_ID = "CustomPropertyValueId";
 
 		private final SpiraCustomProperty _spiraCustomProperty;
 
@@ -289,7 +335,7 @@ public class SpiraCustomProperty extends BaseSpiraArtifact {
 			new SearchQuery.SearchParameter[searchParameters.length + 2];
 
 		customSearchParameters[0] = new SearchQuery.SearchParameter(
-			SpiraProject.ID_KEY, spiraProject.getID());
+			SpiraProject.KEY_ID, spiraProject.getID());
 		customSearchParameters[1] = new SearchQuery.SearchParameter(
 			"ArtifactTypeName", getArtifactTypeName(spiraArtifactClass));
 
@@ -341,7 +387,7 @@ public class SpiraCustomProperty extends BaseSpiraArtifact {
 
 	protected static final String ARTIFACT_TYPE_NAME = "customproperty";
 
-	protected static final String ID_KEY = "CustomPropertyId";
+	protected static final String KEY_ID = "CustomPropertyId";
 
 	private static Integer _getNextPositionNumber(
 		List<SpiraCustomProperty> spiraCustomProperties) {
@@ -394,7 +440,7 @@ public class SpiraCustomProperty extends BaseSpiraArtifact {
 					i);
 
 				responseJSONObject.put(
-					SpiraProject.ID_KEY, spiraProject.getID());
+					SpiraProject.KEY_ID, spiraProject.getID());
 
 				spiraCustomProperties.add(responseJSONObject);
 			}

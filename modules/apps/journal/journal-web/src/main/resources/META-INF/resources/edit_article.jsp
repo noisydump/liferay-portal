@@ -49,6 +49,7 @@ JournalEditArticleDisplayContext journalEditArticleDisplayContext = new JournalE
 	<aui:input name="articleURL" type="hidden" value="<%= editArticleRenderURL %>" />
 	<aui:input name="ddmStructureId" type="hidden" />
 	<aui:input name="ddmTemplateId" type="hidden" />
+	<aui:input name="defaultLanguageId" type="hidden" value="<%= journalEditArticleDisplayContext.getDefaultArticleLanguageId() %>" />
 	<aui:input name="languageId" type="hidden" value="<%= journalEditArticleDisplayContext.getSelectedLanguageId() %>" />
 	<aui:input name="workflowAction" type="hidden" value="<%= String.valueOf(WorkflowConstants.ACTION_SAVE_DRAFT) %>" />
 
@@ -58,7 +59,7 @@ JournalEditArticleDisplayContext journalEditArticleDisplayContext = new JournalE
 		DDMStructure ddmStructure = journalEditArticleDisplayContext.getDDMStructure();
 		%>
 
-		<clay:container>
+		<clay:container-fluid>
 			<ul class="tbar-nav">
 				<li class="tbar-item tbar-item-expand">
 					<aui:input autoFocus="<%= (article == null) || article.isNew() %>" cssClass="form-control-inline" defaultLanguageId="<%= journalEditArticleDisplayContext.getDefaultArticleLanguageId() %>" label="" localized="<%= true %>" name="titleMapAsXML" placeholder='<%= LanguageUtil.format(request, "untitled-x", HtmlUtil.escape(ddmStructure.getName(locale))) %>' required="<%= journalEditArticleDisplayContext.getClassNameId() == JournalArticleConstants.CLASS_NAME_ID_DEFAULT %>" selectedLanguageId="<%= journalEditArticleDisplayContext.getSelectedLanguageId() %>" type="text" wrapperCssClass="article-content-title mb-0" />
@@ -88,16 +89,15 @@ JournalEditArticleDisplayContext journalEditArticleDisplayContext = new JournalE
 						</c:if>
 
 						<clay:button
+							borderless="<%= true %>"
 							icon="cog"
-							id='<%= renderResponse.getNamespace() + "contextualSidebarButton" %>'
-							monospaced="<%= true %>"
-							size="sm"
-							style="borderless"
+							id='<%= liferayPortletResponse.getNamespace() + "contextualSidebarButton" %>'
+							small="<%= true %>"
 						/>
 					</div>
 				</li>
 			</ul>
-		</clay:container>
+		</clay:container-fluid>
 	</nav>
 
 	<div class="contextual-sidebar edit-article-sidebar sidebar-light sidebar-sm" id="<portlet:namespace />contextualSidebarContainer">
@@ -138,10 +138,10 @@ JournalEditArticleDisplayContext journalEditArticleDisplayContext = new JournalE
 	</div>
 
 	<div class="contextual-sidebar-content">
-		<clay:container
-			className="container-view"
+		<clay:container-fluid
+			cssClass="container-view"
 		>
-			<div class="sheet sheet-lg">
+			<clay:sheet>
 				<aui:model-context bean="<%= article %>" defaultLanguageId="<%= journalEditArticleDisplayContext.getDefaultArticleLanguageId() %>" model="<%= JournalArticle.class %>" />
 
 				<liferay-ui:error exception="<%= ArticleContentException.class %>" message="please-enter-valid-content" />
@@ -180,10 +180,10 @@ JournalEditArticleDisplayContext journalEditArticleDisplayContext = new JournalE
 							<liferay-ui:message arguments="<%= new String[] {eicve.getLayoutURL(), eicve.getGroupFriendlyURL()} %>" key="unable-to-validate-referenced-page-with-url-x-because-the-page-group-with-url-x-cannot-be-found" />
 						</c:when>
 						<c:when test="<%= eicve.getType() == ExportImportContentValidationException.LAYOUT_NOT_FOUND %>">
-							<liferay-ui:message arguments="<%= new String[] {MapUtil.toString(eicve.getLayoutReferenceParameters())} %>" key="unable-to-validate-referenced-page-because-it-cannot-be-found-with-the-following-parameters-x" />
+							<liferay-ui:message arguments="<%= MapUtil.toString(eicve.getLayoutReferenceParameters()) %>" key="unable-to-validate-referenced-page-because-it-cannot-be-found-with-the-following-parameters-x" />
 						</c:when>
 						<c:when test="<%= eicve.getType() == ExportImportContentValidationException.LAYOUT_WITH_URL_NOT_FOUND %>">
-							<liferay-ui:message arguments="<%= new String[] {eicve.getLayoutURL()} %>" key="unable-to-validate-referenced-page-because-it-cannot-be-found-with-url-x" />
+							<liferay-ui:message arguments="<%= eicve.getLayoutURL() %>" key="unable-to-validate-referenced-page-because-it-cannot-be-found-with-url-x" />
 						</c:when>
 						<c:otherwise>
 							<liferay-ui:message key="an-unexpected-error-occurred" />
@@ -247,14 +247,14 @@ JournalEditArticleDisplayContext journalEditArticleDisplayContext = new JournalE
 					<c:choose>
 						<c:when test="<%= journalDisplayContext.useDataEngineEditor() %>">
 							<liferay-data-engine:data-layout-renderer
-								containerId='<%= renderResponse.getNamespace() + "dataEngineLayoutRenderer" %>'
+								containerId='<%= liferayPortletResponse.getNamespace() + "dataEngineLayoutRenderer" %>'
 								dataDefinitionId="<%= ddmStructure.getStructureId() %>"
 								dataRecordValues="<%= journalEditArticleDisplayContext.getValues(ddmStructure) %>"
-								namespace="<%= renderResponse.getNamespace() %>"
+								namespace="<%= liferayPortletResponse.getNamespace() %>"
 							/>
 
 							<liferay-frontend:component
-								componentId='<%= renderResponse.getNamespace() + "dataEngineLayoutRendererLanguageProxy" %>'
+								componentId='<%= liferayPortletResponse.getNamespace() + "dataEngineLayoutRendererLanguageProxy" %>'
 								module="js/dataEngineLayoutRendererLanguageProxy.es"
 								servletContext="<%= application %>"
 							/>
@@ -276,13 +276,14 @@ JournalEditArticleDisplayContext journalEditArticleDisplayContext = new JournalE
 						</c:otherwise>
 					</c:choose>
 				</div>
-			</div>
-		</clay:container>
+			</clay:sheet>
+		</clay:container-fluid>
 	</div>
 </aui:form>
 
 <liferay-frontend:component
-	componentId='<%= renderResponse.getNamespace() + "JournalPortletComponent" %>'
+	componentId='<%= liferayPortletResponse.getNamespace() + "JournalPortletComponent" %>'
+	context="<%= journalEditArticleDisplayContext.getComponentContext() %>"
 	module="js/JournalPortlet.es"
 	servletContext="<%= application %>"
 />

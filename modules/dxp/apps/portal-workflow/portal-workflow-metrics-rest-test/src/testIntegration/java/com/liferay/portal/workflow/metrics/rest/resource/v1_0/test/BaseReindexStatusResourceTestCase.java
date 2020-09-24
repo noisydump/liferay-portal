@@ -107,7 +107,9 @@ public abstract class BaseReindexStatusResourceTestCase {
 
 		ReindexStatusResource.Builder builder = ReindexStatusResource.builder();
 
-		reindexStatusResource = builder.locale(
+		reindexStatusResource = builder.authentication(
+			"test@liferay.com", "test"
+		).locale(
 			LocaleUtil.getDefault()
 		).build();
 	}
@@ -246,7 +248,7 @@ public abstract class BaseReindexStatusResourceTestCase {
 		}
 	}
 
-	protected void assertValid(ReindexStatus reindexStatus) {
+	protected void assertValid(ReindexStatus reindexStatus) throws Exception {
 		boolean valid = true;
 
 		for (String additionalAssertFieldName :

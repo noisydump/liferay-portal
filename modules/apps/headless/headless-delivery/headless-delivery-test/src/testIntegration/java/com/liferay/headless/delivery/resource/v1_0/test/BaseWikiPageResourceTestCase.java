@@ -119,7 +119,9 @@ public abstract class BaseWikiPageResourceTestCase {
 
 		WikiPageResource.Builder builder = WikiPageResource.builder();
 
-		wikiPageResource = builder.locale(
+		wikiPageResource = builder.authentication(
+			"test@liferay.com", "test"
+		).locale(
 			LocaleUtil.getDefault()
 		).build();
 	}
@@ -210,7 +212,8 @@ public abstract class BaseWikiPageResourceTestCase {
 	public void testGetWikiNodeWikiPagesPage() throws Exception {
 		Page<WikiPage> page = wikiPageResource.getWikiNodeWikiPagesPage(
 			testGetWikiNodeWikiPagesPage_getWikiNodeId(),
-			RandomTestUtil.randomString(), null, Pagination.of(1, 2), null);
+			RandomTestUtil.randomString(), null, null, Pagination.of(1, 2),
+			null);
 
 		Assert.assertEquals(0, page.getTotalCount());
 
@@ -224,7 +227,8 @@ public abstract class BaseWikiPageResourceTestCase {
 					irrelevantWikiNodeId, randomIrrelevantWikiPage());
 
 			page = wikiPageResource.getWikiNodeWikiPagesPage(
-				irrelevantWikiNodeId, null, null, Pagination.of(1, 2), null);
+				irrelevantWikiNodeId, null, null, null, Pagination.of(1, 2),
+				null);
 
 			Assert.assertEquals(1, page.getTotalCount());
 
@@ -241,7 +245,7 @@ public abstract class BaseWikiPageResourceTestCase {
 			wikiNodeId, randomWikiPage());
 
 		page = wikiPageResource.getWikiNodeWikiPagesPage(
-			wikiNodeId, null, null, Pagination.of(1, 2), null);
+			wikiNodeId, null, null, null, Pagination.of(1, 2), null);
 
 		Assert.assertEquals(2, page.getTotalCount());
 
@@ -275,7 +279,7 @@ public abstract class BaseWikiPageResourceTestCase {
 
 		for (EntityField entityField : entityFields) {
 			Page<WikiPage> page = wikiPageResource.getWikiNodeWikiPagesPage(
-				wikiNodeId, null,
+				wikiNodeId, null, null,
 				getFilterString(entityField, "between", wikiPage1),
 				Pagination.of(1, 2), null);
 
@@ -307,7 +311,8 @@ public abstract class BaseWikiPageResourceTestCase {
 
 		for (EntityField entityField : entityFields) {
 			Page<WikiPage> page = wikiPageResource.getWikiNodeWikiPagesPage(
-				wikiNodeId, null, getFilterString(entityField, "eq", wikiPage1),
+				wikiNodeId, null, null,
+				getFilterString(entityField, "eq", wikiPage1),
 				Pagination.of(1, 2), null);
 
 			assertEquals(
@@ -330,14 +335,14 @@ public abstract class BaseWikiPageResourceTestCase {
 			wikiNodeId, randomWikiPage());
 
 		Page<WikiPage> page1 = wikiPageResource.getWikiNodeWikiPagesPage(
-			wikiNodeId, null, null, Pagination.of(1, 2), null);
+			wikiNodeId, null, null, null, Pagination.of(1, 2), null);
 
 		List<WikiPage> wikiPages1 = (List<WikiPage>)page1.getItems();
 
 		Assert.assertEquals(wikiPages1.toString(), 2, wikiPages1.size());
 
 		Page<WikiPage> page2 = wikiPageResource.getWikiNodeWikiPagesPage(
-			wikiNodeId, null, null, Pagination.of(2, 2), null);
+			wikiNodeId, null, null, null, Pagination.of(2, 2), null);
 
 		Assert.assertEquals(3, page2.getTotalCount());
 
@@ -346,7 +351,7 @@ public abstract class BaseWikiPageResourceTestCase {
 		Assert.assertEquals(wikiPages2.toString(), 1, wikiPages2.size());
 
 		Page<WikiPage> page3 = wikiPageResource.getWikiNodeWikiPagesPage(
-			wikiNodeId, null, null, Pagination.of(1, 3), null);
+			wikiNodeId, null, null, null, Pagination.of(1, 3), null);
 
 		assertEqualsIgnoringOrder(
 			Arrays.asList(wikiPage1, wikiPage2, wikiPage3),
@@ -456,7 +461,7 @@ public abstract class BaseWikiPageResourceTestCase {
 
 		for (EntityField entityField : entityFields) {
 			Page<WikiPage> ascPage = wikiPageResource.getWikiNodeWikiPagesPage(
-				wikiNodeId, null, null, Pagination.of(1, 2),
+				wikiNodeId, null, null, null, Pagination.of(1, 2),
 				entityField.getName() + ":asc");
 
 			assertEquals(
@@ -464,7 +469,7 @@ public abstract class BaseWikiPageResourceTestCase {
 				(List<WikiPage>)ascPage.getItems());
 
 			Page<WikiPage> descPage = wikiPageResource.getWikiNodeWikiPagesPage(
-				wikiNodeId, null, null, Pagination.of(1, 2),
+				wikiNodeId, null, null, null, Pagination.of(1, 2),
 				entityField.getName() + ":desc");
 
 			assertEquals(
@@ -832,7 +837,7 @@ public abstract class BaseWikiPageResourceTestCase {
 		}
 	}
 
-	protected void assertValid(WikiPage wikiPage) {
+	protected void assertValid(WikiPage wikiPage) throws Exception {
 		boolean valid = true;
 
 		if (wikiPage.getDateCreated() == null) {

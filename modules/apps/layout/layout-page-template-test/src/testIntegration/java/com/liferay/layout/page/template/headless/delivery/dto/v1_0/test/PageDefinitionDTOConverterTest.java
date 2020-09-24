@@ -52,6 +52,7 @@ import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.Theme;
 import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
 import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
@@ -61,7 +62,6 @@ import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.util.FileUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
-import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.test.rule.Inject;
@@ -72,6 +72,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.ClassRule;
@@ -108,6 +109,8 @@ public class PageDefinitionDTOConverterTest {
 		_serviceContext = ServiceContextTestUtil.getServiceContext(
 			_group, TestPropsValues.getUserId());
 
+		ServiceContextThreadLocal.pushServiceContext(_serviceContext);
+
 		LayoutPageTemplateCollection layoutPageTemplateCollection =
 			_layoutPageTemplateCollectionLocalService.
 				addLayoutPageTemplateCollection(
@@ -129,6 +132,11 @@ public class PageDefinitionDTOConverterTest {
 				TestPropsValues.getUserId(), _group.getGroupId(),
 				RandomTestUtil.randomString(), StringPool.BLANK,
 				_serviceContext);
+	}
+
+	@After
+	public void tearDown() {
+		ServiceContextThreadLocal.popServiceContext();
 	}
 
 	@Test
@@ -261,7 +269,7 @@ public class PageDefinitionDTOConverterTest {
 			(FragmentFieldBackgroundImage)fragmentField.getValue();
 
 		_validateFragmentBackgroundImage(
-			fragmentFieldBackgroundImage.getBackgroundImage());
+			fragmentFieldBackgroundImage.getBackgroundFragmentImage());
 	}
 
 	@Test
@@ -277,7 +285,7 @@ public class PageDefinitionDTOConverterTest {
 			(FragmentFieldBackgroundImage)fragmentField.getValue();
 
 		_validateFragmentBackgroundImageWithTitle(
-			fragmentFieldBackgroundImage.getBackgroundImage(),
+			fragmentFieldBackgroundImage.getBackgroundFragmentImage(),
 			"My Background Image Title");
 	}
 
@@ -295,11 +303,41 @@ public class PageDefinitionDTOConverterTest {
 	}
 
 	@Test
+	public void testToPageDefinitionFragmentFieldHTMLDataEditable()
+		throws Exception {
+
+		FragmentField fragmentField = _getFragmentField(
+			"editable_values_fragment_field_html.json", "my-html",
+			"<div data-lfr-editable-id=\"my-html\" data-lfr-editable-type=" +
+				"\"html\" id=\"my-html-id\"><h1>Example</h1></div>");
+
+		FragmentFieldHTML fragmentFieldHTML =
+			(FragmentFieldHTML)fragmentField.getValue();
+
+		_validateFragmentFieldHTML(fragmentFieldHTML);
+	}
+
+	@Test
 	public void testToPageDefinitionFragmentFieldImage() throws Exception {
 		FragmentField fragmentField = _getFragmentField(
 			"editable_values_fragment_field_image.json", "my-image",
 			"<lfr-editable id=\"my-image\" type=\"image\"><img/>" +
 				"</lfr-editable>");
+
+		FragmentFieldImage fragmentFieldImage =
+			(FragmentFieldImage)fragmentField.getValue();
+
+		_validateFragmentImage(fragmentFieldImage.getFragmentImage());
+	}
+
+	@Test
+	public void testToPageDefinitionFragmentFieldImageDataEditable()
+		throws Exception {
+
+		FragmentField fragmentField = _getFragmentField(
+			"editable_values_fragment_field_image.json", "my-image",
+			"<div data-lfr-editable-id=\"my-image\" data-lfr-editable-type=" +
+				"\"image\" id=\"my-image-id\"><img/></div>");
 
 		FragmentFieldImage fragmentFieldImage =
 			(FragmentFieldImage)fragmentField.getValue();
@@ -322,11 +360,43 @@ public class PageDefinitionDTOConverterTest {
 	}
 
 	@Test
+	public void testToPageDefinitionFragmentFieldImageTitleDataEditable()
+		throws Exception {
+
+		FragmentField fragmentField = _getFragmentField(
+			"editable_values_fragment_field_image_title.json", "my-image",
+			"<div data-lfr-editable-id=\"my-image\" data-lfr-editable-type=" +
+				"\"image\" id=\"my-image-id\"><img/></div>");
+
+		FragmentFieldImage fragmentFieldImage =
+			(FragmentFieldImage)fragmentField.getValue();
+
+		_validateFragmentImageWithTitle(
+			fragmentFieldImage.getFragmentImage(), "My Image Title");
+	}
+
+	@Test
 	public void testToPageDefinitionFragmentFieldLink() throws Exception {
 		FragmentField fragmentField = _getFragmentField(
 			"editable_values_fragment_field_link.json", "my-link",
 			"<lfr-editable id=\"my-link\" type=\"link\"><a href=\"\" " +
 				"id=\"my-link\">Go here</a></lfr-editable>");
+
+		FragmentFieldText fragmentFieldText =
+			(FragmentFieldText)fragmentField.getValue();
+
+		_validateFragmentFieldText(fragmentFieldText);
+	}
+
+	@Test
+	public void testToPageDefinitionFragmentFieldLinkDataEditable()
+		throws Exception {
+
+		FragmentField fragmentField = _getFragmentField(
+			"editable_values_fragment_field_link.json", "my-link",
+			"<a href=\"\" data-lfr-editable-id=\"my-link\" " +
+				"data-lfr-editable-type=\"link\" id=\"link-id\">Go here</a>" +
+					"</lfr-editable>");
 
 		FragmentFieldText fragmentFieldText =
 			(FragmentFieldText)fragmentField.getValue();
@@ -463,11 +533,8 @@ public class PageDefinitionDTOConverterTest {
 		PageSectionDefinition pageSectionDefinition1 =
 			(PageSectionDefinition)sectionPageElement1.getDefinition();
 
-		Assert.assertEquals(
-			"primary", pageSectionDefinition1.getBackgroundColor());
-
 		FragmentImage fragmentImage1 =
-			pageSectionDefinition1.getBackgroundImage();
+			pageSectionDefinition1.getBackgroundFragmentImage();
 
 		FragmentInlineValue titleFragmentInlineValue =
 			(FragmentInlineValue)fragmentImage1.getTitle();
@@ -486,12 +553,13 @@ public class PageDefinitionDTOConverterTest {
 		com.liferay.headless.delivery.dto.v1_0.Layout sectionLayout =
 			pageSectionDefinition1.getLayout();
 
-		Assert.assertEquals("Fluid", sectionLayout.getContainerTypeAsString());
+		Assert.assertEquals("Fluid", sectionLayout.getWidthTypeAsString());
 		Assert.assertEquals(
-			Integer.valueOf(8), sectionLayout.getPaddingBottom());
+			Integer.valueOf(10), sectionLayout.getPaddingBottom());
+		Assert.assertEquals(Integer.valueOf(4), sectionLayout.getPaddingLeft());
 		Assert.assertEquals(
-			Integer.valueOf(4), sectionLayout.getPaddingHorizontal());
-		Assert.assertEquals(Integer.valueOf(1), sectionLayout.getPaddingTop());
+			Integer.valueOf(4), sectionLayout.getPaddingRight());
+		Assert.assertEquals(Integer.valueOf(4), sectionLayout.getPaddingTop());
 
 		PageElement sectionPageElement2 = pageElements[1];
 
@@ -502,7 +570,7 @@ public class PageDefinitionDTOConverterTest {
 			(PageSectionDefinition)sectionPageElement2.getDefinition();
 
 		FragmentImage fragmentImage2 =
-			pageSectionDefinition2.getBackgroundImage();
+			pageSectionDefinition2.getBackgroundFragmentImage();
 
 		Assert.assertNull(fragmentImage2.getTitle());
 
@@ -520,7 +588,6 @@ public class PageDefinitionDTOConverterTest {
 
 		_layoutPageTemplateStructureLocalService.addLayoutPageTemplateStructure(
 			TestPropsValues.getUserId(), _group.getGroupId(),
-			_portal.getClassNameId(Layout.class.getName()),
 			_layoutPageTemplateEntry.getPlid(),
 			StringUtil.replace(_read(fileName), "${", "}", valuesMap),
 			_serviceContext);
@@ -541,10 +608,7 @@ public class PageDefinitionDTOConverterTest {
 
 		Fragment fragment = pageFragmentInstanceDefinition.getFragment();
 
-		Assert.assertEquals(
-			_fragmentCollection.getName(), fragment.getCollectionName());
 		Assert.assertEquals(fragmentEntryKey, fragment.getKey());
-		Assert.assertEquals(fragmentName, fragment.getName());
 
 		FragmentField[] fragmentFields =
 			pageFragmentInstanceDefinition.getFragmentFields();
@@ -578,8 +642,7 @@ public class PageDefinitionDTOConverterTest {
 		FragmentEntryLink fragmentEntryLink =
 			_fragmentEntryLinkLocalService.addFragmentEntryLink(
 				TestPropsValues.getUserId(), _group.getGroupId(), 0,
-				fragmentEntry.getFragmentEntryId(), 0,
-				_portal.getClassNameId(Layout.class), layout.getPlid(),
+				fragmentEntry.getFragmentEntryId(), 0, layout.getPlid(),
 				StringPool.BLANK, html, StringPool.BLANK, configuration,
 				_read(editableValuesFileName), StringPool.BLANK, 0, null,
 				_serviceContext);
@@ -782,9 +845,6 @@ public class PageDefinitionDTOConverterTest {
 	@Inject
 	private LayoutPageTemplateStructureLocalService
 		_layoutPageTemplateStructureLocalService;
-
-	@Inject
-	private Portal _portal;
 
 	private ServiceContext _serviceContext;
 

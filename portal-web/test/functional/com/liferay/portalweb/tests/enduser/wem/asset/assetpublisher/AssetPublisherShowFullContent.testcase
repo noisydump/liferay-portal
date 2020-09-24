@@ -76,6 +76,7 @@ definition {
 
 	@priority = "5"
 	test AddAPMultiplePortlet {
+		property portal.acceptance = "true";
 		property testray.component.names = "Asset Publisher,Training";
 
 		Navigator.gotoSitePage(
@@ -106,6 +107,7 @@ definition {
 	@priority = "5"
 	test AddAssetTypesViaAPAndAddRespectivePortletsToSamePage {
 		property plugins.deployment.type = "osgi";
+		property portal.acceptance = "true";
 
 		Navigator.gotoSitePage(
 			pageName = "Asset Publisher Page",
@@ -159,7 +161,6 @@ definition {
 
 		ProductMenu.gotoPortlet(
 			category = "Content &amp; Data",
-			panel = "Site Administration",
 			portlet = "Dynamic Data Lists");
 
 		DDLDataDefinition.addCP(ddlDataDefinitionName = "Data Definition");
@@ -175,7 +176,6 @@ definition {
 
 		ProductMenu.gotoPortlet(
 			category = "Content &amp; Data",
-			panel = "Site Administration",
 			portlet = "Dynamic Data Lists");
 
 		DDLList.addCP(ddlListName = "List Name");
@@ -424,6 +424,7 @@ definition {
 
 	@priority = "5"
 	test ConfigureAPPortletScopeMultipleSites {
+		property portal.acceptance = "true";
 		property testray.component.names = "Asset Publisher,Training";
 
 		JSONGroup.addGroup(groupName = "Site Name 2");
@@ -616,21 +617,17 @@ definition {
 			layoutName = "Tags Navigation Page",
 			widgetName = "Asset Publisher");
 
-		var serviceContext = '''{"assetTagNames": ["first tag","second tag"]}''';
-
 		JSONWebcontent.addWebContent(
+			assetTagNames = "first tag,second tag",
 			content = "Web Content Content",
 			groupName = "Test Site Name",
-			serviceContext = "${serviceContext}",
 			title = "Web Content Title");
 
-		var serviceContext = '''{"assetTagNames": ["first tag"]}''';
-
 		JSONDocument.addFileWithUploadedFile(
+			assetTagNames = "first tag",
 			dmDocumentTitle = "DM Document Title",
 			groupName = "Test Site Name",
 			mimeType = "text/plain",
-			serviceContext = "${serviceContext}",
 			sourceFileName = "Document_1.txt");
 
 		Navigator.gotoSitePage(
@@ -700,10 +697,15 @@ definition {
 			pageName = "Asset Publisher Page",
 			siteName = "Test Site Name");
 
-		AssetPublisherPortlet.viewMultipleAssetOrderPGViaAP(
-			assetTitle1 = "WebContent Title 1",
-			assetTitle2 = "WebContent Title 2",
-			assetTitle3 = "WebContent Title 3");
+		var n = "1";
+
+		for (var title : list "WebContent Title 1,WebContent Title 2,WebContent Title 3") {
+			AssetPublisherPortlet.viewDisplayOrderPG(
+				assetTitle = "${title}",
+				rowNumber = "${n}");
+
+			var n = ${n} + 1;
+		}
 
 		AssetPublisherPortlet.gotoEditAssetPG(assetTitle = "WebContent Title 1");
 
@@ -717,10 +719,15 @@ definition {
 			pageName = "Asset Publisher Page",
 			siteName = "Test Site Name");
 
-		AssetPublisherPortlet.viewMultipleAssetOrderPGViaAP(
-			assetTitle1 = "WebContent Title 2",
-			assetTitle2 = "WebContent Title 3",
-			assetTitle3 = "WebContent Title 1 Edit");
+		var n = "1";
+
+		for (var title : list "WebContent Title 2,WebContent Title 3,WebContent Title 1 Edit") {
+			AssetPublisherPortlet.viewDisplayOrderPG(
+				assetTitle = "${title}",
+				rowNumber = "${n}");
+
+			var n = ${n} + 1;
+		}
 	}
 
 	@priority = "3"
@@ -762,10 +769,15 @@ definition {
 			pageName = "Asset Publisher Page",
 			siteName = "Test Site Name");
 
-		AssetPublisherPortlet.viewMultipleAssetOrderPGViaAP(
-			assetTitle1 = "WebContent Title 1",
-			assetTitle2 = "WebContent Title 2",
-			assetTitle3 = "WebContent Title 3");
+		var n = "1";
+
+		for (var title : list "WebContent Title 1,WebContent Title 2,WebContent Title 3") {
+			AssetPublisherPortlet.viewDisplayOrderPG(
+				assetTitle = "${title}",
+				rowNumber = "${n}");
+
+			var n = ${n} + 1;
+		}
 
 		AssetPublisherPortlet.gotoEditAssetPG(assetTitle = "WebContent Title 1");
 
@@ -779,10 +791,15 @@ definition {
 			pageName = "Asset Publisher Page",
 			siteName = "Test Site Name");
 
-		AssetPublisherPortlet.viewMultipleAssetOrderPGViaAP(
-			assetTitle1 = "WebContent Title 2",
-			assetTitle2 = "WebContent Title 3",
-			assetTitle3 = "WebContent Title 1 Edit");
+		var n = "1";
+
+		for (var title : list "WebContent Title 2,WebContent Title 3,WebContent Title 1 Edit") {
+			AssetPublisherPortlet.viewDisplayOrderPG(
+				assetTitle = "${title}",
+				rowNumber = "${n}");
+
+			var n = ${n} + 1;
+		}
 	}
 
 	@priority = "4"
@@ -792,7 +809,6 @@ definition {
 		for (var i : list "1,5,3") {
 			ProductMenu.gotoPortlet(
 				category = "Content &amp; Data",
-				panel = "Site Administration",
 				portlet = "Web Content");
 
 			WebContentNavigator.gotoAddCP();
@@ -914,10 +930,15 @@ definition {
 			pageName = "Asset Publisher Page",
 			siteName = "Test Site Name");
 
-		AssetPublisherPortlet.viewMultipleAssetOrderPGViaAP(
-			assetTitle1 = "WebContent Title 1",
-			assetTitle2 = "WebContent Title 2",
-			assetTitle3 = "WebContent Title 3");
+		var n = "1";
+
+		for (var title : list "WebContent Title 1,WebContent Title 2,WebContent Title 3") {
+			AssetPublisherPortlet.viewDisplayOrderPG(
+				assetTitle = "${title}",
+				rowNumber = "${n}");
+
+			var n = ${n} + 1;
+		}
 
 		Navigator.gotoSitePage(
 			pageName = "Asset Publisher Page",
@@ -934,6 +955,7 @@ definition {
 
 	@priority = "5"
 	test RestoreAPArchivedSetup {
+		property portal.acceptance = "true";
 		property testray.component.names = "Asset Publisher,Training";
 
 		JSONWebcontent.addWebContent(

@@ -20,7 +20,6 @@ import com.liferay.portal.jericho.CachedLoggerProvider;
 import com.liferay.portal.kernel.dao.db.DB;
 import com.liferay.portal.kernel.dao.db.DBManagerUtil;
 import com.liferay.portal.kernel.dao.db.DBType;
-import com.liferay.portal.kernel.dependency.manager.DependencyManagerSyncUtil;
 import com.liferay.portal.kernel.events.ActionException;
 import com.liferay.portal.kernel.events.SimpleAction;
 import com.liferay.portal.kernel.log.Log;
@@ -42,8 +41,6 @@ import com.liferay.registry.ServiceRegistration;
 import com.liferay.taglib.servlet.JspFactorySwapper;
 
 import java.io.InputStream;
-
-import java.util.Map;
 
 import org.apache.commons.io.IOUtils;
 
@@ -105,24 +102,11 @@ public class StartupAction extends SimpleAction {
 
 		// Check required schema version
 
-		if (PropsValues.UPGRADE_DATABASE_AUTO_RUN) {
-			DependencyManagerSyncUtil.sync();
-		}
-		else {
-			StartupHelperUtil.verifyRequiredSchemaVersion();
+		StartupHelperUtil.verifyRequiredSchemaVersion();
 
-			DBUpgrader.checkReleaseState();
-		}
+		DBUpgrader.checkReleaseState();
 
 		Registry registry = RegistryUtil.getRegistry();
-
-		Map<String, Object> properties = HashMapBuilder.<String, Object>put(
-			"module.service.lifecycle", "database.initialized"
-		).put(
-			"service.vendor", ReleaseInfo.getVendor()
-		).put(
-			"service.version", ReleaseInfo.getVersion()
-		).build();
 
 		final ServiceRegistration<ModuleServiceLifecycle>
 			moduleServiceLifecycleServiceRegistration =
@@ -130,7 +114,13 @@ public class StartupAction extends SimpleAction {
 					ModuleServiceLifecycle.class,
 					new ModuleServiceLifecycle() {
 					},
-					properties);
+					HashMapBuilder.<String, Object>put(
+						"module.service.lifecycle", "database.initialized"
+					).put(
+						"service.vendor", ReleaseInfo.getVendor()
+					).put(
+						"service.version", ReleaseInfo.getVersion()
+					).build());
 
 		PortalLifecycleUtil.register(
 			new BasePortalLifecycle() {
@@ -161,9 +151,7 @@ public class StartupAction extends SimpleAction {
 			_log.debug("Check resource actions");
 		}
 
-		if (StartupHelperUtil.isDBNew() ||
-			PropsValues.UPGRADE_DATABASE_AUTO_RUN) {
-
+		if (StartupHelperUtil.isDBNew()) {
 			StartupHelperUtil.initResourceActions();
 
 			ResourceActionLocalServiceUtil.checkResourceActions();

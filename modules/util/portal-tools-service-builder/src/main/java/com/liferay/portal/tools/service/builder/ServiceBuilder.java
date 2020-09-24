@@ -117,10 +117,10 @@ import java.util.TreeSet;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Stream;
 
 import org.dom4j.Attribute;
 import org.dom4j.Document;
-import org.dom4j.DocumentException;
 import org.dom4j.DocumentHelper;
 import org.dom4j.DocumentType;
 import org.dom4j.Element;
@@ -368,8 +368,8 @@ public class ServiceBuilder {
 		try {
 			ClearThreadLocalUtil.clearThreadLocal();
 		}
-		catch (Throwable t) {
-			t.printStackTrace();
+		catch (Throwable throwable) {
+			throwable.printStackTrace();
 		}
 
 		Introspector.flushCaches();
@@ -388,10 +388,10 @@ public class ServiceBuilder {
 			if (config.startsWith("classpath*:")) {
 				String name = config.substring("classpath*:".length());
 
-				Enumeration<URL> enu = classLoader.getResources(name);
+				Enumeration<URL> enumeration = classLoader.getResources(name);
 
-				while (enu.hasMoreElements()) {
-					URL url = enu.nextElement();
+				while (enumeration.hasMoreElements()) {
+					URL url = enumeration.nextElement();
 
 					InputStream inputStream = url.openStream();
 
@@ -401,11 +401,11 @@ public class ServiceBuilder {
 				}
 			}
 			else {
-				Enumeration<URL> urls = classLoader.getResources(config);
+				Enumeration<URL> enumeration = classLoader.getResources(config);
 
-				if (urls.hasMoreElements()) {
-					while (urls.hasMoreElements()) {
-						URL url = urls.nextElement();
+				if (enumeration.hasMoreElements()) {
+					while (enumeration.hasMoreElements()) {
+						URL url = enumeration.nextElement();
 
 						try (InputStream inputStream = url.openStream()) {
 							_readResourceActionModels(
@@ -2349,7 +2349,9 @@ public class ServiceBuilder {
 				_outputPath, "/service/impl/", entity.getName(),
 				"CTServiceImpl.java"));
 
-		if (!entity.isChangeTrackingEnabled() || entity.hasLocalService()) {
+		if (!entity.isChangeTrackingEnabled() || !entity.hasEntityColumns() ||
+			entity.hasLocalService()) {
+
 			if (file.exists()) {
 				System.out.println("Removing " + file);
 
@@ -3483,12 +3485,48 @@ public class ServiceBuilder {
 					_outputPath, "/service/base/", entity.getName(),
 					_getSessionTypeName(sessionType), "ServiceBaseImpl.java"));
 
-			JavaSource parentJavaSource = parentJavaClass.getSource();
-
-			imports.addAll(parentJavaSource.getImports());
-
 			methods = _mergeMethods(
 				methods, parentJavaClass.getMethods(), true);
+
+			JavaSource parentJavaSource = parentJavaClass.getSource();
+
+			Map<String, String> importsMap = new HashMap<>();
+
+			for (String childImport : imports) {
+				int x = childImport.lastIndexOf('.');
+
+				importsMap.put(childImport.substring(x + 1), childImport);
+			}
+
+			for (String parentImport : parentJavaSource.getImports()) {
+				int x = parentImport.lastIndexOf('.');
+
+				String simpleName = parentImport.substring(x + 1);
+
+				String conflictingImport = importsMap.get(simpleName);
+
+				if (conflictingImport == null) {
+					imports.add(parentImport);
+				}
+				else if (!conflictingImport.equals(parentImport)) {
+					for (JavaMethod method : methods) {
+						String signature = method.getDeclarationSignature(
+							false);
+
+						if (signature.contains(conflictingImport)) {
+							break;
+						}
+
+						if (signature.contains(parentImport)) {
+							imports.remove(conflictingImport);
+
+							imports.add(parentImport);
+
+							break;
+						}
+					}
+				}
+			}
 		}
 
 		Map<String, Object> context = _getContext();
@@ -4611,9 +4649,7 @@ public class ServiceBuilder {
 		return sb.toString();
 	}
 
-	private String _formatXml(String xml)
-		throws DocumentException, IOException {
-
+	private String _formatXml(String xml) throws Exception {
 		String doctype = null;
 
 		int x = xml.indexOf("<!DOCTYPE");
@@ -5644,6 +5680,46 @@ public class ServiceBuilder {
 		return Version.getInstance(version);
 	}
 
+	private boolean _hasFinderThatIsNotUniqueByCompany(
+		List<Element> columnElements, List<Element> finderColumnElements) {
+
+		if (!isVersionGTE_7_3_0()) {
+			return false;
+		}
+
+		boolean hasCompanyId = Stream.of(
+			columnElements.toArray(new Element[0])
+		).map(
+			columnElement -> columnElement.attributeValue("name")
+		).anyMatch(
+			columnName -> columnName.equals("companyId")
+		);
+
+		if (!hasCompanyId) {
+			return false;
+		}
+
+		String[] finderColumnNames = Stream.of(
+			finderColumnElements.toArray(new Element[0])
+		).map(
+			finderColumnElement -> finderColumnElement.attributeValue("name")
+		).filter(
+			finderColumnName ->
+				finderColumnName.endsWith("Id") ||
+				finderColumnName.endsWith("PK")
+		).toArray(
+			String[]::new
+		);
+
+		if ((finderColumnNames.length == 1) &&
+			finderColumnNames[0].equals("classNameId")) {
+
+			return true;
+		}
+
+		return false;
+	}
+
 	private boolean _hasHttpMethods(JavaClass javaClass) {
 		for (JavaMethod javaMethod : _getMethods(javaClass)) {
 			if (javaMethod.isPublic() && isCustomMethod(javaMethod)) {
@@ -5752,7 +5828,7 @@ public class ServiceBuilder {
 			javaAnnotationsMap.put(javaAnnotation.getType(), javaAnnotation);
 		}
 
-		List<JavaAnnotation> javaAnnotations = new ArrayList<>(
+		List<JavaAnnotation> javaAnnotations3 = new ArrayList<>(
 			javaAnnotationsMap.values());
 
 		Comparator<JavaAnnotation> comparator =
@@ -5772,9 +5848,9 @@ public class ServiceBuilder {
 
 			};
 
-		Collections.sort(javaAnnotations, comparator);
+		Collections.sort(javaAnnotations3, comparator);
 
-		return javaAnnotations;
+		return javaAnnotations3;
 	}
 
 	private List<JavaMethod> _mergeMethods(
@@ -5811,7 +5887,7 @@ public class ServiceBuilder {
 			}
 		}
 
-		List<JavaMethod> javaMethods = new ArrayList<>(javaMethodMap.values());
+		List<JavaMethod> javaMethods3 = new ArrayList<>(javaMethodMap.values());
 
 		Comparator<JavaMethod> comparator = new Comparator<JavaMethod>() {
 
@@ -5832,9 +5908,9 @@ public class ServiceBuilder {
 
 		};
 
-		Collections.sort(javaMethods, comparator);
+		Collections.sort(javaMethods3, comparator);
 
-		return javaMethods;
+		return javaMethods3;
 	}
 
 	private List<Entity> _mergeReferenceEntities(Entity entity) {
@@ -5857,7 +5933,10 @@ public class ServiceBuilder {
 	private Entity _parseEntity(Element entityElement) throws Exception {
 		String entityName = entityElement.attributeValue("name");
 		String humanName = entityElement.attributeValue("human-name");
+		String variableName = entityElement.attributeValue("variable-name");
 		String pluralName = entityElement.attributeValue("plural-name");
+		String pluralVariableName = entityElement.attributeValue(
+			"plural-variable-name");
 
 		String tableName = entityElement.attributeValue("table");
 
@@ -6026,11 +6105,7 @@ public class ServiceBuilder {
 			derivedColumnElements.add(columnElement);
 		}
 
-		if (columnElements.isEmpty()) {
-			changeTrackingEnabled = false;
-		}
-
-		if (changeTrackingEnabled) {
+		if (changeTrackingEnabled && !columnElements.isEmpty()) {
 			Element columnElement = DocumentHelper.createElement("column");
 
 			columnElement.addAttribute(
@@ -6494,6 +6569,16 @@ public class ServiceBuilder {
 				finderEntityColumns.add(entityColumn);
 			}
 
+			if (_hasFinderThatIsNotUniqueByCompany(
+					columnElements, finderColumnElements)) {
+
+				throw new IllegalArgumentException(
+					StringBundler.concat(
+						"Finder ", finderName, " for entity ", entityName,
+						" needs an additional ID column to make it unique by ",
+						"company"));
+			}
+
 			entityFinders.add(
 				new EntityFinder(
 					this, finderName, finderPluralName, finderReturn,
@@ -6580,19 +6665,19 @@ public class ServiceBuilder {
 
 		Entity entity = new Entity(
 			this, _packagePath, _apiPackagePath, _portletShortName, entityName,
-			pluralName, humanName, tableName, alias, uuid, uuidAccessor,
-			externalReferenceCode, localService, remoteService, persistence,
-			persistenceClassName, finderClassName, dataSource, sessionFactory,
-			txManager, cacheEnabled, changeTrackingEnabled,
-			dynamicUpdateEnabled, jsonEnabled, mvccEnabled, trashEnabled,
-			uadApplicationName, uadAutoDelete, uadOutputPath, uadPackagePath,
-			deprecated, pkEntityColumns, regularEntityColumns,
-			blobEntityColumns, collectionEntityColumns, entityColumns,
-			entityOrder, entityFinders, referenceEntities,
+			variableName, pluralName, pluralVariableName, humanName, tableName,
+			alias, uuid, uuidAccessor, externalReferenceCode, localService,
+			remoteService, persistence, persistenceClassName, finderClassName,
+			dataSource, sessionFactory, txManager, cacheEnabled,
+			changeTrackingEnabled, dynamicUpdateEnabled, jsonEnabled,
+			mvccEnabled, trashEnabled, uadApplicationName, uadAutoDelete,
+			uadOutputPath, uadPackagePath, deprecated, pkEntityColumns,
+			regularEntityColumns, blobEntityColumns, collectionEntityColumns,
+			entityColumns, entityOrder, entityFinders, referenceEntities,
 			unresolvedReferenceEntityNames, txRequiredMethodNames,
 			resourceActionModel);
 
-		if (changeTrackingEnabled) {
+		if (changeTrackingEnabled && !columnElements.isEmpty()) {
 			if (!mvccEnabled) {
 				throw new ServiceBuilderException(
 					"MVCC must be enabled to use change tracking for " +
@@ -7043,7 +7128,13 @@ public class ServiceBuilder {
 		}
 
 		versionEntityElement.addAttribute("local-service", "false");
-		versionEntityElement.addAttribute("mvcc-enabled", "false");
+
+		if (entity.isChangeTrackingEnabled()) {
+			versionEntityElement.addAttribute("mvcc-enabled", "true");
+		}
+		else {
+			versionEntityElement.addAttribute("mvcc-enabled", "false");
+		}
 
 		versionEntityElement.addAttribute("name", entity.getName() + "Version");
 
@@ -7067,7 +7158,7 @@ public class ServiceBuilder {
 			"column");
 
 		versionEntityColumnElement.addAttribute(
-			"name", entity.getVarName() + "VersionId");
+			"name", entity.getVariableName() + "VersionId");
 		versionEntityColumnElement.addAttribute("primary", "true");
 		versionEntityColumnElement.addAttribute("type", "long");
 
@@ -7095,7 +7186,10 @@ public class ServiceBuilder {
 		for (Element columnElement : columnElements) {
 			String name = columnElement.attributeValue("name");
 
-			if (!name.equals("mvccVersion") && !name.equals("headId")) {
+			if (!name.equals("mvccVersion") && !name.equals("headId") &&
+				(!name.equals("ctCollectionId") ||
+				 !entity.isChangeTrackingEnabled())) {
+
 				versionEntityColumnElement = versionEntityElement.addElement(
 					"column");
 

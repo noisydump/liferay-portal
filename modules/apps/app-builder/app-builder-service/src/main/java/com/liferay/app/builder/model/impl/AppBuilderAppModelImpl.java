@@ -81,9 +81,11 @@ public class AppBuilderAppModelImpl
 		{"groupId", Types.BIGINT}, {"companyId", Types.BIGINT},
 		{"userId", Types.BIGINT}, {"userName", Types.VARCHAR},
 		{"createDate", Types.TIMESTAMP}, {"modifiedDate", Types.TIMESTAMP},
-		{"active_", Types.BOOLEAN}, {"ddmStructureId", Types.BIGINT},
+		{"active_", Types.BOOLEAN}, {"ddlRecordSetId", Types.BIGINT},
+		{"ddmStructureId", Types.BIGINT},
 		{"ddmStructureLayoutId", Types.BIGINT},
-		{"deDataListViewId", Types.BIGINT}, {"name", Types.VARCHAR}
+		{"deDataListViewId", Types.BIGINT}, {"name", Types.VARCHAR},
+		{"scope", Types.VARCHAR}
 	};
 
 	public static final Map<String, Integer> TABLE_COLUMNS_MAP =
@@ -99,14 +101,16 @@ public class AppBuilderAppModelImpl
 		TABLE_COLUMNS_MAP.put("createDate", Types.TIMESTAMP);
 		TABLE_COLUMNS_MAP.put("modifiedDate", Types.TIMESTAMP);
 		TABLE_COLUMNS_MAP.put("active_", Types.BOOLEAN);
+		TABLE_COLUMNS_MAP.put("ddlRecordSetId", Types.BIGINT);
 		TABLE_COLUMNS_MAP.put("ddmStructureId", Types.BIGINT);
 		TABLE_COLUMNS_MAP.put("ddmStructureLayoutId", Types.BIGINT);
 		TABLE_COLUMNS_MAP.put("deDataListViewId", Types.BIGINT);
 		TABLE_COLUMNS_MAP.put("name", Types.VARCHAR);
+		TABLE_COLUMNS_MAP.put("scope", Types.VARCHAR);
 	}
 
 	public static final String TABLE_SQL_CREATE =
-		"create table AppBuilderApp (uuid_ VARCHAR(75) null,appBuilderAppId LONG not null primary key,groupId LONG,companyId LONG,userId LONG,userName VARCHAR(75) null,createDate DATE null,modifiedDate DATE null,active_ BOOLEAN,ddmStructureId LONG,ddmStructureLayoutId LONG,deDataListViewId LONG,name STRING null)";
+		"create table AppBuilderApp (uuid_ VARCHAR(75) null,appBuilderAppId LONG not null primary key,groupId LONG,companyId LONG,userId LONG,userName VARCHAR(75) null,createDate DATE null,modifiedDate DATE null,active_ BOOLEAN,ddlRecordSetId LONG,ddmStructureId LONG,ddmStructureLayoutId LONG,deDataListViewId LONG,name STRING null,scope VARCHAR(75) null)";
 
 	public static final String TABLE_SQL_DROP = "drop table AppBuilderApp";
 
@@ -122,24 +126,61 @@ public class AppBuilderAppModelImpl
 
 	public static final String TX_MANAGER = "liferayTransactionManager";
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
+	 */
+	@Deprecated
 	public static final long ACTIVE_COLUMN_BITMASK = 1L;
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
+	 */
+	@Deprecated
 	public static final long COMPANYID_COLUMN_BITMASK = 2L;
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
+	 */
+	@Deprecated
 	public static final long DDMSTRUCTUREID_COLUMN_BITMASK = 4L;
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
+	 */
+	@Deprecated
 	public static final long GROUPID_COLUMN_BITMASK = 8L;
 
-	public static final long UUID_COLUMN_BITMASK = 16L;
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
+	 */
+	@Deprecated
+	public static final long SCOPE_COLUMN_BITMASK = 16L;
 
-	public static final long APPBUILDERAPPID_COLUMN_BITMASK = 32L;
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
+	 */
+	@Deprecated
+	public static final long UUID_COLUMN_BITMASK = 32L;
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *		#getColumnBitmask(String)
+	 */
+	@Deprecated
+	public static final long APPBUILDERAPPID_COLUMN_BITMASK = 64L;
+
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
 	public static void setEntityCacheEnabled(boolean entityCacheEnabled) {
-		_entityCacheEnabled = entityCacheEnabled;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
 	public static void setFinderCacheEnabled(boolean finderCacheEnabled) {
-		_finderCacheEnabled = finderCacheEnabled;
 	}
 
 	public AppBuilderAppModelImpl() {
@@ -193,9 +234,6 @@ public class AppBuilderAppModelImpl
 				attributeName,
 				attributeGetterFunction.apply((AppBuilderApp)this));
 		}
-
-		attributes.put("entityCacheEnabled", isEntityCacheEnabled());
-		attributes.put("finderCacheEnabled", isFinderCacheEnabled());
 
 		return attributes;
 	}
@@ -308,6 +346,11 @@ public class AppBuilderAppModelImpl
 			"active",
 			(BiConsumer<AppBuilderApp, Boolean>)AppBuilderApp::setActive);
 		attributeGetterFunctions.put(
+			"ddlRecordSetId", AppBuilderApp::getDdlRecordSetId);
+		attributeSetterBiConsumers.put(
+			"ddlRecordSetId",
+			(BiConsumer<AppBuilderApp, Long>)AppBuilderApp::setDdlRecordSetId);
+		attributeGetterFunctions.put(
 			"ddmStructureId", AppBuilderApp::getDdmStructureId);
 		attributeSetterBiConsumers.put(
 			"ddmStructureId",
@@ -327,6 +370,10 @@ public class AppBuilderAppModelImpl
 		attributeGetterFunctions.put("name", AppBuilderApp::getName);
 		attributeSetterBiConsumers.put(
 			"name", (BiConsumer<AppBuilderApp, String>)AppBuilderApp::setName);
+		attributeGetterFunctions.put("scope", AppBuilderApp::getScope);
+		attributeSetterBiConsumers.put(
+			"scope",
+			(BiConsumer<AppBuilderApp, String>)AppBuilderApp::setScope);
 
 		_attributeGetterFunctions = Collections.unmodifiableMap(
 			attributeGetterFunctions);
@@ -346,17 +393,20 @@ public class AppBuilderAppModelImpl
 
 	@Override
 	public void setUuid(String uuid) {
-		_columnBitmask |= UUID_COLUMN_BITMASK;
-
-		if (_originalUuid == null) {
-			_originalUuid = _uuid;
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
 		}
 
 		_uuid = uuid;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #getColumnOriginalValue(String)}
+	 */
+	@Deprecated
 	public String getOriginalUuid() {
-		return GetterUtil.getString(_originalUuid);
+		return getColumnOriginalValue("uuid_");
 	}
 
 	@Override
@@ -366,6 +416,10 @@ public class AppBuilderAppModelImpl
 
 	@Override
 	public void setAppBuilderAppId(long appBuilderAppId) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_appBuilderAppId = appBuilderAppId;
 	}
 
@@ -376,19 +430,20 @@ public class AppBuilderAppModelImpl
 
 	@Override
 	public void setGroupId(long groupId) {
-		_columnBitmask |= GROUPID_COLUMN_BITMASK;
-
-		if (!_setOriginalGroupId) {
-			_setOriginalGroupId = true;
-
-			_originalGroupId = _groupId;
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
 		}
 
 		_groupId = groupId;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #getColumnOriginalValue(String)}
+	 */
+	@Deprecated
 	public long getOriginalGroupId() {
-		return _originalGroupId;
+		return GetterUtil.getLong(this.<Long>getColumnOriginalValue("groupId"));
 	}
 
 	@Override
@@ -398,19 +453,21 @@ public class AppBuilderAppModelImpl
 
 	@Override
 	public void setCompanyId(long companyId) {
-		_columnBitmask |= COMPANYID_COLUMN_BITMASK;
-
-		if (!_setOriginalCompanyId) {
-			_setOriginalCompanyId = true;
-
-			_originalCompanyId = _companyId;
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
 		}
 
 		_companyId = companyId;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #getColumnOriginalValue(String)}
+	 */
+	@Deprecated
 	public long getOriginalCompanyId() {
-		return _originalCompanyId;
+		return GetterUtil.getLong(
+			this.<Long>getColumnOriginalValue("companyId"));
 	}
 
 	@Override
@@ -420,6 +477,10 @@ public class AppBuilderAppModelImpl
 
 	@Override
 	public void setUserId(long userId) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_userId = userId;
 	}
 
@@ -451,6 +512,10 @@ public class AppBuilderAppModelImpl
 
 	@Override
 	public void setUserName(String userName) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_userName = userName;
 	}
 
@@ -461,6 +526,10 @@ public class AppBuilderAppModelImpl
 
 	@Override
 	public void setCreateDate(Date createDate) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_createDate = createDate;
 	}
 
@@ -477,6 +546,10 @@ public class AppBuilderAppModelImpl
 	public void setModifiedDate(Date modifiedDate) {
 		_setModifiedDate = true;
 
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_modifiedDate = modifiedDate;
 	}
 
@@ -492,19 +565,35 @@ public class AppBuilderAppModelImpl
 
 	@Override
 	public void setActive(boolean active) {
-		_columnBitmask |= ACTIVE_COLUMN_BITMASK;
-
-		if (!_setOriginalActive) {
-			_setOriginalActive = true;
-
-			_originalActive = _active;
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
 		}
 
 		_active = active;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #getColumnOriginalValue(String)}
+	 */
+	@Deprecated
 	public boolean getOriginalActive() {
-		return _originalActive;
+		return GetterUtil.getBoolean(
+			this.<Boolean>getColumnOriginalValue("active_"));
+	}
+
+	@Override
+	public long getDdlRecordSetId() {
+		return _ddlRecordSetId;
+	}
+
+	@Override
+	public void setDdlRecordSetId(long ddlRecordSetId) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
+		_ddlRecordSetId = ddlRecordSetId;
 	}
 
 	@Override
@@ -514,19 +603,21 @@ public class AppBuilderAppModelImpl
 
 	@Override
 	public void setDdmStructureId(long ddmStructureId) {
-		_columnBitmask |= DDMSTRUCTUREID_COLUMN_BITMASK;
-
-		if (!_setOriginalDdmStructureId) {
-			_setOriginalDdmStructureId = true;
-
-			_originalDdmStructureId = _ddmStructureId;
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
 		}
 
 		_ddmStructureId = ddmStructureId;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #getColumnOriginalValue(String)}
+	 */
+	@Deprecated
 	public long getOriginalDdmStructureId() {
-		return _originalDdmStructureId;
+		return GetterUtil.getLong(
+			this.<Long>getColumnOriginalValue("ddmStructureId"));
 	}
 
 	@Override
@@ -536,6 +627,10 @@ public class AppBuilderAppModelImpl
 
 	@Override
 	public void setDdmStructureLayoutId(long ddmStructureLayoutId) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_ddmStructureLayoutId = ddmStructureLayoutId;
 	}
 
@@ -546,6 +641,10 @@ public class AppBuilderAppModelImpl
 
 	@Override
 	public void setDeDataListViewId(long deDataListViewId) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_deDataListViewId = deDataListViewId;
 	}
 
@@ -604,6 +703,10 @@ public class AppBuilderAppModelImpl
 
 	@Override
 	public void setName(String name) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_name = name;
 	}
 
@@ -652,12 +755,58 @@ public class AppBuilderAppModelImpl
 	}
 
 	@Override
+	public String getScope() {
+		if (_scope == null) {
+			return "";
+		}
+		else {
+			return _scope;
+		}
+	}
+
+	@Override
+	public void setScope(String scope) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
+		_scope = scope;
+	}
+
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #getColumnOriginalValue(String)}
+	 */
+	@Deprecated
+	public String getOriginalScope() {
+		return getColumnOriginalValue("scope");
+	}
+
+	@Override
 	public StagedModelType getStagedModelType() {
 		return new StagedModelType(
 			PortalUtil.getClassNameId(AppBuilderApp.class.getName()));
 	}
 
 	public long getColumnBitmask() {
+		if (_columnBitmask > 0) {
+			return _columnBitmask;
+		}
+
+		if ((_columnOriginalValues == null) ||
+			(_columnOriginalValues == Collections.EMPTY_MAP)) {
+
+			return 0;
+		}
+
+		for (Map.Entry<String, Object> entry :
+				_columnOriginalValues.entrySet()) {
+
+			if (entry.getValue() != getColumnValue(entry.getKey())) {
+				_columnBitmask |= _columnBitmasks.get(entry.getKey());
+			}
+		}
+
 		return _columnBitmask;
 	}
 
@@ -768,10 +917,12 @@ public class AppBuilderAppModelImpl
 		appBuilderAppImpl.setCreateDate(getCreateDate());
 		appBuilderAppImpl.setModifiedDate(getModifiedDate());
 		appBuilderAppImpl.setActive(isActive());
+		appBuilderAppImpl.setDdlRecordSetId(getDdlRecordSetId());
 		appBuilderAppImpl.setDdmStructureId(getDdmStructureId());
 		appBuilderAppImpl.setDdmStructureLayoutId(getDdmStructureLayoutId());
 		appBuilderAppImpl.setDeDataListViewId(getDeDataListViewId());
 		appBuilderAppImpl.setName(getName());
+		appBuilderAppImpl.setScope(getScope());
 
 		appBuilderAppImpl.resetOriginalValues();
 
@@ -794,16 +945,16 @@ public class AppBuilderAppModelImpl
 	}
 
 	@Override
-	public boolean equals(Object obj) {
-		if (this == obj) {
+	public boolean equals(Object object) {
+		if (this == object) {
 			return true;
 		}
 
-		if (!(obj instanceof AppBuilderApp)) {
+		if (!(object instanceof AppBuilderApp)) {
 			return false;
 		}
 
-		AppBuilderApp appBuilderApp = (AppBuilderApp)obj;
+		AppBuilderApp appBuilderApp = (AppBuilderApp)object;
 
 		long primaryKey = appBuilderApp.getPrimaryKey();
 
@@ -820,44 +971,31 @@ public class AppBuilderAppModelImpl
 		return (int)getPrimaryKey();
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
 	@Override
 	public boolean isEntityCacheEnabled() {
-		return _entityCacheEnabled;
+		return true;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
 	@Override
 	public boolean isFinderCacheEnabled() {
-		return _finderCacheEnabled;
+		return true;
 	}
 
 	@Override
 	public void resetOriginalValues() {
-		AppBuilderAppModelImpl appBuilderAppModelImpl = this;
+		_columnOriginalValues = Collections.emptyMap();
 
-		appBuilderAppModelImpl._originalUuid = appBuilderAppModelImpl._uuid;
+		_setModifiedDate = false;
 
-		appBuilderAppModelImpl._originalGroupId =
-			appBuilderAppModelImpl._groupId;
-
-		appBuilderAppModelImpl._setOriginalGroupId = false;
-
-		appBuilderAppModelImpl._originalCompanyId =
-			appBuilderAppModelImpl._companyId;
-
-		appBuilderAppModelImpl._setOriginalCompanyId = false;
-
-		appBuilderAppModelImpl._setModifiedDate = false;
-
-		appBuilderAppModelImpl._originalActive = appBuilderAppModelImpl._active;
-
-		appBuilderAppModelImpl._setOriginalActive = false;
-
-		appBuilderAppModelImpl._originalDdmStructureId =
-			appBuilderAppModelImpl._ddmStructureId;
-
-		appBuilderAppModelImpl._setOriginalDdmStructureId = false;
-
-		appBuilderAppModelImpl._columnBitmask = 0;
+		_columnBitmask = 0;
 	}
 
 	@Override
@@ -909,6 +1047,8 @@ public class AppBuilderAppModelImpl
 
 		appBuilderAppCacheModel.active = isActive();
 
+		appBuilderAppCacheModel.ddlRecordSetId = getDdlRecordSetId();
+
 		appBuilderAppCacheModel.ddmStructureId = getDdmStructureId();
 
 		appBuilderAppCacheModel.ddmStructureLayoutId =
@@ -922,6 +1062,14 @@ public class AppBuilderAppModelImpl
 
 		if ((name != null) && (name.length() == 0)) {
 			appBuilderAppCacheModel.name = null;
+		}
+
+		appBuilderAppCacheModel.scope = getScope();
+
+		String scope = appBuilderAppCacheModel.scope;
+
+		if ((scope != null) && (scope.length() == 0)) {
+			appBuilderAppCacheModel.scope = null;
 		}
 
 		return appBuilderAppCacheModel;
@@ -997,33 +1145,126 @@ public class AppBuilderAppModelImpl
 
 	}
 
-	private static boolean _entityCacheEnabled;
-	private static boolean _finderCacheEnabled;
-
 	private String _uuid;
-	private String _originalUuid;
 	private long _appBuilderAppId;
 	private long _groupId;
-	private long _originalGroupId;
-	private boolean _setOriginalGroupId;
 	private long _companyId;
-	private long _originalCompanyId;
-	private boolean _setOriginalCompanyId;
 	private long _userId;
 	private String _userName;
 	private Date _createDate;
 	private Date _modifiedDate;
 	private boolean _setModifiedDate;
 	private boolean _active;
-	private boolean _originalActive;
-	private boolean _setOriginalActive;
+	private long _ddlRecordSetId;
 	private long _ddmStructureId;
-	private long _originalDdmStructureId;
-	private boolean _setOriginalDdmStructureId;
 	private long _ddmStructureLayoutId;
 	private long _deDataListViewId;
 	private String _name;
 	private String _nameCurrentLanguageId;
+	private String _scope;
+
+	public <T> T getColumnValue(String columnName) {
+		columnName = _attributeNames.getOrDefault(columnName, columnName);
+
+		Function<AppBuilderApp, Object> function =
+			_attributeGetterFunctions.get(columnName);
+
+		if (function == null) {
+			throw new IllegalArgumentException(
+				"No attribute getter function found for " + columnName);
+		}
+
+		return (T)function.apply((AppBuilderApp)this);
+	}
+
+	public <T> T getColumnOriginalValue(String columnName) {
+		if (_columnOriginalValues == null) {
+			return null;
+		}
+
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
+		return (T)_columnOriginalValues.get(columnName);
+	}
+
+	private void _setColumnOriginalValues() {
+		_columnOriginalValues = new HashMap<String, Object>();
+
+		_columnOriginalValues.put("uuid_", _uuid);
+		_columnOriginalValues.put("appBuilderAppId", _appBuilderAppId);
+		_columnOriginalValues.put("groupId", _groupId);
+		_columnOriginalValues.put("companyId", _companyId);
+		_columnOriginalValues.put("userId", _userId);
+		_columnOriginalValues.put("userName", _userName);
+		_columnOriginalValues.put("createDate", _createDate);
+		_columnOriginalValues.put("modifiedDate", _modifiedDate);
+		_columnOriginalValues.put("active_", _active);
+		_columnOriginalValues.put("ddlRecordSetId", _ddlRecordSetId);
+		_columnOriginalValues.put("ddmStructureId", _ddmStructureId);
+		_columnOriginalValues.put(
+			"ddmStructureLayoutId", _ddmStructureLayoutId);
+		_columnOriginalValues.put("deDataListViewId", _deDataListViewId);
+		_columnOriginalValues.put("name", _name);
+		_columnOriginalValues.put("scope", _scope);
+	}
+
+	private static final Map<String, String> _attributeNames;
+
+	static {
+		Map<String, String> attributeNames = new HashMap<>();
+
+		attributeNames.put("uuid_", "uuid");
+		attributeNames.put("active_", "active");
+
+		_attributeNames = Collections.unmodifiableMap(attributeNames);
+	}
+
+	private transient Map<String, Object> _columnOriginalValues;
+
+	public static long getColumnBitmask(String columnName) {
+		return _columnBitmasks.get(columnName);
+	}
+
+	private static final Map<String, Long> _columnBitmasks;
+
+	static {
+		Map<String, Long> columnBitmasks = new HashMap<>();
+
+		columnBitmasks.put("uuid_", 1L);
+
+		columnBitmasks.put("appBuilderAppId", 2L);
+
+		columnBitmasks.put("groupId", 4L);
+
+		columnBitmasks.put("companyId", 8L);
+
+		columnBitmasks.put("userId", 16L);
+
+		columnBitmasks.put("userName", 32L);
+
+		columnBitmasks.put("createDate", 64L);
+
+		columnBitmasks.put("modifiedDate", 128L);
+
+		columnBitmasks.put("active_", 256L);
+
+		columnBitmasks.put("ddlRecordSetId", 512L);
+
+		columnBitmasks.put("ddmStructureId", 1024L);
+
+		columnBitmasks.put("ddmStructureLayoutId", 2048L);
+
+		columnBitmasks.put("deDataListViewId", 4096L);
+
+		columnBitmasks.put("name", 8192L);
+
+		columnBitmasks.put("scope", 16384L);
+
+		_columnBitmasks = Collections.unmodifiableMap(columnBitmasks);
+	}
+
 	private long _columnBitmask;
 	private AppBuilderApp _escapedModel;
 

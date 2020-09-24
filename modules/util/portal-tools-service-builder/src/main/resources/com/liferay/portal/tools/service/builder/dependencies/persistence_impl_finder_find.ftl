@@ -256,7 +256,7 @@ that may or may not be enforced with a unique index at the database level. Case
 			list = (List<${entity.name}>)${finderCache}.getResult(finderPath, finderArgs, this);
 
 			if ((list != null) && !list.isEmpty()) {
-				for (${entity.name} ${entity.varName} : list) {
+				for (${entity.name} ${entity.variableName} : list) {
 					if (
 						<#list entityColumns as entityColumn>
 							<#include "persistence_impl_finder_field_comparator.ftl">
@@ -299,9 +299,11 @@ that may or may not be enforced with a unique index at the database level. Case
 				}
 			}
 			catch (Exception exception) {
-				if (${useCache}) {
-					${finderCache}.removeResult(finderPath, finderArgs);
-				}
+				<#if serviceBuilder.isVersionLTE_7_2_0()>
+					if (${useCache}) {
+						${finderCache}.removeResult(finderPath, finderArgs);
+					}
+				</#if>
 
 				throw processException(exception);
 			}
@@ -331,7 +333,7 @@ that may or may not be enforced with a unique index at the database level. Case
 	</#list>
 
 	OrderByComparator<${entity.name}> orderByComparator) throws ${noSuchEntity}Exception {
-		${entity.name} ${entity.varName} = fetchBy${entityFinder.name}_First(
+		${entity.name} ${entity.variableName} = fetchBy${entityFinder.name}_First(
 
 		<#list entityColumns as entityColumn>
 			${entityColumn.name},
@@ -339,8 +341,8 @@ that may or may not be enforced with a unique index at the database level. Case
 
 		orderByComparator);
 
-		if (${entity.varName} != null) {
-			return ${entity.varName};
+		if (${entity.variableName} != null) {
+			return ${entity.variableName};
 		}
 
 		StringBundler sb = new StringBundler(${(entityColumns?size * 2) + 2});
@@ -409,7 +411,7 @@ that may or may not be enforced with a unique index at the database level. Case
 	</#list>
 
 	OrderByComparator<${entity.name}> orderByComparator) throws ${noSuchEntity}Exception {
-		${entity.name} ${entity.varName} = fetchBy${entityFinder.name}_Last(
+		${entity.name} ${entity.variableName} = fetchBy${entityFinder.name}_Last(
 
 		<#list entityColumns as entityColumn>
 			${entityColumn.name},
@@ -417,8 +419,8 @@ that may or may not be enforced with a unique index at the database level. Case
 
 		orderByComparator);
 
-		if (${entity.varName} != null) {
-			return ${entity.varName};
+		if (${entity.variableName} != null) {
+			return ${entity.variableName};
 		}
 
 		StringBundler sb = new StringBundler(${(entityColumns?size * 2) + 2});
@@ -485,11 +487,11 @@ that may or may not be enforced with a unique index at the database level. Case
 		return null;
 	}
 
-	<#if !entityFinder.hasEntityColumn(entity.PKVarName)>
+	<#if !entityFinder.hasEntityColumn(entity.PKVariableName)>
 		/**
 		 * Returns the ${entity.pluralHumanName} before and after the current ${entity.humanName} in the ordered set where ${entityFinder.getHumanConditions(false)}.
 		 *
-		 * @param ${entity.PKVarName} the primary key of the current ${entity.humanName}
+		 * @param ${entity.PKVariableName} the primary key of the current ${entity.humanName}
 		<#list entityColumns as entityColumn>
 		 * @param ${entityColumn.name} the ${entityColumn.humanName}
 		</#list>
@@ -498,7 +500,7 @@ that may or may not be enforced with a unique index at the database level. Case
 		 * @throws ${noSuchEntity}Exception if a ${entity.humanName} with the primary key could not be found
 		 */
 		@Override
-		public ${entity.name}[] findBy${entityFinder.name}_PrevAndNext(${entity.PKClassName} ${entity.PKVarName},
+		public ${entity.name}[] findBy${entityFinder.name}_PrevAndNext(${entity.PKClassName} ${entity.PKVariableName},
 
 		<#list entityColumns as entityColumn>
 			${entityColumn.type} ${entityColumn.name},
@@ -511,7 +513,7 @@ that may or may not be enforced with a unique index at the database level. Case
 				</#if>
 			</#list>
 
-			${entity.name} ${entity.varName} = findByPrimaryKey(${entity.PKVarName});
+			${entity.name} ${entity.variableName} = findByPrimaryKey(${entity.PKVariableName});
 
 			Session session = null;
 
@@ -522,7 +524,7 @@ that may or may not be enforced with a unique index at the database level. Case
 
 				array[0] =
 					getBy${entityFinder.name}_PrevAndNext(
-						session, ${entity.varName},
+						session, ${entity.variableName},
 
 						<#list entityColumns as entityColumn>
 							${entityColumn.name},
@@ -530,11 +532,11 @@ that may or may not be enforced with a unique index at the database level. Case
 
 						orderByComparator, true);
 
-				array[1] = ${entity.varName};
+				array[1] = ${entity.variableName};
 
 				array[2] =
 					getBy${entityFinder.name}_PrevAndNext(
-						session, ${entity.varName},
+						session, ${entity.variableName},
 
 						<#list entityColumns as entityColumn>
 							${entityColumn.name},
@@ -553,7 +555,7 @@ that may or may not be enforced with a unique index at the database level. Case
 		}
 
 		protected ${entity.name} getBy${entityFinder.name}_PrevAndNext(
-			Session session, ${entity.name} ${entity.varName},
+			Session session, ${entity.name} ${entity.variableName},
 
 			<#list entityColumns as entityColumn>
 				${entityColumn.type} ${entityColumn.name},
@@ -575,7 +577,7 @@ that may or may not be enforced with a unique index at the database level. Case
 			<@finderQPos />
 
 			if (orderByComparator != null) {
-				for (Object orderByConditionValue : orderByComparator.getOrderByConditionValues(${entity.varName})) {
+				for (Object orderByConditionValue : orderByComparator.getOrderByConditionValues(${entity.variableName})) {
 					queryPos.add(orderByConditionValue);
 				}
 			}
@@ -797,11 +799,11 @@ that may or may not be enforced with a unique index at the database level. Case
 			</#if>
 		}
 
-		<#if !entityFinder.hasEntityColumn(entity.PKVarName)>
+		<#if !entityFinder.hasEntityColumn(entity.PKVariableName)>
 			/**
 			 * Returns the ${entity.pluralHumanName} before and after the current ${entity.humanName} in the ordered set of ${entity.pluralHumanName} that the user has permission to view where ${entityFinder.getHumanConditions(false)}.
 			 *
-			 * @param ${entity.PKVarName} the primary key of the current ${entity.humanName}
+			 * @param ${entity.PKVariableName} the primary key of the current ${entity.humanName}
 			<#list entityColumns as entityColumn>
 			 * @param ${entityColumn.name} the ${entityColumn.humanName}
 			</#list>
@@ -810,7 +812,7 @@ that may or may not be enforced with a unique index at the database level. Case
 			 * @throws ${noSuchEntity}Exception if a ${entity.humanName} with the primary key could not be found
 			 */
 			@Override
-			public ${entity.name}[] filterFindBy${entityFinder.name}_PrevAndNext(${entity.PKClassName} ${entity.PKVarName},
+			public ${entity.name}[] filterFindBy${entityFinder.name}_PrevAndNext(${entity.PKClassName} ${entity.PKVariableName},
 
 			<#list entityColumns as entityColumn>
 				${entityColumn.type} ${entityColumn.name},
@@ -825,7 +827,7 @@ that may or may not be enforced with a unique index at the database level. Case
 					if (!InlineSQLHelperUtil.isEnabled()) {
 				</#if>
 
-					return findBy${entityFinder.name}_PrevAndNext(${entity.PKVarName},
+					return findBy${entityFinder.name}_PrevAndNext(${entity.PKVariableName},
 
 					<#list entityColumns as entityColumn>
 						${entityColumn.name},
@@ -840,7 +842,7 @@ that may or may not be enforced with a unique index at the database level. Case
 					</#if>
 				</#list>
 
-				${entity.name} ${entity.varName} = findByPrimaryKey(${entity.PKVarName});
+				${entity.name} ${entity.variableName} = findByPrimaryKey(${entity.PKVariableName});
 
 				Session session = null;
 
@@ -851,7 +853,7 @@ that may or may not be enforced with a unique index at the database level. Case
 
 					array[0] =
 						filterGetBy${entityFinder.name}_PrevAndNext(
-							session, ${entity.varName},
+							session, ${entity.variableName},
 
 							<#list entityColumns as entityColumn>
 								${entityColumn.name},
@@ -859,11 +861,11 @@ that may or may not be enforced with a unique index at the database level. Case
 
 							orderByComparator, true);
 
-					array[1] = ${entity.varName};
+					array[1] = ${entity.variableName};
 
 					array[2] =
 						filterGetBy${entityFinder.name}_PrevAndNext(
-							session, ${entity.varName},
+							session, ${entity.variableName},
 
 							<#list entityColumns as entityColumn>
 								${entityColumn.name},
@@ -882,7 +884,7 @@ that may or may not be enforced with a unique index at the database level. Case
 			}
 
 			protected ${entity.name} filterGetBy${entityFinder.name}_PrevAndNext(
-				Session session, ${entity.name} ${entity.varName},
+				Session session, ${entity.name} ${entity.variableName},
 
 				<#list entityColumns as entityColumn>
 					${entityColumn.type} ${entityColumn.name},
@@ -905,7 +907,7 @@ that may or may not be enforced with a unique index at the database level. Case
 					<@finderQPos />
 
 					if (orderByComparator != null) {
-						for (Object orderByConditionValue : orderByComparator.getOrderByConditionValues(${entity.varName})) {
+						for (Object orderByConditionValue : orderByComparator.getOrderByConditionValues(${entity.variableName})) {
 							queryPos.add(orderByConditionValue);
 						}
 					}
@@ -1036,7 +1038,7 @@ that may or may not be enforced with a unique index at the database level. Case
 					<@finderQPos />
 
 					if (orderByComparator != null) {
-						for (Object orderByConditionValue : orderByComparator.getOrderByConditionValues(${entity.varName})) {
+						for (Object orderByConditionValue : orderByComparator.getOrderByConditionValues(${entity.variableName})) {
 							queryPos.add(orderByConditionValue);
 						}
 					}
@@ -1572,7 +1574,7 @@ that may or may not be enforced with a unique index at the database level. Case
 		</#list>
 		) {
 			<#if entityFinder.isUnique()>
-				${entity.name} ${entity.varName} = fetchBy${entityFinder.name}(
+				${entity.name} ${entity.variableName} = fetchBy${entityFinder.name}(
 					<#list entityColumns as entityColumn>
 						<#if entityColumn.hasArrayableOperator()>
 							${entityColumn.pluralName}[0]
@@ -1585,13 +1587,13 @@ that may or may not be enforced with a unique index at the database level. Case
 						</#if>
 					</#list>);
 
-				if (${entity.varName} == null) {
+				if (${entity.variableName} == null) {
 					return Collections.emptyList();
 				}
 				else {
 					List<${entity.name}> list = new ArrayList<${entity.name}>(1);
 
-					list.add(${entity.varName});
+					list.add(${entity.variableName});
 
 					return list;
 				}
@@ -1656,11 +1658,11 @@ that may or may not be enforced with a unique index at the database level. Case
 			list = (List<${entity.name}>)${finderCache}.getResult(_finderPathWithPaginationFindBy${entityFinder.name}, finderArgs, this);
 
 			if ((list != null) && !list.isEmpty()) {
-				for (${entity.name} ${entity.varName} : list) {
+				for (${entity.name} ${entity.variableName} : list) {
 					if (
 						<#list entityColumns as entityColumn>
 							<#if entityColumn.hasArrayableOperator()>
-								!ArrayUtil.contains(${entityColumn.pluralName}, ${entity.varName}.get${entityColumn.methodName}())
+								!ArrayUtil.contains(${entityColumn.pluralName}, ${entity.variableName}.get${entityColumn.methodName}())
 							<#else>
 								<#include "persistence_impl_finder_field_comparator.ftl">
 							</#if>
@@ -1705,9 +1707,11 @@ that may or may not be enforced with a unique index at the database level. Case
 				}
 			}
 			catch (Exception exception) {
-				if (${useCache}) {
-					${finderCache}.removeResult(_finderPathWithPaginationFindBy${entityFinder.name}, finderArgs);
-				}
+				<#if serviceBuilder.isVersionLTE_7_2_0()>
+					if (${useCache}) {
+						${finderCache}.removeResult(_finderPathWithPaginationFindBy${entityFinder.name}, finderArgs);
+					}
+				</#if>
 
 				throw processException(exception);
 			}
@@ -1932,7 +1936,7 @@ that may or may not be enforced with a unique index at the database level. Case
 		</#list>
 		) {
 			<#if entityFinder.isUnique()>
-				${entity.name} ${entity.varName} = fetchBy${entityFinder.name}(
+				${entity.name} ${entity.variableName} = fetchBy${entityFinder.name}(
 					<#list entityColumns as entityColumn>
 						<#if entityColumn.hasArrayableOperator()>
 							${entityColumn.pluralName}[0]
@@ -1945,11 +1949,11 @@ that may or may not be enforced with a unique index at the database level. Case
 						</#if>
 					</#list>);
 
-				if (${entity.varName} == null) {
+				if (${entity.variableName} == null) {
 					return Collections.emptyList();
 				}
 				else {
-					return Collections.singletonList(${entity.varName});
+					return Collections.singletonList(${entity.variableName});
 				}
 			<#else>
 				return findBy${entityFinder.name}(
@@ -2008,11 +2012,11 @@ that may or may not be enforced with a unique index at the database level. Case
 			list = (List<${entity.name}>)${finderCache}.getResult(_finderPathWithPaginationFindBy${entityFinder.name}, finderArgs, this);
 
 			if ((list != null) && !list.isEmpty()) {
-				for (${entity.name} ${entity.varName} : list) {
+				for (${entity.name} ${entity.variableName} : list) {
 					if (
 						<#list entityColumns as entityColumn>
 							<#if entityColumn.hasArrayableOperator()>
-								!ArrayUtil.contains(${entityColumn.pluralName}, ${entity.varName}.get${entityColumn.methodName}())
+								!ArrayUtil.contains(${entityColumn.pluralName}, ${entity.variableName}.get${entityColumn.methodName}())
 							<#else>
 								<#include "persistence_impl_finder_field_comparator.ftl">
 							</#if>
@@ -2090,9 +2094,11 @@ that may or may not be enforced with a unique index at the database level. Case
 				}
 			}
 			catch (Exception exception) {
-				if (${useCache}) {
-					${finderCache}.removeResult(_finderPathWithPaginationFindBy${entityFinder.name}, finderArgs);
-				}
+				<#if serviceBuilder.isVersionLTE_7_2_0()>
+					if (${useCache}) {
+						${finderCache}.removeResult(_finderPathWithPaginationFindBy${entityFinder.name}, finderArgs);
+					}
+				</#if>
 
 				throw processException(exception);
 			}
@@ -2173,7 +2179,7 @@ that may or may not be enforced with a unique index at the database level. Case
 	</#list>
 
 	) throws ${noSuchEntity}Exception {
-		${entity.name} ${entity.varName} = fetchBy${entityFinder.name}(
+		${entity.name} ${entity.variableName} = fetchBy${entityFinder.name}(
 
 		<#list entityColumns as entityColumn>
 			${entityColumn.name}
@@ -2185,7 +2191,7 @@ that may or may not be enforced with a unique index at the database level. Case
 
 		);
 
-		if ( ${entity.varName} == null) {
+		if ( ${entity.variableName} == null) {
 			StringBundler sb = new StringBundler(${(entityColumns?size * 2) + 2});
 
 			sb.append(_NO_SUCH_ENTITY_WITH_KEY);
@@ -2206,7 +2212,7 @@ that may or may not be enforced with a unique index at the database level. Case
 			throw new ${noSuchEntity}Exception(sb.toString());
 		}
 
-		return ${entity.varName};
+		return ${entity.variableName};
 	}
 
 	/**
@@ -2292,18 +2298,18 @@ that may or may not be enforced with a unique index at the database level. Case
 		}
 
 		if (result instanceof ${entity.name}) {
-			${entity.name} ${entity.varName} = (${entity.name})result;
+			${entity.name} ${entity.variableName} = (${entity.name})result;
 
 			if (
 				<#list entityColumns as entityColumn>
 					<#if entityColumn.isPrimitiveType(false)>
 						<#if stringUtil.equals(entityColumn.type, "boolean")>
-							(${entityColumn.name} != ${entity.varName}.is${entityColumn.methodName}())
+							(${entityColumn.name} != ${entity.variableName}.is${entityColumn.methodName}())
 						<#else>
-							(${entityColumn.name} != ${entity.varName}.get${entityColumn.methodName}())
+							(${entityColumn.name} != ${entity.variableName}.get${entityColumn.methodName}())
 						</#if>
 					<#else>
-						!Objects.equals(${entityColumn.name}, ${entity.varName}.get${entityColumn.methodName}())
+						!Objects.equals(${entityColumn.name}, ${entity.variableName}.get${entityColumn.methodName}())
 					</#if>
 
 					<#if entityColumn_has_next>
@@ -2373,17 +2379,19 @@ that may or may not be enforced with a unique index at the database level. Case
 						}
 					</#if>
 
-					${entity.name} ${entity.varName} = list.get(0);
+					${entity.name} ${entity.variableName} = list.get(0);
 
-					result = ${entity.varName};
+					result = ${entity.variableName};
 
-					cacheResult(${entity.varName});
+					cacheResult(${entity.variableName});
 				}
 			}
 			catch (Exception exception) {
-				if (${useCache}) {
-					${finderCache}.removeResult(_finderPathFetchBy${entityFinder.name}, finderArgs);
-				}
+				<#if serviceBuilder.isVersionLTE_7_2_0()>
+					if (${useCache}) {
+						${finderCache}.removeResult(_finderPathFetchBy${entityFinder.name}, finderArgs);
+					}
+				</#if>
 
 				throw processException(exception);
 			}

@@ -109,7 +109,9 @@ public abstract class BaseFormStructureResourceTestCase {
 
 		FormStructureResource.Builder builder = FormStructureResource.builder();
 
-		formStructureResource = builder.locale(
+		formStructureResource = builder.authentication(
+			"test@liferay.com", "test"
+		).locale(
 			LocaleUtil.getDefault()
 		).build();
 	}
@@ -470,7 +472,7 @@ public abstract class BaseFormStructureResourceTestCase {
 		}
 	}
 
-	protected void assertValid(FormStructure formStructure) {
+	protected void assertValid(FormStructure formStructure) throws Exception {
 		boolean valid = true;
 
 		if (formStructure.getDateCreated() == null) {

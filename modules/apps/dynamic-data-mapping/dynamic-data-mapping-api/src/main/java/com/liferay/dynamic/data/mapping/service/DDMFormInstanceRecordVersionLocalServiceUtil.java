@@ -41,6 +41,10 @@ public class DDMFormInstanceRecordVersionLocalServiceUtil {
 	/**
 	 * Adds the ddm form instance record version to the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect DDMFormInstanceRecordVersionLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param ddmFormInstanceRecordVersion the ddm form instance record version
 	 * @return the ddm form instance record version that was added
 	 */
@@ -82,6 +86,10 @@ public class DDMFormInstanceRecordVersionLocalServiceUtil {
 	/**
 	 * Deletes the ddm form instance record version from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect DDMFormInstanceRecordVersionLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param ddmFormInstanceRecordVersion the ddm form instance record version
 	 * @return the ddm form instance record version that was removed
 	 */
@@ -97,6 +105,10 @@ public class DDMFormInstanceRecordVersionLocalServiceUtil {
 
 	/**
 	 * Deletes the ddm form instance record version with the primary key from the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect DDMFormInstanceRecordVersionLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param formInstanceRecordVersionId the primary key of the ddm form instance record version
 	 * @return the ddm form instance record version that was removed
@@ -338,6 +350,16 @@ public class DDMFormInstanceRecordVersionLocalServiceUtil {
 			ddmFormInstanceId);
 	}
 
+	public static
+		com.liferay.dynamic.data.mapping.model.DDMFormInstanceRecordVersion
+				getLatestFormInstanceRecordVersion(
+					long ddmFormInstanceRecordId, int status)
+			throws com.liferay.portal.kernel.exception.PortalException {
+
+		return getService().getLatestFormInstanceRecordVersion(
+			ddmFormInstanceRecordId, status);
+	}
+
 	/**
 	 * Returns the OSGi service identifier.
 	 *
@@ -359,6 +381,10 @@ public class DDMFormInstanceRecordVersionLocalServiceUtil {
 
 	/**
 	 * Updates the ddm form instance record version in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect DDMFormInstanceRecordVersionLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param ddmFormInstanceRecordVersion the ddm form instance record version
 	 * @return the ddm form instance record version that was updated

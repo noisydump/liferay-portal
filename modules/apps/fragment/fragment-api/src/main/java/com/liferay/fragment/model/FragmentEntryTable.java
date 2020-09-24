@@ -35,8 +35,14 @@ public class FragmentEntryTable extends BaseTable<FragmentEntryTable> {
 
 	public final Column<FragmentEntryTable, Long> mvccVersion = createColumn(
 		"mvccVersion", Long.class, Types.BIGINT, Column.FLAG_NULLITY);
+	public final Column<FragmentEntryTable, Long> ctCollectionId = createColumn(
+		"ctCollectionId", Long.class, Types.BIGINT, Column.FLAG_PRIMARY);
 	public final Column<FragmentEntryTable, String> uuid = createColumn(
 		"uuid_", String.class, Types.VARCHAR, Column.FLAG_DEFAULT);
+	public final Column<FragmentEntryTable, Long> headId = createColumn(
+		"headId", Long.class, Types.BIGINT, Column.FLAG_DEFAULT);
+	public final Column<FragmentEntryTable, Boolean> head = createColumn(
+		"head", Boolean.class, Types.BOOLEAN, Column.FLAG_DEFAULT);
 	public final Column<FragmentEntryTable, Long> fragmentEntryId =
 		createColumn(
 			"fragmentEntryId", Long.class, Types.BIGINT, Column.FLAG_PRIMARY);

@@ -50,7 +50,10 @@ RedirectNotFoundEntriesManagementToolbarDisplayContext redirectNotFoundEntriesMa
 				>
 
 					<%
-					row.setData(HashMapBuilder.<String, Object>put("actions", redirectNotFoundEntriesManagementToolbarDisplayContext.getAvailableActions(redirectNotFoundEntry)).build());
+					row.setData(
+						HashMapBuilder.<String, Object>put(
+							"actions", redirectNotFoundEntriesManagementToolbarDisplayContext.getAvailableActions(redirectNotFoundEntry)
+						).build());
 					%>
 
 					<liferay-ui:search-container-column-text
@@ -74,10 +77,10 @@ RedirectNotFoundEntriesManagementToolbarDisplayContext redirectNotFoundEntriesMa
 					</c:if>
 
 					<liferay-ui:search-container-column-text
-						cssClass="table-cell-expand-smallest"
+						cssClass="table-cell-expand-smallest table-column-text-end"
 						name="requests"
 					>
-						<%= redirectNotFoundEntry.getHits() %>
+						<%= redirectNotFoundEntry.getRequestCount() %>
 					</liferay-ui:search-container-column-text>
 
 					<liferay-ui:search-container-column-text>

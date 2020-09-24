@@ -17,15 +17,13 @@ package com.liferay.analytics.reports.web.internal.layout.seo;
 import com.liferay.layout.seo.kernel.LayoutSEOLink;
 import com.liferay.layout.seo.kernel.LayoutSEOLinkManager;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
+import com.liferay.portal.kernel.util.LocaleUtil;
+import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.WebKeys;
 
-import java.util.Collections;
 import java.util.Locale;
-import java.util.Map;
-import java.util.Set;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -35,11 +33,10 @@ import javax.servlet.http.HttpServletRequest;
 public class CanonicalURLProvider {
 
 	public CanonicalURLProvider(
-		HttpServletRequest httpServletRequest, Language language,
+		HttpServletRequest httpServletRequest,
 		LayoutSEOLinkManager layoutSEOLinkManager, Portal portal) {
 
 		_httpServletRequest = httpServletRequest;
-		_language = language;
 		_layoutSEOLinkManager = layoutSEOLinkManager;
 		_portal = portal;
 
@@ -48,39 +45,31 @@ public class CanonicalURLProvider {
 	}
 
 	public String getCanonicalURL() throws PortalException {
-		return _getCanonicalURL(
-			_portal.getCanonicalURL(
-				_portal.getCurrentCompleteURL(_httpServletRequest),
-				_themeDisplay, _themeDisplay.getLayout(), false, false));
+		Locale locale = LocaleUtil.fromLanguageId(
+			ParamUtil.getString(
+				_httpServletRequest, "languageId",
+				_themeDisplay.getLanguageId()));
+
+		return _getCanonicalURL(locale);
 	}
 
-	private Map<Locale, String> _getAlternateURLS(String canonicalURL)
-		throws PortalException {
+	private String _getCanonicalURL(Locale locale) throws PortalException {
+		String completeURL = _portal.getCurrentCompleteURL(_httpServletRequest);
 
-		Set<Locale> locales = _language.getAvailableLocales(
-			_themeDisplay.getSiteGroupId());
-
-		if (locales.size() > 1) {
-			return _portal.getAlternateURLs(
-				canonicalURL, _themeDisplay, _themeDisplay.getLayout());
-		}
-
-		return Collections.emptyMap();
-	}
-
-	private String _getCanonicalURL(String canonicalURL)
-		throws PortalException {
+		String canonicalURL = _portal.getCanonicalURL(
+			completeURL, _themeDisplay, _themeDisplay.getLayout(), false,
+			false);
 
 		LayoutSEOLink layoutSEOLink =
 			_layoutSEOLinkManager.getCanonicalLayoutSEOLink(
-				_themeDisplay.getLayout(), _themeDisplay.getLocale(),
-				canonicalURL, _getAlternateURLS(canonicalURL));
+				_themeDisplay.getLayout(), locale, canonicalURL,
+				_portal.getAlternateURLs(
+					canonicalURL, _themeDisplay, _themeDisplay.getLayout()));
 
 		return layoutSEOLink.getHref();
 	}
 
 	private final HttpServletRequest _httpServletRequest;
-	private final Language _language;
 	private final LayoutSEOLinkManager _layoutSEOLinkManager;
 	private final Portal _portal;
 	private final ThemeDisplay _themeDisplay;

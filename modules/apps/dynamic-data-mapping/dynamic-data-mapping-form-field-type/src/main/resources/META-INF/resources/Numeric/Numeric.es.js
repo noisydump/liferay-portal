@@ -13,14 +13,12 @@
  */
 
 import {ClayInput} from '@clayui/form';
-import React, {useEffect, useRef} from 'react';
+import {usePrevious} from 'frontend-js-react-web';
+import React, {useEffect, useRef, useState} from 'react';
 import createNumberMask from 'text-mask-addons/dist/createNumberMask';
 import vanillaTextMask from 'vanilla-text-mask';
 
-import {FieldBaseProxy} from '../FieldBase/ReactFieldBase.es';
-import {useSyncValue} from '../hooks/useSyncValue.es';
-import getConnectedReactComponentAdapter from '../util/ReactComponentAdapter.es';
-import {connectStore} from '../util/connectStore.es';
+import {FieldBase} from '../FieldBase/ReactFieldBase.es';
 
 const getMaskConfig = (dataType, symbols) => {
 	let config = {
@@ -43,27 +41,50 @@ const getMaskConfig = (dataType, symbols) => {
 
 const Numeric = ({
 	dataType = 'integer',
+	defaultLanguageId,
 	disabled,
+	editingLanguageId,
+	localizable,
+	localizedValue,
 	onChange,
 	symbols = {
 		decimalSymbol: '.',
 		thousandsSeparator: ',',
 	},
-	value: initialValue,
+	value,
 	...otherProps
 }) => {
-	const [value, setValue] = useSyncValue(initialValue);
+	const [currentValue, setCurrentValue] = useState(value);
 	const inputRef = useRef(null);
+
+	const prevEditingLanguageId = usePrevious(editingLanguageId);
+
+	useEffect(() => {
+		if (prevEditingLanguageId !== editingLanguageId && localizable) {
+			const newValue =
+				localizedValue[editingLanguageId] !== undefined
+					? localizedValue[editingLanguageId]
+					: localizedValue[defaultLanguageId];
+			setCurrentValue(newValue);
+		}
+	}, [
+		defaultLanguageId,
+		editingLanguageId,
+		localizable,
+		localizedValue,
+		prevEditingLanguageId,
+		setCurrentValue,
+	]);
 
 	useEffect(() => {
 		let maskInstance = null;
 
 		if (inputRef.current) {
-			let {value} = inputRef.current;
+			let newValue = value;
 
 			if (dataType === 'integer' && value) {
-				value = String(
-					Math.round(value.replace(symbols.decimalSymbol, '.'))
+				newValue = String(
+					Math.round(newValue.replace(symbols.decimalSymbol, '.'))
 				);
 			}
 
@@ -74,9 +95,8 @@ const Numeric = ({
 				mask,
 			});
 
-			if (value !== '') {
-				setValue(value);
-				onChange({target: {value}});
+			if (newValue !== inputRef.current.value) {
+				setCurrentValue(newValue);
 			}
 		}
 
@@ -86,33 +106,39 @@ const Numeric = ({
 			}
 		};
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [dataType, inputRef, setValue]);
+	}, [dataType, inputRef, setCurrentValue, value]);
 
 	return (
 		<ClayInput
 			{...otherProps}
-			aria-label="numeric"
 			disabled={disabled}
 			onChange={(event) => {
 				const {value: newValue} = event.target;
 
-				if (newValue.substr(-1) === symbols.decimalSymbol) {
+				if (
+					dataType === 'integer' &&
+					newValue.substr(-1) === symbols.decimalSymbol
+				) {
 					return;
 				}
 
-				setValue(newValue);
+				setCurrentValue(newValue);
 				onChange(event);
 			}}
 			ref={inputRef}
 			type="text"
-			value={value}
+			value={currentValue}
 		/>
 	);
 };
 
 const Main = ({
 	dataType,
+	defaultLanguageId,
+	editingLanguageId,
 	id,
+	localizable,
+	localizedValue = {},
 	name,
 	onBlur,
 	onChange,
@@ -124,11 +150,21 @@ const Main = ({
 	value,
 	...otherProps
 }) => (
-	<FieldBaseProxy {...otherProps} id={id} name={name} readOnly={readOnly}>
+	<FieldBase
+		{...otherProps}
+		id={id}
+		localizedValue={localizedValue}
+		name={name}
+		readOnly={readOnly}
+	>
 		<Numeric
 			dataType={dataType}
+			defaultLanguageId={defaultLanguageId}
 			disabled={readOnly}
-			id={id}
+			editingLanguageId={editingLanguageId}
+			id={id ? id : name}
+			localizable={localizable}
+			localizedValue={localizedValue}
 			name={name}
 			onBlur={onBlur}
 			onChange={onChange}
@@ -137,24 +173,10 @@ const Main = ({
 			symbols={symbols}
 			value={value ? value : predefinedValue}
 		/>
-	</FieldBaseProxy>
+	</FieldBase>
 );
 
 Main.displayName = 'Numeric';
 
-const NumericProxy = connectStore(({emit, ...otherProps}) => (
-	<Main
-		{...otherProps}
-		onBlur={(event) => emit('fieldBlurred', event, event.target.value)}
-		onChange={(event) => emit('fieldEdited', event, event.target.value)}
-		onFocus={(event) => emit('fieldFocused', event, event.target.value)}
-	/>
-));
-
-const ReactNumericAdapter = getConnectedReactComponentAdapter(
-	NumericProxy,
-	'numeric'
-);
-
 export {Main};
-export default ReactNumericAdapter;
+export default Main;

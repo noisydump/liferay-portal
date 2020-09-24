@@ -251,10 +251,10 @@ public class BindConfigurationMVCActionCommand implements MVCActionCommand {
 						configuration.getProperties());
 			}
 
-			Enumeration<String> keys = properties.keys();
+			Enumeration<String> enumeration = properties.keys();
 
-			while (keys.hasMoreElements()) {
-				String key = keys.nextElement();
+			while (enumeration.hasMoreElements()) {
+				String key = enumeration.nextElement();
 
 				Object value = properties.get(key);
 
@@ -293,9 +293,7 @@ public class BindConfigurationMVCActionCommand implements MVCActionCommand {
 
 				file = file.getAbsoluteFile();
 
-				URI uri = file.toURI();
-
-				String fileName = uri.toString();
+				String fileName = String.valueOf(file.toURI());
 
 				String oldFileName = (String)configuredProperties.put(
 					"felix.fileinstall.filename", fileName);
@@ -404,7 +402,7 @@ public class BindConfigurationMVCActionCommand implements MVCActionCommand {
 	private ConfigurationFormRendererRetriever
 		_configurationFormRendererRetriever;
 
-	@Reference
+	@Reference(target = "(!(filter.visibility=*))")
 	private ConfigurationModelRetriever _configurationModelRetriever;
 
 	@Reference

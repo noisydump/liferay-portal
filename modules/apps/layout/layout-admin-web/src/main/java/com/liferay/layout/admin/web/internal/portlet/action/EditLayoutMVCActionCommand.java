@@ -36,7 +36,6 @@ import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.LocalizationUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
-import com.liferay.portal.kernel.util.PortletKeys;
 import com.liferay.portal.kernel.util.PropertiesParamUtil;
 import com.liferay.portal.kernel.util.PropsKeys;
 import com.liferay.portal.kernel.util.UnicodeProperties;
@@ -107,6 +106,8 @@ public class EditLayoutMVCActionCommand extends BaseMVCActionCommand {
 
 		long masterLayoutPlid = ParamUtil.getLong(
 			uploadPortletRequest, "masterLayoutPlid");
+		long styleBookEntryId = ParamUtil.getLong(
+			uploadPortletRequest, "styleBookEntryId");
 
 		ServiceContext serviceContext = ServiceContextFactory.getInstance(
 			Layout.class.getName(), actionRequest);
@@ -124,8 +125,6 @@ public class EditLayoutMVCActionCommand extends BaseMVCActionCommand {
 			friendlyURLMap = layout.getFriendlyURLMap();
 		}
 
-		String currentType = layout.getType();
-
 		if (layout.isTypeAssetDisplay()) {
 			serviceContext.setAttribute(
 				"layout.instanceable.allowed", Boolean.TRUE);
@@ -136,10 +135,9 @@ public class EditLayoutMVCActionCommand extends BaseMVCActionCommand {
 			nameMap, layout.getTitleMap(), layout.getDescriptionMap(),
 			layout.getKeywordsMap(), layout.getRobotsMap(), type, hidden,
 			friendlyURLMap, !deleteLogo, iconBytes, masterLayoutPlid,
-			serviceContext);
+			styleBookEntryId, serviceContext);
 
-		Layout draftLayout = _layoutLocalService.fetchLayout(
-			_portal.getClassNameId(Layout.class), layout.getPlid());
+		Layout draftLayout = layout.fetchDraftLayout();
 
 		if (draftLayout != null) {
 			_layoutService.updateLayout(
@@ -149,7 +147,7 @@ public class EditLayoutMVCActionCommand extends BaseMVCActionCommand {
 				draftLayout.getKeywordsMap(), draftLayout.getRobotsMap(), type,
 				draftLayout.isHidden(), draftLayout.getFriendlyURLMap(),
 				!deleteLogo, iconBytes, draftLayout.getMasterLayoutPlid(),
-				serviceContext);
+				styleBookEntryId, serviceContext);
 		}
 
 		themeDisplay.clearLayoutFriendlyURL(layout);
@@ -194,15 +192,6 @@ public class EditLayoutMVCActionCommand extends BaseMVCActionCommand {
 				layoutTypePortlet.removeCustomization(
 					layoutTypeSettingsUnicodeProperties);
 			}
-
-			layout = _layoutService.updateLayout(
-				groupId, privateLayout, layoutId,
-				layoutTypeSettingsUnicodeProperties.toString());
-
-			if (!currentType.equals(LayoutConstants.TYPE_PORTLET)) {
-				_portletPreferencesLocalService.deletePortletPreferences(
-					0, PortletKeys.PREFS_OWNER_TYPE_LAYOUT, layout.getPlid());
-			}
 		}
 		else {
 			layoutTypeSettingsUnicodeProperties.putAll(
@@ -210,11 +199,11 @@ public class EditLayoutMVCActionCommand extends BaseMVCActionCommand {
 
 			layoutTypeSettingsUnicodeProperties.putAll(
 				layout.getTypeSettingsProperties());
-
-			layout = _layoutService.updateLayout(
-				groupId, privateLayout, layoutId,
-				layoutTypeSettingsUnicodeProperties.toString());
 		}
+
+		layout = _layoutService.updateLayout(
+			groupId, privateLayout, layoutId,
+			layoutTypeSettingsUnicodeProperties.toString());
 
 		EventsProcessorUtil.process(
 			PropsKeys.LAYOUT_CONFIGURATION_ACTION_UPDATE,

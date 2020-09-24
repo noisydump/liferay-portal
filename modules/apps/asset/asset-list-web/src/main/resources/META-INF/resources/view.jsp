@@ -20,6 +20,11 @@
 AssetListManagementToolbarDisplayContext assetListManagementToolbarDisplayContext = new AssetListManagementToolbarDisplayContext(request, liferayPortletRequest, liferayPortletResponse, assetListDisplayContext);
 %>
 
+<clay:navigation-bar
+	inverted="<%= true %>"
+	navigationItems='<%= assetListDisplayContext.getNavigationItems("collections") %>'
+/>
+
 <clay:management-toolbar
 	displayContext="<%= assetListManagementToolbarDisplayContext %>"
 />
@@ -29,6 +34,10 @@ AssetListManagementToolbarDisplayContext assetListManagementToolbarDisplayContex
 </portlet:actionURL>
 
 <aui:form action="<%= deleteAssetListEntryURL %>" cssClass="container-fluid-1280" name="fm">
+	<liferay-ui:breadcrumb
+		showLayout="<%= false %>"
+	/>
+
 	<c:choose>
 		<c:when test="<%= assetListDisplayContext.getAssetListEntriesCount() > 0 %>">
 			<liferay-ui:search-container
@@ -78,27 +87,30 @@ AssetListManagementToolbarDisplayContext assetListManagementToolbarDisplayContex
 							<strong><liferay-ui:message key="<%= HtmlUtil.escape(assetListEntry.getTypeLabel()) %>" /></strong>
 						</h6>
 
-						<%
-						String assetEntryTypeLabel = ResourceActionsUtil.getModelResource(locale, assetListEntry.getAssetEntryType());
+						<c:if test="<%= Validator.isNotNull(assetListEntry.getAssetEntryType()) %>">
 
-						long classTypeId = GetterUtil.getLong(assetListEntry.getAssetEntrySubtype());
+							<%
+							String assetEntryTypeLabel = ResourceActionsUtil.getModelResource(locale, assetListEntry.getAssetEntryType());
 
-						if (classTypeId > 0) {
-							AssetRendererFactory assetRendererFactory = AssetRendererFactoryRegistryUtil.getAssetRendererFactoryByClassName(assetListEntry.getAssetEntryType());
+							long classTypeId = GetterUtil.getLong(assetListEntry.getAssetEntrySubtype(), -1);
 
-							if ((assetRendererFactory != null) && assetRendererFactory.isSupportsClassTypes()) {
-								ClassTypeReader classTypeReader = assetRendererFactory.getClassTypeReader();
+							if (classTypeId >= 0) {
+								AssetRendererFactory<?> assetRendererFactory = AssetRendererFactoryRegistryUtil.getAssetRendererFactoryByClassName(assetListEntry.getAssetEntryType());
 
-								ClassType classType = classTypeReader.getClassType(classTypeId, locale);
+								if ((assetRendererFactory != null) && assetRendererFactory.isSupportsClassTypes()) {
+									ClassTypeReader classTypeReader = assetRendererFactory.getClassTypeReader();
 
-								assetEntryTypeLabel = assetEntryTypeLabel + " - " + classType.getName();
+									ClassType classType = classTypeReader.getClassType(classTypeId, locale);
+
+									assetEntryTypeLabel = assetEntryTypeLabel + " - " + classType.getName();
+								}
 							}
-						}
-						%>
+							%>
 
-						<h6 class="text-default">
-							<strong><%= assetEntryTypeLabel %></strong>
-						</h6>
+							<h6 class="text-default">
+								<strong><%= HtmlUtil.escape(assetEntryTypeLabel) %></strong>
+							</h6>
+						</c:if>
 
 						<%
 						Date statusDate = assetListEntry.getCreateDate();

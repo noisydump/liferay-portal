@@ -29,7 +29,7 @@ public class LayoutStructureItemUtil {
 		if (Objects.equals(
 				itemType, LayoutDataItemTypeConstants.TYPE_COLLECTION)) {
 
-			return new CollectionLayoutStructureItem(parentItemId);
+			return new CollectionStyledLayoutStructureItem(parentItemId);
 		}
 
 		if (Objects.equals(
@@ -45,7 +45,7 @@ public class LayoutStructureItemUtil {
 		if (Objects.equals(
 				itemType, LayoutDataItemTypeConstants.TYPE_CONTAINER)) {
 
-			return new ContainerLayoutStructureItem(parentItemId);
+			return new ContainerStyledLayoutStructureItem(parentItemId);
 		}
 
 		if (Objects.equals(
@@ -57,7 +57,7 @@ public class LayoutStructureItemUtil {
 		if (Objects.equals(
 				itemType, LayoutDataItemTypeConstants.TYPE_FRAGMENT)) {
 
-			return new FragmentLayoutStructureItem(parentItemId);
+			return new FragmentStyledLayoutStructureItem(parentItemId);
 		}
 
 		if (Objects.equals(
@@ -72,10 +72,35 @@ public class LayoutStructureItemUtil {
 		}
 
 		if (Objects.equals(itemType, LayoutDataItemTypeConstants.TYPE_ROW)) {
-			return new RowLayoutStructureItem(parentItemId);
+			return new RowStyledLayoutStructureItem(parentItemId);
 		}
 
 		return null;
+	}
+
+	public static boolean hasAncestor(
+		String itemId, String itemType, LayoutStructure layoutStructure) {
+
+		LayoutStructureItem layoutStructureItem =
+			layoutStructure.getLayoutStructureItem(itemId);
+
+		LayoutStructureItem parentLayoutStructureItem =
+			layoutStructure.getLayoutStructureItem(
+				layoutStructureItem.getParentItemId());
+
+		if (Objects.equals(parentLayoutStructureItem.getItemType(), itemType)) {
+			return true;
+		}
+
+		if (Objects.equals(
+				parentLayoutStructureItem.getItemType(),
+				LayoutDataItemTypeConstants.TYPE_ROOT)) {
+
+			return false;
+		}
+
+		return hasAncestor(
+			parentLayoutStructureItem.getItemId(), itemType, layoutStructure);
 	}
 
 }

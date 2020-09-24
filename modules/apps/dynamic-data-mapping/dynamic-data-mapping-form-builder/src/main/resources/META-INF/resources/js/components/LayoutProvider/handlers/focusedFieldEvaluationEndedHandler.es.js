@@ -14,38 +14,51 @@
 
 import {PagesVisitor} from 'dynamic-data-mapping-form-renderer';
 
+import {getField} from '../util/fields.es';
 import handleFieldEdited from './fieldEditedHandler.es';
 
 const handleFocusedFieldEvaluationEnded = (
 	props,
 	state,
+	changedEditingLanguage = false,
+	changedFieldType = false,
 	instanceId,
 	settingsContext
 ) => {
-	const visitor = new PagesVisitor(settingsContext.pages);
+	if (changedEditingLanguage) {
+		return state;
+	}
+
+	const fieldName = getField(settingsContext.pages, 'name');
 	const {focusedField} = state;
+	const focusedFieldName = getField(
+		focusedField.settingsContext.pages,
+		'name'
+	);
+
+	if (
+		fieldName.instanceId !== focusedFieldName.instanceId &&
+		!changedFieldType
+	) {
+		return state;
+	}
 
 	state = {
 		...state,
 		focusedField: {
 			...focusedField,
-			instanceId,
+			instanceId: instanceId || focusedField.instanceId,
 			settingsContext,
 		},
 	};
 
+	const visitor = new PagesVisitor(settingsContext.pages);
+
 	visitor.mapFields(({fieldName, value}) => {
-		state = handleFieldEdited(
-			{
-				...props,
-				shouldAutoGenerateName: () => false,
-			},
-			state,
-			{
-				propertyName: fieldName,
-				propertyValue: value,
-			}
-		);
+		state = handleFieldEdited(props, state, {
+			propertyName: fieldName,
+			propertyValue: value,
+		});
 	});
 
 	return state;

@@ -28,7 +28,7 @@ import com.liferay.portal.kernel.util.WebKeys;
 public class AssetRendererVerticalCard implements VerticalCard {
 
 	public AssetRendererVerticalCard(
-		AssetRenderer assetRenderer,
+		AssetRenderer<?> assetRenderer,
 		LiferayPortletRequest liferayPortletRequest) {
 
 		_assetRenderer = assetRenderer;
@@ -74,9 +74,9 @@ public class AssetRendererVerticalCard implements VerticalCard {
 
 	@Override
 	public String getTitle() {
-		String title = _assetRenderer.getTitle(_themeDisplay.getLocale());
-
-		return HtmlUtil.escape(StringUtil.shorten(title, 60));
+		return HtmlUtil.escape(
+			StringUtil.shorten(
+				_assetRenderer.getTitle(_themeDisplay.getLocale()), 60));
 	}
 
 	@Override
@@ -84,7 +84,7 @@ public class AssetRendererVerticalCard implements VerticalCard {
 		return false;
 	}
 
-	private final AssetRenderer _assetRenderer;
+	private final AssetRenderer<?> _assetRenderer;
 	private final LiferayPortletRequest _liferayPortletRequest;
 	private final ThemeDisplay _themeDisplay;
 

@@ -32,7 +32,9 @@ if (!Validator.isBlank(analyticsConfiguration.token())) {
 String keywords = ParamUtil.getString(request, "keywords");
 %>
 
-<div class="pb-2 portlet-analytics-settings sheet sheet-lg">
+<clay:sheet
+	cssClass="pb-2 portlet-analytics-settings"
+>
 	<h2>
 		<liferay-ui:message key="sync-sites-to-property" />
 	</h2>
@@ -87,7 +89,7 @@ String keywords = ParamUtil.getString(request, "keywords");
 		</c:when>
 		<c:otherwise>
 			<clay:management-toolbar
-				displayContext="<%= new ChannelManagementToolbarDisplayContext(request, liferayPortletRequest, liferayPortletResponse, channelDisplayContext, channelSearch) %>"
+				displayContext="<%= new ChannelManagementToolbarDisplayContext(channelDisplayContext, request, liferayPortletRequest, liferayPortletResponse) %>"
 				elementClasses="custom-management-toolbar"
 			/>
 
@@ -130,4 +132,4 @@ String keywords = ParamUtil.getString(request, "keywords");
 			</liferay-ui:search-container>
 		</c:otherwise>
 	</c:choose>
-</div>
+</clay:sheet>

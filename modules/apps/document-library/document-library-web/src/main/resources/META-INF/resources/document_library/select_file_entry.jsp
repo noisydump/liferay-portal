@@ -34,7 +34,7 @@ portletURL.setParameter("mvcRenderCommandName", "/document_library/select_file_e
 portletURL.setParameter("groupId", String.valueOf(groupId));
 portletURL.setParameter("folderId", String.valueOf(folderId));
 
-SearchContainer dlSearchContainer = new SearchContainer(liferayPortletRequest, null, null, "curEntry", SearchContainer.DEFAULT_DELTA, portletURL, null, null);
+SearchContainer<Object> dlSearchContainer = new SearchContainer(liferayPortletRequest, null, null, "curEntry", SearchContainer.DEFAULT_DELTA, portletURL, null, null);
 
 int foldersAndFileEntriesAndFileShortcutsCount = DLAppServiceUtil.getFoldersAndFileEntriesAndFileShortcutsCount(groupId, folderId, WorkflowConstants.STATUS_APPROVED, true);
 
@@ -45,7 +45,7 @@ List<Object> foldersAndFileEntriesAndFileShortcuts = DLAppServiceUtil.getFolders
 dlSearchContainer.setResults(foldersAndFileEntriesAndFileShortcuts);
 %>
 
-<clay:container>
+<clay:container-fluid>
 	<aui:form method="post" name="selectFileEntryFm">
 		<liferay-ui:breadcrumb
 			showGuestGroup="<%= false %>"
@@ -101,16 +101,17 @@ dlSearchContainer.setResults(foldersAndFileEntriesAndFileShortcuts);
 							<liferay-ui:search-container-column-text
 								name="name"
 							>
-
-								<%
-								Map<String, Object> data = HashMapBuilder.<String, Object>put(
-									"entryid", fileEntry.getFileEntryId()
-								).put(
-									"entryname", HtmlUtil.unescape(fileEntry.getTitle())
-								).build();
-								%>
-
-								<aui:a cssClass="selector-button" data="<%= data %>" href="javascript:;">
+								<aui:a
+									cssClass="selector-button"
+									data='<%=
+										HashMapBuilder.<String, Object>put(
+											"entryid", fileEntry.getFileEntryId()
+										).put(
+											"entryname", HtmlUtil.unescape(fileEntry.getTitle())
+										).build()
+									%>'
+									href="javascript:;"
+								>
 									<%= fileEntry.getTitle() %>
 								</aui:a>
 
@@ -131,7 +132,7 @@ dlSearchContainer.setResults(foldersAndFileEntriesAndFileShortcuts);
 			/>
 		</liferay-ui:search-container>
 	</aui:form>
-</clay:container>
+</clay:container-fluid>
 
 <aui:script>
 	Liferay.Util.selectEntityHandler(

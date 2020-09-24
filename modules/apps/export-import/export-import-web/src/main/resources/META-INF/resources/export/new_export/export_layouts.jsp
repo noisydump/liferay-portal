@@ -88,7 +88,7 @@ portletDisplay.setURLBack(backURL);
 renderResponse.setTitle(!configuredExport ? LanguageUtil.get(request, "new-custom-export") : LanguageUtil.format(request, "new-export-based-on-x", exportImportConfiguration.getName(), false));
 %>
 
-<clay:container>
+<clay:container-fluid>
 	<portlet:actionURL name="editExportConfiguration" var="restoreTrashEntriesURL">
 		<portlet:param name="mvcRenderCommandName" value="exportLayouts" />
 		<portlet:param name="<%= Constants.CMD %>" value="<%= Constants.RESTORE %>" />
@@ -147,7 +147,7 @@ renderResponse.setTitle(!configuredExport ? LanguageUtil.get(request, "new-custo
 					exportImportConfigurationId="<%= exportImportConfigurationId %>"
 				/>
 
-				<c:if test="<%= !group.isLayoutPrototype() && !group.isCompany() %>">
+				<c:if test="<%= !group.isDepot() && !group.isCompany() && !group.isLayoutPrototype() %>">
 					<liferay-staging:select-pages
 						action="<%= Constants.EXPORT %>"
 						disableInputs="<%= configuredExport %>"
@@ -182,7 +182,7 @@ renderResponse.setTitle(!configuredExport ? LanguageUtil.get(request, "new-custo
 			<aui:button href="<%= backURL %>" type="cancel" />
 		</aui:button-row>
 	</aui:form>
-</clay:container>
+</clay:container-fluid>
 
 <aui:script use="liferay-export-import-export-import">
 	var exportImport = new Liferay.ExportImport({

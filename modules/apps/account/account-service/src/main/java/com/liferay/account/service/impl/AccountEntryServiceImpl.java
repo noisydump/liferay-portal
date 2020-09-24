@@ -34,6 +34,7 @@ import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
 import com.liferay.portal.kernel.security.permission.resource.PortletResourcePermission;
 import com.liferay.portal.kernel.service.OrganizationLocalService;
+import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.permission.OrganizationPermission;
 import com.liferay.portal.kernel.util.LinkedHashMapBuilder;
 import com.liferay.portal.kernel.util.ListUtil;
@@ -60,10 +61,48 @@ import org.osgi.service.component.annotations.ReferencePolicyOption;
 )
 public class AccountEntryServiceImpl extends AccountEntryServiceBaseImpl {
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #addAccountEntry(long, long, String, String, String[],
+	 *             byte[], String, int, ServiceContext)}
+	 */
+	@Deprecated
 	@Override
 	public AccountEntry addAccountEntry(
 			long userId, long parentAccountEntryId, String name,
 			String description, String[] domains, byte[] logoBytes, int status)
+		throws PortalException {
+
+		return addAccountEntry(
+			userId, parentAccountEntryId, name, description, domains, logoBytes,
+			null, AccountConstants.ACCOUNT_ENTRY_TYPE_BUSINESS, status, null);
+	}
+
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #addAccountEntry(long, long, String, String, String[],
+	 *             byte[], String, int, ServiceContext)}
+	 */
+	@Deprecated
+	@Override
+	public AccountEntry addAccountEntry(
+			long userId, long parentAccountEntryId, String name,
+			String description, String[] domains, byte[] logoBytes, int status,
+			ServiceContext serviceContext)
+		throws PortalException {
+
+		return addAccountEntry(
+			userId, parentAccountEntryId, name, description, domains, logoBytes,
+			null, AccountConstants.ACCOUNT_ENTRY_TYPE_BUSINESS, status,
+			serviceContext);
+	}
+
+	@Override
+	public AccountEntry addAccountEntry(
+			long userId, long parentAccountEntryId, String name,
+			String description, String[] domains, byte[] logoBytes,
+			String taxIdNumber, String type, int status,
+			ServiceContext serviceContext)
 		throws PortalException {
 
 		_portletResourcePermission.check(
@@ -71,13 +110,13 @@ public class AccountEntryServiceImpl extends AccountEntryServiceBaseImpl {
 
 		return accountEntryLocalService.addAccountEntry(
 			userId, parentAccountEntryId, name, description, domains, logoBytes,
-			status);
+			taxIdNumber, type, status, serviceContext);
 	}
 
 	@Override
 	public List<AccountEntry> getAccountEntries(
 			long companyId, int status, int start, int end,
-			OrderByComparator<AccountEntry> obc)
+			OrderByComparator<AccountEntry> orderByComparator)
 		throws PortalException {
 
 		PermissionChecker permissionChecker = getPermissionChecker();
@@ -92,7 +131,7 @@ public class AccountEntryServiceImpl extends AccountEntryServiceBaseImpl {
 		}
 
 		return accountEntryLocalService.getAccountEntries(
-			companyId, status, start, end, obc);
+			companyId, status, start, end, orderByComparator);
 	}
 
 	@Override
@@ -102,26 +141,23 @@ public class AccountEntryServiceImpl extends AccountEntryServiceBaseImpl {
 
 		PermissionChecker permissionChecker = _getPermissionChecker();
 
-		if (!permissionChecker.isOmniadmin()) {
+		if (!permissionChecker.isCompanyAdmin()) {
 			try {
 				User user = userLocalService.getUser(
 					permissionChecker.getUserId());
-
-				LinkedHashMap<String, Object> organizationParams =
-					LinkedHashMapBuilder.<String, Object>put(
-						"organizationsTree",
-						ListUtil.filter(
-							user.getOrganizations(true),
-							organization -> _hasManageAccountsPermission(
-								permissionChecker, organization))
-					).build();
 
 				BaseModelSearchResult<Organization> baseModelSearchResult =
 					_organizationLocalService.searchOrganizations(
 						user.getCompanyId(),
 						OrganizationConstants.ANY_PARENT_ORGANIZATION_ID, null,
-						organizationParams, QueryUtil.ALL_POS,
-						QueryUtil.ALL_POS, null);
+						LinkedHashMapBuilder.<String, Object>put(
+							"accountsOrgsTree",
+							ListUtil.filter(
+								user.getOrganizations(true),
+								organization -> _hasManageAccountsPermission(
+									permissionChecker, organization))
+						).build(),
+						QueryUtil.ALL_POS, QueryUtil.ALL_POS, null);
 
 				if (baseModelSearchResult.getLength() == 0) {
 					return new BaseModelSearchResult<>(

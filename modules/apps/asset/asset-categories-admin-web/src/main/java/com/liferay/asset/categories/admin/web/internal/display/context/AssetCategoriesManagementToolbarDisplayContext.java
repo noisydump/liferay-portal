@@ -184,12 +184,12 @@ public class AssetCategoriesManagementToolbarDisplayContext
 		).add(
 			_assetCategoriesDisplayContext::isFlattenedNavigationAllowed,
 			dropdownItem -> {
-				dropdownItem.setActive(_isNavigationCategory());
 				dropdownItem.putData("action", "selectCategory");
 				dropdownItem.putData(
 					"categoriesSelectorURL", _getCategoriesSelectorURL());
 				dropdownItem.putData(
 					"viewCategoriesURL", _getViewCategoriesURL());
+				dropdownItem.setActive(_isNavigationCategory());
 				dropdownItem.setLabel(LanguageUtil.get(request, "category"));
 			}
 		).build();
@@ -247,10 +247,10 @@ public class AssetCategoriesManagementToolbarDisplayContext
 		return portletURL.toString();
 	}
 
-	private String _getViewCategoriesURL() {
+	private String _getViewCategoriesURL() throws PortalException {
 		PortletURL portletURL = liferayPortletResponse.createRenderURL();
 
-		portletURL.setParameter("mvcPath", "/view_categories.jsp");
+		portletURL.setParameter("mvcPath", "/view.jsp");
 		portletURL.setParameter("navigation", "category");
 		portletURL.setParameter(
 			"vocabularyId",

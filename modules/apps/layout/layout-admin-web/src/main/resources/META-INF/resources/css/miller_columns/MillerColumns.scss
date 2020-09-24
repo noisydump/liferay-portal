@@ -34,10 +34,10 @@
 	padding: 1rem;
 	position: relative;
 
-	&.active {
+	&--active {
 		background-color: $light-l1;
 
-		&.autofit-row {
+		&.miller-columns-item.autofit-row {
 			margin-top: 1px;
 		}
 	}
@@ -110,9 +110,21 @@
 	.list-group-title .text-truncate {
 		z-index: 2;
 	}
+
+	.list-group-subtitle .label {
+		flex-shrink: 2;
+
+		.label-item {
+			display: block;
+			overflow: hidden;
+			text-overflow: ellipsis;
+			white-space: nowrap;
+		}
+	}
 }
 
-.show-quick-actions-on-hover .miller-columns-item:not(.active) {
+.show-quick-actions-on-hover
+	.miller-columns-item:not(.miller-columns-item--active) {
 	&:hover {
 		.miller-columns-item-quick-action {
 			display: flex;

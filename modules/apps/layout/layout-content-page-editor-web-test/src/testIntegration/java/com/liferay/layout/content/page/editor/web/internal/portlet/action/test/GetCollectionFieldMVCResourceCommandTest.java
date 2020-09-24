@@ -25,6 +25,7 @@ import com.liferay.info.list.provider.item.selector.criterion.InfoListProviderIt
 import com.liferay.info.pagination.Pagination;
 import com.liferay.info.sort.Sort;
 import com.liferay.item.selector.criteria.InfoListItemSelectorReturnType;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.orm.QueryDefinition;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.json.JSONArray;
@@ -41,10 +42,12 @@ import com.liferay.portal.kernel.test.rule.Sync;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
+import com.liferay.portal.kernel.util.LocaleThreadLocal;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.UnicodeProperties;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
+import com.liferay.portal.search.test.util.SearchTestRule;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
@@ -55,6 +58,9 @@ import com.liferay.registry.ServiceRegistration;
 import java.util.List;
 import java.util.Locale;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -62,6 +68,9 @@ import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+
+import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.mock.web.MockHttpServletResponse;
 
 /**
  * @author Víctor Galán
@@ -91,7 +100,13 @@ public class GetCollectionFieldMVCResourceCommandTest {
 		Registry registry = RegistryUtil.getRegistry();
 
 		_infoListProviderServiceRegistration = registry.registerService(
-			InfoListProvider.class, new TestInfoListProvider());
+			(Class<InfoListProvider<?>>)(Class<?>)InfoListProvider.class,
+			new TestInfoListProvider());
+
+		_originalThemeDisplayDefaultLocale =
+			LocaleThreadLocal.getThemeDisplayLocale();
+
+		LocaleThreadLocal.setThemeDisplayLocale(LocaleUtil.US);
 	}
 
 	@After
@@ -101,6 +116,9 @@ public class GetCollectionFieldMVCResourceCommandTest {
 		if (_infoListProviderServiceRegistration != null) {
 			_infoListProviderServiceRegistration.unregister();
 		}
+
+		LocaleThreadLocal.setThemeDisplayLocale(
+			_originalThemeDisplayDefaultLocale);
 	}
 
 	@Test
@@ -119,8 +137,15 @@ public class GetCollectionFieldMVCResourceCommandTest {
 
 		JSONObject jsonObject = ReflectionTestUtil.invoke(
 			_mvcResourceCommand, "_getCollectionFieldsJSONObject",
-			new Class<?>[] {String.class, Locale.class, long.class, int.class},
-			layoutObjectReferenceJSONObject.toString(), LocaleUtil.US, 0, 1);
+			new Class<?>[] {
+				HttpServletRequest.class, HttpServletResponse.class,
+				String.class, String.class, String.class, String.class,
+				String.class, long.class, int.class
+			},
+			new MockHttpServletRequest(), new MockHttpServletResponse(),
+			LocaleUtil.toLanguageId(LocaleUtil.US),
+			layoutObjectReferenceJSONObject.toString(), StringPool.BLANK,
+			StringPool.BLANK, StringPool.BLANK, 0, 1);
 
 		Assert.assertEquals(1, jsonObject.getInt("length"));
 
@@ -128,9 +153,10 @@ public class GetCollectionFieldMVCResourceCommandTest {
 
 		Assert.assertEquals(1, jsonArray.length());
 
-		JSONObject item = jsonArray.getJSONObject(0);
+		JSONObject itemJSONObject = jsonArray.getJSONObject(0);
 
-		Assert.assertEquals(blogsEntry.getTitle(), item.getString("title"));
+		Assert.assertEquals(
+			blogsEntry.getTitle(), itemJSONObject.getString("title"));
 	}
 
 	@Test
@@ -158,8 +184,15 @@ public class GetCollectionFieldMVCResourceCommandTest {
 
 		JSONObject jsonObject = ReflectionTestUtil.invoke(
 			_mvcResourceCommand, "_getCollectionFieldsJSONObject",
-			new Class<?>[] {String.class, Locale.class, long.class, int.class},
-			layoutObjectReferenceJSONObject.toString(), LocaleUtil.US, 0, 2);
+			new Class<?>[] {
+				HttpServletRequest.class, HttpServletResponse.class,
+				String.class, String.class, String.class, String.class,
+				String.class, long.class, int.class
+			},
+			new MockHttpServletRequest(), new MockHttpServletResponse(),
+			LocaleUtil.toLanguageId(LocaleUtil.US),
+			layoutObjectReferenceJSONObject.toString(), StringPool.BLANK,
+			StringPool.BLANK, StringPool.BLANK, 0, 2);
 
 		Assert.assertEquals(2, jsonObject.getInt("length"));
 
@@ -167,13 +200,15 @@ public class GetCollectionFieldMVCResourceCommandTest {
 
 		Assert.assertEquals(2, jsonArray.length());
 
-		JSONObject item1 = jsonArray.getJSONObject(0);
+		JSONObject itemJSONObject1 = jsonArray.getJSONObject(0);
 
-		Assert.assertEquals(blogsEntry1.getTitle(), item1.getString("title"));
+		Assert.assertEquals(
+			blogsEntry1.getTitle(), itemJSONObject1.getString("title"));
 
-		JSONObject item2 = jsonArray.getJSONObject(1);
+		JSONObject itemJSONObject2 = jsonArray.getJSONObject(1);
 
-		Assert.assertEquals(blogsEntry2.getTitle(), item2.getString("title"));
+		Assert.assertEquals(
+			blogsEntry2.getTitle(), itemJSONObject2.getString("title"));
 	}
 
 	@Test
@@ -203,8 +238,15 @@ public class GetCollectionFieldMVCResourceCommandTest {
 
 		JSONObject jsonObject = ReflectionTestUtil.invoke(
 			_mvcResourceCommand, "_getCollectionFieldsJSONObject",
-			new Class<?>[] {String.class, Locale.class, long.class, int.class},
-			layoutObjectReferenceJSONObject.toString(), LocaleUtil.US, 0, 1);
+			new Class<?>[] {
+				HttpServletRequest.class, HttpServletResponse.class,
+				String.class, String.class, String.class, String.class,
+				String.class, long.class, int.class
+			},
+			new MockHttpServletRequest(), new MockHttpServletResponse(),
+			LocaleUtil.toLanguageId(LocaleUtil.US),
+			layoutObjectReferenceJSONObject.toString(), StringPool.BLANK,
+			StringPool.BLANK, StringPool.BLANK, 0, 1);
 
 		Assert.assertEquals(2, jsonObject.getInt("length"));
 
@@ -212,10 +254,14 @@ public class GetCollectionFieldMVCResourceCommandTest {
 
 		Assert.assertEquals(1, jsonArray.length());
 
-		JSONObject item1 = jsonArray.getJSONObject(0);
+		JSONObject itemJSONObject = jsonArray.getJSONObject(0);
 
-		Assert.assertEquals(blogsEntry.getTitle(), item1.getString("title"));
+		Assert.assertEquals(
+			blogsEntry.getTitle(), itemJSONObject.getString("title"));
 	}
+
+	@Rule
+	public SearchTestRule searchTestRule = new SearchTestRule();
 
 	private BlogsEntry _addBlogsEntry() throws Exception {
 		return _blogsEntryLocalService.addEntry(
@@ -248,11 +294,13 @@ public class GetCollectionFieldMVCResourceCommandTest {
 	@DeleteAfterTestRun
 	private Group _group;
 
-	private ServiceRegistration<InfoListProvider>
+	private ServiceRegistration<InfoListProvider<?>>
 		_infoListProviderServiceRegistration;
 
 	@Inject(filter = "mvc.command.name=/content_layout/get_collection_field")
 	private MVCResourceCommand _mvcResourceCommand;
+
+	private Locale _originalThemeDisplayDefaultLocale;
 
 	@Inject
 	private Portal _portal;

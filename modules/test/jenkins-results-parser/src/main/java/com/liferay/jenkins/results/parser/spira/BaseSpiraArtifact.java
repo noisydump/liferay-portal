@@ -50,21 +50,21 @@ public abstract class BaseSpiraArtifact implements SpiraArtifact {
 		return (String)_getClassField(spiraArtifactClass, "ARTIFACT_TYPE_NAME");
 	}
 
-	public static String getIDKey(
+	public static String getKeyID(
 		Class<? extends SpiraArtifact> spiraArtifactClass) {
 
-		return (String)_getClassField(spiraArtifactClass, "ID_KEY");
+		return (String)_getClassField(spiraArtifactClass, "KEY_ID");
 	}
 
 	@Override
-	public boolean equals(Object o) {
-		if (!Objects.equals(getClass(), o.getClass())) {
+	public boolean equals(Object object) {
+		if (!Objects.equals(getClass(), object.getClass())) {
 			return false;
 		}
 
-		SpiraArtifact spiraArtifact = (SpiraArtifact)o;
+		SpiraArtifact spiraArtifact = (SpiraArtifact)object;
 
-		if (!(o instanceof SpiraProject)) {
+		if (!(object instanceof SpiraProject)) {
 			SpiraProject spiraProject = spiraArtifact.getSpiraProject();
 
 			if (!spiraProject.equals(getSpiraProject())) {
@@ -81,7 +81,7 @@ public abstract class BaseSpiraArtifact implements SpiraArtifact {
 
 	@Override
 	public int getID() {
-		return jsonObject.getInt(getIDKey(getClass()));
+		return jsonObject.getInt(getKeyID(getClass()));
 	}
 
 	@Override
@@ -96,7 +96,7 @@ public abstract class BaseSpiraArtifact implements SpiraArtifact {
 		}
 
 		return SpiraProject.getSpiraProjectByID(
-			jsonObject.getInt(SpiraProject.ID_KEY));
+			jsonObject.getInt(SpiraProject.KEY_ID));
 	}
 
 	@Override
@@ -137,6 +137,50 @@ public abstract class BaseSpiraArtifact implements SpiraArtifact {
 		}
 	}
 
+	protected static void clearCachedSpiraArtifacts(
+		Class<? extends SpiraArtifact> spiraArtifactClass) {
+
+		int cachedSpiraArtifactCount = 0;
+
+		synchronized (_idSpiraArtifactsMap) {
+			Map<Integer, SpiraArtifact> idSpiraArtifactsMap =
+				_getIDSpiraArtifactsMap(spiraArtifactClass);
+
+			cachedSpiraArtifactCount += idSpiraArtifactsMap.size();
+
+			idSpiraArtifactsMap.clear();
+		}
+
+		synchronized (_indentLevelSpiraArtifactsMap) {
+			Map<String, IndentLevelSpiraArtifact> indentLevelSpiraArtifactsMap =
+				_getIndentLevelSpiraArtifactsMap(spiraArtifactClass);
+
+			cachedSpiraArtifactCount += indentLevelSpiraArtifactsMap.size();
+
+			indentLevelSpiraArtifactsMap.clear();
+		}
+
+		synchronized (_pathSpiraArtifactsMap) {
+			Map<String, PathSpiraArtifact> pathSpiraArtifactsMap =
+				_getPathSpiraArtifactsMap(spiraArtifactClass);
+
+			cachedSpiraArtifactCount += pathSpiraArtifactsMap.size();
+
+			pathSpiraArtifactsMap.clear();
+		}
+
+		String artifactTypeName = getArtifactTypeName(spiraArtifactClass);
+
+		System.out.println(
+			JenkinsResultsParserUtil.combine(
+				"Cleared ", String.valueOf(cachedSpiraArtifactCount),
+				" cached ",
+				JenkinsResultsParserUtil.getNounForm(
+					cachedSpiraArtifactCount, artifactTypeName + "s",
+					artifactTypeName),
+				" from memory."));
+	}
+
 	protected static <S extends SpiraArtifact> List<S> getSpiraArtifacts(
 		Class<S> spiraArtifactClass,
 		Supplier<List<JSONObject>> spiraArtifactSupplier,
@@ -154,14 +198,14 @@ public abstract class BaseSpiraArtifact implements SpiraArtifact {
 		SearchQuery<S> searchQuery = new SearchQuery<>(
 			spiraArtifactClass, searchParameters);
 
-		String idKey = getIDKey(spiraArtifactClass);
+		String keyID = getKeyID(spiraArtifactClass);
 
-		if (searchQuery.hasSearchParameter(idKey)) {
+		if (searchQuery.hasSearchParameter(keyID)) {
 			Map<Integer, SpiraArtifact> idSpiraArtifactsMap =
 				_getIDSpiraArtifactsMap(spiraArtifactClass);
 
 			SearchQuery.SearchParameter searchParameter =
-				searchQuery.getSearchParameter(idKey);
+				searchQuery.getSearchParameter(keyID);
 
 			Integer id = (Integer)searchParameter.getValue();
 

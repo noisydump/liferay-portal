@@ -18,13 +18,14 @@ import com.liferay.asset.kernel.AssetRendererFactoryRegistryUtil;
 import com.liferay.asset.kernel.model.AssetRenderer;
 import com.liferay.asset.kernel.model.AssetRendererFactory;
 import com.liferay.journal.constants.JournalActivityKeys;
+import com.liferay.journal.constants.JournalArticleConstants;
 import com.liferay.journal.constants.JournalPortletKeys;
 import com.liferay.journal.exception.NoSuchArticleException;
 import com.liferay.journal.model.JournalArticle;
-import com.liferay.journal.model.JournalArticleConstants;
 import com.liferay.journal.model.JournalFolder;
 import com.liferay.journal.service.JournalArticleLocalService;
 import com.liferay.journal.web.internal.util.JournalResourceBundleLoader;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.portlet.LiferayPortletRequest;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
@@ -75,11 +76,11 @@ public class JournalArticleActivityInterpreter
 			if ((liferayPortletRequest != null) &&
 				(liferayPortletResponse != null)) {
 
-				AssetRendererFactory journalArticleAssetRendererFactory =
+				AssetRendererFactory<?> journalArticleAssetRendererFactory =
 					AssetRendererFactoryRegistryUtil.
 						getAssetRendererFactoryByClass(JournalArticle.class);
 
-				AssetRenderer journalArticleAssetRenderer =
+				AssetRenderer<?> journalArticleAssetRenderer =
 					journalArticleAssetRendererFactory.getAssetRenderer(
 						activity.getClassPK());
 
@@ -98,11 +99,10 @@ public class JournalArticleActivityInterpreter
 				String groupFriendlyURL = _portal.getGroupFriendlyURL(
 					layout.getLayoutSet(), serviceContext.getThemeDisplay());
 
-				return groupFriendlyURL.concat(
-					JournalArticleConstants.CANONICAL_URL_SEPARATOR
-				).concat(
-					article.getUrlTitle()
-				);
+				return StringBundler.concat(
+					groupFriendlyURL,
+					JournalArticleConstants.CANONICAL_URL_SEPARATOR,
+					article.getUrlTitle());
 			}
 
 			return null;

@@ -32,6 +32,10 @@ public interface DataLayoutBuilderDefinition {
 		return false;
 	}
 
+	public default boolean allowNestedFields() {
+		return true;
+	}
+
 	public default boolean allowRules() {
 		return false;
 	}
@@ -68,8 +72,8 @@ public interface DataLayoutBuilderDefinition {
 
 	public default String[] getUnimplementedProperties() {
 		return new String[] {
-			"fieldNamespace", "indexType", "localizable", "readOnly", "type",
-			"validation", "visibilityExpression"
+			"fieldNamespace", "indexType", "readOnly", "validation",
+			"visibilityExpression"
 		};
 	}
 

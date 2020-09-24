@@ -20,11 +20,11 @@
 JournalArticleDisplay articleDisplay = journalDisplayContext.getArticleDisplay();
 %>
 
-<clay:container
-	className="mt-2"
+<clay:container-fluid
+	cssClass="mt-2"
 >
 	<%= articleDisplay.getContent() %>
-</clay:container>
+</clay:container-fluid>
 
 <c:if test="<%= articleDisplay.isPaginate() %>">
 

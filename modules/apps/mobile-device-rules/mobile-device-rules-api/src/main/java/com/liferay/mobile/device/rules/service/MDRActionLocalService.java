@@ -67,7 +67,7 @@ public interface MDRActionLocalService
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this interface directly. Always use {@link MDRActionLocalServiceUtil} to access the mdr action local service. Add custom service methods to <code>com.liferay.mobile.device.rules.service.impl.MDRActionLocalServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface.
+	 * Never modify this interface directly. Add custom service methods to <code>com.liferay.mobile.device.rules.service.impl.MDRActionLocalServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface. Consume the mdr action local service via injection or a <code>org.osgi.util.tracker.ServiceTracker</code>. Use {@link MDRActionLocalServiceUtil} if injection and service tracking are not available.
 	 */
 	public MDRAction addAction(
 			long ruleGroupInstanceId, Map<Locale, String> nameMap,
@@ -84,6 +84,10 @@ public interface MDRActionLocalService
 
 	/**
 	 * Adds the mdr action to the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect MDRActionLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param mdrAction the mdr action
 	 * @return the mdr action that was added
@@ -116,6 +120,10 @@ public interface MDRActionLocalService
 	/**
 	 * Deletes the mdr action with the primary key from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect MDRActionLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param actionId the primary key of the mdr action
 	 * @return the mdr action that was removed
 	 * @throws PortalException if a mdr action with the primary key could not be found
@@ -125,6 +133,10 @@ public interface MDRActionLocalService
 
 	/**
 	 * Deletes the mdr action from the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect MDRActionLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param mdrAction the mdr action
 	 * @return the mdr action that was removed
@@ -240,7 +252,7 @@ public interface MDRActionLocalService
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<MDRAction> getActions(
 		long ruleGroupInstanceId, int start, int end,
-		OrderByComparator<MDRAction> obc);
+		OrderByComparator<MDRAction> orderByComparator);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public int getActionsCount(long ruleGroupInstanceId);
@@ -352,6 +364,10 @@ public interface MDRActionLocalService
 
 	/**
 	 * Updates the mdr action in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect MDRActionLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param mdrAction the mdr action
 	 * @return the mdr action that was updated

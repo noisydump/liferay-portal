@@ -14,11 +14,11 @@
 
 package com.liferay.layout.type.controller.display.page.internal.display.context;
 
-import com.liferay.asset.display.page.constants.AssetDisplayPageWebKeys;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemListBuilder;
-import com.liferay.info.display.contributor.InfoDisplayObjectProvider;
 import com.liferay.info.display.url.provider.InfoEditURLProvider;
+import com.liferay.layout.display.page.LayoutDisplayPageObjectProvider;
+import com.liferay.layout.display.page.constants.LayoutDisplayPageWebKeys;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
@@ -43,23 +43,23 @@ import javax.servlet.http.HttpServletRequest;
 public class EditDisplayPageMenuDisplayContext {
 
 	public EditDisplayPageMenuDisplayContext(
-		HttpServletRequest httpServletRequest) {
+		HttpServletRequest httpServletRequest,
+		InfoEditURLProvider<Object> infoEditURLProvider) {
 
 		_httpServletRequest = httpServletRequest;
+		_infoEditURLProvider = infoEditURLProvider;
 
-		_infoDisplayObjectProvider =
-			(InfoDisplayObjectProvider)httpServletRequest.getAttribute(
-				AssetDisplayPageWebKeys.INFO_DISPLAY_OBJECT_PROVIDER);
-		_infoEditURLProvider =
-			(InfoEditURLProvider)httpServletRequest.getAttribute(
-				AssetDisplayPageWebKeys.INFO_EDIT_URL_PROVIDER);
+		_layoutDisplayPageObjectProvider =
+			(LayoutDisplayPageObjectProvider<?>)httpServletRequest.getAttribute(
+				LayoutDisplayPageWebKeys.LAYOUT_DISPLAY_PAGE_OBJECT_PROVIDER);
 		_themeDisplay = (ThemeDisplay)_httpServletRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
 	}
 
 	public List<DropdownItem> getDropdownItems() throws Exception {
 		String editURL = _infoEditURLProvider.getURL(
-			_infoDisplayObjectProvider.getDisplayObject(), _httpServletRequest);
+			_layoutDisplayPageObjectProvider.getDisplayObject(),
+			_httpServletRequest);
 
 		return DropdownItemListBuilder.add(
 			() ->
@@ -69,7 +69,7 @@ public class EditDisplayPageMenuDisplayContext {
 				dropdownItem.setLabel(
 					LanguageUtil.format(
 						_httpServletRequest, "edit-x",
-						_infoDisplayObjectProvider.getTitle(
+						_layoutDisplayPageObjectProvider.getTitle(
 							_themeDisplay.getLocale())));
 			}
 		).add(
@@ -77,8 +77,7 @@ public class EditDisplayPageMenuDisplayContext {
 				_themeDisplay.getPermissionChecker(), _themeDisplay.getLayout(),
 				ActionKeys.UPDATE),
 			dropdownItem -> {
-				Layout draftLayout = LayoutLocalServiceUtil.fetchLayout(
-					PortalUtil.getClassNameId(Layout.class),
+				Layout draftLayout = LayoutLocalServiceUtil.fetchDraftLayout(
 					_themeDisplay.getPlid());
 
 				String editLayoutURL = PortalUtil.getLayoutFullURL(
@@ -104,8 +103,9 @@ public class EditDisplayPageMenuDisplayContext {
 	}
 
 	private final HttpServletRequest _httpServletRequest;
-	private final InfoDisplayObjectProvider _infoDisplayObjectProvider;
-	private final InfoEditURLProvider _infoEditURLProvider;
+	private final InfoEditURLProvider<Object> _infoEditURLProvider;
+	private final LayoutDisplayPageObjectProvider<?>
+		_layoutDisplayPageObjectProvider;
 	private final ThemeDisplay _themeDisplay;
 
 }

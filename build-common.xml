@@ -837,6 +837,7 @@ information.
 
 					<exec dir="@{dir}" executable="${project.dir}/gradlew${gradlew.suffix}" failonerror="@{failonerror}">
 						<arg if:set="env.JENKINS_HOME" value="--max-workers=${gradle.ci.max.workers}" />
+						<arg unless:true="${gradle.build.parallel.enabled}" value="--no-parallel" />
 						<arg if:true="${gradle.profile.enabled}" value="--profile" />
 						<arg if:set="env.JENKINS_HOME" value="--profile" />
 						<arg value="--project-cache-dir=${project.dir}/.gradle" />
@@ -955,6 +956,7 @@ information.
 							<exec dir="@{dir}" executable="${project.dir}/gradlew${gradlew.suffix}" failonerror="@{failonerror}">
 								<args />
 								<arg if:set="env.JENKINS_HOME" value="--max-workers=${gradle.ci.max.workers}" />
+								<arg unless:true="${gradle.build.parallel.enabled}" value="--no-parallel" />
 								<arg if:true="${gradle.profile.enabled}" value="--profile" />
 								<arg if:set="env.JENKINS_HOME" value="--profile" />
 								<arg value="--project-cache-dir=${project.dir}/.gradle" />
@@ -990,6 +992,7 @@ information.
 								<exec dir="@{dir}" executable="${project.dir}/gradlew${gradlew.suffix}" failonerror="@{failonerror}">
 									<args />
 									<arg if:set="env.JENKINS_HOME" value="--max-workers=${gradle.ci.max.workers}" />
+									<arg unless:true="${gradle.build.parallel.enabled}" value="--no-parallel" />
 									<arg if:true="${gradle.profile.enabled}" value="--profile" />
 									<arg if:set="env.JENKINS_HOME" value="--profile" />
 									<arg value="--project-cache-dir=${project.dir}/.gradle" />
@@ -1502,8 +1505,19 @@ information.
 								<arg value="." />
 							</exec>
 
+							<loadresource property="remote.repository.cdn.url">
+								<filterchain>
+									<tokenfilter>
+										<filetokenizer />
+
+										<replacestring from="repository.liferay.com" to="repository-cdn.liferay.com" />
+									</tokenfilter>
+								</filterchain>
+								<propertyresource name="remote.repository.url" />
+							</loadresource>
+
 							<echo file="${project.dir}/modules/.releng/${artifact.name}.properties">artifact.git.id=${artifact.git.id}
-artifact.url=${remote.repository.url}/com/liferay/portal/com.liferay.${processed.artifact.name}/${artifact.version}/com.liferay.${processed.artifact.name}-${artifact.version}.@{packaging}</echo>
+artifact.url=${remote.repository.cdn.url}/com/liferay/portal/com.liferay.${processed.artifact.name}/${artifact.version}/com.liferay.${processed.artifact.name}-${artifact.version}.@{packaging}</echo>
 
 							<exec dir="${project.dir}/modules/.releng" executable="git" failonerror="true">
 								<arg value="add" />
@@ -1683,6 +1697,75 @@ artifact.url=${remote.repository.url}/com/liferay/portal/com.liferay.${processed
 		</sequential>
 	</macrodef>
 
+	<macrodef name="setup-dxp-app">
+		<attribute name="dxp.app.name" />
+		<attribute name="dxp.app.version" />
+
+		<sequential>
+			<gradle-execute outputproperty="dxp.app.zip.file" setupbinariescache="false" task="printDependencyPath">
+				<arg value="--build-file=${project.dir}/modules/util.gradle" />
+				<arg value="--quiet" />
+				<arg value="-Dorg.gradle.internal.launcher.welcomeMessageEnabled=false" />
+				<arg value="-PdependencyNotation=com.liferay.portal:com.liferay.portal.dxp.apps.@{dxp.app.name}:@{dxp.app.version}" />
+			</gradle-execute>
+
+			<propertyregex
+				input="${dxp.app.zip.file}"
+				override="true"
+				property="dxp.app.zip.file"
+				regexp="(.*$)"
+				select="\1"
+			/>
+
+			<dirname file="${dxp.app.zip.file}" property="dxp.app.zip.dir" />
+
+			<if>
+				<not>
+					<uptodate>
+						<mapper
+							to="${project.dir}/modules/dxp/@{dxp.app.name}"
+							type="merge"
+						/>
+						<srcfiles dir="${dxp.app.zip.dir}" includes="com.liferay.portal.dxp.apps.@{dxp.app.name}-@{dxp.app.version}.zip" />
+					</uptodate>
+				</not>
+				<then>
+					<delete dir="${project.dir}/modules/.releng/dxp/apps/@{dxp.app.name}" />
+
+					<unzip
+						dest="${project.dir}/modules/.releng/dxp/apps"
+						src="${dxp.app.zip.dir}/com.liferay.portal.dxp.apps.@{dxp.app.name}-@{dxp.app.version}.zip"
+					>
+						<mapper
+							from="com.liferay.portal.dxp.apps.@{dxp.app.name}-@{dxp.app.version}/.releng/*"
+							to="@{dxp.app.name}/*"
+							type="glob"
+						/>
+						<patternset>
+							<include name="com.liferay.portal.dxp.apps.@{dxp.app.name}-@{dxp.app.version}/.releng/**" />
+						</patternset>
+					</unzip>
+
+					<delete dir="${project.dir}/modules/dxp/apps/@{dxp.app.name}" />
+
+					<unzip
+						dest="${project.dir}/modules/dxp/apps"
+						src="${dxp.app.zip.dir}/com.liferay.portal.dxp.apps.@{dxp.app.name}-@{dxp.app.version}.zip"
+					>
+						<mapper
+							from="com.liferay.portal.dxp.apps.@{dxp.app.name}-@{dxp.app.version}/apps/*"
+							to="@{dxp.app.name}/*"
+							type="glob"
+						/>
+						<patternset>
+							<include name="com.liferay.portal.dxp.apps.@{dxp.app.name}-@{dxp.app.version}/apps/**" />
+						</patternset>
+					</unzip>
+				</then>
+			</if>
+		</sequential>
+	</macrodef>
+
 	<macrodef name="setup-libs">
 		<sequential>
 			<gradle-execute task="setUpLibs">
@@ -1740,7 +1823,7 @@ artifact.url=${remote.repository.url}/com/liferay/portal/com.liferay.${processed
 				</then>
 			</if>
 
-			<update-gradle-properties />
+			<antcall inheritAll="false" target="update-gradle-properties" />
 
 			<gradle-execute setupbinariescache="@{setupbinariescache}" task="setUpPortalTools">
 				<arg value="--build-file=${project.dir}/modules/util.gradle" />
@@ -1837,7 +1920,7 @@ artifact.url=${remote.repository.url}/com/liferay/portal/com.liferay.${processed
 					</gradle-execute>
 
 					<retry retrycount="5" retrydelay="10000">
-						<gradle-execute dir="${project.dir}/modules" task=":yarnInstall" />
+						<gradle-execute dir="${project.dir}/modules" task=":portalYarnInstall" />
 					</retry>
 
 					<if>

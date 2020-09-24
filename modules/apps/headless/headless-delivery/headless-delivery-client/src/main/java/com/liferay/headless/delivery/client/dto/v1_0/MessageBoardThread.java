@@ -329,6 +329,27 @@ public class MessageBoardThread implements Cloneable {
 
 	protected String[] keywords;
 
+	public Boolean getLocked() {
+		return locked;
+	}
+
+	public void setLocked(Boolean locked) {
+		this.locked = locked;
+	}
+
+	public void setLocked(
+		UnsafeSupplier<Boolean, Exception> lockedUnsafeSupplier) {
+
+		try {
+			locked = lockedUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected Boolean locked;
+
 	public Long getMessageBoardSectionId() {
 		return messageBoardSectionId;
 	}
@@ -421,6 +442,25 @@ public class MessageBoardThread implements Cloneable {
 	}
 
 	protected RelatedContent[] relatedContents;
+
+	public Boolean getSeen() {
+		return seen;
+	}
+
+	public void setSeen(Boolean seen) {
+		this.seen = seen;
+	}
+
+	public void setSeen(UnsafeSupplier<Boolean, Exception> seenUnsafeSupplier) {
+		try {
+			seen = seenUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected Boolean seen;
 
 	public Boolean getShowAsQuestion() {
 		return showAsQuestion;

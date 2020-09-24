@@ -33,6 +33,8 @@ import java.util.Set;
 
 import javax.annotation.Generated;
 
+import javax.validation.Valid;
+
 import javax.xml.bind.annotation.XmlRootElement;
 
 /**
@@ -48,6 +50,65 @@ public class PageRowDefinition {
 	public static PageRowDefinition toDTO(String json) {
 		return ObjectMapperUtil.readValue(PageRowDefinition.class, json);
 	}
+
+	@Schema
+	@Valid
+	public FragmentStyle getFragmentStyle() {
+		return fragmentStyle;
+	}
+
+	public void setFragmentStyle(FragmentStyle fragmentStyle) {
+		this.fragmentStyle = fragmentStyle;
+	}
+
+	@JsonIgnore
+	public void setFragmentStyle(
+		UnsafeSupplier<FragmentStyle, Exception> fragmentStyleUnsafeSupplier) {
+
+		try {
+			fragmentStyle = fragmentStyleUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected FragmentStyle fragmentStyle;
+
+	@Schema
+	@Valid
+	public FragmentViewport[] getFragmentViewports() {
+		return fragmentViewports;
+	}
+
+	public void setFragmentViewports(FragmentViewport[] fragmentViewports) {
+		this.fragmentViewports = fragmentViewports;
+	}
+
+	@JsonIgnore
+	public void setFragmentViewports(
+		UnsafeSupplier<FragmentViewport[], Exception>
+			fragmentViewportsUnsafeSupplier) {
+
+		try {
+			fragmentViewports = fragmentViewportsUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected FragmentViewport[] fragmentViewports;
 
 	@Schema
 	public Boolean getGutters() {
@@ -78,6 +139,34 @@ public class PageRowDefinition {
 	protected Boolean gutters;
 
 	@Schema
+	public Integer getModulesPerRow() {
+		return modulesPerRow;
+	}
+
+	public void setModulesPerRow(Integer modulesPerRow) {
+		this.modulesPerRow = modulesPerRow;
+	}
+
+	@JsonIgnore
+	public void setModulesPerRow(
+		UnsafeSupplier<Integer, Exception> modulesPerRowUnsafeSupplier) {
+
+		try {
+			modulesPerRow = modulesPerRowUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected Integer modulesPerRow;
+
+	@Schema
 	public Integer getNumberOfColumns() {
 		return numberOfColumns;
 	}
@@ -104,6 +193,126 @@ public class PageRowDefinition {
 	@GraphQLField
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected Integer numberOfColumns;
+
+	@Schema
+	public Boolean getReverseOrder() {
+		return reverseOrder;
+	}
+
+	public void setReverseOrder(Boolean reverseOrder) {
+		this.reverseOrder = reverseOrder;
+	}
+
+	@JsonIgnore
+	public void setReverseOrder(
+		UnsafeSupplier<Boolean, Exception> reverseOrderUnsafeSupplier) {
+
+		try {
+			reverseOrder = reverseOrderUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected Boolean reverseOrder;
+
+	@Schema(
+		description = "Deprecated as of Athanasius (7.3.x), replaced by rowViewports"
+	)
+	@Valid
+	public RowViewportConfig getRowViewportConfig() {
+		return rowViewportConfig;
+	}
+
+	public void setRowViewportConfig(RowViewportConfig rowViewportConfig) {
+		this.rowViewportConfig = rowViewportConfig;
+	}
+
+	@JsonIgnore
+	public void setRowViewportConfig(
+		UnsafeSupplier<RowViewportConfig, Exception>
+			rowViewportConfigUnsafeSupplier) {
+
+		try {
+			rowViewportConfig = rowViewportConfigUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@Deprecated
+	@GraphQLField(
+		description = "Deprecated as of Athanasius (7.3.x), replaced by rowViewports"
+	)
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected RowViewportConfig rowViewportConfig;
+
+	@Schema
+	@Valid
+	public RowViewport[] getRowViewports() {
+		return rowViewports;
+	}
+
+	public void setRowViewports(RowViewport[] rowViewports) {
+		this.rowViewports = rowViewports;
+	}
+
+	@JsonIgnore
+	public void setRowViewports(
+		UnsafeSupplier<RowViewport[], Exception> rowViewportsUnsafeSupplier) {
+
+		try {
+			rowViewports = rowViewportsUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected RowViewport[] rowViewports;
+
+	@Schema
+	public String getVerticalAlignment() {
+		return verticalAlignment;
+	}
+
+	public void setVerticalAlignment(String verticalAlignment) {
+		this.verticalAlignment = verticalAlignment;
+	}
+
+	@JsonIgnore
+	public void setVerticalAlignment(
+		UnsafeSupplier<String, Exception> verticalAlignmentUnsafeSupplier) {
+
+		try {
+			verticalAlignment = verticalAlignmentUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected String verticalAlignment;
 
 	@Override
 	public boolean equals(Object object) {
@@ -132,6 +341,36 @@ public class PageRowDefinition {
 
 		sb.append("{");
 
+		if (fragmentStyle != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"fragmentStyle\": ");
+
+			sb.append(String.valueOf(fragmentStyle));
+		}
+
+		if (fragmentViewports != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"fragmentViewports\": ");
+
+			sb.append("[");
+
+			for (int i = 0; i < fragmentViewports.length; i++) {
+				sb.append(String.valueOf(fragmentViewports[i]));
+
+				if ((i + 1) < fragmentViewports.length) {
+					sb.append(", ");
+				}
+			}
+
+			sb.append("]");
+		}
+
 		if (gutters != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -142,6 +381,16 @@ public class PageRowDefinition {
 			sb.append(gutters);
 		}
 
+		if (modulesPerRow != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"modulesPerRow\": ");
+
+			sb.append(modulesPerRow);
+		}
+
 		if (numberOfColumns != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -150,6 +399,60 @@ public class PageRowDefinition {
 			sb.append("\"numberOfColumns\": ");
 
 			sb.append(numberOfColumns);
+		}
+
+		if (reverseOrder != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"reverseOrder\": ");
+
+			sb.append(reverseOrder);
+		}
+
+		if (rowViewportConfig != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"rowViewportConfig\": ");
+
+			sb.append(String.valueOf(rowViewportConfig));
+		}
+
+		if (rowViewports != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"rowViewports\": ");
+
+			sb.append("[");
+
+			for (int i = 0; i < rowViewports.length; i++) {
+				sb.append(String.valueOf(rowViewports[i]));
+
+				if ((i + 1) < rowViewports.length) {
+					sb.append(", ");
+				}
+			}
+
+			sb.append("]");
+		}
+
+		if (verticalAlignment != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"verticalAlignment\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(verticalAlignment));
+
+			sb.append("\"");
 		}
 
 		sb.append("}");
@@ -167,6 +470,16 @@ public class PageRowDefinition {
 		String string = String.valueOf(object);
 
 		return string.replaceAll("\"", "\\\\\"");
+	}
+
+	private static boolean _isArray(Object value) {
+		if (value == null) {
+			return false;
+		}
+
+		Class<?> clazz = value.getClass();
+
+		return clazz.isArray();
 	}
 
 	private static String _toJSON(Map<String, ?> map) {
@@ -187,9 +500,7 @@ public class PageRowDefinition {
 
 			Object value = entry.getValue();
 
-			Class<?> clazz = value.getClass();
-
-			if (clazz.isArray()) {
+			if (_isArray(value)) {
 				sb.append("[");
 
 				Object[] valueArray = (Object[])value;

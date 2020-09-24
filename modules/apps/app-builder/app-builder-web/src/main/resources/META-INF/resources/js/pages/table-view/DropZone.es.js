@@ -13,6 +13,7 @@
  */
 
 import ClayIcon from '@clayui/icon';
+import ClayLayout from '@clayui/layout';
 import {ClayTooltipProvider} from '@clayui/tooltip';
 import classNames from 'classnames';
 import {DragTypes} from 'data-engine-taglib';
@@ -67,13 +68,15 @@ const DropZone = ({fields, onAddFieldName, onRemoveFieldName}) => {
 
 	const [
 		{
+			dataDefinition: {defaultLanguageId},
 			dataListView: {appliedFilters},
+			editingLanguageId,
 		},
 	] = useContext(EditTableViewContext);
 
 	if (empty) {
 		return (
-			<div className="p-4 sheet">
+			<ClayLayout.Sheet className="p-4">
 				<div className="empty-drop-zone-header"></div>
 				<div
 					className={classNames('empty-drop-zone', {
@@ -88,9 +91,12 @@ const DropZone = ({fields, onAddFieldName, onRemoveFieldName}) => {
 						)}
 					</p>
 				</div>
-			</div>
+			</ClayLayout.Sheet>
 		);
 	}
+
+	const getLocalizableValue = (label) =>
+		label[editingLanguageId] || label[defaultLanguageId];
 
 	return (
 		<div ref={containerRef}>
@@ -100,17 +106,18 @@ const DropZone = ({fields, onAddFieldName, onRemoveFieldName}) => {
 				columns={fields.map(({label, name}) => ({
 					key: label,
 					value: (
-						<div className="container p-0">
-							<div className="align-items-center row">
-								<div className="autofit-col-expand col">
-									{label ? label.en_US : ''}
-								</div>
+						<ClayLayout.ContainerFluid className="p-0">
+							<ClayLayout.ContentRow verticalAlign="center">
+								<ClayLayout.ContentCol expand>
+									{getLocalizableValue(label)}
+								</ClayLayout.ContentCol>
+
 								{Object.prototype.hasOwnProperty.call(
 									appliedFilters,
 									name
 								) && (
 									<ClayTooltipProvider>
-										<div className="col text-right">
+										<ClayLayout.ContentCol>
 											<ClayIcon
 												data-tooltip-align="top"
 												data-tooltip-delay="200"
@@ -119,15 +126,15 @@ const DropZone = ({fields, onAddFieldName, onRemoveFieldName}) => {
 													'this-column-has-applied-filters'
 												)}
 											/>
-										</div>
+										</ClayLayout.ContentCol>
 									</ClayTooltipProvider>
 								)}
-							</div>
-						</div>
+							</ClayLayout.ContentRow>
+						</ClayLayout.ContainerFluid>
 					),
 				}))}
 				items={generateItems(
-					fields.map(({label}) => (label ? label.en_US : ''))
+					fields.map(({label}) => getLocalizableValue(label))
 				)}
 				ref={drop}
 			/>

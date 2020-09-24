@@ -15,11 +15,12 @@
 package com.liferay.dynamic.data.mapping.web.internal.display.context;
 
 import com.liferay.dynamic.data.mapping.configuration.DDMGroupServiceConfiguration;
+import com.liferay.dynamic.data.mapping.configuration.DDMWebConfiguration;
 import com.liferay.dynamic.data.mapping.constants.DDMPortletKeys;
+import com.liferay.dynamic.data.mapping.constants.DDMTemplateConstants;
 import com.liferay.dynamic.data.mapping.constants.DDMWebKeys;
 import com.liferay.dynamic.data.mapping.model.DDMStructure;
 import com.liferay.dynamic.data.mapping.model.DDMTemplate;
-import com.liferay.dynamic.data.mapping.model.DDMTemplateConstants;
 import com.liferay.dynamic.data.mapping.service.DDMStructureLinkLocalService;
 import com.liferay.dynamic.data.mapping.service.DDMStructureService;
 import com.liferay.dynamic.data.mapping.service.DDMTemplateService;
@@ -29,7 +30,6 @@ import com.liferay.dynamic.data.mapping.util.DDMDisplayRegistry;
 import com.liferay.dynamic.data.mapping.util.DDMDisplayTabItem;
 import com.liferay.dynamic.data.mapping.util.DDMTemplateHelper;
 import com.liferay.dynamic.data.mapping.util.DDMUtil;
-import com.liferay.dynamic.data.mapping.web.internal.configuration.DDMWebConfiguration;
 import com.liferay.dynamic.data.mapping.web.internal.context.util.DDMWebRequestHelper;
 import com.liferay.dynamic.data.mapping.web.internal.search.StructureSearch;
 import com.liferay.dynamic.data.mapping.web.internal.search.StructureSearchTerms;
@@ -209,7 +209,6 @@ public class DDMDisplayContext {
 		return NavigationItemListBuilder.add(
 			navigationItem -> {
 				navigationItem.setActive(true);
-				navigationItem.setHref(StringPool.BLANK);
 				navigationItem.setLabel(getScopedStructureLabel());
 			}
 		).build();
@@ -677,21 +676,21 @@ public class DDMDisplayContext {
 	public boolean isShowAddTemplateButton() throws PortalException {
 		DDMDisplay ddmDisplay = getDDMDisplay();
 
-		long classNameId = getClassNameId();
-		long resourceClassNameId = PortalUtil.getClassNameId(
-			ddmDisplay.getStructureType());
-
 		ThemeDisplay themeDisplay = _ddmWebRequestHelper.getThemeDisplay();
 
-		if ((classNameId == 0) || (resourceClassNameId == 0)) {
-			return ddmDisplay.isShowAddButton(themeDisplay.getScopeGroup());
-		}
+		if (_ddmWebConfiguration.enableTemplateCreation() &&
+			ddmDisplay.isShowAddButton(themeDisplay.getScopeGroup())) {
 
-		if (ddmDisplay.isShowAddButton(themeDisplay.getScopeGroup()) &&
-			DDMTemplatePermission.containsAddTemplatePermission(
-				_ddmWebRequestHelper.getPermissionChecker(),
-				_ddmWebRequestHelper.getScopeGroupId(), classNameId,
-				resourceClassNameId)) {
+			long classNameId = getClassNameId();
+			long resourceClassNameId = PortalUtil.getClassNameId(
+				ddmDisplay.getStructureType());
+
+			if ((classNameId != 0) && (resourceClassNameId != 0)) {
+				return DDMTemplatePermission.containsAddTemplatePermission(
+					_ddmWebRequestHelper.getPermissionChecker(),
+					_ddmWebRequestHelper.getScopeGroupId(), classNameId,
+					resourceClassNameId);
+			}
 
 			return true;
 		}
@@ -934,15 +933,15 @@ public class DDMDisplayContext {
 			templateHandlers =
 				PortletDisplayTemplateUtil.getPortletDisplayTemplateHandlers();
 
-			Iterator<TemplateHandler> itr = templateHandlers.iterator();
+			Iterator<TemplateHandler> iterator = templateHandlers.iterator();
 
-			while (itr.hasNext()) {
-				TemplateHandler templateHandler = itr.next();
+			while (iterator.hasNext()) {
+				TemplateHandler templateHandler = iterator.next();
 
 				if (!containsAddPortletDisplayTemplatePermission(
 						templateHandler.getResourceName())) {
 
-					itr.remove();
+					iterator.remove();
 				}
 			}
 		}

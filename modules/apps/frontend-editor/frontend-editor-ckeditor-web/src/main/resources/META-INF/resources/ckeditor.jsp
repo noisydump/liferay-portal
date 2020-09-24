@@ -17,7 +17,7 @@
 <%@ include file="/init.jsp" %>
 
 <%
-String portletId = portletDisplay.getRootPortletId();
+String portletId = portletDisplay.getId();
 
 boolean autoCreate = GetterUtil.getBoolean((String)request.getAttribute(CKEditorConstants.ATTRIBUTE_NAMESPACE + ":autoCreate"));
 String contents = (String)request.getAttribute(CKEditorConstants.ATTRIBUTE_NAMESPACE + ":contents");
@@ -120,6 +120,10 @@ if (inlineEdit && Validator.isNotNull(inlineEditSaveURL)) {
 </div>
 
 <script type="text/javascript">
+	CKEDITOR.ADDITIONAL_RESOURCE_PARAMS = {
+		languageId: themeDisplay.getLanguageId(),
+	};
+
 	CKEDITOR.disableAutoInline = true;
 
 	CKEDITOR.dtd.$removeEmpty.i = 0;
@@ -509,6 +513,23 @@ name = HtmlUtil.escapeJS(name);
 				if (instanceReady) {
 					initData();
 				}
+
+				// LPS-118801
+
+				var editorPath =
+					'<%= HtmlUtil.escapeJS(PortalWebResourcesUtil.getContextPath(PortalWebResourceConstants.RESOURCE_TYPE_EDITOR_CKEDITOR)) %>';
+
+				document
+					.querySelectorAll(
+						'link[href*="' +
+							editorPath +
+							'"],script[src*="' +
+							editorPath +
+							'"]'
+					)
+					.forEach(function (tag) {
+						tag.setAttribute('data-senna-track', 'temporary');
+					});
 			});
 		</c:if>
 
@@ -616,6 +637,20 @@ name = HtmlUtil.escapeJS(name);
 			}
 
 			window['<%= name %>']._setStyles();
+		});
+
+		ckEditor.on('drop', function (event) {
+			var data = event.data.dataTransfer.getData('text/html');
+
+			if (data) {
+				var fragment = CKEDITOR.htmlParser.fragment.fromHtml(data);
+
+				var name = fragment.children[0].name;
+
+				if (name) {
+					return this.pasteFilter.check(name);
+				}
+			}
 		});
 
 		ckEditor.on('setData', function (event) {

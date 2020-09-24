@@ -9,7 +9,7 @@
  * distribution rights of the Software.
  */
 
-import {cleanup, render, wait} from '@testing-library/react';
+import {cleanup, render} from '@testing-library/react';
 import React from 'react';
 
 import Navigation from '../../../src/main/resources/META-INF/resources/js/components/Navigation';
@@ -18,154 +18,12 @@ import {StoreContextProvider} from '../../../src/main/resources/META-INF/resourc
 
 import '@testing-library/jest-dom/extend-expect';
 
-const mockApi = {
-	getHistoricalReads: jest.fn(() =>
-		Promise.resolve({
-			analyticsReportsHistoricalReads: {
-				histogram: [
-					{
-						key: '2020-01-27T00:00',
-						previousKey: '2020-01-20T00:00',
-						previousValue: 22.0,
-						value: 33.0,
-					},
-					{
-						key: '2020-01-28T00:00',
-						previousKey: '2020-01-21T00:00',
-						previousValue: 23.0,
-						value: 33.0,
-					},
-					{
-						key: '2020-01-29T00:00',
-						previousKey: '2020-01-22T00:00',
-						previousValue: 24.0,
-						value: 34.0,
-					},
-					{
-						key: '2020-01-30T00:00',
-						previousKey: '2020-01-23T00:00',
-						previousValue: 25.0,
-						value: 33.0,
-					},
-					{
-						key: '2020-01-31T00:00',
-						previousKey: '2020-01-24T00:00',
-						previousValue: 26.0,
-						value: 32.0,
-					},
-					{
-						key: '2020-02-01T00:00',
-						previousKey: '2020-01-25T00:00',
-						previousValue: 27.0,
-						value: 31.0,
-					},
-					{
-						key: '2020-02-02T00:00',
-						previousKey: '2020-01-26T00:00',
-						previousValue: 28.0,
-						value: 30.0,
-					},
-				],
-				previousValue: 175.0,
-				value: 226.0,
-			},
-		})
-	),
-	getHistoricalViews: jest.fn(() =>
-		Promise.resolve({
-			analyticsReportsHistoricalViews: {
-				histogram: [
-					{
-						key: '2020-01-27T00:00',
-						previousKey: '2020-01-20T00:00',
-						previousValue: 22.0,
-						value: 32.0,
-					},
-					{
-						key: '2020-01-28T00:00',
-						previousKey: '2020-01-21T00:00',
-						previousValue: 23.0,
-						value: 33.0,
-					},
-					{
-						key: '2020-01-29T00:00',
-						previousKey: '2020-01-22T00:00',
-						previousValue: 24.0,
-						value: 34.0,
-					},
-					{
-						key: '2020-01-30T00:00',
-						previousKey: '2020-01-23T00:00',
-						previousValue: 25.0,
-						value: 33.0,
-					},
-					{
-						key: '2020-01-31T00:00',
-						previousKey: '2020-01-24T00:00',
-						previousValue: 26.0,
-						value: 32.0,
-					},
-					{
-						key: '2020-02-01T00:00',
-						previousKey: '2020-01-25T00:00',
-						previousValue: 27.0,
-						value: 31.0,
-					},
-					{
-						key: '2020-02-02T00:00',
-						previousKey: '2020-01-26T00:00',
-						previousValue: 28.0,
-						value: 30.0,
-					},
-				],
-				previousValue: 175.0,
-				value: 225.0,
-			},
-		})
-	),
-	getTotalReads: jest.fn(() => {
-		return Promise.resolve(999);
-	}),
-	getTotalViews: jest.fn(() => {
-		return Promise.resolve(12345);
-	}),
-	getTrafficSourceDetails: jest.fn(() => {
-		return Promise.resolve({
-			keywords: [
-				{
-					position: 1,
-					title: 'commerce',
-					value: 90000,
-					volume: 12300,
-				},
-				{
-					position: 2,
-					title: 'e-commerce',
-					value: 14800,
-					volume: 9800,
-				},
-				{
-					position: 3,
-					title: 'what is commerce',
-					value: 14000,
-					volume: 9500,
-				},
-				{
-					position: 4,
-					title: 'what is e-commerce',
-					value: 12100,
-					volume: 8700,
-				},
-				{
-					position: 5,
-					title: 'commerce definition for new business strategy',
-					value: 10100,
-					volume: 7100,
-				},
-			],
-			title: 'Organic Traffic',
-		});
-	}),
+const mockEndpoints = {
+	analyticsReportsHistoricalReadsURL: 'analyticsReportsHistoricalReadsURL',
+	analyticsReportsHistoricalViewsURL: 'analyticsReportsHistoricalViewsURL',
+	analyticsReportsTotalReadsURL: 'analyticsReportsTotalReadsURL',
+	analyticsReportsTotalViewsURL: 'analyticsReportsTotalViewsURL',
+	analyticsReportsTrafficSourcesURL: 'analyticsReportsTrafficSourcesURL',
 };
 
 const mockTimeSpanOptions = [
@@ -177,27 +35,28 @@ const mockTimeSpanOptions = [
 		key: 'last-7-days',
 		label: 'Last 7 Days',
 	},
-	{
-		key: 'last-24-hours',
-		label: 'Last 24 Hours',
-	},
 ];
 
-const mockTrafficSources = [
+const mockViewURLs = [
 	{
-		helpMessage: 'Testing Help Message',
-		name: 'testing',
-		title: 'Testing',
-		value: 32178,
+		default: true,
+		languageId: 'en-US',
+		selected: true,
+		viewURL: 'http://localhost:8080/en/web/guest/-/basic-web-content',
 	},
 	{
-		helpMessage: 'Second Testing Help Message',
-		name: 'second-testing',
-		title: 'Second Testing',
+		default: false,
+		languageId: 'es-ES',
+		selected: false,
+		viewURL: 'http://localhost:8080/es/web/guest/-/contenido-web-basico',
 	},
 ];
 
 describe('Navigation', () => {
+	beforeEach(() => {
+		fetch.mockResponse(JSON.stringify({}));
+	});
+
 	afterEach(() => {
 		jest.clearAllMocks();
 		cleanup();
@@ -205,12 +64,19 @@ describe('Navigation', () => {
 
 	it('displays an alert error message if there is no valid connection', () => {
 		const testProps = {
-			authorName: 'John Tester',
-			defaultTimeRange: {endDate: '2020-01-27', startDate: '2020-02-02'},
-			defaultTimeSpanKey: 'last-7-days',
+			author: {
+				authorId: '',
+				name: 'John Tester',
+				url: '',
+			},
+			canonicalURL:
+				'http://localhost:8080/en/web/guest/-/basic-web-content',
 			languageTag: 'en-US',
-			pagePublishDate: 1581957977840,
+			page: {plid: 20},
+			pagePublishDate: 'Thu Aug 10 08:17:57 GMT 2020',
 			pageTitle: 'A testing page',
+			timeRange: {endDate: '2020-01-27', startDate: '2020-02-02'},
+			timeSpanKey: 'last-7-days',
 		};
 
 		const {getByText} = render(
@@ -220,15 +86,18 @@ describe('Navigation', () => {
 				}}
 			>
 				<Navigation
-					api={{}}
-					authorName={testProps.authorName}
-					defaultTimeRange={testProps.defaultTimeRange}
-					defaultTimeSpanKey={testProps.defaultTimeSpanKey}
+					author={testProps.author}
+					canonicalURL={testProps.canonicalURL}
+					endpoints={mockEndpoints}
 					languageTag={testProps.languageTag}
+					onSelectedLanguageClick={() => {}}
+					page={testProps.page}
 					pagePublishDate={testProps.pagePublishDate}
 					pageTitle={testProps.pageTitle}
+					timeRange={testProps.timeRange}
+					timeSpanKey={testProps.timeSpanKey}
 					timeSpanOptions={mockTimeSpanOptions}
-					trafficSources={mockTrafficSources}
+					viewURLs={mockViewURLs}
 				/>
 			</ConnectionContext.Provider>
 		);
@@ -236,40 +105,86 @@ describe('Navigation', () => {
 		expect(getByText('an-unexpected-error-occurred')).toBeInTheDocument();
 	});
 
-	it('displays an alert warning message if some data is not available', async () => {
+	it('displays an alert warning message if some data is temporarily unavailable', () => {
 		const testProps = {
-			authorName: 'John Tester',
-			defaultTimeRange: {endDate: '2020-01-27', startDate: '2020-02-02'},
-			defaultTimeSpanKey: 'last-7-days',
+			author: {
+				authorId: '',
+				name: 'John Tester',
+				url: '',
+			},
+			canonicalURL:
+				'http://localhost:8080/en/web/guest/-/basic-web-content',
 			languageTag: 'en-US',
-			pagePublishDate: 1581957977840,
+			page: {plid: 20},
+			pagePublishDate: 'Thu Aug 10 08:17:57 GMT 2020',
 			pageTitle: 'A testing page',
+			timeRange: {endDate: '2020-01-27', startDate: '2020-02-02'},
+			timeSpanKey: 'last-7-days',
 		};
 
 		const {getByText} = render(
-			<StoreContextProvider>
+			<StoreContextProvider value={{warning: true}}>
 				<Navigation
-					api={mockApi}
-					authorName={testProps.authorName}
-					defaultTimeRange={testProps.defaultTimeRange}
-					defaultTimeSpanKey={testProps.defaultTimeSpanKey}
+					author={testProps.author}
+					canonicalURL={testProps.canonicalURL}
+					endpoints={mockEndpoints}
 					languageTag={testProps.languageTag}
+					onSelectedLanguageClick={() => {}}
+					page={testProps.page}
 					pagePublishDate={testProps.pagePublishDate}
 					pageTitle={testProps.pageTitle}
+					timeRange={testProps.timeRange}
+					timeSpanKey={testProps.timeSpanKey}
 					timeSpanOptions={mockTimeSpanOptions}
-					trafficSources={mockTrafficSources}
+					viewURLs={mockViewURLs}
 				/>
 			</StoreContextProvider>
 		);
 
-		await wait(() => expect(mockApi.getTotalReads).toHaveBeenCalled());
-		await wait(() => expect(mockApi.getTotalViews).toHaveBeenCalled());
-
-		await wait(() => expect(mockApi.getHistoricalReads).toHaveBeenCalled());
-		await wait(() => expect(mockApi.getHistoricalViews).toHaveBeenCalled());
-
 		expect(
 			getByText('some-data-is-temporarily-unavailable')
+		).toBeInTheDocument();
+	});
+
+	it('displays an alert info message if the content was published today', () => {
+		const testProps = {
+			author: {
+				authorId: '',
+				name: 'John Tester',
+				url: '',
+			},
+			canonicalURL:
+				'http://localhost:8080/en/web/guest/-/basic-web-content',
+			languageTag: 'en-US',
+			page: {plid: 20},
+			pagePublishDate: 'Thu Feb 02 08:17:57 GMT 2020',
+			pageTitle: 'A testing page',
+			timeRange: {endDate: '2020-01-27', startDate: '2020-02-02'},
+			timeSpanKey: 'last-7-days',
+		};
+
+		const {getByText} = render(
+			<StoreContextProvider value={{publishedToday: true}}>
+				<Navigation
+					author={testProps.author}
+					canonicalURL={testProps.canonicalURL}
+					endpoints={mockEndpoints}
+					languageTag={testProps.languageTag}
+					onSelectedLanguageClick={() => {}}
+					page={testProps.page}
+					pagePublishDate={testProps.pagePublishDate}
+					pageTitle={testProps.pageTitle}
+					timeRange={testProps.timeRange}
+					timeSpanKey={testProps.timeSpanKey}
+					timeSpanOptions={mockTimeSpanOptions}
+					viewURLs={mockViewURLs}
+				/>
+			</StoreContextProvider>
+		);
+
+		expect(getByText('no-data-is-available-yet')).toBeInTheDocument();
+		expect(
+			getByText('content-has-just-been-published')
 		).toBeInTheDocument();
 	});
 });

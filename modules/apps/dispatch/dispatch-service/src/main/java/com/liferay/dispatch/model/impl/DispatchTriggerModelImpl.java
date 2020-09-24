@@ -77,8 +77,7 @@ public class DispatchTriggerModelImpl
 		{"companyId", Types.BIGINT}, {"userId", Types.BIGINT},
 		{"userName", Types.VARCHAR}, {"createDate", Types.TIMESTAMP},
 		{"modifiedDate", Types.TIMESTAMP}, {"active_", Types.BOOLEAN},
-		{"cronExpression", Types.VARCHAR}, {"endDate", Types.TIMESTAMP},
-		{"name", Types.VARCHAR}, {"startDate", Types.TIMESTAMP},
+		{"cronExpression", Types.VARCHAR}, {"name", Types.VARCHAR},
 		{"system_", Types.BOOLEAN}, {"type_", Types.VARCHAR},
 		{"typeSettings", Types.CLOB}
 	};
@@ -96,16 +95,14 @@ public class DispatchTriggerModelImpl
 		TABLE_COLUMNS_MAP.put("modifiedDate", Types.TIMESTAMP);
 		TABLE_COLUMNS_MAP.put("active_", Types.BOOLEAN);
 		TABLE_COLUMNS_MAP.put("cronExpression", Types.VARCHAR);
-		TABLE_COLUMNS_MAP.put("endDate", Types.TIMESTAMP);
 		TABLE_COLUMNS_MAP.put("name", Types.VARCHAR);
-		TABLE_COLUMNS_MAP.put("startDate", Types.TIMESTAMP);
 		TABLE_COLUMNS_MAP.put("system_", Types.BOOLEAN);
 		TABLE_COLUMNS_MAP.put("type_", Types.VARCHAR);
 		TABLE_COLUMNS_MAP.put("typeSettings", Types.CLOB);
 	}
 
 	public static final String TABLE_SQL_CREATE =
-		"create table DispatchTrigger (mvccVersion LONG default 0 not null,dispatchTriggerId LONG not null primary key,companyId LONG,userId LONG,userName VARCHAR(75) null,createDate DATE null,modifiedDate DATE null,active_ BOOLEAN,cronExpression VARCHAR(75) null,endDate DATE null,name VARCHAR(75) null,startDate DATE null,system_ BOOLEAN,type_ VARCHAR(75) null,typeSettings TEXT null)";
+		"create table DispatchTrigger (mvccVersion LONG default 0 not null,dispatchTriggerId LONG not null primary key,companyId LONG,userId LONG,userName VARCHAR(75) null,createDate DATE null,modifiedDate DATE null,active_ BOOLEAN,cronExpression VARCHAR(75) null,name VARCHAR(75) null,system_ BOOLEAN,type_ VARCHAR(75) null,typeSettings TEXT null)";
 
 	public static final String TABLE_SQL_DROP = "drop table DispatchTrigger";
 
@@ -121,20 +118,43 @@ public class DispatchTriggerModelImpl
 
 	public static final String TX_MANAGER = "liferayTransactionManager";
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
+	 */
+	@Deprecated
 	public static final long COMPANYID_COLUMN_BITMASK = 1L;
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
+	 */
+	@Deprecated
 	public static final long NAME_COLUMN_BITMASK = 2L;
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
+	 */
+	@Deprecated
 	public static final long TYPE_COLUMN_BITMASK = 4L;
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *		#getColumnBitmask(String)
+	 */
+	@Deprecated
 	public static final long MODIFIEDDATE_COLUMN_BITMASK = 8L;
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
 	public static void setEntityCacheEnabled(boolean entityCacheEnabled) {
-		_entityCacheEnabled = entityCacheEnabled;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
 	public static void setFinderCacheEnabled(boolean finderCacheEnabled) {
-		_finderCacheEnabled = finderCacheEnabled;
 	}
 
 	/**
@@ -142,7 +162,9 @@ public class DispatchTriggerModelImpl
 	 *
 	 * @param soapModel the soap model instance to convert
 	 * @return the normal model instance
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
 	 */
+	@Deprecated
 	public static DispatchTrigger toModel(DispatchTriggerSoap soapModel) {
 		if (soapModel == null) {
 			return null;
@@ -159,9 +181,7 @@ public class DispatchTriggerModelImpl
 		model.setModifiedDate(soapModel.getModifiedDate());
 		model.setActive(soapModel.isActive());
 		model.setCronExpression(soapModel.getCronExpression());
-		model.setEndDate(soapModel.getEndDate());
 		model.setName(soapModel.getName());
-		model.setStartDate(soapModel.getStartDate());
 		model.setSystem(soapModel.isSystem());
 		model.setType(soapModel.getType());
 		model.setTypeSettings(soapModel.getTypeSettings());
@@ -174,7 +194,9 @@ public class DispatchTriggerModelImpl
 	 *
 	 * @param soapModels the soap model instances to convert
 	 * @return the normal model instances
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
 	 */
+	@Deprecated
 	public static List<DispatchTrigger> toModels(
 		DispatchTriggerSoap[] soapModels) {
 
@@ -243,9 +265,6 @@ public class DispatchTriggerModelImpl
 				attributeName,
 				attributeGetterFunction.apply((DispatchTrigger)this));
 		}
-
-		attributes.put("entityCacheEnabled", isEntityCacheEnabled());
-		attributes.put("finderCacheEnabled", isFinderCacheEnabled());
 
 		return attributes;
 	}
@@ -365,19 +384,10 @@ public class DispatchTriggerModelImpl
 			"cronExpression",
 			(BiConsumer<DispatchTrigger, String>)
 				DispatchTrigger::setCronExpression);
-		attributeGetterFunctions.put("endDate", DispatchTrigger::getEndDate);
-		attributeSetterBiConsumers.put(
-			"endDate",
-			(BiConsumer<DispatchTrigger, Date>)DispatchTrigger::setEndDate);
 		attributeGetterFunctions.put("name", DispatchTrigger::getName);
 		attributeSetterBiConsumers.put(
 			"name",
 			(BiConsumer<DispatchTrigger, String>)DispatchTrigger::setName);
-		attributeGetterFunctions.put(
-			"startDate", DispatchTrigger::getStartDate);
-		attributeSetterBiConsumers.put(
-			"startDate",
-			(BiConsumer<DispatchTrigger, Date>)DispatchTrigger::setStartDate);
 		attributeGetterFunctions.put("system", DispatchTrigger::getSystem);
 		attributeSetterBiConsumers.put(
 			"system",
@@ -407,6 +417,10 @@ public class DispatchTriggerModelImpl
 
 	@Override
 	public void setMvccVersion(long mvccVersion) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_mvccVersion = mvccVersion;
 	}
 
@@ -418,6 +432,10 @@ public class DispatchTriggerModelImpl
 
 	@Override
 	public void setDispatchTriggerId(long dispatchTriggerId) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_dispatchTriggerId = dispatchTriggerId;
 	}
 
@@ -429,19 +447,21 @@ public class DispatchTriggerModelImpl
 
 	@Override
 	public void setCompanyId(long companyId) {
-		_columnBitmask |= COMPANYID_COLUMN_BITMASK;
-
-		if (!_setOriginalCompanyId) {
-			_setOriginalCompanyId = true;
-
-			_originalCompanyId = _companyId;
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
 		}
 
 		_companyId = companyId;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #getColumnOriginalValue(String)}
+	 */
+	@Deprecated
 	public long getOriginalCompanyId() {
-		return _originalCompanyId;
+		return GetterUtil.getLong(
+			this.<Long>getColumnOriginalValue("companyId"));
 	}
 
 	@JSON
@@ -452,6 +472,10 @@ public class DispatchTriggerModelImpl
 
 	@Override
 	public void setUserId(long userId) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_userId = userId;
 	}
 
@@ -484,6 +508,10 @@ public class DispatchTriggerModelImpl
 
 	@Override
 	public void setUserName(String userName) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_userName = userName;
 	}
 
@@ -495,6 +523,10 @@ public class DispatchTriggerModelImpl
 
 	@Override
 	public void setCreateDate(Date createDate) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_createDate = createDate;
 	}
 
@@ -512,7 +544,9 @@ public class DispatchTriggerModelImpl
 	public void setModifiedDate(Date modifiedDate) {
 		_setModifiedDate = true;
 
-		_columnBitmask = -1L;
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
 
 		_modifiedDate = modifiedDate;
 	}
@@ -531,6 +565,10 @@ public class DispatchTriggerModelImpl
 
 	@Override
 	public void setActive(boolean active) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_active = active;
 	}
 
@@ -547,18 +585,11 @@ public class DispatchTriggerModelImpl
 
 	@Override
 	public void setCronExpression(String cronExpression) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_cronExpression = cronExpression;
-	}
-
-	@JSON
-	@Override
-	public Date getEndDate() {
-		return _endDate;
-	}
-
-	@Override
-	public void setEndDate(Date endDate) {
-		_endDate = endDate;
 	}
 
 	@JSON
@@ -574,28 +605,20 @@ public class DispatchTriggerModelImpl
 
 	@Override
 	public void setName(String name) {
-		_columnBitmask |= NAME_COLUMN_BITMASK;
-
-		if (_originalName == null) {
-			_originalName = _name;
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
 		}
 
 		_name = name;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #getColumnOriginalValue(String)}
+	 */
+	@Deprecated
 	public String getOriginalName() {
-		return GetterUtil.getString(_originalName);
-	}
-
-	@JSON
-	@Override
-	public Date getStartDate() {
-		return _startDate;
-	}
-
-	@Override
-	public void setStartDate(Date startDate) {
-		_startDate = startDate;
+		return getColumnOriginalValue("name");
 	}
 
 	@JSON
@@ -612,6 +635,10 @@ public class DispatchTriggerModelImpl
 
 	@Override
 	public void setSystem(boolean system) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_system = system;
 	}
 
@@ -628,17 +655,20 @@ public class DispatchTriggerModelImpl
 
 	@Override
 	public void setType(String type) {
-		_columnBitmask |= TYPE_COLUMN_BITMASK;
-
-		if (_originalType == null) {
-			_originalType = _type;
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
 		}
 
 		_type = type;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #getColumnOriginalValue(String)}
+	 */
+	@Deprecated
 	public String getOriginalType() {
-		return GetterUtil.getString(_originalType);
+		return getColumnOriginalValue("type_");
 	}
 
 	@JSON
@@ -654,10 +684,32 @@ public class DispatchTriggerModelImpl
 
 	@Override
 	public void setTypeSettings(String typeSettings) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_typeSettings = typeSettings;
 	}
 
 	public long getColumnBitmask() {
+		if (_columnBitmask > 0) {
+			return _columnBitmask;
+		}
+
+		if ((_columnOriginalValues == null) ||
+			(_columnOriginalValues == Collections.EMPTY_MAP)) {
+
+			return 0;
+		}
+
+		for (Map.Entry<String, Object> entry :
+				_columnOriginalValues.entrySet()) {
+
+			if (entry.getValue() != getColumnValue(entry.getKey())) {
+				_columnBitmask |= _columnBitmasks.get(entry.getKey());
+			}
+		}
+
 		return _columnBitmask;
 	}
 
@@ -702,9 +754,7 @@ public class DispatchTriggerModelImpl
 		dispatchTriggerImpl.setModifiedDate(getModifiedDate());
 		dispatchTriggerImpl.setActive(isActive());
 		dispatchTriggerImpl.setCronExpression(getCronExpression());
-		dispatchTriggerImpl.setEndDate(getEndDate());
 		dispatchTriggerImpl.setName(getName());
-		dispatchTriggerImpl.setStartDate(getStartDate());
 		dispatchTriggerImpl.setSystem(isSystem());
 		dispatchTriggerImpl.setType(getType());
 		dispatchTriggerImpl.setTypeSettings(getTypeSettings());
@@ -731,16 +781,16 @@ public class DispatchTriggerModelImpl
 	}
 
 	@Override
-	public boolean equals(Object obj) {
-		if (this == obj) {
+	public boolean equals(Object object) {
+		if (this == object) {
 			return true;
 		}
 
-		if (!(obj instanceof DispatchTrigger)) {
+		if (!(object instanceof DispatchTrigger)) {
 			return false;
 		}
 
-		DispatchTrigger dispatchTrigger = (DispatchTrigger)obj;
+		DispatchTrigger dispatchTrigger = (DispatchTrigger)object;
 
 		long primaryKey = dispatchTrigger.getPrimaryKey();
 
@@ -757,32 +807,31 @@ public class DispatchTriggerModelImpl
 		return (int)getPrimaryKey();
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
 	@Override
 	public boolean isEntityCacheEnabled() {
-		return _entityCacheEnabled;
+		return true;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
 	@Override
 	public boolean isFinderCacheEnabled() {
-		return _finderCacheEnabled;
+		return true;
 	}
 
 	@Override
 	public void resetOriginalValues() {
-		DispatchTriggerModelImpl dispatchTriggerModelImpl = this;
+		_columnOriginalValues = Collections.emptyMap();
 
-		dispatchTriggerModelImpl._originalCompanyId =
-			dispatchTriggerModelImpl._companyId;
+		_setModifiedDate = false;
 
-		dispatchTriggerModelImpl._setOriginalCompanyId = false;
-
-		dispatchTriggerModelImpl._setModifiedDate = false;
-
-		dispatchTriggerModelImpl._originalName = dispatchTriggerModelImpl._name;
-
-		dispatchTriggerModelImpl._originalType = dispatchTriggerModelImpl._type;
-
-		dispatchTriggerModelImpl._columnBitmask = 0;
+		_columnBitmask = 0;
 	}
 
 	@Override
@@ -834,30 +883,12 @@ public class DispatchTriggerModelImpl
 			dispatchTriggerCacheModel.cronExpression = null;
 		}
 
-		Date endDate = getEndDate();
-
-		if (endDate != null) {
-			dispatchTriggerCacheModel.endDate = endDate.getTime();
-		}
-		else {
-			dispatchTriggerCacheModel.endDate = Long.MIN_VALUE;
-		}
-
 		dispatchTriggerCacheModel.name = getName();
 
 		String name = dispatchTriggerCacheModel.name;
 
 		if ((name != null) && (name.length() == 0)) {
 			dispatchTriggerCacheModel.name = null;
-		}
-
-		Date startDate = getStartDate();
-
-		if (startDate != null) {
-			dispatchTriggerCacheModel.startDate = startDate.getTime();
-		}
-		else {
-			dispatchTriggerCacheModel.startDate = Long.MIN_VALUE;
 		}
 
 		dispatchTriggerCacheModel.system = isSystem();
@@ -951,14 +982,9 @@ public class DispatchTriggerModelImpl
 
 	}
 
-	private static boolean _entityCacheEnabled;
-	private static boolean _finderCacheEnabled;
-
 	private long _mvccVersion;
 	private long _dispatchTriggerId;
 	private long _companyId;
-	private long _originalCompanyId;
-	private boolean _setOriginalCompanyId;
 	private long _userId;
 	private String _userName;
 	private Date _createDate;
@@ -966,14 +992,107 @@ public class DispatchTriggerModelImpl
 	private boolean _setModifiedDate;
 	private boolean _active;
 	private String _cronExpression;
-	private Date _endDate;
 	private String _name;
-	private String _originalName;
-	private Date _startDate;
 	private boolean _system;
 	private String _type;
-	private String _originalType;
 	private String _typeSettings;
+
+	public <T> T getColumnValue(String columnName) {
+		columnName = _attributeNames.getOrDefault(columnName, columnName);
+
+		Function<DispatchTrigger, Object> function =
+			_attributeGetterFunctions.get(columnName);
+
+		if (function == null) {
+			throw new IllegalArgumentException(
+				"No attribute getter function found for " + columnName);
+		}
+
+		return (T)function.apply((DispatchTrigger)this);
+	}
+
+	public <T> T getColumnOriginalValue(String columnName) {
+		if (_columnOriginalValues == null) {
+			return null;
+		}
+
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
+		return (T)_columnOriginalValues.get(columnName);
+	}
+
+	private void _setColumnOriginalValues() {
+		_columnOriginalValues = new HashMap<String, Object>();
+
+		_columnOriginalValues.put("mvccVersion", _mvccVersion);
+		_columnOriginalValues.put("dispatchTriggerId", _dispatchTriggerId);
+		_columnOriginalValues.put("companyId", _companyId);
+		_columnOriginalValues.put("userId", _userId);
+		_columnOriginalValues.put("userName", _userName);
+		_columnOriginalValues.put("createDate", _createDate);
+		_columnOriginalValues.put("modifiedDate", _modifiedDate);
+		_columnOriginalValues.put("active_", _active);
+		_columnOriginalValues.put("cronExpression", _cronExpression);
+		_columnOriginalValues.put("name", _name);
+		_columnOriginalValues.put("system_", _system);
+		_columnOriginalValues.put("type_", _type);
+		_columnOriginalValues.put("typeSettings", _typeSettings);
+	}
+
+	private static final Map<String, String> _attributeNames;
+
+	static {
+		Map<String, String> attributeNames = new HashMap<>();
+
+		attributeNames.put("active_", "active");
+		attributeNames.put("system_", "system");
+		attributeNames.put("type_", "type");
+
+		_attributeNames = Collections.unmodifiableMap(attributeNames);
+	}
+
+	private transient Map<String, Object> _columnOriginalValues;
+
+	public static long getColumnBitmask(String columnName) {
+		return _columnBitmasks.get(columnName);
+	}
+
+	private static final Map<String, Long> _columnBitmasks;
+
+	static {
+		Map<String, Long> columnBitmasks = new HashMap<>();
+
+		columnBitmasks.put("mvccVersion", 1L);
+
+		columnBitmasks.put("dispatchTriggerId", 2L);
+
+		columnBitmasks.put("companyId", 4L);
+
+		columnBitmasks.put("userId", 8L);
+
+		columnBitmasks.put("userName", 16L);
+
+		columnBitmasks.put("createDate", 32L);
+
+		columnBitmasks.put("modifiedDate", 64L);
+
+		columnBitmasks.put("active_", 128L);
+
+		columnBitmasks.put("cronExpression", 256L);
+
+		columnBitmasks.put("name", 512L);
+
+		columnBitmasks.put("system_", 1024L);
+
+		columnBitmasks.put("type_", 2048L);
+
+		columnBitmasks.put("typeSettings", 4096L);
+
+		_columnBitmasks = Collections.unmodifiableMap(columnBitmasks);
+	}
+
 	private long _columnBitmask;
 	private DispatchTrigger _escapedModel;
 

@@ -24,18 +24,20 @@ boolean showStripeMessage = workflowDefinitionLinkDisplayContext.showStripeMessa
 
 <liferay-util:include page="/definition_link/management_bar.jsp" servletContext="<%= application %>" />
 
-<clay:container
-	className="workflow-definition-link-container"
-	id='<%= renderResponse.getNamespace() + "Container" %>'
+<clay:container-fluid
+	cssClass="workflow-definition-link-container"
+	id='<%= liferayPortletResponse.getNamespace() + "Container" %>'
 >
 	<c:if test="<%= showStripeMessage %>">
 		<clay:alert
-			closeable="true"
-			destroyOnHide="true"
-			message='<%= LanguageUtil.get(resourceBundle, "the-assets-from-documents-and-media-and-forms-are-assigned-within-their-respective-applications") %>'
-			title="Info"
+			dismissible="<%= true %>"
+			message="the-assets-from-documents-and-media-and-forms-are-assigned-within-their-respective-applications"
 		/>
 	</c:if>
+
+	<liferay-ui:breadcrumb
+		showLayout="<%= false %>"
+	/>
 
 	<liferay-ui:search-container
 		id="searchContainer"
@@ -45,14 +47,9 @@ boolean showStripeMessage = workflowDefinitionLinkDisplayContext.showStripeMessa
 			className="com.liferay.portal.workflow.web.internal.search.WorkflowDefinitionLinkSearchEntry"
 			modelVar="workflowDefinitionLinkSearchEntry"
 		>
-
-			<%
-			String randomNamespace = StringUtil.randomString(8) + StringPool.UNDERLINE;
-			%>
-
 			<liferay-ui:search-container-row-parameter
 				name="randomNamespace"
-				value="<%= randomNamespace %>"
+				value="<%= StringUtil.randomString(8) + StringPool.UNDERLINE %>"
 			/>
 
 			<liferay-ui:search-container-row-parameter
@@ -88,4 +85,4 @@ boolean showStripeMessage = workflowDefinitionLinkDisplayContext.showStripeMessa
 			markupView="lexicon"
 		/>
 	</liferay-ui:search-container>
-</clay:container>
+</clay:container-fluid>

@@ -19,7 +19,7 @@
 <%
 assetPublisherDisplayContext.setPageKeywords();
 
-if (assetPublisherDisplayContext.isEnableTagBasedNavigation() && !assetPublisherDisplayContext.isSelectionStyleAssetList() && assetPublisherDisplayContext.isSelectionStyleManual() && ((assetPublisherDisplayContext.getAllAssetCategoryIds().length > 0) || (assetPublisherDisplayContext.getAllAssetTagNames().length > 0))) {
+if (assetPublisherDisplayContext.isEnableTagBasedNavigation() && !assetPublisherDisplayContext.isSelectionStyleAssetList() && assetPublisherDisplayContext.isSelectionStyleManual() && (ArrayUtil.isNotEmpty(assetPublisherDisplayContext.getAllAssetCategoryIds()) || ArrayUtil.isNotEmpty(assetPublisherDisplayContext.getAllAssetTagNames()))) {
 	assetPublisherDisplayContext.setSelectionStyle("dynamic");
 }
 %>
@@ -33,10 +33,14 @@ if (assetPublisherDisplayContext.isEnableTagBasedNavigation() && !assetPublisher
 
 			<div class="btn-group-item">
 				<clay:link
-					elementClasses="btn btn-outline-borderless btn-outline-secondary btn-sm"
+					borderless="<%= true %>"
+					displayType="secondary"
 					href="<%= rssURL.toString() %>"
 					icon="rss-full"
-					label='<%= LanguageUtil.get(request, "rss") %>'
+					label="rss"
+					outline="<%= true %>"
+					small="<%= true %>"
+					type="button"
 				/>
 			</div>
 
@@ -53,10 +57,11 @@ if (assetPublisherDisplayContext.isEnableTagBasedNavigation() && !assetPublisher
 					</portlet:actionURL>
 
 					<clay:link
-						buttonStyle="secondary"
-						elementClasses="btn-sm"
+						displayType="secondary"
 						href="<%= unsubscribeURL %>"
-						label='<%= LanguageUtil.get(request, "unsubscribe") %>'
+						label="unsubscribe"
+						small="<%= true %>"
+						type="button"
 					/>
 				</c:when>
 				<c:otherwise>
@@ -65,10 +70,11 @@ if (assetPublisherDisplayContext.isEnableTagBasedNavigation() && !assetPublisher
 					</portlet:actionURL>
 
 					<clay:link
-						buttonStyle="secondary"
-						elementClasses="btn-sm"
+						displayType="secondary"
 						href="<%= subscribeURL %>"
-						label='<%= LanguageUtil.get(request, "subscribe") %>'
+						label="subscribe"
+						small="<%= true %>"
+						type="button"
 					/>
 				</c:otherwise>
 			</c:choose>
@@ -138,7 +144,7 @@ if (assetPublisherDisplayContext.isEnableTagBasedNavigation() && !assetPublisher
 </c:choose>
 
 <%
-SearchContainer searchContainer = assetPublisherDisplayContext.getSearchContainer();
+SearchContainer<AssetEntry> searchContainer = assetPublisherDisplayContext.getSearchContainer();
 %>
 
 <c:if test="<%= !assetPublisherDisplayContext.isPaginationTypeNone() && (searchContainer.getTotal() > searchContainer.getDelta()) %>">

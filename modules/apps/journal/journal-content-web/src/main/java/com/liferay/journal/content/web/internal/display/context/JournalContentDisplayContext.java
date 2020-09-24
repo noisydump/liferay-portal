@@ -531,12 +531,7 @@ public class JournalContentDisplayContext {
 		assetEntryItemSelectorCriterion.setDesiredItemSelectorReturnTypes(
 			new AssetEntryItemSelectorReturnType());
 
-		long groupId = getGroupId();
-
-		assetEntryItemSelectorCriterion.setGroupId(groupId);
-		assetEntryItemSelectorCriterion.setSelectedGroupIds(
-			PortalUtil.getCurrentAndAncestorSiteGroupIds(groupId));
-
+		assetEntryItemSelectorCriterion.setGroupId(getGroupId());
 		assetEntryItemSelectorCriterion.setShowNonindexable(true);
 		assetEntryItemSelectorCriterion.setShowScheduled(true);
 		assetEntryItemSelectorCriterion.setSingleSelect(true);
@@ -845,8 +840,7 @@ public class JournalContentDisplayContext {
 					enableViewCountIncrement());
 		}
 		else {
-			_enableViewCountIncrement =
-				PropsValues.ASSET_ENTRY_BUFFERED_INCREMENT_ENABLED;
+			_enableViewCountIncrement = PropsValues.VIEW_COUNT_ENABLED;
 		}
 
 		return _enableViewCountIncrement;
@@ -1080,8 +1074,9 @@ public class JournalContentDisplayContext {
 			AssetRendererFactory.TYPE_LATEST_APPROVED);
 
 		try {
-			AssetRenderer assetRenderer = assetRendererFactory.getAssetRenderer(
-				assetEntry.getClassPK(), previewType);
+			AssetRenderer<?> assetRenderer =
+				assetRendererFactory.getAssetRenderer(
+					assetEntry.getClassPK(), previewType);
 
 			return (JournalArticle)assetRenderer.getAssetObject();
 		}

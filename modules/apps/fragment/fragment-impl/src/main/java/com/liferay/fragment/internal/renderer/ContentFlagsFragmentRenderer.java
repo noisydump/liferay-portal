@@ -18,15 +18,15 @@ import com.liferay.flags.taglib.servlet.taglib.react.FlagsTag;
 import com.liferay.fragment.model.FragmentEntryLink;
 import com.liferay.fragment.renderer.FragmentRenderer;
 import com.liferay.fragment.renderer.FragmentRendererContext;
-import com.liferay.info.constants.InfoDisplayWebKeys;
-import com.liferay.info.display.contributor.InfoDisplayContributor;
-import com.liferay.info.display.contributor.InfoDisplayObjectProvider;
+import com.liferay.info.item.InfoItemReference;
+import com.liferay.layout.display.page.LayoutDisplayPageObjectProvider;
+import com.liferay.layout.display.page.LayoutDisplayPageProvider;
+import com.liferay.layout.display.page.constants.LayoutDisplayPageWebKeys;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
-import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.Tuple;
 
 import java.util.Locale;
@@ -36,7 +36,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Pavel Savinov
@@ -78,6 +77,11 @@ public class ContentFlagsFragmentRenderer
 	}
 
 	@Override
+	public String getIcon() {
+		return "web-content";
+	}
+
+	@Override
 	public String getLabel(Locale locale) {
 		ResourceBundle resourceBundle = resourceBundleLoader.loadResourceBundle(
 			locale);
@@ -96,13 +100,15 @@ public class ContentFlagsFragmentRenderer
 		Tuple displayObject = getDisplayObject(
 			fragmentRendererContext, httpServletRequest);
 
-		flagsTag.setClassName(GetterUtil.getString(displayObject.getObject(0)));
+		String className = GetterUtil.getString(displayObject.getObject(0));
+
+		flagsTag.setClassName(className);
 
 		long classPK = GetterUtil.getLong(displayObject.getObject(1));
 
 		flagsTag.setClassPK(classPK);
 
-		flagsTag.setReportedUserId(_portal.getUserId(httpServletRequest));
+		flagsTag.setReportedUserId(portal.getUserId(httpServletRequest));
 
 		FragmentEntryLink fragmentEntryLink =
 			fragmentRendererContext.getFragmentEntryLink();
@@ -117,18 +123,20 @@ public class ContentFlagsFragmentRenderer
 							fragmentEntryLink.getEditableValues(),
 							"message"))));
 
-			InfoDisplayContributor infoDisplayContributor =
-				(InfoDisplayContributor)httpServletRequest.getAttribute(
-					InfoDisplayWebKeys.INFO_DISPLAY_CONTRIBUTOR);
+			LayoutDisplayPageProvider<?> layoutDisplayPageProvider =
+				(LayoutDisplayPageProvider<?>)httpServletRequest.getAttribute(
+					LayoutDisplayPageWebKeys.LAYOUT_DISPLAY_PAGE_PROVIDER);
 
-			if (infoDisplayContributor != null) {
-				InfoDisplayObjectProvider infoDisplayObjectProvider =
-					infoDisplayContributor.getInfoDisplayObjectProvider(
-						classPK);
+			if (layoutDisplayPageProvider != null) {
+				LayoutDisplayPageObjectProvider<?>
+					layoutDisplayPageObjectProvider =
+						layoutDisplayPageProvider.
+							getLayoutDisplayPageObjectProvider(
+								new InfoItemReference(className, classPK));
 
-				if (infoDisplayObjectProvider != null) {
+				if (layoutDisplayPageObjectProvider != null) {
 					flagsTag.setContentTitle(
-						infoDisplayObjectProvider.getTitle(
+						layoutDisplayPageObjectProvider.getTitle(
 							fragmentRendererContext.getLocale()));
 				}
 			}
@@ -142,8 +150,5 @@ public class ContentFlagsFragmentRenderer
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		ContentFlagsFragmentRenderer.class);
-
-	@Reference
-	private Portal _portal;
 
 }

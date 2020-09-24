@@ -15,7 +15,6 @@
 package com.liferay.akismet.internal.portlet;
 
 import com.liferay.akismet.client.AkismetClient;
-import com.liferay.akismet.client.util.AkismetServiceConfigurationUtil;
 import com.liferay.akismet.internal.constants.ModerationPortletKeys;
 import com.liferay.message.boards.exception.NoSuchMessageException;
 import com.liferay.message.boards.exception.RequiredMessageException;
@@ -31,8 +30,6 @@ import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 
-import java.io.Serializable;
-
 import java.util.HashMap;
 
 import javax.portlet.ActionRequest;
@@ -46,7 +43,7 @@ import org.osgi.service.component.annotations.Reference;
  * @author Jamie
  */
 @Component(
-	immediate = true,
+	enabled = false, immediate = true,
 	property = {
 		"com.liferay.portlet.display-category=category.hidden",
 		"com.liferay.portlet.instanceable=false",
@@ -91,19 +88,17 @@ public class ModerationPortlet extends MVCPortlet {
 			MBMessage mbMessage = _mbMessageLocalService.updateStatus(
 				themeDisplay.getUserId(), mbMessageId,
 				WorkflowConstants.STATUS_APPROVED, serviceContext,
-				new HashMap<String, Serializable>());
+				new HashMap<>());
 
-			if (AkismetServiceConfigurationUtil.isMessageBoardsEnabled()) {
-				_akismetClient.submitHam(mbMessage);
-			}
+			_akismetClient.submitHam(mbMessage);
 		}
 	}
 
 	@Override
-	protected boolean isSessionErrorException(Throwable cause) {
-		if (cause instanceof NoSuchMessageException ||
-			cause instanceof PrincipalException ||
-			cause instanceof RequiredMessageException) {
+	protected boolean isSessionErrorException(Throwable throwable) {
+		if (throwable instanceof NoSuchMessageException ||
+			throwable instanceof PrincipalException ||
+			throwable instanceof RequiredMessageException) {
 
 			return true;
 		}

@@ -12,40 +12,64 @@
  * details.
  */
 
+import {TranslationManager} from 'data-engine-taglib';
 import React, {useContext} from 'react';
 
+import {AppContext} from '../../../AppContext.es';
 import {UpperToolbarInput} from '../../../components/upper-toolbar/UpperToolbar.es';
 import EditAppContext, {UPDATE_NAME} from './EditAppContext.es';
 
-export default () => {
+export default ({
+	availableLanguageIds,
+	defaultLanguageId,
+	editingLanguageId,
+	onEditingLanguageIdChange,
+}) => {
+	const {showTranslationManager} = useContext(AppContext);
 	const {
 		dispatch,
 		state: {
-			app: {
-				name: {en_US: appName},
-			},
+			app: {name},
 		},
 	} = useContext(EditAppContext);
 
-	const onAppNameChange = (event) => {
-		const appName = event.target.value;
-
+	const onAppNameChange = ({target: {value}}) => {
 		dispatch({
-			appName,
+			name: {
+				...name,
+				[editingLanguageId]: value,
+			},
 			type: UPDATE_NAME,
 		});
 	};
 
-	const maxLength = 30;
-
 	return (
 		<>
 			<div className="align-items-center bg-transparent card-header d-flex justify-content-between">
+				{showTranslationManager && (
+					<TranslationManager
+						availableLanguageIds={availableLanguageIds.reduce(
+							(acc, cur) => {
+								acc[cur] = cur;
+
+								return acc;
+							},
+							{}
+						)}
+						className="mr-1"
+						defaultLanguageId={defaultLanguageId}
+						editingLanguageId={editingLanguageId}
+						onEditingLanguageIdChange={(editingLanguageId) => {
+							onEditingLanguageIdChange(editingLanguageId);
+						}}
+						translatedLanguageIds={name}
+					/>
+				)}
 				<UpperToolbarInput
-					maxLength={maxLength}
-					onInput={onAppNameChange}
+					maxLength={30}
+					onChange={onAppNameChange}
 					placeholder={Liferay.Language.get('untitled-app')}
-					value={appName}
+					value={name[editingLanguageId] || ''}
 				/>
 			</div>
 

@@ -24,7 +24,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 /**
- * @author Shuyang Zhou
+ * @author     Shuyang Zhou
  * @deprecated As of Athanasius (7.3.x), with no direct replacement
  */
 @Deprecated
@@ -186,8 +186,8 @@ public class DistributedRegistry {
 							distributed.matchType());
 					}
 				}
-				catch (Throwable t) {
-					throw new RuntimeException(t);
+				catch (Throwable throwable) {
+					throw new RuntimeException(throwable);
 				}
 			}
 

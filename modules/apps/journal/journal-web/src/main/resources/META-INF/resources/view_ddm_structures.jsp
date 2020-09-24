@@ -24,16 +24,14 @@ JournalDDMStructuresManagementToolbarDisplayContext journalDDMStructuresManageme
 
 <clay:navigation-bar
 	inverted="<%= true %>"
-	navigationItems='<%= journalDisplayContext.getNavigationBarItems("structures") %>'
+	navigationItems='<%= journalDisplayContext.getNavigationItems("structures") %>'
 />
 
 <clay:management-toolbar
 	displayContext="<%= journalDDMStructuresManagementToolbarDisplayContext %>"
 />
 
-<portlet:actionURL name="/journal/delete_ddm_structure" var="deleteDDMStructureURL">
-	<portlet:param name="mvcPath" value="/view_ddm_structures.jsp" />
-</portlet:actionURL>
+<portlet:actionURL copyCurrentRenderParameters="<%= true %>" name="/journal/delete_ddm_structure" var="deleteDDMStructureURL" />
 
 <portlet:actionURL name="/journal/delete_data_definition" var="deleteDataDefinitionURL">
 	<portlet:param name="mvcPath" value="/view_ddm_structures.jsp" />
@@ -45,6 +43,12 @@ JournalDDMStructuresManagementToolbarDisplayContext journalDDMStructuresManageme
 	<liferay-ui:error exception="<%= RequiredStructureException.MustNotDeleteStructureReferencedByStructureLinks.class %>" message="the-structure-cannot-be-deleted-because-it-is-required-by-one-or-more-structure-links" />
 	<liferay-ui:error exception="<%= RequiredStructureException.MustNotDeleteStructureReferencedByTemplates.class %>" message="the-structure-cannot-be-deleted-because-it-is-required-by-one-or-more-templates" />
 	<liferay-ui:error exception="<%= RequiredStructureException.MustNotDeleteStructureThatHasChild.class %>" message="the-structure-cannot-be-deleted-because-it-has-one-or-more-substructures" />
+
+	<c:if test="<%= !journalDisplayContext.isNavigationMine() && !journalDisplayContext.isNavigationRecent() %>">
+		<liferay-site-navigation:breadcrumb
+			breadcrumbEntries="<%= new ArrayList<>() %>"
+		/>
+	</c:if>
 
 	<liferay-ui:search-container
 		id="ddmStructures"

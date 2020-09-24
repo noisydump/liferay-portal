@@ -14,12 +14,8 @@
 
 import ClayButton from '@clayui/button';
 import ClayForm, {ClayInput} from '@clayui/form';
-import {
-	FieldBaseProxy,
-	connectStore,
-	getConnectedReactComponentAdapter,
-} from 'dynamic-data-mapping-form-field-type';
-import {ItemSelectorDialog} from 'frontend-js-web';
+import {ReactFieldBase} from 'dynamic-data-mapping-form-field-type';
+import {openSelectionModal} from 'frontend-js-web';
 import React, {useEffect, useState} from 'react';
 
 const JournalArticleSelector = ({
@@ -55,16 +51,12 @@ const JournalArticleSelector = ({
 	const handleItemSelectorTriggerClick = (event) => {
 		event.preventDefault();
 
-		const itemSelectorDialog = new ItemSelectorDialog({
-			eventName: `${portletNamespace}selectJournalArticle`,
-			singleSelect: true,
+		openSelectionModal({
+			onSelect: handleFieldChanged,
+			selectEventName: `${portletNamespace}selectJournalArticle`,
 			title: Liferay.Language.get('journal-article'),
 			url: itemSelectorURL,
 		});
-
-		itemSelectorDialog.on('selectedItemChange', handleFieldChanged);
-
-		itemSelectorDialog.open();
 	};
 
 	return (
@@ -115,34 +107,28 @@ const JournalArticleSelector = ({
 	);
 };
 
-const JournalArticleSelectorProxy = connectStore(
-	({
-		emit,
-		itemSelectorURL,
-		name,
-		portletNamespace,
-		predefinedValue,
-		readOnly,
-		value,
-		...otherProps
-	}) => (
-		<FieldBaseProxy {...otherProps} name={name} readOnly={readOnly}>
-			<JournalArticleSelector
-				disabled={readOnly}
-				inputValue={value && value !== '' ? value : predefinedValue}
-				itemSelectorURL={itemSelectorURL}
-				name={name}
-				onChange={(value) => emit('fieldEdited', {}, value)}
-				portletNamespace={portletNamespace}
-			/>
-		</FieldBaseProxy>
-	)
+const Main = ({
+	itemSelectorURL,
+	name,
+	onChange,
+	portletNamespace,
+	predefinedValue,
+	readOnly,
+	value,
+	...otherProps
+}) => (
+	<ReactFieldBase {...otherProps} name={name} readOnly={readOnly}>
+		<JournalArticleSelector
+			disabled={readOnly}
+			inputValue={value && value !== '' ? value : predefinedValue}
+			itemSelectorURL={itemSelectorURL}
+			name={name}
+			onChange={(value) => onChange({}, value)}
+			portletNamespace={portletNamespace}
+		/>
+	</ReactFieldBase>
 );
 
-const ReactJournalArticleSelectorAdapter = getConnectedReactComponentAdapter(
-	JournalArticleSelectorProxy,
-	'journal_article'
-);
+Main.displayName = 'JournalArticleSelector';
 
-export {ReactJournalArticleSelectorAdapter};
-export default ReactJournalArticleSelectorAdapter;
+export default Main;

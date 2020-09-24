@@ -15,6 +15,7 @@
 package com.liferay.portal.workflow.metrics.rest.internal.resource.v1_0;
 
 import com.liferay.portal.kernel.language.Language;
+import com.liferay.portal.kernel.model.Role;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.util.ArrayUtil;
@@ -202,6 +203,11 @@ public class TaskResourceImpl extends BaseTaskResourceImpl {
 			Pagination pagination, TaskBulkSelection taskBulkSelection)
 		throws Exception {
 
+		if (ArrayUtil.isEmpty(taskBulkSelection.getAssigneeIds())) {
+			taskBulkSelection.setAssigneeIds(
+				new Long[] {-1L, contextUser.getUserId()});
+		}
+
 		SearchSearchResponse searchSearchResponse = _getSearchSearchResponse(
 			taskBulkSelection.getAssigneeIds(),
 			taskBulkSelection.getInstanceIds(),
@@ -212,6 +218,29 @@ public class TaskResourceImpl extends BaseTaskResourceImpl {
 		int taskCount = _getTaskCount(searchSearchResponse);
 
 		if (taskCount > 0) {
+			if (pagination == null) {
+				return Page.of(
+					Stream.of(
+						searchSearchResponse.getAggregationResultsMap()
+					).map(
+						aggregationResultsMap ->
+							(TermsAggregationResult)aggregationResultsMap.get(
+								"name")
+					).map(
+						TermsAggregationResult::getBuckets
+					).flatMap(
+						Collection::stream
+					).map(
+						bucket -> TaskUtil.toTask(
+							_language, bucket.getKey(),
+							ResourceBundleUtil.getModuleAndPortalResourceBundle(
+								contextAcceptLanguage.getPreferredLocale(),
+								TaskResourceImpl.class))
+					).collect(
+						Collectors.toList()
+					));
+			}
+
 			return Page.of(
 				_getTasks(
 					taskBulkSelection.getAssigneeIds(),
@@ -226,37 +255,56 @@ public class TaskResourceImpl extends BaseTaskResourceImpl {
 		return Page.of(Collections.emptyList());
 	}
 
-	private BooleanQuery _createAssigneeIdsExistsBooleanQuery(
-		Long[] assigneeIds) {
-
-		BooleanQuery booleanQuery = _queries.booleanQuery();
-
-		if (ArrayUtil.contains(assigneeIds, -1L)) {
-			booleanQuery.addMustNotQueryClauses(_queries.exists("assigneeIds"));
-		}
-
-		return booleanQuery;
-	}
-
 	private BooleanQuery _createAssigneeIdsTermsBooleanQuery(
 		Long[] assigneeIds) {
 
 		BooleanQuery booleanQuery = _queries.booleanQuery();
 
-		TermsQuery termsQuery = _queries.terms("assigneeIds");
+		if (ArrayUtil.contains(assigneeIds, -1L)) {
+			BooleanQuery shouldBooleanQuery = _queries.booleanQuery();
 
-		termsQuery.addValues(
-			Stream.of(
-				assigneeIds
-			).filter(
-				assigneeId -> assigneeId > 0
-			).map(
-				String::valueOf
-			).toArray(
-				Object[]::new
-			));
+			TermsQuery termsQuery = _queries.terms("assigneeIds");
 
-		return booleanQuery.addMustQueryClauses(termsQuery);
+			termsQuery.addValues(
+				Stream.of(
+					ArrayUtil.toArray(contextUser.getRoleIds())
+				).map(
+					String::valueOf
+				).toArray(
+					Object[]::new
+				));
+
+			shouldBooleanQuery.addMustQueryClauses(
+				termsQuery,
+				_queries.term("assigneeType", Role.class.getName()));
+
+			booleanQuery.addShouldQueryClauses(shouldBooleanQuery);
+		}
+
+		if (!ArrayUtil.contains(assigneeIds, -1L) || (assigneeIds.length > 1)) {
+			BooleanQuery shouldBooleanQuery = _queries.booleanQuery();
+
+			TermsQuery termsQuery = _queries.terms("assigneeIds");
+
+			termsQuery.addValues(
+				Stream.of(
+					assigneeIds
+				).filter(
+					assigneeId -> assigneeId > 0
+				).map(
+					String::valueOf
+				).toArray(
+					Object[]::new
+				));
+
+			shouldBooleanQuery.addMustQueryClauses(
+				termsQuery,
+				_queries.term("assigneeType", User.class.getName()));
+
+			booleanQuery.addShouldQueryClauses(shouldBooleanQuery);
+		}
+
+		return booleanQuery;
 	}
 
 	private BooleanQuery _createBooleanQuery(long processId) {
@@ -282,9 +330,9 @@ public class TaskResourceImpl extends BaseTaskResourceImpl {
 	private BooleanQuery _createBooleanQuery(
 		Long[] assigneeIds, Long[] instanceIds, Long processId) {
 
-		BooleanQuery booleanQuery = _queries.booleanQuery();
+		BooleanQuery filterBooleanQuery = _queries.booleanQuery();
 
-		booleanQuery.setMinimumShouldMatch(1);
+		BooleanQuery booleanQuery = _queries.booleanQuery();
 
 		BooleanQuery slaTaskResultsBooleanQuery = _queries.booleanQuery();
 
@@ -306,8 +354,9 @@ public class TaskResourceImpl extends BaseTaskResourceImpl {
 		tasksBooleanQuery.addMustQueryClauses(
 			_createTasksBooleanQuery(assigneeIds, instanceIds, processId));
 
-		return booleanQuery.addShouldQueryClauses(
-			slaTaskResultsBooleanQuery, tasksBooleanQuery);
+		return filterBooleanQuery.addFilterQueryClauses(
+			booleanQuery.addShouldQueryClauses(
+				slaTaskResultsBooleanQuery, tasksBooleanQuery));
 	}
 
 	private BucketSelectorPipelineAggregation
@@ -428,12 +477,6 @@ public class TaskResourceImpl extends BaseTaskResourceImpl {
 
 		booleanQuery.addMustNotQueryClauses(_queries.term("taskId", 0));
 
-		if (assigneeIds != null) {
-			booleanQuery.addShouldQueryClauses(
-				_createAssigneeIdsExistsBooleanQuery(assigneeIds),
-				_createAssigneeIdsTermsBooleanQuery(assigneeIds));
-		}
-
 		if (instanceIds != null) {
 			booleanQuery.addMustQueryClauses(
 				_createInstanceIdsTermsBooleanQuery(instanceIds));
@@ -445,6 +488,7 @@ public class TaskResourceImpl extends BaseTaskResourceImpl {
 		}
 
 		return booleanQuery.addMustQueryClauses(
+			_createAssigneeIdsTermsBooleanQuery(assigneeIds),
 			_queries.term("companyId", contextCompany.getCompanyId()),
 			_queries.term("completed", Boolean.FALSE),
 			_queries.term("deleted", Boolean.FALSE),
@@ -456,6 +500,22 @@ public class TaskResourceImpl extends BaseTaskResourceImpl {
 		String[] slaStatuses, String[] taskNames) {
 
 		SearchSearchRequest searchSearchRequest = new SearchSearchRequest();
+
+		TermsAggregation termsAggregation = _aggregations.terms("name", "name");
+
+		termsAggregation.addChildrenAggregations(
+			_resourceHelper.creatTaskCountScriptedMetricAggregation(
+				ListUtil.fromArray(assigneeIds),
+				ListUtil.fromArray(slaStatuses),
+				ListUtil.fromArray(taskNames)));
+
+		termsAggregation.addOrders(Order.key(true));
+		termsAggregation.addPipelineAggregations(
+			_createBucketSelectorPipelineAggregation());
+
+		termsAggregation.setSize(10000);
+
+		searchSearchRequest.addAggregation(termsAggregation);
 
 		searchSearchRequest.addAggregation(
 			_resourceHelper.creatTaskCountScriptedMetricAggregation(
@@ -532,7 +592,11 @@ public class TaskResourceImpl extends BaseTaskResourceImpl {
 
 		SearchSearchRequest searchSearchRequest = new SearchSearchRequest();
 
-		TermsAggregation termsAggregation = _aggregations.terms("name", "name");
+		TermsAggregation termsAggregation = _aggregations.terms(
+			"instanceIdTaskId", null);
+
+		termsAggregation.setScript(
+			_scripts.script("doc['instanceId'].value + doc['taskId'].value"));
 
 		FilterAggregation indexFilterAggregation = _aggregations.filter(
 			"index",
@@ -553,12 +617,8 @@ public class TaskResourceImpl extends BaseTaskResourceImpl {
 
 		termsAggregation.addOrders(Order.key(true));
 		termsAggregation.addPipelineAggregations(
-			_createBucketSelectorPipelineAggregation());
-
-		if (pagination != null) {
-			termsAggregation.addPipelineAggregations(
-				_createBucketSortPipelineAggregation(pagination));
-		}
+			_createBucketSelectorPipelineAggregation(),
+			_createBucketSortPipelineAggregation(pagination));
 
 		termsAggregation.setSize(GetterUtil.getInteger(taskCount));
 
@@ -579,48 +639,34 @@ public class TaskResourceImpl extends BaseTaskResourceImpl {
 			SearchSearchResponse::getAggregationResultsMap
 		).map(
 			aggregationResultsMap ->
-				(TermsAggregationResult)aggregationResultsMap.get("name")
+				(TermsAggregationResult)aggregationResultsMap.get(
+					"instanceIdTaskId")
 		).map(
 			TermsAggregationResult::getBuckets
 		).flatMap(
 			Collection::stream
 		).map(
-			bucket -> {
-				if (pagination == null) {
-					return TaskUtil.toTask(
-						_language, bucket.getKey(),
-						ResourceBundleUtil.getModuleAndPortalResourceBundle(
-							contextAcceptLanguage.getPreferredLocale(),
-							TaskResourceImpl.class));
-				}
-
-				return Stream.of(
-					(FilterAggregationResult)bucket.getChildAggregationResult(
-						"index")
-				).map(
-					filterAggregationResult ->
-						(TopHitsAggregationResult)
-							filterAggregationResult.getChildAggregationResult(
-								"topHits")
-				).map(
-					TopHitsAggregationResult::getSearchHits
-				).map(
-					SearchHits::getSearchHits
-				).flatMap(
-					List::stream
-				).map(
-					SearchHit::getSourcesMap
-				).findFirst(
-				).map(
-					sourcesMap -> TaskUtil.toTask(
-						_language, contextAcceptLanguage.getPreferredLocale(),
-						_portal,
-						ResourceBundleUtil.getModuleAndPortalResourceBundle(
-							contextAcceptLanguage.getPreferredLocale(),
-							TaskResourceImpl.class),
-						sourcesMap, _userLocalService::fetchUser)
-				).get();
-			}
+			bucket -> (FilterAggregationResult)bucket.getChildAggregationResult(
+				"index")
+		).map(
+			filterAggregationResult ->
+				(TopHitsAggregationResult)
+					filterAggregationResult.getChildAggregationResult("topHits")
+		).map(
+			TopHitsAggregationResult::getSearchHits
+		).map(
+			SearchHits::getSearchHits
+		).flatMap(
+			List::stream
+		).map(
+			SearchHit::getSourcesMap
+		).map(
+			sourcesMap -> TaskUtil.toTask(
+				_language, contextAcceptLanguage.getPreferredLocale(), _portal,
+				ResourceBundleUtil.getModuleAndPortalResourceBundle(
+					contextAcceptLanguage.getPreferredLocale(),
+					TaskResourceImpl.class),
+				sourcesMap, _userLocalService::fetchUser)
 		).collect(
 			Collectors.toCollection(LinkedList::new)
 		);

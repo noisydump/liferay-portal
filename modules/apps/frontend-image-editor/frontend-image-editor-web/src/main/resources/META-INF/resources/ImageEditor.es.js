@@ -79,10 +79,11 @@ class ImageEditor extends PortletBase {
 
 		// Polyfill svg usage for lexicon icons
 
-		svg4everybody({
-			attributeName: 'data-href',
-			polyfill: true,
-		});
+		if (window.svg4everybody) {
+			svg4everybody({
+				polyfill: true,
+			});
+		}
 
 		// Load the first entry imageData and render it on the app.
 
@@ -367,20 +368,13 @@ class ImageEditor extends PortletBase {
 	 * @param  {String} message The error message to display.
 	 * @protected
 	 */
-	showError_(message) {
+	showError_({message}) {
 		this.components.loading.show = false;
 
-		AUI().use('liferay-alert', () => {
-			new Liferay.Alert({
-				delay: {
-					hide: 2000,
-					show: 0,
-				},
-				duration: 3000,
-				icon: 'exclamation-circle',
-				message: message.message,
-				type: 'danger',
-			}).render(this.element);
+		Liferay.Util.openToast({
+			container: this.element,
+			message,
+			type: 'danger',
 		});
 	}
 

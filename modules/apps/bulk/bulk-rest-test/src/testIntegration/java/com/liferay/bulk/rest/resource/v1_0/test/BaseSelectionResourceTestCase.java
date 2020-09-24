@@ -106,7 +106,9 @@ public abstract class BaseSelectionResourceTestCase {
 
 		SelectionResource.Builder builder = SelectionResource.builder();
 
-		selectionResource = builder.locale(
+		selectionResource = builder.authentication(
+			"test@liferay.com", "test"
+		).locale(
 			LocaleUtil.getDefault()
 		).build();
 	}
@@ -249,7 +251,7 @@ public abstract class BaseSelectionResourceTestCase {
 		}
 	}
 
-	protected void assertValid(Selection selection) {
+	protected void assertValid(Selection selection) throws Exception {
 		boolean valid = true;
 
 		for (String additionalAssertFieldName :

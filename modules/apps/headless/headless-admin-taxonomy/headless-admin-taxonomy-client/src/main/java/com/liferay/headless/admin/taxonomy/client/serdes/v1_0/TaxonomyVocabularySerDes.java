@@ -73,6 +73,20 @@ public class TaxonomyVocabularySerDes {
 			sb.append(_toJSON(taxonomyVocabulary.getActions()));
 		}
 
+		if (taxonomyVocabulary.getAssetLibraryKey() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"assetLibraryKey\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(taxonomyVocabulary.getAssetLibraryKey()));
+
+			sb.append("\"");
+		}
+
 		if (taxonomyVocabulary.getAssetTypes() != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -290,6 +304,15 @@ public class TaxonomyVocabularySerDes {
 			map.put("actions", String.valueOf(taxonomyVocabulary.getActions()));
 		}
 
+		if (taxonomyVocabulary.getAssetLibraryKey() == null) {
+			map.put("assetLibraryKey", null);
+		}
+		else {
+			map.put(
+				"assetLibraryKey",
+				String.valueOf(taxonomyVocabulary.getAssetLibraryKey()));
+		}
+
 		if (taxonomyVocabulary.getAssetTypes() == null) {
 			map.put("assetTypes", null);
 		}
@@ -429,6 +452,12 @@ public class TaxonomyVocabularySerDes {
 							(String)jsonParserFieldValue));
 				}
 			}
+			else if (Objects.equals(jsonParserFieldName, "assetLibraryKey")) {
+				if (jsonParserFieldValue != null) {
+					taxonomyVocabulary.setAssetLibraryKey(
+						(String)jsonParserFieldValue);
+				}
+			}
 			else if (Objects.equals(jsonParserFieldName, "assetTypes")) {
 				if (jsonParserFieldValue != null) {
 					taxonomyVocabulary.setAssetTypes(
@@ -519,9 +548,8 @@ public class TaxonomyVocabularySerDes {
 							(String)jsonParserFieldValue));
 				}
 			}
-			else {
-				throw new IllegalArgumentException(
-					"Unsupported field name " + jsonParserFieldName);
+			else if (jsonParserFieldName.equals("status")) {
+				throw new IllegalArgumentException();
 			}
 		}
 

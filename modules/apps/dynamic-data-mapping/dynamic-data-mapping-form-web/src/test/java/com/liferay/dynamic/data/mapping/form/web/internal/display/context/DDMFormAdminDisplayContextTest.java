@@ -32,6 +32,7 @@ import com.liferay.dynamic.data.mapping.service.DDMFormInstanceService;
 import com.liferay.dynamic.data.mapping.service.DDMFormInstanceVersionLocalService;
 import com.liferay.dynamic.data.mapping.service.DDMStructureLocalService;
 import com.liferay.dynamic.data.mapping.service.DDMStructureService;
+import com.liferay.dynamic.data.mapping.storage.DDMStorageAdapterTracker;
 import com.liferay.dynamic.data.mapping.util.DDMFormValuesMerger;
 import com.liferay.frontend.js.loader.modules.extender.npm.NPMResolver;
 import com.liferay.petra.string.StringBundler;
@@ -115,9 +116,8 @@ public class DDMFormAdminDisplayContextTest extends PowerMockito {
 		setRenderRequestParamenter(
 			"formInstanceId", String.valueOf(_RESTRICTED_FORM_INSTANCE_ID));
 
-		String formURL = _ddmFormAdminDisplayContext.getFormURL();
-
-		Assert.assertEquals(getRestrictedFormURL(), formURL);
+		Assert.assertEquals(
+			getRestrictedFormURL(), _ddmFormAdminDisplayContext.getFormURL());
 	}
 
 	@Test
@@ -125,9 +125,8 @@ public class DDMFormAdminDisplayContextTest extends PowerMockito {
 		setRenderRequestParamenter(
 			"formInstanceId", String.valueOf(_SHARED_FORM_INSTANCE_ID));
 
-		String formURL = _ddmFormAdminDisplayContext.getFormURL();
-
-		Assert.assertEquals(getSharedFormURL(), formURL);
+		Assert.assertEquals(
+			getSharedFormURL(), _ddmFormAdminDisplayContext.getFormURL());
 	}
 
 	@Test
@@ -144,17 +143,15 @@ public class DDMFormAdminDisplayContextTest extends PowerMockito {
 
 	@Test
 	public void testGetRestrictedFormURL() throws Exception {
-		String restrictedFormURL =
-			_ddmFormAdminDisplayContext.getRestrictedFormURL();
-
-		Assert.assertEquals(getRestrictedFormURL(), restrictedFormURL);
+		Assert.assertEquals(
+			getRestrictedFormURL(),
+			_ddmFormAdminDisplayContext.getRestrictedFormURL());
 	}
 
 	@Test
 	public void testGetSharedFormURL() throws Exception {
-		String sharedFormURL = _ddmFormAdminDisplayContext.getSharedFormURL();
-
-		Assert.assertEquals(getSharedFormURL(), sharedFormURL);
+		Assert.assertEquals(
+			getSharedFormURL(), _ddmFormAdminDisplayContext.getSharedFormURL());
 	}
 
 	protected String getFormURL(
@@ -343,6 +340,7 @@ public class DDMFormAdminDisplayContextTest extends PowerMockito {
 			mock(DDMFormTemplateContextFactory.class),
 			mock(DDMFormValuesFactory.class), mock(DDMFormValuesMerger.class),
 			mock(DDMFormWebConfiguration.class),
+			mock(DDMStorageAdapterTracker.class),
 			mock(DDMStructureLocalService.class),
 			mock(DDMStructureService.class), mock(JSONFactory.class),
 			mock(NPMResolver.class), mock(Portal.class));

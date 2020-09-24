@@ -35,13 +35,13 @@ import com.liferay.source.formatter.checks.util.SourceUtil;
 import com.liferay.source.formatter.util.CheckType;
 import com.liferay.source.formatter.util.DebugUtil;
 import com.liferay.source.formatter.util.FileUtil;
+import com.liferay.source.formatter.util.JIRAUtil;
 import com.liferay.source.formatter.util.SourceFormatterUtil;
 
 import com.puppycrawl.tools.checkstyle.api.CheckstyleException;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.IOException;
 import java.io.StringReader;
 
 import java.util.ArrayList;
@@ -62,8 +62,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.LinkedBlockingQueue;
-
-import org.dom4j.DocumentException;
 
 /**
  * @author Hugo Huijser
@@ -121,6 +119,18 @@ public class SourceFormatter {
 
 			sourceFormatterArgs.setCheckName(checkName);
 
+			boolean failOnAutoFix = ArgumentsUtil.getBoolean(
+				arguments, "source.fail.on.auto.fix",
+				SourceFormatterArgs.FAIL_ON_AUTO_FIX);
+
+			sourceFormatterArgs.setFailOnAutoFix(failOnAutoFix);
+
+			boolean failOnHasWarning = ArgumentsUtil.getBoolean(
+				arguments, "source.fail.on.has.warning",
+				SourceFormatterArgs.FAIL_ON_HAS_WARNING);
+
+			sourceFormatterArgs.setFailOnHasWarning(failOnHasWarning);
+
 			boolean formatCurrentBranch = ArgumentsUtil.getBoolean(
 				arguments, "format.current.branch",
 				SourceFormatterArgs.FORMAT_CURRENT_BRANCH);
@@ -139,14 +149,13 @@ public class SourceFormatter {
 
 			sourceFormatterArgs.setFormatLocalChanges(formatLocalChanges);
 
+			String gitWorkingBranchName = ArgumentsUtil.getString(
+				arguments, "git.working.branch.name",
+				SourceFormatterArgs.GIT_WORKING_BRANCH_NAME);
+
+			sourceFormatterArgs.setGitWorkingBranchName(gitWorkingBranchName);
+
 			if (formatCurrentBranch) {
-				String gitWorkingBranchName = ArgumentsUtil.getString(
-					arguments, "git.working.branch.name",
-					SourceFormatterArgs.GIT_WORKING_BRANCH_NAME);
-
-				sourceFormatterArgs.setGitWorkingBranchName(
-					gitWorkingBranchName);
-
 				sourceFormatterArgs.addRecentChangesFileNames(
 					GitUtil.getCurrentBranchFileNames(
 						baseDirName, gitWorkingBranchName, false),
@@ -254,11 +263,12 @@ public class SourceFormatter {
 					Arrays.asList(skipCheckNames));
 			}
 
-			boolean throwException = ArgumentsUtil.getBoolean(
-				arguments, "source.throw.exception",
-				SourceFormatterArgs.THROW_EXCEPTION);
+			boolean validateCommitMessages = ArgumentsUtil.getBoolean(
+				arguments, "validate.commit.messages",
+				SourceFormatterArgs.VALIDATE_COMMIT_MESSAGES);
 
-			sourceFormatterArgs.setThrowException(throwException);
+			sourceFormatterArgs.setValidateCommitMessages(
+				validateCommitMessages);
 
 			SourceFormatter sourceFormatter = new SourceFormatter(
 				sourceFormatterArgs);
@@ -300,6 +310,10 @@ public class SourceFormatter {
 		_printProgressStatusMessage("Scanning for files...");
 
 		_init();
+
+		if (_sourceFormatterArgs.isValidateCommitMessages()) {
+			_validateCommitMessages();
+		}
 
 		_printProgressStatusMessage("Initializing checks...");
 
@@ -392,53 +406,55 @@ public class SourceFormatter {
 			throw executionException1;
 		}
 
-		if (_sourceFormatterArgs.isThrowException() &&
-			(!_sourceFormatterMessages.isEmpty() ||
-			 !_sourceMismatchExceptions.isEmpty())) {
+		if ((!_sourceFormatterArgs.isFailOnAutoFix() ||
+			 _sourceMismatchExceptions.isEmpty()) &&
+			(!_sourceFormatterArgs.isFailOnHasWarning() ||
+			 _sourceFormatterMessages.isEmpty())) {
 
-			int size =
-				_sourceFormatterMessages.size() +
-					_sourceMismatchExceptions.size();
+			return;
+		}
 
-			StringBundler sb = new StringBundler(size * 4);
+		int size =
+			_sourceFormatterMessages.size() + _sourceMismatchExceptions.size();
 
-			int index = 1;
+		StringBundler sb = new StringBundler(size * 4);
 
-			if (!_sourceFormatterMessages.isEmpty()) {
-				for (SourceFormatterMessage sourceFormatterMessage :
-						_sourceFormatterMessages) {
+		int index = 1;
 
+		if (_sourceFormatterArgs.isFailOnHasWarning()) {
+			for (SourceFormatterMessage sourceFormatterMessage :
+					_sourceFormatterMessages) {
+
+				sb.append(index);
+				sb.append(": ");
+				sb.append(sourceFormatterMessage.toString());
+				sb.append("\n");
+
+				index = index + 1;
+			}
+		}
+
+		if (_sourceFormatterArgs.isFailOnAutoFix()) {
+			for (SourceMismatchException sourceMismatchException :
+					_sourceMismatchExceptions) {
+
+				String message = sourceMismatchException.getMessage();
+
+				if (!Objects.isNull(message)) {
 					sb.append(index);
 					sb.append(": ");
-					sb.append(sourceFormatterMessage.toString());
+					sb.append(message);
 					sb.append("\n");
 
 					index = index + 1;
 				}
 			}
-
-			if (!_sourceMismatchExceptions.isEmpty()) {
-				for (SourceMismatchException sourceMismatchException :
-						_sourceMismatchExceptions) {
-
-					String message = sourceMismatchException.getMessage();
-
-					if (!Objects.isNull(message)) {
-						sb.append(index);
-						sb.append(": ");
-						sb.append(message);
-						sb.append("\n");
-
-						index = index + 1;
-					}
-				}
-			}
-
-			String message = StringBundler.concat(
-				"Found ", index - 1, " formatting issues:\n", sb.toString());
-
-			throw new Exception(message);
 		}
+
+		String message = StringBundler.concat(
+			"Found ", index - 1, " formatting issues:\n", sb.toString());
+
+		throw new Exception(message);
 	}
 
 	public List<String> getModifiedFileNames() {
@@ -460,18 +476,46 @@ public class SourceFormatter {
 	private static CheckstyleException _getNestedCheckstyleException(
 		Exception exception) {
 
-		Throwable cause = exception;
+		Throwable throwable = exception;
 
 		while (true) {
-			if (cause == null) {
+			if (throwable == null) {
 				return null;
 			}
 
-			if (cause instanceof CheckstyleException) {
-				return (CheckstyleException)cause;
+			if (throwable instanceof CheckstyleException) {
+				return (CheckstyleException)throwable;
 			}
 
-			cause = cause.getCause();
+			throwable = throwable.getCause();
+		}
+	}
+
+	private Set<String> _addDependentFileName(
+		Set<String> dependentFileNames, String fileName,
+		String dependentFileName) {
+
+		String dirName = fileName.substring(
+			0, fileName.lastIndexOf(CharPool.SLASH));
+
+		while (true) {
+			String dependentFilePathName = dirName + "/" + dependentFileName;
+
+			File file = new File(dependentFilePathName);
+
+			if (file.exists()) {
+				dependentFileNames.add(dependentFilePathName);
+
+				return dependentFileNames;
+			}
+
+			int pos = dirName.lastIndexOf(CharPool.SLASH);
+
+			if (pos == -1) {
+				return dependentFileNames;
+			}
+
+			dirName = dirName.substring(0, pos);
 		}
 	}
 
@@ -504,9 +548,26 @@ public class SourceFormatter {
 				buildPropertiesAdded = true;
 			}
 
-			if (recentChangesFileName.endsWith("ServiceImpl.java")) {
-				dependentFileNames = _addServiceXMLFileName(
-					dependentFileNames, recentChangesFileName);
+			if (recentChangesFileName.contains("/modules/apps/archived/")) {
+				dependentFileNames.addAll(
+					SourceFormatterUtil.filterFileNames(
+						_allFileNames, new String[0],
+						new String[] {
+							"**/source-formatter.properties",
+							"**/test.properties"
+						},
+						_sourceFormatterExcludes, false));
+			}
+
+			if (recentChangesFileName.endsWith(".java") &&
+				recentChangesFileName.contains("/upgrade/")) {
+
+				dependentFileNames = _addDependentFileName(
+					dependentFileNames, recentChangesFileName, "bnd.bnd");
+			}
+			else if (recentChangesFileName.endsWith("ServiceImpl.java")) {
+				dependentFileNames = _addDependentFileName(
+					dependentFileNames, recentChangesFileName, "service.xml");
 			}
 			else if (!tagJavaFilesAdded &&
 					 recentChangesFileName.endsWith(".tld")) {
@@ -534,33 +595,6 @@ public class SourceFormatter {
 			dependentFileNames, null);
 	}
 
-	private Set<String> _addServiceXMLFileName(
-		Set<String> dependentFileNames, String serviceImplFileName) {
-
-		String dirName = serviceImplFileName.substring(
-			0, serviceImplFileName.lastIndexOf(CharPool.SLASH));
-
-		while (true) {
-			String serviceFileName = dirName + "/service.xml";
-
-			File file = new File(serviceFileName);
-
-			if (file.exists()) {
-				dependentFileNames.add(serviceFileName);
-
-				return dependentFileNames;
-			}
-
-			int pos = dirName.lastIndexOf(CharPool.SLASH);
-
-			if (pos == -1) {
-				return dependentFileNames;
-			}
-
-			dirName = dirName.substring(0, pos);
-		}
-	}
-
 	private boolean _containsDir(String dirName) {
 		File directory = SourceFormatterUtil.getFile(
 			_sourceFormatterArgs.getBaseDirName(), dirName,
@@ -574,7 +608,7 @@ public class SourceFormatter {
 	}
 
 	private void _excludeWorkingDirCheckoutPrivateApps(File portalDir)
-		throws IOException {
+		throws Exception {
 
 		File file = new File(portalDir, "working.dir.properties");
 
@@ -697,7 +731,7 @@ public class SourceFormatter {
 		return null;
 	}
 
-	private String _getProjectPathPrefix() throws IOException {
+	private String _getProjectPathPrefix() throws Exception {
 		if (!_subrepository) {
 			return null;
 		}
@@ -724,7 +758,7 @@ public class SourceFormatter {
 		return null;
 	}
 
-	private Properties _getProperties(File file) throws IOException {
+	private Properties _getProperties(File file) throws Exception {
 		Properties properties = new Properties();
 
 		if (file.exists()) {
@@ -734,7 +768,23 @@ public class SourceFormatter {
 		return properties;
 	}
 
-	private void _init() throws DocumentException, IOException {
+	private List<String> _getPropertyValues(String key) {
+		List<String> propertyValues = new ArrayList<>();
+
+		for (Map.Entry<String, Properties> entry : _propertiesMap.entrySet()) {
+			Properties properties = entry.getValue();
+
+			if (properties.containsKey(key)) {
+				propertyValues.addAll(
+					ListUtil.fromString(
+						properties.getProperty(key), StringPool.COMMA));
+			}
+		}
+
+		return propertyValues;
+	}
+
+	private void _init() throws Exception {
 		_sourceFormatterExcludes = new SourceFormatterExcludes(
 			SetUtil.fromArray(DEFAULT_EXCLUDE_SYNTAX_PATTERNS));
 
@@ -817,7 +867,7 @@ public class SourceFormatter {
 		}
 	}
 
-	private boolean _isSubrepository() throws IOException {
+	private boolean _isSubrepository() throws Exception {
 		if (_portalSource) {
 			return false;
 		}
@@ -861,7 +911,7 @@ public class SourceFormatter {
 		System.out.print(message + "\r");
 	}
 
-	private void _readProperties(File propertiesFile) throws IOException {
+	private void _readProperties(File propertiesFile) throws Exception {
 		Properties properties = _getProperties(propertiesFile);
 
 		if (properties.isEmpty()) {
@@ -904,7 +954,7 @@ public class SourceFormatter {
 	}
 
 	private void _readProperties(String content, String propertiesFileLocation)
-		throws IOException {
+		throws Exception {
 
 		Properties properties = new Properties();
 
@@ -942,6 +992,20 @@ public class SourceFormatter {
 		_sourceMismatchExceptions.addAll(
 			sourceProcessor.getSourceMismatchExceptions());
 		_modifiedFileNames.addAll(sourceProcessor.getModifiedFileNames());
+	}
+
+	private void _validateCommitMessages() throws Exception {
+		List<String> commitMessages = GitUtil.getCurrentBranchCommitMessages(
+			_sourceFormatterArgs.getBaseDirName(),
+			_sourceFormatterArgs.getGitWorkingBranchName());
+
+		JIRAUtil.validateJIRAProjectNames(
+			commitMessages, _getPropertyValues("jira.project.keys"));
+		JIRAUtil.validateJIRATicketIds(commitMessages, 20);
+
+		JIRAUtil.validateJIRASecurityKeywords(
+			commitMessages,
+			_getPropertyValues("jira.security.vulnerability.keywords"), 20);
 	}
 
 	private static final String _PROPERTIES_FILE_NAME =

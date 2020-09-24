@@ -20,22 +20,31 @@ export default {
 	/**
 	 * Get an asset's value
 	 * @param {object} options
-	 * @param {string} options.layoutObjectReference
+	 * @param {string} options.listItemStyle
+	 * @param {string} options.listStyle
 	 * @param {function} options.onNetworkStatus
 	 */
 	getCollectionField({
 		collection,
+		languageId,
+		listItemStyle,
+		listStyle,
 		onNetworkStatus,
 		segmentsExperienceId,
 		size,
+		templateKey,
 	}) {
 		return serviceFetch(
 			config.getCollectionFieldURL,
 			{
 				body: {
+					languageId,
 					layoutObjectReference: JSON.stringify(collection),
+					listItemStyle,
+					listStyle,
 					segmentsExperienceId,
 					size,
+					templateKey,
 				},
 			},
 			onNetworkStatus
@@ -45,15 +54,22 @@ export default {
 	/**
 	 * Get available collection mapping fields
 	 * @param {object} options
+	 * @param {string} options.fieldType Type of field to which we are mapping
 	 * @param {string} options.itemSubtype Collection itemSubtype
 	 * @param {string} options.itemType Collection itemType
 	 * @param {function} options.onNetworkStatus
 	 */
-	getCollectionMappingFields({itemSubtype, itemType, onNetworkStatus}) {
+	getCollectionMappingFields({
+		fieldType,
+		itemSubtype,
+		itemType,
+		onNetworkStatus,
+	}) {
 		return serviceFetch(
 			config.getCollectionMappingFieldsURL,
 			{
 				body: {
+					fieldType,
 					itemSubtype,
 					itemType,
 				},

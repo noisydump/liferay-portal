@@ -18,17 +18,22 @@ import {
 	generateInstanceId,
 } from 'dynamic-data-mapping-form-renderer';
 
+import {getDefaultFieldName} from '../../../util/fieldSupport.es';
 import {sub} from '../../../util/strings.es';
 import {getFieldLocalizedValue} from '../util/fields.es';
 import {
 	getSettingsContextProperty,
 	updateField,
+	updateSettingsContextProperty,
 } from '../util/settingsContext.es';
 
-export const createDuplicatedField = (originalField, props) => {
+export const createDuplicatedField = (originalField, props, blacklist = []) => {
 	const {editingLanguageId, fieldNameGenerator} = props;
-	const label = getLabel(originalField, editingLanguageId);
-	const newFieldName = fieldNameGenerator(label);
+	const newFieldName = fieldNameGenerator(
+		getDefaultFieldName(),
+		null,
+		blacklist
+	);
 
 	let duplicatedField = updateField(
 		props,
@@ -39,7 +44,53 @@ export const createDuplicatedField = (originalField, props) => {
 
 	duplicatedField.instanceId = generateInstanceId(8);
 
+	const label = getLabel(originalField, editingLanguageId);
+
 	duplicatedField = updateField(props, duplicatedField, 'label', label);
+
+	if (duplicatedField.nestedFields?.length > 0) {
+		duplicatedField.nestedFields = duplicatedField.nestedFields.map(
+			(field) => {
+				const newDuplicatedNestedField = createDuplicatedField(
+					field,
+					props,
+					blacklist
+				);
+
+				blacklist.push(newDuplicatedNestedField.fieldName);
+
+				const visitor = new PagesVisitor([
+					{
+						rows: duplicatedField.rows ?? [],
+					},
+				]);
+
+				const layout = visitor.mapColumns((column) => {
+					return {
+						...column,
+						fields: column.fields.map((fieldName) => {
+							if (fieldName === field.fieldName) {
+								return newDuplicatedNestedField.fieldName;
+							}
+
+							return fieldName;
+						}),
+					};
+				});
+
+				duplicatedField.rows = layout[0].rows;
+
+				return newDuplicatedNestedField;
+			}
+		);
+
+		duplicatedField.settingsContext = updateSettingsContextProperty(
+			props.editingLanguageId,
+			duplicatedField.settingsContext,
+			'rows',
+			duplicatedField.rows
+		);
+	}
 
 	return updateField(
 		props,
@@ -69,6 +120,7 @@ export const getValidation = (originalField) => {
 };
 
 export const duplicateField = (
+	activePage,
 	props,
 	pages,
 	originalField,
@@ -107,7 +159,12 @@ export const duplicateField = (
 						duplicatedField.fieldName,
 					]);
 
-					pages = FormSupport.addRow(pages, rowIndex + 1, 0, newRow);
+					pages = FormSupport.addRow(
+						pages,
+						rowIndex + 1,
+						activePage,
+						newRow
+					);
 
 					return updateField(props, field, 'rows', pages[0].rows);
 				}
@@ -126,12 +183,15 @@ export const duplicateField = (
 
 	const newRow = FormSupport.implAddRow(12, [duplicatedField]);
 
-	return FormSupport.addRow(pages, rowIndex + 1, 0, newRow);
+	return FormSupport.addRow(pages, rowIndex + 1, activePage, newRow);
 };
 
-const handleFieldDuplicated = (props, state, event) => {
-	const {fieldName} = event;
+const handleFieldDuplicated = (props, state, {activePage, fieldName}) => {
 	const {pages} = state;
+
+	if (activePage === undefined) {
+		activePage = state.activePage;
+	}
 
 	const originalField = JSON.parse(
 		JSON.stringify(FormSupport.findFieldByFieldName(pages, fieldName))
@@ -143,7 +203,13 @@ const handleFieldDuplicated = (props, state, event) => {
 		focusedField: {
 			...duplicatedField,
 		},
-		pages: duplicateField(props, pages, originalField, duplicatedField),
+		pages: duplicateField(
+			activePage,
+			props,
+			pages,
+			originalField,
+			duplicatedField
+		),
 	};
 };
 

@@ -204,22 +204,18 @@ definition {
 
 		AssertElementPresent.assertVisible(locator1 = "Button#DONE");
 
-		LiferayEvent.waitForLiferayEvent(
-			attributeName = "src",
-			attributeValue = "dialog-iframe-popup",
-			eventName = "modalIframeLoaded");
-
 		SelectFrame(locator1 = "IFrame#MODAL_BODY");
 
-		var key_userScreenName = "${userScreenName}";
-
 		AssertTextEquals(
+			key_userScreenName = "${userScreenName}",
 			locator1 = "UserGroupsAssignUsers#USER_TABLE_SCREEN_NAME",
 			value1 = "${userScreenName}");
 
-		Check(locator1 = "UserGroupsAssignUsers#USER_TABLE_CHECKBOX");
+		Check(
+			key_userScreenName = "${userScreenName}",
+			locator1 = "UserGroupsAssignUsers#USER_TABLE_CHECKBOX");
 
-		Pause(locator1 = "5000");
+		Pause(locator1 = "3000");
 
 		SelectFrameTop();
 
@@ -275,7 +271,7 @@ definition {
 			key_toggleSwitchLabel = "Create Site",
 			locator1 = "ToggleSwitch#ANY_TOGGLE_SWITCH");
 
-		if (("${organizationSite}" == "Community Site") || ("${organizationSite}" == "Intranet Site")) {
+		if (isSet(organizationSite)) {
 			Select(
 				locator1 = "UserGroupsEditUserGroup#PUBLIC_PAGES_SELECT",
 				value1 = "${organizationSite}");
@@ -345,36 +341,33 @@ definition {
 	macro assignOrgRoleCP {
 		Organization.gotoActionsCmd(orgName = "${orgName}");
 
-		var key_orgName = "${orgName}";
-
-		Pause(locator1 = "5000");
+		Pause(locator1 = "3000");
 
 		MenuItem.click(menuItem = "Assign Organization Roles");
-
-		LiferayEvent.waitForLiferayEvent(
-			attributeName = "src",
-			attributeValue = "dialog-iframe-popup",
-			eventName = "modalIframeLoaded");
 
 		SelectFrame(locator1 = "IFrame#MODAL_BODY");
 
 		AssertTextEquals(
+			key_roleTitle = "${roleTitle}",
 			locator1 = "UsersAndOrganizationsAssignOrganizationalRoles#ROLE_TITLE",
 			value1 = "${roleTitle}");
 
-		Click(locator1 = "UsersAndOrganizationsAssignOrganizationalRoles#ROLE_TITLE");
+		Click(
+			key_roleTitle = "${roleTitle}",
+			locator1 = "UsersAndOrganizationsAssignOrganizationalRoles#ROLE_TITLE");
 
 		Navigator.gotoNavItem(navItem = "Available");
 
 		Search.searchCP(searchTerm = "${userScreenName}");
 
-		var key_userScreenName = "${userScreenName}";
-
 		AssertTextEquals(
+			key_userScreenName = "${userScreenName}",
 			locator1 = "UserGroupsAssignUsers#USER_TABLE_SCREEN_NAME",
 			value1 = "${userScreenName}");
 
-		Check(locator1 = "UserGroupsAssignUsers#USER_TABLE_CHECKBOX");
+		Check(
+			key_userScreenName = "${userScreenName}",
+			locator1 = "UserGroupsAssignUsers#USER_TABLE_CHECKBOX");
 
 		AssertClick(
 			locator1 = "Button#UPDATE_ASSOCIATIONS",
@@ -385,10 +378,12 @@ definition {
 		Navigator.gotoNavItem(navItem = "Current");
 
 		AssertTextEquals(
+			key_userScreenName = "${userScreenName}",
 			locator1 = "UsersAndOrganizationsAssignUsers#USER_TABLE_USER_NAME",
 			value1 = "${userFirstName} ${userLastName}");
 
 		AssertTextEquals(
+			key_userScreenName = "${userScreenName}",
 			locator1 = "UserGroupsAssignUsers#USER_TABLE_SCREEN_NAME",
 			value1 = "${userScreenName}");
 
@@ -576,11 +571,6 @@ definition {
 			locator1 = "UsersAndOrganizationsEditOrganization#PARENT_ORGANIZATION_SELECT_BUTTON",
 			value1 = "Select");
 
-		LiferayEvent.waitForLiferayEvent(
-			attributeName = "src",
-			attributeValue = "dialog-iframe-popup",
-			eventName = "modalIframeLoaded");
-
 		SelectFrame(locator1 = "UsersAndOrganizationsSelectOrganization#SELECT_ORGANIZATION_IFRAME");
 
 		AssertTextEquals(
@@ -603,7 +593,7 @@ definition {
 	}
 
 	macro tearDownCP {
-		ProductMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Users",
 			panel = "Control Panel",
 			portlet = "Users and Organizations");
@@ -751,11 +741,6 @@ definition {
 				locator1 = "UsersAndOrganizationsEditOrganization#PARENT_ORGANIZATION_SELECT_BUTTON",
 				value1 = "Change");
 
-			LiferayEvent.waitForLiferayEvent(
-				attributeName = "src",
-				attributeValue = "dialog-iframe-popup",
-				eventName = "modalIframeLoaded");
-
 			SelectFrame(locator1 = "UsersAndOrganizationsSelectOrganization#SELECT_ORGANIZATION_IFRAME");
 
 			AssertTextEquals(
@@ -770,11 +755,6 @@ definition {
 			AssertClick(
 				locator1 = "UsersAndOrganizationsEditOrganization#PARENT_ORGANIZATION_SELECT_BUTTON",
 				value1 = "Select");
-
-			LiferayEvent.waitForLiferayEvent(
-				attributeName = "src",
-				attributeValue = "dialog-iframe-popup",
-				eventName = "modalIframeLoaded");
 
 			SelectFrame(locator1 = "UsersAndOrganizationsSelectOrganization#SELECT_ORGANIZATION_IFRAME");
 

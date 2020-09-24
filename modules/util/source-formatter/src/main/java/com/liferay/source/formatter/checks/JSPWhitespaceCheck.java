@@ -176,7 +176,7 @@ public class JSPWhitespaceCheck extends WhitespaceCheck {
 					continue;
 				}
 
-				if (!trimmedLine.equals("%>") && line.contains("%>") &&
+				if (!trimmedLine.startsWith("%>") && line.contains("%>") &&
 					!line.contains("--%>") && !line.contains(" %>")) {
 
 					line = StringUtil.replace(line, "%>", " %>");
@@ -206,7 +206,9 @@ public class JSPWhitespaceCheck extends WhitespaceCheck {
 					continue;
 				}
 
-				line = formatIncorrectSyntax(line, "\t ", "\t", false);
+				if (!javaSource) {
+					line = formatIncorrectSyntax(line, "\t ", "\t", false);
+				}
 
 				line = _formatWhitespace(line, javaSource);
 

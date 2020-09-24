@@ -56,18 +56,21 @@ renderResponse.setTitle((workflowDefinition == null) ? LanguageUtil.get(request,
 
 <c:if test="<%= workflowDefinition != null %>">
 	<liferay-frontend:info-bar>
-		<clay:container>
+		<clay:container-fluid>
 			<div class="info-bar-item">
 				<c:choose>
 					<c:when test="<%= active %>">
-						<span class="label label-info label-lg">
-							<liferay-ui:message key="published" />
-						</span>
+						<clay:label
+							displayType="info"
+							label="published"
+							large="<%= true %>"
+						/>
 					</c:when>
 					<c:otherwise>
-						<span class="label label-lg label-secondary">
-							<liferay-ui:message key="not-published" />
-						</span>
+						<clay:label
+							label="not-published"
+							large="<%= true %>"
+						/>
 					</c:otherwise>
 				</c:choose>
 			</div>
@@ -86,7 +89,7 @@ renderResponse.setTitle((workflowDefinition == null) ? LanguageUtil.get(request,
 					</c:otherwise>
 				</c:choose>
 			</span>
-		</clay:container>
+		</clay:container-fluid>
 
 		<liferay-frontend:info-bar-buttons>
 			<liferay-frontend:info-bar-sidenav-toggler-button
@@ -104,26 +107,30 @@ renderResponse.setTitle((workflowDefinition == null) ? LanguageUtil.get(request,
 			<div class="sidebar sidebar-light">
 				<div class="tbar-visible-xs">
 					<nav class="component-tbar tbar">
-						<clay:container>
+						<clay:container-fluid>
 							<ul class="tbar-nav">
 								<li class="tbar-item">
 									<aui:icon cssClass="component-action sidenav-close" image="times" markupView="lexicon" url="javascript:;" />
 								</li>
 							</ul>
-						</clay:container>
+						</clay:container-fluid>
 					</nav>
 				</div>
 
 				<div class="sidebar-header">
-					<div class="autofit-row sidebar-section">
-						<div class="autofit-col autofit-col-expand">
+					<clay:content-row
+						cssClass="sidebar-section"
+					>
+						<clay:content-col
+							expand="<%= true %>"
+						>
 							<h4 class="component-title">
 								<span class="text-truncate-inline">
 									<span class="text-truncate"><%= HtmlUtil.escape(workflowDefinition.getTitle(LanguageUtil.getLanguageId(request))) %></span>
 								</span>
 							</h4>
-						</div>
-					</div>
+						</clay:content-col>
+					</clay:content-row>
 				</div>
 
 				<div class="sidebar-body">
@@ -171,7 +178,7 @@ renderResponse.setTitle((workflowDefinition == null) ? LanguageUtil.get(request,
 										<liferay-ui:message key="total-modifications" />
 									</dt>
 									<dd class="sidebar-dd">
-										<liferay-ui:message arguments='<%= new String[] {workflowDefinitionDisplayContext.getWorkflowDefinitionsCount(workflowDefinition) + ""} %>' key="x-revisions" translateArguments="<%= false %>" />
+										<liferay-ui:message arguments='<%= workflowDefinitionDisplayContext.getWorkflowDefinitionsCount(workflowDefinition) + "" %>' key="x-revisions" translateArguments="<%= false %>" />
 									</dd>
 									<dt class="sidebar-dt"></dt>
 									<dd class="sidebar-dd"></dd>
@@ -190,7 +197,7 @@ renderResponse.setTitle((workflowDefinition == null) ? LanguageUtil.get(request,
 		</div>
 	</c:if>
 
-	<clay:container>
+	<clay:container-fluid>
 		<div class="sidenav-content">
 			<aui:form method="post" name="fm">
 				<aui:input name="redirect" type="hidden" value="<%= redirect %>" />
@@ -201,18 +208,22 @@ renderResponse.setTitle((workflowDefinition == null) ? LanguageUtil.get(request,
 
 				<div class="card-horizontal main-content-card">
 					<div class="card-row-padded">
+						<liferay-ui:error exception="<%= IllegalArgumentException.class %>">
+
+							<%
+							IllegalArgumentException iae = (IllegalArgumentException)errorException;
+							%>
+
+							<liferay-ui:message key="<%= iae.getMessage() %>" />
+						</liferay-ui:error>
+
+						<liferay-ui:error exception="<%= NoSuchRoleException.class %>" message="the-role-could-not-be-found" />
+
 						<liferay-ui:error exception="<%= RequiredWorkflowDefinitionException.class %>">
 							<liferay-ui:message arguments="<%= workflowDefinitionDisplayContext.getMessageArguments((RequiredWorkflowDefinitionException)errorException) %>" key="<%= workflowDefinitionDisplayContext.getMessageKey((RequiredWorkflowDefinitionException)errorException) %>" translateArguments="<%= false %>" />
 						</liferay-ui:error>
 
-						<liferay-ui:error exception="<%= WorkflowDefinitionFileException.class %>">
-
-							<%
-							WorkflowDefinitionFileException wdfe = (WorkflowDefinitionFileException)errorException;
-							%>
-
-							<liferay-ui:message key="<%= HtmlUtil.escape(wdfe.getMessage()) %>" />
-						</liferay-ui:error>
+						<liferay-ui:error exception="<%= WorkflowDefinitionFileException.class %>" message="please-enter-valid-content" />
 
 						<liferay-ui:error exception="<%= WorkflowDefinitionTitleException.class %>" message="please-add-a-workflow-title-before-publishing" />
 
@@ -232,7 +243,7 @@ renderResponse.setTitle((workflowDefinition == null) ? LanguageUtil.get(request,
 							</clay:col>
 
 							<clay:col
-								className="workflow-definition-upload"
+								cssClass="workflow-definition-upload"
 								size="12"
 							>
 								<liferay-util:buffer
@@ -249,8 +260,8 @@ renderResponse.setTitle((workflowDefinition == null) ? LanguageUtil.get(request,
 							</clay:col>
 
 							<clay:col
-								className="workflow-definition-content-source-wrapper"
-								id='<%= renderResponse.getNamespace() + "contentSourceWrapper" %>'
+								cssClass="workflow-definition-content-source-wrapper"
+								id='<%= liferayPortletResponse.getNamespace() + "contentSourceWrapper" %>'
 								size="12"
 							>
 								<div class="workflow-definition-content-source" id="<portlet:namespace />contentEditor"></div>
@@ -280,7 +291,7 @@ renderResponse.setTitle((workflowDefinition == null) ? LanguageUtil.get(request,
 				</aui:button-row>
 			</aui:form>
 		</div>
-	</clay:container>
+	</clay:container-fluid>
 </div>
 
 <div class="hide" id="<%= randomNamespace %>titleInputLocalized">

@@ -14,7 +14,6 @@
 
 package com.liferay.depot.web.internal.servlet.taglib;
 
-import com.liferay.depot.configuration.DepotConfiguration;
 import com.liferay.depot.web.internal.display.context.DepotAdminRolesDisplayContext;
 import com.liferay.item.selector.ItemSelector;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -50,10 +49,6 @@ public class UserRolesPostJSPDynamicInclude extends BaseJSPDynamicInclude {
 		throws IOException {
 
 		try {
-			if (!_depotConfiguration.isEnabled()) {
-				return;
-			}
-
 			PortletRequest portletRequest =
 				(PortletRequest)httpServletRequest.getAttribute(
 					JavaConstants.JAVAX_PORTLET_REQUEST);
@@ -101,9 +96,6 @@ public class UserRolesPostJSPDynamicInclude extends BaseJSPDynamicInclude {
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		UserRolesPostJSPDynamicInclude.class);
-
-	@Reference
-	private DepotConfiguration _depotConfiguration;
 
 	@Reference
 	private ItemSelector _itemSelector;

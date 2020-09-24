@@ -22,33 +22,27 @@
 			<scope>provided</scope>
 		</dependency>
 #end
+#if (${liferayVersion.startsWith("7.0")} || ${liferayVersion.startsWith("7.1")} || ${liferayVersion.startsWith("7.2")})
 		<dependency>
 			<groupId>com.liferay</groupId>
 			<artifactId>com.liferay.petra.io</artifactId>
 			<scope>provided</scope>
 		</dependency>
-#if (${liferayVersion.startsWith("7.2")} || ${liferayVersion.startsWith("7.3")})
+#if (${liferayVersion.startsWith("7.2")})
 		<dependency>
 			<groupId>com.liferay</groupId>
 			<artifactId>com.liferay.petra.lang</artifactId>
 			<scope>provided</scope>
 		</dependency>
 #end
-#if (${liferayVersion.startsWith("7.3")})
-		<dependency>
-			<groupId>com.liferay</groupId>
-			<artifactId>com.liferay.petra.sql.dsl.api</artifactId>
-			<scope>provided</scope>
-		</dependency>
-#end
-#if (${liferayVersion.startsWith("7.1")} || ${liferayVersion.startsWith("7.2")} || ${liferayVersion.startsWith("7.3")})
+#if (${liferayVersion.startsWith("7.1")} || ${liferayVersion.startsWith("7.2")})
 		<dependency>
 			<groupId>com.liferay</groupId>
 			<artifactId>com.liferay.petra.string</artifactId>
 			<scope>provided</scope>
 		</dependency>
 #end
-#if (${liferayVersion.startsWith("7.2")} || ${liferayVersion.startsWith("7.3")})
+#if (${liferayVersion.startsWith("7.2")})
 		<dependency>
 			<groupId>com.liferay</groupId>
 			<artifactId>com.liferay.portal.aop.api</artifactId>
@@ -73,7 +67,7 @@
 			<artifactId>com.liferay.portal.kernel</artifactId>
 			<scope>provided</scope>
 		</dependency>
-#if (${liferayVersion.startsWith("7.2")} || ${liferayVersion.startsWith("7.3")})
+#if (${liferayVersion.startsWith("7.2")})
 		<dependency>
 			<groupId>org.osgi</groupId>
 			<artifactId>org.osgi.annotation.versioning</artifactId>
@@ -90,6 +84,13 @@
 			<artifactId>org.osgi.service.component.annotations</artifactId>
 			<scope>provided</scope>
 		</dependency>
+#else
+		<dependency>
+			<groupId>com.liferay.portal</groupId>
+			<artifactId>release.${product}.api</artifactId>
+			<scope>provided</scope>
+		</dependency>
+#end
 		<dependency>
 			<groupId>${groupId}</groupId>
 			<artifactId>${artifactId}-api</artifactId>

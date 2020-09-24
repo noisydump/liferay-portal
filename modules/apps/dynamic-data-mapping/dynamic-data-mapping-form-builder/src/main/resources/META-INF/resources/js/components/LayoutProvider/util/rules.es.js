@@ -35,7 +35,7 @@ export const isFieldValueOperand = (operands) => {
 };
 
 export const isOptionReferencedByOperand = (options, operandValue) => {
-	return options.some(({value}) => operandValue === value);
+	return options.some(({label}) => operandValue === label);
 };
 
 export const renameFieldInsideExpression = (
@@ -56,6 +56,20 @@ export const renameFieldInsideExpression = (
 	);
 };
 
+export const renameFieldInsideAutofill = (
+	object,
+	oldFieldName,
+	newFieldName
+) => {
+	Object.keys(object).map((key) => {
+		if (object[key] === oldFieldName) {
+			object[key] = newFieldName;
+		}
+	});
+
+	return object;
+};
+
 export const updateRulesReferences = (rules, oldProperties, newProperties) => {
 	const oldFieldName = oldProperties.fieldName;
 	const newFieldName = newProperties.fieldName;
@@ -74,6 +88,21 @@ export const updateRulesReferences = (rules, oldProperties, newProperties) => {
 				...action,
 				expression: renameFieldInsideExpression(
 					action.expression,
+					oldFieldName,
+					newFieldName
+				),
+			};
+		}
+		else if (action.action === 'auto-fill') {
+			action = {
+				...action,
+				inputs: renameFieldInsideAutofill(
+					action.inputs,
+					oldFieldName,
+					newFieldName
+				),
+				outputs: renameFieldInsideAutofill(
+					action.outputs,
 					oldFieldName,
 					newFieldName
 				),
@@ -107,16 +136,18 @@ export const updateRulesReferences = (rules, oldProperties, newProperties) => {
 					isEqualLengthOptions(oldOptions, newOptions) &&
 					isOptionReferencedByOperand(oldOptions, operand.value)
 				) {
-					const changedOption = newOptions.find(({value}) => {
-						return !oldOptions.some(
-							(option) => option.value == value
-						);
-					});
+					const changedOption = newOptions.find(
+						({value}) =>
+							value ===
+							oldOptions.find(
+								({label}) => label === operand.value
+							).value
+					);
 
 					if (changedOption) {
 						return {
 							...operand,
-							value: changedOption.value,
+							value: changedOption.label,
 						};
 					}
 				}

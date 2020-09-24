@@ -29,10 +29,10 @@ renderResponse.setTitle(LanguageUtil.format(request, "usages-and-propagation-x",
 GroupFragmentEntryUsageManagementToolbarDisplayContext groupFragmentEntryUsageManagementToolbarDisplayContext = new GroupFragmentEntryUsageManagementToolbarDisplayContext(request, liferayPortletRequest, liferayPortletResponse, groupFragmentEntryLinkDisplayContext.getSearchContainer());
 %>
 
-<clay:container
-	className="container-form-lg"
+<clay:container-fluid
+	cssClass="container-form-lg"
 >
-	<div class="sheet">
+	<clay:sheet>
 		<clay:row>
 			<clay:col
 				lg="12"
@@ -77,8 +77,8 @@ GroupFragmentEntryUsageManagementToolbarDisplayContext groupFragmentEntryUsageMa
 				</aui:form>
 			</clay:col>
 		</clay:row>
-	</div>
-</clay:container>
+	</clay:sheet>
+</clay:container-fluid>
 
 <liferay-frontend:component
 	componentId="<%= groupFragmentEntryUsageManagementToolbarDisplayContext.getDefaultEventHandler() %>"

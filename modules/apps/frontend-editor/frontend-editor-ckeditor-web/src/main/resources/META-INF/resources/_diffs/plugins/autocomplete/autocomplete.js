@@ -19,6 +19,8 @@
 	var KeyMap = A.Event.KeyMap;
 	var Lang = A.Lang;
 
+	var BR_TAG = 'BR';
+
 	var CSS_LFR_AC_CONTENT = 'lfr-ac-content';
 
 	var STR_EDITOR = 'editor';
@@ -183,6 +185,27 @@
 				}
 			});
 
+			// What follows is an algorithm to properly select the query
+			// from the last detected trigger. Because of the HTML
+			// structure, it's not as straightforward as a text search.
+			//
+			// If triggerIndex === -1, the trigger is not in the current
+			// HTML node element. Thus, we walk the DOM tree upwards
+			// until we find it, constructing the query as we visit the
+			// nodes in the tree.
+			//
+			// If triggerIndex > 0, we found the trigger in a longer
+			// text sequence.  We check if the char before the trigger
+			// is a space (' ' or nbsp;) by checking that trimming
+			// the char returns false or a filler char (\u200b) for
+			// WebKit-based engines. If that's the case, we take the
+			// substring from triggerPosition forward and discard the
+			// rest of the text sequence.
+			//
+			// If triggerIndex === 0, the trigger is the first char in
+			// the sequence which means it's already the right query and
+			// has no additional characters.
+
 			if (triggerIndex === -1) {
 				var triggerWalker = instance._getWalker(triggerContainer);
 
@@ -230,7 +253,8 @@
 			}
 			else if (
 				triggerIndex > 0 &&
-				query.charAt(triggerIndex - 1) === STR_SPACE
+				(!query.charAt(triggerIndex - 1).trim() ||
+					query.charAt(triggerIndex - 1) === '\u200b')
 			) {
 				query = query.substring(triggerIndex);
 			}
@@ -249,6 +273,16 @@
 			var prevTriggerPosition = instance._getPrevTriggerPosition();
 
 			var query = prevTriggerPosition.query;
+
+			if (
+				query &&
+				prevTriggerPosition.container.$.lastElementChild &&
+				prevTriggerPosition.container.$.lastElementChild.nodeName ===
+					BR_TAG
+			) {
+				query = null;
+			}
+
 			var trigger = prevTriggerPosition.value;
 
 			var res = instance._getRegExp().exec(query);
@@ -361,7 +395,8 @@
 
 			if (
 				!replaceContainer ||
-				!replaceContainer.hasClass('lfr-ac-content')
+				!replaceContainer.hasClass('lfr-ac-content') ||
+				prevTriggerPosition.value
 			) {
 				replaceContainer = prevTriggerPosition.container.split(
 					prevTriggerPosition.index
@@ -376,7 +411,15 @@
 
 			newElement.replace(replaceContainer);
 
-			var nextElement = newElement.getNext();
+			var nextElement = newElement.getNext(function () {
+				return (
+					this.type !== CKEDITOR.NODE_TEXT || this.getText().trim()
+				);
+			});
+
+			if (nextElement && nextElement.$.nodeName === BR_TAG) {
+				nextElement = null;
+			}
 
 			if (nextElement) {
 				var containerAscendant = instance._getContainerAscendant(

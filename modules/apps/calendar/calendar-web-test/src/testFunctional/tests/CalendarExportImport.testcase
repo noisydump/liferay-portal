@@ -15,7 +15,6 @@ definition {
 
 		ProductMenu.gotoPortlet(
 			category = "Site Builder",
-			panel = "Site Administration",
 			portlet = "Pages");
 
 		SitePages.addPublicPage(
@@ -122,7 +121,7 @@ definition {
 
 		Navigator.gotoPage(pageName = "Calendar Page");
 
-		CalendarEvent.delete();
+		CalendarEvent.tearDownNoCloseMessage();
 
 		Calendar.tearDown();
 

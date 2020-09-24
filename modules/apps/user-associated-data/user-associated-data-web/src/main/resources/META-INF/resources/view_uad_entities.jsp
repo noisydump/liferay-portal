@@ -70,9 +70,9 @@ long[] groupIds = viewUADEntitiesDisplay.getGroupIds();
 		</c:otherwise>
 	</c:choose>
 
-	<clay:container
-		className="closed sidenav-container sidenav-right"
-		id='<%= renderResponse.getNamespace() + "infoPanelId" %>'
+	<clay:container-fluid
+		cssClass="closed sidenav-container sidenav-right"
+		id='<%= liferayPortletResponse.getNamespace() + "infoPanelId" %>'
 	>
 		<div id="breadcrumb">
 			<liferay-ui:breadcrumb
@@ -84,12 +84,7 @@ long[] groupIds = viewUADEntitiesDisplay.getGroupIds();
 		</div>
 
 		<liferay-ui:error key="deleteUADEntityException">
-
-			<%
-			String message = (String)errorException;
-			%>
-
-			<liferay-ui:message key="<%= message %>" localizeKey="<%= false %>" />
+			<liferay-ui:message key="<%= (String)errorException %>" localizeKey="<%= false %>" />
 		</liferay-ui:error>
 
 		<c:if test="<%= !Objects.equals(viewUADEntitiesDisplay.getApplicationKey(), UADConstants.ALL_APPLICATIONS) %>">
@@ -100,7 +95,7 @@ long[] groupIds = viewUADEntitiesDisplay.getGroupIds();
 
 			<liferay-frontend:sidebar-panel
 				resourceURL="<%= entityTypeSidebarURL %>"
-				searchContainerId="<%= viewUADEntitiesDisplay.getSearchContainerID(request, renderResponse.getNamespace()) %>"
+				searchContainerId="<%= viewUADEntitiesDisplay.getSearchContainerID(request, liferayPortletResponse.getNamespace()) %>"
 			>
 				<liferay-util:include page="/info_panel.jsp" servletContext="<%= application %>" />
 			</liferay-frontend:sidebar-panel>
@@ -150,9 +145,9 @@ long[] groupIds = viewUADEntitiesDisplay.getGroupIds();
 
 							<c:if test='<%= columnEntryKey.equals("name") || columnEntryKey.equals("title") %>'>
 								<c:if test="<%= uadEntity.isInTrash() %>">
-									<span class="label label-secondary">
-										<span class="label-item label-item-expand"><%= StringUtil.toUpperCase(LanguageUtil.get(request, "in-trash"), locale) %></span>
-									</span>
+									<clay:label
+										label="in-trash"
+									/>
 								</c:if>
 
 								<c:if test="<%= showUserIcon %>">
@@ -183,7 +178,7 @@ long[] groupIds = viewUADEntitiesDisplay.getGroupIds();
 				/>
 			</liferay-ui:search-container>
 		</div>
-	</clay:container>
+	</clay:container-fluid>
 </aui:form>
 
 <aui:script>

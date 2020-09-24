@@ -114,7 +114,9 @@ public abstract class BaseDataRecordCollectionResourceTestCase {
 		DataRecordCollectionResource.Builder builder =
 			DataRecordCollectionResource.builder();
 
-		dataRecordCollectionResource = builder.locale(
+		dataRecordCollectionResource = builder.authentication(
+			"test@liferay.com", "test"
+		).locale(
 			LocaleUtil.getDefault()
 		).build();
 	}
@@ -614,6 +616,11 @@ public abstract class BaseDataRecordCollectionResourceTestCase {
 	}
 
 	@Test
+	public void testGetDataRecordCollectionPermissionsPage() throws Exception {
+		Assert.assertTrue(false);
+	}
+
+	@Test
 	public void testPutDataRecordCollectionPermission() throws Exception {
 		@SuppressWarnings("PMD.UnusedLocalVariable")
 		DataRecordCollection dataRecordCollection =
@@ -822,7 +829,9 @@ public abstract class BaseDataRecordCollectionResourceTestCase {
 		}
 	}
 
-	protected void assertValid(DataRecordCollection dataRecordCollection) {
+	protected void assertValid(DataRecordCollection dataRecordCollection)
+		throws Exception {
+
 		boolean valid = true;
 
 		if (dataRecordCollection.getId() == null) {

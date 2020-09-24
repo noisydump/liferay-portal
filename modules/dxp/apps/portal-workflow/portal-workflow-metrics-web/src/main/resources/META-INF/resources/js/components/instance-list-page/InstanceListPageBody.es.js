@@ -9,6 +9,8 @@
  * distribution rights of the Software.
  */
 
+import ClayLayout from '@clayui/layout';
+import {usePrevious} from 'frontend-js-react-web';
 import React, {useContext, useMemo} from 'react';
 
 import ContentView from '../../shared/components/content-view/ContentView.es';
@@ -31,10 +33,13 @@ const Body = ({
 	filtered,
 	routeParams,
 }) => {
-	const {visibleModal} = useContext(ModalContext);
-
+	const {fetchOnClose, visibleModal} = useContext(ModalContext);
+	const previousFetchData = usePrevious(fetchData);
 	const promises = useMemo(() => {
-		if (!visibleModal) {
+		if (
+			(previousFetchData !== fetchData || fetchOnClose) &&
+			!visibleModal
+		) {
 			return [fetchData()];
 		}
 
@@ -65,7 +70,7 @@ const Body = ({
 
 	return (
 		<PromisesResolver promises={promises}>
-			<div className="container-fluid-1280 mt-4">
+			<ClayLayout.ContainerFluid className="mt-4">
 				<ContentView {...statesProps}>
 					{totalCount > 0 && (
 						<>
@@ -78,7 +83,7 @@ const Body = ({
 						</>
 					)}
 				</ContentView>
-			</div>
+			</ClayLayout.ContainerFluid>
 
 			<Body.ModalWrapper />
 		</PromisesResolver>

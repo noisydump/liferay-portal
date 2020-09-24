@@ -17,7 +17,6 @@ package com.liferay.portal.workflow.kaleo.runtime.internal.notification.recipien
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.Group;
-import com.liferay.portal.kernel.model.GroupConstants;
 import com.liferay.portal.kernel.model.Organization;
 import com.liferay.portal.kernel.model.Role;
 import com.liferay.portal.kernel.model.User;
@@ -38,6 +37,7 @@ import com.liferay.portal.workflow.kaleo.model.KaleoTaskAssignmentInstance;
 import com.liferay.portal.workflow.kaleo.runtime.ExecutionContext;
 import com.liferay.portal.workflow.kaleo.runtime.notification.NotificationRecipient;
 import com.liferay.portal.workflow.kaleo.runtime.notification.recipient.NotificationRecipientBuilder;
+import com.liferay.portal.workflow.kaleo.runtime.util.validator.GroupAwareRoleValidator;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -45,6 +45,9 @@ import java.util.Set;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ReferenceCardinality;
+import org.osgi.service.component.annotations.ReferencePolicy;
+import org.osgi.service.component.annotations.ReferencePolicyOption;
 
 /**
  * @author Michael C. Han
@@ -87,6 +90,17 @@ public class RoleNotificationRecipientBuilder
 		addRoleRecipientAddresses(
 			notificationRecipients, _roleLocalService.getRole(roleId),
 			notificationReceptionType, executionContext);
+	}
+
+	@Reference(
+		cardinality = ReferenceCardinality.MULTIPLE,
+		policy = ReferencePolicy.DYNAMIC,
+		policyOption = ReferencePolicyOption.GREEDY
+	)
+	protected void addGroupAwareRoleValidator(
+		GroupAwareRoleValidator groupAwareRoleValidator) {
+
+		_groupAwareRoleValidators.add(groupAwareRoleValidator);
 	}
 
 	protected void addRoleRecipientAddresses(
@@ -207,7 +221,7 @@ public class RoleNotificationRecipientBuilder
 	protected boolean isValidGroup(Group group, Role role)
 		throws PortalException {
 
-		if ((group != null) && (group.getType() == GroupConstants.TYPE_DEPOT) &&
+		if ((group != null) && group.isDepot() &&
 			(role.getType() == RoleConstants.TYPE_DEPOT)) {
 
 			return true;
@@ -223,8 +237,25 @@ public class RoleNotificationRecipientBuilder
 			return true;
 		}
 
+		for (GroupAwareRoleValidator groupAwareRoleValidator :
+				_groupAwareRoleValidators) {
+
+			if (groupAwareRoleValidator.isValidGroup(group, role)) {
+				return true;
+			}
+		}
+
 		return false;
 	}
+
+	protected void removeGroupAwareRoleValidator(
+		GroupAwareRoleValidator groupAwareRoleValidator) {
+
+		_groupAwareRoleValidators.remove(groupAwareRoleValidator);
+	}
+
+	private final List<GroupAwareRoleValidator> _groupAwareRoleValidators =
+		new ArrayList<>();
 
 	@Reference
 	private GroupLocalService _groupLocalService;

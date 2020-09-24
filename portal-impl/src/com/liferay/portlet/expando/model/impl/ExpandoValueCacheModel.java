@@ -18,6 +18,7 @@ import com.liferay.expando.kernel.model.ExpandoValue;
 import com.liferay.petra.lang.HashUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.model.CacheModel;
+import com.liferay.portal.kernel.model.MVCCModel;
 
 import java.io.Externalizable;
 import java.io.IOException;
@@ -31,22 +32,24 @@ import java.io.ObjectOutput;
  * @generated
  */
 public class ExpandoValueCacheModel
-	implements CacheModel<ExpandoValue>, Externalizable {
+	implements CacheModel<ExpandoValue>, Externalizable, MVCCModel {
 
 	@Override
-	public boolean equals(Object obj) {
-		if (this == obj) {
+	public boolean equals(Object object) {
+		if (this == object) {
 			return true;
 		}
 
-		if (!(obj instanceof ExpandoValueCacheModel)) {
+		if (!(object instanceof ExpandoValueCacheModel)) {
 			return false;
 		}
 
 		ExpandoValueCacheModel expandoValueCacheModel =
-			(ExpandoValueCacheModel)obj;
+			(ExpandoValueCacheModel)object;
 
-		if (valueId == expandoValueCacheModel.valueId) {
+		if ((valueId == expandoValueCacheModel.valueId) &&
+			(mvccVersion == expandoValueCacheModel.mvccVersion)) {
+
 			return true;
 		}
 
@@ -55,14 +58,30 @@ public class ExpandoValueCacheModel
 
 	@Override
 	public int hashCode() {
-		return HashUtil.hash(0, valueId);
+		int hashCode = HashUtil.hash(0, valueId);
+
+		return HashUtil.hash(hashCode, mvccVersion);
+	}
+
+	@Override
+	public long getMvccVersion() {
+		return mvccVersion;
+	}
+
+	@Override
+	public void setMvccVersion(long mvccVersion) {
+		this.mvccVersion = mvccVersion;
 	}
 
 	@Override
 	public String toString() {
-		StringBundler sb = new StringBundler(17);
+		StringBundler sb = new StringBundler(21);
 
-		sb.append("{valueId=");
+		sb.append("{mvccVersion=");
+		sb.append(mvccVersion);
+		sb.append(", ctCollectionId=");
+		sb.append(ctCollectionId);
+		sb.append(", valueId=");
 		sb.append(valueId);
 		sb.append(", companyId=");
 		sb.append(companyId);
@@ -87,6 +106,8 @@ public class ExpandoValueCacheModel
 	public ExpandoValue toEntityModel() {
 		ExpandoValueImpl expandoValueImpl = new ExpandoValueImpl();
 
+		expandoValueImpl.setMvccVersion(mvccVersion);
+		expandoValueImpl.setCtCollectionId(ctCollectionId);
 		expandoValueImpl.setValueId(valueId);
 		expandoValueImpl.setCompanyId(companyId);
 		expandoValueImpl.setTableId(tableId);
@@ -111,6 +132,10 @@ public class ExpandoValueCacheModel
 	public void readExternal(ObjectInput objectInput)
 		throws ClassNotFoundException, IOException {
 
+		mvccVersion = objectInput.readLong();
+
+		ctCollectionId = objectInput.readLong();
+
 		valueId = objectInput.readLong();
 
 		companyId = objectInput.readLong();
@@ -129,6 +154,10 @@ public class ExpandoValueCacheModel
 
 	@Override
 	public void writeExternal(ObjectOutput objectOutput) throws IOException {
+		objectOutput.writeLong(mvccVersion);
+
+		objectOutput.writeLong(ctCollectionId);
+
 		objectOutput.writeLong(valueId);
 
 		objectOutput.writeLong(companyId);
@@ -151,6 +180,8 @@ public class ExpandoValueCacheModel
 		}
 	}
 
+	public long mvccVersion;
+	public long ctCollectionId;
 	public long valueId;
 	public long companyId;
 	public long tableId;

@@ -31,6 +31,11 @@ public class SocialActivityTable extends BaseTable<SocialActivityTable> {
 	public static final SocialActivityTable INSTANCE =
 		new SocialActivityTable();
 
+	public final Column<SocialActivityTable, Long> mvccVersion = createColumn(
+		"mvccVersion", Long.class, Types.BIGINT, Column.FLAG_NULLITY);
+	public final Column<SocialActivityTable, Long> ctCollectionId =
+		createColumn(
+			"ctCollectionId", Long.class, Types.BIGINT, Column.FLAG_PRIMARY);
 	public final Column<SocialActivityTable, Long> activityId = createColumn(
 		"activityId", Long.class, Types.BIGINT, Column.FLAG_PRIMARY);
 	public final Column<SocialActivityTable, Long> groupId = createColumn(

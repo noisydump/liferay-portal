@@ -19,7 +19,7 @@
 <%
 ItemSelectorUploadViewDisplayContext itemSelectorUploadViewDisplayContext = (ItemSelectorUploadViewDisplayContext)request.getAttribute(ItemSelectorUploadView.ITEM_SELECTOR_UPLOAD_VIEW_DISPLAY_CONTEXT);
 
-ItemSelectorReturnTypeResolver itemSelectorReturnTypeResolver = itemSelectorUploadViewDisplayContext.getItemSelectorReturnTypeResolver();
+ItemSelectorReturnTypeResolver<?, ?> itemSelectorReturnTypeResolver = itemSelectorUploadViewDisplayContext.getItemSelectorReturnTypeResolver();
 
 Class<?> itemSelectorReturnTypeClass = itemSelectorReturnTypeResolver.getItemSelectorReturnTypeClass();
 
@@ -48,8 +48,8 @@ Map<String, Object> context = HashMapBuilder.<String, Object>put(
 ).build();
 %>
 
-<clay:container
-	className="lfr-item-viewer"
+<clay:container-fluid
+	cssClass="lfr-item-viewer"
 	id="itemSelectorUploadContainer"
 >
 	<div class="drop-enabled drop-zone item-selector upload-view">
@@ -73,7 +73,7 @@ Map<String, Object> context = HashMapBuilder.<String, Object>put(
 	/>
 
 	<div class="item-selector-preview-container"></div>
-</clay:container>
+</clay:container-fluid>
 
 <liferay-frontend:component
 	context="<%= context %>"

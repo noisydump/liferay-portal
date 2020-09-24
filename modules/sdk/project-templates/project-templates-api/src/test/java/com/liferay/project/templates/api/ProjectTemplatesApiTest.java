@@ -78,8 +78,8 @@ public class ProjectTemplatesApiTest implements BaseProjectTemplatesTestCase {
 		testExists(gradleProjectDir, "bnd.bnd");
 
 		testContains(
-			gradleProjectDir, "build.gradle",
-			BaseProjectTemplatesTestCase.DEPENDENCY_OSGI_CORE);
+			gradleProjectDir, "build.gradle", DEPENDENCY_RELEASE_PORTAL_API);
+
 		testContains(
 			gradleProjectDir, "src/main/java/foo/api/Foo.java",
 			"public interface Foo");
@@ -124,7 +124,7 @@ public class ProjectTemplatesApiTest implements BaseProjectTemplatesTestCase {
 	@Test
 	public void testBuildTemplateApiContainsCorrectAuthor() throws Exception {
 		String author = "Test Author";
-		String liferayVersion = "7.3.1";
+		String liferayVersion = getDefaultLiferayVersion();
 		String template = "api";
 		String name = "author-test";
 

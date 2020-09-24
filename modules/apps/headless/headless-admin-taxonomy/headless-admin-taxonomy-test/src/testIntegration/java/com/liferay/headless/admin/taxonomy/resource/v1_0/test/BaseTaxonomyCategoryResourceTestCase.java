@@ -120,7 +120,9 @@ public abstract class BaseTaxonomyCategoryResourceTestCase {
 		TaxonomyCategoryResource.Builder builder =
 			TaxonomyCategoryResource.builder();
 
-		taxonomyCategoryResource = builder.locale(
+		taxonomyCategoryResource = builder.authentication(
+			"test@liferay.com", "test"
+		).locale(
 			LocaleUtil.getDefault()
 		).build();
 	}
@@ -1309,7 +1311,9 @@ public abstract class BaseTaxonomyCategoryResourceTestCase {
 		}
 	}
 
-	protected void assertValid(TaxonomyCategory taxonomyCategory) {
+	protected void assertValid(TaxonomyCategory taxonomyCategory)
+		throws Exception {
+
 		boolean valid = true;
 
 		if (taxonomyCategory.getDateCreated() == null) {

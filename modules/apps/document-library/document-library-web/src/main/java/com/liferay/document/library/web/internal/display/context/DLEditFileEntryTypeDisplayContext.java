@@ -69,24 +69,27 @@ public class DLEditFileEntryTypeDisplayContext {
 		_liferayPortletResponse = liferayPortletResponse;
 	}
 
-	public List<Map> getAdditionalPanels(String npmResolvedPackageName) {
+	public List<Map<String, Object>> getAdditionalPanels(
+		String npmResolvedPackageName) {
+
 		ThemeDisplay themeDisplay =
 			(ThemeDisplay)_liferayPortletRequest.getAttribute(
 				WebKeys.THEME_DISPLAY);
 
-		List<Map> additionalPanels = new ArrayList<>();
+		List<Map<String, Object>> additionalPanels = new ArrayList<>();
 
 		additionalPanels.add(
 			HashMapBuilder.<String, Object>put(
 				"icon", "cog"
 			).put(
-				"label", LanguageUtil.get(themeDisplay.getLocale(), "details")
+				"label",
+				LanguageUtil.get(themeDisplay.getLocale(), "properties")
 			).put(
 				"pluginEntryPoint",
 				npmResolvedPackageName +
 					"/document_library/js/ddm/panels/index.es"
 			).put(
-				"sidebarPanelId", "details"
+				"sidebarPanelId", "properties"
 			).put(
 				"url",
 				() -> {

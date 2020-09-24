@@ -23,9 +23,9 @@ boolean privateLayout = ParamUtil.getBoolean(request, "privateLayout");
 
 <aui:form cssClass="lfr-export-dialog" method="post" name="fm1">
 	<div class="lfr-dynamic-uploader">
-		<clay:container>
+		<clay:container-fluid>
 			<div class="lfr-upload-container" id="<portlet:namespace />fileUpload"></div>
-		</clay:container>
+		</clay:container-fluid>
 	</div>
 
 	<%
@@ -37,7 +37,7 @@ boolean privateLayout = ParamUtil.getBoolean(request, "privateLayout");
 	</aui:button-row>
 
 	<%
-	Date expirationDate = new Date(System.currentTimeMillis() + PropsValues.SESSION_TIMEOUT * Time.MINUTE);
+	Date expirationDate = new Date(System.currentTimeMillis() + (PropsValues.SESSION_TIMEOUT * Time.MINUTE));
 
 	Ticket ticket = TicketLocalServiceUtil.addTicket(user.getCompanyId(), User.class.getName(), user.getUserId(), TicketConstants.TYPE_IMPERSONATE, null, expirationDate, new ServiceContext());
 	%>

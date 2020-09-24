@@ -15,9 +15,14 @@
 import ClayButton from '@clayui/button';
 import ClayIcon from '@clayui/icon';
 import ClayLabel from '@clayui/label';
+import {openSelectionModal} from 'frontend-js-web';
 import React, {useEffect, useState} from 'react';
 
-function GroupLabels({itemSelectorURL, portletNamespace, target}) {
+export default function GroupLabels({
+	itemSelectorURL,
+	portletNamespace,
+	target,
+}) {
 	const [groupIds, setGroupIds] = useState([]);
 	const [groupNames, setGroupNames] = useState([]);
 
@@ -25,7 +30,9 @@ function GroupLabels({itemSelectorURL, portletNamespace, target}) {
 		setGroupIds(
 			document[`${portletNamespace}fm`][
 				`${portletNamespace}groupIds${target}`
-			].value.split(',')
+			].value
+				.split(',')
+				.filter((groupId) => !!groupId)
 		);
 		setGroupNames(
 			document[`${portletNamespace}fm`][
@@ -34,30 +41,6 @@ function GroupLabels({itemSelectorURL, portletNamespace, target}) {
 				.split('@@')
 				.filter((name) => !!name)
 		);
-	}, [portletNamespace, target]);
-
-	useEffect(() => {
-		const selectGroupHandle = Liferay.on(
-			`${portletNamespace}selectGroup`,
-			(event) => {
-				if (event.grouptarget === target) {
-					setGroupIds((groupIds) =>
-						groupIds.indexOf(event.groupid) == -1
-							? [...groupIds, event.groupid]
-							: groupIds
-					);
-					setGroupNames((groupNames) =>
-						groupNames.indexOf(event.groupdescriptivename) == -1
-							? [...groupNames, event.groupdescriptivename]
-							: groupNames
-					);
-				}
-			}
-		);
-
-		return () => {
-			Liferay.detach(selectGroupHandle);
-		};
 	}, [portletNamespace, target]);
 
 	useEffect(() => {
@@ -105,19 +88,33 @@ function GroupLabels({itemSelectorURL, portletNamespace, target}) {
 			<ClayButton
 				displayType="unstyled"
 				onClick={() => {
-					Liferay.Util.selectEntity({
-						dialog: {
-							constrain: true,
-							modal: true,
-							width: 600,
+					openSelectionModal({
+						onSelect: (event) => {
+							if (event.grouptarget === target) {
+								setGroupIds((groupIds) =>
+									groupIds.indexOf(event.groupid) == -1
+										? [...groupIds, event.groupid]
+										: groupIds
+								);
+								setGroupNames((groupNames) =>
+									groupNames.indexOf(
+										event.groupdescriptivename
+									) == -1
+										? [
+												...groupNames,
+												event.groupdescriptivename,
+										  ]
+										: groupNames
+								);
+							}
 						},
-						id: `${portletNamespace}selectGroup${target}`,
+						selectEventName: `${portletNamespace}selectGroup${target}`,
 						selectedData: groupIds,
 						title: Liferay.Util.sub(
 							Liferay.Language.get('select-x'),
 							Liferay.Language.get('site')
 						),
-						uri: itemSelectorURL,
+						url: itemSelectorURL,
 					});
 				}}
 			>
@@ -126,7 +123,3 @@ function GroupLabels({itemSelectorURL, portletNamespace, target}) {
 		</>
 	);
 }
-
-export default (props) => (
-	<GroupLabels {...props} portletNamespace={`_${props.portletNamespace}_`} />
-);

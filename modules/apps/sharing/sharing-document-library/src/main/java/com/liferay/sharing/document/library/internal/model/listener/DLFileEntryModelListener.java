@@ -15,10 +15,10 @@
 package com.liferay.sharing.document.library.internal.model.listener;
 
 import com.liferay.document.library.kernel.model.DLFileEntry;
-import com.liferay.portal.kernel.exception.ModelListenerException;
 import com.liferay.portal.kernel.model.BaseModelListener;
 import com.liferay.portal.kernel.model.ModelListener;
 import com.liferay.portal.kernel.service.ClassNameLocalService;
+import com.liferay.portal.kernel.util.TempFileEntryUtil;
 import com.liferay.sharing.service.SharingEntryLocalService;
 
 import org.osgi.service.component.annotations.Component;
@@ -31,14 +31,16 @@ import org.osgi.service.component.annotations.Reference;
 public class DLFileEntryModelListener extends BaseModelListener<DLFileEntry> {
 
 	@Override
-	public void onBeforeRemove(DLFileEntry dlFileEntry)
-		throws ModelListenerException {
+	public void onBeforeRemove(DLFileEntry dlFileEntry) {
+		String fileName = dlFileEntry.getFileName();
 
-		long classNameId = _classNameLocalService.getClassNameId(
-			DLFileEntry.class.getName());
+		if (!fileName.contains(TempFileEntryUtil.TEMP_RANDOM_SUFFIX)) {
+			long classNameId = _classNameLocalService.getClassNameId(
+				DLFileEntry.class.getName());
 
-		_sharingEntryLocalService.deleteSharingEntries(
-			classNameId, dlFileEntry.getFileEntryId());
+			_sharingEntryLocalService.deleteSharingEntries(
+				classNameId, dlFileEntry.getFileEntryId());
+		}
 	}
 
 	@Reference

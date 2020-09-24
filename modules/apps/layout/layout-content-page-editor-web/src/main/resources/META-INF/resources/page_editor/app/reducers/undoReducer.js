@@ -12,51 +12,95 @@
  * details.
  */
 
+import {DELETE_SEGMENTS_EXPERIENCE} from '../../plugins/experience/actions';
 import {
+	ADD_REDO_ACTION,
 	ADD_UNDO_ACTION,
-	CLEAN_UNDO_ACTIONS,
+	UPDATE_REDO_ACTIONS,
 	UPDATE_UNDO_ACTIONS,
 } from '../actions/types';
 import {getDerivedStateForUndo} from '../components/undo/undoActions';
 
-const MAX_UNDO_ACTIONS = 20;
+const MAX_UNDO_ACTIONS = 100;
+
+let actionId = 0;
 
 export default function undoReducer(state, action) {
 	switch (action.type) {
-		case ADD_UNDO_ACTION: {
-			const {actionType} = action;
+		case ADD_REDO_ACTION: {
+			const {actionType, originalType} = action;
 
-			const nextUndoHistory = state.undoHistory || [];
+			const nextRedoHistory = state.redoHistory || [];
 
 			return {
 				...state,
+				redoHistory: [
+					{
+						...getDerivedStateForUndo({
+							action,
+							state,
+							type: actionType,
+						}),
+						actionId: actionId++,
+						originalType,
+					},
+					...nextRedoHistory,
+				],
+			};
+		}
+		case ADD_UNDO_ACTION: {
+			const {actionType, originalType} = action;
+
+			const nextUndoHistory = state.undoHistory || [];
+
+			const nextRedoHistory = action.isRedo ? state.redoHistory : [];
+
+			return {
+				...state,
+				redoHistory: nextRedoHistory,
 				undoHistory: [
-					getDerivedStateForUndo({action, state, type: actionType}),
+					{
+						...getDerivedStateForUndo({
+							action,
+							state,
+							type: actionType,
+						}),
+						actionId: actionId++,
+						originalType,
+					},
 					...nextUndoHistory.slice(0, MAX_UNDO_ACTIONS - 1),
 				],
 			};
 		}
-		case CLEAN_UNDO_ACTIONS: {
-			let nextUndoHistory = [...(state.undoHistory || [])];
+		case DELETE_SEGMENTS_EXPERIENCE: {
+			const {segmentsExperienceId} = action.payload;
 
-			const itemId = action.itemId;
-
-			const item = state.layoutData.items[itemId];
-
-			if (item.config && item.config.fragmentEntryLinkId) {
-				nextUndoHistory = nextUndoHistory.filter(
-					({fragmentEntryLinkId}) =>
-						fragmentEntryLinkId !== item.config.fragmentEntryLinkId
-				);
-			}
-
-			nextUndoHistory = nextUndoHistory.filter(
-				({itemId}) => itemId !== action.itemId
-			);
+			const nextUndoHistory = state.undoHistory || [];
+			const nextRedoHistory = state.redoHistory || [];
 
 			return {
 				...state,
-				undoHistory: nextUndoHistory,
+				redoHistory: nextRedoHistory.filter(
+					(action) =>
+						action.segmentsExperienceId !== segmentsExperienceId &&
+						action.nextSegmentsExperienceId !== segmentsExperienceId
+				),
+				undoHistory: nextUndoHistory.filter(
+					(action) =>
+						action.segmentsExperienceId !== segmentsExperienceId &&
+						action.nextSegmentsExperienceId !== segmentsExperienceId
+				),
+			};
+		}
+		case UPDATE_REDO_ACTIONS: {
+			return {
+				...state,
+				redoHistory: action.redoHistory,
+			};
+		}
+		case 'UPDATE_STORE': {
+			return {
+				...action.store,
 			};
 		}
 		case UPDATE_UNDO_ACTIONS: {

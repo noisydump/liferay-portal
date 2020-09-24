@@ -23,8 +23,8 @@ import com.liferay.info.list.provider.DefaultInfoListProviderContext;
 import com.liferay.info.list.provider.InfoListProvider;
 import com.liferay.info.list.provider.InfoListProviderContext;
 import com.liferay.info.list.provider.InfoListProviderTracker;
+import com.liferay.journal.constants.JournalFolderConstants;
 import com.liferay.journal.model.JournalArticle;
-import com.liferay.journal.model.JournalFolderConstants;
 import com.liferay.journal.test.util.JournalTestUtil;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.service.ServiceContext;
@@ -38,6 +38,7 @@ import com.liferay.portal.kernel.util.Accessor;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.WebKeys;
+import com.liferay.portal.search.test.util.SearchTestRule;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
@@ -92,9 +93,10 @@ public class AssetInfoListProviderTest {
 			article2.getResourcePrimKey(), 1, serviceContext);
 
 		InfoListProvider<AssetEntry> infoListProvider =
-			_infoListProviderTracker.getInfoListProvider(
-				"com.liferay.asset.internal.info.list.provider." +
-					"HighestRatedAssetsInfoListProvider");
+			(InfoListProvider<AssetEntry>)
+				_infoListProviderTracker.getInfoListProvider(
+					"com.liferay.asset.internal.info.list.provider." +
+						"HighestRatedAssetsInfoListProvider");
 
 		List<AssetEntry> assetEntries = infoListProvider.getInfoList(
 			_infoListProviderContext);
@@ -145,9 +147,10 @@ public class AssetInfoListProviderTest {
 			JournalArticle.class.getName(), article2.getResourcePrimKey());
 
 		InfoListProvider<AssetEntry> infoListProvider =
-			_infoListProviderTracker.getInfoListProvider(
-				"com.liferay.asset.internal.info.list.provider." +
-					"MostViewedAssetsInfoListProvider");
+			(InfoListProvider<AssetEntry>)
+				_infoListProviderTracker.getInfoListProvider(
+					"com.liferay.asset.internal.info.list.provider." +
+						"MostViewedAssetsInfoListProvider");
 
 		List<AssetEntry> assetEntries = infoListProvider.getInfoList(
 			_infoListProviderContext);
@@ -188,9 +191,10 @@ public class AssetInfoListProviderTest {
 			JournalFolderConstants.DEFAULT_PARENT_FOLDER_ID);
 
 		InfoListProvider<AssetEntry> infoListProvider =
-			_infoListProviderTracker.getInfoListProvider(
-				"com.liferay.asset.internal.info.list.provider." +
-					"RecentContentInfoListProvider");
+			(InfoListProvider<AssetEntry>)
+				_infoListProviderTracker.getInfoListProvider(
+					"com.liferay.asset.internal.info.list.provider." +
+						"RecentContentInfoListProvider");
 
 		List<AssetEntry> assetEntries = infoListProvider.getInfoList(
 			_infoListProviderContext);
@@ -257,9 +261,10 @@ public class AssetInfoListProviderTest {
 		ServiceContextThreadLocal.pushServiceContext(serviceContext);
 
 		InfoListProvider<AssetEntry> infoListProvider =
-			_infoListProviderTracker.getInfoListProvider(
-				"com.liferay.asset.internal.info.list.provider." +
-					"RelatedAssetsInfoListProvider");
+			(InfoListProvider<AssetEntry>)
+				_infoListProviderTracker.getInfoListProvider(
+					"com.liferay.asset.internal.info.list.provider." +
+						"RelatedAssetsInfoListProvider");
 
 		List<AssetEntry> assetEntries = infoListProvider.getInfoList(
 			_infoListProviderContext);
@@ -285,6 +290,9 @@ public class AssetInfoListProviderTest {
 			Long.valueOf(article3.getResourcePrimKey()),
 			_CLASS_PK_ACCESSOR.get(assetEntries.get(0)));
 	}
+
+	@Rule
+	public SearchTestRule searchTestRule = new SearchTestRule();
 
 	private static final Accessor<AssetEntry, Long> _CLASS_PK_ACCESSOR =
 		new Accessor<AssetEntry, Long>() {

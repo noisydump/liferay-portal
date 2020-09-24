@@ -35,9 +35,9 @@ Role role = usersDisplayContext.getRole();
 
 <liferay-ui:error embed="<%= false %>" exception="<%= RequiredUserException.class %>" message="one-or-more-users-were-not-removed-since-they-belong-to-a-user-group" />
 
-<clay:container
-	className="closed sidenav-container sidenav-right"
-	id='<%= renderResponse.getNamespace() + "infoPanelId" %>'
+<clay:container-fluid
+	cssClass="closed sidenav-container sidenav-right"
+	id='<%= liferayPortletResponse.getNamespace() + "infoPanelId" %>'
 >
 	<liferay-portlet:resourceURL copyCurrentRenderParameters="<%= false %>" id="/user/info_panel" var="sidebarPanelURL">
 		<portlet:param name="groupId" value="<%= String.valueOf(siteMembershipsDisplayContext.getGroupId()) %>" />
@@ -60,6 +60,10 @@ Role role = usersDisplayContext.getRole();
 			<aui:input name="navigation" type="hidden" value="<%= usersDisplayContext.getNavigation() %>" />
 			<aui:input name="addUserIds" type="hidden" />
 			<aui:input name="roleId" type="hidden" value="<%= (role != null) ? role.getRoleId() : 0 %>" />
+
+			<liferay-ui:breadcrumb
+				showLayout="<%= false %>"
+			/>
 
 			<liferay-ui:membership-policy-error />
 
@@ -97,7 +101,7 @@ Role role = usersDisplayContext.getRole();
 			</liferay-ui:search-container>
 		</aui:form>
 	</div>
-</clay:container>
+</clay:container-fluid>
 
 <portlet:actionURL name="addGroupUsers" var="addGroupUsersURL">
 	<portlet:param name="redirect" value="<%= currentURL %>" />

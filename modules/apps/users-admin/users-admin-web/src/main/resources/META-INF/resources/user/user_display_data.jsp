@@ -48,7 +48,7 @@ User selUser = (User)request.getAttribute(UsersAdminWebKeys.SELECTED_USER);
 
 			List<String> fields = ufe.getFields();
 
-			StringBundler sb = new StringBundler(2 * fields.size() - 1);
+			StringBundler sb = new StringBundler((2 * fields.size()) - 1);
 
 			for (int i = 0; i < fields.size(); i++) {
 				String field = fields.get(i);
@@ -138,7 +138,7 @@ User selUser = (User)request.getAttribute(UsersAdminWebKeys.SELECTED_USER);
 			<liferay-ui:error exception="<%= UserIdException.MustNotBeNull.class %>" message="please-enter-a-user-id" />
 			<liferay-ui:error exception="<%= UserIdException.MustNotBeReserved.class %>" message="the-user-id-you-requested-is-reserved" />
 
-			<aui:input name="userId" type="resource" value="<%= String.valueOf(selUser.getUserId()) %>" />
+			<aui:input cssClass="disabled" name="userId" readonly="true" type="text" value="<%= String.valueOf(selUser.getUserId()) %>" />
 		</c:if>
 	</clay:col>
 
@@ -175,3 +175,51 @@ User selUser = (User)request.getAttribute(UsersAdminWebKeys.SELECTED_USER);
 		</div>
 	</clay:col>
 </clay:row>
+
+<portlet:renderURL var="verifyPasswordURL" windowState="<%= LiferayWindowState.POP_UP.toString() %>">
+	<portlet:param name="mvcPath" value="/user/password_verification.jsp" />
+</portlet:renderURL>
+
+<c:if test="<%= selUser != null %>">
+	<aui:script use="liferay-form">
+		Liferay.once('<portlet:namespace/>formReady', function () {
+			var form = Liferay.Form.get('<portlet:namespace/>fm');
+
+			form.set('onSubmit', function (event) {
+				event.preventDefault();
+
+				var emailAddressInput = document.getElementById(
+					'<portlet:namespace/>emailAddress'
+				);
+				var screenNameInput = document.getElementById(
+					'<portlet:namespace/>screenName'
+				);
+
+				if (
+					emailAddressInput.value != '<%= selUser.getEmailAddress() %>' ||
+					screenNameInput.value != '<%= selUser.getScreenName() %>'
+				) {
+					Liferay.Util.openModal({
+						customEvents: [
+							{
+								name:
+									'<%= liferayPortletResponse.getNamespace() + "verifyPassword" %>',
+								onEvent: function (event) {
+									submitForm(form.form);
+								},
+							},
+						],
+						height: '320px',
+						id: 'password-verification-dialog',
+						size: 'md',
+						title: '<%= LanguageUtil.get(request, "confirm-password") %>',
+						url: '<%= verifyPasswordURL %>',
+					});
+				}
+				else {
+					submitForm(form.form);
+				}
+			});
+		});
+	</aui:script>
+</c:if>

@@ -10,6 +10,7 @@
  */
 
 import ClayIcon from '@clayui/icon';
+import ClayLayout from '@clayui/layout';
 import ClayTable from '@clayui/table';
 import React, {useCallback, useContext} from 'react';
 
@@ -66,7 +67,7 @@ const Item = ({
 
 	return (
 		<ClayTable.Row>
-			<ClayTable.Cell data-testid="slaName">
+			<ClayTable.Cell>
 				<div className="table-list-title">
 					{blocked && (
 						<ClayIcon
@@ -80,31 +81,24 @@ const Item = ({
 				</div>
 			</ClayTable.Cell>
 
-			<ClayTable.Cell data-testid="slaDescription">
-				{description}
-			</ClayTable.Cell>
+			<ClayTable.Cell>{description}</ClayTable.Cell>
 
-			<ClayTable.Cell
-				className={blockedStatusClass}
-				data-testid="slaStatus"
-			>
+			<ClayTable.Cell className={blockedStatusClass}>
 				{statusText}
 			</ClayTable.Cell>
 
-			<ClayTable.Cell data-testid="slaDuration">
-				{durationString}
-			</ClayTable.Cell>
+			<ClayTable.Cell>{durationString}</ClayTable.Cell>
 
-			<ClayTable.Cell data-testid="slaDateModified">
+			<ClayTable.Cell>
 				{moment
 					.utc(dateModified)
 					.format(Liferay.Language.get('mmm-dd'))}
 			</ClayTable.Cell>
 
 			<ClayTable.Cell className="actions">
-				<div className="autofit-col">
+				<ClayLayout.ContentCol>
 					<QuickActionKebab dropDownItems={dropDownItems} />
-				</div>
+				</ClayLayout.ContentCol>
 			</ClayTable.Cell>
 		</ClayTable.Row>
 	);

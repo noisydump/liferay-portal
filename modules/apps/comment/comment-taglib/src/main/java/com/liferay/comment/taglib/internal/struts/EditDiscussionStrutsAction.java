@@ -85,9 +85,6 @@ public class EditDiscussionStrutsAction implements StrutsAction {
 			namespacedHttpServletRequest, Constants.CMD);
 
 		try {
-			String redirect = _portal.escapeRedirect(
-				ParamUtil.getString(namespacedHttpServletRequest, "redirect"));
-
 			if (cmd.equals(Constants.ADD) || cmd.equals(Constants.UPDATE)) {
 				long commentId = updateComment(namespacedHttpServletRequest);
 
@@ -98,15 +95,13 @@ public class EditDiscussionStrutsAction implements StrutsAction {
 					String randomNamespace = ParamUtil.getString(
 						namespacedHttpServletRequest, "randomNamespace");
 
-					JSONObject jsonObject = JSONUtil.put(
-						"commentId", commentId
-					).put(
-						"randomNamespace", randomNamespace
-					);
-
 					writeJSON(
 						namespacedHttpServletRequest, httpServletResponse,
-						jsonObject);
+						JSONUtil.put(
+							"commentId", commentId
+						).put(
+							"randomNamespace", randomNamespace
+						));
 
 					return null;
 				}
@@ -120,6 +115,9 @@ public class EditDiscussionStrutsAction implements StrutsAction {
 			else if (cmd.equals(Constants.UNSUBSCRIBE_FROM_COMMENTS)) {
 				subscribeToComments(namespacedHttpServletRequest, false);
 			}
+
+			String redirect = _portal.escapeRedirect(
+				ParamUtil.getString(namespacedHttpServletRequest, "redirect"));
 
 			if (Validator.isNotNull(redirect)) {
 				httpServletResponse.sendRedirect(redirect);
@@ -201,8 +199,6 @@ public class EditDiscussionStrutsAction implements StrutsAction {
 
 		String className = ParamUtil.getString(httpServletRequest, "className");
 		long classPK = ParamUtil.getLong(httpServletRequest, "classPK");
-		long parentCommentId = ParamUtil.getLong(
-			httpServletRequest, "parentCommentId");
 		String subject = ParamUtil.getString(httpServletRequest, "subject");
 		String body = ParamUtil.getString(httpServletRequest, "body");
 
@@ -236,6 +232,9 @@ public class EditDiscussionStrutsAction implements StrutsAction {
 					return 0;
 				}
 			}
+
+			long parentCommentId = ParamUtil.getLong(
+				httpServletRequest, "parentCommentId");
 
 			String name = PrincipalThreadLocal.getName();
 
@@ -280,12 +279,12 @@ public class EditDiscussionStrutsAction implements StrutsAction {
 
 	protected void writeJSON(
 			HttpServletRequest httpServletRequest,
-			HttpServletResponse httpServletResponse, Object jsonObj)
+			HttpServletResponse httpServletResponse, Object object)
 		throws IOException {
 
 		httpServletResponse.setContentType(ContentTypes.APPLICATION_JSON);
 
-		ServletResponseUtil.write(httpServletResponse, jsonObj.toString());
+		ServletResponseUtil.write(httpServletResponse, object.toString());
 
 		httpServletResponse.flushBuffer();
 	}

@@ -227,7 +227,7 @@ public class ReportsEngineDisplayContext {
 		return portletURL;
 	}
 
-	public SearchContainer getSearchContainer() throws PortalException {
+	public SearchContainer<?> getSearchContainer() throws PortalException {
 		if (_searchContainer == null) {
 			if (isDefinitionsTabSelected()) {
 				_searchContainer = _getDefinitionSearch();
@@ -272,7 +272,7 @@ public class ReportsEngineDisplayContext {
 	}
 
 	public int getTotalItems() throws PortalException {
-		SearchContainer searchContainer = getSearchContainer();
+		SearchContainer<?> searchContainer = getSearchContainer();
 
 		return searchContainer.getTotal();
 	}
@@ -388,14 +388,16 @@ public class ReportsEngineDisplayContext {
 		EntryDisplayTerms displayTerms =
 			(EntryDisplayTerms)entrySearch.getDisplayTerms();
 
-		Date startDate = PortalUtil.getDate(
-			displayTerms.getStartDateMonth(), displayTerms.getStartDateDay(),
-			displayTerms.getStartDateYear(), _themeDisplay.getTimeZone(), null);
-		Date endDate = PortalUtil.getDate(
-			displayTerms.getEndDateMonth(), displayTerms.getEndDateDay() + 1,
-			displayTerms.getEndDateYear(), _themeDisplay.getTimeZone(), null);
-
 		if (displayTerms.isAdvancedSearch()) {
+			Date startDate = PortalUtil.getDate(
+				displayTerms.getStartDateMonth(),
+				displayTerms.getStartDateDay(), displayTerms.getStartDateYear(),
+				_themeDisplay.getTimeZone(), null);
+			Date endDate = PortalUtil.getDate(
+				displayTerms.getEndDateMonth(),
+				displayTerms.getEndDateDay() + 1, displayTerms.getEndDateYear(),
+				_themeDisplay.getTimeZone(), null);
+
 			int total = EntryServiceUtil.getEntriesCount(
 				_themeDisplay.getSiteGroupId(),
 				displayTerms.getDefinitionName(), null, startDate, endDate,
@@ -551,7 +553,7 @@ public class ReportsEngineDisplayContext {
 	private String _orderByType;
 	private final PortalPreferences _portalPreferences;
 	private final ReportsEngineRequestHelper _reportsEngineRequestHelper;
-	private SearchContainer _searchContainer;
+	private SearchContainer<?> _searchContainer;
 	private final ThemeDisplay _themeDisplay;
 
 }

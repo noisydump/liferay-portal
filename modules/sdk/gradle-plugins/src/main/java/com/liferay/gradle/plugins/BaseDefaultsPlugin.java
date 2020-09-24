@@ -27,6 +27,9 @@ public abstract class BaseDefaultsPlugin<T extends Plugin<? extends Project>>
 
 	@Override
 	public void apply(final Project project) {
+
+		// Containers
+
 		PluginContainer pluginContainer = project.getPlugins();
 
 		pluginContainer.withType(

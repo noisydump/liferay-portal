@@ -259,10 +259,6 @@ public class AssetPublisherHelperImpl implements AssetPublisherHelper {
 					getAssetRendererFactoryByClassName(
 						assetEntry.getClassName());
 
-			AssetRenderer<?> assetRenderer =
-				assetRendererFactory.getAssetRenderer(
-					assetEntry.getClassPK(), type);
-
 			if (!assetRendererFactory.isActive(
 					permissionChecker.getCompanyId())) {
 
@@ -274,6 +270,10 @@ public class AssetPublisherHelperImpl implements AssetPublisherHelper {
 			}
 
 			if (checkPermission) {
+				AssetRenderer<?> assetRenderer =
+					assetRendererFactory.getAssetRenderer(
+						assetEntry.getClassPK(), type);
+
 				if (!assetRenderer.isDisplayable() &&
 					!includeNonvisibleAssets) {
 
@@ -1158,10 +1158,10 @@ public class AssetPublisherHelperImpl implements AssetPublisherHelper {
 
 		List<String> assetEntryXmlsList = ListUtil.fromArray(assetEntryXmls);
 
-		Iterator<String> itr = assetEntryXmlsList.iterator();
+		Iterator<String> iterator = assetEntryXmlsList.iterator();
 
-		while (itr.hasNext()) {
-			String assetEntryXml = itr.next();
+		while (iterator.hasNext()) {
+			String assetEntryXml = iterator.next();
 
 			Document document = SAXReaderUtil.read(assetEntryXml);
 
@@ -1170,7 +1170,7 @@ public class AssetPublisherHelperImpl implements AssetPublisherHelper {
 			String assetEntryUuid = rootElement.elementText("asset-entry-uuid");
 
 			if (assetEntryUuids.contains(assetEntryUuid)) {
-				itr.remove();
+				iterator.remove();
 			}
 		}
 

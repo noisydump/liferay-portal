@@ -62,12 +62,12 @@ ExportTemplatesToolbarDisplayContext exportTemplatesToolbarDisplayContext = new 
 <clay:management-toolbar
 	displayContext="<%= exportTemplatesToolbarDisplayContext %>"
 	searchFormName="searchFm"
-	selectable="false"
+	selectable="<%= false %>"
 	showCreationMenu="<%= true %>"
 	showSearch="<%= true %>"
 />
 
-<clay:container>
+<clay:container-fluid>
 	<aui:form action="<%= portletURL %>">
 		<liferay-ui:search-container
 			searchContainer="<%= exportTemplatesToolbarDisplayContext.getSearchContainer() %>"
@@ -133,4 +133,4 @@ ExportTemplatesToolbarDisplayContext exportTemplatesToolbarDisplayContext = new 
 			/>
 		</liferay-ui:search-container>
 	</aui:form>
-</clay:container>
+</clay:container-fluid>

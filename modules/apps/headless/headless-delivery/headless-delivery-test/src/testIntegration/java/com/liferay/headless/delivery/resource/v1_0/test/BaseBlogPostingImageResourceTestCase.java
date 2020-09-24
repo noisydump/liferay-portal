@@ -123,7 +123,9 @@ public abstract class BaseBlogPostingImageResourceTestCase {
 		BlogPostingImageResource.Builder builder =
 			BlogPostingImageResource.builder();
 
-		blogPostingImageResource = builder.locale(
+		blogPostingImageResource = builder.authentication(
+			"test@liferay.com", "test"
+		).locale(
 			LocaleUtil.getDefault()
 		).build();
 	}
@@ -194,6 +196,7 @@ public abstract class BaseBlogPostingImageResourceTestCase {
 		BlogPostingImage blogPostingImage = randomBlogPostingImage();
 
 		blogPostingImage.setContentUrl(regex);
+		blogPostingImage.setContentValue(regex);
 		blogPostingImage.setEncodingFormat(regex);
 		blogPostingImage.setFileExtension(regex);
 		blogPostingImage.setTitle(regex);
@@ -205,6 +208,7 @@ public abstract class BaseBlogPostingImageResourceTestCase {
 		blogPostingImage = BlogPostingImageSerDes.toDTO(json);
 
 		Assert.assertEquals(regex, blogPostingImage.getContentUrl());
+		Assert.assertEquals(regex, blogPostingImage.getContentValue());
 		Assert.assertEquals(regex, blogPostingImage.getEncodingFormat());
 		Assert.assertEquals(regex, blogPostingImage.getFileExtension());
 		Assert.assertEquals(regex, blogPostingImage.getTitle());
@@ -352,7 +356,8 @@ public abstract class BaseBlogPostingImageResourceTestCase {
 		Page<BlogPostingImage> page =
 			blogPostingImageResource.getSiteBlogPostingImagesPage(
 				testGetSiteBlogPostingImagesPage_getSiteId(),
-				RandomTestUtil.randomString(), null, Pagination.of(1, 2), null);
+				RandomTestUtil.randomString(), null, null, Pagination.of(1, 2),
+				null);
 
 		Assert.assertEquals(0, page.getTotalCount());
 
@@ -366,7 +371,7 @@ public abstract class BaseBlogPostingImageResourceTestCase {
 					irrelevantSiteId, randomIrrelevantBlogPostingImage());
 
 			page = blogPostingImageResource.getSiteBlogPostingImagesPage(
-				irrelevantSiteId, null, null, Pagination.of(1, 2), null);
+				irrelevantSiteId, null, null, null, Pagination.of(1, 2), null);
 
 			Assert.assertEquals(1, page.getTotalCount());
 
@@ -385,7 +390,7 @@ public abstract class BaseBlogPostingImageResourceTestCase {
 				siteId, randomBlogPostingImage());
 
 		page = blogPostingImageResource.getSiteBlogPostingImagesPage(
-			siteId, null, null, Pagination.of(1, 2), null);
+			siteId, null, null, null, Pagination.of(1, 2), null);
 
 		Assert.assertEquals(2, page.getTotalCount());
 
@@ -423,7 +428,7 @@ public abstract class BaseBlogPostingImageResourceTestCase {
 		for (EntityField entityField : entityFields) {
 			Page<BlogPostingImage> page =
 				blogPostingImageResource.getSiteBlogPostingImagesPage(
-					siteId, null,
+					siteId, null, null,
 					getFilterString(entityField, "between", blogPostingImage1),
 					Pagination.of(1, 2), null);
 
@@ -458,7 +463,7 @@ public abstract class BaseBlogPostingImageResourceTestCase {
 		for (EntityField entityField : entityFields) {
 			Page<BlogPostingImage> page =
 				blogPostingImageResource.getSiteBlogPostingImagesPage(
-					siteId, null,
+					siteId, null, null,
 					getFilterString(entityField, "eq", blogPostingImage1),
 					Pagination.of(1, 2), null);
 
@@ -488,7 +493,7 @@ public abstract class BaseBlogPostingImageResourceTestCase {
 
 		Page<BlogPostingImage> page1 =
 			blogPostingImageResource.getSiteBlogPostingImagesPage(
-				siteId, null, null, Pagination.of(1, 2), null);
+				siteId, null, null, null, Pagination.of(1, 2), null);
 
 		List<BlogPostingImage> blogPostingImages1 =
 			(List<BlogPostingImage>)page1.getItems();
@@ -498,7 +503,7 @@ public abstract class BaseBlogPostingImageResourceTestCase {
 
 		Page<BlogPostingImage> page2 =
 			blogPostingImageResource.getSiteBlogPostingImagesPage(
-				siteId, null, null, Pagination.of(2, 2), null);
+				siteId, null, null, null, Pagination.of(2, 2), null);
 
 		Assert.assertEquals(3, page2.getTotalCount());
 
@@ -510,7 +515,7 @@ public abstract class BaseBlogPostingImageResourceTestCase {
 
 		Page<BlogPostingImage> page3 =
 			blogPostingImageResource.getSiteBlogPostingImagesPage(
-				siteId, null, null, Pagination.of(1, 3), null);
+				siteId, null, null, null, Pagination.of(1, 3), null);
 
 		assertEqualsIgnoringOrder(
 			Arrays.asList(
@@ -632,7 +637,7 @@ public abstract class BaseBlogPostingImageResourceTestCase {
 		for (EntityField entityField : entityFields) {
 			Page<BlogPostingImage> ascPage =
 				blogPostingImageResource.getSiteBlogPostingImagesPage(
-					siteId, null, null, Pagination.of(1, 2),
+					siteId, null, null, null, Pagination.of(1, 2),
 					entityField.getName() + ":asc");
 
 			assertEquals(
@@ -641,7 +646,7 @@ public abstract class BaseBlogPostingImageResourceTestCase {
 
 			Page<BlogPostingImage> descPage =
 				blogPostingImageResource.getSiteBlogPostingImagesPage(
-					siteId, null, null, Pagination.of(1, 2),
+					siteId, null, null, null, Pagination.of(1, 2),
 					entityField.getName() + ":desc");
 
 			assertEquals(
@@ -901,7 +906,9 @@ public abstract class BaseBlogPostingImageResourceTestCase {
 		}
 	}
 
-	protected void assertValid(BlogPostingImage blogPostingImage) {
+	protected void assertValid(BlogPostingImage blogPostingImage)
+		throws Exception {
+
 		boolean valid = true;
 
 		if (blogPostingImage.getId() == null) {
@@ -913,6 +920,14 @@ public abstract class BaseBlogPostingImageResourceTestCase {
 
 			if (Objects.equals("contentUrl", additionalAssertFieldName)) {
 				if (blogPostingImage.getContentUrl() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals("contentValue", additionalAssertFieldName)) {
+				if (blogPostingImage.getContentValue() == null) {
 					valid = false;
 				}
 
@@ -1065,6 +1080,17 @@ public abstract class BaseBlogPostingImageResourceTestCase {
 				if (!Objects.deepEquals(
 						blogPostingImage1.getContentUrl(),
 						blogPostingImage2.getContentUrl())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals("contentValue", additionalAssertFieldName)) {
+				if (!Objects.deepEquals(
+						blogPostingImage1.getContentValue(),
+						blogPostingImage2.getContentValue())) {
 
 					return false;
 				}
@@ -1228,6 +1254,14 @@ public abstract class BaseBlogPostingImageResourceTestCase {
 			return sb.toString();
 		}
 
+		if (entityFieldName.equals("contentValue")) {
+			sb.append("'");
+			sb.append(String.valueOf(blogPostingImage.getContentValue()));
+			sb.append("'");
+
+			return sb.toString();
+		}
+
 		if (entityFieldName.equals("encodingFormat")) {
 			sb.append("'");
 			sb.append(String.valueOf(blogPostingImage.getEncodingFormat()));
@@ -1317,6 +1351,8 @@ public abstract class BaseBlogPostingImageResourceTestCase {
 		return new BlogPostingImage() {
 			{
 				contentUrl = StringUtil.toLowerCase(
+					RandomTestUtil.randomString());
+				contentValue = StringUtil.toLowerCase(
 					RandomTestUtil.randomString());
 				encodingFormat = StringUtil.toLowerCase(
 					RandomTestUtil.randomString());

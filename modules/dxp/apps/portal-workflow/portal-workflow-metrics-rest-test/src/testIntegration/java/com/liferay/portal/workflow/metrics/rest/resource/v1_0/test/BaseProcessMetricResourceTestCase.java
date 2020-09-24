@@ -114,7 +114,9 @@ public abstract class BaseProcessMetricResourceTestCase {
 
 		ProcessMetricResource.Builder builder = ProcessMetricResource.builder();
 
-		processMetricResource = builder.locale(
+		processMetricResource = builder.authentication(
+			"test@liferay.com", "test"
+		).locale(
 			LocaleUtil.getDefault()
 		).build();
 	}
@@ -453,7 +455,7 @@ public abstract class BaseProcessMetricResourceTestCase {
 		}
 	}
 
-	protected void assertValid(ProcessMetric processMetric) {
+	protected void assertValid(ProcessMetric processMetric) throws Exception {
 		boolean valid = true;
 
 		for (String additionalAssertFieldName :

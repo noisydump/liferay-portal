@@ -25,9 +25,16 @@ import {CSS_DDM_FIELDSET} from '../../util/cssClasses.es';
 import {getField, isFieldSet} from '../../util/fieldSupport.es';
 
 const getFieldContainer = (fieldName) => {
-	return document.querySelector(
-		`.ddm-field-container[data-field-name="${fieldName}"]`
-	);
+	const selector = `.ddm-field-container[data-field-name="${fieldName}"]`;
+
+	if (document.querySelectorAll(selector).length > 1) {
+		return (
+			document.querySelector(`${selector}.hovered`) ||
+			document.querySelector(`${selector}.selected`)
+		);
+	}
+
+	return document.querySelector(selector);
 };
 
 class FieldActionsDropDown extends Component {
@@ -78,6 +85,10 @@ class FieldActionsDropDown extends Component {
 		const {fieldTypes, pages} = this.props;
 		const field = FormSupport.findFieldByFieldName(pages, fieldName);
 
+		if (field && isFieldSet(field)) {
+			return Liferay.Language.get('fieldset');
+		}
+
 		return (
 			field &&
 			fieldTypes.find((fieldType) => {
@@ -107,6 +118,7 @@ class FieldActionsDropDown extends Component {
 			<div
 				class={this.getCssClasses()}
 				onMouseDown={this._handleOnMouseDown.bind(this)}
+				onMouseEnter={this._handleOnMouseEnter.bind(this)}
 				onMouseLeave={this._handleOnMouseLeave.bind(this)}
 			>
 				<span class="actions-label">{this.getLabel()}</span>
@@ -159,6 +171,17 @@ class FieldActionsDropDown extends Component {
 		}
 	}
 
+	_handleOnMouseEnter(event) {
+		const {dispatch} = this.context;
+		const {fieldName} = this.state;
+		const {pages} = this.props;
+		const field = FormSupport.findFieldByFieldName(pages, fieldName);
+
+		event.stopImmediatePropagation();
+		event.stopPropagation();
+		dispatch('fieldHovered', field);
+	}
+
 	_handleOnMouseLeave(event) {
 		const {fieldName} = this.state;
 
@@ -184,13 +207,23 @@ class FieldActionsDropDown extends Component {
 	}) {
 		const {fieldName} = this.state;
 
-		action(fieldName);
+		const {activePage} = this.props;
 
+		action({activePage, fieldName});
 		this.close();
 	}
 }
 
 FieldActionsDropDown.PROPS = {
+
+	/**
+	 * @default undefined
+	 * @instance
+	 * @memberof FieldActionsDropDown
+	 * @type {number}
+	 */
+
+	activePage: Config.number(),
 
 	/**
 	 * @default false

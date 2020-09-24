@@ -115,7 +115,9 @@ public abstract class BaseKnowledgeBaseFolderResourceTestCase {
 		KnowledgeBaseFolderResource.Builder builder =
 			KnowledgeBaseFolderResource.builder();
 
-		knowledgeBaseFolderResource = builder.locale(
+		knowledgeBaseFolderResource = builder.authentication(
+			"test@liferay.com", "test"
+		).locale(
 			LocaleUtil.getDefault()
 		).build();
 	}
@@ -948,7 +950,9 @@ public abstract class BaseKnowledgeBaseFolderResourceTestCase {
 		}
 	}
 
-	protected void assertValid(KnowledgeBaseFolder knowledgeBaseFolder) {
+	protected void assertValid(KnowledgeBaseFolder knowledgeBaseFolder)
+		throws Exception {
+
 		boolean valid = true;
 
 		if (knowledgeBaseFolder.getDateCreated() == null) {

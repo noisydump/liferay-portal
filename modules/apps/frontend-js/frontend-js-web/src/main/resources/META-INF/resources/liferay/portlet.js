@@ -412,7 +412,6 @@
 
 					Liferay.Util.openToast({
 						message,
-						title: Liferay.Language.get('error'),
 						type: 'danger',
 					});
 				});
@@ -517,7 +516,7 @@
 
 					var events = 'focus';
 
-					if (!A.UA.touch) {
+					if (!A.UA.touchEnabled) {
 						events = ['focus', 'mousemove'];
 					}
 

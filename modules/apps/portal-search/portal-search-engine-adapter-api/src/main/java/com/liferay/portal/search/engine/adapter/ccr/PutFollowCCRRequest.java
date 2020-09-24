@@ -27,6 +27,8 @@ public class PutFollowCCRRequest
 		_remoteClusterAlias = remoteClusterAlias;
 		_leaderIndexName = leaderIndexName;
 		_followerIndexName = followerIndexName;
+
+		setPreferLocalCluster(true);
 	}
 
 	@Override

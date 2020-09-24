@@ -108,7 +108,9 @@ public abstract class BaseTaskResourceTestCase {
 
 		TaskResource.Builder builder = TaskResource.builder();
 
-		taskResource = builder.locale(
+		taskResource = builder.authentication(
+			"test@liferay.com", "test"
+		).locale(
 			LocaleUtil.getDefault()
 		).build();
 	}
@@ -449,7 +451,7 @@ public abstract class BaseTaskResourceTestCase {
 		}
 	}
 
-	protected void assertValid(Task task) {
+	protected void assertValid(Task task) throws Exception {
 		boolean valid = true;
 
 		if (task.getDateCreated() == null) {

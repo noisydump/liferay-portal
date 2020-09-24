@@ -20,9 +20,9 @@
 SegmentsSimulationDisplayContext segmentsSimulationDisplayContext = new SegmentsSimulationDisplayContext(request, renderResponse);
 %>
 
-<clay:container
-	className="segments-simulation"
-	id='<%= renderResponse.getNamespace() + "segmentsSimulationContainer" %>'
+<clay:container-fluid
+	cssClass="segments-simulation"
+	id='<%= liferayPortletResponse.getNamespace() + "segmentsSimulationContainer" %>'
 >
 	<c:choose>
 		<c:when test="<%= segmentsSimulationDisplayContext.isShowEmptyMessage() %>">
@@ -72,4 +72,4 @@ SegmentsSimulationDisplayContext segmentsSimulationDisplayContext = new Segments
 			</aui:script>
 		</c:otherwise>
 	</c:choose>
-</clay:container>
+</clay:container-fluid>

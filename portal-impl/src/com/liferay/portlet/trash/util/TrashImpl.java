@@ -67,7 +67,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
 
 import javax.portlet.ActionRequest;
 import javax.portlet.PortletException;
@@ -143,17 +142,15 @@ public class TrashImpl implements Trash {
 		ActionRequest actionRequest, List<TrashedModel> trashedModels,
 		String cmd) {
 
-		Map<String, Object> data = HashMapBuilder.<String, Object>put(
-			Constants.CMD, new String[] {cmd}
-		).put(
-			"trashedModels", trashedModels
-		).build();
-
 		SessionMessages.add(
 			actionRequest,
 			PortalUtil.getPortletId(actionRequest) +
 				SessionMessages.KEY_SUFFIX_DELETE_SUCCESS_DATA,
-			data);
+			HashMapBuilder.<String, Object>put(
+				Constants.CMD, new String[] {cmd}
+			).put(
+				"trashedModels", trashedModels
+			).build());
 	}
 
 	@Override
@@ -417,10 +414,6 @@ public class TrashImpl implements Trash {
 			return null;
 		}
 
-		ThemeDisplay themeDisplay =
-			(ThemeDisplay)httpServletRequest.getAttribute(
-				WebKeys.THEME_DISPLAY);
-
 		PortletURL portletURL = PortletProviderUtil.getPortletURL(
 			httpServletRequest, TrashEntry.class.getName(),
 			PortletProvider.Action.VIEW);
@@ -430,6 +423,11 @@ public class TrashImpl implements Trash {
 		}
 
 		portletURL.setParameter("mvcPath", "/view_content.jsp");
+
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
+
 		portletURL.setParameter("redirect", themeDisplay.getURLCurrent());
 
 		TrashEntry trashEntry = TrashEntryLocalServiceUtil.getEntry(

@@ -24,8 +24,10 @@ import java.util.List;
  * This class is used by SOAP remote services, specifically {@link com.liferay.portlet.documentlibrary.service.http.DLFileEntryTypeServiceSoap}.
  *
  * @author Brian Wing Shun Chan
+ * @deprecated As of Athanasius (7.3.x), with no direct replacement
  * @generated
  */
+@Deprecated
 public class DLFileEntryTypeSoap implements Serializable {
 
 	public static DLFileEntryTypeSoap toSoapModel(DLFileEntryType model) {
@@ -41,6 +43,7 @@ public class DLFileEntryTypeSoap implements Serializable {
 		soapModel.setUserName(model.getUserName());
 		soapModel.setCreateDate(model.getCreateDate());
 		soapModel.setModifiedDate(model.getModifiedDate());
+		soapModel.setDataDefinitionId(model.getDataDefinitionId());
 		soapModel.setFileEntryTypeKey(model.getFileEntryTypeKey());
 		soapModel.setName(model.getName());
 		soapModel.setDescription(model.getDescription());
@@ -184,6 +187,14 @@ public class DLFileEntryTypeSoap implements Serializable {
 		_modifiedDate = modifiedDate;
 	}
 
+	public long getDataDefinitionId() {
+		return _dataDefinitionId;
+	}
+
+	public void setDataDefinitionId(long dataDefinitionId) {
+		_dataDefinitionId = dataDefinitionId;
+	}
+
 	public String getFileEntryTypeKey() {
 		return _fileEntryTypeKey;
 	}
@@ -226,6 +237,7 @@ public class DLFileEntryTypeSoap implements Serializable {
 	private String _userName;
 	private Date _createDate;
 	private Date _modifiedDate;
+	private long _dataDefinitionId;
 	private String _fileEntryTypeKey;
 	private String _name;
 	private String _description;

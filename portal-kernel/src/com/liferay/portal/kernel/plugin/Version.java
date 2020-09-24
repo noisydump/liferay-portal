@@ -152,19 +152,17 @@ public class Version implements Comparable<Version>, Serializable {
 	}
 
 	@Override
-	public boolean equals(Object obj) {
-		if (this == obj) {
+	public boolean equals(Object object) {
+		if (this == object) {
 			return true;
 		}
 
-		if (!(obj instanceof Version)) {
+		if (!(object instanceof Version)) {
 			return false;
 		}
 
-		Version version = (Version)obj;
-
 		String versionString1 = toString();
-		String versionString2 = version.toString();
+		String versionString2 = String.valueOf((Version)object);
 
 		if (versionString1.equals(UNKNOWN) || versionString2.equals(UNKNOWN)) {
 			return false;

@@ -16,6 +16,7 @@ import ClayButton, {ClayButtonWithIcon} from '@clayui/button';
 import ClayCard from '@clayui/card';
 import {ClayInput} from '@clayui/form';
 import ClayIcon from '@clayui/icon';
+import {usePage} from 'dynamic-data-mapping-form-renderer';
 import {
 	ItemSelectorDialog,
 	createActionURL,
@@ -23,11 +24,10 @@ import {
 } from 'frontend-js-web';
 import React, {useMemo, useState} from 'react';
 
-import {FieldBaseProxy} from '../FieldBase/ReactFieldBase.es';
-import getConnectedReactComponentAdapter from '../util/ReactComponentAdapter.es';
-import {connectStore} from '../util/connectStore.es';
+import {FieldBase} from '../FieldBase/ReactFieldBase.es';
 
 function getDocumentLibrarySelectorURL({
+	groupId,
 	itemSelectorAuthToken,
 	portletNamespace,
 }) {
@@ -48,13 +48,13 @@ function getDocumentLibrarySelectorURL({
 		'2_json': JSON.stringify(uploadCriterionJSON),
 		criteria:
 			'com.liferay.item.selector.criteria.file.criterion.FileItemSelectorCriterion',
-		doAsGroupId: themeDisplay.getScopeGroupId(),
+		doAsGroupId: groupId,
 		itemSelectedEventName: `${portletNamespace}selectDocumentLibrary`,
 		p_p_auth: itemSelectorAuthToken,
 		p_p_id: Liferay.PortletKeys.ITEM_SELECTOR,
 		p_p_mode: 'view',
 		p_p_state: 'pop_up',
-		refererGroupId: themeDisplay.getScopeGroupId(),
+		refererGroupId: groupId,
 	};
 
 	const documentLibrarySelectorURL = createPortletURL(
@@ -176,6 +176,9 @@ const DocumentLibrary = ({
 					{transformedFileEntryTitle && (
 						<ClayInput.GroupItem append shrink>
 							<ClayButtonWithIcon
+								aria-label={Liferay.Language.get(
+									'unselect-file'
+								)}
 								className="clear-button"
 								displayType="secondary"
 								onClick={onClearButtonClicked}
@@ -187,7 +190,7 @@ const DocumentLibrary = ({
 			)}
 
 			<ClayInput
-				id={id}
+				id={id ? id : name}
 				name={name}
 				placeholder={placeholder}
 				type="hidden"
@@ -197,100 +200,118 @@ const DocumentLibrary = ({
 	);
 };
 
-const DocumentLibraryProxy = connectStore(
-	({
-		emit,
-		fileEntryTitle,
-		fileEntryURL,
-		id,
+const Main = ({
+	displayErrors,
+	errorMessage,
+	fileEntryTitle,
+	fileEntryURL,
+	groupId,
+	id,
+	itemSelectorAuthToken,
+	name,
+	onBlur,
+	onChange,
+	onFocus,
+	placeholder,
+	readOnly,
+	valid,
+	value = '{}',
+	...otherProps
+}) => {
+	const {portletNamespace} = usePage();
+	const [currentValue, setCurrentValue] = useState(value);
+
+	const getErrorMessages = (errorMessage, isSignedIn) => {
+		const errorMessages = [errorMessage];
+
+		if (!isSignedIn) {
+			errorMessages.push(
+				Liferay.Language.get(
+					'you-need-to-be-signed-in-to-edit-this-field'
+				)
+			);
+		}
+
+		return errorMessages.join(' ');
+	};
+
+	const handleVisibleChange = (event) => {
+		if (event.selectedItem) {
+			onFocus({}, event);
+		}
+		else {
+			onBlur({}, event);
+		}
+	};
+
+	const handleSelectButtonClicked = ({
 		itemSelectorAuthToken,
-		name,
-		placeholder,
-		readOnly,
-		store,
-		value = '{}',
-		...otherProps
+		portletNamespace,
 	}) => {
-		const [currentValue, setCurrentValue] = useState(value);
+		const itemSelectorDialog = new ItemSelectorDialog({
+			eventName: `${portletNamespace}selectDocumentLibrary`,
+			singleSelect: true,
+			url: getDocumentLibrarySelectorURL({
+				groupId,
+				itemSelectorAuthToken,
+				portletNamespace,
+			}),
+		});
 
-		const handleVisibleChange = (event) => {
-			if (event.selectedItem) {
-				emit('fieldFocused', event, event.selectedItem);
-			}
-			else {
-				emit('fieldBlurred', event);
-			}
-		};
+		itemSelectorDialog.on('selectedItemChange', handleFieldChanged);
+		itemSelectorDialog.on('visibleChange', handleVisibleChange);
 
-		const handleSelectButtonClicked = ({
-			itemSelectorAuthToken,
-			portletNamespace,
-		}) => {
-			const itemSelectorDialog = new ItemSelectorDialog({
-				eventName: `${portletNamespace}selectDocumentLibrary`,
-				singleSelect: true,
-				url: getDocumentLibrarySelectorURL({
-					itemSelectorAuthToken,
-					portletNamespace,
-				}),
-			});
+		itemSelectorDialog.open();
+	};
 
-			itemSelectorDialog.on('selectedItemChange', handleFieldChanged);
-			itemSelectorDialog.on('visibleChange', handleVisibleChange);
+	const handleFieldChanged = (event) => {
+		const selectedItem = event.selectedItem;
 
-			itemSelectorDialog.open();
-		};
+		if (selectedItem) {
+			const {value} = selectedItem;
 
-		const handleFieldChanged = (event) => {
-			const selectedItem = event.selectedItem;
+			setCurrentValue(value);
 
-			if (selectedItem) {
-				const {value} = selectedItem;
+			onChange(event, value);
+		}
+	};
 
-				setCurrentValue(value);
+	const isSignedIn = Liferay.ThemeDisplay.isSignedIn();
 
-				emit('fieldEdited', event, value);
-			}
-		};
-
-		return (
-			<FieldBaseProxy
-				{...otherProps}
+	return (
+		<FieldBase
+			{...otherProps}
+			displayErrors={isSignedIn ? displayErrors : true}
+			errorMessage={getErrorMessages(errorMessage, isSignedIn)}
+			id={id}
+			name={name}
+			readOnly={isSignedIn ? readOnly : true}
+			valid={isSignedIn ? valid : false}
+		>
+			<DocumentLibrary
+				fileEntryTitle={fileEntryTitle}
+				fileEntryURL={fileEntryURL}
 				id={id}
 				name={name}
-				readOnly={readOnly}
-				store={store}
-			>
-				<DocumentLibrary
-					fileEntryTitle={fileEntryTitle}
-					fileEntryURL={fileEntryURL}
-					id={id}
-					name={name}
-					onClearButtonClicked={(event) => {
-						setCurrentValue(null);
+				onClearButtonClicked={(event) => {
+					setCurrentValue(null);
 
-						emit('fieldEdited', event, '{}');
-					}}
-					onSelectButtonClicked={() =>
-						handleSelectButtonClicked({
-							itemSelectorAuthToken,
-							portletNamespace: store.portletNamespace,
-						})
-					}
-					placeholder={placeholder}
-					readOnly={readOnly}
-					value={currentValue || ''}
-				/>
-			</FieldBaseProxy>
-		);
-	}
-);
+					onChange(event, '{}');
+				}}
+				onSelectButtonClicked={() =>
+					handleSelectButtonClicked({
+						itemSelectorAuthToken,
+						portletNamespace,
+					})
+				}
+				placeholder={placeholder}
+				readOnly={isSignedIn ? readOnly : true}
+				value={currentValue || ''}
+			/>
+		</FieldBase>
+	);
+};
 
-const ReactDocumentLibraryAdapter = getConnectedReactComponentAdapter(
-	DocumentLibraryProxy,
-	'document_library'
-);
+Main.displayName = 'DocumentLibrary';
 
-export {ReactDocumentLibraryAdapter};
-
-export default ReactDocumentLibraryAdapter;
+export default Main;

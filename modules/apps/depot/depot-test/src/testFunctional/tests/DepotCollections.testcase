@@ -32,7 +32,7 @@ definition {
 		for (var i : list "1,2") {
 			DepotNavigator.openDepotAdmin();
 
-			DepotNavigator.gotoDepot(
+			DepotNavigator.gotoDepotPortlet(
 				depotName = "Test Depot Name",
 				portlet = "Documents and Media");
 
@@ -45,7 +45,7 @@ definition {
 		}
 
 		for (var i : list "1,2") {
-			DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "test-depot-name");
+			DepotNavigator.openDepotDocumentsAndMediaAdmin(depotName = "Test Depot Name");
 
 			DMDocument.addCP(
 				dmDocumentDescription = "DM Document Description",
@@ -53,30 +53,32 @@ definition {
 				dmDocumentTypeName = "DM Document Type Name 2");
 		}
 
-		AssetListsAdmin.openAssetListsAdmin(siteURLKey = "test-depot-name");
+		JSONAssetlist.addManualAssetListEntry(
+			groupName = "Test Depot Name",
+			site = "false",
+			title = "Depot Manual Asset List");
 
-		AssetListsAdmin.addManualSelection(
-			assetListTitle = "Depot Manual Asset List",
-			depotName = "Test Depot Name");
-
-		AssetListsAdmin.openAssetListsAdmin(siteURLKey = "test-depot-name");
+		DepotNavigator.openDepotAssetListsAdmin(depotName = "Test Depot Name");
 
 		AssetListsAdmin.viewAssetTypeList(
 			assetListName = "Depot Manual Asset List",
 			assetType = "Web Content Folder,Basic Document,Basic Web Content,Documents Folder,DM Document Type Name 1,DM Document Type Name 2",
+			itemType = "All Types",
 			manualSelection = "true");
 
 		for (var i : list "1,2") {
-			AssetListsAdmin.openAssetListsAdmin(siteURLKey = "test-depot-name");
+			DepotNavigator.openDepotAssetListsAdmin(depotName = "Test Depot Name");
 
 			AssetListsAdmin.selectAsset(
 				assetListName = "Depot Manual Asset List",
 				assetName = "DM Document Title ${i}",
-				assetType = "DM Document Type Name 2");
+				assetType = "DM Document Type Name 2",
+				itemSubtype = "DM Document Type Name 2",
+				itemType = "Document");
 		}
 
 		for (var documentName : list "DM Document Title 1,DM Document Title 2") {
-			AssetListsAdmin.openAssetListsAdmin(siteURLKey = "test-depot-name");
+			DepotNavigator.openDepotAssetListsAdmin(depotName = "Test Depot Name");
 
 			AssetListsAdmin.viewContent(
 				assetListTitle = "Depot Manual Asset List",
@@ -101,56 +103,57 @@ definition {
 			groupName = "Test Site Name",
 			title = "WC Site Title");
 
-		AssetListsAdmin.openAssetListsAdmin(siteURLKey = "test-depot-name");
+		DepotNavigator.openDepotAssetListsAdmin(depotName = "Test Depot Name");
 
 		AssetListsAdmin.addDynamicSelection(assetListTitle = "Depot Dynamic Asset List");
 
-		AssetListsAdmin.openAssetListsAdmin(siteURLKey = "test-depot-name");
+		DepotNavigator.openDepotAssetListsAdmin(depotName = "Test Depot Name");
 
 		AssetListsAdmin.configureScope(
 			assetListTitle = "Depot Dynamic Asset List",
-			otherSite = "Test Site Name");
+			otherSite = "Test Site Name",
+			selectedAsset = "All Types");
 
-		AssetListsAdmin.openAssetListsAdmin(siteURLKey = "test-depot-name");
+		DepotNavigator.openDepotAssetListsAdmin(depotName = "Test Depot Name");
 
 		AssetListsAdmin.removeScope(
 			assetListTitle = "Depot Dynamic Asset List",
 			scopeName = "Current Asset Library");
 
-		AssetListsAdmin.openAssetListsAdmin(siteURLKey = "test-depot-name");
+		DepotNavigator.openDepotAssetListsAdmin(depotName = "Test Depot Name");
 
 		AssetListsAdmin.viewContent(
 			assetListTitle = "Depot Dynamic Asset List",
 			assetTitle = "WC Site Title",
 			assetType = "Web Content Article");
 
-		AssetListsAdmin.openAssetListsAdmin(siteURLKey = "test-depot-name");
+		DepotNavigator.openDepotAssetListsAdmin(depotName = "Test Depot Name");
 
 		AssetListsAdmin.viewNoContent(
 			assetListTitle = "Depot Dynamic Asset List",
 			assetTitle = "WC Depot Title",
 			assetType = "Web Content Article");
 
-		AssetListsAdmin.openAssetListsAdmin(siteURLKey = "test-depot-name");
+		DepotNavigator.openDepotAssetListsAdmin(depotName = "Test Depot Name");
 
 		AssetListsAdmin.configureScope(
 			assetListTitle = "Depot Dynamic Asset List",
 			defaultSite = "Current Asset Library (Test Depot Name)");
 
-		AssetListsAdmin.openAssetListsAdmin(siteURLKey = "test-depot-name");
+		DepotNavigator.openDepotAssetListsAdmin(depotName = "Test Depot Name");
 
 		AssetListsAdmin.removeScope(
 			assetListTitle = "Depot Dynamic Asset List",
 			scopeName = "Test Site Name");
 
-		AssetListsAdmin.openAssetListsAdmin(siteURLKey = "test-depot-name");
+		DepotNavigator.openDepotAssetListsAdmin(depotName = "Test Depot Name");
 
 		AssetListsAdmin.viewContent(
 			assetListTitle = "Depot Dynamic Asset List",
 			assetTitle = "WC Depot Title",
 			assetType = "Web Content Article");
 
-		AssetListsAdmin.openAssetListsAdmin(siteURLKey = "test-depot-name");
+		DepotNavigator.openDepotAssetListsAdmin(depotName = "Test Depot Name");
 
 		AssetListsAdmin.viewNoContent(
 			assetListTitle = "Depot Dynamic Asset List",
@@ -197,7 +200,9 @@ definition {
 			assetListName = "Site Manual Asset List",
 			assetName = "WC WebContent Title",
 			assetType = "Basic Web Content",
-			depotName = "Test Depot Name");
+			depotName = "Test Depot Name",
+			itemSubtype = "Basic Web Content",
+			itemType = "Web Content Article");
 
 		Navigator.gotoSitePage(
 			pageName = "Asset Publisher Page",
@@ -211,25 +216,26 @@ definition {
 
 		AssertTextEquals(
 			key_assetTitle = "WC WebContent Title",
-			locator1 = "AP#ASSET_ABSTRACT_TITLE_EXACT_MATCH",
+			locator1 = "AP#ASSET_ABSTRACT_TITLE",
 			value1 = "WC WebContent Title");
 	}
 
 	@description = "This ensures that the asset types will not be displayed when disabling the applications."
 	@priority = "5"
 	test DisableAllAssetTypes {
-		AssetListsAdmin.openAssetListsAdmin(siteURLKey = "test-depot-name");
+		JSONAssetlist.addDynamicAssetListEntry(
+			groupName = "Test Depot Name",
+			site = "false",
+			title = "Depot Dynamic Asset List");
 
-		AssetListsAdmin.addDynamicSelection(assetListTitle = "Depot Dynamic Asset List");
-
-		AssetListsAdmin.openAssetListsAdmin(siteURLKey = "test-depot-name");
-
-		AssetListsAdmin.addManualSelection(assetListTitle = "Depot Manual Asset List");
+		JSONAssetlist.addManualAssetListEntry(
+			groupName = "Test Depot Name",
+			site = "false",
+			title = "Depot Manual Asset List");
 
 		DepotNavigator.openDepotAdmin();
 
 		DepotNavigator.gotoDepotPortlet(
-			category = "Configuration",
 			depotName = "Test Depot Name",
 			portlet = "Settings");
 
@@ -237,14 +243,14 @@ definition {
 			applicationList = "Documents and Media,Web Content",
 			status = "Disabled");
 
-		AssetListsAdmin.openAssetListsAdmin(siteURLKey = "test-depot-name");
+		DepotNavigator.openDepotAssetListsAdmin(depotName = "Test Depot Name");
 
 		AssetListsAdmin.viewAssetTypeList(
 			allAssetsDisabled = "ture",
 			assetListName = "Depot Manual Asset List",
 			manualSelection = "true");
 
-		AssetListsAdmin.openAssetListsAdmin(siteURLKey = "test-depot-name");
+		DepotNavigator.openDepotAssetListsAdmin(depotName = "Test Depot Name");
 
 		AssetListsAdmin.viewAssetTypeList(
 			allAssetsDisabled = "true",
@@ -252,18 +258,98 @@ definition {
 			dynamicSelection = "true");
 	}
 
+	@description = "This ensures that user can not select the collection in depot after disabling Collections."
+	@priority = "5"
+	test DisableCollections {
+		JSONAssetlist.addManualAssetListEntry(
+			groupName = "Test Depot Name",
+			site = "false",
+			title = "Depot Manual Asset List");
+
+		JSONGroup.addGroup(groupName = "Site Name");
+
+		DepotNavigator.openDepotAdmin();
+
+		DepotNavigator.gotoEdit(depotName = "Test Depot Name");
+
+		DepotNavigator.gotoSites(depotName = "Test Depot Name");
+
+		Depot.connectSite(siteList = "Site Name");
+
+		DepotNavigator.openDepotAdmin();
+
+		DepotNavigator.gotoDepotPortlet(
+			depotName = "Test Depot Name",
+			portlet = "Settings");
+
+		Depot.configureApplication(
+			applicationList = "Collections",
+			status = "Disabled");
+
+		JSONLayout.addPublicLayout(
+			groupName = "Site Name",
+			layoutName = "Asset Publisher Page");
+
+		JSONLayout.addWidgetToPublicLayout(
+			groupName = "Site Name",
+			layoutName = "Asset Publisher Page",
+			widgetName = "Asset Publisher");
+
+		Navigator.gotoSitePage(
+			pageName = "Asset Publisher Page",
+			siteName = "Site Name");
+
+		Portlet.gotoPortletOptions(
+			portletName = "Asset Publisher",
+			portletOption = "Configuration");
+
+		SelectFrame(locator1 = "IFrame#MODAL_BODY");
+
+		Navigator.gotoNavTab(navTab = "Asset Selection");
+
+		Panel.expandPanel(panel = "Asset Selection");
+
+		Click(locator1 = "APConfiguration#ASSET_SELECTION_ASSET_LIST");
+
+		Panel.expandPanel(panel = "Select Collection");
+
+		Button.clickSelect();
+
+		SelectFrame.selectFrameNoLoading(locator1 = "IFrame#ASSET_LIST_DIALOG");
+
+		AssertClick(
+			key_breadcrumbName = "Sites and Libraries",
+			locator1 = "Breadcrumb#BREADCRUMB_ENTRY",
+			value1 = "Sites and Libraries");
+
+		AssertClick(
+			key_groupTab = "Asset Library",
+			locator1 = "ItemSelector#NAVIGATION_GROUP_TAB",
+			value1 = "Asset Library");
+
+		Click(
+			key_card = "Test Depot Name",
+			locator1 = "Card#CARD_TITLE");
+
+		AssertTextEquals(
+			locator1 = "Message#INFO",
+			value1 = "Info:This application is not supported for Asset Libraries. Please, go back to scope selection.");
+	}
+
 	@description = "This ensures that only the asset types related to web content will be displayed after disabling DM."
 	@priority = "5"
 	test DisableDM {
-		AssetListsAdmin.openAssetListsAdmin(siteURLKey = "test-depot-name");
+		JSONAssetlist.addDynamicAssetListEntry(
+			groupName = "Test Depot Name",
+			site = "false",
+			title = "Depot Dynamic Asset List");
 
-		AssetListsAdmin.addDynamicSelection(assetListTitle = "Depot Dynamic Asset List");
+		JSONAssetlist.addManualAssetListEntry(
+			groupName = "Test Depot Name",
+			site = "false",
+			title = "Depot Manual Asset List");
 
-		AssetListsAdmin.openAssetListsAdmin(siteURLKey = "test-depot-name");
-
-		AssetListsAdmin.addManualSelection(assetListTitle = "Depot Manual Asset List");
-
-		WebContentNavigator.openWebContentAdmin(siteURLKey = "test-depot-name");
+		DepotNavigator.openDepotWebContentAdmin(depotName = "Test Depot Name");
 
 		NavItem.gotoStructures();
 
@@ -281,7 +367,6 @@ definition {
 		DepotNavigator.openDepotAdmin();
 
 		DepotNavigator.gotoDepotPortlet(
-			category = "Configuration",
 			depotName = "Test Depot Name",
 			portlet = "Settings");
 
@@ -289,14 +374,15 @@ definition {
 			applicationList = "Documents and Media",
 			status = "Disabled");
 
-		AssetListsAdmin.openAssetListsAdmin(siteURLKey = "test-depot-name");
+		DepotNavigator.openDepotAssetListsAdmin(depotName = "Test Depot Name");
 
 		AssetListsAdmin.viewAssetTypeList(
 			assetListName = "Depot Manual Asset List",
 			assetType = "Web Content Folder,Basic Web Content,WC Structure Name",
+			itemType = "All Types",
 			manualSelection = "true");
 
-		AssetListsAdmin.openAssetListsAdmin(siteURLKey = "test-depot-name");
+		DepotNavigator.openDepotAssetListsAdmin(depotName = "Test Depot Name");
 
 		AssetListsAdmin.viewAssetTypeList(
 			assetListName = "Depot Dynamic Asset List",
@@ -307,15 +393,17 @@ definition {
 	@description = "This ensures that only the asset types related to DM will be displayed after disabling WC."
 	@priority = "5"
 	test DisableWC {
-		AssetListsAdmin.openAssetListsAdmin(siteURLKey = "test-depot-name");
+		JSONAssetlist.addDynamicAssetListEntry(
+			groupName = "Test Depot Name",
+			site = "false",
+			title = "Depot Dynamic Asset List");
 
-		AssetListsAdmin.addDynamicSelection(assetListTitle = "Depot Dynamic Asset List");
+		JSONAssetlist.addManualAssetListEntry(
+			groupName = "Test Depot Name",
+			site = "false",
+			title = "Depot Manual Asset List");
 
-		AssetListsAdmin.openAssetListsAdmin(siteURLKey = "test-depot-name");
-
-		AssetListsAdmin.addManualSelection(assetListTitle = "Depot Manual Asset List");
-
-		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "test-depot-name");
+		DepotNavigator.openDepotDocumentsAndMediaAdmin(depotName = "Test Depot Name");
 
 		DMNavigator.gotoDocumentType();
 
@@ -327,7 +415,6 @@ definition {
 		DepotNavigator.openDepotAdmin();
 
 		DepotNavigator.gotoDepotPortlet(
-			category = "Configuration",
 			depotName = "Test Depot Name",
 			portlet = "Settings");
 
@@ -335,14 +422,15 @@ definition {
 			applicationList = "Web Content",
 			status = "Disabled");
 
-		AssetListsAdmin.openAssetListsAdmin(siteURLKey = "test-depot-name");
+		DepotNavigator.openDepotAssetListsAdmin(depotName = "Test Depot Name");
 
 		AssetListsAdmin.viewAssetTypeList(
 			assetListName = "Depot Manual Asset List",
 			assetType = "Basic Document,Documents Folder,DM Document Type Name",
+			itemType = "All Types",
 			manualSelection = "true");
 
-		AssetListsAdmin.openAssetListsAdmin(siteURLKey = "test-depot-name");
+		DepotNavigator.openDepotAssetListsAdmin(depotName = "Test Depot Name");
 
 		AssetListsAdmin.viewAssetTypeList(
 			assetListName = "Depot Dynamic Asset List",
@@ -360,24 +448,26 @@ definition {
 			mimeType = "image/jpeg",
 			sourceFileName = "Document_2.jpeg");
 
-		AssetListsAdmin.openAssetListsAdmin(siteURLKey = "test-depot-name");
+		DepotNavigator.openDepotAssetListsAdmin(depotName = "Test Depot Name");
 
 		AssetListsAdmin.addManualSelection(
 			assetListTitle = "Depot Manual Asset List",
 			depotName = "Test Depot Name");
 
-		AssetListsAdmin.openAssetListsAdmin(siteURLKey = "test-depot-name");
+		DepotNavigator.openDepotAssetListsAdmin(depotName = "Test Depot Name");
 
 		AssetListsAdmin.viewAssetList(
 			assetListTitle = "Depot Manual Asset List",
 			type = "Manual");
 
-		AssetListsAdmin.openAssetListsAdmin(siteURLKey = "test-depot-name");
+		DepotNavigator.openDepotAssetListsAdmin(depotName = "Test Depot Name");
 
 		AssetListsAdmin.selectAsset(
 			assetListName = "Depot Manual Asset List",
 			assetName = "Document Title",
-			assetType = "Basic Document");
+			assetType = "Basic Document",
+			itemSubtype = "Basic Document",
+			itemType = "Document");
 
 		JSONGroup.addGroup(groupName = "Site Name");
 
@@ -413,7 +503,7 @@ definition {
 
 		AssertTextEquals(
 			key_assetTitle = "Document Title",
-			locator1 = "AP#ASSET_ABSTRACT_TITLE_EXACT_MATCH",
+			locator1 = "AP#ASSET_ABSTRACT_TITLE",
 			value1 = "Document Title");
 	}
 
@@ -427,7 +517,7 @@ definition {
 			mimeType = "application/msword",
 			sourceFileName = "Document_2.doc");
 
-		WebContentNavigator.openWebContentAdmin(siteURLKey = "test-depot-name");
+		DepotNavigator.openDepotWebContentAdmin(depotName = "Test Depot Name");
 
 		WebContentNavigator.gotoAddCP();
 
@@ -436,19 +526,19 @@ definition {
 			webContentContent = "Web Content Content",
 			webContentTitle = "Web Content Title");
 
-		AssetListsAdmin.openAssetListsAdmin(siteURLKey = "test-depot-name");
+		DepotNavigator.openDepotAssetListsAdmin(depotName = "Test Depot Name");
 
 		AssetListsAdmin.addDynamicSelection(
 			assetListTitle = "Depot Dynamic Asset List",
 			depotName = "Test Depot Name");
 
-		AssetListsAdmin.openAssetListsAdmin(siteURLKey = "test-depot-name");
+		DepotNavigator.openDepotAssetListsAdmin(depotName = "Test Depot Name");
 
 		AssetListsAdmin.viewAssetList(
 			assetListTitle = "Depot Dynamic Asset List",
 			type = "Dynamic");
 
-		AssetListsAdmin.openAssetListsAdmin(siteURLKey = "test-depot-name");
+		DepotNavigator.openDepotAssetListsAdmin(depotName = "Test Depot Name");
 
 		AssetListsAdmin.editAssetList(assetListTitle = "Depot Dynamic Asset List");
 
@@ -490,14 +580,14 @@ definition {
 
 		AssertTextEquals(
 			key_assetTitle = "Web Content Title",
-			locator1 = "AP#ASSET_ABSTRACT_TITLE_EXACT_MATCH",
+			locator1 = "AP#ASSET_ABSTRACT_TITLE",
 			value1 = "Web Content Title");
 	}
 
 	@description = "This ensures that images are excluded with the dynamic selection that does not contain the keyword "Image" in a depot."
 	@priority = "5"
 	test ExcludeImagesDynamically {
-		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "test-depot-name");
+		DepotNavigator.openDepotDocumentsAndMediaAdmin(depotName = "Test Depot Name");
 
 		for (var i : list "1,2") {
 			JSONDocument.addFileWithUploadedFile(
@@ -517,11 +607,14 @@ definition {
 				sourceFileName = "Document_${i}.png");
 		}
 
-		AssetListsAdmin.openAssetListsAdmin(siteURLKey = "test-depot-name");
+		JSONAssetlist.addDynamicAssetListEntry(
+			groupName = "Test Depot Name",
+			site = "false",
+			title = "Depot Dynamic Asset List");
 
-		AssetListsAdmin.addDynamicSelection(
-			assetListTitle = "Depot Dynamic Asset List",
-			depotName = "Test Depot Name");
+		DepotNavigator.openDepotAssetListsAdmin(depotName = "Test Depot Name");
+
+		AssetListsAdmin.gotoEntry(assetListName = "Depot Dynamic Asset List");
 
 		AssetListsAdmin.addKeywordsFilter(
 			keyWords = "Image",
@@ -529,7 +622,7 @@ definition {
 			queryContains = "Does Not Contain");
 
 		for (var i : list "1,2") {
-			AssetListsAdmin.openAssetListsAdmin(siteURLKey = "test-depot-name");
+			DepotNavigator.openDepotAssetListsAdmin(depotName = "Test Depot Name");
 
 			AssetListsAdmin.viewContent(
 				assetListTitle = "Depot Dynamic Asset List",
@@ -541,43 +634,40 @@ definition {
 	@description = "This ensures that the asset can be removed in Collections."
 	@priority = "4"
 	test RemoveAssetFromContentSet {
-		WebContentNavigator.openWebContentAdmin(siteURLKey = "test-depot-name");
-
 		for (var i : list "1,2,3") {
-			WebContentNavigator.gotoAddCP();
-
-			WebContent.addCP(
-				webContentContent = "WC WebContent Content",
-				webContentTitle = "WC WebContent Title ${i}");
-
-			PortletEntry.publish();
+			JSONWebcontent.addWebContent(
+				content = "WC WebContent Content",
+				groupName = "Test Depot Name",
+				site = "false",
+				title = "WC WebContent Title ${i}");
 		}
 
-		AssetListsAdmin.openAssetListsAdmin(siteURLKey = "test-depot-name");
+		JSONAssetlist.addManualAssetListEntry(
+			groupName = "Test Depot Name",
+			site = "false",
+			title = "Depot Manual Asset List");
 
-		AssetListsAdmin.addManualSelection(
-			assetListTitle = "Depot Manual Asset List",
-			depotName = "Test Depot Name");
-
-		AssetListsAdmin.openAssetListsAdmin(siteURLKey = "test-depot-name");
+		DepotNavigator.openDepotAssetListsAdmin(depotName = "Test Depot Name");
 
 		AssetListsAdmin.viewAssetList(
 			assetListTitle = "Depot Manual Asset List",
 			type = "Manual");
 
 		for (var i : list "1,2,3") {
-			AssetListsAdmin.openAssetListsAdmin(siteURLKey = "test-depot-name");
+			DepotNavigator.openDepotAssetListsAdmin(depotName = "Test Depot Name");
 
 			AssetListsAdmin.selectAsset(
 				assetListName = "Depot Manual Asset List",
 				assetName = "WC WebContent Title ${i}",
-				assetType = "Basic Web Content");
+				assetType = "Basic Web Content",
+				itemSubtype = "Basic Web Content",
+				itemType = "Web Content Article");
 		}
 
 		AssetListsAdmin.deleteManualSelectionAssets(assetsList = "WC WebContent Title 2");
 
 		for (var i : list "1,3") {
-			AssetListsAdmin.openAssetListsAdmin(siteURLKey = "test-depot-name");
+			DepotNavigator.openDepotAssetListsAdmin(depotName = "Test Depot Name");
 
 			AssetListsAdmin.viewContent(
 				assetListTitle = "Depot Manual Asset List",
@@ -585,7 +675,7 @@ definition {
 				assetType = "Web Content Article");
 		}
 
-		AssetListsAdmin.openAssetListsAdmin(siteURLKey = "test-depot-name");
+		DepotNavigator.openDepotAssetListsAdmin(depotName = "Test Depot Name");
 
 		AssetListsAdmin.viewNoContent(
 			assetListTitle = "Depot Manual Asset List",
@@ -603,33 +693,30 @@ definition {
 			mimeType = "application/msword",
 			sourceFileName = "Document_1.doc");
 
-		WebContentNavigator.openWebContentAdmin(siteURLKey = "test-depot-name");
-
 		for (var i : list "1,2,3") {
-			WebContentNavigator.gotoAddCP();
-
-			WebContent.addCP(
-				webContentContent = "WC WebContent Content",
-				webContentTitle = "WC WebContent Title ${i}");
-
-			PortletEntry.publish();
+			JSONWebcontent.addWebContent(
+				content = "WC WebContent Content",
+				groupName = "Test Depot Name",
+				site = "false",
+				title = "WC WebContent Title ${i}");
 		}
 
-		AssetListsAdmin.openAssetListsAdmin(siteURLKey = "test-depot-name");
+		JSONAssetlist.addDynamicAssetListEntry(
+			groupName = "Test Depot Name",
+			site = "false",
+			title = "Depot Dynamic Asset List");
 
-		AssetListsAdmin.addDynamicSelection(
-			assetListTitle = "Depot Dynamic Asset List",
-			depotName = "Test Depot Name");
-
-		AssetListsAdmin.openAssetListsAdmin(siteURLKey = "test-depot-name");
+		DepotNavigator.openDepotAssetListsAdmin(depotName = "Test Depot Name");
 
 		AssetListsAdmin.viewAssetTypeList(
 			assetListName = "Depot Dynamic Asset List",
 			assetType = "Web Content Folder,Web Content Article,Document,Documents Folder",
 			dynamicSelection = "true");
 
+		AssetListsAdmin.configureAssetEntryType(selectedAsset = "All Types");
+
 		for (var i : list "1,2,3") {
-			AssetListsAdmin.openAssetListsAdmin(siteURLKey = "test-depot-name");
+			DepotNavigator.openDepotAssetListsAdmin(depotName = "Test Depot Name");
 
 			AssetListsAdmin.viewContent(
 				assetListTitle = "Depot Dynamic Asset List",
@@ -637,21 +724,21 @@ definition {
 				assetType = "Web Content Article");
 		}
 
-		AssetListsAdmin.openAssetListsAdmin(siteURLKey = "test-depot-name");
+		DepotNavigator.openDepotAssetListsAdmin(depotName = "Test Depot Name");
 
 		AssetListsAdmin.viewContent(
 			assetListTitle = "Depot Dynamic Asset List",
 			assetTitle = "Document Title",
 			assetType = "Document");
 
-		AssetListsAdmin.openAssetListsAdmin(siteURLKey = "test-depot-name");
+		DepotNavigator.openDepotAssetListsAdmin(depotName = "Test Depot Name");
 
 		AssetListsAdmin.editAssetList(assetListTitle = "Depot Dynamic Asset List");
 
 		AssetListsAdmin.configureAssetEntryType(selectedAsset = "Web Content Article");
 
 		for (var i : list "1,2,3") {
-			AssetListsAdmin.openAssetListsAdmin(siteURLKey = "test-depot-name");
+			DepotNavigator.openDepotAssetListsAdmin(depotName = "Test Depot Name");
 
 			AssetListsAdmin.viewContent(
 				assetListTitle = "Depot Dynamic Asset List",
@@ -659,7 +746,7 @@ definition {
 				assetType = "Web Content Article");
 		}
 
-		AssetListsAdmin.openAssetListsAdmin(siteURLKey = "test-depot-name");
+		DepotNavigator.openDepotAssetListsAdmin(depotName = "Test Depot Name");
 
 		AssetListsAdmin.viewNoContent(
 			assetListTitle = "Depot Dynamic Asset List",
@@ -672,9 +759,14 @@ definition {
 	test SelectDocumentFromOtherScopeDynamically {
 		JSONGroup.addGroup(groupName = "Test Site Name");
 
-		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "test-site-name");
-
-		DMDocument.addMultipleCP(dmDocumentFileList = "Document_1.doc,Document_2.doc");
+		for (var i : list "1,2") {
+			JSONDocument.addFileWithUploadedFile(
+				dmDocumentDescription = "DM Document Description",
+				dmDocumentTitle = "Document_${i}.doc",
+				groupName = "Test Site Name",
+				mimeType = "application/msword",
+				sourceFileName = "Document_${i}.doc");
+		}
 
 		JSONDocument.addFileWithUploadedFile(
 			dmDocumentDescription = "DM Document Description",
@@ -683,19 +775,19 @@ definition {
 			mimeType = "image/jpeg",
 			sourceFileName = "Document_2.jpeg");
 
-		AssetListsAdmin.openAssetListsAdmin(siteURLKey = "test-depot-name");
+		JSONAssetlist.addDynamicAssetListEntry(
+			groupName = "Test Depot Name",
+			site = "false",
+			title = "Depot Dynamic Asset List");
 
-		AssetListsAdmin.addDynamicSelection(
-			assetListTitle = "Depot Dynamic Asset List",
-			depotName = "Test Depot Name");
-
-		AssetListsAdmin.openAssetListsAdmin(siteURLKey = "test-depot-name");
+		DepotNavigator.openDepotAssetListsAdmin(depotName = "Test Depot Name");
 
 		AssetListsAdmin.configureScope(
 			assetListTitle = "Depot Dynamic Asset List",
-			otherSite = "Test Site Name");
+			otherSite = "Test Site Name",
+			selectedAsset = "All Types");
 
-		AssetListsAdmin.openAssetListsAdmin(siteURLKey = "test-depot-name");
+		DepotNavigator.openDepotAssetListsAdmin(depotName = "Test Depot Name");
 
 		AssetListsAdmin.editAssetList(assetListTitle = "Depot Dynamic Asset List");
 
@@ -704,7 +796,7 @@ definition {
 			queryAndOperator = "Any",
 			queryContains = "Does Not Contain");
 
-		AssetListsAdmin.openAssetListsAdmin(siteURLKey = "test-depot-name");
+		DepotNavigator.openDepotAssetListsAdmin(depotName = "Test Depot Name");
 
 		AssetListsAdmin.viewContent(
 			assetListTitle = "Depot Dynamic Asset List",
@@ -712,7 +804,7 @@ definition {
 			assetType = "Document");
 
 		for (var i : list "1,2") {
-			AssetListsAdmin.openAssetListsAdmin(siteURLKey = "test-depot-name");
+			DepotNavigator.openDepotAssetListsAdmin(depotName = "Test Depot Name");
 
 			AssetListsAdmin.viewNoContent(
 				assetListTitle = "Depot Dynamic Asset List",
@@ -724,31 +816,52 @@ definition {
 	@description = "This ensures that multiple documents can be selected through Collections in a depot."
 	@priority = "5"
 	test SelectMultipleDocumentsManually {
-		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "test-depot-name");
+		for (var documentName : list "Document_1.doc,Document_2.jpg,Document_3.txt") {
 
-		DMDocument.addMultipleCP(dmDocumentFileList = "Document_1.doc,Document_2.jpg,Document_3.txt");
+			var extension = StringUtil.extractLast("${documentName}", ".");
 
-		AssetListsAdmin.openAssetListsAdmin(siteURLKey = "test-depot-name");
+			if ("${extension}" == "doc") {
+				var mimeType = "application/msword";
+			}
+			else if ("${extension}" == "jpg") {
+				var mimeType = "image/jpg";
+			}
+			else if ("${extension}" == "txt") {
+				var mimeType = "text/plain";
+			}
 
-		AssetListsAdmin.addManualSelection(assetListTitle = "Depot Manual Asset List");
+			JSONDocument.addFileWithUploadedFile(
+				dmDocumentDescription = "DM Document Description",
+				dmDocumentTitle = "${documentName}",
+				groupName = "Test Depot Name",
+				mimeType = "${mimeType}",
+				sourceFileName = "${documentName}");
+		}
 
-		AssetListsAdmin.openAssetListsAdmin(siteURLKey = "test-depot-name");
+		JSONAssetlist.addManualAssetListEntry(
+			groupName = "Test Depot Name",
+			site = "false",
+			title = "Depot Manual Asset List");
+
+		DepotNavigator.openDepotAssetListsAdmin(depotName = "Test Depot Name");
 
 		AssetListsAdmin.viewAssetList(
 			assetListTitle = "Depot Manual Asset List",
 			type = "Manual");
 
 		for (var documentName : list "Document_1.doc,Document_2.jpg,Document_3.txt") {
-			AssetListsAdmin.openAssetListsAdmin(siteURLKey = "test-depot-name");
+			DepotNavigator.openDepotAssetListsAdmin(depotName = "Test Depot Name");
 
 			AssetListsAdmin.selectAsset(
 				assetListName = "Depot Manual Asset List",
 				assetName = "${documentName}",
-				assetType = "Basic Document");
+				assetType = "Basic Document",
+				itemSubtype = "Basic Document",
+				itemType = "Document");
 		}
 
 		for (var documentName : list "Document_1.doc,Document_2.jpg,Document_3.txt") {
-			AssetListsAdmin.openAssetListsAdmin(siteURLKey = "test-depot-name");
+			DepotNavigator.openDepotAssetListsAdmin(depotName = "Test Depot Name");
 
 			AssetListsAdmin.viewContent(
 				assetListTitle = "Depot Manual Asset List",
@@ -768,29 +881,30 @@ definition {
 				title = "WC WebContent Title ${i}");
 		}
 
-		AssetListsAdmin.openAssetListsAdmin(siteURLKey = "test-depot-name");
+		JSONAssetlist.addManualAssetListEntry(
+			groupName = "Test Depot Name",
+			site = "false",
+			title = "Depot Manual Asset List");
 
-		AssetListsAdmin.addManualSelection(
-			assetListTitle = "Depot Manual Asset List",
-			depotName = "Test Depot Name");
-
-		AssetListsAdmin.openAssetListsAdmin(siteURLKey = "test-depot-name");
+		DepotNavigator.openDepotAssetListsAdmin(depotName = "Test Depot Name");
 
 		AssetListsAdmin.viewAssetList(
 			assetListTitle = "Depot Manual Asset List",
 			type = "Manual");
 
 		for (var i : list "1,2,3") {
-			AssetListsAdmin.openAssetListsAdmin(siteURLKey = "test-depot-name");
+			DepotNavigator.openDepotAssetListsAdmin(depotName = "Test Depot Name");
 
 			AssetListsAdmin.selectAsset(
 				assetListName = "Depot Manual Asset List",
 				assetName = "WC WebContent Title ${i}",
-				assetType = "Basic Web Content");
+				assetType = "Basic Web Content",
+				itemSubtype = "Basic Web Content",
+				itemType = "Web Content Article");
 		}
 
 		for (var i : list "1,2,3") {
-			AssetListsAdmin.openAssetListsAdmin(siteURLKey = "test-depot-name");
+			DepotNavigator.openDepotAssetListsAdmin(depotName = "Test Depot Name");
 
 			AssetListsAdmin.viewContent(
 				assetListTitle = "Depot Manual Asset List",
@@ -802,9 +916,9 @@ definition {
 	@description = "This ensures that web contents from all the scopes can be selected through dynamic selection in a depot."
 	@priority = "4"
 	test SelectWCFromAllScopesDynamically {
-		JSONGroup.addGroup(groupName = "Test Site Name 1");
-
-		JSONGroup.addGroup(groupName = "Test Site Name 2");
+		for (var i : list "1,2") {
+			JSONGroup.addGroup(groupName = "Test Site Name ${i}");
+		}
 
 		JSONWebcontent.addWebContent(
 			content = "WC WebContent Content",
@@ -822,24 +936,26 @@ definition {
 			groupName = "Test Site Name 2",
 			title = "WC WebContent Title 3");
 
-		AssetListsAdmin.openAssetListsAdmin(siteURLKey = "test-depot-name");
+		JSONAssetlist.addDynamicAssetListEntry(
+			groupName = "Test Depot Name",
+			site = "false",
+			title = "Depot Dynamic Asset List");
 
-		AssetListsAdmin.addDynamicSelection(assetListTitle = "Depot Dynamic Asset List");
-
-		AssetListsAdmin.openAssetListsAdmin(siteURLKey = "test-depot-name");
+		DepotNavigator.openDepotAssetListsAdmin(depotName = "Test Depot Name");
 
 		AssetListsAdmin.configureScope(
 			assetListTitle = "Depot Dynamic Asset List",
-			otherSite = "Test Site Name 1");
+			otherSite = "Test Site Name 1",
+			selectedAsset = "All Types");
 
-		AssetListsAdmin.openAssetListsAdmin(siteURLKey = "test-depot-name");
+		DepotNavigator.openDepotAssetListsAdmin(depotName = "Test Depot Name");
 
 		AssetListsAdmin.configureScope(
 			assetListTitle = "Depot Dynamic Asset List",
 			otherSite = "Test Site Name 2");
 
 		for (var i : list "1,2,3") {
-			AssetListsAdmin.openAssetListsAdmin(siteURLKey = "test-depot-name");
+			DepotNavigator.openDepotAssetListsAdmin(depotName = "Test Depot Name");
 
 			AssetListsAdmin.viewContent(
 				assetListTitle = "Depot Dynamic Asset List",
@@ -860,17 +976,19 @@ definition {
 				title = "WC WebContent Title ${i}");
 		}
 
-		AssetListsAdmin.openAssetListsAdmin(siteURLKey = "test-depot-name");
+		JSONAssetlist.addDynamicAssetListEntry(
+			groupName = "Test Depot Name",
+			site = "false",
+			title = "Depot Dynamic Asset List");
 
-		AssetListsAdmin.addDynamicSelection(assetListTitle = "Depot Dynamic Asset List");
-
-		AssetListsAdmin.openAssetListsAdmin(siteURLKey = "test-depot-name");
+		DepotNavigator.openDepotAssetListsAdmin(depotName = "Test Depot Name");
 
 		AssetListsAdmin.configureScope(
 			assetListTitle = "Depot Dynamic Asset List",
-			otherSite = "Test Site Name");
+			otherSite = "Test Site Name",
+			selectedAsset = "All Types");
 
-		AssetListsAdmin.openAssetListsAdmin(siteURLKey = "test-depot-name");
+		DepotNavigator.openDepotAssetListsAdmin(depotName = "Test Depot Name");
 
 		AssetListsAdmin.editAssetList(assetListTitle = "Depot Dynamic Asset List");
 
@@ -879,7 +997,7 @@ definition {
 			queryAndOperator = "Any",
 			queryContains = "Does Not Contain");
 
-		AssetListsAdmin.openAssetListsAdmin(siteURLKey = "test-depot-name");
+		DepotNavigator.openDepotAssetListsAdmin(depotName = "Test Depot Name");
 
 		AssetListsAdmin.viewContent(
 			assetListTitle = "Depot Dynamic Asset List",
@@ -887,7 +1005,7 @@ definition {
 			assetType = "Web Content Article");
 
 		for (var i : list "2 3,3 4") {
-			AssetListsAdmin.openAssetListsAdmin(siteURLKey = "test-depot-name");
+			DepotNavigator.openDepotAssetListsAdmin(depotName = "Test Depot Name");
 
 			AssetListsAdmin.viewNoContent(
 				assetListTitle = "Depot Dynamic Asset List",
@@ -899,7 +1017,7 @@ definition {
 	@description = "This ensures that the web content created by the structure can be selected via searching for the corresponding structure name."
 	@priority = "5"
 	test SelectWebContentWithStructure {
-		WebContentNavigator.openWebContentAdmin(siteURLKey = "test-depot-name");
+		DepotNavigator.openDepotWebContentAdmin(depotName = "Test Depot Name");
 
 		NavItem.gotoStructures();
 
@@ -914,7 +1032,7 @@ definition {
 
 		WebContentStructures.saveCP(structureName = "WC Structure Name");
 
-		WebContentNavigator.openWebContentAdmin(siteURLKey = "test-depot-name");
+		DepotNavigator.openDepotWebContentAdmin(depotName = "Test Depot Name");
 
 		for (var i : list "1,2") {
 			WebContentNavigator.gotoAddWithStructureCP(structureName = "WC Structure Name");
@@ -926,21 +1044,23 @@ definition {
 			PortletEntry.publish();
 		}
 
-		AssetListsAdmin.openAssetListsAdmin(siteURLKey = "test-depot-name");
+		DepotNavigator.openDepotAssetListsAdmin(depotName = "Test Depot Name");
 
 		AssetListsAdmin.addManualSelection(assetListTitle = "Depot Manual Asset List");
 
 		for (var i : list "1,2") {
-			AssetListsAdmin.openAssetListsAdmin(siteURLKey = "test-depot-name");
+			DepotNavigator.openDepotAssetListsAdmin(depotName = "Test Depot Name");
 
 			AssetListsAdmin.selectAsset(
 				assetListName = "Depot Manual Asset List",
 				assetName = "WC WebContent Title ${i}",
-				assetType = "WC Structure Name");
+				assetType = "WC Structure Name",
+				itemSubtype = "WC Structure Name",
+				itemType = "Web Content Article");
 		}
 
 		for (var i : list "1,2") {
-			AssetListsAdmin.openAssetListsAdmin(siteURLKey = "test-depot-name");
+			DepotNavigator.openDepotAssetListsAdmin(depotName = "Test Depot Name");
 
 			AssetListsAdmin.viewContent(
 				assetListTitle = "Depot Manual Asset List",
@@ -957,7 +1077,7 @@ definition {
 
 		DepotNavigator.openDepotAdmin();
 
-		DepotNavigator.gotoDepot(
+		DepotNavigator.gotoDepotPortlet(
 			depotName = "Test Depot Name",
 			portlet = "Collections");
 
@@ -971,9 +1091,9 @@ definition {
 
 		LexiconEntry.gotoAdd();
 
-		MenuItem.viewPresent(menuItem = "Manual Selection");
+		MenuItem.viewPresent(menuItem = "Manual Collection");
 
-		MenuItem.viewPresent(menuItem = "Dynamic Selection");
+		MenuItem.viewPresent(menuItem = "Dynamic Collection");
 
 		Refresh();
 
@@ -982,11 +1102,11 @@ definition {
 		Click.waitForMenuToggleJSClick(locator1 = "Dropdown#EMPTY_MESSAGE_DROPDOWN");
 
 		AssertElementPresent(
-			key_menuItem = "Manual Selection",
+			key_menuItem = "Manual Collection",
 			locator1 = "MenuItem#DROPDOWN_MENU_ITEM");
 
 		AssertElementPresent(
-			key_menuItem = "Dynamic Selection",
+			key_menuItem = "Dynamic Collection",
 			locator1 = "MenuItem#DROPDOWN_MENU_ITEM");
 	}
 

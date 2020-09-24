@@ -23,7 +23,6 @@ import com.liferay.fragment.renderer.FragmentRendererTracker;
 import com.liferay.fragment.service.FragmentCollectionService;
 import com.liferay.fragment.service.FragmentCompositionService;
 import com.liferay.fragment.util.configuration.FragmentEntryConfigurationParser;
-import com.liferay.info.display.contributor.InfoDisplayContributorTracker;
 import com.liferay.layout.content.page.editor.constants.ContentPageEditorPortletKeys;
 import com.liferay.layout.content.page.editor.web.internal.constants.ContentPageEditorConstants;
 import com.liferay.layout.page.template.serializer.LayoutStructureItemJSONSerializer;
@@ -116,7 +115,7 @@ public class AddFragmentCompositionMVCActionCommand
 			actionRequest, "segmentsExperienceId",
 			SegmentsExperienceConstants.ID_DEFAULT);
 
-		String layoutStructureJSON =
+		String layoutStructureItemJSON =
 			_layoutStructureItemJSONSerializer.toJSONString(
 				_layoutLocalService.getLayout(themeDisplay.getPlid()), itemId,
 				saveInlineContent, saveMappingConfiguration,
@@ -126,7 +125,7 @@ public class AddFragmentCompositionMVCActionCommand
 			_fragmentCompositionService.addFragmentComposition(
 				themeDisplay.getScopeGroupId(),
 				fragmentCollection.getFragmentCollectionId(), null, name,
-				description, layoutStructureJSON, 0,
+				description, layoutStructureItemJSON, 0,
 				WorkflowConstants.STATUS_APPROVED, serviceContext);
 
 		String previewImageURL = ParamUtil.getString(
@@ -154,6 +153,8 @@ public class AddFragmentCompositionMVCActionCommand
 			"fragmentEntryKey", fragmentComposition.getFragmentCompositionKey()
 		).put(
 			"groupId", fragmentComposition.getGroupId()
+		).put(
+			"icon", "edit-layout"
 		).put(
 			"imagePreviewURL",
 			fragmentComposition.getImagePreviewURL(themeDisplay)
@@ -242,9 +243,6 @@ public class AddFragmentCompositionMVCActionCommand
 
 	@Reference
 	private FragmentRendererTracker _fragmentRendererTracker;
-
-	@Reference
-	private InfoDisplayContributorTracker _infoDisplayContributorTracker;
 
 	@Reference
 	private LayoutLocalService _layoutLocalService;

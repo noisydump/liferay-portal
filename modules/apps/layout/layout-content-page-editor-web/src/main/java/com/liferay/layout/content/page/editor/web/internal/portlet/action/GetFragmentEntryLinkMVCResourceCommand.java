@@ -15,15 +15,23 @@
 package com.liferay.layout.content.page.editor.web.internal.portlet.action;
 
 import com.liferay.fragment.constants.FragmentEntryLinkConstants;
+import com.liferay.fragment.contributor.FragmentCollectionContributorTracker;
+import com.liferay.fragment.entry.processor.util.EditableFragmentEntryProcessorUtil;
+import com.liferay.fragment.model.FragmentEntry;
 import com.liferay.fragment.model.FragmentEntryLink;
 import com.liferay.fragment.renderer.DefaultFragmentRendererContext;
 import com.liferay.fragment.renderer.FragmentRendererController;
 import com.liferay.fragment.service.FragmentEntryLinkLocalService;
+import com.liferay.fragment.service.FragmentEntryService;
 import com.liferay.info.constants.InfoDisplayWebKeys;
-import com.liferay.info.display.contributor.InfoDisplayContributor;
-import com.liferay.info.display.contributor.InfoDisplayContributorTracker;
-import com.liferay.info.display.contributor.InfoDisplayObjectProvider;
+import com.liferay.info.item.ClassPKInfoItemIdentifier;
+import com.liferay.info.item.InfoItemIdentifier;
+import com.liferay.info.item.InfoItemServiceTracker;
+import com.liferay.info.item.provider.InfoItemObjectProvider;
 import com.liferay.layout.content.page.editor.constants.ContentPageEditorPortletKeys;
+import com.liferay.layout.display.page.LayoutDisplayPageProvider;
+import com.liferay.layout.display.page.LayoutDisplayPageProviderTracker;
+import com.liferay.layout.display.page.constants.LayoutDisplayPageWebKeys;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.portlet.JSONPortletResponseUtil;
@@ -99,31 +107,41 @@ public class GetFragmentEntryLinkMVCResourceCommand
 			HttpServletRequest httpServletRequest =
 				_portal.getHttpServletRequest(resourceRequest);
 
-			InfoDisplayContributor currentInfoDisplayContributor =
-				(InfoDisplayContributor)httpServletRequest.getAttribute(
-					InfoDisplayWebKeys.INFO_DISPLAY_CONTRIBUTOR);
+			LayoutDisplayPageProvider<?> currentLayoutDisplayPageProvider =
+				(LayoutDisplayPageProvider<?>)httpServletRequest.getAttribute(
+					LayoutDisplayPageWebKeys.LAYOUT_DISPLAY_PAGE_PROVIDER);
 
 			if (Validator.isNotNull(collectionItemClassName) &&
 				(collectionItemClassPK > 0)) {
 
-				InfoDisplayContributor infoDisplayContributor =
-					_infoDisplayContributorTracker.getInfoDisplayContributor(
-						collectionItemClassName);
+				InfoItemObjectProvider<Object> infoItemObjectProvider =
+					_infoItemServiceTracker.getFirstInfoItemService(
+						InfoItemObjectProvider.class, collectionItemClassName);
 
-				if (infoDisplayContributor != null) {
-					InfoDisplayObjectProvider infoDisplayObjectProvider =
-						infoDisplayContributor.getInfoDisplayObjectProvider(
-							collectionItemClassPK);
+				if (infoItemObjectProvider != null) {
+					InfoItemIdentifier infoItemIdentifier =
+						new ClassPKInfoItemIdentifier(collectionItemClassPK);
+
+					Object infoItemObject = infoItemObjectProvider.getInfoItem(
+						infoItemIdentifier);
 
 					defaultFragmentRendererContext.setDisplayObject(
-						infoDisplayObjectProvider.getDisplayObject());
+						infoItemObject);
 
 					httpServletRequest.setAttribute(
-						InfoDisplayWebKeys.INFO_DISPLAY_CONTRIBUTOR,
-						infoDisplayContributor);
-					httpServletRequest.setAttribute(
 						InfoDisplayWebKeys.INFO_LIST_DISPLAY_OBJECT,
-						infoDisplayObjectProvider.getDisplayObject());
+						infoItemObject);
+				}
+
+				LayoutDisplayPageProvider<?> layoutDisplayPageProvider =
+					_layoutDisplayPageProviderTracker.
+						getLayoutDisplayPageProviderByClassName(
+							collectionItemClassName);
+
+				if (layoutDisplayPageProvider != null) {
+					httpServletRequest.setAttribute(
+						LayoutDisplayPageWebKeys.LAYOUT_DISPLAY_PAGE_PROVIDER,
+						layoutDisplayPageProvider);
 				}
 			}
 
@@ -135,18 +153,36 @@ public class GetFragmentEntryLinkMVCResourceCommand
 				jsonObject.put(
 					"content", content
 				).put(
+					"editableTypes",
+					EditableFragmentEntryProcessorUtil.getEditableTypes(
+						fragmentEntryLink.getHtml())
+				).put(
 					"editableValues",
 					JSONFactoryUtil.createJSONObject(
 						fragmentEntryLink.getEditableValues())
 				);
+
+				FragmentEntry fragmentEntry =
+					_fragmentEntryService.fetchFragmentEntry(
+						fragmentEntryLink.getFragmentEntryId());
+
+				if (fragmentEntry == null) {
+					fragmentEntry =
+						_fragmentCollectionContributorTracker.getFragmentEntry(
+							fragmentEntryLink.getRendererKey());
+				}
+
+				if (fragmentEntry != null) {
+					jsonObject.put("icon", fragmentEntry.getIcon());
+				}
 			}
 			finally {
 				httpServletRequest.removeAttribute(
 					InfoDisplayWebKeys.INFO_LIST_DISPLAY_OBJECT);
 
 				httpServletRequest.setAttribute(
-					InfoDisplayWebKeys.INFO_DISPLAY_CONTRIBUTOR,
-					currentInfoDisplayContributor);
+					LayoutDisplayPageWebKeys.LAYOUT_DISPLAY_PAGE_PROVIDER,
+					currentLayoutDisplayPageProvider);
 			}
 
 			if (SessionErrors.contains(
@@ -163,13 +199,23 @@ public class GetFragmentEntryLinkMVCResourceCommand
 	}
 
 	@Reference
+	private FragmentCollectionContributorTracker
+		_fragmentCollectionContributorTracker;
+
+	@Reference
 	private FragmentEntryLinkLocalService _fragmentEntryLinkLocalService;
+
+	@Reference
+	private FragmentEntryService _fragmentEntryService;
 
 	@Reference
 	private FragmentRendererController _fragmentRendererController;
 
 	@Reference
-	private InfoDisplayContributorTracker _infoDisplayContributorTracker;
+	private InfoItemServiceTracker _infoItemServiceTracker;
+
+	@Reference
+	private LayoutDisplayPageProviderTracker _layoutDisplayPageProviderTracker;
 
 	@Reference
 	private Portal _portal;

@@ -23,7 +23,6 @@ import com.liferay.depot.service.DepotEntryLocalService;
 import com.liferay.depot.web.internal.application.controller.DepotApplicationController;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.Group;
-import com.liferay.portal.kernel.model.GroupConstants;
 import com.liferay.portal.kernel.portlet.LiferayPortletRequest;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
@@ -45,7 +44,7 @@ public class DepotAssetRendererFactoryWrapper<T>
 	implements AssetRendererFactoryWrapper<T> {
 
 	public DepotAssetRendererFactoryWrapper(
-		AssetRendererFactory assetRendererFactory,
+		AssetRendererFactory<T> assetRendererFactory,
 		DepotApplicationController depotApplicationController,
 		DepotEntryLocalService depotEntryLocalService,
 		GroupLocalService groupLocalService) {
@@ -220,7 +219,7 @@ public class DepotAssetRendererFactoryWrapper<T>
 	public boolean isSelectable() {
 		Group group = _getGroup();
 
-		if ((group != null) && (group.getType() == GroupConstants.TYPE_DEPOT) &&
+		if ((group != null) && group.isDepot() &&
 			!_depotApplicationController.isClassNameEnabled(
 				getClassName(), group.getGroupId())) {
 
@@ -245,7 +244,7 @@ public class DepotAssetRendererFactoryWrapper<T>
 		getAssetRendererFactory().setPortletId(portletId);
 	}
 
-	protected AssetRendererFactory getAssetRendererFactory() {
+	protected AssetRendererFactory<T> getAssetRendererFactory() {
 		return _assetRendererFactory;
 	}
 
@@ -266,7 +265,7 @@ public class DepotAssetRendererFactoryWrapper<T>
 		return _groupLocalService.fetchGroup(serviceContext.getScopeGroupId());
 	}
 
-	private final AssetRendererFactory _assetRendererFactory;
+	private final AssetRendererFactory<T> _assetRendererFactory;
 	private final DepotApplicationController _depotApplicationController;
 	private final DepotEntryLocalService _depotEntryLocalService;
 	private final GroupLocalService _groupLocalService;

@@ -25,16 +25,14 @@ const VelocityUnitFilter = ({
 	prefixKey = '',
 	timeRange,
 }) => {
-	const defaultOptions = {
+	options = {
 		hideControl: true,
 		multiple: false,
 		position: 'right',
 		withSelectionTitle: true,
 		withoutRouteParams: false,
+		...options,
 	};
-	// eslint-disable-next-line react-hooks/exhaustive-deps
-	options = useMemo(() => ({...defaultOptions, ...options}), [options]);
-
 	const velocityUnits = useMemo(() => getVelocityUnits(timeRange), [
 		timeRange,
 	]);
@@ -43,7 +41,7 @@ const VelocityUnitFilter = ({
 		filterKey,
 		prefixKey,
 		staticItems: velocityUnits,
-		withoutRouteParams: options.withoutRouteParams,
+		...options,
 	});
 
 	const defaultItem = useMemo(
@@ -64,7 +62,6 @@ const VelocityUnitFilter = ({
 
 	return (
 		<Filter
-			data-testid="velocityUnitFilter"
 			defaultItem={defaultItem}
 			disabled={disabled}
 			elementClasses={className}

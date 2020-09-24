@@ -41,10 +41,12 @@ import com.liferay.portal.search.aggregation.pipeline.PipelineAggregation;
 import com.liferay.portal.search.document.DocumentBuilder;
 import com.liferay.portal.search.document.DocumentBuilderFactory;
 import com.liferay.portal.search.engine.adapter.SearchEngineAdapter;
+import com.liferay.portal.search.filter.ComplexQueryPartBuilderFactory;
 import com.liferay.portal.search.geolocation.GeoBuilders;
 import com.liferay.portal.search.highlight.Highlights;
 import com.liferay.portal.search.internal.aggregation.AggregationsImpl;
 import com.liferay.portal.search.internal.document.DocumentBuilderFactoryImpl;
+import com.liferay.portal.search.internal.filter.ComplexQueryPartBuilderFactoryImpl;
 import com.liferay.portal.search.internal.geolocation.GeoBuildersImpl;
 import com.liferay.portal.search.internal.highlight.HighlightsImpl;
 import com.liferay.portal.search.internal.legacy.searcher.SearchRequestBuilderImpl;
@@ -102,6 +104,10 @@ public abstract class BaseIndexingTestCase {
 	public static void tearDownClassBaseIndexingTestCase() throws Exception {
 		_documentFixture.tearDown();
 
+		if (_indexingFixture == null) {
+			return;
+		}
+
 		if (_indexingFixture.isSearchEngineAvailable()) {
 			_indexingFixture.tearDown();
 		}
@@ -124,6 +130,10 @@ public abstract class BaseIndexingTestCase {
 
 	@After
 	public void tearDown() throws Exception {
+		if (_indexingFixture == null) {
+			return;
+		}
+
 		if (!_indexingFixture.isSearchEngineAvailable()) {
 			return;
 		}
@@ -151,8 +161,10 @@ public abstract class BaseIndexingTestCase {
 	}
 
 	protected void addDocument(DocumentBuilder documentBuilder) {
+		DocumentTranslator documentTranslator = new DocumentTranslator();
+
 		addDocument(
-			new DocumentTranslator().toLegacyDocument(documentBuilder.build()));
+			documentTranslator.toLegacyDocument(documentBuilder.build()));
 	}
 
 	protected void addDocument(DocumentCreationHelper documentCreationHelper) {
@@ -320,6 +332,9 @@ public abstract class BaseIndexingTestCase {
 	protected final AggregationFixture aggregationFixture =
 		new AggregationFixture();
 	protected final Aggregations aggregations = new AggregationsImpl();
+	protected final ComplexQueryPartBuilderFactory
+		complexQueryPartBuilderFactory =
+			new ComplexQueryPartBuilderFactoryImpl();
 	protected DocumentBuilderFactory documentBuilderFactory =
 		new DocumentBuilderFactoryImpl();
 	protected final GeoBuilders geoBuilders = new GeoBuildersImpl();
@@ -503,14 +518,14 @@ public abstract class BaseIndexingTestCase {
 	}
 
 	private void _handle(SearchException searchException) {
-		Throwable t = searchException.getCause();
+		Throwable throwable = searchException.getCause();
 
-		if (t instanceof RuntimeException) {
-			throw (RuntimeException)t;
+		if (throwable instanceof RuntimeException) {
+			throw (RuntimeException)throwable;
 		}
 
-		if (t != null) {
-			throw new RuntimeException(t);
+		if (throwable != null) {
+			throw new RuntimeException(throwable);
 		}
 	}
 

@@ -119,7 +119,9 @@ public abstract class BaseUserAccountResourceTestCase {
 
 		UserAccountResource.Builder builder = UserAccountResource.builder();
 
-		userAccountResource = builder.locale(
+		userAccountResource = builder.authentication(
+			"test@liferay.com", "test"
+		).locale(
 			LocaleUtil.getDefault()
 		).build();
 	}
@@ -1287,6 +1289,34 @@ public abstract class BaseUserAccountResourceTestCase {
 	}
 
 	@Test
+	public void testPatchUserAccount() throws Exception {
+		UserAccount postUserAccount = testPatchUserAccount_addUserAccount();
+
+		UserAccount randomPatchUserAccount = randomPatchUserAccount();
+
+		UserAccount patchUserAccount = userAccountResource.patchUserAccount(
+			postUserAccount.getId(), randomPatchUserAccount);
+
+		UserAccount expectedPatchUserAccount = postUserAccount.clone();
+
+		_beanUtilsBean.copyProperties(
+			expectedPatchUserAccount, randomPatchUserAccount);
+
+		UserAccount getUserAccount = userAccountResource.getUserAccount(
+			patchUserAccount.getId());
+
+		assertEquals(expectedPatchUserAccount, getUserAccount);
+		assertValid(getUserAccount);
+	}
+
+	protected UserAccount testPatchUserAccount_addUserAccount()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
 	public void testPutUserAccount() throws Exception {
 		UserAccount postUserAccount = testPutUserAccount_addUserAccount();
 
@@ -1370,7 +1400,7 @@ public abstract class BaseUserAccountResourceTestCase {
 		}
 	}
 
-	protected void assertValid(UserAccount userAccount) {
+	protected void assertValid(UserAccount userAccount) throws Exception {
 		boolean valid = true;
 
 		if (userAccount.getDateCreated() == null) {

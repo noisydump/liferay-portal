@@ -17,8 +17,8 @@ package com.liferay.journal.web.internal.portlet.action;
 import com.liferay.data.engine.field.type.util.LocalizedValueUtil;
 import com.liferay.data.engine.rest.dto.v2_0.DataDefinition;
 import com.liferay.data.engine.rest.resource.v2_0.DataDefinitionResource;
+import com.liferay.dynamic.data.mapping.constants.DDMTemplateConstants;
 import com.liferay.dynamic.data.mapping.model.DDMStructure;
-import com.liferay.dynamic.data.mapping.model.DDMTemplateConstants;
 import com.liferay.dynamic.data.mapping.service.DDMStructureService;
 import com.liferay.dynamic.data.mapping.service.DDMTemplateService;
 import com.liferay.journal.constants.JournalPortletKeys;
@@ -103,15 +103,15 @@ public class CopyDataDefinitionMVCActionCommand
 			dataDefinitionResource.postSiteDataDefinitionByContentType(
 				themeDisplay.getScopeGroupId(), "journal", dataDefinition);
 
-		DDMStructure ddmStructure = _ddmStructureService.getStructure(
-			themeDisplay.getScopeGroupId(),
-			_portal.getClassNameId(JournalArticle.class),
-			dataDefinition.getDataDefinitionKey());
-
 		boolean copyTemplates = ParamUtil.getBoolean(
 			actionRequest, "copyTemplates");
 
 		if (copyTemplates) {
+			DDMStructure ddmStructure = _ddmStructureService.getStructure(
+				themeDisplay.getScopeGroupId(),
+				_portal.getClassNameId(JournalArticle.class),
+				dataDefinition.getDataDefinitionKey());
+
 			ServiceContext serviceContext = ServiceContextFactory.getInstance(
 				DDMStructure.class.getName(), actionRequest);
 

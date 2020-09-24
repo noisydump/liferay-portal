@@ -22,7 +22,9 @@ import '@testing-library/jest-dom/extend-expect';
 
 const tasks = (range) =>
 	new Array(range).fill({}).map((_, id) => ({
-		assigneePerson: {
+		assetTitle: `title${id + 1}`,
+		assetType: 'Blogs Entry',
+		assignee: {
 			additionalName: '',
 			contentType: 'UserAccount',
 			familyName: 'Test',
@@ -32,22 +34,15 @@ const tasks = (range) =>
 			profileURL: '/web/test',
 		},
 		assigneeRoles: [],
+		classPK: id + 1,
 		completed: false,
 		dateCreated: '2020-03-03T12:04:46Z',
 		description: '',
 		id: id + 1,
+		instanceId: id + 1,
 		label: 'Review',
 		name: 'review',
-		objectReviewed: {
-			assetTitle: `title${id + 1}`,
-			assetType: 'Blogs Entry',
-			id: id + 1,
-			resourceType: 'BlogPosting',
-		},
-		workflowDefinitionId: id + 1,
-		workflowDefinitionName: 'Single Approver',
-		workflowDefinitionVersion: '1',
-		workflowInstanceId: id + 1,
+		processId: id + 1,
 	}));
 
 const {data, items, processSteps} = {
@@ -141,6 +136,10 @@ const {data, items, processSteps} = {
 	totalCount: 45,
 };
 
+const mockTasks = {
+	data: {items, totalCount: items.length + 1},
+};
+
 const ContainerMockPrimary = ({children}) => {
 	const processId = '12345';
 
@@ -170,14 +169,8 @@ const ContainerMockPrimary = ({children}) => {
 		selectAll: false,
 		tasks: [],
 	});
-	const [visibleModal, setVisibleModal] = useState('bulkTransition');
 
 	const clientMock = {
-		get: jest
-			.fn()
-			.mockRejectedValueOnce(new Error('request-failure'))
-			.mockResolvedValueOnce({data})
-			.mockResolvedValueOnce({data}),
 		patch: jest
 			.fn()
 			.mockRejectedValueOnce(new Error('request-failure'))
@@ -185,9 +178,10 @@ const ContainerMockPrimary = ({children}) => {
 		post: jest
 			.fn()
 			.mockRejectedValueOnce(new Error('request-failure'))
-			.mockResolvedValue({
-				data: {items, totalCount: items.length + 1},
-			}),
+			.mockResolvedValueOnce(mockTasks)
+			.mockResolvedValueOnce(mockTasks)
+			.mockRejectedValueOnce(new Error('request-failure'))
+			.mockResolvedValue({data}),
 		request: jest
 			.fn()
 			.mockResolvedValueOnce({data: {items: processSteps}})
@@ -210,8 +204,7 @@ const ContainerMockPrimary = ({children}) => {
 						selectTasks,
 						setBulkTransition,
 						setSelectTasks,
-						setVisibleModal,
-						visibleModal,
+						visibleModal: 'bulkTransition',
 					}}
 				>
 					<ToasterProvider>{children}</ToasterProvider>
@@ -251,7 +244,7 @@ const ContainerMockSecondary = ({children}) => {
 		selectAll: false,
 		tasks: [],
 	});
-	const [visibleModal, setVisibleModal] = useState('bulkTransition');
+	const [visibleModal] = useState('bulkTransition');
 
 	const clientMock = {
 		get: jest.fn().mockResolvedValueOnce({data}),
@@ -277,7 +270,6 @@ const ContainerMockSecondary = ({children}) => {
 						selectTasks,
 						setBulkTransition,
 						setSelectTasks,
-						setVisibleModal,
 						visibleModal,
 					}}
 				>
@@ -289,14 +281,15 @@ const ContainerMockSecondary = ({children}) => {
 };
 
 describe('The BulkTransitionModal component should', () => {
-	let getAllByTestId, getByTestId;
+	let getAllByTestId, getAllByText, getByTestId;
 
 	beforeAll(() => {
 		const component = render(<BulkTransitionModal />, {
 			wrapper: ContainerMockPrimary,
 		});
-		getByTestId = component.getByTestId;
 		getAllByTestId = component.getAllByTestId;
+		getAllByText = component.getAllByText;
+		getByTestId = component.getByTestId;
 
 		jest.runAllTimers();
 	});
@@ -325,17 +318,15 @@ describe('The BulkTransitionModal component should', () => {
 		const table = getByTestId('selectTaskStepTable');
 		const checkbox = getAllByTestId('itemCheckbox');
 		const checkAllButton = getByTestId('checkAllButton');
-		const processStepFilter = getByTestId('processStepFilter');
-
-		const content = modal.children[0].children[0].children[0];
-		const header = content.children[0].children[0];
+		const content = modal.children[0].children[0];
+		const header = content.children[0];
 
 		expect(header).toHaveTextContent('select-steps-to-transition');
 
 		expect(stepBar.children[0]).toHaveTextContent('select-steps');
 		expect(stepBar.children[1]).toHaveTextContent('step-x-of-x');
 
-		expect(processStepFilter).not.toBeUndefined();
+		expect(getAllByText('process-step').length).toBe(2);
 
 		expect(cancelBtn).toHaveTextContent('cancel');
 		expect(nextBtn).toHaveTextContent('next');
@@ -423,8 +414,8 @@ describe('The BulkTransitionModal component should', () => {
 	test('Load the second step and all transitions successfully', () => {
 		const modal = getByTestId('bulkTransitionModal');
 
-		const content = modal.children[0].children[0].children[0];
-		const header = content.children[0].children[0];
+		const content = modal.children[0].children[0];
+		const header = content.children[0];
 		const stepBar = getByTestId('stepBar');
 		const nextBtn = getByTestId('nextButton');
 
@@ -446,7 +437,7 @@ describe('The BulkTransitionModal component should', () => {
 		fireEvent.click(nextBtn);
 	});
 
-	test('Show alert message when attempt to transition without selecting any transition go to previous step and foward', () => {
+	test('Show alert message when attempt to transition without selecting any transition go to previous step and forward', () => {
 		const alertError = getByTestId('alertError');
 
 		expect(alertError).toHaveTextContent('your-request-has-failed');
@@ -454,9 +445,9 @@ describe('The BulkTransitionModal component should', () => {
 		const nextBtn = getByTestId('nextButton');
 		const modal = getByTestId('bulkTransitionModal');
 
-		const content = modal.children[0].children[0].children[0];
+		const content = modal.children[0].children[0];
 
-		const header = content.children[0].children[0];
+		const header = content.children[0];
 
 		const previousButton = getByTestId('previousButton');
 
@@ -509,7 +500,7 @@ describe('The BulkTransitionModal component should', () => {
 		);
 	});
 
-	test('Check all tasks and step foward to "Select Transition" step and show loading view', async () => {
+	test('Check all tasks and step forward to "Select Transition" step and show loading view', async () => {
 		cleanup();
 		const {getByTestId} = render(<BulkTransitionModal />, {
 			wrapper: ContainerMockSecondary,

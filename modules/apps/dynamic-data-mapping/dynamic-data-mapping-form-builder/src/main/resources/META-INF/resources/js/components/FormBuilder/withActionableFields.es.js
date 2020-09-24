@@ -70,12 +70,6 @@ const withActionableFields = (ChildComponent) => {
 			}
 		}
 
-		isActionsEnabled() {
-			const {defaultLanguageId, editingLanguageId} = this.props;
-
-			return defaultLanguageId === editingLanguageId;
-		}
-
 		hasFocusedField() {
 			const {focusedField} = this.props;
 
@@ -92,7 +86,7 @@ const withActionableFields = (ChildComponent) => {
 		}
 
 		render() {
-			const {hoveredFieldActionsVisible} = this.state;
+			const {activePage, hoveredFieldActionsVisible} = this.state;
 			const {fieldActions, fieldTypes, pages, spritemap} = this.props;
 
 			return (
@@ -100,7 +94,7 @@ const withActionableFields = (ChildComponent) => {
 					<ChildComponent {...this.props} />
 
 					<FieldActionsDropDown
-						disabled={!this.isActionsEnabled()}
+						activePage={activePage}
 						events={{
 							mouseLeave: this._handleMouseLeaveActions.bind(
 								this
@@ -116,7 +110,7 @@ const withActionableFields = (ChildComponent) => {
 					/>
 
 					<FieldActionsDropDown
-						disabled={!this.isActionsEnabled()}
+						activePage={activePage}
 						events={{
 							mouseLeave: this._handleMouseLeaveActions.bind(
 								this
@@ -185,8 +179,15 @@ const withActionableFields = (ChildComponent) => {
 		_handleMouseEnterField(event) {
 			const {pages} = this.props;
 			const {delegateTarget} = event;
+			const {dispatch} = this.context;
 			const {fieldName} = delegateTarget.dataset;
 			const {hoveredFieldActions, selectedFieldActions} = this.refs;
+			const activePage = parseInt(
+				dom.closest(event.delegateTarget, '[data-ddm-page]').dataset
+					.ddmPage,
+				10
+			);
+			this.setState({activePage});
 
 			if (
 				selectedFieldActions.state.fieldName === fieldName ||
@@ -197,13 +198,21 @@ const withActionableFields = (ChildComponent) => {
 				return;
 			}
 
+			if (fieldName !== selectedFieldActions.state.fieldName) {
+				selectedFieldActions.close();
+			}
+
 			const hoveredNode = this._getHoveredNode();
 
 			if (hoveredNode) {
 				hoveredNode.classList.remove(_CSS_HOVERED);
+
+				dispatch('fieldBlurred', {});
 			}
 
 			delegateTarget.classList.add(_CSS_HOVERED);
+
+			dispatch('fieldHovered', {fieldName});
 
 			this.showActions(hoveredFieldActions, fieldName);
 
@@ -251,20 +260,36 @@ const withActionableFields = (ChildComponent) => {
 
 			this.hideActions(hoveredFieldActions);
 
+			this._handleClosestParent({
+				delegateTarget,
+				hoveredFieldActions,
+				selectedFieldActions,
+			});
+
+			if (event.stopPropagation) {
+				event.stopPropagation();
+			}
+		}
+
+		_handleClosestParent({
+			delegateTarget,
+			hoveredFieldActions,
+			selectedFieldActions,
+		}) {
+			const {pages} = this.props;
 			const closestParent = this._getClosestParent(delegateTarget);
 
 			if (closestParent) {
 				const {fieldName} = closestParent.dataset;
 
-				if (selectedFieldActions.state.fieldName !== fieldName) {
+				if (
+					selectedFieldActions.state.fieldName !== fieldName &&
+					!isFieldSetChild(pages, fieldName)
+				) {
 					closestParent.classList.add(_CSS_HOVERED);
 
 					this.showActions(hoveredFieldActions, fieldName);
 				}
-			}
-
-			if (event.stopPropagation) {
-				event.stopPropagation();
 			}
 		}
 
@@ -281,6 +306,7 @@ const withActionableFields = (ChildComponent) => {
 	};
 
 	ActionableFields.STATE = {
+		activePage: Config.number(),
 		hoveredFieldActionsVisible: Config.bool().value(false),
 	};
 

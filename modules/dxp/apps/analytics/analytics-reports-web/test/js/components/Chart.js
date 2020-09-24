@@ -14,7 +14,6 @@ import {cleanup, render, wait} from '@testing-library/react';
 import React from 'react';
 
 import Chart from '../../../src/main/resources/META-INF/resources/js/components/Chart';
-import {StoreContextProvider} from '../../../src/main/resources/META-INF/resources/js/context/store';
 
 const mockReadsDataProvider = jest.fn(() =>
 	Promise.resolve({
@@ -122,7 +121,7 @@ const mockViewsDataProvider = jest.fn(() =>
 	})
 );
 
-const mockPublishDate = 1581957977840;
+const mockPublishDate = 'Thu Aug 10 08:17:57 GMT 2020';
 
 const mockTimeSpanOptions = [
 	{
@@ -147,18 +146,18 @@ describe('Chart', () => {
 
 	it('displays total views and date range title for default time span', async () => {
 		const testProps = {
-			defaultTimeRange: {endDate: '2020-01-27', startDate: '2020-02-02'},
-			defaultTimeSpanOption: 'last-7-days',
 			languageTag: 'en-US',
+			timeRange: {endDate: '2020-01-27', startDate: '2020-02-02'},
+			timeSpanKey: 'last-7-days',
 		};
 
 		const {getByText} = render(
 			<Chart
 				dataProviders={[mockViewsDataProvider]}
-				defaultTimeRange={testProps.defaultTimeRange}
-				defaultTimeSpanOption={testProps.defaultTimeSpanOption}
 				languageTag={testProps.languageTag}
 				publishDate={mockPublishDate}
+				timeRange={testProps.timeRange}
+				timeSpanKey={testProps.timeSpanKey}
 				timeSpanOptions={mockTimeSpanOptions}
 			/>
 		);
@@ -179,18 +178,18 @@ describe('Chart', () => {
 
 	it('displays total views and reads and date range title for default time span', async () => {
 		const testProps = {
-			defaultTimeRange: {endDate: '2020-01-27', startDate: '2020-02-02'},
-			defaultTimeSpanOption: 'last-7-days',
 			languageTag: 'en-US',
+			timeRange: {endDate: '2020-01-27', startDate: '2020-02-02'},
+			timeSpanKey: 'last-7-days',
 		};
 
 		const {getByText} = render(
 			<Chart
 				dataProviders={[mockViewsDataProvider, mockReadsDataProvider]}
-				defaultTimeRange={testProps.defaultTimeRange}
-				defaultTimeSpanOption={testProps.defaultTimeSpanOption}
 				languageTag={testProps.languageTag}
 				publishDate={mockPublishDate}
+				timeRange={testProps.timeRange}
+				timeSpanKey={testProps.timeSpanKey}
 				timeSpanOptions={mockTimeSpanOptions}
 			/>
 		);
@@ -216,39 +215,5 @@ describe('Chart', () => {
 		expect(getByText('226')).toBeInTheDocument();
 
 		expect(getByText('Jan 27 - Feb 2, 2020')).toBeInTheDocument();
-	});
-
-	it('displays a message in the chart if the content was published today', async () => {
-		const testProps = {
-			defaultTimeRange: {endDate: '2020-01-27', startDate: '2020-02-02'},
-			defaultTimeSpanOption: 'last-7-days',
-			languageTag: 'en-US',
-			publishDate: new Date().getTime(),
-		};
-
-		const {getByText} = render(
-			<StoreContextProvider value={{publishedToday: true}}>
-				<Chart
-					dataProviders={[
-						mockViewsDataProvider,
-						mockReadsDataProvider,
-					]}
-					defaultTimeRange={testProps.defaultTimeRange}
-					defaultTimeSpanOption={testProps.defaultTimeSpanOption}
-					languageTag={testProps.languageTag}
-					publishDate={testProps.publishDate}
-					timeSpanOptions={mockTimeSpanOptions}
-				/>
-			</StoreContextProvider>
-		);
-
-		await wait(() =>
-			expect(mockViewsDataProvider).toHaveBeenCalledTimes(1)
-		);
-		await wait(() =>
-			expect(mockReadsDataProvider).toHaveBeenCalledTimes(1)
-		);
-
-		expect(getByText('no-data-is-available-yet')).toBeInTheDocument();
 	});
 });

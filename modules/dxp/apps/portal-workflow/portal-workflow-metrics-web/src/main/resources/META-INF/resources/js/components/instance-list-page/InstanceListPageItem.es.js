@@ -11,8 +11,9 @@
 
 import {ClayCheckbox} from '@clayui/form';
 import ClayIcon from '@clayui/icon';
+import ClayLayout from '@clayui/layout';
 import ClayTable from '@clayui/table';
-import React, {useContext, useEffect, useState} from 'react';
+import React, {useContext} from 'react';
 
 import QuickActionKebab from '../../shared/components/quick-action-kebab/QuickActionKebab.es';
 import moment from '../../shared/util/moment.es';
@@ -51,9 +52,7 @@ const Item = ({totalCount, ...instance}) => {
 		setSelectAll,
 		setSelectedItems,
 	} = useContext(InstanceListContext);
-	const {setVisibleModal} = useContext(ModalContext);
-
-	const [checked, setChecked] = useState(false);
+	const {openModal} = useContext(ModalContext);
 
 	const {
 		assetTitle,
@@ -67,10 +66,7 @@ const Item = ({totalCount, ...instance}) => {
 		taskNames = [Liferay.Language.get('not-available')],
 	} = instance;
 
-	useEffect(() => {
-		setChecked(!!selectedItems.find((item) => item.id === id));
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [selectedItems]);
+	const checked = !!selectedItems.find((item) => item.id === id);
 
 	const assignedToUser = !!assignees.find(({id}) => id === Number(userId));
 	const assigneeNames = assignees.map((user) => user.name).join(', ');
@@ -88,8 +84,6 @@ const Item = ({totalCount, ...instance}) => {
 		: Liferay.Language.get('completed');
 
 	const handleCheck = ({target}) => {
-		setChecked(target.checked);
-
 		const updatedItems = target.checked
 			? [...selectedItems, instance]
 			: selectedItems.filter((item) => item.id !== id);
@@ -133,7 +127,7 @@ const Item = ({totalCount, ...instance}) => {
 					onClick={() => {
 						setInstanceId(id);
 
-						setVisibleModal('instanceDetails');
+						openModal('instanceDetails');
 					}}
 					tabIndex="-1"
 				>
@@ -174,18 +168,18 @@ const Item = ({totalCount, ...instance}) => {
 };
 
 const QuickActionMenu = ({disabled, instance}) => {
-	const {setSingleTransition, setVisibleModal} = useContext(ModalContext);
+	const {openModal, setSingleTransition} = useContext(ModalContext);
 	const {setSelectedItem, setSelectedItems} = useContext(InstanceListContext);
 	const {transitions = [], taskNames = []} = instance;
 
 	const handleClick = (bulkModal, singleModal) => {
 		if (taskNames.length > 1) {
 			setSelectedItems([instance]);
-			setVisibleModal(bulkModal);
+			openModal(bulkModal);
 		}
 		else {
 			setSelectedItem(instance);
-			setVisibleModal(singleModal);
+			openModal(singleModal);
 		}
 	};
 
@@ -215,7 +209,7 @@ const QuickActionMenu = ({disabled, instance}) => {
 					label,
 					name,
 					onClick: () => {
-						setVisibleModal('singleTransition');
+						openModal('singleTransition');
 						setSelectedItem(instance);
 						setSingleTransition({
 							title: label,
@@ -239,7 +233,7 @@ const QuickActionMenu = ({disabled, instance}) => {
 				label: transitionLabel,
 				onClick: () => {
 					setSelectedItems([instance]);
-					setVisibleModal('bulkTransition');
+					openModal('bulkTransition');
 				},
 			},
 			updateDueDateItem
@@ -247,9 +241,9 @@ const QuickActionMenu = ({disabled, instance}) => {
 	}
 
 	return (
-		<div className="autofit-col">
+		<ClayLayout.ContentCol>
 			<QuickActionKebab disabled={disabled} items={kebabItems} />
-		</div>
+		</ClayLayout.ContentCol>
 	);
 };
 

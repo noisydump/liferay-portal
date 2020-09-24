@@ -49,7 +49,7 @@ import com.liferay.layout.page.template.validator.MasterPageValidator;
 import com.liferay.layout.page.template.validator.PageDefinitionValidator;
 import com.liferay.layout.page.template.validator.PageTemplateValidator;
 import com.liferay.layout.util.LayoutCopyHelper;
-import com.liferay.layout.util.structure.FragmentLayoutStructureItem;
+import com.liferay.layout.util.structure.FragmentStyledLayoutStructureItem;
 import com.liferay.layout.util.structure.LayoutStructure;
 import com.liferay.layout.util.structure.LayoutStructureItem;
 import com.liferay.petra.string.CharPool;
@@ -60,11 +60,13 @@ import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Layout;
+import com.liferay.portal.kernel.model.PortletPreferences;
 import com.liferay.portal.kernel.model.Repository;
 import com.liferay.portal.kernel.model.Theme;
 import com.liferay.portal.kernel.portletfilerepository.PortletFileRepository;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.service.LayoutLocalService;
+import com.liferay.portal.kernel.service.PortletPreferencesLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
 import com.liferay.portal.kernel.service.ThemeLocalService;
@@ -76,6 +78,7 @@ import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.MimeTypesUtil;
 import com.liferay.portal.kernel.util.Portal;
+import com.liferay.portal.kernel.util.PortletKeys;
 import com.liferay.portal.kernel.util.ResourceBundleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.UnicodeProperties;
@@ -177,6 +180,18 @@ public class LayoutPageTemplatesImporterImpl
 		return fragmentEntryLinks;
 	}
 
+	private void _deleteExistingPortletPreferences(long plid) {
+		List<PortletPreferences> portletPreferencesList =
+			_portletPreferencesLocalService.getPortletPreferences(
+				PortletKeys.PREFS_OWNER_ID_DEFAULT,
+				PortletKeys.PREFS_OWNER_TYPE_LAYOUT, plid);
+
+		for (PortletPreferences portletPreferences : portletPreferencesList) {
+			_portletPreferencesLocalService.deletePortletPreferences(
+				portletPreferences);
+		}
+	}
+
 	private PageTemplateCollectionEntry
 		_getDefaultPageTemplateCollectionEntry() {
 
@@ -193,7 +208,7 @@ public class LayoutPageTemplatesImporterImpl
 
 	private List<DisplayPageTemplateEntry> _getDisplayPageTemplateEntries(
 			long groupId, ZipFile zipFile)
-		throws IOException, PortalException {
+		throws Exception {
 
 		List<DisplayPageTemplateEntry> displayPageTemplateEntries =
 			new ArrayList<>();
@@ -316,13 +331,17 @@ public class LayoutPageTemplatesImporterImpl
 			LayoutStructureItem layoutStructureItem =
 				layoutStructure.getLayoutStructureItem(childItemId);
 
-			if (layoutStructureItem instanceof FragmentLayoutStructureItem) {
-				FragmentLayoutStructureItem fragmentLayoutStructureItem =
-					(FragmentLayoutStructureItem)layoutStructureItem;
+			if (layoutStructureItem instanceof
+					FragmentStyledLayoutStructureItem) {
+
+				FragmentStyledLayoutStructureItem
+					fragmentStyledLayoutStructureItem =
+						(FragmentStyledLayoutStructureItem)layoutStructureItem;
 
 				fragmentEntryLinks.add(
 					_fragmentEntryLinkLocalService.getFragmentEntryLink(
-						fragmentLayoutStructureItem.getFragmentEntryLinkId()));
+						fragmentStyledLayoutStructureItem.
+							getFragmentEntryLinkId()));
 			}
 
 			List<String> currentChildrenItemIds =
@@ -412,7 +431,7 @@ public class LayoutPageTemplatesImporterImpl
 
 	private List<MasterPageEntry> _getMasterPageEntries(
 			long groupId, ZipFile zipFile)
-		throws IOException, PortalException {
+		throws Exception {
 
 		List<MasterPageEntry> masterPageEntries = new ArrayList<>();
 
@@ -513,7 +532,7 @@ public class LayoutPageTemplatesImporterImpl
 
 	private Map<String, PageTemplateCollectionEntry>
 			_getPageTemplateCollectionEntryMap(long groupId, ZipFile zipFile)
-		throws IOException, PortalException {
+		throws Exception {
 
 		Map<String, PageTemplateCollectionEntry> pageTemplateCollectionMap =
 			new HashMap<>();
@@ -843,9 +862,9 @@ public class LayoutPageTemplatesImporterImpl
 			try {
 				TransactionInvokerUtil.invoke(_transactionConfig, callable);
 			}
-			catch (Throwable t) {
+			catch (Throwable throwable) {
 				if (_log.isWarnEnabled()) {
-					_log.warn(t, t);
+					_log.warn(throwable, throwable);
 				}
 
 				DisplayPageTemplate displayPageTemplate =
@@ -900,6 +919,9 @@ public class LayoutPageTemplatesImporterImpl
 				added = true;
 			}
 			else if (overwrite) {
+				_deleteExistingPortletPreferences(
+					layoutPageTemplateEntry.getPlid());
+
 				layoutPageTemplateEntry =
 					_layoutPageTemplateEntryService.
 						updateLayoutPageTemplateEntry(
@@ -975,9 +997,9 @@ public class LayoutPageTemplatesImporterImpl
 			try {
 				TransactionInvokerUtil.invoke(_transactionConfig, callable);
 			}
-			catch (Throwable t) {
+			catch (Throwable throwable) {
 				if (_log.isWarnEnabled()) {
-					_log.warn(t, t);
+					_log.warn(throwable, throwable);
 				}
 
 				MasterPage masterPage = masterPageEntry.getMasterPage();
@@ -1032,6 +1054,8 @@ public class LayoutPageTemplatesImporterImpl
 			Settings settings = pageDefinition.getSettings();
 
 			if (settings != null) {
+				layout = _layoutLocalService.fetchLayout(layout.getPlid());
+
 				_updateLayoutSettings(layout, settings);
 			}
 		}
@@ -1054,18 +1078,10 @@ public class LayoutPageTemplatesImporterImpl
 		LayoutStructureItem layoutStructureItem = null;
 
 		if (layoutStructureItemImporter != null) {
-			List<String> layoutStructureItemWarningMessages =
-				layoutStructureItemImporter.validateLayoutStructureItem(
-					layout.getGroupId(), pageElement);
-
-			if (ListUtil.isNotEmpty(layoutStructureItemWarningMessages)) {
-				warningMessages.addAll(layoutStructureItemWarningMessages);
-			}
-
 			layoutStructureItem =
 				layoutStructureItemImporter.addLayoutStructureItem(
 					layout, layoutStructure, pageElement, parentItemId,
-					position);
+					position, warningMessages);
 		}
 		else if (pageElement.getType() == PageElement.Type.ROOT) {
 			layoutStructureItem = layoutStructure.getMainLayoutStructureItem();
@@ -1119,9 +1135,9 @@ public class LayoutPageTemplatesImporterImpl
 			try {
 				TransactionInvokerUtil.invoke(_transactionConfig, callable);
 			}
-			catch (Throwable t) {
+			catch (Throwable throwable) {
 				if (_log.isWarnEnabled()) {
-					_log.warn(t, t);
+					_log.warn(throwable, throwable);
 				}
 
 				PageTemplate pageTemplate = pageTemplateEntry.getPageTemplate();
@@ -1166,14 +1182,12 @@ public class LayoutPageTemplatesImporterImpl
 			Layout layout, LayoutStructure layoutStructure)
 		throws Exception {
 
-		long classNameId = _portal.getClassNameId(Layout.class.getName());
-
 		JSONObject jsonObject = layoutStructure.toJSONObject();
 
 		LayoutPageTemplateStructure layoutPageTemplateStructure =
 			_layoutPageTemplateStructureLocalService.
 				fetchLayoutPageTemplateStructure(
-					layout.getGroupId(), classNameId, layout.getPlid());
+					layout.getGroupId(), layout.getPlid());
 
 		if (layoutPageTemplateStructure != null) {
 			_layoutPageTemplateStructureLocalService.
@@ -1181,8 +1195,8 @@ public class LayoutPageTemplatesImporterImpl
 		}
 
 		_layoutPageTemplateStructureLocalService.addLayoutPageTemplateStructure(
-			layout.getUserId(), layout.getGroupId(), classNameId,
-			layout.getPlid(), jsonObject.toString(),
+			layout.getUserId(), layout.getGroupId(), layout.getPlid(),
+			jsonObject.toString(),
 			ServiceContextThreadLocal.getServiceContext());
 	}
 
@@ -1192,8 +1206,7 @@ public class LayoutPageTemplatesImporterImpl
 		Layout layout = _layoutLocalService.fetchLayout(
 			layoutPageTemplateEntry.getPlid());
 
-		Layout draftLayout = _layoutLocalService.fetchLayout(
-			_portal.getClassNameId(Layout.class.getName()), layout.getPlid());
+		Layout draftLayout = layout.fetchDraftLayout();
 
 		draftLayout = _layoutCopyHelper.copyLayout(layout, draftLayout);
 
@@ -1209,6 +1222,15 @@ public class LayoutPageTemplatesImporterImpl
 
 		Map<String, String> themeSettings =
 			(Map<String, String>)settings.getThemeSettings();
+
+		Set<Map.Entry<String, String>> entrySet = unicodeProperties.entrySet();
+
+		entrySet.removeIf(
+			entry -> {
+				String key = entry.getKey();
+
+				return key.startsWith("lfr-theme:");
+			});
 
 		if (themeSettings != null) {
 			for (Map.Entry<String, String> entry : themeSettings.entrySet()) {
@@ -1324,6 +1346,9 @@ public class LayoutPageTemplatesImporterImpl
 
 	@Reference
 	private PortletFileRepository _portletFileRepository;
+
+	@Reference
+	private PortletPreferencesLocalService _portletPreferencesLocalService;
 
 	@Reference
 	private ThemeLocalService _themeLocalService;
@@ -1469,7 +1494,7 @@ public class LayoutPageTemplatesImporterImpl
 				displayPageTemplate.getContentSubtype();
 
 			if (contentSubtype != null) {
-				classTypeId = contentSubtype.getClassTypeId();
+				classTypeId = contentSubtype.getSubtypeId();
 			}
 
 			LayoutPageTemplateEntry layoutPageTemplateEntry =

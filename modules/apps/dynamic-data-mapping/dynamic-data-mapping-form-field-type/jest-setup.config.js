@@ -67,6 +67,7 @@ window.themeDisplay = {
 	getLayoutRelativeControlPanelURL: () => 'layoutRelativeControlPanelURL',
 	getLayoutRelativeURL: () => 'getLayoutRelativeURL',
 	getScopeGroupId: () => 'scopeGroupId',
+	isSignedIn: () => true,
 };
 
 window.util = {
@@ -90,6 +91,9 @@ const languageMap = {
 
 window.Liferay = {
 	...(window.Liferay || {}),
+	AUI: {
+		getDateFormat: () => '%m/%d/%Y',
+	},
 	Language: {
 		get: (key) => {
 			if (languageMap[key]) {

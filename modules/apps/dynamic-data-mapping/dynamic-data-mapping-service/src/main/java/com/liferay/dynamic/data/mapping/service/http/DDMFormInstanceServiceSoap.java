@@ -61,8 +61,10 @@ import java.util.Map;
  *
  * @author Brian Wing Shun Chan
  * @see DDMFormInstanceServiceHttp
+ * @deprecated As of Athanasius (7.3.x), with no direct replacement
  * @generated
  */
+@Deprecated
 public class DDMFormInstanceServiceSoap {
 
 	public static com.liferay.dynamic.data.mapping.model.DDMFormInstanceSoap
@@ -235,6 +237,32 @@ public class DDMFormInstanceServiceSoap {
 
 	public static com.liferay.dynamic.data.mapping.model.DDMFormInstanceSoap[]
 			search(
+				long companyId, long groupId, String keywords, int status,
+				int start, int end,
+				com.liferay.portal.kernel.util.OrderByComparator
+					<com.liferay.dynamic.data.mapping.model.DDMFormInstance>
+						orderByComparator)
+		throws RemoteException {
+
+		try {
+			java.util.List
+				<com.liferay.dynamic.data.mapping.model.DDMFormInstance>
+					returnValue = DDMFormInstanceServiceUtil.search(
+						companyId, groupId, keywords, status, start, end,
+						orderByComparator);
+
+			return com.liferay.dynamic.data.mapping.model.DDMFormInstanceSoap.
+				toSoapModels(returnValue);
+		}
+		catch (Exception exception) {
+			_log.error(exception, exception);
+
+			throw new RemoteException(exception.getMessage());
+		}
+	}
+
+	public static com.liferay.dynamic.data.mapping.model.DDMFormInstanceSoap[]
+			search(
 				long companyId, long groupId, String keywords, int start,
 				int end,
 				com.liferay.portal.kernel.util.OrderByComparator
@@ -302,6 +330,23 @@ public class DDMFormInstanceServiceSoap {
 	}
 
 	public static int searchCount(
+			long companyId, long groupId, String keywords, int status)
+		throws RemoteException {
+
+		try {
+			int returnValue = DDMFormInstanceServiceUtil.searchCount(
+				companyId, groupId, keywords, status);
+
+			return returnValue;
+		}
+		catch (Exception exception) {
+			_log.error(exception, exception);
+
+			throw new RemoteException(exception.getMessage());
+		}
+	}
+
+	public static int searchCount(
 			long companyId, long groupId, String[] names, String[] descriptions,
 			boolean andOperator)
 		throws RemoteException {
@@ -311,6 +356,22 @@ public class DDMFormInstanceServiceSoap {
 				companyId, groupId, names, descriptions, andOperator);
 
 			return returnValue;
+		}
+		catch (Exception exception) {
+			_log.error(exception, exception);
+
+			throw new RemoteException(exception.getMessage());
+		}
+	}
+
+	public static void sendEmail(
+			long formInstanceId, String message, String subject,
+			String[] toEmailAddresses)
+		throws RemoteException {
+
+		try {
+			DDMFormInstanceServiceUtil.sendEmail(
+				formInstanceId, message, subject, toEmailAddresses);
 		}
 		catch (Exception exception) {
 			_log.error(exception, exception);

@@ -118,8 +118,8 @@
 /portal/commons-discovery.jar
 /portal/commons-exec.jar
 /portal/commons-fileupload.jar
-/portal/commons-httpclient.jar
 /portal/commons-io.jar
+/portal/commons-lang3.jar
 /portal/commons-lang.jar
 /portal/commons-logging.jar
 /portal/commons-math3.jar
@@ -261,7 +261,6 @@
 /portal/tomcat-jdbc.jar
 /portal/tomcat-juli.jar
 /portal/transaction.jar
-/portal/truezip.jar
 /portal/unoil.jar
 /portal/urlrewritefilter.jar
 /portal/vorbis-java-core.jar

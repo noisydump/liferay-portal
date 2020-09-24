@@ -12,6 +12,8 @@
  * details.
  */
 
+import {getLocalizedValue} from './lang.es';
+
 export const containsFieldSet = (dataDefinition, dataDefinitionId) => {
 	let hasFieldSet = false;
 
@@ -19,9 +21,9 @@ export const containsFieldSet = (dataDefinition, dataDefinitionId) => {
 		const {customProperties, fieldType} = dataDefinitionField;
 
 		if (
-			fieldType === 'section' &&
+			fieldType === 'fieldset' &&
 			customProperties &&
-			customProperties.dataDefinitionId == dataDefinitionId
+			customProperties.ddmStructureId == dataDefinitionId
 		) {
 			hasFieldSet = true;
 		}
@@ -80,21 +82,33 @@ export const getDataDefinitionField = (
 	return field;
 };
 
+export const getDataDefinitionFieldSet = (dataDefinitionFields, fieldSetId) =>
+	dataDefinitionFields.find(
+		({customProperties: {ddmStructureId}}) => ddmStructureId == fieldSetId
+	);
+
 export const getFieldLabel = (dataDefinition, fieldName) => {
 	const field = getDataDefinitionField(dataDefinition, fieldName);
 
-	return field ? field.label[themeDisplay.getLanguageId()] : fieldName;
+	if (field) {
+		return getLocalizedValue(dataDefinition.defaultLanguageId, field.label);
+	}
+
+	return fieldName;
 };
 
-export const getOptionLabel = (options = {}, value) => {
-	return (options[themeDisplay.getLanguageId()] || []).reduce(
-		(result, option) => {
-			if (option.value === value) {
-				return option.label;
-			}
+export const getOptionLabel = (
+	options = {},
+	value,
+	defaultLanguageId = themeDisplay.getDefaultLanguageId(),
+	languageId = themeDisplay.getLanguageId()
+) => {
+	const getLabel = (languageId) => {
+		if (options[languageId]) {
+			return options[languageId].find((option) => option.value === value)
+				?.label;
+		}
+	};
 
-			return result;
-		},
-		value
-	);
+	return getLabel(languageId) || getLabel(defaultLanguageId) || value;
 };

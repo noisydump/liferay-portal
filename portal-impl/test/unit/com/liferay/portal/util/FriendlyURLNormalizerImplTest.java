@@ -61,6 +61,15 @@ public class FriendlyURLNormalizerImplTest {
 			"company-grew-100-last-year",
 			_friendlyURLNormalizerImpl.normalizeWithEncoding(
 				"Company grew 100% last year"));
+		Assert.assertEquals(
+			"sample-web-content-title",
+			_friendlyURLNormalizerImpl.normalizeWithEncoding(
+				"Sample Web % Content Title"));
+		Assert.assertEquals(
+			"%5E_%5E", _friendlyURLNormalizerImpl.normalizeWithEncoding("^_^"));
+		Assert.assertEquals(
+			"%5E_%5E",
+			_friendlyURLNormalizerImpl.normalizeWithEncoding("%5E_%5E"));
 	}
 
 	@Test

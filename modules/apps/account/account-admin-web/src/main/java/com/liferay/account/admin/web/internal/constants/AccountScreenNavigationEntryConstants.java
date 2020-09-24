@@ -19,6 +19,8 @@ package com.liferay.account.admin.web.internal.constants;
  */
 public class AccountScreenNavigationEntryConstants {
 
+	public static final String CATEGORY_KEY_ACCOUNTS = "accounts";
+
 	public static final String CATEGORY_KEY_ASSIGNEES = "assignees";
 
 	public static final String CATEGORY_KEY_CONTACT = "contact";
@@ -69,6 +71,9 @@ public class AccountScreenNavigationEntryConstants {
 
 	public static final String SCREEN_NAVIGATION_KEY_ACCOUNT_ENTRY =
 		"edit.account.entry.form";
+
+	public static final String SCREEN_NAVIGATION_KEY_ACCOUNT_GROUP =
+		"edit.account.group.form";
 
 	public static final String SCREEN_NAVIGATION_KEY_ACCOUNT_ROLE =
 		"edit.account.role.form";

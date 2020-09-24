@@ -19,11 +19,15 @@ import {EDITABLE_FRAGMENT_ENTRY_PROCESSOR} from '../../../../../src/main/resourc
 import '@testing-library/jest-dom/extend-expect';
 import {act, cleanup, render} from '@testing-library/react';
 
-import {ControlsProvider} from '../../../../../src/main/resources/META-INF/resources/page_editor/app/components/Controls';
+import {
+	ControlsProvider,
+	useSelectItem,
+} from '../../../../../src/main/resources/META-INF/resources/page_editor/app/components/Controls';
 import {EditableProcessorContextProvider} from '../../../../../src/main/resources/META-INF/resources/page_editor/app/components/fragment-content/EditableProcessorContext';
 import FragmentContent from '../../../../../src/main/resources/META-INF/resources/page_editor/app/components/fragment-content/FragmentContent';
 import resolveEditableValue from '../../../../../src/main/resources/META-INF/resources/page_editor/app/components/fragment-content/resolveEditableValue';
 import {BACKGROUND_IMAGE_FRAGMENT_ENTRY_PROCESSOR} from '../../../../../src/main/resources/META-INF/resources/page_editor/app/config/constants/backgroundImageFragmentEntryProcessor';
+import {VIEWPORT_SIZES} from '../../../../../src/main/resources/META-INF/resources/page_editor/app/config/constants/viewportSizes';
 import {StoreAPIContextProvider} from '../../../../../src/main/resources/META-INF/resources/page_editor/app/store';
 
 jest.mock(
@@ -39,7 +43,9 @@ jest.mock(
 jest.mock(
 	'../../../../../src/main/resources/META-INF/resources/page_editor/app/config',
 	() => ({
-		config: {},
+		config: {
+			frontendTokens: {},
+		},
 	})
 );
 
@@ -98,26 +104,44 @@ const item = {
 	type: '',
 };
 
-const renderFragmentContent = (fragmentEntryLink) => {
+const renderFragmentContent = ({
+	activeItemId,
+	fragmentEntryLink,
+	hasUpdatePermissions = true,
+	lockedExperience = false,
+	viewportSize = VIEWPORT_SIZES.desktop,
+}) => {
 	const state = {
 		fragmentEntryLinks: {
 			[FRAGMENT_ENTRY_LINK_ID]: fragmentEntryLink,
 		},
 		languageId: 'en_US',
-		permissions: {},
+		permissions: {
+			LOCKED_SEGMENTS_EXPERIMENT: lockedExperience,
+			UPDATE: hasUpdatePermissions,
+		},
 		segmentsExperienceId: '0',
+		selectedViewportSize: viewportSize,
 	};
 
 	const ref = React.createRef();
+
+	const AutoSelect = () => {
+		useSelectItem()(activeItemId);
+
+		return null;
+	};
 
 	return render(
 		<StoreAPIContextProvider dispatch={() => {}} getState={() => state}>
 			<EditableProcessorContextProvider>
 				<ControlsProvider>
+					<AutoSelect />
 					<FragmentContent
+						elementRef={ref}
 						fragmentEntryLinkId={FRAGMENT_ENTRY_LINK_ID}
-						itemId={item.itemId}
-						ref={ref}
+						getPortals={() => []}
+						item={item}
 					/>
 				</ControlsProvider>
 			</EditableProcessorContextProvider>
@@ -136,7 +160,7 @@ describe('FragmentContent', () => {
 		const fragmentEntryLink = getFragmentEntryLink();
 
 		await act(async () => {
-			renderFragmentContent(fragmentEntryLink);
+			renderFragmentContent({fragmentEntryLink});
 		});
 
 		const editableContent = document.body.querySelector('#editable-id');
@@ -148,7 +172,7 @@ describe('FragmentContent', () => {
 		const fragmentEntryLink = getFragmentEntryLink();
 
 		await act(async () => {
-			renderFragmentContent(fragmentEntryLink);
+			renderFragmentContent({fragmentEntryLink});
 		});
 
 		expect(resolveEditableValue).toBeCalledWith(
@@ -167,7 +191,7 @@ describe('FragmentContent', () => {
 		});
 
 		await act(async () => {
-			renderFragmentContent(fragmentEntryLink);
+			renderFragmentContent({fragmentEntryLink});
 		});
 
 		expect(resolveEditableValue).toBeCalledWith(
@@ -191,7 +215,7 @@ describe('FragmentContent', () => {
 		});
 
 		await act(async () => {
-			renderFragmentContent(fragmentEntryLink);
+			renderFragmentContent({fragmentEntryLink});
 		});
 
 		expect(resolveEditableValue).toBeCalledWith(
@@ -201,5 +225,22 @@ describe('FragmentContent', () => {
 			'en_US',
 			expect.any(Function)
 		);
+	});
+
+	it('shows widgets topper even without update permissions', async () => {
+		const fragmentEntryLink = getFragmentEntryLink();
+
+		await act(async () => {
+			renderFragmentContent({
+				fragmentEntryLink,
+				hasUpdatePermissions: false,
+			});
+		});
+
+		expect(
+			document.body.querySelector(
+				'.page-editor__fragment-content--portlet-topper-hidden'
+			)
+		).toBeInTheDocument();
 	});
 });

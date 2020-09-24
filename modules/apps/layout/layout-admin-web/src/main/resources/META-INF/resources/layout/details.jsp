@@ -89,21 +89,37 @@ String friendlyURLBase = StringPool.BLANK;
 
 		<c:choose>
 			<c:when test="<%= selLayoutType.isURLFriendliable() && !layoutsAdminDisplayContext.isDraft() && !selLayout.isSystem() %>">
-				<liferay-portlet:resourceURL copyCurrentRenderParameters="<%= false %>" id="/layout/get_friendly_url_entry_localizations" var="friendlyURLEntryLocalizationslURL">
+				<liferay-portlet:resourceURL copyCurrentRenderParameters="<%= false %>" id="/layout/get_friendly_url_entry_localizations" var="friendlyURLEntryLocalizationsURL">
 					<portlet:param name="plid" value="<%= String.valueOf(selLayout.getPlid()) %>" />
 				</liferay-portlet:resourceURL>
 
+				<portlet:actionURL name="/layout/delete_friendly_url_entry_localization" var="deleteFriendlyURLEntryLocalizationURL">
+					<portlet:param name="plid" value="<%= String.valueOf(selLayout.getPlid()) %>" />
+				</portlet:actionURL>
+
+				<portlet:actionURL name="/layout/restore_friendly_url_entry_localization" var="restoreFriendlyURLEntryLocalizationURL">
+					<portlet:param name="plid" value="<%= String.valueOf(selLayout.getPlid()) %>" />
+				</portlet:actionURL>
+
 				<div class="btn-url-history-wrapper">
+
+					<%
+					User defaultUser = company.getDefaultUser();
+					%>
+
 					<react:component
-						data='<%=
-							HashMapBuilder.<String, Object>put(
-								"defaultLanguageId",
-								LocaleUtil.toLanguageId(company.getDefaultUser().getLocale())
-							).put(
-								"friendlyURLEntryLocalizationslURL",
-								friendlyURLEntryLocalizationslURL
-							).build() %>'
 						module="js/friendly_url_history/FriendlyURLHistory"
+						props='<%=
+							HashMapBuilder.<String, Object>put(
+								"defaultLanguageId", LocaleUtil.toLanguageId(defaultUser.getLocale())
+							).put(
+								"deleteFriendlyURLEntryLocalizationURL", deleteFriendlyURLEntryLocalizationURL
+							).put(
+								"friendlyURLEntryLocalizationsURL", friendlyURLEntryLocalizationsURL
+							).put(
+								"restoreFriendlyURLEntryLocalizationURL", restoreFriendlyURLEntryLocalizationURL
+							).build()
+						%>'
 					/>
 				</div>
 
@@ -130,10 +146,9 @@ String friendlyURLBase = StringPool.BLANK;
 			LayoutSetPrototype layoutSetPrototype = LayoutSetPrototypeLocalServiceUtil.getLayoutSetPrototype(group.getClassPK());
 
 			boolean layoutSetPrototypeUpdateable = GetterUtil.getBoolean(layoutSetPrototype.getSettingsProperty("layoutsUpdateable"), true);
-			boolean layoutUpdateable = GetterUtil.getBoolean(selLayoutType.getTypeSettingsProperty("layoutUpdateable"), true);
 			%>
 
-			<aui:input disabled="<%= !layoutSetPrototypeUpdateable %>" helpMessage="allow-site-administrators-to-modify-this-page-for-their-site-help" label="allow-site-administrators-to-modify-this-page-for-their-site" name="TypeSettingsProperties--layoutUpdateable--" type="checkbox" value="<%= layoutUpdateable %>" />
+			<aui:input disabled="<%= !layoutSetPrototypeUpdateable %>" helpMessage="allow-site-administrators-to-modify-this-page-for-their-site-help" label="allow-site-administrators-to-modify-this-page-for-their-site" name="TypeSettingsProperties--layoutUpdateable--" type="checkbox" value='<%= GetterUtil.getBoolean(selLayoutType.getTypeSettingsProperty("layoutUpdateable"), true) %>' />
 		</c:if>
 	</c:when>
 	<c:otherwise>
@@ -177,11 +192,11 @@ String friendlyURLBase = StringPool.BLANK;
 </div>
 
 <c:if test="<%= !selLayout.isTypeAssetDisplay() %>">
-	<div class="sheet-section">
+	<clay:sheet-section>
 		<h3 class="sheet-subtitle"><liferay-ui:message key="categorization" /></h3>
 
 		<liferay-util:include page="/layout/categorization.jsp" servletContext="<%= application %>" />
-	</div>
+	</clay:sheet-section>
 </c:if>
 
 <aui:script require="metal-dom/src/dom as dom">

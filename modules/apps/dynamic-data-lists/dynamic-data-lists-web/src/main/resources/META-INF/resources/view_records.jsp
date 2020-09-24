@@ -17,6 +17,8 @@
 <%@ include file="/init.jsp" %>
 
 <%
+String randomNamespace = PortalUtil.generateRandomKey(request, "portlet_dynamic_data_lists_view_records") + StringPool.UNDERLINE;
+
 long formDDMTemplateId = ParamUtil.getLong(request, "formDDMTemplateId");
 
 DDLViewRecordsDisplayContext ddlViewRecordsDisplayContext = new DDLViewRecordsDisplayContext(liferayPortletRequest, liferayPortletResponse, formDDMTemplateId);
@@ -40,12 +42,12 @@ if (!ddlDisplayContext.isAdminPortlet()) {
 <clay:management-toolbar
 	actionDropdownItems="<%= ddlViewRecordsDisplayContext.getActionItemsDropdownItems() %>"
 	clearResultsURL="<%= ddlViewRecordsDisplayContext.getClearResultsURL() %>"
-	componentId="ddlViewRecordsManagementToolbar"
+	componentId='<%= randomNamespace + "ddlViewRecordsManagementToolbar" %>'
 	creationMenu="<%= ddlViewRecordsDisplayContext.getCreationMenu() %>"
 	disabled="<%= ddlViewRecordsDisplayContext.isDisabledManagementBar() %>"
 	filterDropdownItems="<%= ddlViewRecordsDisplayContext.getFilterItemsDropdownItems() %>"
 	itemsTotal="<%= ddlViewRecordsDisplayContext.getTotalItems() %>"
-	namespace="<%= renderResponse.getNamespace() %>"
+	namespace="<%= liferayPortletResponse.getNamespace() %>"
 	searchActionURL="<%= ddlViewRecordsDisplayContext.getSearchActionURL() %>"
 	searchContainerId="<%= ddlViewRecordsDisplayContext.getSearchContainerId() %>"
 	searchFormName="fm1"
@@ -54,9 +56,9 @@ if (!ddlDisplayContext.isAdminPortlet()) {
 	sortingURL="<%= ddlViewRecordsDisplayContext.getSortingURL() %>"
 />
 
-<clay:container
-	className="view-records-container"
-	id='<%= renderResponse.getNamespace() + "formContainer" %>'
+<clay:container-fluid
+	cssClass="view-records-container"
+	id='<%= liferayPortletResponse.getNamespace() + "formContainer" %>'
 >
 	<aui:form action="<%= portletURL.toString() %>" method="post" name="fm">
 		<aui:input name="recordIds" type="hidden" />
@@ -159,7 +161,7 @@ if (!ddlDisplayContext.isAdminPortlet()) {
 			/>
 		</liferay-ui:search-container>
 	</aui:form>
-</clay:container>
+</clay:container-fluid>
 
 <%@ include file="/export_record_set.jspf" %>
 
@@ -199,9 +201,9 @@ if (!ddlDisplayContext.isAdminPortlet()) {
 		deleteRecords: deleteRecords,
 	};
 
-	Liferay.componentReady('ddlViewRecordsManagementToolbar').then(function (
-		managementToolbar
-	) {
+	Liferay.componentReady(
+		'<%= randomNamespace + "ddlViewRecordsManagementToolbar" %>'
+	).then(function (managementToolbar) {
 		managementToolbar.on('actionItemClicked', function (event) {
 			var itemData = event.data.item.data;
 

@@ -12,20 +12,12 @@
  * details.
  */
 
-import {ItemSelectorDialog, toggleDisabled} from 'frontend-js-web';
+import {openSelectionModal, toggleDisabled} from 'frontend-js-web';
 
 export default function ({namespace, uploadOpenGraphImageURL}) {
 	const openGraphImageButton = document.getElementById(
 		`${namespace}openGraphImageButton`
 	);
-
-	const itemSelectorDialog = new ItemSelectorDialog({
-		buttonAddLabel: Liferay.Language.get('done'),
-		eventName: `${namespace}openGraphImageSelectedItem`,
-		singleSelect: true,
-		title: Liferay.Language.get('open-graph-image'),
-		url: uploadOpenGraphImageURL,
-	});
 
 	const openGraphImageFileEntryId = document.getElementById(
 		`${namespace}openGraphImageFileEntryId`
@@ -44,30 +36,33 @@ export default function ({namespace, uploadOpenGraphImageURL}) {
 		`${namespace}openGraphImageAlt_${Liferay.ThemeDisplay.getLanguageId()}`
 	);
 	const openGraphImageAltLabel = document.querySelector(
-		`[for="${namespace}openGraphImageAlt"`
+		`[for="${namespace}openGraphImageAlt"]`
 	);
-
-	itemSelectorDialog.on('selectedItemChange', (event) => {
-		const selectedItem = event.selectedItem;
-
-		if (selectedItem) {
-			const itemValue = JSON.parse(selectedItem.value);
-
-			openGraphImageFileEntryId.value = itemValue.fileEntryId;
-			openGraphImageTitle.value = itemValue.title;
-			openGraphPreviewImage.src = itemValue.url;
-
-			toggleDisabled(openGraphImageAltField, false);
-			toggleDisabled(openGraphImageAltFieldDefaultLocale, false);
-			toggleDisabled(openGraphImageAltLabel, false);
-
-			openGraphPreviewImage.classList.remove('hide');
-		}
-	});
 
 	openGraphImageButton.addEventListener('click', (event) => {
 		event.preventDefault();
-		itemSelectorDialog.open();
+
+		openSelectionModal({
+			buttonAddLabel: Liferay.Language.get('done'),
+			onSelect: (selectedItem) => {
+				if (selectedItem) {
+					const itemValue = JSON.parse(selectedItem.value);
+
+					openGraphImageFileEntryId.value = itemValue.fileEntryId;
+					openGraphImageTitle.value = itemValue.title;
+					openGraphPreviewImage.src = itemValue.url;
+
+					toggleDisabled(openGraphImageAltField, false);
+					toggleDisabled(openGraphImageAltFieldDefaultLocale, false);
+					toggleDisabled(openGraphImageAltLabel, false);
+
+					openGraphPreviewImage.classList.remove('hide');
+				}
+			},
+			selectEventName: `${namespace}openGraphImageSelectedItem`,
+			title: Liferay.Language.get('open-graph-image'),
+			url: uploadOpenGraphImageURL,
+		});
 	});
 
 	const openGraphClearImageButton = document.getElementById(

@@ -106,9 +106,10 @@ public class PortletRegistryImpl implements PortletRegistry {
 				fragmentEntryLink.getEditableValues());
 
 			String portletId = jsonObject.getString("portletId");
-			String instanceId = jsonObject.getString("instanceId");
 
 			if (Validator.isNotNull(portletId)) {
+				String instanceId = jsonObject.getString("instanceId");
+
 				portletIds.add(PortletIdCodec.encode(portletId, instanceId));
 			}
 		}
@@ -148,6 +149,18 @@ public class PortletRegistryImpl implements PortletRegistry {
 		List<Portlet> portlets = stream.map(
 			fragmentEntryLinkPortletId -> _portletLocalService.getPortletById(
 				fragmentEntryLinkPortletId)
+		).filter(
+			portlet -> {
+				if (portlet == null) {
+					return false;
+				}
+
+				if (!portlet.isActive() || portlet.isUndeployedPortlet()) {
+					return false;
+				}
+
+				return true;
+			}
 		).distinct(
 		).collect(
 			Collectors.toList()

@@ -24,15 +24,21 @@ String ddmFormInstanceReportData = StringPool.BLANK;
 if (ddmFormInstanceReport != null) {
 	ddmFormInstanceReportData = ddmFormInstanceReport.getData();
 }
-
-Map<String, Object> data = HashMapBuilder.<String, Object>put(
-	"data", ddmFormInstanceReportData
-).build();
 %>
 
 <div id="<portlet:namespace />report">
 	<react:component
-		data="<%= data %>"
 		module="js/index.es"
+		props='<%=
+			HashMapBuilder.<String, Object>put(
+				"data", ddmFormInstanceReportData
+			).put(
+				"fields", ddmFormReportDisplayContext.getFieldsJSONArray()
+			).put(
+				"formReportRecordsFieldValuesURL", ddmFormReportDisplayContext.getFormReportRecordsFieldValuesURL()
+			).put(
+				"portletNamespace", PortalUtil.getPortletNamespace(DDMPortletKeys.DYNAMIC_DATA_MAPPING_FORM_REPORT)
+			).build()
+		%>'
 	/>
 </div>

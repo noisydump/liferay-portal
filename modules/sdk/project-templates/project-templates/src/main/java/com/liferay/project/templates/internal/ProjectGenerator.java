@@ -19,7 +19,7 @@ import aQute.bnd.version.VersionRange;
 
 import com.liferay.project.templates.extensions.ProjectTemplateCustomizer;
 import com.liferay.project.templates.extensions.ProjectTemplatesArgs;
-import com.liferay.project.templates.extensions.ProjectTemplatesConstants;
+import com.liferay.project.templates.extensions.constants.ProjectTemplatesConstants;
 import com.liferay.project.templates.extensions.util.FileUtil;
 import com.liferay.project.templates.extensions.util.ProjectTemplatesUtil;
 import com.liferay.project.templates.extensions.util.Validator;
@@ -56,6 +56,7 @@ public class ProjectGenerator {
 		String groupId = projectTemplatesArgs.getGroupId();
 		String liferayVersion = projectTemplatesArgs.getLiferayVersion();
 		String packageName = projectTemplatesArgs.getPackageName();
+		String product = projectTemplatesArgs.getProduct();
 
 		String template = projectTemplatesArgs.getTemplate();
 
@@ -125,10 +126,11 @@ public class ProjectGenerator {
 		}
 
 		if (buildType.equals("maven") && template.equals("form-field") &&
-			liferayVersion.startsWith("7.2")) {
+			!liferayVersion.startsWith("7.0") &&
+			!liferayVersion.startsWith("7.1")) {
 
 			throw new IllegalArgumentException(
-				"Form Field project is not supported 7.2 for Maven");
+				"Form Field project in Maven is only supported in 7.0 and 7.1");
 		}
 
 		Properties properties = new Properties();
@@ -141,6 +143,7 @@ public class ProjectGenerator {
 			String.valueOf(dependencyManagementEnabled));
 		_setProperty(properties, "liferayVersion", liferayVersion);
 		_setProperty(properties, "package", packageName);
+		_setProperty(properties, "product", product);
 		_setProperty(properties, "projectType", projectType);
 
 		archetypeGenerationRequest.setProperties(properties);

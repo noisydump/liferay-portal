@@ -1,10 +1,9 @@
-/*eslint-disable*/
 const dropdown = fragmentElement.querySelector('.navbar-collapse');
 const dropdownButton = fragmentElement.querySelector('.navbar-toggler-link');
 const editMode = document.body.classList.contains('has-edit-mode-menu');
-const tabItems = [].slice.call(fragmentElement.querySelectorAll('.nav-link'));
+const tabItems = [].slice.call(fragmentElement.querySelectorAll('[data-fragment-namespace="' + fragmentNamespace + '"].nav-link'));
 const tabPanelItems = [].slice.call(
-	fragmentElement.querySelectorAll('.tab-panel-item')
+	fragmentElement.querySelectorAll('[data-fragment-namespace="' + fragmentNamespace + '"].tab-panel-item')
 );
 
 function activeTab(item) {
@@ -25,7 +24,7 @@ function activeTabPanel(item) {
 	item.classList.remove('d-none');
 }
 
-function handleDropdown({event, item}) {
+function handleDropdown(event, item) {
 	event.preventDefault();
 	dropdown.classList.toggle('show');
 
@@ -52,13 +51,14 @@ function handleDropdownButtonName(item) {
 }
 
 function openTabPanel(event, i) {
-	const {currentTarget, target} = event;
+	const currentTarget = event.currentTarget;
+	const target = event.target;
 	const isEditable = target.hasAttribute('data-lfr-editable-id') || target.hasAttribute('contenteditable');
 	const dropdownIsOpen = JSON.parse(dropdownButton.getAttribute('aria-expanded'));
 
-	if (!isEditable || !editMode) {	
+	if (!isEditable || !editMode) {
 		if (dropdownIsOpen) {
-			handleDropdown({event, item: currentTarget});
+			handleDropdown(event, currentTarget);
 		}
 
 		currentTarget.focus();
@@ -103,7 +103,7 @@ function main() {
 	}
 
 	dropdownButton.addEventListener('click', function(event) {
-		handleDropdown({event});
+		handleDropdown(event);
 	});
 	handleDropdownButtonName(tabItemSelected);
 }

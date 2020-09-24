@@ -50,6 +50,22 @@ definition {
 		LexiconEntry.gotoEllipsisMenuItem(menuItem = "Export");
 	}
 
+	macro exportMultipleCollections {
+		for (var collectionName : list "${collectionNameList}") {
+			Check(
+				key_tableEntry = "${collectionName}",
+				locator1 = "LexiconTable#TABLE_ENTRY_CHECKBOX");
+
+			Pause(locator1 = "3000");
+		}
+
+		SelectFrameTop();
+
+		Button.click(button = "Export");
+
+		Alert.viewSuccessMessage();
+	}
+
 	macro importCollectionFromDependenciesFolder {
 		FragmentsAdminNavigator.gotoImportCollection();
 
@@ -59,11 +75,13 @@ definition {
 
 		SelectFrameTop();
 
-		Click.mouseDownMouseUp(
-			key_text = "Import",
-			locator1 = "Modal#ANY_BUTTON");
+		Button.clickImport();
+
+		SelectFrame.selectFrameNoLoading(locator1 = "IFrame#MODAL_IFRAME");
 
 		Alert.viewSuccessMessage();
+
+		SelectFrameTop();
 
 		IFrame.closeFrame();
 	}
@@ -79,9 +97,7 @@ definition {
 
 		SelectFrameTop();
 
-		Click.mouseDownMouseUp(
-			key_text = "Import",
-			locator1 = "Modal#ANY_BUTTON");
+		Button.clickImport();
 
 		SelectFrame.selectFrameNoLoading(locator1 = "IFrame#MODAL_IFRAME");
 
@@ -97,11 +113,6 @@ definition {
 	}
 
 	macro selectCollection {
-		LiferayEvent.waitForLiferayEvent(
-			attributeName = "src",
-			attributeValue = "dialog-iframe-popup",
-			eventName = "modalIframeLoaded");
-
 		SelectFrame(locator1 = "IFrame#MODAL_BODY");
 
 		LexiconCard.clickCard(card = "${collectionName}");

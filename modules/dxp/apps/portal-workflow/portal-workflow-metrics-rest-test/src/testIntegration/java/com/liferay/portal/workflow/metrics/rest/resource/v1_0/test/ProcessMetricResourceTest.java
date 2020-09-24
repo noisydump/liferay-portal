@@ -18,12 +18,14 @@ import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.petra.function.UnsafeBiConsumer;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
+import com.liferay.portal.kernel.test.rule.DataGuard;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.odata.entity.EntityField;
 import com.liferay.portal.search.document.Document;
+import com.liferay.portal.search.test.util.SearchTestRule;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.workflow.metrics.rest.client.dto.v1_0.Instance;
 import com.liferay.portal.workflow.metrics.rest.client.dto.v1_0.Process;
@@ -45,13 +47,14 @@ import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
 /**
  * @author Rafael Praxedes
  */
+@DataGuard(scope = DataGuard.Scope.METHOD)
 @RunWith(Arquillian.class)
 public class ProcessMetricResourceTest
 	extends BaseProcessMetricResourceTestCase {
@@ -138,7 +141,6 @@ public class ProcessMetricResourceTest
 			});
 	}
 
-	@Ignore
 	@Override
 	@Test
 	public void testGetProcessMetricsPageWithSortString() throws Exception {
@@ -154,7 +156,7 @@ public class ProcessMetricResourceTest
 							LocaleUtil.US.toLanguageTag(), process1.getTitle()
 						).build());
 
-					Process process2 = processMetric1.getProcess();
+					Process process2 = processMetric2.getProcess();
 
 					process2.setTitle("Bbb" + RandomTestUtil.randomString());
 					process2.setTitle_i18n(
@@ -203,6 +205,9 @@ public class ProcessMetricResourceTest
 				ProcessMetricSerDes.toDTOs(
 					processMetricsJSONObject.getString("items"))));
 	}
+
+	@Rule
+	public SearchTestRule searchTestRule = new SearchTestRule();
 
 	@Override
 	protected String[] getAdditionalAssertFieldNames() {

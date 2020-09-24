@@ -10,7 +10,7 @@ exports[`Sidebar closes the sidebar in edition mode 1`] = `
             <li class="tbar-item tbar-item-expand text-left">
               <div class="tbar-section"><span class="text-truncate-inline"><span class="text-truncate">add-elements</span></span></div>
             </li>
-            <li class="tbar-item"><a class="component-action sidebar-close" href="#1" ref="closeButton" role="button"><svg aria-hidden="true" class="lexicon-icon lexicon-icon-times">
+            <li class="tbar-item"><a class="component-action sidebar-close" href="javascript:;" ref="closeButton" role="button"><svg aria-hidden="true" class="lexicon-icon lexicon-icon-times">
                   <use xlink:href="icons.svg#times"></use>
                 </svg></a></li>
           </ul>
@@ -21,8 +21,8 @@ exports[`Sidebar closes the sidebar in edition mode 1`] = `
           </svg></a>
         <div class="collapse navbar-collapse" id="sidebarLightCollapse00">
           <ul class="nav navbar-nav" role="tablist">
-            <li class="nav-item" data-index="0" ref="tab0"><a class="nav-link active" aria-controls="sidebarLightDetails" data-toggle="liferay-tab" href="javascript:;" role="tab"><span class="navbar-text-truncate">elements</span></a></li>
-            <li class="nav-item" data-index="1" ref="tab1"><a class="nav-link" aria-controls="sidebarLightDetails" data-toggle="liferay-tab" href="javascript:;" role="tab"><span class="navbar-text-truncate">element-sets</span></a></li>
+            <li class="nav-item" data-index="0" ref="tab0"><a class="nav-link active" aria-controls="sidebarLightDetails" href="javascript:;" role="tab"><span class="navbar-text-truncate">elements</span></a></li>
+            <li class="nav-item" data-index="1" ref="tab1"><a class="nav-link" aria-controls="sidebarLightDetails" href="javascript:;" role="tab"><span class="navbar-text-truncate">element-sets</span></a></li>
           </ul>
         </div>
       </nav>
@@ -167,7 +167,7 @@ exports[`Sidebar renders a Sidebar with fieldTypes 1`] = `
             <li class="tbar-item tbar-item-expand text-left">
               <div class="tbar-section"><span class="text-truncate-inline"><span class="text-truncate">add-elements</span></span></div>
             </li>
-            <li class="tbar-item"><a class="component-action sidebar-close" href="#1" ref="closeButton" role="button"><svg aria-hidden="true" class="lexicon-icon lexicon-icon-times">
+            <li class="tbar-item"><a class="component-action sidebar-close" href="javascript:;" ref="closeButton" role="button"><svg aria-hidden="true" class="lexicon-icon lexicon-icon-times">
                   <use xlink:href="icons.svg#times"></use>
                 </svg></a></li>
           </ul>
@@ -178,8 +178,8 @@ exports[`Sidebar renders a Sidebar with fieldTypes 1`] = `
           </svg></a>
         <div class="collapse navbar-collapse" id="sidebarLightCollapse00">
           <ul class="nav navbar-nav" role="tablist">
-            <li class="nav-item" data-index="0" ref="tab0"><a class="nav-link active" aria-controls="sidebarLightDetails" data-toggle="liferay-tab" href="javascript:;" role="tab"><span class="navbar-text-truncate">elements</span></a></li>
-            <li class="nav-item" data-index="1" ref="tab1"><a class="nav-link" aria-controls="sidebarLightDetails" data-toggle="liferay-tab" href="javascript:;" role="tab"><span class="navbar-text-truncate">element-sets</span></a></li>
+            <li class="nav-item" data-index="0" ref="tab0"><a class="nav-link active" aria-controls="sidebarLightDetails" href="javascript:;" role="tab"><span class="navbar-text-truncate">elements</span></a></li>
+            <li class="nav-item" data-index="1" ref="tab1"><a class="nav-link" aria-controls="sidebarLightDetails" href="javascript:;" role="tab"><span class="navbar-text-truncate">element-sets</span></a></li>
           </ul>
         </div>
       </nav>

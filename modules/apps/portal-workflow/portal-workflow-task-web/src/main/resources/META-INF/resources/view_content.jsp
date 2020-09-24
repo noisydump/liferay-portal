@@ -21,9 +21,9 @@ String redirect = ParamUtil.getString(request, "redirect");
 
 AssetEntry assetEntry = workflowTaskDisplayContext.getAssetEntry();
 
-AssetRenderer assetRenderer = workflowTaskDisplayContext.getAssetRenderer(workflowTaskDisplayContext.getWorkflowTask());
+AssetRenderer<?> assetRenderer = workflowTaskDisplayContext.getAssetRenderer(workflowTaskDisplayContext.getWorkflowTask());
 
-AssetRendererFactory assetRendererFactory = workflowTaskDisplayContext.getAssetRendererFactory();
+AssetRendererFactory<?> assetRendererFactory = workflowTaskDisplayContext.getAssetRendererFactory();
 
 String languageId = LanguageUtil.getLanguageId(request);
 
@@ -43,23 +43,25 @@ portletDisplay.setURLBack(redirect);
 renderResponse.setTitle(title);
 %>
 
-<clay:container
-	className="main-content-body"
+<clay:container-fluid
+	cssClass="main-content-body"
 >
 	<clay:col
-		className="lfr-asset-column lfr-asset-column-details"
+		cssClass="lfr-asset-column lfr-asset-column-details"
 		md="12"
 	>
 		<div class="card-horizontal main-content-card">
 			<div class="panel-body">
 				<c:if test="<%= assetEntry != null %>">
-					<div class="locale-actions">
-						<liferay-ui:language
-							formAction="<%= currentURL %>"
-							languageId="<%= languageId %>"
-							languageIds="<%= availableLanguageIds %>"
-						/>
-					</div>
+					<c:if test="<%= assetRenderer.isLocalizable() %>">
+						<div class="locale-actions">
+							<liferay-ui:language
+								formAction="<%= currentURL %>"
+								languageId="<%= languageId %>"
+								languageIds="<%= availableLanguageIds %>"
+							/>
+						</div>
+					</c:if>
 
 					<liferay-asset:asset-display
 						assetEntry="<%= assetEntry %>"
@@ -80,4 +82,4 @@ renderResponse.setTitle(title);
 			</div>
 		</div>
 	</clay:col>
-</clay:container>
+</clay:container-fluid>

@@ -75,10 +75,8 @@ public abstract class BaseJSPTermsCheck extends BaseFileCheck {
 			return;
 		}
 
-		String[] excludes = {"**/null.jsp", "**/tools/**"};
-
 		List<String> allJSPFileNames = SourceFormatterUtil.filterFileNames(
-			_allFileNames, excludes,
+			_allFileNames, new String[] {"**/null.jsp", "**/tools/**"},
 			new String[] {"**/*.jsp", "**/*.jspf", "**/*.tag"},
 			getSourceFormatterExcludes(), true);
 
@@ -178,7 +176,7 @@ public abstract class BaseJSPTermsCheck extends BaseFileCheck {
 			includeFileNames.addAll(
 				JSPSourceUtil.getJSPReferenceFileNames(
 					fileName, includeFileNames, contentsMap,
-					".*init(-ext)?\\.(jsp|jspf|tag)"));
+					".*\\.(jsp|jspf|tag)"));
 		}
 
 		checkedForIncludesFileNames.add(fileName);

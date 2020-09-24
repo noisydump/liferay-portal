@@ -20,12 +20,10 @@
 SearchContainer<CTCollection> searchContainer = changeListsDisplayContext.getSearchContainer();
 
 searchContainer.setId("selectChangeList");
-
-SelectChangeListManagementToolbarDisplayContext selectChangeListManagementToolbarDisplayContext = new SelectChangeListManagementToolbarDisplayContext(request, liferayPortletRequest, liferayPortletResponse, searchContainer);
 %>
 
 <clay:management-toolbar
-	displayContext="<%= selectChangeListManagementToolbarDisplayContext %>"
+	displayContext="<%= new SelectChangeListManagementToolbarDisplayContext(request, liferayPortletRequest, liferayPortletResponse, searchContainer) %>"
 />
 
 <c:if test="<%= !searchContainer.hasResults() %>">
@@ -36,8 +34,8 @@ SelectChangeListManagementToolbarDisplayContext selectChangeListManagementToolba
 	</div>
 </c:if>
 
-<clay:container
-	id='<%= renderResponse.getNamespace() + "selectChangeListContainer" %>'
+<clay:container-fluid
+	id='<%= liferayPortletResponse.getNamespace() + "selectChangeListContainer" %>'
 >
 	<div class="table-responsive">
 		<table class="change-lists-table select-change-list-table table table-autofit">
@@ -45,9 +43,6 @@ SelectChangeListManagementToolbarDisplayContext selectChangeListManagementToolba
 
 				<%
 				for (CTCollection ctCollection : searchContainer.getResults()) {
-					Map<String, Object> data = HashMapBuilder.<String, Object>put(
-						"ctcollectionid", ctCollection.getCtCollectionId()
-					).build();
 				%>
 
 					<tr>
@@ -70,7 +65,15 @@ SelectChangeListManagementToolbarDisplayContext selectChangeListManagementToolba
 									</div>
 								</c:when>
 								<c:otherwise>
-									<aui:a cssClass="selector-button" data="<%= data %>" href="javascript:;">
+									<aui:a
+										cssClass="selector-button"
+										data='<%=
+											HashMapBuilder.<String, Object>put(
+												"ctcollectionid", ctCollection.getCtCollectionId()
+											).build()
+										%>'
+										href="javascript:;"
+									>
 										<div class="change-list-name">
 											<%= HtmlUtil.escape(ctCollection.getName()) %>
 										</div>
@@ -96,7 +99,7 @@ SelectChangeListManagementToolbarDisplayContext selectChangeListManagementToolba
 		markupView="lexicon"
 		searchContainer="<%= searchContainer %>"
 	/>
-</clay:container>
+</clay:container-fluid>
 
 <aui:script>
 	Liferay.Util.selectEntityHandler(

@@ -12,14 +12,36 @@
  * details.
  */
 
+const COLUMNS = [
+	{
+		key: 'name',
+		sortable: true,
+		value: Liferay.Language.get('name'),
+	},
+	{
+		key: 'type',
+		value: Liferay.Language.get('deployed-as'),
+	},
+	{
+		key: 'dateCreated',
+		sortable: true,
+		value: Liferay.Language.get('create-date'),
+	},
+	{
+		asc: false,
+		key: 'dateModified',
+		sortable: true,
+		value: Liferay.Language.get('modified-date'),
+	},
+	{
+		key: 'status',
+		value: Liferay.Language.get('status'),
+	},
+];
+
 const DEPLOYMENT_ACTION = {
 	deploy: Liferay.Language.get('deploy'),
 	undeploy: Liferay.Language.get('undeploy'),
-};
-
-const DEPLOYMENT_STATUS = {
-	false: Liferay.Language.get('undeployed'),
-	true: Liferay.Language.get('deployed'),
 };
 
 const DEPLOYMENT_TYPES = {
@@ -28,4 +50,52 @@ const DEPLOYMENT_TYPES = {
 	widget: Liferay.Language.get('widget'),
 };
 
-export {DEPLOYMENT_ACTION, DEPLOYMENT_STATUS, DEPLOYMENT_TYPES};
+const FILTER_NAMES = {
+	author: [
+		Liferay.Language.get('author'),
+		Liferay.Language.get('filter-by-author'),
+	],
+	'deployment-type': [
+		Liferay.Language.get('deployment-type'),
+		Liferay.Language.get('filter-by-deployment-type'),
+	],
+	status: [
+		Liferay.Language.get('status'),
+		Liferay.Language.get('filter-by-status'),
+	],
+};
+
+const STATUSES = {
+	active: Liferay.Language.get('deployed'),
+	inactive: Liferay.Language.get('undeployed'),
+};
+
+const FILTERS = [
+	{
+		items: [
+			{label: DEPLOYMENT_TYPES.productMenu, value: 'productMenu'},
+			{label: DEPLOYMENT_TYPES.standalone, value: 'standalone'},
+			{label: DEPLOYMENT_TYPES.widget, value: 'widget'},
+		],
+		key: 'deploymentTypes',
+		multiple: true,
+		name: 'deployment-type',
+	},
+	{
+		items: [
+			{label: STATUSES.active, value: 'true'},
+			{label: STATUSES.inactive, value: 'false'},
+		],
+		key: 'active',
+		name: 'status',
+	},
+];
+
+export {
+	COLUMNS,
+	DEPLOYMENT_ACTION,
+	DEPLOYMENT_TYPES,
+	FILTERS,
+	FILTER_NAMES,
+	STATUSES,
+};

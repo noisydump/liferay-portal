@@ -20,7 +20,7 @@ import com.liferay.document.library.kernel.service.DLAppService;
 import com.liferay.expando.kernel.service.ExpandoColumnLocalService;
 import com.liferay.expando.kernel.service.ExpandoTableLocalService;
 import com.liferay.headless.common.spi.resource.SPIRatingResource;
-import com.liferay.headless.common.spi.service.context.ServiceContextUtil;
+import com.liferay.headless.common.spi.service.context.ServiceContextRequestUtil;
 import com.liferay.headless.delivery.dto.v1_0.BlogPosting;
 import com.liferay.headless.delivery.dto.v1_0.Image;
 import com.liferay.headless.delivery.dto.v1_0.Rating;
@@ -43,6 +43,7 @@ import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.odata.entity.EntityModel;
+import com.liferay.portal.vulcan.aggregation.Aggregation;
 import com.liferay.portal.vulcan.dto.converter.DTOConverterRegistry;
 import com.liferay.portal.vulcan.dto.converter.DefaultDTOConverterContext;
 import com.liferay.portal.vulcan.pagination.Page;
@@ -111,12 +112,12 @@ public class BlogPostingResourceImpl
 
 	@Override
 	public Page<BlogPosting> getSiteBlogPostingsPage(
-			Long siteId, String search, Filter filter, Pagination pagination,
-			Sort[] sorts)
+			Long siteId, String search, Aggregation aggregation, Filter filter,
+			Pagination pagination, Sort[] sorts)
 		throws Exception {
 
 		return SearchUtil.search(
-			HashMapBuilder.<String, Map<String, String>>put(
+			HashMapBuilder.put(
 				"create",
 				addAction(
 					"ADD_ENTRY", "postSiteBlogPosting", "com.liferay.blogs",
@@ -138,6 +139,7 @@ public class BlogPostingResourceImpl
 			queryConfig -> queryConfig.setSelectedFieldNames(
 				Field.ENTRY_CLASS_PK),
 			searchContext -> {
+				searchContext.addVulcanAggregation(aggregation);
 				searchContext.setAttribute(
 					Field.STATUS, WorkflowConstants.STATUS_APPROVED);
 				searchContext.setCompanyId(contextCompany.getCompanyId());
@@ -176,10 +178,11 @@ public class BlogPostingResourceImpl
 				localDateTime.getHour(), localDateTime.getMinute(), true, true,
 				new String[0], _getCaption(image), _getImageSelector(image),
 				null,
-				ServiceContextUtil.createServiceContext(
+				ServiceContextRequestUtil.createServiceContext(
 					blogPosting.getTaxonomyCategoryIds(),
 					blogPosting.getKeywords(),
 					_getExpandoBridgeAttributes(blogPosting), siteId,
+					contextHttpServletRequest,
 					blogPosting.getViewableByAsString())));
 	}
 
@@ -203,11 +206,11 @@ public class BlogPostingResourceImpl
 				localDateTime.getHour(), localDateTime.getMinute(), true, true,
 				new String[0], _getCaption(image), _getImageSelector(image),
 				null,
-				ServiceContextUtil.createServiceContext(
+				ServiceContextRequestUtil.createServiceContext(
 					blogPosting.getTaxonomyCategoryIds(),
 					blogPosting.getKeywords(),
 					_getExpandoBridgeAttributes(blogPosting),
-					blogsEntry.getGroupId(),
+					blogsEntry.getGroupId(), contextHttpServletRequest,
 					blogPosting.getViewableByAsString())));
 	}
 
@@ -304,21 +307,19 @@ public class BlogPostingResourceImpl
 					ratingsEntry.getClassPK());
 
 				return RatingUtil.toRating(
-					HashMapBuilder.<String, Map<String, String>>put(
+					HashMapBuilder.put(
 						"create",
-						addAction(
-							"UPDATE", blogsEntry, "postBlogPostingMyRating")
+						addAction("VIEW", blogsEntry, "postBlogPostingMyRating")
 					).put(
 						"delete",
 						addAction(
-							"UPDATE", blogsEntry, "deleteBlogPostingMyRating")
+							"VIEW", blogsEntry, "deleteBlogPostingMyRating")
 					).put(
 						"get",
 						addAction("VIEW", blogsEntry, "getBlogPostingMyRating")
 					).put(
 						"replace",
-						addAction(
-							"UPDATE", blogsEntry, "putBlogPostingMyRating")
+						addAction("VIEW", blogsEntry, "putBlogPostingMyRating")
 					).build(),
 					_portal, ratingsEntry, _userLocalService);
 			},
@@ -329,7 +330,7 @@ public class BlogPostingResourceImpl
 		return _blogPostingDTOConverter.toDTO(
 			new DefaultDTOConverterContext(
 				contextAcceptLanguage.isAcceptAllLanguages(),
-				HashMapBuilder.<String, Map<String, String>>put(
+				HashMapBuilder.put(
 					"delete",
 					addAction("DELETE", blogsEntry, "deleteBlogPosting")
 				).put(

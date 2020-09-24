@@ -61,7 +61,7 @@ public interface RedirectNotFoundEntryLocalService
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this interface directly. Always use {@link RedirectNotFoundEntryLocalServiceUtil} to access the redirect not found entry local service. Add custom service methods to <code>com.liferay.redirect.service.impl.RedirectNotFoundEntryLocalServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface.
+	 * Never modify this interface directly. Add custom service methods to <code>com.liferay.redirect.service.impl.RedirectNotFoundEntryLocalServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface. Consume the redirect not found entry local service via injection or a <code>org.osgi.util.tracker.ServiceTracker</code>. Use {@link RedirectNotFoundEntryLocalServiceUtil} if injection and service tracking are not available.
 	 */
 	@Indexable(type = IndexableType.REINDEX)
 	public RedirectNotFoundEntry addOrUpdateRedirectNotFoundEntry(
@@ -69,6 +69,10 @@ public interface RedirectNotFoundEntryLocalService
 
 	/**
 	 * Adds the redirect not found entry to the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect RedirectNotFoundEntryLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param redirectNotFoundEntry the redirect not found entry
 	 * @return the redirect not found entry that was added
@@ -103,6 +107,10 @@ public interface RedirectNotFoundEntryLocalService
 	/**
 	 * Deletes the redirect not found entry with the primary key from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect RedirectNotFoundEntryLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param redirectNotFoundEntryId the primary key of the redirect not found entry
 	 * @return the redirect not found entry that was removed
 	 * @throws PortalException if a redirect not found entry with the primary key could not be found
@@ -114,6 +122,10 @@ public interface RedirectNotFoundEntryLocalService
 
 	/**
 	 * Deletes the redirect not found entry from the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect RedirectNotFoundEntryLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param redirectNotFoundEntry the redirect not found entry
 	 * @return the redirect not found entry that was removed
@@ -238,17 +250,17 @@ public interface RedirectNotFoundEntryLocalService
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<RedirectNotFoundEntry> getRedirectNotFoundEntries(
 		long groupId, Boolean ignored, Date minModifiedDate, int start, int end,
-		OrderByComparator<RedirectNotFoundEntry> obc);
+		OrderByComparator<RedirectNotFoundEntry> orderByComparator);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<RedirectNotFoundEntry> getRedirectNotFoundEntries(
 		long groupId, Date minModifiedDate, int start, int end,
-		OrderByComparator<RedirectNotFoundEntry> obc);
+		OrderByComparator<RedirectNotFoundEntry> orderByComparator);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<RedirectNotFoundEntry> getRedirectNotFoundEntries(
 		long groupId, int start, int end,
-		OrderByComparator<RedirectNotFoundEntry> obc);
+		OrderByComparator<RedirectNotFoundEntry> orderByComparator);
 
 	/**
 	 * Returns the number of redirect not found entries.
@@ -288,6 +300,10 @@ public interface RedirectNotFoundEntryLocalService
 
 	/**
 	 * Updates the redirect not found entry in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect RedirectNotFoundEntryLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param redirectNotFoundEntry the redirect not found entry
 	 * @return the redirect not found entry that was updated

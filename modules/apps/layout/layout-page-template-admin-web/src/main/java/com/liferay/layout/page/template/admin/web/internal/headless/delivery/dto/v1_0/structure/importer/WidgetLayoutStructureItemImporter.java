@@ -32,13 +32,13 @@ import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.service.PortletLocalService;
 import com.liferay.portal.kernel.service.PortletPreferencesLocalService;
 import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
-import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.PortletKeys;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -54,11 +54,12 @@ public class WidgetLayoutStructureItemImporter
 	@Override
 	public LayoutStructureItem addLayoutStructureItem(
 			Layout layout, LayoutStructure layoutStructure,
-			PageElement pageElement, String parentItemId, int position)
+			PageElement pageElement, String parentItemId, int position,
+			Set<String> warningMessages)
 		throws Exception {
 
 		FragmentEntryLink fragmentEntryLink = _addFragmentEntryLink(
-			layout, pageElement);
+			layout, pageElement, warningMessages);
 
 		if (fragmentEntryLink == null) {
 			return null;
@@ -74,7 +75,7 @@ public class WidgetLayoutStructureItemImporter
 	}
 
 	private FragmentEntryLink _addFragmentEntryLink(
-			Layout layout, PageElement pageElement)
+			Layout layout, PageElement pageElement, Set<String> warningMessages)
 		throws Exception {
 
 		Map<String, Object> definitionMap = getDefinitionMap(
@@ -131,11 +132,10 @@ public class WidgetLayoutStructureItemImporter
 		_portletPermissionsImporterHelper.importPortletPermissions(
 			layout.getPlid(),
 			PortletIdCodec.encode(widgetName, widgetInstanceId),
-			widgetPermissionsMaps);
+			warningMessages, widgetPermissionsMaps);
 
 		return _fragmentEntryLinkLocalService.addFragmentEntryLink(
-			layout.getUserId(), layout.getGroupId(), 0, 0, 0,
-			_portal.getClassNameId(Layout.class), layout.getPlid(),
+			layout.getUserId(), layout.getGroupId(), 0, 0, 0, layout.getPlid(),
 			StringPool.BLANK, StringPool.BLANK, StringPool.BLANK,
 			StringPool.BLANK, editableValueJSONObject.toString(),
 			widgetInstanceId, 0, null,
@@ -144,7 +144,7 @@ public class WidgetLayoutStructureItemImporter
 
 	private String _getPortletInstanceId(
 			Layout layout, String portletInstanceId, String portletId)
-		throws PortletIdException {
+		throws Exception {
 
 		Portlet portlet = _portletLocalService.fetchPortletById(
 			layout.getCompanyId(), portletId);
@@ -176,9 +176,6 @@ public class WidgetLayoutStructureItemImporter
 
 	@Reference
 	private LayoutLocalService _layoutLocalService;
-
-	@Reference
-	private Portal _portal;
 
 	@Reference
 	private PortletConfigurationImporterHelper

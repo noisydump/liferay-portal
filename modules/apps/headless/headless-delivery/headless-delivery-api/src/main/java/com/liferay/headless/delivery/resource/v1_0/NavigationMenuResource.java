@@ -15,6 +15,8 @@
 package com.liferay.headless.delivery.resource.v1_0;
 
 import com.liferay.headless.delivery.dto.v1_0.NavigationMenu;
+import com.liferay.portal.kernel.service.GroupLocalService;
+import com.liferay.portal.kernel.service.RoleLocalService;
 import com.liferay.portal.vulcan.accept.language.AcceptLanguage;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
@@ -26,6 +28,7 @@ import javax.annotation.Generated;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 
 import org.osgi.annotation.versioning.ProviderType;
@@ -46,11 +49,31 @@ public interface NavigationMenuResource {
 		return FactoryHolder.factory.create();
 	}
 
+	public void deleteNavigationMenu(Long navigationMenuId) throws Exception;
+
+	public Response deleteNavigationMenuBatch(String callbackURL, Object object)
+		throws Exception;
+
 	public NavigationMenu getNavigationMenu(Long navigationMenuId)
+		throws Exception;
+
+	public NavigationMenu putNavigationMenu(
+			Long navigationMenuId, NavigationMenu navigationMenu)
+		throws Exception;
+
+	public Response putNavigationMenuBatch(String callbackURL, Object object)
 		throws Exception;
 
 	public Page<NavigationMenu> getSiteNavigationMenusPage(
 			Long siteId, Pagination pagination)
+		throws Exception;
+
+	public NavigationMenu postSiteNavigationMenu(
+			Long siteId, NavigationMenu navigationMenu)
+		throws Exception;
+
+	public Response postSiteNavigationMenuBatch(
+			Long siteId, String callbackURL, Object object)
 		throws Exception;
 
 	public default void setContextAcceptLanguage(
@@ -73,6 +96,10 @@ public interface NavigationMenuResource {
 
 	public void setContextUser(
 		com.liferay.portal.kernel.model.User contextUser);
+
+	public void setGroupLocalService(GroupLocalService groupLocalService);
+
+	public void setRoleLocalService(RoleLocalService roleLocalService);
 
 	public static class FactoryHolder {
 

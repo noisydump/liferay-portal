@@ -16,6 +16,9 @@ package com.liferay.jenkins.results.parser;
 
 import java.io.IOException;
 
+import java.net.MalformedURLException;
+import java.net.URL;
+
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 
@@ -51,6 +54,24 @@ public class BatchBuild extends BaseBuild {
 		return getSpiraPropertyValue("app.server");
 	}
 
+	@Override
+	public URL getArtifactsBaseURL() {
+		TopLevelBuild topLevelBuild = getTopLevelBuild();
+
+		StringBuilder sb = new StringBuilder();
+
+		sb.append(topLevelBuild.getArtifactsBaseURL());
+		sb.append("/");
+		sb.append(getParameterValue("JOB_VARIANT"));
+
+		try {
+			return new URL(sb.toString());
+		}
+		catch (MalformedURLException malformedURLException) {
+			return null;
+		}
+	}
+
 	public String getBatchName() {
 		return batchName;
 	}
@@ -63,6 +84,25 @@ public class BatchBuild extends BaseBuild {
 	@Override
 	public String getDatabase() {
 		return getSpiraPropertyValue("database");
+	}
+
+	public List<AxisBuild> getDownstreamAxisBuilds() {
+		List<AxisBuild> downstreamAxisBuilds = new ArrayList<>();
+
+		List<Build> downstreamBuilds = getDownstreamBuilds(null);
+
+		for (Build downstreamBuild : downstreamBuilds) {
+			if (!(downstreamBuild instanceof AxisBuild)) {
+				continue;
+			}
+
+			downstreamAxisBuilds.add((AxisBuild)downstreamBuild);
+		}
+
+		Collections.sort(
+			downstreamAxisBuilds, new BaseBuild.BuildDisplayNameComparator());
+
+		return downstreamAxisBuilds;
 	}
 
 	@Override
@@ -83,7 +123,7 @@ public class BatchBuild extends BaseBuild {
 		}
 
 		Map<Build, Element> downstreamBuildFailureMessages =
-			getDownstreamBuildMessages("ABORTED", "FAILURE", "UNSTABLE");
+			getDownstreamBuildMessages(getFailedDownstreamBuilds());
 
 		List<Element> failureElements = new ArrayList<>();
 		List<Element> upstreamJobFailureElements = new ArrayList<>();
@@ -242,7 +282,7 @@ public class BatchBuild extends BaseBuild {
 			return Collections.emptyList();
 		}
 
-		JSONObject testReportJSONObject = getTestReportJSONObject();
+		JSONObject testReportJSONObject = getTestReportJSONObject(false);
 
 		JSONArray childReportsJSONArray = testReportJSONObject.optJSONArray(
 			"childReports");
@@ -350,7 +390,7 @@ public class BatchBuild extends BaseBuild {
 	}
 
 	@Override
-	public void update() {
+	public synchronized void update() {
 		super.update();
 
 		if (badBuildNumbers.size() >= REINVOCATIONS_SIZE_MAX) {
@@ -424,9 +464,7 @@ public class BatchBuild extends BaseBuild {
 	}
 
 	protected AxisBuild getAxisBuild(String axisVariable) {
-		for (Build downstreamBuild : getDownstreamBuilds(null)) {
-			AxisBuild downstreamAxisBuild = (AxisBuild)downstreamBuild;
-
+		for (AxisBuild downstreamAxisBuild : getDownstreamAxisBuilds()) {
 			if (axisVariable.equals(downstreamAxisBuild.getAxisVariable())) {
 				return downstreamAxisBuild;
 			}
@@ -458,24 +496,16 @@ public class BatchBuild extends BaseBuild {
 
 		int failCount = getDownstreamBuildCountByResult("FAILURE");
 		int successCount = getDownstreamBuildCountByResult("SUCCESS");
-		int upstreamFailCount = 0;
 
 		if (result.equals("UNSTABLE")) {
 			failCount = getTestCountByStatus("FAILURE");
 			successCount = getTestCountByStatus("SUCCESS");
 
 			if (isCompareToUpstream()) {
-				for (TestResult testResult : getTestResults(null)) {
-					if (!testResult.isFailing()) {
-						continue;
-					}
+				List<TestResult> upstreamJobFailureTestResults =
+					getUpstreamJobFailureTestResults();
 
-					if (UpstreamFailureUtil.isTestFailingInUpstreamJob(
-							testResult)) {
-
-						upstreamFailCount++;
-					}
-				}
+				int upstreamFailCount = upstreamJobFailureTestResults.size();
 
 				if (showCommonFailuresCount) {
 					failCount = upstreamFailCount;
@@ -512,18 +542,7 @@ public class BatchBuild extends BaseBuild {
 
 		tableRowElements.add(getJenkinsReportTableRowElement());
 
-		List<Build> downstreamBuilds = getDownstreamBuilds(null);
-
-		Collections.sort(
-			downstreamBuilds, new BaseBuild.BuildDisplayNameComparator());
-
-		for (Build downstreamBuild : downstreamBuilds) {
-			if (!(downstreamBuild instanceof AxisBuild)) {
-				continue;
-			}
-
-			AxisBuild downstreamAxisBuild = (AxisBuild)downstreamBuild;
-
+		for (AxisBuild downstreamAxisBuild : getDownstreamAxisBuilds()) {
 			tableRowElements.addAll(
 				downstreamAxisBuild.getJenkinsReportTableRowElements(
 					downstreamAxisBuild.getResult(),
@@ -535,7 +554,7 @@ public class BatchBuild extends BaseBuild {
 
 	@Override
 	protected int getTestCountByStatus(String status) {
-		JSONObject testReportJSONObject = getTestReportJSONObject();
+		JSONObject testReportJSONObject = getTestReportJSONObject(false);
 
 		int failCount = testReportJSONObject.getInt("failCount");
 

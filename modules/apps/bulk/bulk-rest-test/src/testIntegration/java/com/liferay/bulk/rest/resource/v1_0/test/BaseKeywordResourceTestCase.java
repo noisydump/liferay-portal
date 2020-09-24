@@ -107,7 +107,9 @@ public abstract class BaseKeywordResourceTestCase {
 
 		KeywordResource.Builder builder = KeywordResource.builder();
 
-		keywordResource = builder.locale(
+		keywordResource = builder.authentication(
+			"test@liferay.com", "test"
+		).locale(
 			LocaleUtil.getDefault()
 		).build();
 	}
@@ -241,7 +243,7 @@ public abstract class BaseKeywordResourceTestCase {
 		}
 	}
 
-	protected void assertValid(Keyword keyword) {
+	protected void assertValid(Keyword keyword) throws Exception {
 		boolean valid = true;
 
 		for (String additionalAssertFieldName :

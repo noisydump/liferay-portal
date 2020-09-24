@@ -14,6 +14,8 @@
 
 package com.liferay.portal.workflow.metrics.rest.resource.v1_0;
 
+import com.liferay.portal.kernel.service.GroupLocalService;
+import com.liferay.portal.kernel.service.RoleLocalService;
 import com.liferay.portal.vulcan.accept.language.AcceptLanguage;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
@@ -49,9 +51,9 @@ public interface InstanceResource {
 	}
 
 	public Page<Instance> getProcessInstancesPage(
-			Long processId, Long[] assigneeIds, Boolean completed, Date dateEnd,
-			Date dateStart, String[] slaStatuses, String[] taskNames,
-			Pagination pagination)
+			Long processId, Long[] assigneeIds, Long[] classPKs,
+			Boolean completed, Date dateEnd, Date dateStart,
+			String[] slaStatuses, String[] taskNames, Pagination pagination)
 		throws Exception;
 
 	public Instance postProcessInstance(Long processId, Instance instance)
@@ -95,6 +97,10 @@ public interface InstanceResource {
 
 	public void setContextUser(
 		com.liferay.portal.kernel.model.User contextUser);
+
+	public void setGroupLocalService(GroupLocalService groupLocalService);
+
+	public void setRoleLocalService(RoleLocalService roleLocalService);
 
 	public static class FactoryHolder {
 

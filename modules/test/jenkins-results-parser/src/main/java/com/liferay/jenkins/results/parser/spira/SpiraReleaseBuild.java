@@ -14,6 +14,7 @@
 
 package com.liferay.jenkins.results.parser.spira;
 
+import com.liferay.jenkins.results.parser.JenkinsResultsParserUtil;
 import com.liferay.jenkins.results.parser.JenkinsResultsParserUtil.HttpRequestMethod;
 
 import java.io.IOException;
@@ -36,7 +37,7 @@ public class SpiraReleaseBuild extends BaseSpiraArtifact {
 	public static SpiraReleaseBuild createSpiraReleaseBuild(
 		SpiraProject spiraProject, SpiraRelease spiraRelease,
 		String releaseBuildName, String releaseBuildDescription,
-		Status releaseBuildStatus) {
+		Status releaseBuildStatus, long releaseBuildStartTime) {
 
 		List<SpiraReleaseBuild> spiraReleaseBuilds = getSpiraReleaseBuilds(
 			spiraProject, spiraRelease,
@@ -57,9 +58,12 @@ public class SpiraReleaseBuild extends BaseSpiraArtifact {
 
 		JSONObject requestJSONObject = new JSONObject();
 
-		requestJSONObject.put(SpiraProject.ID_KEY, spiraProject.getID());
-		requestJSONObject.put(SpiraRelease.ID_KEY, spiraRelease.getID());
+		requestJSONObject.put(SpiraProject.KEY_ID, spiraProject.getID());
+		requestJSONObject.put(SpiraRelease.KEY_ID, spiraRelease.getID());
 		requestJSONObject.put("BuildStatusId", releaseBuildStatus.getID());
+		requestJSONObject.put(
+			"CreationDate",
+			SpiraRestAPIUtil.toDateString(releaseBuildStartTime));
 		requestJSONObject.put("Name", releaseBuildName);
 
 		if (releaseBuildDescription != null) {
@@ -73,30 +77,14 @@ public class SpiraReleaseBuild extends BaseSpiraArtifact {
 				requestJSONObject.toString());
 
 			return spiraRelease.getSpiraReleaseBuildByID(
-				responseJSONObject.getInt(ID_KEY));
+				responseJSONObject.getInt(KEY_ID));
 		}
 		catch (IOException ioException) {
 			throw new RuntimeException(ioException);
 		}
 	}
 
-	public static enum Status {
-
-		ABORTED(4), FAILED(1), SUCCEEDED(2), UNSTABLE(3);
-
-		public Integer getID() {
-			return _id;
-		}
-
-		private Status(Integer id) {
-			_id = id;
-		}
-
-		private final Integer _id;
-
-	}
-
-	protected static List<SpiraReleaseBuild> getSpiraReleaseBuilds(
+	public static List<SpiraReleaseBuild> getSpiraReleaseBuilds(
 		final SpiraProject spiraProject, final SpiraRelease spiraRelease,
 		final SearchQuery.SearchParameter... searchParameters) {
 
@@ -122,9 +110,42 @@ public class SpiraReleaseBuild extends BaseSpiraArtifact {
 			searchParameters);
 	}
 
+	public String getBuildStatusName() {
+		return jsonObject.getString("BuildStatusName");
+	}
+
+	public String getCreationDate() {
+		return jsonObject.getString("CreationDate");
+	}
+
+	@Override
+	public String getURL() {
+		SpiraProject spiraProject = getSpiraProject();
+
+		return JenkinsResultsParserUtil.combine(
+			SPIRA_BASE_URL, String.valueOf(spiraProject.getID()), "/Build/",
+			String.valueOf(getID()), ".aspx");
+	}
+
+	public static enum Status {
+
+		ABORTED(4), FAILED(1), SUCCEEDED(2), UNSTABLE(3);
+
+		public Integer getID() {
+			return _id;
+		}
+
+		private Status(Integer id) {
+			_id = id;
+		}
+
+		private final Integer _id;
+
+	}
+
 	protected static final String ARTIFACT_TYPE_NAME = "build";
 
-	protected static final String ID_KEY = "BuildId";
+	protected static final String KEY_ID = "BuildId";
 
 	private static List<JSONObject> _requestSpiraReleaseBuilds(
 		SpiraProject spiraProject, SpiraRelease spiraRelease,

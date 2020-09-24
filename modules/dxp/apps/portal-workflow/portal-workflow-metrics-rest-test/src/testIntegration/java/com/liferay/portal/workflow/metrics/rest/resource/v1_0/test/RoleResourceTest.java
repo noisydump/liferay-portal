@@ -19,9 +19,11 @@ import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.model.role.RoleConstants;
 import com.liferay.portal.kernel.service.RoleLocalService;
 import com.liferay.portal.kernel.service.UserLocalService;
-import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
+import com.liferay.portal.kernel.test.rule.DataGuard;
 import com.liferay.portal.kernel.test.util.RoleTestUtil;
+import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.test.util.UserTestUtil;
+import com.liferay.portal.search.test.util.SearchTestRule;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.workflow.metrics.rest.client.dto.v1_0.Assignee;
 import com.liferay.portal.workflow.metrics.rest.client.dto.v1_0.Process;
@@ -36,11 +38,14 @@ import java.util.Objects;
 
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
 import org.junit.runner.RunWith;
 
 /**
  * @author Rafael Praxedes
  */
+@DataGuard(scope = DataGuard.Scope.METHOD)
 @RunWith(Arquillian.class)
 public class RoleResourceTest extends BaseRoleResourceTestCase {
 
@@ -54,6 +59,7 @@ public class RoleResourceTest extends BaseRoleResourceTestCase {
 	}
 
 	@Override
+	@Test
 	public void testGetProcessRolesPage() throws Exception {
 		super.testGetProcessRolesPage();
 
@@ -72,6 +78,9 @@ public class RoleResourceTest extends BaseRoleResourceTestCase {
 			Arrays.asList(role1, role2), (List<Role>)page.getItems());
 		assertValid(page);
 	}
+
+	@Rule
+	public SearchTestRule searchTestRule = new SearchTestRule();
 
 	@Override
 	protected String[] getAdditionalAssertFieldNames() {
@@ -123,7 +132,7 @@ public class RoleResourceTest extends BaseRoleResourceTestCase {
 			() -> _workflowMetricsRESTTestHelper.addInstance(
 				testGroup.getCompanyId(), Objects.equals(status, "COMPLETED"),
 				processId),
-			processId, status);
+			processId, status, TestPropsValues.getUser());
 
 		return role;
 	}
@@ -149,7 +158,6 @@ public class RoleResourceTest extends BaseRoleResourceTestCase {
 	@Inject
 	private RoleLocalService _roleLocalService;
 
-	@DeleteAfterTestRun
 	private final List<com.liferay.portal.kernel.model.Role> _roles =
 		new ArrayList<>();
 

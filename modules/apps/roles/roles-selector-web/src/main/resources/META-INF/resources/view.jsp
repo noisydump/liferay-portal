@@ -93,7 +93,6 @@ request.setAttribute("edit_roles.jsp-portletURL", portletURL);
 					add(
 						navigationItem -> {
 							navigationItem.setActive(true);
-							navigationItem.setHref(StringPool.BLANK);
 							navigationItem.setLabel(LanguageUtil.get(request, "roles"));
 						});
 				}
@@ -129,14 +128,12 @@ else {
 %>
 
 <clay:stripe
-	destroyOnHide="<%= true %>"
 	message="<%= stripeMessage %>"
-	title='<%= LanguageUtil.get(request, "info") %>'
 />
 
 <clay:management-toolbar
 	clearResultsURL="<%= portletURL.toString() %>"
-	namespace="<%= renderResponse.getNamespace() %>"
+	namespace="<%= liferayPortletResponse.getNamespace() %>"
 	searchActionURL="<%= portletURL.toString() %>"
 	selectable="<%= false %>"
 	showCreationMenu="<%= false %>"
@@ -153,7 +150,7 @@ else {
 	%>
 
 	<div class="roles-selector-body">
-		<clay:container>
+		<clay:container-fluid>
 			<c:choose>
 				<c:when test="<%= role == null %>">
 					<liferay-util:include page="/edit_roles.jsp" servletContext="<%= application %>" />
@@ -179,7 +176,7 @@ else {
 					</c:choose>
 				</c:otherwise>
 			</c:choose>
-		</clay:container>
+		</clay:container-fluid>
 	</div>
 
 	<aui:button-row>
@@ -188,7 +185,7 @@ else {
 			<%
 			portletURL.setParameter("cur", String.valueOf(cur));
 
-			String taglibOnClick = renderResponse.getNamespace() + methodName + "('" + portletURL.toString() + "');";
+			String taglibOnClick = liferayPortletResponse.getNamespace() + methodName + "('" + portletURL.toString() + "');";
 			%>
 
 			<aui:button onClick="<%= taglibOnClick %>" primary="<%= true %>" value="update-associations" />

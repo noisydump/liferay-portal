@@ -40,8 +40,10 @@ Enumeration<Logger> enu = LogManager.getCurrentLoggers();
 while (enu.hasMoreElements()) {
 	Logger logger = enu.nextElement();
 
-	if (Validator.isNull(keywords) || logger.getName().contains(keywords)) {
-		currentLoggerNames.put(logger.getName(), logger);
+	String loggerName = logger.getName();
+
+	if (Validator.isNull(keywords) || loggerName.contains(keywords)) {
+		currentLoggerNames.put(loggerName, logger);
 	}
 }
 
@@ -70,15 +72,16 @@ PortletURL addLogCategoryURL = renderResponse.createRenderURL();
 addLogCategoryURL.setParameter("mvcRenderCommandName", "/server_admin/add_log_category");
 addLogCategoryURL.setParameter("redirect", currentURL);
 
-CreationMenu creationMenu = new CreationMenu() {
-	{
-		addPrimaryDropdownItem(
-			dropdownItem -> {
-				dropdownItem.setHref(addLogCategoryURL);
-				dropdownItem.setLabel(LanguageUtil.get(request, "add-category"));
-			});
-	}
-};
+CreationMenu creationMenu =
+	new CreationMenu() {
+		{
+			addPrimaryDropdownItem(
+				dropdownItem -> {
+					dropdownItem.setHref(addLogCategoryURL);
+					dropdownItem.setLabel(LanguageUtil.get(request, "add-category"));
+				});
+		}
+	};
 %>
 
 <clay:management-toolbar
@@ -92,7 +95,7 @@ CreationMenu creationMenu = new CreationMenu() {
 	showSearch="<%= true %>"
 />
 
-<clay:container>
+<clay:container-fluid>
 	<liferay-ui:search-container
 		searchContainer="<%= loggerSearchContainer %>"
 	>
@@ -120,7 +123,7 @@ CreationMenu creationMenu = new CreationMenu() {
 				Level level = logger.getLevel();
 				%>
 
-				<select name="<%= renderResponse.getNamespace() + "logLevel" + HtmlUtil.escapeAttribute(name) %>">
+				<select name="<%= liferayPortletResponse.getNamespace() + "logLevel" + HtmlUtil.escapeAttribute(name) %>">
 
 					<%
 					for (int j = 0; j < Levels.ALL_LEVELS.length; j++) {
@@ -144,4 +147,4 @@ CreationMenu creationMenu = new CreationMenu() {
 	<aui:button-row>
 		<aui:button cssClass="save-server-button" data-cmd="updateLogLevels" value="save" />
 	</aui:button-row>
-</clay:container>
+</clay:container-fluid>

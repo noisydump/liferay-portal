@@ -17,14 +17,12 @@
 <%@ include file="/document_library/init.jsp" %>
 
 <%
-String eventName = ParamUtil.getString(request, "eventName", liferayPortletResponse.getNamespace() + "selectGroup");
-
 PortletURL portletURL = renderResponse.createRenderURL();
 
 portletURL.setParameter("mvcPath", "/document_library/select_group.jsp");
 %>
 
-<clay:container>
+<clay:container-fluid>
 	<clay:management-toolbar
 		clearResultsURL="<%= portletURL.toString() %>"
 		searchActionURL="<%= portletURL.toString() %>"
@@ -123,16 +121,17 @@ portletURL.setParameter("mvcPath", "/document_library/select_group.jsp");
 				/>
 
 				<liferay-ui:search-container-column-text>
-
-					<%
-					Map<String, Object> data = HashMapBuilder.<String, Object>put(
-						"groupdescriptivename", groupDescriptiveName
-					).put(
-						"groupid", group.getGroupId()
-					).build();
-					%>
-
-					<aui:button cssClass="selector-button" data="<%= data %>" value="select" />
+					<aui:button
+						cssClass="selector-button"
+						data='<%=
+							HashMapBuilder.<String, Object>put(
+								"groupdescriptivename", groupDescriptiveName
+							).put(
+								"groupid", group.getGroupId()
+							).build()
+						%>'
+						value="select"
+					/>
 				</liferay-ui:search-container-column-text>
 			</liferay-ui:search-container-row>
 
@@ -141,11 +140,4 @@ portletURL.setParameter("mvcPath", "/document_library/select_group.jsp");
 			/>
 		</liferay-ui:search-container>
 	</aui:form>
-</clay:container>
-
-<aui:script>
-	Liferay.Util.selectEntityHandler(
-		'#<portlet:namespace />selectGroupFm',
-		'<%= HtmlUtil.escapeJS(eventName) %>'
-	);
-</aui:script>
+</clay:container-fluid>

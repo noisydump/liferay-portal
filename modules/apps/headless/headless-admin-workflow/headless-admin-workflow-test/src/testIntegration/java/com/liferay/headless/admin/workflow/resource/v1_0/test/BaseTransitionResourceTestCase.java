@@ -108,7 +108,9 @@ public abstract class BaseTransitionResourceTestCase {
 
 		TransitionResource.Builder builder = TransitionResource.builder();
 
-		transitionResource = builder.locale(
+		transitionResource = builder.authentication(
+			"test@liferay.com", "test"
+		).locale(
 			LocaleUtil.getDefault()
 		).build();
 	}
@@ -477,7 +479,7 @@ public abstract class BaseTransitionResourceTestCase {
 		}
 	}
 
-	protected void assertValid(Transition transition) {
+	protected void assertValid(Transition transition) throws Exception {
 		boolean valid = true;
 
 		for (String additionalAssertFieldName :

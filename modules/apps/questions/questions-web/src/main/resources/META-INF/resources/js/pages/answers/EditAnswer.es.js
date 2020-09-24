@@ -12,38 +12,50 @@
  * details.
  */
 
+import {useLazyQuery, useMutation} from '@apollo/client';
 import ClayButton from '@clayui/button';
 import ClayForm from '@clayui/form';
 import ClayIcon from '@clayui/icon';
-import {Editor} from 'frontend-editor-ckeditor-web';
-import React, {useContext, useState} from 'react';
+import React, {useContext, useEffect, useState} from 'react';
 import {withRouter} from 'react-router-dom';
 
 import {AppContext} from '../../AppContext.es';
-import {getMessage, updateMessage} from '../../utils/client.es';
-import {getCKEditorConfig, onBeforeLoadCKEditor} from '../../utils/utils.es';
+import QuestionsEditor from '../../components/QuestionsEditor';
+import TextLengthValidation from '../../components/TextLengthValidation.es';
+import {getMessageQuery, updateMessageQuery} from '../../utils/client.es';
+import {getContextLink, stripHTML} from '../../utils/utils.es';
 
 export default withRouter(
 	({
 		history,
 		match: {
-			params: {answerId},
+			params: {answerId, questionId, sectionTitle},
 		},
 	}) => {
 		const context = useContext(AppContext);
 
+		const [getMessage, {data}] = useLazyQuery(getMessageQuery, {
+			fetchPolicy: 'network-only',
+			variables: {friendlyUrlPath: answerId, siteKey: context.siteKey},
+		});
+
 		const [articleBody, setArticleBody] = useState('');
-		const [id, setId] = useState();
+		const [id, setId] = useState('');
 
-		const loadMessage = () =>
-			getMessage(answerId, context.siteKey).then(({articleBody, id}) => {
-				setArticleBody(articleBody);
-				setId(id);
-			});
+		useEffect(() => {
+			setId((data && data.messageBoardMessageByFriendlyUrlPath.id) || '');
+		}, [data]);
 
-		const submit = () => {
-			updateMessage(articleBody, id).then(() => history.goBack());
-		};
+		const [addUpdateMessage] = useMutation(updateMessageQuery, {
+			context: getContextLink(`${sectionTitle}/${questionId}`),
+			onCompleted() {
+				history.goBack();
+			},
+			update(proxy) {
+				proxy.evict(`MessageBoardMessage:${id}`);
+				proxy.gc();
+			},
+		});
 
 		return (
 			<section className="c-mt-5 questions-section questions-sections-answer">
@@ -62,32 +74,26 @@ export default withRouter(
 										</span>
 									</label>
 
-									<Editor
-										config={getCKEditorConfig()}
-										data={articleBody}
-										onBeforeLoad={(editor) =>
-											onBeforeLoadCKEditor(
-												editor,
-												context.imageBrowseURL
-											)
+									<QuestionsEditor
+										contents={
+											data &&
+											data
+												.messageBoardMessageByFriendlyUrlPath
+												.articleBody
 										}
 										onChange={(event) =>
 											setArticleBody(
 												event.editor.getData()
 											)
 										}
-										onInstanceReady={loadMessage}
-										required
-										type="text"
+										onInstanceReady={() => getMessage()}
 									/>
 
 									<ClayForm.FeedbackGroup>
 										<ClayForm.FeedbackItem>
-											<span className="small text-secondary">
-												{Liferay.Language.get(
-													'include-all-the-information-someone-would-need-to-answer-your-question'
-												)}
-											</span>
+											<TextLengthValidation
+												text={articleBody}
+											/>
 										</ClayForm.FeedbackItem>
 									</ClayForm.FeedbackGroup>
 								</ClayForm.Group>
@@ -96,9 +102,22 @@ export default withRouter(
 							<div className="c-mt-4 d-flex flex-column-reverse flex-sm-row">
 								<ClayButton
 									className="c-mt-4 c-mt-sm-0"
-									disabled={!articleBody}
+									disabled={
+										!articleBody ||
+										stripHTML(articleBody).length < 15
+									}
 									displayType="primary"
-									onClick={submit}
+									onClick={() => {
+										addUpdateMessage({
+											variables: {
+												articleBody,
+												messageBoardMessageId:
+													data
+														.messageBoardMessageByFriendlyUrlPath
+														.id,
+											},
+										});
+									}}
 								>
 									{Liferay.Language.get('update-your-answer')}
 								</ClayButton>

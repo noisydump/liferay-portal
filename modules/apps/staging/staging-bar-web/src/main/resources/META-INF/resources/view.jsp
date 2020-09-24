@@ -35,7 +35,7 @@ if (liveLayout != null) {
 <c:if test="<%= themeDisplay.isShowStagingIcon() %>">
 	<c:if test="<%= liveGroup != null %>">
 		<nav class="navbar navbar-collapse-absolute navbar-expand navbar-underline navigation-bar navigation-bar-secondary staging-navbar">
-			<clay:container>
+			<clay:container-fluid>
 				<ul class="navbar-nav">
 					<c:choose>
 						<c:when test="<%= group.isStagingGroup() || group.isStagedRemotely() %>">
@@ -134,12 +134,12 @@ if (liveLayout != null) {
 						markupView="lexicon"
 					/>
 				</button>
-			</clay:container>
+			</clay:container-fluid>
 		</nav>
 
 		<c:if test="<%= !layout.isSystem() || layout.isTypeControlPanel() || !Objects.equals(layout.getFriendlyURL(), PropsValues.CONTROL_PANEL_LAYOUT_FRIENDLY_URL) %>">
 			<div class="staging-bar">
-				<clay:container>
+				<clay:container-fluid>
 					<clay:row>
 						<c:choose>
 							<c:when test="<%= group.isStagingGroup() || group.isStagedRemotely() %>">
@@ -163,8 +163,8 @@ if (liveLayout != null) {
 											</clay:col>
 
 											<clay:col
-												className="staging-alert-container"
-												id='<%= renderResponse.getNamespace() + "layoutRevisionStatus" %>'
+												cssClass="staging-alert-container"
+												id='<%= liferayPortletResponse.getNamespace() + "layoutRevisionStatus" %>'
 											>
 												<aui:model-context bean="<%= layoutRevision %>" model="<%= LayoutRevision.class %>" />
 
@@ -172,8 +172,8 @@ if (liveLayout != null) {
 											</clay:col>
 
 											<clay:col
-												className="staging-alert-container"
-												id='<%= renderResponse.getNamespace() + "layoutRevisionDetails" %>'
+												cssClass="col-auto staging-alert-container"
+												id='<%= liferayPortletResponse.getNamespace() + "layoutRevisionDetails" %>'
 											>
 												<aui:model-context bean="<%= layoutRevision %>" model="<%= LayoutRevision.class %>" />
 
@@ -182,7 +182,7 @@ if (liveLayout != null) {
 										</c:when>
 										<c:otherwise>
 											<clay:col
-												className="staging-alert-container"
+												cssClass="staging-alert-container"
 											>
 												<c:choose>
 													<c:when test="<%= liveLayout == null %>">
@@ -197,7 +197,7 @@ if (liveLayout != null) {
 											</clay:col>
 
 											<clay:col
-												className="staging-button-container"
+												cssClass="staging-button-container"
 												md="2"
 												sm="3"
 											>
@@ -212,7 +212,7 @@ if (liveLayout != null) {
 							</c:when>
 							<c:otherwise>
 								<clay:col
-									className="staging-alert-container"
+									cssClass="staging-alert-container"
 								>
 									<div class="alert alert-warning hide warning-content" id="<portlet:namespace />warningMessage">
 										<liferay-ui:message key="an-inital-staging-publication-is-in-progress" />
@@ -223,7 +223,39 @@ if (liveLayout != null) {
 							</c:otherwise>
 						</c:choose>
 					</clay:row>
-				</clay:container>
+				</clay:container-fluid>
+
+				<c:if test="<%= (layoutRevision != null) && (layoutRevision.isIncomplete() || (layoutRevision.isPending() && StagingUtil.hasWorkflowTask(user.getUserId(), layoutRevision))) %>">
+					<div class="staging-bar-level-3-message">
+						<div class="staging-bar-level-3-message-container">
+							<div class="alert alert-fluid alert-info" role="alert">
+								<div class="container-fluid container-fluid-max-xl staging-alert-container">
+									<span class="alert-indicator">
+										<svg aria-hidden="true" class="lexicon-icon lexicon-icon-info-circle">
+											<use xlink:href="<%= themeDisplay.getPathThemeImages() %>/clay/icons.svg#info-circle" />
+										</svg>
+									</span>
+
+									<%
+									String layoutSetBranchName = null;
+
+									LayoutSetBranch layoutSetBranch = (LayoutSetBranch)request.getAttribute(StagingProcessesWebKeys.LAYOUT_SET_BRANCH);
+
+									if ((layoutSetBranch == null) && (layoutRevision != null)) {
+										layoutSetBranch = LayoutSetBranchLocalServiceUtil.getLayoutSetBranch(layoutRevision.getLayoutSetBranchId());
+									}
+
+									if (layoutSetBranch != null) {
+										layoutSetBranchName = HtmlUtil.escape(layoutSetBranchDisplayContext.getLayoutSetBranchDisplayName(layoutSetBranch));
+									}
+									%>
+
+									<liferay-ui:message arguments="<%= new Object[] {HtmlUtil.escape(layoutRevision.getName(locale)), layoutSetBranchName} %>" key="the-page-x-is-not-enabled-in-x,-but-is-available-in-other-pages-variations" translateArguments="<%= false %>" />
+								</div>
+							</div>
+						</div>
+					</div>
+				</c:if>
 			</div>
 		</c:if>
 	</c:if>

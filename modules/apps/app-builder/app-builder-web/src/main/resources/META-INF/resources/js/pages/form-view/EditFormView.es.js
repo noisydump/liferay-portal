@@ -14,7 +14,7 @@
 
 import React, {useContext, useState} from 'react';
 import {DndProvider} from 'react-dnd';
-import HTML5Backend from 'react-dnd-html5-backend';
+import {HTML5Backend} from 'react-dnd-html5-backend';
 import {createPortal} from 'react-dom';
 
 import {AppContext} from '../../AppContext.es';
@@ -48,6 +48,7 @@ const EditFormView = (props) => {
 		dataLayoutBuilder,
 		dataLayoutId,
 		newCustomObject,
+		showTranslationManager,
 	} = parseProps(props);
 	const {basePortletURL} = useContext(AppContext);
 
@@ -59,17 +60,16 @@ const EditFormView = (props) => {
 
 	return (
 		<DndProvider backend={HTML5Backend}>
-			<FormViewContextProvider
-				dataDefinitionId={dataDefinitionId}
-				dataLayoutBuilder={dataLayoutBuilder}
-				dataLayoutId={dataLayoutId}
-			>
+			<FormViewContextProvider dataLayoutBuilder={dataLayoutBuilder}>
 				<FormViewControlMenu
 					backURL={backURL}
 					dataLayoutId={dataLayoutId}
 				/>
 
-				<FormViewUpperToolbar newCustomObject={newCustomObject} />
+				<FormViewUpperToolbar
+					newCustomObject={newCustomObject}
+					showTranslationManager={showTranslationManager}
+				/>
 
 				{createPortal(
 					<CustomObjectSidebar />,

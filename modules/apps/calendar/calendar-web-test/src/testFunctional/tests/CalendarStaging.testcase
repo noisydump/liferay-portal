@@ -13,7 +13,7 @@ definition {
 
 		User.firstLoginPG();
 
-		ProductMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Sites",
 			panel = "Control Panel",
 			portlet = "Sites");
@@ -22,7 +22,6 @@ definition {
 
 		ProductMenu.gotoPortlet(
 			category = "Site Builder",
-			panel = "Site Administration",
 			portlet = "Pages");
 
 		SitePages.addPublicPage(
@@ -64,7 +63,6 @@ definition {
 	@description = "This is a use case for LPS-52083."
 	@priority = "3"
 	test AddEvent {
-		property portal.upstream = "quarantine";
 
 		CalendarNavigator.gotoAddEvent();
 
@@ -82,7 +80,6 @@ definition {
 
 		ProductMenu.gotoPortlet(
 			category = "Publishing",
-			panel = "Site Administration",
 			portlet = "Staging");
 
 		Staging.activateStagingCP(siteName = "Site Name");
@@ -146,14 +143,12 @@ definition {
 
 	@priority = "5"
 	test SchedulePublishToLiveWithEventAndResource {
-		property portal.acceptance = "true";
 		property testray.component.names = "Training";
 
 		Navigator.openSiteURL(siteName = "Site Name");
 
 		ProductMenu.gotoPortlet(
 			category = "Publishing",
-			panel = "Site Administration",
 			portlet = "Staging");
 
 		Staging.activateStagingCP(siteName = "Site Name");

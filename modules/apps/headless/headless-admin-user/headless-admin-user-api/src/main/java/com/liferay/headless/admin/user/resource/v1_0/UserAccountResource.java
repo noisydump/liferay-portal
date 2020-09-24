@@ -17,6 +17,8 @@ package com.liferay.headless.admin.user.resource.v1_0;
 import com.liferay.headless.admin.user.dto.v1_0.UserAccount;
 import com.liferay.portal.kernel.search.Sort;
 import com.liferay.portal.kernel.search.filter.Filter;
+import com.liferay.portal.kernel.service.GroupLocalService;
+import com.liferay.portal.kernel.service.RoleLocalService;
 import com.liferay.portal.vulcan.accept.language.AcceptLanguage;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
@@ -78,6 +80,10 @@ public interface UserAccountResource {
 
 	public UserAccount getUserAccount(Long userAccountId) throws Exception;
 
+	public UserAccount patchUserAccount(
+			Long userAccountId, UserAccount userAccount)
+		throws Exception;
+
 	public UserAccount putUserAccount(
 			Long userAccountId, UserAccount userAccount)
 		throws Exception;
@@ -105,6 +111,10 @@ public interface UserAccountResource {
 
 	public void setContextUser(
 		com.liferay.portal.kernel.model.User contextUser);
+
+	public void setGroupLocalService(GroupLocalService groupLocalService);
+
+	public void setRoleLocalService(RoleLocalService roleLocalService);
 
 	public static class FactoryHolder {
 

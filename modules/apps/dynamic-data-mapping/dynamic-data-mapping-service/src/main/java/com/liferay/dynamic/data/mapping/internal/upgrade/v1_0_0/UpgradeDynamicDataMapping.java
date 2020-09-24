@@ -26,10 +26,10 @@ import com.liferay.document.library.kernel.service.DLFileEntryLocalService;
 import com.liferay.document.library.kernel.service.DLFileVersionLocalService;
 import com.liferay.document.library.kernel.service.DLFolderLocalService;
 import com.liferay.document.library.kernel.store.Store;
+import com.liferay.dynamic.data.mapping.constants.DDMStructureConstants;
+import com.liferay.dynamic.data.mapping.constants.DDMTemplateConstants;
 import com.liferay.dynamic.data.mapping.internal.util.DDMImpl;
 import com.liferay.dynamic.data.mapping.io.DDMFormDeserializer;
-import com.liferay.dynamic.data.mapping.io.DDMFormDeserializerDeserializeRequest;
-import com.liferay.dynamic.data.mapping.io.DDMFormDeserializerDeserializeResponse;
 import com.liferay.dynamic.data.mapping.io.DDMFormLayoutSerializer;
 import com.liferay.dynamic.data.mapping.io.DDMFormLayoutSerializerSerializeRequest;
 import com.liferay.dynamic.data.mapping.io.DDMFormLayoutSerializerSerializeResponse;
@@ -37,8 +37,6 @@ import com.liferay.dynamic.data.mapping.io.DDMFormSerializer;
 import com.liferay.dynamic.data.mapping.io.DDMFormSerializerSerializeRequest;
 import com.liferay.dynamic.data.mapping.io.DDMFormSerializerSerializeResponse;
 import com.liferay.dynamic.data.mapping.io.DDMFormValuesDeserializer;
-import com.liferay.dynamic.data.mapping.io.DDMFormValuesDeserializerDeserializeRequest;
-import com.liferay.dynamic.data.mapping.io.DDMFormValuesDeserializerDeserializeResponse;
 import com.liferay.dynamic.data.mapping.io.DDMFormValuesSerializer;
 import com.liferay.dynamic.data.mapping.io.DDMFormValuesSerializerSerializeRequest;
 import com.liferay.dynamic.data.mapping.io.DDMFormValuesSerializerSerializeResponse;
@@ -48,9 +46,7 @@ import com.liferay.dynamic.data.mapping.model.DDMFormField;
 import com.liferay.dynamic.data.mapping.model.DDMFormLayout;
 import com.liferay.dynamic.data.mapping.model.DDMStorageLink;
 import com.liferay.dynamic.data.mapping.model.DDMStructure;
-import com.liferay.dynamic.data.mapping.model.DDMStructureConstants;
 import com.liferay.dynamic.data.mapping.model.DDMTemplate;
-import com.liferay.dynamic.data.mapping.model.DDMTemplateConstants;
 import com.liferay.dynamic.data.mapping.model.LocalizedValue;
 import com.liferay.dynamic.data.mapping.model.UnlocalizedValue;
 import com.liferay.dynamic.data.mapping.model.Value;
@@ -58,7 +54,9 @@ import com.liferay.dynamic.data.mapping.storage.DDMFormFieldValue;
 import com.liferay.dynamic.data.mapping.storage.DDMFormValues;
 import com.liferay.dynamic.data.mapping.util.DDM;
 import com.liferay.dynamic.data.mapping.util.DDMFieldsCounter;
+import com.liferay.dynamic.data.mapping.util.DDMFormDeserializeUtil;
 import com.liferay.dynamic.data.mapping.util.DDMFormFieldValueTransformer;
+import com.liferay.dynamic.data.mapping.util.DDMFormValuesDeserializeUtil;
 import com.liferay.dynamic.data.mapping.util.DDMFormValuesTransformer;
 import com.liferay.dynamic.data.mapping.validator.DDMFormValidationException.MustNotDuplicateFieldName;
 import com.liferay.expando.kernel.model.ExpandoColumn;
@@ -185,7 +183,8 @@ public class UpgradeDynamicDataMapping extends UpgradeProcess {
 		_viewCountEntryLocalService = viewCountEntryLocalService;
 
 		_dlFolderModelPermissions = ModelPermissionsFactory.create(
-			_DLFOLDER_GROUP_PERMISSIONS, _DLFOLDER_GUEST_PERMISSIONS);
+			_DLFOLDER_GROUP_PERMISSIONS, _DLFOLDER_GUEST_PERMISSIONS,
+			DLFolder.class.getName());
 
 		_dlFolderModelPermissions.addRolePermissions(
 			RoleConstants.OWNER, _DLFOLDER_OWNER_PERMISSIONS);
@@ -269,23 +268,8 @@ public class UpgradeDynamicDataMapping extends UpgradeProcess {
 		}
 	}
 
-	protected DDMFormValues deserialize(String content, DDMForm ddmForm) {
-		DDMFormValuesDeserializerDeserializeRequest.Builder builder =
-			DDMFormValuesDeserializerDeserializeRequest.Builder.newBuilder(
-				content, ddmForm);
-
-		DDMFormValuesDeserializerDeserializeResponse
-			ddmFormValuesDeserializerDeserializeResponse =
-				_ddmFormValuesDeserializer.deserialize(builder.build());
-
-		return ddmFormValuesDeserializerDeserializeResponse.getDDMFormValues();
-	}
-
 	protected DDMForm deserialize(String content, String type)
 		throws Exception {
-
-		DDMFormDeserializerDeserializeRequest.Builder builder =
-			DDMFormDeserializerDeserializeRequest.Builder.newBuilder(content);
 
 		DDMFormDeserializer ddmFormDeserializer = null;
 
@@ -296,18 +280,7 @@ public class UpgradeDynamicDataMapping extends UpgradeProcess {
 			ddmFormDeserializer = _ddmFormXSDDeserializer;
 		}
 
-		DDMFormDeserializerDeserializeResponse
-			ddmFormDeserializerDeserializeResponse =
-				ddmFormDeserializer.deserialize(builder.build());
-
-		Exception exception =
-			ddmFormDeserializerDeserializeResponse.getException();
-
-		if (exception != null) {
-			throw new UpgradeException(exception);
-		}
-
-		return ddmFormDeserializerDeserializeResponse.getDDMForm();
+		return DDMFormDeserializeUtil.deserialize(ddmFormDeserializer, content);
 	}
 
 	@Override
@@ -1032,7 +1005,9 @@ public class UpgradeDynamicDataMapping extends UpgradeProcess {
 
 				DDMForm ddmForm = getFullHierarchyDDMForm(ddmStructureId);
 
-				DDMFormValues ddmFormValues = deserialize(data_, ddmForm);
+				DDMFormValues ddmFormValues =
+					DDMFormValuesDeserializeUtil.deserialize(
+						data_, ddmForm, _ddmFormValuesDeserializer);
 
 				transformFieldTypeDDMFormFields(
 					groupId, companyId, userId, userName, createDate, entryId,
@@ -1085,7 +1060,9 @@ public class UpgradeDynamicDataMapping extends UpgradeProcess {
 
 				DDMForm ddmForm = getFullHierarchyDDMForm(ddmStructureId);
 
-				DDMFormValues ddmFormValues = deserialize(data_, ddmForm);
+				DDMFormValues ddmFormValues =
+					DDMFormValuesDeserializeUtil.deserialize(
+						data_, ddmForm, _ddmFormValuesDeserializer);
 
 				transformFieldTypeDDMFormFields(
 					groupId, companyId, userId, userName, createDate, entryId,
@@ -2284,10 +2261,11 @@ public class UpgradeDynamicDataMapping extends UpgradeProcess {
 			_entryVersion = entryVersion;
 			_entryModelName = entryModelName;
 
-			_modelPermissions = ModelPermissionsFactory.create(
-				_groupPermissions, _guestPermissions);
+			_dlFileEntryModelPermissions = ModelPermissionsFactory.create(
+				_groupPermissions, _guestPermissions,
+				DLFileEntry.class.getName());
 
-			_modelPermissions.addRolePermissions(
+			_dlFileEntryModelPermissions.addRolePermissions(
 				RoleConstants.OWNER, _ownerPermissions);
 		}
 
@@ -2693,7 +2671,8 @@ public class UpgradeDynamicDataMapping extends UpgradeProcess {
 
 				ServiceContext serviceContext = new ServiceContext();
 
-				serviceContext.setModelPermissions(_modelPermissions);
+				serviceContext.setModelPermissions(
+					_dlFileEntryModelPermissions);
 
 				_resourceLocalService.addModelResources(
 					dlFileEntry, serviceContext);
@@ -2729,13 +2708,13 @@ public class UpgradeDynamicDataMapping extends UpgradeProcess {
 
 		private final long _companyId;
 		private final Timestamp _createDate;
+		private final ModelPermissions _dlFileEntryModelPermissions;
 		private final long _entryId;
 		private final String _entryModelName;
 		private final String _entryVersion;
 		private final long _groupId;
 		private final String[] _groupPermissions = {"ADD_DISCUSSION", "VIEW"};
 		private final String[] _guestPermissions = {"ADD_DISCUSSION", "VIEW"};
-		private final ModelPermissions _modelPermissions;
 		private final Timestamp _now = new Timestamp(
 			System.currentTimeMillis());
 		private final String[] _ownerPermissions = {

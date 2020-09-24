@@ -24,51 +24,48 @@ import com.liferay.petra.process.ProcessExecutor;
 import com.liferay.petra.process.ProcessLog;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.cluster.ClusterExecutor;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
-import com.liferay.portal.kernel.util.Props;
-import com.liferay.portal.kernel.util.PropsKeys;
+import com.liferay.portal.kernel.util.ListUtil;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
-import com.liferay.portal.search.elasticsearch7.configuration.ElasticsearchConfiguration;
-import com.liferay.portal.search.elasticsearch7.internal.settings.SettingsBuilder;
+import com.liferay.portal.search.elasticsearch7.internal.configuration.ElasticsearchConfigurationWrapper;
+import com.liferay.portal.search.elasticsearch7.internal.connection.ElasticsearchInstancePaths;
+import com.liferay.portal.search.elasticsearch7.internal.connection.ElasticsearchInstanceSettingsBuilder;
+import com.liferay.portal.search.elasticsearch7.internal.connection.HttpPortRange;
+import com.liferay.portal.search.elasticsearch7.internal.index.constants.SidecarVersionConstants;
 import com.liferay.portal.search.elasticsearch7.internal.util.ResourceUtil;
+import com.liferay.portal.search.elasticsearch7.settings.SettingsContributor;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.Serializable;
 
 import java.net.URL;
 import java.net.URLClassLoader;
 
 import java.nio.file.DirectoryStream;
-import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
-import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.SimpleFileVisitor;
-import java.nio.file.attribute.BasicFileAttributes;
 
 import java.security.CodeSource;
 import java.security.ProtectionDomain;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Consumer;
 
 import org.elasticsearch.common.settings.Settings;
 
-import org.objectweb.asm.ClassReader;
-import org.objectweb.asm.ClassVisitor;
-import org.objectweb.asm.ClassWriter;
-import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 
 /**
@@ -77,95 +74,62 @@ import org.objectweb.asm.Opcodes;
 public class Sidecar {
 
 	public Sidecar(
-		ElasticsearchConfiguration elasticsearchConfiguration,
-		ProcessExecutor processExecutor, Props props) {
+		ClusterExecutor clusterExecutor,
+		ElasticsearchConfigurationWrapper elasticsearchConfigurationWrapper,
+		ElasticsearchInstancePaths elasticsearchInstancePaths,
+		ProcessExecutor processExecutor,
+		ProcessExecutorPaths processExecutorPaths,
+		Collection<SettingsContributor> settingsContributors) {
 
-		_elasticsearchConfiguration = elasticsearchConfiguration;
+		_clusterExecutor = clusterExecutor;
+		_dataHomePath = elasticsearchInstancePaths.getDataPath();
+		_elasticsearchConfigurationWrapper = elasticsearchConfigurationWrapper;
+		_elasticsearchInstancePaths = elasticsearchInstancePaths;
 		_processExecutor = processExecutor;
-		_props = props;
-
-		Path liferayHomePath = Paths.get(props.get(PropsKeys.LIFERAY_HOME));
-
-		liferayHomePath = liferayHomePath.toAbsolutePath();
-
-		_dataHomePath = liferayHomePath.resolve("data/elasticsearch7");
-		_logsPath = liferayHomePath.resolve("logs");
-
-		_indicesPath = _dataHomePath.resolve("indices");
-		_repoPath = _dataHomePath.resolve("repo");
-
-		Path sidecarHomePath = liferayHomePath.resolve(
-			elasticsearchConfiguration.sidecarHome());
-
-		if (!Files.isDirectory(sidecarHomePath)) {
-			sidecarHomePath = Paths.get(
-				elasticsearchConfiguration.sidecarHome());
-
-			if (!Files.isDirectory(sidecarHomePath)) {
-				throw new IllegalArgumentException(
-					"Sidecar home " + elasticsearchConfiguration.sidecarHome() +
-						" does not exist");
-			}
-		}
-
-		_sidecarHomePath = sidecarHomePath.toAbsolutePath();
+		_processExecutorPaths = processExecutorPaths;
+		_settingsContributors = settingsContributors;
+		_sidecarHomePath = elasticsearchInstancePaths.getHomePath();
 	}
 
 	public String getNetworkHostAddress() {
-		if (_address == null) {
-			try {
-				_address = _addressNoticeableFuture.get();
-
-				if (_log.isInfoEnabled()) {
-					_log.info(
-						StringBundler.concat(
-							"Sidecar ", getNodeName(), " is at ", _address));
-				}
-			}
-			catch (Exception exception) {
-				_processChannel.write(new StopSidecarProcessCallable());
-
-				throw new IllegalStateException(
-					"Unable to get network host address", exception);
-			}
-		}
-
 		return _address;
 	}
 
 	public void start() {
+		if (_log.isDebugEnabled()) {
+			_log.debug("Sidecar Elasticsearch starting");
+		}
+
+		_installElasticsearchIfNeeded();
+
+		ProcessChannel<Serializable> processChannel =
+			executeSidecarMainProcess();
+
+		FutureListener<Serializable> futureListener =
+			new RestartFutureListener();
+
+		addFutureListener(processChannel, futureListener);
+
+		String address = startElasticsearch(processChannel);
+
 		if (_log.isInfoEnabled()) {
-			_log.info("Starting sidecar");
+			_log.info(
+				StringBundler.concat(
+					"Sidecar Elasticsearch ", getNodeName(), " started at ",
+					address));
 		}
 
-		String sidecarLibClassPath = _createClasspath(
-			_sidecarHomePath.resolve("lib"), path -> true);
-
-		try {
-			_processChannel = _processExecutor.execute(
-				_createProcessConfig(sidecarLibClassPath),
-				new SidecarMainProcessCallable(
-					_elasticsearchConfiguration.sidecarHeartbeatInterval(),
-					_getModifiedClasses(sidecarLibClassPath)));
-		}
-		catch (ProcessException processException) {
-			throw new RuntimeException(
-				"Unable to start sidecar process", processException);
-		}
-
-		NoticeableFuture<Serializable> noticeableFuture =
-			_processChannel.getProcessNoticeableFuture();
-
-		_restartFutureListener = new RestartFutureListener();
-
-		noticeableFuture.addFutureListener(_restartFutureListener);
-
-		_addressNoticeableFuture = _processChannel.write(
-			new StartSidecarProcessCallable(_getSidecarArguments()));
+		_address = address;
+		_processChannel = processChannel;
+		_restartFutureListener = futureListener;
 	}
 
 	public void stop() {
-		deleteDir(_sidecarTempDirPath);
+		if (_log.isInfoEnabled()) {
+			_log.info("Stopping sidecar Elasticsearch");
+		}
+
+		PathUtil.deleteDir(_sidecarTempDirPath);
 
 		if (_processChannel == null) {
 			return;
@@ -180,7 +144,7 @@ public class Sidecar {
 
 		try {
 			noticeableFuture.get(
-				_elasticsearchConfiguration.sidecarShutdownTimeout(),
+				_elasticsearchConfigurationWrapper.sidecarShutdownTimeout(),
 				TimeUnit.MILLISECONDS);
 		}
 		catch (Exception exception) {
@@ -188,9 +152,9 @@ public class Sidecar {
 				if (_log.isWarnEnabled()) {
 					_log.warn(
 						StringBundler.concat(
-							"Forcibly shutdown sidecar process because it did ",
-							"not shut down in ",
-							_elasticsearchConfiguration.
+							"Forcibly shutdown sidecar Elasticsearch process ",
+							"because it did not shut down in ",
+							_elasticsearchConfigurationWrapper.
 								sidecarShutdownTimeout(),
 							" ms"));
 				}
@@ -202,63 +166,115 @@ public class Sidecar {
 		_processChannel = null;
 	}
 
-	protected void deleteDir(Path dirPath) {
-		if (dirPath == null) {
-			return;
+	protected static void addFutureListener(
+		ProcessChannel<Serializable> processChannel,
+		FutureListener<Serializable> futureListener) {
+
+		NoticeableFuture<Serializable> noticeableFuture =
+			processChannel.getProcessNoticeableFuture();
+
+		noticeableFuture.addFutureListener(futureListener);
+	}
+
+	protected static boolean fileNameContains(Path path, String s) {
+		String name = String.valueOf(path.getFileName());
+
+		if (name.contains(s)) {
+			return true;
 		}
+
+		return false;
+	}
+
+	protected static String waitForPublishedAddress(
+			NoticeableFuture<String> noticeableFuture)
+		throws Exception {
 
 		try {
-			Files.walkFileTree(
-				dirPath,
-				new SimpleFileVisitor<Path>() {
-
-					@Override
-					public FileVisitResult postVisitDirectory(
-							Path path, IOException ioException)
-						throws IOException {
-
-						if (ioException != null) {
-							throw ioException;
-						}
-
-						Files.delete(path);
-
-						return FileVisitResult.CONTINUE;
-					}
-
-					@Override
-					public FileVisitResult visitFile(
-							Path path, BasicFileAttributes basicFileAttributes)
-						throws IOException {
-
-						Files.delete(path);
-
-						return FileVisitResult.CONTINUE;
-					}
-
-					@Override
-					public FileVisitResult visitFileFailed(
-							Path path, IOException ioException)
-						throws IOException {
-
-						if (ioException instanceof NoSuchFileException) {
-							return FileVisitResult.CONTINUE;
-						}
-
-						throw ioException;
-					}
-
-				});
+			return noticeableFuture.get();
 		}
-		catch (IOException ioException) {
-			if (_log.isWarnEnabled()) {
-				_log.warn("Unable to delete " + dirPath, ioException);
+		catch (ExecutionException executionException) {
+			throw (Exception)executionException.getCause();
+		}
+		catch (InterruptedException interruptedException) {
+			throw new RuntimeException(interruptedException);
+		}
+	}
+
+	protected void consumeProcessLog(ProcessLog processLog) {
+		if (ProcessLog.Level.DEBUG == processLog.getLevel()) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(processLog.getMessage(), processLog.getThrowable());
 			}
 		}
+		else if (ProcessLog.Level.INFO == processLog.getLevel()) {
+			if (_log.isInfoEnabled()) {
+				_log.info(processLog.getMessage(), processLog.getThrowable());
+			}
+		}
+		else if (ProcessLog.Level.WARN == processLog.getLevel()) {
+			if (_log.isWarnEnabled()) {
+				_log.warn(processLog.getMessage(), processLog.getThrowable());
+			}
+		}
+		else {
+			_log.error(processLog.getMessage(), processLog.getThrowable());
+		}
+	}
+
+	protected ProcessChannel<Serializable> executeSidecarMainProcess() {
+		if (!Files.isDirectory(_sidecarHomePath)) {
+			throw new IllegalArgumentException(
+				"Sidecar Elasticsearch home does not exist: " +
+					_sidecarHomePath);
+		}
+
+		String sidecarLibClassPath = _createClasspath(
+			_sidecarHomePath.resolve("lib"), path -> true);
+
+		try {
+			return _processExecutor.execute(
+				_createProcessConfig(sidecarLibClassPath),
+				new SidecarMainProcessCallable(
+					_elasticsearchConfigurationWrapper.
+						sidecarHeartbeatInterval(),
+					_getModifiedClasses(sidecarLibClassPath)));
+		}
+		catch (ProcessException processException) {
+			throw new RuntimeException(
+				"Unable to start sidecar Elasticsearch process",
+				processException);
+		}
+	}
+
+	protected String getBootstrapClassPath() {
+		return _createClasspath(
+			_processExecutorPaths.getLibPath(),
+			path -> fileNameContains(path, "petra"));
+	}
+
+	protected URL getBundleURL() {
+		ProtectionDomain protectionDomain = Sidecar.class.getProtectionDomain();
+
+		CodeSource codeSource = protectionDomain.getCodeSource();
+
+		return codeSource.getLocation();
+	}
+
+	protected String getClusterName() {
+		return _elasticsearchConfigurationWrapper.clusterName();
 	}
 
 	protected Path getDataHomePath() {
 		return _dataHomePath;
+	}
+
+	protected HashMap<String, String> getEnvironment() {
+		return HashMapBuilder.putAll(
+			System.getenv()
+		).put(
+			"HOSTNAME", "localhost"
+		).build();
 	}
 
 	protected String getLogProperties() {
@@ -266,17 +282,80 @@ public class Sidecar {
 	}
 
 	protected String getNodeName() {
+		String nodeName = _elasticsearchConfigurationWrapper.nodeName();
+
+		if (!Validator.isBlank(nodeName)) {
+			return nodeName;
+		}
+
 		return "liferay";
 	}
 
-	protected Path getPathData() {
-		return _indicesPath;
+	protected URL getSecurityPolicyURL(URL bundleURL) {
+		try (URLClassLoader urlClassLoader = new URLClassLoader(
+				new URL[] {bundleURL})) {
+
+			return urlClassLoader.findResource("META-INF/sidecar.policy");
+		}
+		catch (IOException ioException) {
+			throw new RuntimeException(ioException);
+		}
 	}
 
-	protected void setClusterDiscoverySettings(
-		SettingsBuilder settingsBuilder) {
+	protected Settings getSettings() {
+		return ElasticsearchInstanceSettingsBuilder.builder(
+		).clusterName(
+			getClusterName()
+		).discoveryTypeSingleNode(
+			true
+		).elasticsearchConfigurationWrapper(
+			_elasticsearchConfigurationWrapper
+		).elasticsearchInstancePaths(
+			_elasticsearchInstancePaths
+		).httpPortRange(
+			new HttpPortRange(_elasticsearchConfigurationWrapper)
+		).localBindInetAddressSupplier(
+			_clusterExecutor::getBindInetAddress
+		).nodeName(
+			getNodeName()
+		).settingsContributors(
+			_settingsContributors
+		).build();
+	}
 
-		settingsBuilder.put("cluster.initial_master_nodes", getNodeName());
+	protected String startElasticsearch(
+		ProcessChannel<Serializable> processChannel) {
+
+		NoticeableFuture<String> noticeableFuture = processChannel.write(
+			new StartSidecarProcessCallable(_getSidecarArguments()));
+
+		try {
+			return waitForPublishedAddress(noticeableFuture);
+		}
+		catch (IOException ioException) {
+			if (Objects.equals("Stream closed", ioException.getMessage())) {
+				throw new RuntimeException(
+					StringBundler.concat(
+						"Sidecar JVM did not launch successfully. ",
+						SidecarMainProcessCallable.class.getSimpleName(),
+						" may have crashed, or its classpath may be missing ",
+						"required libraries"),
+					ioException);
+			}
+
+			processChannel.write(new StopSidecarProcessCallable());
+
+			throw new RuntimeException(ioException);
+		}
+		catch (Exception exception) {
+			processChannel.write(new StopSidecarProcessCallable());
+
+			if (exception instanceof RuntimeException) {
+				throw (RuntimeException)exception;
+			}
+
+			throw new RuntimeException(exception);
+		}
 	}
 
 	private String _createClasspath(
@@ -306,86 +385,59 @@ public class Sidecar {
 	}
 
 	private ProcessConfig _createProcessConfig(String sidecarLibClassPath) {
-		ProcessConfig.Builder processConfigBuilder =
-			new ProcessConfig.Builder();
+		ProcessConfig.Builder builder = new ProcessConfig.Builder();
 
-		ProtectionDomain protectionDomain = Sidecar.class.getProtectionDomain();
+		URL bundleURL = getBundleURL();
 
-		CodeSource codeSource = protectionDomain.getCodeSource();
-
-		URL bundleURL = codeSource.getLocation();
-
-		processConfigBuilder.setArguments(_getJVMArguments(bundleURL));
-
-		File file = new File(_props.get(PropsKeys.LIFERAY_LIB_GLOBAL_DIR));
-
-		String bootstrapClasspath = _createClasspath(
-			file.toPath(),
-			path -> {
-				String name = String.valueOf(path.getFileName());
-
-				if (name.contains("petra")) {
-					return true;
-				}
-
-				return false;
-			});
-
-		processConfigBuilder.setBootstrapClassPath(bootstrapClasspath);
-
-		processConfigBuilder.setEnvironment(
-			HashMapBuilder.putAll(
-				System.getenv()
-			).put(
-				"HOSTNAME", "localhost"
-			).build());
-
-		processConfigBuilder.setProcessLogConsumer(
-			processLog -> {
-				if (ProcessLog.Level.DEBUG == processLog.getLevel()) {
-					if (_log.isDebugEnabled()) {
-						_log.debug(
-							processLog.getMessage(), processLog.getThrowable());
-					}
-				}
-				else if (ProcessLog.Level.INFO == processLog.getLevel()) {
-					if (_log.isInfoEnabled()) {
-						_log.info(
-							processLog.getMessage(), processLog.getThrowable());
-					}
-				}
-				else if (ProcessLog.Level.WARN == processLog.getLevel()) {
-					if (_log.isWarnEnabled()) {
-						_log.warn(
-							processLog.getMessage(), processLog.getThrowable());
-					}
-				}
-				else {
-					_log.error(
-						processLog.getMessage(), processLog.getThrowable());
-				}
-			});
-		processConfigBuilder.setReactClassLoader(
-			Sidecar.class.getClassLoader());
-		processConfigBuilder.setRuntimeClassPath(
+		return builder.setArguments(
+			_getJVMArguments(bundleURL)
+		).setBootstrapClassPath(
+			getBootstrapClassPath()
+		).setEnvironment(
+			getEnvironment()
+		).setProcessLogConsumer(
+			this::consumeProcessLog
+		).setReactClassLoader(
+			Sidecar.class.getClassLoader()
+		).setRuntimeClassPath(
 			StringBundler.concat(
 				sidecarLibClassPath, File.pathSeparator, bundleURL.getPath(),
-				File.pathSeparator, bootstrapClasspath));
+				File.pathSeparator, getBootstrapClassPath())
+		).build();
+	}
 
-		return processConfigBuilder.build();
+	private Distribution _getElasticsearchDistribution() {
+		String versionNumber = ResourceUtil.getResourceAsString(
+			getClass(), SidecarVersionConstants.SIDECAR_VERSION_FILE_NAME);
+
+		if (versionNumber.equals("7.3.0")) {
+			return new Elasticsearch730Distribution();
+		}
+
+		if (versionNumber.equals("7.7.0")) {
+			return new Elasticsearch770Distribution();
+		}
+
+		if (versionNumber.equals("7.9.0")) {
+			return new Elasticsearch790Distribution();
+		}
+
+		throw new IllegalArgumentException(
+			"Unsupported Elasticsearch version: " + versionNumber);
 	}
 
 	private List<String> _getJVMArguments(URL bundleURL) {
 		List<String> arguments = new ArrayList<>();
 
 		for (String jvmOption :
-				_elasticsearchConfiguration.sidecarJVMOptions()) {
+				_elasticsearchConfigurationWrapper.sidecarJVMOptions()) {
 
 			arguments.add(jvmOption);
 		}
 
-		if (_elasticsearchConfiguration.sidecarDebug()) {
-			arguments.add(_elasticsearchConfiguration.sidecarDebugSettings());
+		if (_elasticsearchConfigurationWrapper.sidecarDebug()) {
+			arguments.add(
+				_elasticsearchConfigurationWrapper.sidecarDebugSettings());
 		}
 
 		try {
@@ -419,7 +471,6 @@ public class Sidecar {
 		}
 
 		arguments.add("-Des.path.conf=" + configFolder);
-		arguments.add("-Des.path.home=" + _sidecarHomePath.toString());
 		arguments.add("-Des.networkaddress.cache.ttl=60");
 		arguments.add("-Des.networkaddress.cache.negative.ttl=10");
 		arguments.add("-Dlog4j.shutdownHookEnabled=false");
@@ -432,66 +483,13 @@ public class Sidecar {
 		arguments.add("-Dfile.encoding=UTF-8");
 		arguments.add("-Djava.io.tmpdir=" + _sidecarTempDirPath);
 
-		URLClassLoader urlClassLoader = new URLClassLoader(
-			new URL[] {bundleURL});
-
-		URL url = urlClassLoader.findResource("META-INF/sidecar.policy");
-
-		arguments.add("-Djava.security.policy=" + url.toString());
+		arguments.add(
+			"-Djava.security.policy=" +
+				String.valueOf(getSecurityPolicyURL(bundleURL)));
 
 		arguments.add("-Djna.nosys=true");
 
 		return arguments;
-	}
-
-	private byte[] _getModifiedClassBytes(
-			Class<?> clazz, String methodName,
-			Consumer<MethodVisitor> methodVisitorConsumer)
-		throws IOException {
-
-		try (InputStream inputStream = clazz.getResourceAsStream(
-				clazz.getSimpleName() + ".class")) {
-
-			ClassReader classReader = new ClassReader(inputStream);
-
-			ClassWriter classWriter = new ClassWriter(
-				classReader, ClassWriter.COMPUTE_MAXS);
-
-			classReader.accept(
-				new ClassVisitor(Opcodes.ASM5, classWriter) {
-
-					@Override
-					public MethodVisitor visitMethod(
-						int access, String name, String description,
-						String signature, String[] exceptions) {
-
-						MethodVisitor methodVisitor = super.visitMethod(
-							access, name, description, signature, exceptions);
-
-						if (!name.equals(methodName)) {
-							return methodVisitor;
-						}
-
-						return new MethodVisitor(Opcodes.ASM5) {
-
-							@Override
-							public void visitCode() {
-								methodVisitorConsumer.accept(methodVisitor);
-							}
-
-							@Override
-							public void visitMaxs(int maxStack, int maxLocals) {
-								methodVisitor.visitMaxs(0, 0);
-							}
-
-						};
-					}
-
-				},
-				0);
-
-			return classWriter.toByteArray();
-		}
 	}
 
 	private Map<String, byte[]> _getModifiedClasses(
@@ -505,26 +503,25 @@ public class Sidecar {
 
 			modifiedClasses.put(
 				"org.elasticsearch.bootstrap.Natives",
-				_getModifiedClassBytes(
-					classLoader.loadClass(
-						"org.elasticsearch.bootstrap.Natives"),
+				ClassModificationUtil.getModifiedClassBytes(
+					"org.elasticsearch.bootstrap.Natives",
 					"definitelyRunningAsRoot",
 					methodVisitor -> {
 						methodVisitor.visitCode();
 						methodVisitor.visitInsn(Opcodes.ICONST_0);
 						methodVisitor.visitInsn(Opcodes.IRETURN);
-					}));
+					},
+					classLoader));
 
 			modifiedClasses.put(
 				"org.elasticsearch.common.settings.KeyStoreWrapper",
-				_getModifiedClassBytes(
-					classLoader.loadClass(
-						"org.elasticsearch.common.settings.KeyStoreWrapper"),
-					"save",
+				ClassModificationUtil.getModifiedClassBytes(
+					"org.elasticsearch.common.settings.KeyStoreWrapper", "save",
 					methodVisitor -> {
 						methodVisitor.visitCode();
 						methodVisitor.visitInsn(Opcodes.RETURN);
-					}));
+					},
+					classLoader));
 		}
 		catch (Exception exception) {
 			_log.error("Unable to modify classes", exception);
@@ -534,59 +531,22 @@ public class Sidecar {
 	}
 
 	private String[] _getSidecarArguments() {
-		SettingsBuilder settingsBuilder = new SettingsBuilder(
-			Settings.builder());
+		Settings settings = getSettings();
 
-		settingsBuilder.put(
-			"bootstrap.memory_lock",
-			_elasticsearchConfiguration.bootstrapMlockAll());
-		settingsBuilder.put("bootstrap.system_call_filter", false);
-		settingsBuilder.put(
-			"cluster.routing.allocation.disk.threshold_enabled", false);
-		settingsBuilder.put(
-			"cluster.name", _elasticsearchConfiguration.clusterName());
-		settingsBuilder.put(
-			"http.cors.enabled", _elasticsearchConfiguration.httpCORSEnabled());
-		settingsBuilder.put("path.data", _indicesPath.toString());
-		settingsBuilder.put("path.logs", _logsPath.toString());
-		settingsBuilder.put("path.repo", _repoPath.toString());
+		StringBundler sb = new StringBundler((2 * settings.size()) + 1);
 
-		if (_elasticsearchConfiguration.httpCORSEnabled()) {
-			settingsBuilder.put(
-				"http.cors.allow-origin",
-				_elasticsearchConfiguration.httpCORSAllowOrigin());
-
-			settingsBuilder.loadFromSource(
-				_elasticsearchConfiguration.httpCORSConfigurations());
-		}
-
-		settingsBuilder.put("node.name", getNodeName());
-		settingsBuilder.put("node.data", true);
-		settingsBuilder.put("node.ingest", true);
-		settingsBuilder.put("node.master", true);
-		settingsBuilder.put("node.store.allow_mmap", false);
-
-		settingsBuilder.loadFromSource(
-			_elasticsearchConfiguration.additionalConfigurations());
-
-		setClusterDiscoverySettings(settingsBuilder);
-
-		Settings settings = settingsBuilder.build();
-
-		StringBundler sb = new StringBundler(2 * settings.size() + 1);
-
-		sb.append("Sidecar properties : {");
+		sb.append("Sidecar Elasticsearch properties : {");
 
 		List<String> arguments = new ArrayList<>();
 
 		for (String key : settings.keySet()) {
 			arguments.add("-E");
 
-			String value = settings.get(key);
+			List<String> list = settings.getAsList(key);
 
-			if (Validator.isNotNull(value)) {
+			if (!ListUtil.isEmpty(list)) {
 				String keyValue = StringBundler.concat(
-					key, StringPool.EQUAL, value);
+					key, StringPool.EQUAL, StringUtil.merge(list));
 
 				arguments.add(keyValue);
 
@@ -598,30 +558,42 @@ public class Sidecar {
 
 		sb.setStringAt(StringPool.CLOSE_CURLY_BRACE, sb.index() - 1);
 
-		if (_log.isInfoEnabled()) {
-			_log.info(sb.toString());
+		if (_log.isDebugEnabled()) {
+			_log.debug(sb.toString());
 		}
 
 		return arguments.toArray(new String[0]);
 	}
 
+	private void _installElasticsearchIfNeeded() {
+		ElasticsearchInstaller.builder(
+		).distributablesDirectoryPath(
+			_elasticsearchInstancePaths.getWorkPath()
+		).distribution(
+			_getElasticsearchDistribution()
+		).installationDirectoryPath(
+			_sidecarHomePath
+		).build(
+		).install();
+	}
+
 	private static final Log _log = LogFactoryUtil.getLog(Sidecar.class);
 
 	private String _address;
-	private NoticeableFuture<String> _addressNoticeableFuture;
+	private final ClusterExecutor _clusterExecutor;
 	private final Path _dataHomePath;
-	private final ElasticsearchConfiguration _elasticsearchConfiguration;
-	private final Path _indicesPath;
-	private final Path _logsPath;
+	private final ElasticsearchConfigurationWrapper
+		_elasticsearchConfigurationWrapper;
+	private final ElasticsearchInstancePaths _elasticsearchInstancePaths;
 	private ProcessChannel<Serializable> _processChannel;
 	private final ProcessExecutor _processExecutor;
-	private final Props _props;
-	private final Path _repoPath;
+	private final ProcessExecutorPaths _processExecutorPaths;
 	private FutureListener<Serializable> _restartFutureListener;
+	private final Collection<SettingsContributor> _settingsContributors;
 	private final Path _sidecarHomePath;
 	private Path _sidecarTempDirPath;
 
-	private class RestartFutureListener
+	private static class RestartFutureListener
 		implements FutureListener<Serializable> {
 
 		@Override
@@ -631,17 +603,18 @@ public class Sidecar {
 			}
 			catch (Exception exception) {
 				if (_log.isWarnEnabled()) {
-					_log.warn("Sidecar process is aborted", exception);
+					_log.warn(
+						"Sidecar Elasticsearch process is aborted", exception);
 				}
 			}
 
-			SidecarComponentUtil.disableSidecarElasticsearchConnectionManager();
+			SidecarComponentUtil.disableSidecarManager();
 
 			if (_log.isInfoEnabled()) {
-				_log.info("Restaring sidecar process");
+				_log.info("Restarting sidecar Elasticsearch process");
 			}
 
-			SidecarComponentUtil.enableSidecarElasticsearchConnectionManager();
+			SidecarComponentUtil.enableSidecarManager();
 		}
 
 	}

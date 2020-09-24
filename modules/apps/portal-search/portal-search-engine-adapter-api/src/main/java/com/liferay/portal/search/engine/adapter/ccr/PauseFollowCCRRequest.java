@@ -22,6 +22,8 @@ public class PauseFollowCCRRequest
 
 	public PauseFollowCCRRequest(String indexName) {
 		_indexName = indexName;
+
+		setPreferLocalCluster(true);
 	}
 
 	@Override

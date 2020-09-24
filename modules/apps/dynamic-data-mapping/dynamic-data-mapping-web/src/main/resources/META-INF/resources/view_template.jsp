@@ -74,8 +74,8 @@ if (layout != null) {
 	<aui:input name="redirect" type="hidden" value="<%= ddmDisplayContext.getTemplateSearchActionURL() %>" />
 	<aui:input name="deleteTemplateIds" type="hidden" />
 
-	<clay:container
-		id='<%= renderResponse.getNamespace() + "entriesContainer" %>'
+	<clay:container-fluid
+		id='<%= liferayPortletResponse.getNamespace() + "entriesContainer" %>'
 	>
 		<liferay-ui:search-container
 			id="<%= ddmDisplayContext.getTemplateSearchContainerId() %>"
@@ -100,7 +100,7 @@ if (layout != null) {
 					rowURL.setParameter("classNameId", String.valueOf(classNameId));
 					rowURL.setParameter("classPK", String.valueOf(template.getClassPK()));
 					rowURL.setParameter("type", template.getType());
-					rowURL.setParameter("structureAvailableFields", renderResponse.getNamespace() + "getAvailableFields");
+					rowURL.setParameter("structureAvailableFields", liferayPortletResponse.getNamespace() + "getAvailableFields");
 
 					rowHREF = rowURL.toString();
 				}
@@ -220,5 +220,5 @@ if (layout != null) {
 				markupView="lexicon"
 			/>
 		</liferay-ui:search-container>
-	</clay:container>
+	</clay:container-fluid>
 </aui:form>

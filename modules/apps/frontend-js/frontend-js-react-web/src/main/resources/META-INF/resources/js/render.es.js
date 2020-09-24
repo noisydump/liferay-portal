@@ -39,7 +39,7 @@ export default function render(renderable, renderData, container) {
 	if (!Liferay.SPA || Liferay.SPA.app) {
 		const {portletId} = renderData;
 		const spritemap =
-			Liferay.ThemeDisplay.getPathThemeImages() + '/lexicon/icons.svg';
+			Liferay.ThemeDisplay.getPathThemeImages() + '/clay/icons.svg';
 
 		let {componentId} = renderData;
 
@@ -62,7 +62,11 @@ export default function render(renderable, renderData, container) {
 			}
 		);
 
-		const Component = typeof renderable === 'function' ? renderable : null;
+		const Component =
+			typeof renderable === 'function' ||
+			renderable.$$typeof === Symbol.for('react.forward_ref')
+				? renderable
+				: null;
 
 		// eslint-disable-next-line liferay-portal/no-react-dom-render
 		ReactDOM.render(

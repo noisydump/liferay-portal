@@ -32,11 +32,10 @@ definition {
 
 	@priority = "4"
 	test ChangeSocialBookmarkSitesForKBArticle {
-		property osgi.app.includes = "social-bookmarks, knowledge-base";
+		property osgi.app.includes = "social-bookmarks,knowledge-base";
 
 		ProductMenu.gotoPortlet(
 			category = "Site Builder",
-			panel = "Site Administration",
 			portlet = "Pages");
 
 		SitePages.addPublicPage(
@@ -51,7 +50,6 @@ definition {
 
 		ProductMenu.gotoPortlet(
 			category = "Content &amp; Data",
-			panel = "Site Administration",
 			portlet = "Knowledge Base");
 
 		KBArticle.addCP(
@@ -89,7 +87,6 @@ definition {
 
 		ProductMenu.gotoPortlet(
 			category = "Site Builder",
-			panel = "Site Administration",
 			portlet = "Pages");
 
 		SitePages.addPublicPage(
@@ -136,11 +133,10 @@ definition {
 
 	@priority = "3"
 	test ViewKBArticleWithAllSocialBookmarkSites {
-		property osgi.app.includes = "social-bookmarks, knowledge-base";
+		property osgi.app.includes = "social-bookmarks,knowledge-base";
 
 		ProductMenu.gotoPortlet(
 			category = "Site Builder",
-			panel = "Site Administration",
 			portlet = "Pages");
 
 		SitePages.addPublicPage(
@@ -155,7 +151,6 @@ definition {
 
 		ProductMenu.gotoPortlet(
 			category = "Content &amp; Data",
-			panel = "Site Administration",
 			portlet = "Knowledge Base");
 
 		KBArticle.addCP(

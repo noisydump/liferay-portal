@@ -13,28 +13,61 @@
  */
 
 import {
+	FormSupport,
 	PagesVisitor,
 	normalizeFieldName,
 } from 'dynamic-data-mapping-form-renderer';
-import {findFieldByFieldName} from 'dynamic-data-mapping-form-renderer/js/components/FormRenderer/FormSupport.es';
 
-export const generateFieldName = (pages, desiredName, currentName = null) => {
-	let counter = 0;
-	let fieldName = normalizeFieldName(desiredName);
+import {getDefaultFieldName} from '../../../util/fieldSupport.es';
 
-	let existingField = findFieldByFieldName(pages, fieldName);
+export const generateFieldName = (
+	pages,
+	desiredName,
+	currentName = null,
+	blacklist = [],
+	generateFieldNameUsingFieldLabel
+) => {
+	let fieldName;
+	let existingField;
 
-	while (existingField && existingField.fieldName !== currentName) {
-		if (counter > 0) {
-			fieldName = normalizeFieldName(desiredName) + counter;
+	if (generateFieldNameUsingFieldLabel) {
+		let counter = 0;
+
+		fieldName = normalizeFieldName(desiredName);
+
+		existingField = FormSupport.findFieldByFieldName(pages, fieldName);
+
+		while (
+			(existingField && existingField.fieldName !== currentName) ||
+			blacklist.includes(fieldName)
+		) {
+			if (counter > 0) {
+				fieldName = normalizeFieldName(desiredName) + counter;
+			}
+
+			existingField = FormSupport.findFieldByFieldName(pages, fieldName);
+
+			counter++;
 		}
 
-		existingField = findFieldByFieldName(pages, fieldName);
-
-		counter++;
+		return normalizeFieldName(fieldName);
 	}
+	else {
+		fieldName = desiredName;
 
-	return normalizeFieldName(fieldName);
+		existingField = FormSupport.findFieldByFieldName(pages, fieldName);
+
+		while (
+			(existingField && existingField.fieldName !== currentName) ||
+			blacklist.includes(fieldName)
+		) {
+			fieldName = getDefaultFieldName();
+
+			existingField = FormSupport.findFieldByFieldName(pages, fieldName);
+		}
+
+		return fieldName;
+	}
 };
 
 export const getFieldValue = (pages, fieldName) => {
@@ -45,11 +78,15 @@ export const getFieldProperty = (pages, fieldName, propertyName) => {
 	const visitor = new PagesVisitor(pages);
 	let propertyValue;
 
-	visitor.mapFields((field) => {
-		if (field.fieldName === fieldName) {
-			propertyValue = field[propertyName];
-		}
-	});
+	visitor.mapFields(
+		(field) => {
+			if (field.fieldName === fieldName) {
+				propertyValue = field[propertyName];
+			}
+		},
+		true,
+		true
+	);
 
 	return propertyValue;
 };

@@ -18,7 +18,6 @@
 String p_u_i_d = ParamUtil.getString(request, "p_u_i_d");
 int step = ParamUtil.getInteger(request, "step", 1);
 String eventName = ParamUtil.getString(request, "eventName", liferayPortletResponse.getNamespace() + "selectOrganizationRole");
-String syncEntitiesEventName = ParamUtil.getString(request, "syncEntitiesEventName", liferayPortletResponse.getNamespace() + "syncOrganizationRoles");
 
 User selUser = PortalUtil.getSelectedUser(request);
 
@@ -38,7 +37,9 @@ if (step == 1) {
 	if (organizations.size() == 1) {
 		step = 2;
 
-		uniqueOrganizationId = organizations.get(0).getOrganizationId();
+		Organization organization = organizations.get(0);
+
+		uniqueOrganizationId = organization.getOrganizationId();
 	}
 }
 
@@ -55,7 +56,7 @@ if (step == 2) {
 	selectedOrganization = OrganizationServiceUtil.getOrganization(organizationId);
 }
 
-SearchContainer roleSearchContainer = null;
+SearchContainer<Role> roleSearchContainer = null;
 
 if (selectedOrganization == null) {
 	roleSearchContainer = selectRoleManagementToolbarDisplayContext.getRoleSearchContainer(filterManageableRoles);
@@ -218,12 +219,14 @@ else {
 						<c:if test="<%= Validator.isNull(p_u_i_d) || OrganizationMembershipPolicyUtil.isRoleAllowed((selUser != null) ? selUser.getUserId() : 0, selectedOrganization.getOrganizationId(), role.getRoleId()) %>">
 
 							<%
+							Group selectedOrganizationGroup = selectedOrganization.getGroup();
+
 							Map<String, Object> data = HashMapBuilder.<String, Object>put(
 								"entityid", role.getRoleId()
 							).put(
 								"entityname", role.getTitle(locale)
 							).put(
-								"groupdescriptivename", selectedOrganization.getGroup().getDescriptiveName(locale)
+								"groupdescriptivename", selectedOrganizationGroup.getDescriptiveName(locale)
 							).put(
 								"groupid", selectedOrganization.getGroupId()
 							).put(
@@ -257,18 +260,3 @@ else {
 		</c:when>
 	</c:choose>
 </aui:form>
-
-<aui:script use="aui-base">
-	var Util = Liferay.Util;
-
-	var openingLiferay = Util.getOpener().Liferay;
-
-	openingLiferay.fire('<%= HtmlUtil.escape(syncEntitiesEventName) %>', {
-		selectors: A.all('.selector-button'),
-	});
-
-	Util.selectEntityHandler(
-		'#<portlet:namespace />selectOrganizationRoleFm',
-		'<%= HtmlUtil.escapeJS(eventName) %>'
-	);
-</aui:script>

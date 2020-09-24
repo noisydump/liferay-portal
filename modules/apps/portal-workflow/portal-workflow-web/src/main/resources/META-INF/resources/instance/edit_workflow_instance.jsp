@@ -34,9 +34,9 @@ portletDisplay.setURLBack(redirect);
 renderResponse.setTitle(workflowInstanceEditDisplayContext.getHeaderTitle());
 %>
 
-<clay:container>
+<clay:container-fluid>
 	<clay:col
-		className="lfr-asset-column lfr-asset-column-details"
+		cssClass="lfr-asset-column lfr-asset-column-details"
 	>
 		<aui:fieldset-group markupView="lexicon">
 			<aui:fieldset>
@@ -124,6 +124,18 @@ renderResponse.setTitle(workflowInstanceEditDisplayContext.getHeaderTitle());
 							assetRenderer="<%= assetRenderer %>"
 							template="<%= AssetRenderer.TEMPLATE_ABSTRACT %>"
 						/>
+
+						<c:if test="<%= assetEntry != null %>">
+							<h4 class="task-content-author">
+								<liferay-ui:message key="author" />
+							</h4>
+
+							<liferay-asset:asset-metadata
+								className="<%= assetEntry.getClassName() %>"
+								classPK="<%= assetEntry.getClassPK() %>"
+								metadataFields='<%= new String[] {"author", "categories", "tags"} %>'
+							/>
+						</c:if>
 					</liferay-ui:panel>
 
 					<liferay-ui:panel
@@ -201,4 +213,4 @@ renderResponse.setTitle(workflowInstanceEditDisplayContext.getHeaderTitle());
 			</liferay-ui:panel-container>
 		</aui:fieldset-group>
 	</clay:col>
-</clay:container>
+</clay:container-fluid>

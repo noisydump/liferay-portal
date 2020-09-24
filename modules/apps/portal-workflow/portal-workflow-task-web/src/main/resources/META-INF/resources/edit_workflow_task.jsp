@@ -65,9 +65,9 @@ portletDisplay.setURLBack(backURL);
 renderResponse.setTitle(headerTitle);
 %>
 
-<clay:container>
+<clay:container-fluid>
 	<clay:col
-		className="lfr-asset-column lfr-asset-column-details"
+		cssClass="lfr-asset-column lfr-asset-column-details"
 	>
 		<liferay-ui:success key='<%= workflowTaskDisplayContext.getPortletResource() + "requestProcessed" %>' message="your-request-completed-successfully" />
 
@@ -89,10 +89,10 @@ renderResponse.setTitle(headerTitle);
 				>
 					<aui:field-wrapper label="assigned-to">
 						<aui:fieldset>
-							<div class="card-row">
+							<div class="align-items-center card-row">
 								<c:choose>
 									<c:when test="<%= workflowTask.isAssignedToSingleUser() %>">
-										<div class="card-col-field">
+										<div class="card-col-field mr-2">
 											<div class="list-group-card-icon">
 												<liferay-ui:user-portrait
 													userId="<%= workflowTask.getAssigneeUserId() %>"
@@ -162,13 +162,15 @@ renderResponse.setTitle(headerTitle);
 						markupView="lexicon"
 						title="<%= workflowTaskDisplayContext.getPreviewOfTitle(workflowTask) %>"
 					>
-						<div class="locale-actions">
-							<liferay-ui:language
-								formAction="<%= currentURL %>"
-								languageId="<%= languageId %>"
-								languageIds="<%= assetRenderer.getAvailableLanguageIds() %>"
-							/>
-						</div>
+						<c:if test="<%= assetRenderer.isLocalizable() %>">
+							<div class="locale-actions">
+								<liferay-ui:language
+									formAction="<%= currentURL %>"
+									languageId="<%= languageId %>"
+									languageIds="<%= assetRenderer.getAvailableLanguageIds() %>"
+								/>
+							</div>
+						</c:if>
 
 						<div class="task-content-actions">
 							<liferay-ui:icon-list>
@@ -257,6 +259,18 @@ renderResponse.setTitle(headerTitle);
 							assetRenderer="<%= assetRenderer %>"
 							template="<%= AssetRenderer.TEMPLATE_ABSTRACT %>"
 						/>
+
+						<c:if test="<%= assetEntry != null %>">
+							<h4 class="task-content-author">
+								<liferay-ui:message key="author" />
+							</h4>
+
+							<liferay-asset:asset-metadata
+								className="<%= assetEntry.getClassName() %>"
+								classPK="<%= assetEntry.getClassPK() %>"
+								metadataFields='<%= new String[] {"author", "categories", "tags"} %>'
+							/>
+						</c:if>
 					</liferay-ui:panel>
 
 					<c:if test="<%= assetEntry != null %>">
@@ -292,7 +306,7 @@ renderResponse.setTitle(headerTitle);
 			</liferay-ui:panel-container>
 		</aui:fieldset-group>
 	</clay:col>
-</clay:container>
+</clay:container-fluid>
 
 <aui:script use="liferay-workflow-tasks">
 	var onTaskClickFn = A.rbind('onTaskClick', Liferay.WorkflowTasks, '');

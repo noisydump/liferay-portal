@@ -64,11 +64,11 @@ renderResponse.setTitle(title);
 %>
 
 <c:if test="<%= kaleoProcessStarted %>">
-	<clay:container
-		className="alert alert-info"
+	<clay:container-fluid
+		cssClass="alert alert-info"
 	>
 		<liferay-ui:message key="updating-the-field-set-or-workflow-will-cause-loss-of-data" />
-	</clay:container>
+	</clay:container-fluid>
 </c:if>
 
 <portlet:actionURL name="updateKaleoProcess" var="editKaleoProcessURL">
@@ -89,13 +89,13 @@ renderResponse.setTitle(title);
 		var="htmlBottom"
 	>
 		<aui:button-row cssClass="kaleo-process-buttons">
-			<aui:button cssClass='<%= (historyKey.equals("forms") ? StringPool.BLANK : "hide") + " kaleo-process-previous pull-left" %>' icon="icon-circle-arrow-left" value="previous" />
+			<aui:button cssClass='<%= (historyKey.equals("forms") ? StringPool.BLANK : "hide") + " float-left kaleo-process-previous" %>' icon="icon-circle-arrow-left" value="previous" />
 
-			<aui:button cssClass='<%= (historyKey.equals("forms") ? StringPool.BLANK : "hide") + " kaleo-process-submit pull-right" %>' disabled="<%= true %>" primary="<%= true %>" type="submit" />
+			<aui:button cssClass='<%= (historyKey.equals("forms") ? StringPool.BLANK : "hide") + " float-right kaleo-process-submit" %>' disabled="<%= true %>" primary="<%= true %>" type="submit" />
 
-			<aui:button cssClass='<%= (historyKey.equals("forms") ? "hide" : StringPool.BLANK) + " kaleo-process-next pull-right" %>' disabled="<%= true %>" icon="icon-circle-arrow-right" iconAlign="right" primary="<%= true %>" value="next" />
+			<aui:button cssClass='<%= (historyKey.equals("forms") ? "hide" : StringPool.BLANK) + " float-right kaleo-process-next" %>' disabled="<%= true %>" icon="icon-circle-arrow-right" iconAlign="right" primary="<%= true %>" value="next" />
 
-			<aui:button cssClass="kaleo-process-cancel pull-right" href="<%= redirect %>" value="cancel" />
+			<aui:button cssClass="float-right kaleo-process-cancel" href="<%= redirect %>" value="cancel" />
 		</aui:button-row>
 	</liferay-util:buffer>
 

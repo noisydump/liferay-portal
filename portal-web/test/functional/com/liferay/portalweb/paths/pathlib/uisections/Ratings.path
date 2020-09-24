@@ -10,12 +10,12 @@
 <tbody>
 <tr>
 	<td>LIKE</td>
-	<td>//div[contains(@class,'ratings-like')]//button[contains(@title,'Like This')]</td>
+	<td>//div[contains(@class,'ratings-like')]//button[contains(@title,'Like This') or contains(@data-title,'Like This')]</td>
 	<td></td>
 </tr>
 <tr>
 	<td>THUMB</td>
-	<td>//div[contains(@class,'ratings-thumbs')]//button[contains(@title,'${key_ratingResult}')]</td>
+	<td>//div[contains(@class,'ratings-thumbs')]//button[contains(@title,'${key_ratingResult}') or contains(@data-title,'${key_ratingResult}')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -41,7 +41,7 @@
 </tr>
 <tr>
 	<td>REPLY_RATING_THUMB</td>
-	<td>//h4[contains(@title,'RE: ${key_threadSubject}')]//following-sibling::div//button[contains(@title,'${key_ratingResult}')]</td>
+	<td>//h4[contains(@title,'RE: ${key_threadSubject}')]//following-sibling::div//button[contains(@title,'${key_ratingResult}') or contains(@data-title,'${key_ratingResult}')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -72,17 +72,27 @@
 </tr>
 <tr>
 	<td>YOUR_RATING_STACKED_STAR</td>
-	<td>//div[contains(@class,'stacked-stars')]//a[contains(@class,'icon-star')]</td>
+	<td>//div[contains(@class,'stacked-stars')]//div[contains(@class,'ratings-stacked-stars-vote-stars')]</td>
 	<td></td>
 </tr>
 <tr>
 	<td>YOUR_RATING_STACKED_STAR_COUNT</td>
-	<td>//div[contains(@class,'stacked-stars')]//a[contains(@title,'Rate this ${key_ratingStarCount} stars out of 5')]</td>
+	<td>//div[contains(@class,'stacked-stars')]//label[contains(@for,'zqmy_column1_0_star${key_ratingStarCount}')]</td>
 	<td></td>
 </tr>
 <tr>
 	<td>YOUR_RATING_STAR_COUNT</td>
 	<td>//div[contains(@class,'ratings-stars-dropdown')]//button[contains(.,'Rate this ${key_ratingStarCount} stars out of 5')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>YOUR_RATING_STAR_DELETE</td>
+	<td>//div[contains(@class,'ratings-stars')]//button[@class='dropdown-item' and contains(.,'Delete')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>YOUR_RATING_STAR_DELETE_DISABLE</td>
+	<td>//div[contains(@class,'ratings-stars')]//button[contains(@class,'dropdown-item disabled') and contains(.,'Delete')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -97,17 +107,17 @@
 </tr>
 <tr>
 	<td>YOUR_RATING_STACKED_STAR_RESULT</td>
-	<td>//div[contains(@class,'stacked-stars')]//div[contains(@class,'rating-content')]//a[contains(@title,'You have rated this ${key_ratingStarCount} stars out of 5')]</td>
+	<td>//div[contains(@class,'stacked-stars')]//label[contains(@class,'ratings-stars-star-full') and contains(@for,'zqmy_column1_0_star${key_ratingStarCount}')]</td>
 	<td></td>
 </tr>
 <tr>
 	<td>YOUR_RATING_STAR_RESULT</td>
-	<td>//div[contains(@class,'ratings-stars')]//button[contains(@title,'You have rated this ${key_ratingStarCount} stars out of 5')]</td>
+	<td>//div[contains(@class,'ratings-stars')]//button[contains(@title,'You have rated this ${key_ratingStarCount} stars out of 5') or contains(@data-title,'You have rated this ${key_ratingStarCount} stars out of 5')]</td>
 	<td></td>
 </tr>
 <tr>
 	<td>YOUR_RATING_STAR_RESULT_COUNT</td>
-	<td>//div[contains(@class,'ratings-stars')]//button[contains(@title,'You have rated this ${key_ratingStarCount} stars out of 5')]//span[contains(@class,'ratings-stars-button-text')]</td>
+	<td>//div[contains(@class,'ratings-stars')]//button[contains(@title,'You have rated this ${key_ratingStarCount} stars out of 5') or contains(@data-title,'You have rated this ${key_ratingStarCount} stars out of 5')]//span[contains(@class,'ratings-stars-button-text')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -128,7 +138,7 @@
 </tr>
 <tr>
 	<td>AVERAGE_STACKED_STAR_RESULT</td>
-	<td>//div[contains(@class,'stacked-stars')]//span[contains(@title,'The average rating is ${key_ratingStarCount} stars out of 5.')]</td>
+	<td>//div[contains(@class,'ratings')]//div[contains(@class,'ratings-stars-average') and @title='${key_averageStarCount}']</td>
 	<td></td>
 </tr>
 <tr>

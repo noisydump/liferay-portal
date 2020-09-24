@@ -46,7 +46,6 @@ AnnouncementsAdminViewManagementToolbarDisplayContext announcementsAdminViewMana
 %>
 
 <clay:navigation-bar
-	inverted="<%= true %>"
 	navigationItems='<%=
 		new JSPNavigationItemList(pageContext) {
 			{
@@ -62,7 +61,6 @@ AnnouncementsAdminViewManagementToolbarDisplayContext announcementsAdminViewMana
 						navigationItem.setHref(renderResponse.createRenderURL(), "navigation", "alerts");
 						navigationItem.setLabel(LanguageUtil.get(request, "alerts"));
 					});
-
 			}
 		}
 	%>'
@@ -79,10 +77,10 @@ AnnouncementsAdminViewManagementToolbarDisplayContext announcementsAdminViewMana
 	itemsTotal="<%= announcementsAdminViewManagementToolbarDisplayContext.getTotal() %>"
 	searchContainerId="announcementsEntries"
 	selectable="<%= true %>"
-	showSearch="false"
+	showSearch="<%= false %>"
 />
 
-<clay:container>
+<clay:container-fluid>
 	<aui:form action="<%= currentURL %>" method="get" name="fm">
 		<aui:input name="<%= Constants.CMD %>" type="hidden" />
 		<aui:input name="redirect" type="hidden" value="<%= currentURL %>" />
@@ -154,7 +152,7 @@ AnnouncementsAdminViewManagementToolbarDisplayContext announcementsAdminViewMana
 			/>
 		</liferay-ui:search-container>
 	</aui:form>
-</clay:container>
+</clay:container-fluid>
 
 <aui:script>
 	var deleteEntries = function () {

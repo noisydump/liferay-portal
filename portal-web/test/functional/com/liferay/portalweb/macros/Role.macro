@@ -35,10 +35,7 @@ definition {
 	macro addAssignees {
 		LexiconEntry.gotoAdd();
 
-		LiferayEvent.waitForLiferayEvent(
-			attributeName = "src",
-			attributeValue = "dialog-iframe-popup",
-			eventName = "modalIframeLoaded");
+		WaitForLiferayEvent.initializeLiferayEventLog();
 
 		SelectFrame(locator1 = "IFrame#SELECT_ASSIGNEES");
 
@@ -54,9 +51,7 @@ definition {
 
 		SelectFrameTop(value1 = "relative=top");
 
-		AssertClick(
-			locator1 = "Button#ADD",
-			value1 = "Add");
+		Button.clickAdd();
 
 		Alert.viewSuccessMessage();
 	}
@@ -73,11 +68,6 @@ definition {
 		Navigator.gotoNavItem(navItem = "Assignees");
 
 		LexiconEntry.gotoAdd();
-
-		LiferayEvent.waitForLiferayEvent(
-			attributeName = "src",
-			attributeValue = "dialog-iframe-popup",
-			eventName = "modalIframeLoaded");
 
 		SelectFrame(locator1 = "IFrame#SELECT_ASSIGNEES");
 
@@ -97,9 +87,7 @@ definition {
 
 		SelectFrameTop(value1 = "relative=top");
 
-		AssertClick(
-			locator1 = "Button#ADD",
-			value1 = "Add");
+		Button.clickAdd();
 
 		Alert.viewSuccessMessage();
 
@@ -149,11 +137,6 @@ definition {
 		var key_roleTitle = StringUtil.lowerCase("${key_roleTitle}");
 
 		if (IsElementPresent.isElementPresentAfterWait(locator1 = "IFrame#MODAL_BODY")) {
-			LiferayEvent.waitForLiferayEvent(
-				attributeName = "src",
-				attributeValue = "dialog-iframe-popup",
-				eventName = "modalIframeLoaded");
-
 			SelectFrame(locator1 = "IFrame#MODAL_BODY");
 		}
 
@@ -293,6 +276,10 @@ definition {
 				var permissionNavigationKey = "SITE_ADMIN_APPLICATIONS_WEB_CONTENT_DISPLAY";
 				var permissionNavigationValue = "Web Content Display";
 			}
+			else if (contains("${permissionDefinitionKey}", "SITE_ADMIN_BUILDER_COLLECTIONS")) {
+				var permissionNavigationKey = "SITE_ADMIN_BUILDER_COLLECTIONS";
+				var permissionNavigationValue = "Collections";
+			}
 			else if (contains("${permissionDefinitionKey}", "SITE_ADMIN_CONFIGURATION_REDIRECTION")) {
 				var permissionNavigationKey = "SITE_ADMIN_CONFIGURATION_REDIRECTION";
 				var permissionNavigationValue = "Redirection";
@@ -312,10 +299,6 @@ definition {
 			else if (contains("${permissionDefinitionKey}", "SITE_ADMIN_CATEGORIES")) {
 				var permissionNavigationKey = "SITE_ADMIN_CATEGORIES";
 				var permissionNavigationValue = "Categories";
-			}
-			else if (contains("${permissionDefinitionKey}", "SITE_ADMIN_CONTENT_COLLECTIONS")) {
-				var permissionNavigationKey = "SITE_ADMIN_CONTENT_COLLECTIONS";
-				var permissionNavigationValue = "Collections";
 			}
 			else if (contains("${permissionDefinitionKey}", "SITE_ADMIN_CONTENT_DOCUMENTS_AND_MEDIA")) {
 				var permissionNavigationKey = "SITE_ADMIN_CONTENT_DOCUMENTS_AND_MEDIA";
@@ -392,11 +375,6 @@ definition {
 
 				var key_card = "${siteNameScope}";
 
-				LiferayEvent.waitForLiferayEvent(
-					attributeName = "src",
-					attributeValue = "dialog-iframe-popup",
-					eventName = "modalIframeLoaded");
-
 				SelectFrame(locator1 = "RolesPermissionsSelectSite#SELECT_SITE_IFRAME");
 
 				AssertClick(
@@ -416,7 +394,7 @@ definition {
 				}
 
 				AssertClick.assertPartialTextClickAt(
-					locator1 = "LexiconCard#CARD_TITLE",
+					locator1 = "Card#CARD_TITLE",
 					value1 = "${siteNameScope}");
 
 				var key_siteNameScope = "${siteNameScope}";
@@ -440,7 +418,7 @@ definition {
 	}
 
 	macro removeAssignee {
-		ProductMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Users",
 			panel = "Control Panel",
 			portlet = "Roles");
@@ -482,11 +460,6 @@ definition {
 		var key_roleTitle = StringUtil.lowerCase("${key_roleTitle}");
 
 		if (IsElementPresent.isElementPresentAfterWait(locator1 = "IFrame#MODAL_BODY")) {
-			LiferayEvent.waitForLiferayEvent(
-				attributeName = "src",
-				attributeValue = "dialog-iframe-popup",
-				eventName = "modalIframeLoaded");
-
 			SelectFrame(locator1 = "IFrame#MODAL_BODY");
 		}
 
@@ -504,7 +477,7 @@ definition {
 	macro removeStagingAdminRole {
 		var roleTitle = "Staging Admin";
 
-		ProductMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Users",
 			panel = "Control Panel",
 			portlet = "Roles");
@@ -521,7 +494,7 @@ definition {
 	}
 
 	macro tearDownCP {
-		ProductMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Users",
 			panel = "Control Panel",
 			portlet = "Roles");
@@ -654,6 +627,10 @@ definition {
 			var permissionNavigationKey = "SITE_ADMIN_APPLICATIONS_WEB_CONTENT_DISPLAY";
 			var permissionNavigationValue = "Web Content Display";
 		}
+		else if (contains("${permissionDefinitionKey}", "SITE_ADMIN_BUILDER_COLLECTIONS")) {
+			var permissionNavigationKey = "SITE_ADMIN_BUILDER_COLLECTIONS";
+			var permissionNavigationValue = "Collections";
+		}
 		else if (contains("${permissionDefinitionKey}", "SITE_ADMIN_CONFIGURATION_REDIRECTION")) {
 			var permissionNavigationKey = "SITE_ADMIN_CONFIGURATION_REDIRECTION";
 			var permissionNavigationValue = "Redirection";
@@ -661,10 +638,6 @@ definition {
 		else if (contains("${permissionDefinitionKey}", "SITE_ADMIN_CONTENT_BLOGS")) {
 			var permissionNavigationKey = "SITE_ADMIN_CONTENT_BLOGS";
 			var permissionNavigationValue = "Blogs";
-		}
-		else if (contains("${permissionDefinitionKey}", "SITE_ADMIN_CONTENT_COLLECTIONS")) {
-			var permissionNavigationKey = "SITE_ADMIN_CONTENT_COLLECTIONS";
-			var permissionNavigationValue = "Collections";
 		}
 		else if (contains("${permissionDefinitionKey}", "SITE_ADMIN_CONTENT_DOCUMENTS_AND_MEDIA")) {
 			var permissionNavigationKey = "SITE_ADMIN_CONTENT_DOCUMENTS_AND_MEDIA";

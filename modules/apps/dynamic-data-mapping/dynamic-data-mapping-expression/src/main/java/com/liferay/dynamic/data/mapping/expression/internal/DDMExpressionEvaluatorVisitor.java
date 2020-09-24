@@ -26,6 +26,7 @@ import com.liferay.dynamic.data.mapping.expression.DDMExpressionParameterAccesso
 import com.liferay.dynamic.data.mapping.expression.DDMExpressionParameterAccessorAware;
 import com.liferay.dynamic.data.mapping.expression.GetFieldPropertyRequest;
 import com.liferay.dynamic.data.mapping.expression.GetFieldPropertyResponse;
+import com.liferay.dynamic.data.mapping.expression.LocaleAware;
 import com.liferay.dynamic.data.mapping.expression.internal.parser.DDMExpressionBaseVisitor;
 import com.liferay.dynamic.data.mapping.expression.internal.parser.DDMExpressionParser;
 import com.liferay.dynamic.data.mapping.expression.internal.parser.DDMExpressionParser.AdditionExpressionContext;
@@ -159,10 +160,9 @@ public class DDMExpressionEvaluatorVisitor
 	public Object visitFunctionCallExpression(
 		@NotNull FunctionCallExpressionContext context) {
 
-		String functionName = getFunctionName(context.functionName);
-
 		DDMExpressionFunctionFactory ddmExpressionFunctionFactory =
-			_ddmExpressionFunctionFactories.get(functionName);
+			_ddmExpressionFunctionFactories.get(
+				getFunctionName(context.functionName));
 
 		DDMExpressionFunction ddmExpressionFunction =
 			ddmExpressionFunctionFactory.create();
@@ -201,6 +201,12 @@ public class DDMExpressionEvaluatorVisitor
 
 			ddmExpressionFieldAccessorAware.setDDMExpressionFieldAccessor(
 				_ddmExpressionFieldAccessor);
+		}
+
+		if (ddmExpressionFunction instanceof LocaleAware) {
+			LocaleAware localeAware = (LocaleAware)ddmExpressionFunction;
+
+			localeAware.setLocale(_ddmExpressionParameterAccessor.getLocale());
 		}
 
 		Optional<Method> methodOptional = _getApplyMethodOptional(
@@ -511,6 +517,10 @@ public class DDMExpressionEvaluatorVisitor
 	}
 
 	protected BigDecimal getBigDecimal(Comparable<?> comparable) {
+		if (comparable == null) {
+			return BigDecimal.ZERO;
+		}
+
 		if (comparable instanceof BigDecimal) {
 			return (BigDecimal)comparable;
 		}
@@ -565,9 +575,10 @@ public class DDMExpressionEvaluatorVisitor
 
 		Class<?>[] parameterTypes = method.getParameterTypes();
 
+		Object object = new Object();
+
 		if ((parameterTypes.length == 1) &&
-			(parameterTypes[0] == new Object().getClass()) &&
-			iterator.hasNext()) {
+			(parameterTypes[0] == object.getClass()) && iterator.hasNext()) {
 
 			return Optional.ofNullable(iterator.next());
 		}

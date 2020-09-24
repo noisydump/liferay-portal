@@ -33,9 +33,9 @@ portletDisplay.setURLBack(importProcessesURL.toString());
 renderResponse.setTitle(LanguageUtil.get(request, "new-import-process"));
 %>
 
-<clay:container
-	className="container-view"
-	id='<%= renderResponse.getNamespace() + "exportImportOptions" %>'
+<clay:container-fluid
+	cssClass="container-view"
+	id='<%= liferayPortletResponse.getNamespace() + "exportImportOptions" %>'
 >
 
 	<%
@@ -56,4 +56,4 @@ renderResponse.setTitle(LanguageUtil.get(request, "new-import-process"));
 			<liferay-util:include page="/import/new_import/import_layouts_validation.jsp" servletContext="<%= application %>" />
 		</c:otherwise>
 	</c:choose>
-</clay:container>
+</clay:container-fluid>

@@ -94,7 +94,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -235,9 +234,8 @@ public class CompanyLocalServiceTest {
 
 		Company company = addCompany();
 
-		long companyId = company.getCompanyId();
-
-		long userId = UserLocalServiceUtil.getDefaultUserId(companyId);
+		long userId = UserLocalServiceUtil.getDefaultUserId(
+			company.getCompanyId());
 
 		Group companyGroup = company.getGroup();
 
@@ -772,6 +770,23 @@ public class CompanyLocalServiceTest {
 	}
 
 	@Test
+	public void testGetCompanyByVirtualHost() throws Exception {
+		String virtualHostName = "::1";
+
+		Company company = CompanyLocalServiceUtil.addCompany(
+			null, virtualHostName, virtualHostName, "test.com", false, 0, true);
+
+		Assert.assertEquals(
+			company,
+			CompanyLocalServiceUtil.getCompanyByVirtualHost(virtualHostName));
+		Assert.assertEquals(
+			company,
+			CompanyLocalServiceUtil.getCompanyByVirtualHost("0:0:0:0:0:0:0:1"));
+
+		CompanyLocalServiceUtil.deleteCompany(company);
+	}
+
+	@Test
 	public void testUpdateDisplay() throws Exception {
 		Company company = addCompany();
 
@@ -785,6 +800,8 @@ public class CompanyLocalServiceTest {
 			company.getCompanyId(), languageId, "CET");
 
 		user = UserLocalServiceUtil.getDefaultUser(company.getCompanyId());
+
+		CompanyLocalServiceUtil.deleteCompany(company.getCompanyId());
 
 		Assert.assertEquals(languageId, user.getLanguageId());
 		Assert.assertEquals("CET", user.getTimeZoneId());
@@ -841,14 +858,19 @@ public class CompanyLocalServiceTest {
 
 	@Test
 	public void testUpdateValidVirtualHostnames() throws Exception {
-		testUpdateVirtualHostnames(new String[] {"abc.com"}, false);
+		testUpdateVirtualHostnames(
+			new String[] {
+				"abc.com", "255.0.0.0", "0:0:0:0:0:0:0:1", "::1",
+				"0000:0000:0000:0000:0000:0000:0000:0001"
+			},
+			false);
 	}
 
 	protected Company addCompany() throws Exception {
 		String webId = RandomTestUtil.randomString() + "test.com";
 
 		Company company = CompanyLocalServiceUtil.addCompany(
-			webId, webId, "test.com", false, 0, true);
+			null, webId, webId, "test.com", false, 0, true);
 
 		PortalInstances.initCompany(_mockServletContext, webId);
 
@@ -859,13 +881,13 @@ public class CompanyLocalServiceTest {
 			long companyId, long userId, String name)
 		throws Exception {
 
-		Map<Locale, String> nameMap = HashMapBuilder.put(
-			LocaleUtil.getDefault(), name
-		).build();
-
 		return LayoutSetPrototypeLocalServiceUtil.addLayoutSetPrototype(
-			userId, companyId, nameMap, new HashMap<Locale, String>(), true,
-			true, getServiceContext(companyId));
+			userId, companyId,
+			HashMapBuilder.put(
+				LocaleUtil.getDefault(), name
+			).build(),
+			new HashMap<Locale, String>(), true, true,
+			getServiceContext(companyId));
 	}
 
 	protected User addUser(

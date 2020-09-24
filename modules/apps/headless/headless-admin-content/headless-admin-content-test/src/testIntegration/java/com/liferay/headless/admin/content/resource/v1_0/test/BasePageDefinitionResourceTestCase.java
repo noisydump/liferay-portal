@@ -106,7 +106,9 @@ public abstract class BasePageDefinitionResourceTestCase {
 		PageDefinitionResource.Builder builder =
 			PageDefinitionResource.builder();
 
-		pageDefinitionResource = builder.locale(
+		pageDefinitionResource = builder.authentication(
+			"test@liferay.com", "test"
+		).locale(
 			LocaleUtil.getDefault()
 		).build();
 	}
@@ -241,7 +243,7 @@ public abstract class BasePageDefinitionResourceTestCase {
 		}
 	}
 
-	protected void assertValid(PageDefinition pageDefinition) {
+	protected void assertValid(PageDefinition pageDefinition) throws Exception {
 		boolean valid = true;
 
 		for (String additionalAssertFieldName :

@@ -34,15 +34,19 @@ MBThread thread = null;
 MBMessage curParentMessage = null;
 
 if (threadId > 0) {
+	thread = MBThreadLocalServiceUtil.getThread(threadId);
+
 	try {
 		curParentMessage = MBMessageServiceUtil.getMessage(parentMessageId);
 
 		if (Validator.isNull(subject)) {
-			if (curParentMessage.getSubject().startsWith(MBMessageConstants.MESSAGE_SUBJECT_PREFIX_RE)) {
-				subject = curParentMessage.getSubject();
+			String curParentMessageSubject = curParentMessage.getSubject();
+
+			if (curParentMessageSubject.startsWith(MBMessageConstants.MESSAGE_SUBJECT_PREFIX_RE)) {
+				subject = curParentMessageSubject;
 			}
 			else {
-				subject = MBMessageConstants.MESSAGE_SUBJECT_PREFIX_RE + curParentMessage.getSubject();
+				subject = MBMessageConstants.MESSAGE_SUBJECT_PREFIX_RE + curParentMessageSubject;
 			}
 		}
 	}
@@ -95,14 +99,14 @@ else {
 
 String headerTitle = LanguageUtil.get(request, "add-message");
 
-if (curParentMessage != null) {
-	headerTitle = LanguageUtil.format(request, "reply-to-x", HtmlUtil.escape(curParentMessage.getSubject()), false);
-}
-else if (message != null) {
+if (message != null) {
 	headerTitle = LanguageUtil.format(request, "edit-x", HtmlUtil.escape(message.getSubject()), false);
 }
+else if (curParentMessage != null) {
+	headerTitle = LanguageUtil.format(request, "reply-to-x", HtmlUtil.escape(curParentMessage.getSubject()), false);
+}
 
-boolean portletTitleBasedNavigation = GetterUtil.getBoolean(portletConfig.getInitParameter("portlet-title-based-navigation"));
+boolean portletTitleBasedNavigation = GetterUtil.getBoolean(portletConfig.getInitParameter("portlet-title-based-navigation")) || Objects.equals(portletDisplay.getPortletResource(), PortletKeys.MY_WORKFLOW_TASK);
 
 if (portletTitleBasedNavigation) {
 	portletDisplay.setShowBackIcon(true);
@@ -112,8 +116,8 @@ if (portletTitleBasedNavigation) {
 }
 %>
 
-<clay:container
-	id='<%= renderResponse.getNamespace() + "mbEditPageContainer" %>'
+<clay:container-fluid
+	id='<%= liferayPortletResponse.getNamespace() + "mbEditPageContainer" %>'
 >
 	<c:if test="<%= !portletTitleBasedNavigation %>">
 		<h3><%= headerTitle %></h3>
@@ -126,6 +130,7 @@ if (portletTitleBasedNavigation) {
 	<aui:form action="<%= editMessageURL %>" enctype="multipart/form-data" method="post" name="fm" onSubmit="event.preventDefault();">
 		<aui:input name="<%= Constants.CMD %>" type="hidden" />
 		<aui:input name="redirect" type="hidden" value="<%= redirect %>" />
+		<aui:input name="portletResource" type="hidden" value="<%= portletDisplay.getPortletResource() %>" />
 		<aui:input name="messageId" type="hidden" value="<%= messageId %>" />
 		<aui:input name="mbCategoryId" type="hidden" value="<%= categoryId %>" />
 		<aui:input name="threadId" type="hidden" value="<%= threadId %>" />
@@ -302,6 +307,7 @@ if (portletTitleBasedNavigation) {
 					<liferay-asset:asset-categories-selector
 						className="<%= MBMessage.class.getName() %>"
 						classPK="<%= (message != null) ? message.getMessageId() : 0 %>"
+						visibilityTypes="<%= AssetVocabularyConstants.VISIBILITY_TYPES %>"
 					/>
 
 					<liferay-asset:asset-tags-selector
@@ -327,18 +333,18 @@ if (portletTitleBasedNavigation) {
 					boolean disabled = false;
 					boolean question = threadAsQuestionByDefault;
 
-					if (message != null) {
-						thread = MBThreadLocalServiceUtil.getThread(threadId);
+					String displayStyle = category.getDisplayStyle();
 
+					if (message != null) {
 						if (thread.isQuestion() || message.isAnswer()) {
 							question = true;
 
-							if ((category != null) && category.getDisplayStyle().equals("question")) {
+							if ((category != null) && Objects.equals(displayStyle, "question")) {
 								disabled = true;
 							}
 						}
 					}
-					else if ((category != null) && category.getDisplayStyle().equals("question")) {
+					else if ((category != null) && Objects.equals(displayStyle, "question")) {
 						disabled = true;
 						question = true;
 					}
@@ -451,7 +457,7 @@ if (portletTitleBasedNavigation) {
 			<aui:button href="<%= redirect %>" type="cancel" />
 		</aui:button-row>
 	</aui:form>
-</clay:container>
+</clay:container-fluid>
 
 <aui:script require='<%= npmResolvedPackageName + "/message_boards/js/MBPortlet.es as MBPortlet" %>'>
 	new MBPortlet.default({

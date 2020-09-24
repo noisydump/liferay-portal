@@ -15,34 +15,18 @@
 package com.liferay.depot.web.internal.configuration;
 
 import com.liferay.depot.configuration.DepotConfiguration;
-import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
 
-import java.util.Map;
-
-import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.Modified;
 
 /**
  * @author Alejandro Tardín
  */
-@Component(
-	configurationPid = "com.liferay.depot.web.internal.configuration.FFDepotConfiguration",
-	service = DepotConfiguration.class
-)
+@Component(service = DepotConfiguration.class)
 public class DepotConfigurationImpl implements DepotConfiguration {
 
+	@Override
 	public boolean isEnabled() {
-		return _ffDepotConfiguration.enabled();
+		return true;
 	}
-
-	@Activate
-	@Modified
-	protected void activate(Map<String, Object> properties) {
-		_ffDepotConfiguration = ConfigurableUtil.createConfigurable(
-			FFDepotConfiguration.class, properties);
-	}
-
-	private volatile FFDepotConfiguration _ffDepotConfiguration;
 
 }

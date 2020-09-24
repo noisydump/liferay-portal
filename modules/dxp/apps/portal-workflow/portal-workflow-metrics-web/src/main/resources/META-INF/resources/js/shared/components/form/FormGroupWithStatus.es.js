@@ -18,6 +18,7 @@ import FieldStatus from './FieldStatus.es';
 const FormGroupWithStatus = ({
 	children,
 	className,
+	description,
 	error,
 	htmlFor,
 	label,
@@ -36,6 +37,15 @@ const FormGroupWithStatus = ({
 		{children}
 
 		{error && <FieldStatus error status={error} />}
+
+		{description && (
+			<ClayForm.FeedbackGroup>
+				<ClayForm.FeedbackItem>
+					<ClayForm.Text>{description}</ClayForm.Text>
+				</ClayForm.FeedbackItem>
+			</ClayForm.FeedbackGroup>
+		)}
+
 		{success && <FieldStatus status={success} />}
 	</ClayForm.Group>
 );
