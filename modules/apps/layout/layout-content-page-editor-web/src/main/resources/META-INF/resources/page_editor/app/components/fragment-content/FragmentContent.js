@@ -19,6 +19,7 @@ import React, {useCallback, useEffect, useState} from 'react';
 
 import setFragmentEditables from '../../actions/setFragmentEditables';
 import selectCanConfigureWidgets from '../../selectors/selectCanConfigureWidgets';
+import selectLanguageId from '../../selectors/selectLanguageId';
 import selectSegmentsExperienceId from '../../selectors/selectSegmentsExperienceId';
 import {useDispatch, useSelector, useSelectorCallback} from '../../store/index';
 import {getFrontendTokenValue} from '../../utils/getFrontendTokenValue';
@@ -84,7 +85,7 @@ const FragmentContent = ({
 		[fragmentEntryLinkId]
 	);
 
-	const languageId = useSelector((state) => state.languageId);
+	const languageId = useSelector(selectLanguageId);
 	const segmentsExperienceId = useSelector(selectSegmentsExperienceId);
 	const selectedViewportSize = useSelector(
 		(state) => state.selectedViewportSize
@@ -92,9 +93,12 @@ const FragmentContent = ({
 
 	const defaultContent = useGetContent(
 		fragmentEntryLink,
+		languageId,
 		segmentsExperienceId
 	);
 	const [content, setContent] = useState(defaultContent);
+
+	/* eslint-disable-next-line react-hooks/exhaustive-deps */
 	const editableValues = fragmentEntryLink
 		? fragmentEntryLink.editableValues
 		: {};
@@ -134,7 +138,8 @@ const FragmentContent = ({
 						editable.processor.render(
 							editable.element,
 							value,
-							editableConfig
+							editableConfig,
+							languageId
 						);
 
 						editable.element.classList.add('page-editor__editable');
@@ -152,12 +157,15 @@ const FragmentContent = ({
 		};
 	}, [
 		defaultContent,
+		dispatch,
 		editableValues,
+		fragmentEntryLink,
 		fragmentEntryLinkId,
 		getFieldValue,
 		isMounted,
 		isProcessorEnabled,
 		languageId,
+		segmentsExperienceId,
 	]);
 
 	const responsiveConfig = getResponsiveConfig(
@@ -207,19 +215,22 @@ const FragmentContent = ({
 	style.border = `solid ${borderWidth}px`;
 	style.borderColor = getFrontendTokenValue(borderColor);
 	style.borderRadius = getFrontendTokenValue(borderRadius);
-	style.boxShadow = getFrontendTokenValue(shadow);
 	style.color = getFrontendTokenValue(textColor);
 	style.fontFamily = getFrontendTokenValue(fontFamily);
 	style.fontSize = getFrontendTokenValue(fontSize);
 	style.fontWeight = getFrontendTokenValue(fontWeight);
 	style.height = height;
 	style.maxHeight = maxHeight;
-	style.maxWidth = maxWidth;
 	style.minHeight = minHeight;
-	style.minWidth = minWidth;
 	style.opacity = opacity ? opacity / 100 : null;
 	style.overflow = overflow;
-	style.width = width;
+
+	if (!withinTopper) {
+		style.boxShadow = getFrontendTokenValue(shadow);
+		style.maxWidth = maxWidth;
+		style.minWidth = minWidth;
+		style.width = width;
+	}
 
 	if (backgroundImageValue) {
 		style.backgroundImage = `url(${backgroundImageValue})`;
@@ -233,8 +244,6 @@ const FragmentContent = ({
 			className={classNames(
 				className,
 				`mb-${marginBottom || 0}`,
-				`ml-${marginLeft || 0}`,
-				`mr-${marginRight || 0}`,
 				`mt-${marginTop || 0}`,
 				`pb-${paddingBottom || 0}`,
 				`pl-${paddingLeft || 0}`,
@@ -243,6 +252,8 @@ const FragmentContent = ({
 				'page-editor__fragment-content',
 				{
 					'page-editor__fragment-content--portlet-topper-hidden': !canConfigureWidgets,
+					[`ml-${marginLeft || 0}`]: !withinTopper,
+					[`mr-${marginRight || 0}`]: !withinTopper,
 					[textAlign
 						? textAlign.startsWith('text-')
 							? textAlign

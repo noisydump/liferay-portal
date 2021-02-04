@@ -55,6 +55,9 @@ public class LiferaySerializer extends AbstractSerializer {
 			constructor = clazz.getConstructor();
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception, exception);
+			}
 		}
 
 		if (Serializable.class.isAssignableFrom(clazz) &&
@@ -424,7 +427,7 @@ public class LiferaySerializer extends AbstractSerializer {
 		return javaClassInstance;
 	}
 
-	private static Object _getSafe(JSONObject jsonObject, String name) {
+	private Object _getSafe(JSONObject jsonObject, String name) {
 		Object object = jsonObject.get(name);
 
 		if (object instanceof Integer) {

@@ -26,6 +26,8 @@ import com.liferay.portal.vulcan.util.ObjectMapperUtil;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
+import java.io.Serializable;
+
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Objects;
@@ -48,7 +50,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 @JsonFilter("Liferay.Vulcan")
 @Schema(requiredProperties = {"categoryId", "priceModifierId"})
 @XmlRootElement(name = "PriceModifierCategory")
-public class PriceModifierCategory {
+public class PriceModifierCategory implements Serializable {
 
 	public static PriceModifierCategory toDTO(String json) {
 		return ObjectMapperUtil.readValue(PriceModifierCategory.class, json);
@@ -177,18 +179,21 @@ public class PriceModifierCategory {
 
 	@DecimalMin("0")
 	@Schema
-	public Long getId() {
-		return id;
+	public Long getPriceModifierCategoryId() {
+		return priceModifierCategoryId;
 	}
 
-	public void setId(Long id) {
-		this.id = id;
+	public void setPriceModifierCategoryId(Long priceModifierCategoryId) {
+		this.priceModifierCategoryId = priceModifierCategoryId;
 	}
 
 	@JsonIgnore
-	public void setId(UnsafeSupplier<Long, Exception> idUnsafeSupplier) {
+	public void setPriceModifierCategoryId(
+		UnsafeSupplier<Long, Exception> priceModifierCategoryIdUnsafeSupplier) {
+
 		try {
-			id = idUnsafeSupplier.get();
+			priceModifierCategoryId =
+				priceModifierCategoryIdUnsafeSupplier.get();
 		}
 		catch (RuntimeException re) {
 			throw re;
@@ -200,7 +205,7 @@ public class PriceModifierCategory {
 
 	@GraphQLField
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
-	protected Long id;
+	protected Long priceModifierCategoryId;
 
 	@Schema
 	public String getPriceModifierExternalReferenceCode() {
@@ -337,14 +342,14 @@ public class PriceModifierCategory {
 			sb.append(categoryId);
 		}
 
-		if (id != null) {
+		if (priceModifierCategoryId != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
 			}
 
-			sb.append("\"id\": ");
+			sb.append("\"priceModifierCategoryId\": ");
 
-			sb.append(id);
+			sb.append(priceModifierCategoryId);
 		}
 
 		if (priceModifierExternalReferenceCode != null) {

@@ -21,8 +21,8 @@ String cmd = ParamUtil.getString(request, Constants.CMD);
 
 PortletURL portletURL = renderResponse.createRenderURL();
 
-portletURL.setParameter("mvcRenderCommandName", "/view_configuration_screen");
-portletURL.setParameter("configurationScreenKey", "synced-contact-data");
+portletURL.setParameter("mvcRenderCommandName", "/configuration_admin/view_configuration_screen");
+portletURL.setParameter("configurationScreenKey", "2-synced-contact-data");
 
 String redirect = ParamUtil.getString(request, "redirect", portletURL.toString());
 
@@ -82,9 +82,10 @@ PortalUtil.addPortletBreadcrumbEntry(request, LanguageUtil.get(resourceBundle, "
 
 	<aui:form action="<%= editSyncedContactsURL %>" method="post" name="fm">
 		<aui:input name="<%= Constants.CMD %>" type="hidden" value="update_synced_contacts_fields" />
-		<aui:input name="redirect" type="hidden" value="<%= currentURL %>" />
+		<aui:input name="redirect" type="hidden" value="<%= portletURL.toString() %>" />
+		<aui:input name="exit" type="hidden" value="<%= false %>" />
 		<aui:input name="referrer" type="hidden" value="<%= cmd %>" />
-		<aui:input name="syncAllContacts" type="hidden" value="<%= syncAllContacts %>" />
+		<aui:input name="syncAllContacts" type="hidden" value="<%= String.valueOf(syncAllContacts) %>" />
 		<aui:input name="syncedOrganizationIds" type="hidden" value="<%= StringUtil.merge(syncedOrganizationIds) %>" />
 		<aui:input name="syncedUserGroupIds" type="hidden" value="<%= StringUtil.merge(syncedUserGroupIds) %>" />
 
@@ -98,7 +99,7 @@ PortalUtil.addPortletBreadcrumbEntry(request, LanguageUtil.get(resourceBundle, "
 				FieldDisplayContext fieldDisplayContext = new FieldDisplayContext("/analytics_settings/edit_synced_contacts_fields", renderRequest, renderResponse);
 				%>
 
-				<clay:management-toolbar
+				<clay:management-toolbar-v2
 					displayContext="<%= new FieldManagementToolbarDisplayContext(fieldDisplayContext, request, liferayPortletRequest, liferayPortletResponse) %>"
 				/>
 
@@ -146,7 +147,7 @@ PortalUtil.addPortletBreadcrumbEntry(request, LanguageUtil.get(resourceBundle, "
 				FieldDisplayContext fieldDisplayContext = new FieldDisplayContext("/analytics_settings/edit_synced_users_fields", renderRequest, renderResponse);
 				%>
 
-				<clay:management-toolbar
+				<clay:management-toolbar-v2
 					displayContext="<%= new FieldManagementToolbarDisplayContext(fieldDisplayContext, request, liferayPortletRequest, liferayPortletResponse) %>"
 				/>
 
@@ -189,9 +190,83 @@ PortalUtil.addPortletBreadcrumbEntry(request, LanguageUtil.get(resourceBundle, "
 			</liferay-ui:section>
 		</liferay-ui:tabs>
 
-		<aui:button-row>
-			<aui:button type="submit" value="save" />
-			<aui:button href="<%= redirect %>" type="cancel" value="cancel" />
-		</aui:button-row>
+		<div class="text-right">
+			<aui:button-row>
+				<aui:button href="" onClick='<%= liferayPortletResponse.getNamespace() + "showConfirmationModal(this);" %>' value="cancel" />
+
+				<aui:button type="submit" value="save" />
+			</aui:button-row>
+		</div>
 	</aui:form>
 </clay:sheet>
+
+<aui:script>
+	Liferay.provide(
+		window,
+		'<portlet:namespace />showConfirmationModal',
+		function (event) {
+			var dialog = Liferay.Util.Window.getWindow({
+				dialog: {
+					bodyContent:
+						'<div><h2><liferay-ui:message key="exit-without-saving" /></h2><p class="mt-3 text-secondary"><liferay-ui:message key="exit-without-saving-help" /></p></div>',
+					destroyOnHide: true,
+					height: 300,
+					resizable: false,
+					toolbars: {
+						footer: [
+							{
+								cssClass: 'btn-cancel',
+								label: '<liferay-ui:message key="cancel" />',
+								on: {
+									click: function () {
+										dialog.hide();
+									},
+								},
+							},
+							{
+								cssClass: 'btn-primary',
+								label: '<liferay-ui:message key="exit" />',
+								on: {
+									click: function () {
+										var form = document.getElementById(
+											'<portlet:namespace />fm'
+										);
+
+										var exit = form.querySelector(
+											'#<portlet:namespace />exit'
+										);
+
+										if (exit) {
+											exit.setAttribute('value', 'true');
+										}
+
+										submitForm(
+											form,
+											'<portlet:actionURL name="/analytics_settings/edit_synced_contacts" var="editSyncedContactsURL" />'
+										);
+									},
+								},
+							},
+						],
+						header: [
+							{
+								cssClass: 'close',
+								discardDefaultButtonCssClasses: true,
+								labelHTML:
+									'<span aria-hidden="true">&times;</span>',
+								on: {
+									click: function (event) {
+										dialog.hide();
+									},
+								},
+							},
+						],
+					},
+					width: 500,
+				},
+				title: '<%= LanguageUtil.get(resourceBundle, "unsaved-changes") %>',
+			});
+		},
+		['aui-base', 'liferay-util-window']
+	);
+</aui:script>

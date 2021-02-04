@@ -9,6 +9,7 @@
  * distribution rights of the Software.
  */
 
+import '@testing-library/jest-dom/extend-expect';
 import {cleanup, render} from '@testing-library/react';
 import React from 'react';
 
@@ -43,7 +44,7 @@ const wrapper = ({children}) => (
 );
 
 describe('The performance by assignee page body should', () => {
-	let getAllByTestId;
+	let getAllByRole;
 
 	afterEach(cleanup);
 
@@ -57,15 +58,15 @@ describe('The performance by assignee page body should', () => {
 			{wrapper}
 		);
 
-		getAllByTestId = renderResult.getAllByTestId;
+		getAllByRole = renderResult.getAllByRole;
 	});
 
 	test('Be rendered with assignees names', () => {
-		const assigneeNames = getAllByTestId('assigneeName');
+		const rows = getAllByRole('row');
 
-		expect(assigneeNames[0].innerHTML).toEqual('User Test First');
-		expect(assigneeNames[1].innerHTML).toEqual('User Test Second');
-		expect(assigneeNames[2].innerHTML).toEqual('User Test Third');
+		expect(rows[1]).toHaveTextContent('User Test First');
+		expect(rows[2]).toHaveTextContent('User Test Second');
+		expect(rows[3]).toHaveTextContent('User Test Third');
 	});
 });
 
@@ -73,19 +74,17 @@ describe('The subcomponents from workload by assignee page body should', () => {
 	afterEach(cleanup);
 
 	test('Be rendered with empty view and no content message', async () => {
-		const {getByTestId} = render(
+		const {getByText} = render(
 			<PerformanceByAssigneePage.Body items={[]} totalCount={0} />
 		);
 
-		const emptyStateDiv = getByTestId('emptyState');
+		const emptyStateMessage = getByText('there-is-no-data-at-the-moment');
 
-		expect(emptyStateDiv.children[1].children[0].innerHTML).toBe(
-			'there-is-no-data-at-the-moment'
-		);
+		expect(emptyStateMessage).toBeTruthy();
 	});
 
 	test('Be rendered with empty view and no results message', async () => {
-		const {getByTestId} = render(
+		const {getByText} = render(
 			<PerformanceByAssigneePage.Body
 				filtered={true}
 				items={[]}
@@ -93,10 +92,8 @@ describe('The subcomponents from workload by assignee page body should', () => {
 			/>
 		);
 
-		const emptyStateDiv = getByTestId('emptyState');
+		const emptyStateMessage = getByText('no-results-were-found');
 
-		expect(emptyStateDiv.children[1].children[0].innerHTML).toBe(
-			'no-results-were-found'
-		);
+		expect(emptyStateMessage).toBeTruthy();
 	});
 });

@@ -25,6 +25,7 @@ import com.liferay.source.formatter.checks.util.SourceUtil;
 
 import com.puppycrawl.tools.checkstyle.api.DetailAST;
 import com.puppycrawl.tools.checkstyle.api.TokenTypes;
+import com.puppycrawl.tools.checkstyle.utils.AnnotationUtil;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -43,15 +44,8 @@ public class VariableNameCheck extends BaseCheck {
 
 	@Override
 	protected void doVisitToken(DetailAST detailAST) {
-		if (detailAST.findFirstToken(TokenTypes.ELLIPSIS) != null) {
-			return;
-		}
-
-		DetailAST modifiersDetailAST = detailAST.findFirstToken(
-			TokenTypes.MODIFIERS);
-
-		if (modifiersDetailAST.branchContains(TokenTypes.LITERAL_PROTECTED) ||
-			modifiersDetailAST.branchContains(TokenTypes.LITERAL_PUBLIC)) {
+		if ((detailAST.findFirstToken(TokenTypes.ELLIPSIS) != null) ||
+			AnnotationUtil.containsAnnotation(detailAST, "Deprecated")) {
 
 			return;
 		}
@@ -59,6 +53,7 @@ public class VariableNameCheck extends BaseCheck {
 		String name = _getVariableName(detailAST);
 
 		if (detailAST.getType() == TokenTypes.VARIABLE_DEF) {
+			_checkClassNameVariable(detailAST, name);
 			_checkTypo(detailAST, name);
 		}
 
@@ -196,6 +191,36 @@ public class VariableNameCheck extends BaseCheck {
 					name.substring(0, x) + array[0] + name.substring(y);
 
 				log(detailAST, MSG_RENAME_VARIABLE, name, newName);
+			}
+		}
+	}
+
+	private void _checkClassNameVariable(
+		DetailAST detailAST, String variableName) {
+
+		Matcher matcher = _classNameVariableNamePatter.matcher(variableName);
+
+		if (!matcher.find()) {
+			return;
+		}
+
+		String match = matcher.group(1);
+
+		String className = StringUtil.removeChar(match, CharPool.UNDERLINE);
+
+		List<DetailAST> valueDetailASTList = getAllChildTokens(
+			detailAST, true, TokenTypes.IDENT, TokenTypes.STRING_LITERAL);
+
+		for (DetailAST valueDetailAST : valueDetailASTList) {
+			String value = StringUtil.removeChar(
+				valueDetailAST.getText(), CharPool.QUOTE);
+
+			if (value.matches("(?i)(.*\\.)?" + className)) {
+				log(
+					detailAST, MSG_RENAME_VARIABLE, variableName,
+					"_CLASS_NAME_" + match);
+
+				return;
 			}
 		}
 	}
@@ -426,7 +451,8 @@ public class VariableNameCheck extends BaseCheck {
 	private void _checkTypeName(
 		DetailAST detailAST, String variableName, String typeName) {
 
-		if (variableName.matches("(?i).*" + typeName + "[0-9]*") ||
+		if (variableName.matches("_?INSTANCE") ||
+			variableName.matches("(?i).*" + typeName + "[0-9]*") ||
 			(typeName.equals("Object") &&
 			 !variableName.matches("(o|obj|(.*Obj))[0-9]*"))) {
 
@@ -754,9 +780,11 @@ public class VariableNameCheck extends BaseCheck {
 
 	private static final String _MSG_TYPO_VARIABLE = "variable.typo";
 
+	private static final Pattern _classNameVariableNamePatter = Pattern.compile(
+		"^_(.+)_CLASS_NAME$");
 	private static final Pattern _countVariableNamePattern = Pattern.compile(
 		"^(\\w+?)([1-9][0-9]*)$");
 	private static final Pattern _isVariableNamePattern = Pattern.compile(
-		"(_?)(is|IS_)([A-Z])(.*)");
+		"^(_?)(is|IS_)([A-Z])(.*)");
 
 }

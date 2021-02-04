@@ -79,12 +79,49 @@ public class AssetDisplayPageEntryServiceUtil {
 
 	public static java.util.List
 		<com.liferay.asset.display.page.model.AssetDisplayPageEntry>
+			getAssetDisplayPageEntries(
+				long classNameId, long classTypeId,
+				long layoutPageTemplateEntryId, boolean defaultTemplate,
+				int start, int end,
+				com.liferay.portal.kernel.util.OrderByComparator
+					<com.liferay.asset.display.page.model.AssetDisplayPageEntry>
+						orderByComparator) {
+
+		return getService().getAssetDisplayPageEntries(
+			classNameId, classTypeId, layoutPageTemplateEntryId,
+			defaultTemplate, start, end, orderByComparator);
+	}
+
+	public static java.util.List
+		<com.liferay.asset.display.page.model.AssetDisplayPageEntry>
 			getAssetDisplayPageEntriesByLayoutPageTemplateEntryId(
 				long layoutPageTemplateEntryId) {
 
 		return getService().
 			getAssetDisplayPageEntriesByLayoutPageTemplateEntryId(
 				layoutPageTemplateEntryId);
+	}
+
+	public static java.util.List
+		<com.liferay.asset.display.page.model.AssetDisplayPageEntry>
+			getAssetDisplayPageEntriesByLayoutPageTemplateEntryId(
+				long layoutPageTemplateEntryId, int start, int end,
+				com.liferay.portal.kernel.util.OrderByComparator
+					<com.liferay.asset.display.page.model.AssetDisplayPageEntry>
+						orderByComparator) {
+
+		return getService().
+			getAssetDisplayPageEntriesByLayoutPageTemplateEntryId(
+				layoutPageTemplateEntryId, start, end, orderByComparator);
+	}
+
+	public static int getAssetDisplayPageEntriesCount(
+		long classNameId, long classTypeId, long layoutPageTemplateEntryId,
+		boolean defaultTemplate) {
+
+		return getService().getAssetDisplayPageEntriesCount(
+			classNameId, classTypeId, layoutPageTemplateEntryId,
+			defaultTemplate);
 	}
 
 	public static int

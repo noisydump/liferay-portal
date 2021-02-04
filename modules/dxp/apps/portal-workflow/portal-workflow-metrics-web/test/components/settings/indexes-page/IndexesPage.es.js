@@ -28,7 +28,7 @@ describe('The IndexesPage component should', () => {
 	describe('Render and dispatch actions', () => {
 		jest.runAllTimers();
 
-		let getAllByTestId, getByTestId;
+		let container, indexesItems, getAllByRole, getAllByText, getByText;
 
 		const items = [
 			{
@@ -62,72 +62,69 @@ describe('The IndexesPage component should', () => {
 				</MockRouter>
 			);
 
-			getAllByTestId = renderResult.getAllByTestId;
-			getByTestId = renderResult.getByTestId;
-
+			container = renderResult.container;
+			getAllByRole = renderResult.getAllByRole;
+			getAllByText = renderResult.getAllByText;
+			getByText = renderResult.getByText;
 			window.location.hash = '/settings/indexes';
 		});
 
 		test('Render information correctly ', () => {
-			const pageTitle = getByTestId('pageTitle');
-			const reindexAllLabel = getByTestId('reindexAllLabel');
-			const reindexAllBtn = getByTestId('reindexAllBtn');
+			const pageTitle = getByText('workflow-index-actions');
+			const reindexAllLabel = getByText('workflow-indexes');
+			const reindexAllBtn = getAllByText('reindex-all')[0];
 
-			expect(pageTitle).toHaveTextContent('workflow-index-actions');
-			expect(reindexAllLabel).toHaveTextContent('workflow-indexes');
-			expect(reindexAllBtn).toHaveTextContent('reindex-all');
+			expect(pageTitle).toBeTruthy();
+			expect(reindexAllLabel).toBeTruthy();
+			expect(reindexAllBtn).toBeTruthy();
 
 			fireEvent.click(reindexAllBtn);
 		});
 
-		test('Render error toast when dispatch any reindex action with error', async () => {
-			const alertToast = await getByTestId('alertToast');
-			const alertClose = alertToast.children[1];
+		test('Render error toast when dispatch any reindex action with error', () => {
+			const alertToast = getByText('your-request-has-failed');
+			const alertClose = container.querySelector('button.close');
 
-			expect(alertToast).toHaveTextContent(
-				'error:your-request-has-failed'
-			);
+			expect(alertToast).toBeTruthy();
 
 			fireEvent.click(alertClose);
 		});
 
 		test('Render with items correctly', () => {
-			const indexesList = getAllByTestId('indexesList');
-			const indexActions = getAllByTestId('indexAction');
-			const indexLabels = getAllByTestId('indexLabel');
+			indexesItems = getAllByRole('listitem');
 
-			expect(indexesList[0].children[0]).toHaveTextContent('metrics');
-			expect(indexActions[0]).toHaveTextContent('reindex-all');
-			expect(indexActions[1]).toHaveTextContent('reindex');
-			expect(indexLabels[0]).toHaveTextContent(
+			expect(indexesItems[1]).toHaveTextContent('metrics');
+			expect(indexesItems[2]).toHaveTextContent('reindex-all');
+			expect(indexesItems[3]).toHaveTextContent('reindex');
+			expect(indexesItems[2]).toHaveTextContent(
 				'workflow-metrics-indexes'
 			);
-			expect(indexLabels[1]).toHaveTextContent('metrics-instances');
-
-			expect(indexesList[1].children[0]).toHaveTextContent('slas');
-			expect(indexActions[2]).toHaveTextContent('reindex-all');
-			expect(indexActions[3]).toHaveTextContent('reindex');
-			expect(indexLabels[2]).toHaveTextContent('workflow-sla-indexes');
-			expect(indexLabels[3]).toHaveTextContent('sla-results');
-
-			expect(indexActions[0].children[0]).not.toBeDisabled();
-			expect(indexActions[1].children[0]).not.toBeDisabled();
-			expect(indexActions[2].children[0]).not.toBeDisabled();
-			expect(indexActions[3].children[0]).not.toBeDisabled();
+			expect(indexesItems[3]).toHaveTextContent('metrics-instances');
+			expect(indexesItems[4]).toHaveTextContent('slas');
+			expect(indexesItems[5]).toHaveTextContent('reindex-all');
+			expect(indexesItems[6]).toHaveTextContent('reindex');
+			expect(indexesItems[5]).toHaveTextContent('workflow-sla-indexes');
+			expect(indexesItems[6]).toHaveTextContent('sla-results');
+			expect(indexesItems[2].children[1].children[0]).not.toBeDisabled();
+			expect(indexesItems[3].children[1].children[0]).not.toBeDisabled();
+			expect(indexesItems[5].children[1].children[0]).not.toBeDisabled();
+			expect(indexesItems[6].children[1].children[0]).not.toBeDisabled();
 		});
 
 		test('Render progress status when dispatch any reindex action', async () => {
-			const reindexAllBtn = getByTestId('reindexAllBtn');
+			const reindexAllBtn = getAllByText('reindex-all')[0];
 
 			await fireEvent.click(reindexAllBtn);
 
-			const indexActions = getAllByTestId('indexAction');
-			const reindexAllStatus = getByTestId('reindexAllStatus');
+			const reindexAllStatus = container.querySelectorAll(
+				'.progress-group'
+			)[0];
 
-			expect(indexActions[0].children[0]).toBeDisabled();
-			expect(indexActions[1].children[0]).toBeDisabled();
-			expect(indexActions[2].children[0]).toBeDisabled();
-			expect(indexActions[3].children[0]).toBeDisabled();
+			expect(indexesItems[2].children[1].children[0]).toBeDisabled();
+			expect(indexesItems[3].children[1].children[0]).toBeDisabled();
+			expect(indexesItems[5].children[1].children[0]).toBeDisabled();
+			expect(indexesItems[6].children[1].children[0]).toBeDisabled();
+
 			expect(reindexAllStatus.children[1]).toHaveTextContent('0%');
 
 			await jest.runOnlyPendingTimers();
@@ -136,30 +133,25 @@ describe('The IndexesPage component should', () => {
 				document.querySelector('div.progress')
 			);
 
-			let alertToast = getByTestId('alertToast');
+			let alertToast = getByText('all-x-have-reindexed-successfully');
 
-			expect(alertToast).toHaveTextContent(
-				'success:all-x-have-reindexed-successfully'
-			);
-
-			expect(indexActions[0].children[0]).not.toBeDisabled();
-			expect(indexActions[1].children[0]).not.toBeDisabled();
-			expect(indexActions[2].children[0]).not.toBeDisabled();
-			expect(indexActions[3].children[0]).not.toBeDisabled();
+			expect(alertToast).toBeTruthy();
+			expect(indexesItems[2].children[1].children[0]).not.toBeDisabled();
+			expect(indexesItems[3].children[1].children[0]).not.toBeDisabled();
+			expect(indexesItems[5].children[1].children[0]).not.toBeDisabled();
+			expect(indexesItems[6].children[1].children[0]).not.toBeDisabled();
 
 			await jest.runOnlyPendingTimers();
 
-			const alertContainer = getByTestId('alertContainer');
+			const alertContainer = document.querySelector('.alert-container');
 			expect(alertContainer.children[0].children.length).toBe(0);
 
-			await fireEvent.click(indexActions[0].children[0]);
+			await fireEvent.click(indexesItems[2].children[1].children[0]);
 
-			expect(indexActions[1].children[0]).toBeDisabled();
-			expect(indexActions[2].children[0]).not.toBeDisabled();
-			expect(indexActions[3].children[0]).not.toBeDisabled();
-			expect(indexActions[0].children[0].children[1]).toHaveTextContent(
-				'0%'
-			);
+			expect(indexesItems[3].children[1].children[0]).toBeDisabled();
+			expect(indexesItems[5].children[1].children[0]).not.toBeDisabled();
+			expect(indexesItems[6].children[1].children[0]).not.toBeDisabled();
+			expect(indexesItems[2]).toHaveTextContent('0%');
 
 			await jest.runOnlyPendingTimers();
 
@@ -167,25 +159,20 @@ describe('The IndexesPage component should', () => {
 				document.querySelector('div.progress')
 			);
 
-			alertToast = getByTestId('alertToast');
+			alertToast = getByText('all-x-have-reindexed-successfully');
 
-			expect(alertToast).toHaveTextContent(
-				'success:all-x-have-reindexed-successfully'
-			);
+			expect(alertToast).toBeTruthy();
+			expect(indexesItems[2].children[1].children[0]).not.toBeDisabled();
+			expect(indexesItems[3].children[1].children[0]).not.toBeDisabled();
+			expect(indexesItems[5].children[1].children[0]).not.toBeDisabled();
+			expect(indexesItems[6].children[1].children[0]).not.toBeDisabled();
 
-			expect(indexActions[0].children[0]).not.toBeDisabled();
-			expect(indexActions[1].children[0]).not.toBeDisabled();
-			expect(indexActions[2].children[0]).not.toBeDisabled();
-			expect(indexActions[3].children[0]).not.toBeDisabled();
+			await fireEvent.click(indexesItems[5].children[1].children[0]);
 
-			await fireEvent.click(indexActions[3].children[0]);
-
-			expect(indexActions[0].children[0]).not.toBeDisabled();
-			expect(indexActions[1].children[0]).not.toBeDisabled();
-			expect(indexActions[2].children[0]).not.toBeDisabled();
-			expect(indexActions[3].children[0].children[1]).toHaveTextContent(
-				'0%'
-			);
+			expect(indexesItems[6].children[1].children[0]).toBeDisabled();
+			expect(indexesItems[2].children[1].children[0]).not.toBeDisabled();
+			expect(indexesItems[3].children[1].children[0]).not.toBeDisabled();
+			expect(indexesItems[5]).toHaveTextContent('0%');
 
 			await jest.runOnlyPendingTimers();
 
@@ -193,23 +180,20 @@ describe('The IndexesPage component should', () => {
 				document.querySelector('div.progress')
 			);
 
-			alertToast = getByTestId('alertToast');
+			alertToast = getByText('all-x-have-reindexed-successfully');
 
-			expect(alertToast).toHaveTextContent(
-				'success:x-has-reindexed-successfully'
-			);
-
-			expect(indexActions[0].children[0]).not.toBeDisabled();
-			expect(indexActions[1].children[0]).not.toBeDisabled();
-			expect(indexActions[2].children[0]).not.toBeDisabled();
-			expect(indexActions[3].children[0]).not.toBeDisabled();
+			expect(alertToast).toBeTruthy();
+			expect(indexesItems[2].children[1].children[0]).not.toBeDisabled();
+			expect(indexesItems[3].children[1].children[0]).not.toBeDisabled();
+			expect(indexesItems[5].children[1].children[0]).not.toBeDisabled();
+			expect(indexesItems[6].children[1].children[0]).not.toBeDisabled();
 		});
 	});
 
 	describe('Render loading reindexes', () => {
 		jest.runAllTimers();
 
-		let getAllByTestId, getByTestId;
+		let container, getAllByRole;
 
 		const items = [
 			{
@@ -267,30 +251,24 @@ describe('The IndexesPage component should', () => {
 				</MockRouter>
 			);
 
-			getAllByTestId = renderResult.getAllByTestId;
-			getByTestId = renderResult.getByTestId;
+			container = renderResult.container;
+			getAllByRole = renderResult.getAllByRole;
 		});
 
 		test('Render all indexes on progress', () => {
-			const indexActions = getAllByTestId('indexAction');
-			const reindexAllStatus = getByTestId('reindexAllStatus');
+			const indexActions = getAllByRole('listitem');
+
+			const reindexAllStatus = container.querySelectorAll(
+				'.progress-group'
+			)[0];
 
 			expect(reindexAllStatus.children[1]).toHaveTextContent('50%');
-			expect(indexActions[0].children[0].children[1]).toHaveTextContent(
-				'0%'
-			);
-			expect(indexActions[0].children[0].children[1]).toHaveTextContent(
-				'20%'
-			);
-			expect(indexActions[1].children[0].children[1]).toHaveTextContent(
-				'40%'
-			);
-			expect(indexActions[2].children[0].children[1]).toHaveTextContent(
-				'60%'
-			);
-			expect(indexActions[3].children[0].children[1]).toHaveTextContent(
-				'80%'
-			);
+
+			expect(indexActions[2]).toHaveTextContent('0%');
+			expect(indexActions[2]).toHaveTextContent('20%');
+			expect(indexActions[3]).toHaveTextContent('40%');
+			expect(indexActions[5]).toHaveTextContent('60%');
+			expect(indexActions[6]).toHaveTextContent('80%');
 		});
 	});
 });

@@ -22,7 +22,7 @@ SearchContainer<AccountGroupDisplay> accountGroupDisplaySearchContainer = Accoun
 ViewAccountGroupsManagementToolbarDisplayContext viewAccountGroupsManagementToolbarDisplayContext = new ViewAccountGroupsManagementToolbarDisplayContext(request, liferayPortletRequest, liferayPortletResponse, accountGroupDisplaySearchContainer);
 %>
 
-<clay:management-toolbar
+<clay:management-toolbar-v2
 	displayContext="<%= viewAccountGroupsManagementToolbarDisplayContext %>"
 />
 
@@ -39,9 +39,10 @@ ViewAccountGroupsManagementToolbarDisplayContext viewAccountGroupsManagementTool
 				modelVar="accountGroupDisplay"
 			>
 				<portlet:renderURL var="rowURL">
-					<portlet:param name="mvcRenderCommandName" value="/account_groups_admin/edit_account_group" />
+					<portlet:param name="mvcRenderCommandName" value="/account_admin/edit_account_group" />
 					<portlet:param name="backURL" value="<%= currentURL %>" />
 					<portlet:param name="accountGroupId" value="<%= String.valueOf(accountGroupDisplay.getAccountGroupId()) %>" />
+					<portlet:param name="screenNavigationCategoryKey" value="<%= AccountScreenNavigationEntryConstants.CATEGORY_KEY_ACCOUNTS %>" />
 				</portlet:renderURL>
 
 				<liferay-ui:search-container-column-text
@@ -56,6 +57,13 @@ ViewAccountGroupsManagementToolbarDisplayContext viewAccountGroupsManagementTool
 					href="<%= rowURL %>"
 					name="description"
 					value="<%= HtmlUtil.escape(accountGroupDisplay.getDescription()) %>"
+				/>
+
+				<liferay-ui:search-container-column-text
+					cssClass="table-cell-expand"
+					href="<%= rowURL %>"
+					name="accounts"
+					value="<%= String.valueOf(accountGroupDisplay.getAccountEntriesCount()) %>"
 				/>
 
 				<liferay-ui:search-container-column-jsp

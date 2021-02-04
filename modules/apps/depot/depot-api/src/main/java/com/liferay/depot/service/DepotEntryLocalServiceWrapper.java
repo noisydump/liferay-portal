@@ -51,6 +51,15 @@ public class DepotEntryLocalServiceWrapper
 
 	@Override
 	public com.liferay.depot.model.DepotEntry addDepotEntry(
+			com.liferay.portal.kernel.model.Group group,
+			com.liferay.portal.kernel.service.ServiceContext serviceContext)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _depotEntryLocalService.addDepotEntry(group, serviceContext);
+	}
+
+	@Override
+	public com.liferay.depot.model.DepotEntry addDepotEntry(
 			java.util.Map<java.util.Locale, String> nameMap,
 			java.util.Map<java.util.Locale, String> descriptionMap,
 			com.liferay.portal.kernel.service.ServiceContext serviceContext)
@@ -355,6 +364,18 @@ public class DepotEntryLocalServiceWrapper
 
 		return _depotEntryLocalService.getDepotEntryByUuidAndGroupId(
 			uuid, groupId);
+	}
+
+	/**
+	 * @deprecated As of Cavanaugh (7.4.x)
+	 */
+	@Deprecated
+	@Override
+	public java.util.List<com.liferay.depot.model.DepotEntry>
+		getDepotEntryGroupRelsByUuidAndCompanyId(String uuid, long companyId) {
+
+		return _depotEntryLocalService.getDepotEntryGroupRelsByUuidAndCompanyId(
+			uuid, companyId);
 	}
 
 	@Override

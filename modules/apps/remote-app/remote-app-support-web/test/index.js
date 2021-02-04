@@ -163,4 +163,53 @@ describe('remote-app-support-web', () => {
 			expect(receiveMessage).not.toHaveBeenCalled();
 		});
 	});
+
+	describe('"fetch" command', () => {
+		it('doesn\'t throw an error if "body" is undefined', async () => {
+			const headers = new Headers();
+			headers.append('Content-Type', 'application/json');
+
+			fetch.mockResponse(
+				JSON.stringify({
+					headers,
+					ok: true,
+					redirected: false,
+					url: '/o/example-url',
+				})
+			);
+
+			iframe.contentWindow.parent.postMessage(
+				{
+					appID: 'some UUID',
+					command: 'fetch',
+					init: {},
+					protocol: REMOTE_APP_PROTOCOL,
+					resource: '/o/test/foo',
+					role: 'client',
+					version: VERSION,
+				},
+				'*'
+			);
+
+			await reply();
+
+			expect(receiveMessage).toHaveBeenCalled();
+
+			expect(receiveMessage.mock.calls[0][0].data).toEqual({
+				appID: 'some UUID',
+				headers: [['content-type', 'text/plain;charset=UTF-8']],
+				kind: 'fetch:resolve',
+				ok: true,
+				protocol: 'com.liferay.remote.app.protocol',
+				redirected: false,
+				requestID: undefined,
+				role: 'host',
+				status: 200,
+				statusText: 'OK',
+				type: undefined,
+				url: '',
+				version: VERSION,
+			});
+		});
+	});
 });

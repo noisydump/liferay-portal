@@ -64,8 +64,10 @@ import java.util.function.Function;
  *
  * @author Brian Wing Shun Chan
  * @see DDMContentImpl
+ * @deprecated
  * @generated
  */
+@Deprecated
 public class DDMContentModelImpl
 	extends BaseModelImpl<DDMContent> implements DDMContentModel {
 
@@ -981,7 +983,7 @@ public class DDMContentModelImpl
 			getAttributeGetterFunctions();
 
 		StringBundler sb = new StringBundler(
-			4 * attributeGetterFunctions.size() + 2);
+			(4 * attributeGetterFunctions.size()) + 2);
 
 		sb.append("{");
 
@@ -1013,7 +1015,7 @@ public class DDMContentModelImpl
 			getAttributeGetterFunctions();
 
 		StringBundler sb = new StringBundler(
-			5 * attributeGetterFunctions.size() + 4);
+			(5 * attributeGetterFunctions.size()) + 4);
 
 		sb.append("<model><model-name>");
 		sb.append(getModelClassName());

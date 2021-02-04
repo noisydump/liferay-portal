@@ -16,15 +16,13 @@ import {config} from '../config/index';
 import selectEditableValue from './selectEditableValue';
 
 export default function selectEditableValueContent(
-	state,
+	{fragmentEntryLinks, languageId},
 	fragmentEntryLinkId,
 	editableId,
 	processorType
 ) {
-	const {languageId} = state;
-
 	const data = selectEditableValue(
-		state,
+		{fragmentEntryLinks},
 		fragmentEntryLinkId,
 		editableId,
 		processorType
@@ -39,7 +37,7 @@ export default function selectEditableValueContent(
 		content = content[config.defaultLanguageId];
 	}
 
-	if (typeof content !== 'string') {
+	if (content == null || content.defaultValue) {
 		content = data.defaultValue;
 	}
 

@@ -583,7 +583,7 @@ public class StagingImpl implements Staging {
 				errorMessageJSONObject.put(
 					"site",
 					LanguageUtil.format(
-						locale, "in-site-x", missingReference.getGroupId(),
+						locale, "in-environment-x", group.getName(locale),
 						false));
 			}
 
@@ -1323,13 +1323,13 @@ public class StagingImpl implements Staging {
 					locale,
 					"there-are-missing-references-that-could-not-be-found-in-" +
 						"the-live-environment-the-following-elements-are-" +
-							"published-from-their-own-site");
+							"published-from-their-own-environment");
 			}
 			else {
 				errorMessage = LanguageUtil.get(
 					locale,
 					"there-are-missing-references-that-could-not-be-found-in-" +
-						"the-current-site");
+						"the-current-environment");
 			}
 
 			MissingReferences missingReferences =
@@ -1770,6 +1770,9 @@ public class StagingImpl implements Staging {
 				}
 			}
 			catch (Exception exception) {
+				if (_log.isDebugEnabled()) {
+					_log.debug(exception, exception);
+				}
 			}
 		}
 
@@ -1821,6 +1824,37 @@ public class StagingImpl implements Staging {
 		}
 
 		return 0;
+	}
+
+	@Override
+	public Layout getRemoteLayout(long userId, long stagingGroupId, long plid)
+		throws PortalException {
+
+		Group stagingGroup = _groupLocalService.fetchGroup(stagingGroupId);
+		User user = _userLocalService.fetchUser(userId);
+
+		HttpPrincipal httpPrincipal = new HttpPrincipal(
+			_stagingURLHelper.buildRemoteURL(
+				stagingGroup.getTypeSettingsProperties()),
+			user.getLogin(), user.getPassword(), user.isPasswordEncrypted());
+
+		Layout layout = _layoutLocalService.fetchLayout(plid);
+
+		Thread thread = Thread.currentThread();
+
+		ClassLoader threadClassLoader = thread.getContextClassLoader();
+
+		try {
+			thread.setContextClassLoader(
+				PortalClassLoaderUtil.getClassLoader());
+
+			return LayoutServiceHttp.getLayoutByUuidAndGroupId(
+				httpPrincipal, layout.getUuid(),
+				stagingGroup.getRemoteLiveGroupId(), layout.isPrivateLayout());
+		}
+		finally {
+			thread.setContextClassLoader(threadClassLoader);
+		}
 	}
 
 	@Override
@@ -2027,6 +2061,25 @@ public class StagingImpl implements Staging {
 		}
 
 		return null;
+	}
+
+	@Override
+	public boolean hasRemoteLayout(long userId, long stagingGroupId, long plid)
+		throws PortalException {
+
+		Group stagingGroup = _groupLocalService.fetchGroup(stagingGroupId);
+		User user = _userLocalService.fetchUser(userId);
+
+		HttpPrincipal httpPrincipal = new HttpPrincipal(
+			_stagingURLHelper.buildRemoteURL(
+				stagingGroup.getTypeSettingsProperties()),
+			user.getLogin(), user.getPassword(), user.isPasswordEncrypted());
+
+		Layout layout = _layoutLocalService.fetchLayout(plid);
+
+		return LayoutServiceHttp.hasLayout(
+			httpPrincipal, layout.getUuid(),
+			stagingGroup.getRemoteLiveGroupId(), layout.isPrivateLayout());
 	}
 
 	@Override
@@ -3207,7 +3260,9 @@ public class StagingImpl implements Staging {
 		String cmd = MapUtil.getString(parameterMap, Constants.CMD);
 
 		if (!cmd.equals(Constants.PUBLISH_TO_LIVE) &&
-			!cmd.equals("schedule_publish_to_live")) {
+			!cmd.equals(Constants.PUBLISH_TO_REMOTE) &&
+			!cmd.equals("schedule_publish_to_live") &&
+			!cmd.equals("schedule_publish_to_remote")) {
 
 			return;
 		}
@@ -3870,7 +3925,9 @@ public class StagingImpl implements Staging {
 			long layoutRevisionId)
 		throws PortalException {
 
-		if (layoutRevisionId <= 0) {
+		if ((layoutRevisionId <= 0) ||
+			ExportImportThreadLocal.isLayoutStagingInProcess()) {
+
 			return;
 		}
 

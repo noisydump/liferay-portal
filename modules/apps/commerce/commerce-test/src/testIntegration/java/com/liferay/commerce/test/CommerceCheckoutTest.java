@@ -113,7 +113,7 @@ public class CommerceCheckoutTest {
 		Settings settings = _settingsFactory.getSettings(
 			new GroupServiceSettingsLocator(
 				_commerceChannel.getGroupId(),
-				CommerceConstants.ORDER_SERVICE_NAME));
+				CommerceConstants.SERVICE_NAME_ORDER));
 
 		ModifiableSettings modifiableSettings =
 			settings.getModifiableSettings();
@@ -141,6 +141,11 @@ public class CommerceCheckoutTest {
 		);
 
 		User user = _company.getDefaultUser();
+
+		PermissionThreadLocal.setPermissionChecker(
+			PermissionCheckerFactoryUtil.create(user));
+
+		PrincipalThreadLocal.setName(user.getUserId());
 
 		CommerceAccount commerceAccount =
 			_commerceAccountLocalService.getGuestCommerceAccount(
@@ -266,7 +271,7 @@ public class CommerceCheckoutTest {
 			Settings settings = _settingsFactory.getSettings(
 				new GroupServiceSettingsLocator(
 					_commerceChannel.getGroupId(),
-					CommerceConstants.ORDER_SERVICE_NAME));
+					CommerceConstants.SERVICE_NAME_ORDER));
 
 			ModifiableSettings modifiableSettings =
 				settings.getModifiableSettings();
@@ -277,6 +282,11 @@ public class CommerceCheckoutTest {
 			modifiableSettings.store();
 
 			User user = _company.getDefaultUser();
+
+			PermissionThreadLocal.setPermissionChecker(
+				PermissionCheckerFactoryUtil.create(user));
+
+			PrincipalThreadLocal.setName(user.getUserId());
 
 			CommerceAccount commerceAccount =
 				_commerceAccountLocalService.getGuestCommerceAccount(
@@ -321,6 +331,11 @@ public class CommerceCheckoutTest {
 			"The price list with the highest priority should be retrieved"
 		);
 
+		PermissionThreadLocal.setPermissionChecker(
+			PermissionCheckerFactoryUtil.create(_user));
+
+		PrincipalThreadLocal.setName(_user.getUserId());
+
 		CommerceOrder commerceOrder = CommerceTestUtil.addB2CCommerceOrder(
 			_user.getUserId(), _commerceChannel.getGroupId(),
 			_commerceCurrency.getCommerceCurrencyId());
@@ -357,10 +372,8 @@ public class CommerceCheckoutTest {
 
 			BigDecimal price = commercePriceEntry.getPrice();
 
-			int quantity = commerceOrderItem.getQuantity();
-
 			BigDecimal totalItemPrice = price.multiply(
-				BigDecimal.valueOf(quantity));
+				BigDecimal.valueOf(commerceOrderItem.getQuantity()));
 
 			expectedSubtotal = expectedSubtotal.add(totalItemPrice);
 		}

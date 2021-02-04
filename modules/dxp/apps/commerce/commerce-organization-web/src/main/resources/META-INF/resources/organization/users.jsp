@@ -37,14 +37,14 @@ portletURL.setParameter(PortletQName.PUBLIC_RENDER_PARAMETER_NAMESPACE + "backUR
 
 <c:if test="<%= OrganizationPermissionUtil.contains(permissionChecker, commerceOrganizationDisplayContext.getOrganizationId(), ActionKeys.ASSIGN_MEMBERS) %>">
 	<div class="commerce-cta is-visible">
-		<aui:button cssClass="btn-lg btn-primary js-invite-user" onClick='<%= liferayPortletResponse.getNamespace() + "openUserInvitationModal();" %>' value="invite-user" />
+		<aui:button cssClass="btn-lg js-invite-user" onClick='<%= liferayPortletResponse.getNamespace() + "openUserInvitationModal();" %>' primary="<%= true %>" value="invite-user" />
 	</div>
 
 	<commerce-ui:user-invitation-modal
 		componentId="userInvitationModal"
 	/>
 
-	<portlet:actionURL name="inviteUser" var="inviteUserActionURL" />
+	<portlet:actionURL name="/commerce_organization/invite_user" var="inviteUserActionURL" />
 
 	<aui:form action="<%= inviteUserActionURL %>" method="post" name="inviteUserFm">
 		<aui:input name="<%= Constants.CMD %>" type="hidden" value="<%= Constants.ASSIGN %>" />

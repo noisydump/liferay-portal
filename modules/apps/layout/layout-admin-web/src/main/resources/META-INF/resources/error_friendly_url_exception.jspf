@@ -33,10 +33,9 @@
 <c:if test="<%= lfurle.getType() == LayoutFriendlyURLException.DUPLICATE %>">
 
 	<%
-	long duplicateClassPK = lfurle.getDuplicateClassPK();
 	String duplicateClassName = lfurle.getDuplicateClassName();
 
-	Layout duplicateLayout = LayoutLocalServiceUtil.getLayout(duplicateClassPK);
+	Layout duplicateLayout = LayoutLocalServiceUtil.getLayout(lfurle.getDuplicateClassPK());
 	%>
 
 	<liferay-ui:message arguments="<%= new Object[] {ResourceActionsUtil.getModelResource(locale, duplicateClassName), duplicateLayout.getName(locale)} %>" key="please-enter-a-unique-friendly-url" translateArguments="<%= false %>" />
@@ -64,6 +63,10 @@
 
 <c:if test="<%= lfurle.getType() == LayoutFriendlyURLException.TOO_DEEP %>">
 	<liferay-ui:message key="the-friendly-url-has-too-many-slashes" />
+</c:if>
+
+<c:if test="<%= lfurle.getType() == LayoutFriendlyURLException.TOO_LONG %>">
+	<liferay-ui:message arguments="<%= LayoutConstants.FRIENDLY_URL_MAX_LENGTH %>" key="the-friendly-url-exceeds-the-limit-of-x-characters-in-its-encoded-format.-please-enter-a-shorter-url" translateArguments="<%= false %>" />
 </c:if>
 
 <c:if test="<%= lfurle.getType() == LayoutFriendlyURLException.TOO_SHORT %>">

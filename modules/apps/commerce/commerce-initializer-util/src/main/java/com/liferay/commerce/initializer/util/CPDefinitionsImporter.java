@@ -28,8 +28,8 @@ import com.liferay.commerce.inventory.service.CommerceInventoryWarehouseItemLoca
 import com.liferay.commerce.model.CPDAvailabilityEstimate;
 import com.liferay.commerce.model.CPDefinitionInventory;
 import com.liferay.commerce.model.CommerceAvailabilityEstimate;
+import com.liferay.commerce.product.constants.CPAttachmentFileEntryConstants;
 import com.liferay.commerce.product.exception.NoSuchSkuContributorCPDefinitionOptionRelException;
-import com.liferay.commerce.product.model.CPAttachmentFileEntryConstants;
 import com.liferay.commerce.product.model.CPDefinition;
 import com.liferay.commerce.product.model.CPDefinitionOptionRel;
 import com.liferay.commerce.product.model.CPDefinitionOptionValueRel;
@@ -55,6 +55,7 @@ import com.liferay.commerce.service.CPDAvailabilityEstimateLocalService;
 import com.liferay.commerce.service.CPDefinitionInventoryLocalService;
 import com.liferay.commerce.service.CommerceAvailabilityEstimateLocalService;
 import com.liferay.commerce.util.comparator.CommerceAvailabilityEstimatePriorityComparator;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.json.JSONArrayImpl;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -262,13 +263,13 @@ public class CPDefinitionsImporter {
 		throws Exception {
 
 		for (int i = 0; i < commerceInventoryWarehouseIds.length; i++) {
-			long commerceInventoryWarehouseId =
-				commerceInventoryWarehouseIds[i];
-
 			int quantity = skuJSONObject.getInt(
 				"Warehouse" + String.valueOf(i + 1));
 
 			if (quantity > 0) {
+				long commerceInventoryWarehouseId =
+					commerceInventoryWarehouseIds[i];
+
 				_commerceInventoryWarehouseItemLocalService.
 					upsertCommerceInventoryWarehouseItem(
 						serviceContext.getUserId(),
@@ -303,7 +304,8 @@ public class CPDefinitionsImporter {
 
 		CPTaxCategory cpTaxCategory =
 			_cpTaxCategoryLocalService.addCPTaxCategory(
-				nameMap, Collections.emptyMap(), serviceContext);
+				StringPool.BLANK, nameMap, Collections.emptyMap(),
+				serviceContext);
 
 		return cpTaxCategory.getCPTaxCategoryId();
 	}
@@ -476,9 +478,9 @@ public class CPDefinitionsImporter {
 
 		JSONArray skusJSONArray = jsonObject.getJSONArray("Skus");
 
-		Calendar calendar = Calendar.getInstance();
-
 		if (skusJSONArray != null) {
+			Calendar calendar = Calendar.getInstance();
+
 			for (int i = 0; i < skusJSONArray.length(); i++) {
 				JSONObject skuJSONObject = skusJSONArray.getJSONObject(i);
 
@@ -498,7 +500,8 @@ public class CPDefinitionsImporter {
 				if (_log.isInfoEnabled()) {
 					_log.info(
 						"No options defined as sku contributor for " +
-							"CPDefinition " + cpDefinition.getCPDefinitionId());
+							"CPDefinition " + cpDefinition.getCPDefinitionId(),
+						noSuchSkuContributorCPDefinitionOptionRelException);
 				}
 			}
 

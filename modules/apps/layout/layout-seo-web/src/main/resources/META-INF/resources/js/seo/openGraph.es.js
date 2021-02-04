@@ -33,7 +33,7 @@ export default function ({namespace, uploadOpenGraphImageURL}) {
 		`${namespace}openGraphImageAlt`
 	);
 	const openGraphImageAltFieldDefaultLocale = document.getElementById(
-		`${namespace}openGraphImageAlt_${Liferay.ThemeDisplay.getLanguageId()}`
+		`${namespace}openGraphImageAlt_${Liferay.ThemeDisplay.getDefaultLanguageId()}`
 	);
 	const openGraphImageAltLabel = document.querySelector(
 		`[for="${namespace}openGraphImageAlt"`
@@ -48,14 +48,14 @@ export default function ({namespace, uploadOpenGraphImageURL}) {
 					openGraphImageFileEntryId.value = itemValue.fileEntryId;
 					openGraphImageTitle.value = itemValue.title;
 
-					toggleDisabled(openGraphImageAltField, false);
-					toggleDisabled(openGraphImageAltFieldDefaultLocale, false);
-					toggleDisabled(openGraphImageAltLabel, false);
-
 					previewSeoFireChange(namespace, {
 						type: 'imgUrl',
 						value: itemValue.url,
 					});
+
+					toggleDisabled(openGraphImageAltField, false);
+					toggleDisabled(openGraphImageAltFieldDefaultLocale, false);
+					toggleDisabled(openGraphImageAltLabel, false);
 				}
 			},
 			selectEventName: `${namespace}openGraphImageSelectedItem`,

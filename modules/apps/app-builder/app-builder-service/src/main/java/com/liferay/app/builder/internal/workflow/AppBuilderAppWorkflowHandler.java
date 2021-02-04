@@ -14,6 +14,7 @@
 
 package com.liferay.app.builder.internal.workflow;
 
+import com.liferay.app.builder.constants.AppBuilderAppConstants;
 import com.liferay.app.builder.model.AppBuilderApp;
 import com.liferay.app.builder.model.AppBuilderAppDataRecordLink;
 import com.liferay.app.builder.service.AppBuilderAppDataRecordLinkLocalService;
@@ -25,6 +26,7 @@ import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.WorkflowDefinitionLink;
+import com.liferay.portal.kernel.portlet.PortletURLFactoryUtil;
 import com.liferay.portal.kernel.security.permission.ResourceActionsUtil;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.WorkflowDefinitionLinkLocalService;
@@ -37,6 +39,12 @@ import java.io.Serializable;
 
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
+
+import javax.portlet.PortletRequest;
+import javax.portlet.PortletURL;
+import javax.portlet.WindowState;
+import javax.portlet.WindowStateException;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -57,8 +65,7 @@ public class AppBuilderAppWorkflowHandler
 	@Override
 	public String getTitle(long classPK, Locale locale) {
 		try {
-			AppBuilderApp appBuilderApp = _getAppBuilderApp(
-				_ddlRecordLocalService.getDDLRecord(classPK));
+			AppBuilderApp appBuilderApp = _getAppBuilderApp(classPK);
 
 			return appBuilderApp.getName(locale);
 		}
@@ -81,8 +88,36 @@ public class AppBuilderAppWorkflowHandler
 			long workflowTaskId, ServiceContext serviceContext)
 		throws PortalException {
 
-		return String.valueOf(
-			serviceContext.getAttribute(WorkflowConstants.CONTEXT_URL));
+		long ddlRecordId = GetterUtil.getLong(
+			serviceContext.getAttribute(
+				WorkflowConstants.CONTEXT_ENTRY_CLASS_PK));
+
+		AppBuilderApp appBuilderApp = _getAppBuilderApp(ddlRecordId);
+
+		if (Objects.equals(
+				appBuilderApp.getScope(),
+				AppBuilderAppConstants.SCOPE_STANDARD)) {
+
+			return super.getURLEditWorkflowTask(workflowTaskId, serviceContext);
+		}
+
+		try {
+			PortletURL portletURL = PortletURLFactoryUtil.create(
+				serviceContext.getRequest(),
+				GetterUtil.getString(serviceContext.getAttribute("portletId")),
+				GetterUtil.getLong(serviceContext.getAttribute("plid")),
+				PortletRequest.RENDER_PHASE);
+
+			portletURL.setParameter("mvcPath", "/edit_app_entry.jsp");
+			portletURL.setParameter(
+				"dataRecordId", String.valueOf(ddlRecordId));
+			portletURL.setWindowState(WindowState.MAXIMIZED);
+
+			return portletURL.toString();
+		}
+		catch (WindowStateException windowStateException) {
+			throw new PortalException(windowStateException);
+		}
 	}
 
 	@Override
@@ -90,8 +125,7 @@ public class AppBuilderAppWorkflowHandler
 			long companyId, long groupId, long classPK)
 		throws PortalException {
 
-		AppBuilderApp appBuilderApp = _getAppBuilderApp(
-			_ddlRecordLocalService.getRecord(classPK));
+		AppBuilderApp appBuilderApp = _getAppBuilderApp(classPK);
 
 		return _workflowDefinitionLinkLocalService.fetchWorkflowDefinitionLink(
 			companyId, appBuilderApp.getGroupId(), getClassName(),
@@ -127,13 +161,12 @@ public class AppBuilderAppWorkflowHandler
 			serviceContext);
 	}
 
-	private AppBuilderApp _getAppBuilderApp(DDLRecord ddlRecord)
+	private AppBuilderApp _getAppBuilderApp(long ddlRecordId)
 		throws PortalException {
 
 		AppBuilderAppDataRecordLink appBuilderAppDataRecordLink =
 			_appBuilderAppDataRecordLinkLocalService.
-				getDDLRecordAppBuilderAppDataRecordLink(
-					ddlRecord.getRecordId());
+				getDDLRecordAppBuilderAppDataRecordLink(ddlRecordId);
 
 		return _appBuilderAppLocalService.getAppBuilderApp(
 			appBuilderAppDataRecordLink.getAppBuilderAppId());

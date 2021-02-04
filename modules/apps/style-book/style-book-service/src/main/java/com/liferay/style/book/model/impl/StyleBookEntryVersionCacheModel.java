@@ -64,12 +64,14 @@ public class StyleBookEntryVersionCacheModel
 
 	@Override
 	public String toString() {
-		StringBundler sb = new StringBundler(27);
+		StringBundler sb = new StringBundler(31);
 
 		sb.append("{styleBookEntryVersionId=");
 		sb.append(styleBookEntryVersionId);
 		sb.append(", version=");
 		sb.append(version);
+		sb.append(", uuid=");
+		sb.append(uuid);
 		sb.append(", styleBookEntryId=");
 		sb.append(styleBookEntryId);
 		sb.append(", groupId=");
@@ -82,6 +84,8 @@ public class StyleBookEntryVersionCacheModel
 		sb.append(userName);
 		sb.append(", createDate=");
 		sb.append(createDate);
+		sb.append(", modifiedDate=");
+		sb.append(modifiedDate);
 		sb.append(", defaultStyleBookEntry=");
 		sb.append(defaultStyleBookEntry);
 		sb.append(", frontendTokensValues=");
@@ -105,6 +109,14 @@ public class StyleBookEntryVersionCacheModel
 		styleBookEntryVersionImpl.setStyleBookEntryVersionId(
 			styleBookEntryVersionId);
 		styleBookEntryVersionImpl.setVersion(version);
+
+		if (uuid == null) {
+			styleBookEntryVersionImpl.setUuid("");
+		}
+		else {
+			styleBookEntryVersionImpl.setUuid(uuid);
+		}
+
 		styleBookEntryVersionImpl.setStyleBookEntryId(styleBookEntryId);
 		styleBookEntryVersionImpl.setGroupId(groupId);
 		styleBookEntryVersionImpl.setCompanyId(companyId);
@@ -122,6 +134,13 @@ public class StyleBookEntryVersionCacheModel
 		}
 		else {
 			styleBookEntryVersionImpl.setCreateDate(new Date(createDate));
+		}
+
+		if (modifiedDate == Long.MIN_VALUE) {
+			styleBookEntryVersionImpl.setModifiedDate(null);
+		}
+		else {
+			styleBookEntryVersionImpl.setModifiedDate(new Date(modifiedDate));
 		}
 
 		styleBookEntryVersionImpl.setDefaultStyleBookEntry(
@@ -163,6 +182,7 @@ public class StyleBookEntryVersionCacheModel
 		styleBookEntryVersionId = objectInput.readLong();
 
 		version = objectInput.readInt();
+		uuid = objectInput.readUTF();
 
 		styleBookEntryId = objectInput.readLong();
 
@@ -173,6 +193,7 @@ public class StyleBookEntryVersionCacheModel
 		userId = objectInput.readLong();
 		userName = objectInput.readUTF();
 		createDate = objectInput.readLong();
+		modifiedDate = objectInput.readLong();
 
 		defaultStyleBookEntry = objectInput.readBoolean();
 		frontendTokensValues = (String)objectInput.readObject();
@@ -187,6 +208,13 @@ public class StyleBookEntryVersionCacheModel
 		objectOutput.writeLong(styleBookEntryVersionId);
 
 		objectOutput.writeInt(version);
+
+		if (uuid == null) {
+			objectOutput.writeUTF("");
+		}
+		else {
+			objectOutput.writeUTF(uuid);
+		}
 
 		objectOutput.writeLong(styleBookEntryId);
 
@@ -204,6 +232,7 @@ public class StyleBookEntryVersionCacheModel
 		}
 
 		objectOutput.writeLong(createDate);
+		objectOutput.writeLong(modifiedDate);
 
 		objectOutput.writeBoolean(defaultStyleBookEntry);
 
@@ -233,12 +262,14 @@ public class StyleBookEntryVersionCacheModel
 
 	public long styleBookEntryVersionId;
 	public int version;
+	public String uuid;
 	public long styleBookEntryId;
 	public long groupId;
 	public long companyId;
 	public long userId;
 	public String userName;
 	public long createDate;
+	public long modifiedDate;
 	public boolean defaultStyleBookEntry;
 	public String frontendTokensValues;
 	public String name;

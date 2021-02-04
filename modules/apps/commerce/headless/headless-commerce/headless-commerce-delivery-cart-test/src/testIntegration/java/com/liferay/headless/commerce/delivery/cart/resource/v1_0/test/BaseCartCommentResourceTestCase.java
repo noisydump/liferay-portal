@@ -325,6 +325,7 @@ public abstract class BaseCartCommentResourceTestCase {
 
 		CartComment randomPatchCartComment = randomPatchCartComment();
 
+		@SuppressWarnings("PMD.UnusedLocalVariable")
 		CartComment patchCartComment = cartCommentResource.patchCartComment(
 			postCartComment.getId(), randomPatchCartComment);
 
@@ -801,9 +802,11 @@ public abstract class BaseCartCommentResourceTestCase {
 					return false;
 				}
 			}
+
+			return true;
 		}
 
-		return true;
+		return false;
 	}
 
 	protected java.util.Collection<EntityField> getEntityFields()

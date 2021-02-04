@@ -15,9 +15,18 @@
 import {ClayButtonWithIcon} from '@clayui/button';
 import React from 'react';
 
+import {SIDEBAR_PANEL_IDS} from '../constants/sidebarPanelIds';
+import {useSetSidebarPanelId} from '../contexts/SidebarPanelIdContext';
+import {AddItemDropDown} from './AddItemDropdown';
 import {AppLayout} from './AppLayout';
 
 export const Toolbar = () => {
+	const setSidebarPanelId = useSetSidebarPanelId();
+
+	const onSettingsButtonClick = () => {
+		setSidebarPanelId(SIDEBAR_PANEL_IDS.menuSettings);
+	};
+
 	return (
 		<>
 			<AppLayout.ToolbarItem expand />
@@ -26,13 +35,18 @@ export const Toolbar = () => {
 				<ClayButtonWithIcon
 					displayType="unstyled"
 					monospaced
+					onClick={onSettingsButtonClick}
 					small
 					symbol="cog"
 				/>
 			</AppLayout.ToolbarItem>
 
 			<AppLayout.ToolbarItem>
-				<ClayButtonWithIcon monospaced small symbol="plus" />
+				<AddItemDropDown
+					trigger={
+						<ClayButtonWithIcon monospaced small symbol="plus" />
+					}
+				/>
 			</AppLayout.ToolbarItem>
 		</>
 	);

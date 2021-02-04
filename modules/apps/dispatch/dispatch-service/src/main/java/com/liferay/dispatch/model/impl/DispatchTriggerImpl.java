@@ -14,15 +14,11 @@
 
 package com.liferay.dispatch.model.impl;
 
-import com.liferay.portal.kernel.scheduler.SchedulerEngineHelperUtil;
-import com.liferay.portal.kernel.scheduler.SchedulerException;
-import com.liferay.portal.kernel.scheduler.StorageType;
 import com.liferay.portal.kernel.util.UnicodeProperties;
-
-import java.util.Date;
 
 /**
  * @author Alessio Antonio Rendina
+ * @author Igor Beslic
  */
 public class DispatchTriggerImpl extends DispatchTriggerBaseImpl {
 
@@ -30,72 +26,40 @@ public class DispatchTriggerImpl extends DispatchTriggerBaseImpl {
 	}
 
 	@Override
-	public Date getEndDate() throws SchedulerException {
-		if (_endDate == null) {
-			_endDate = SchedulerEngineHelperUtil.getEndTime(
-				String.format("DISPATCH_JOB_%07d", getDispatchTriggerId()),
-				String.format("DISPATCH_GROUP_%07d", getDispatchTriggerId()),
-				StorageType.PERSISTED);
+	public UnicodeProperties getDispatchTaskSettingsUnicodeProperties() {
+		if (_dispatchTaskSettingsUnicodeProperties == null) {
+			_dispatchTaskSettingsUnicodeProperties = new UnicodeProperties(
+				true);
+
+			_dispatchTaskSettingsUnicodeProperties.fastLoad(
+				getDispatchTaskSettings());
 		}
 
-		return _endDate;
+		return _dispatchTaskSettingsUnicodeProperties;
 	}
 
 	@Override
-	public Date getStartDate() throws SchedulerException {
-		if (_startDate == null) {
-			_startDate = SchedulerEngineHelperUtil.getStartTime(
-				String.format("DISPATCH_JOB_%07d", getDispatchTriggerId()),
-				String.format("DISPATCH_GROUP_%07d", getDispatchTriggerId()),
-				StorageType.PERSISTED);
+	public void setDispatchTaskSettings(String dispatchTaskSettings) {
+		super.setDispatchTaskSettings(dispatchTaskSettings);
+
+		_dispatchTaskSettingsUnicodeProperties = null;
+	}
+
+	@Override
+	public void setDispatchTaskSettingsUnicodeProperties(
+		UnicodeProperties dispatchTaskSettingsUnicodeProperties) {
+
+		_dispatchTaskSettingsUnicodeProperties =
+			dispatchTaskSettingsUnicodeProperties;
+
+		if (_dispatchTaskSettingsUnicodeProperties == null) {
+			_dispatchTaskSettingsUnicodeProperties = new UnicodeProperties();
 		}
 
-		return _startDate;
+		super.setDispatchTaskSettings(
+			_dispatchTaskSettingsUnicodeProperties.toString());
 	}
 
-	@Override
-	public UnicodeProperties getTypeSettingsProperties() {
-		if (_typeSettingsUnicodeProperties == null) {
-			_typeSettingsUnicodeProperties = new UnicodeProperties(true);
-
-			_typeSettingsUnicodeProperties.fastLoad(getTypeSettings());
-		}
-
-		return _typeSettingsUnicodeProperties;
-	}
-
-	@Override
-	public void setEndDate(Date endDate) {
-		_endDate = endDate;
-	}
-
-	@Override
-	public void setStartDate(Date startDate) {
-		_startDate = startDate;
-	}
-
-	@Override
-	public void setTypeSettings(String typeSettings) {
-		super.setTypeSettings(typeSettings);
-
-		_typeSettingsUnicodeProperties = null;
-	}
-
-	@Override
-	public void setTypeSettingsProperties(
-		UnicodeProperties typeSettingsUnicodeProperties) {
-
-		_typeSettingsUnicodeProperties = typeSettingsUnicodeProperties;
-
-		if (_typeSettingsUnicodeProperties == null) {
-			_typeSettingsUnicodeProperties = new UnicodeProperties();
-		}
-
-		super.setTypeSettings(_typeSettingsUnicodeProperties.toString());
-	}
-
-	private Date _endDate;
-	private Date _startDate;
-	private transient UnicodeProperties _typeSettingsUnicodeProperties;
+	private transient UnicodeProperties _dispatchTaskSettingsUnicodeProperties;
 
 }

@@ -65,6 +65,7 @@
 		<suppress checks="TryWithResourcesCheck" files="portal-kernel/test/unit/com/liferay/portal/kernel/nio/intraband/blocking/ExecutorIntrabandTest\.java" />
 		<suppress checks="VariableDeclarationAsUsedCheck" files="portal-impl/src/com/liferay/portal/action/UpdateLayoutAction\.java" />
 		<suppress checks="VariableNameCheck" files="portal-impl/test/unit/com/liferay/portal/jsonwebservice/FooService\.java" />
+		<suppress checks="VariableNameCheck" files="portal-kernel/src/com/liferay/portal/kernel/display/context/BaseDisplayContext\.java" />
 	</checkstyle>
 	<source-check>
 		<suppress checks="CDNCheck" files="test\.properties" />
@@ -86,6 +87,9 @@
 		<suppress checks="JavaHelperUtilCheck" files="portal-kernel/src/com/liferay/portal/kernel/security/pwd/PasswordEncryptorUtil\.java" />
 		<suppress checks="JavaHelperUtilCheck" files="portal-kernel/src/com/liferay/portal/kernel/settings/SettingsLocatorHelperUtil\.java" />
 		<suppress checks="JavaIllegalImportsCheck" files="util-slf4j/src/com/liferay/util/slf4j/LiferayLoggerFactory\.java" />
+		<suppress checks="JavaMetaAnnotationsCheck" files="modules/apps/portal-configuration/portal-configuration-metatype-definitions-test/src/testIntegration/java/com/liferay/portal/configuration/metatype/definitions/test/MetatypeAttributeDefinitionTest\.java" />
+		<suppress checks="JavaStaticMethodCheck" files="portal-impl/src/com/liferay/portal/struts/FindStrutsAction\.java" />
+		<suppress checks="JavaStaticMethodCheck" files="portal-impl/test/unit/com/liferay/portal/nio/intraband/proxy/IntrabandProxyUtilTest\.java" />
 		<suppress checks="JavaStringBundlerConcatCheck" files="portal-kernel/test/unit/com/liferay/portal/kernel/util/StringBundlerTest\.java" />
 		<suppress checks="JavaStringBundlerInitialCapacityCheck" files="portal-kernel/test/unit/com/liferay/portal/kernel/util/StringBundlerTest\.java" />
 		<suppress checks="JavaTaglibMethodCheck" files="util-taglib/src/com/liferay/taglib/ui/IconTag\.java" />
@@ -116,6 +120,7 @@
 		<suppress checks="PropertiesEmptyLinesCheck" files="build\.properties" />
 		<suppress checks="PropertiesLongLinesCheck" files="portal-impl/src/system\.properties" />
 		<suppress checks="PropertiesWhitespaceCheck" files="build\.properties" />
+		<suppress checks="ResourceBundleCheck" files="portal-kernel/src/com/liferay/portal/kernel/resource/bundle/ClassResourceBundleLoader\.java" />
 		<suppress checks="ResourceBundleCheck" files="portal-kernel/src/com/liferay/portal/kernel/util/ClassResourceBundleLoader\.java" />
 		<suppress checks="ResourceBundleCheck" files="portal-kernel/src/com/liferay/portal/kernel/util/ResourceBundleUtil\.java" />
 		<suppress checks="StringMethodsCheck" files="portal-kernel/src/com/liferay/portal/kernel/util/StringUtil\.java" />
@@ -134,6 +139,7 @@
 		<suppress checks="BNDSuiteCheck" files="modules/apps/bookmarks/app\.bnd" />
 		<suppress checks="BNDSuiteCheck" files="modules/apps/journal-properties-transformer-listener/app\.bnd" />
 		<suppress checks="BNDSuiteCheck" files="modules/apps/microblogs/app\.bnd" />
+		<suppress checks="BNDSuiteCheck" files="modules/apps/polls/app\.bnd" />
 
 		<!-- Temporary suppressions for portal -->
 
@@ -147,7 +153,6 @@
 		<!-- Temporary suppressions for frontend build setup (Chema) -->
 
 		<suppress checks="JSONPackageJSONCheck" files="modules/apps/analytics/analytics-client-js/package\.json" />
-		<suppress checks="JSONPackageJSONCheck" files="modules/apps/remote-app/remote-app-client-js/package\.json" />
 
 		<!-- Temporary suppressions for frontend React setup (LPS-99901, wincent) -->
 

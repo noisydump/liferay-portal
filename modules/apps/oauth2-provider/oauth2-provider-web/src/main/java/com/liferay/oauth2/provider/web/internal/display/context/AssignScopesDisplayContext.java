@@ -81,6 +81,7 @@ public class AssignScopesDisplayContext
 			portletRequest, themeDisplay);
 
 		_applicationDescriptorLocator = applicationDescriptorLocator;
+
 		_companyId = themeDisplay.getCompanyId();
 		_locale = themeDisplay.getLocale();
 
@@ -482,16 +483,6 @@ public class AssignScopesDisplayContext
 			});
 	}
 
-	private static <K, V> Map<V, K> _invertMap(Map<K, V> map) {
-		Map<V, K> ret = new HashMap<>();
-
-		for (Map.Entry<K, V> entry : map.entrySet()) {
-			ret.put(entry.getValue(), entry.getKey());
-		}
-
-		return ret;
-	}
-
 	private void _indexAssignableScopes(
 		AssignableScopes assignableScopes, Set<String> assignedApplicationNames,
 		boolean indexAsGlobalAssignableScopes) {
@@ -524,6 +515,16 @@ public class AssignScopesDisplayContext
 
 			assignableScopesSet.add(assignableScopes);
 		}
+	}
+
+	private <K, V> Map<V, K> _invertMap(Map<K, V> map) {
+		Map<V, K> ret = new HashMap<>();
+
+		for (Map.Entry<K, V> entry : map.entrySet()) {
+			ret.put(entry.getValue(), entry.getKey());
+		}
+
+		return ret;
 	}
 
 	private Map<AssignableScopes, Relations> _normalize(
@@ -595,12 +596,12 @@ public class AssignScopesDisplayContext
 	}
 
 	private final ApplicationDescriptorLocator _applicationDescriptorLocator;
-	private Map<AssignableScopes, Relations> _assignableScopesRelations =
+	private final Map<AssignableScopes, Relations> _assignableScopesRelations =
 		new HashMap<>();
 	private final long _companyId;
-	private Map<String, Set<AssignableScopes>>
+	private final Map<String, Set<AssignableScopes>>
 		_globalAssignableScopesByApplicationName = new HashMap<>();
-	private Map<String, Set<AssignableScopes>>
+	private final Map<String, Set<AssignableScopes>>
 		_localAssignableScopesByApplicationName = new HashMap<>();
 	private final Locale _locale;
 

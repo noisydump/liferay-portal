@@ -15,6 +15,7 @@
 package com.liferay.portal.osgi.web.wab.extender.internal;
 
 import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
+import com.liferay.portal.kernel.dependency.manager.DependencyManagerSyncUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.module.framework.ModuleServiceLifecycle;
@@ -140,32 +141,25 @@ public class WabFactory
 		_bundleTracker = new BundleTracker<>(
 			bundleContext, Bundle.ACTIVE | Bundle.STARTING, this);
 
-		_futureTask = new FutureTask<>(
+		FutureTask<Void> futureTask = new FutureTask<>(
 			() -> {
 				_bundleTracker.open();
 
 				return null;
 			});
 
-		Thread serviceTrackerOpenerThread = new Thread(
-			_futureTask, WabFactory.class.getName() + "-ServiceTrackerOpener");
+		Thread bundleTrackerOpenerThread = new Thread(
+			futureTask, WabFactory.class.getName() + "-BundleTrackerOpener");
 
-		serviceTrackerOpenerThread.setDaemon(true);
+		bundleTrackerOpenerThread.setDaemon(true);
 
-		serviceTrackerOpenerThread.start();
+		bundleTrackerOpenerThread.start();
+
+		DependencyManagerSyncUtil.registerSyncFuture(futureTask);
 	}
 
 	@Deactivate
 	protected void deactivate() {
-		try {
-			_futureTask.get(
-				_wabExtenderConfiguration.stopTimeout(), TimeUnit.MILLISECONDS);
-		}
-		catch (Exception exception) {
-			_log.error(
-				"Unable to stop service tracker opener thread", exception);
-		}
-
 		_bundleTracker.close();
 
 		_webBundleDeployer.close();
@@ -176,7 +170,6 @@ public class WabFactory
 	private static final Log _log = LogFactoryUtil.getLog(WabFactory.class);
 
 	private BundleTracker<?> _bundleTracker;
-	private FutureTask<Void> _futureTask;
 
 	@Reference
 	private JSPServletFactory _jspServletFactory;

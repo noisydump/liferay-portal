@@ -6,8 +6,6 @@ create index IX_A0B4C71A on CPAttachmentFileEntry (displayDate, status);
 create index IX_C2C5D600 on CPAttachmentFileEntry (uuid_[$COLUMN_LENGTH:75$], companyId);
 create unique index IX_BFCBDC82 on CPAttachmentFileEntry (uuid_[$COLUMN_LENGTH:75$], groupId);
 
-create unique index IX_D8B93434 on CPDSpecificationOptionValue (CPDSpecificationOptionValueId, CPDefinitionId);
-create unique index IX_EDD77D36 on CPDSpecificationOptionValue (CPDefinitionId, CPDSpecificationOptionValueId);
 create index IX_95975FB4 on CPDSpecificationOptionValue (CPDefinitionId, CPOptionCategoryId);
 create index IX_173E8E91 on CPDSpecificationOptionValue (CPDefinitionId, CPSpecificationOptionId);
 create index IX_4F4EDBA5 on CPDSpecificationOptionValue (CPOptionCategoryId);
@@ -98,7 +96,7 @@ create index IX_421ED80 on CPSpecificationOption (CPOptionCategoryId);
 create unique index IX_1DA76D6B on CPSpecificationOption (companyId, key_[$COLUMN_LENGTH:75$]);
 create index IX_5B218A65 on CPSpecificationOption (uuid_[$COLUMN_LENGTH:75$], companyId);
 
-create index IX_64046706 on CPTaxCategory (companyId);
+create index IX_E91CFF77 on CPTaxCategory (companyId, externalReferenceCode[$COLUMN_LENGTH:75$]);
 
 create index IX_7BB74B87 on CProduct (companyId, externalReferenceCode[$COLUMN_LENGTH:75$]);
 create index IX_77F5B8F8 on CProduct (groupId);

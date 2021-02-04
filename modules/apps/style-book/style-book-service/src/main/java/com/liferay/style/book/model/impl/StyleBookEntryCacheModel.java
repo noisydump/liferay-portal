@@ -77,10 +77,12 @@ public class StyleBookEntryCacheModel
 
 	@Override
 	public String toString() {
-		StringBundler sb = new StringBundler(27);
+		StringBundler sb = new StringBundler(31);
 
 		sb.append("{mvccVersion=");
 		sb.append(mvccVersion);
+		sb.append(", uuid=");
+		sb.append(uuid);
 		sb.append(", headId=");
 		sb.append(headId);
 		sb.append(", styleBookEntryId=");
@@ -95,6 +97,8 @@ public class StyleBookEntryCacheModel
 		sb.append(userName);
 		sb.append(", createDate=");
 		sb.append(createDate);
+		sb.append(", modifiedDate=");
+		sb.append(modifiedDate);
 		sb.append(", defaultStyleBookEntry=");
 		sb.append(defaultStyleBookEntry);
 		sb.append(", frontendTokensValues=");
@@ -115,6 +119,14 @@ public class StyleBookEntryCacheModel
 		StyleBookEntryImpl styleBookEntryImpl = new StyleBookEntryImpl();
 
 		styleBookEntryImpl.setMvccVersion(mvccVersion);
+
+		if (uuid == null) {
+			styleBookEntryImpl.setUuid("");
+		}
+		else {
+			styleBookEntryImpl.setUuid(uuid);
+		}
+
 		styleBookEntryImpl.setHeadId(headId);
 		styleBookEntryImpl.setHead(head);
 		styleBookEntryImpl.setStyleBookEntryId(styleBookEntryId);
@@ -134,6 +146,13 @@ public class StyleBookEntryCacheModel
 		}
 		else {
 			styleBookEntryImpl.setCreateDate(new Date(createDate));
+		}
+
+		if (modifiedDate == Long.MIN_VALUE) {
+			styleBookEntryImpl.setModifiedDate(null);
+		}
+		else {
+			styleBookEntryImpl.setModifiedDate(new Date(modifiedDate));
 		}
 
 		styleBookEntryImpl.setDefaultStyleBookEntry(defaultStyleBookEntry);
@@ -171,6 +190,7 @@ public class StyleBookEntryCacheModel
 		throws ClassNotFoundException, IOException {
 
 		mvccVersion = objectInput.readLong();
+		uuid = objectInput.readUTF();
 
 		headId = objectInput.readLong();
 
@@ -185,6 +205,7 @@ public class StyleBookEntryCacheModel
 		userId = objectInput.readLong();
 		userName = objectInput.readUTF();
 		createDate = objectInput.readLong();
+		modifiedDate = objectInput.readLong();
 
 		defaultStyleBookEntry = objectInput.readBoolean();
 		frontendTokensValues = (String)objectInput.readObject();
@@ -197,6 +218,13 @@ public class StyleBookEntryCacheModel
 	@Override
 	public void writeExternal(ObjectOutput objectOutput) throws IOException {
 		objectOutput.writeLong(mvccVersion);
+
+		if (uuid == null) {
+			objectOutput.writeUTF("");
+		}
+		else {
+			objectOutput.writeUTF(uuid);
+		}
 
 		objectOutput.writeLong(headId);
 
@@ -218,6 +246,7 @@ public class StyleBookEntryCacheModel
 		}
 
 		objectOutput.writeLong(createDate);
+		objectOutput.writeLong(modifiedDate);
 
 		objectOutput.writeBoolean(defaultStyleBookEntry);
 
@@ -246,6 +275,7 @@ public class StyleBookEntryCacheModel
 	}
 
 	public long mvccVersion;
+	public String uuid;
 	public long headId;
 	public boolean head;
 	public long styleBookEntryId;
@@ -254,6 +284,7 @@ public class StyleBookEntryCacheModel
 	public long userId;
 	public String userName;
 	public long createDate;
+	public long modifiedDate;
 	public boolean defaultStyleBookEntry;
 	public String frontendTokensValues;
 	public String name;

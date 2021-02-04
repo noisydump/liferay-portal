@@ -488,6 +488,54 @@ public class KaleoDefinitionLocalServiceWrapper
 	}
 
 	@Override
+	public java.util.List
+		<com.liferay.portal.workflow.kaleo.model.KaleoDefinition>
+			getScopeKaleoDefinitions(
+				String scope, boolean active, int start, int end,
+				com.liferay.portal.kernel.util.OrderByComparator
+					<com.liferay.portal.workflow.kaleo.model.KaleoDefinition>
+						orderByComparator,
+				com.liferay.portal.kernel.service.ServiceContext
+					serviceContext) {
+
+		return _kaleoDefinitionLocalService.getScopeKaleoDefinitions(
+			scope, active, start, end, orderByComparator, serviceContext);
+	}
+
+	@Override
+	public java.util.List
+		<com.liferay.portal.workflow.kaleo.model.KaleoDefinition>
+			getScopeKaleoDefinitions(
+				String scope, int start, int end,
+				com.liferay.portal.kernel.util.OrderByComparator
+					<com.liferay.portal.workflow.kaleo.model.KaleoDefinition>
+						orderByComparator,
+				com.liferay.portal.kernel.service.ServiceContext
+					serviceContext) {
+
+		return _kaleoDefinitionLocalService.getScopeKaleoDefinitions(
+			scope, start, end, orderByComparator, serviceContext);
+	}
+
+	@Override
+	public int getScopeKaleoDefinitionsCount(
+		String scope, boolean active,
+		com.liferay.portal.kernel.service.ServiceContext serviceContext) {
+
+		return _kaleoDefinitionLocalService.getScopeKaleoDefinitionsCount(
+			scope, active, serviceContext);
+	}
+
+	@Override
+	public int getScopeKaleoDefinitionsCount(
+		String scope,
+		com.liferay.portal.kernel.service.ServiceContext serviceContext) {
+
+		return _kaleoDefinitionLocalService.getScopeKaleoDefinitionsCount(
+			scope, serviceContext);
+	}
+
+	@Override
 	public com.liferay.portal.workflow.kaleo.model.KaleoDefinition
 			updatedKaleoDefinition(
 				long kaleoDefinitionId, String title, String description,

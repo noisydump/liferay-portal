@@ -45,9 +45,10 @@ public class MFAFIDO2CredentialEntrySoap implements Serializable {
 		soapModel.setCreateDate(model.getCreateDate());
 		soapModel.setModifiedDate(model.getModifiedDate());
 		soapModel.setCredentialKey(model.getCredentialKey());
+		soapModel.setCredentialKeyHash(model.getCredentialKeyHash());
 		soapModel.setCredentialType(model.getCredentialType());
 		soapModel.setFailedAttempts(model.getFailedAttempts());
-		soapModel.setPublicKeyCode(model.getPublicKeyCode());
+		soapModel.setPublicKeyCOSE(model.getPublicKeyCOSE());
 		soapModel.setSignatureCount(model.getSignatureCount());
 
 		return soapModel;
@@ -176,6 +177,14 @@ public class MFAFIDO2CredentialEntrySoap implements Serializable {
 		_credentialKey = credentialKey;
 	}
 
+	public long getCredentialKeyHash() {
+		return _credentialKeyHash;
+	}
+
+	public void setCredentialKeyHash(long credentialKeyHash) {
+		_credentialKeyHash = credentialKeyHash;
+	}
+
 	public int getCredentialType() {
 		return _credentialType;
 	}
@@ -192,12 +201,12 @@ public class MFAFIDO2CredentialEntrySoap implements Serializable {
 		_failedAttempts = failedAttempts;
 	}
 
-	public String getPublicKeyCode() {
-		return _publicKeyCode;
+	public String getPublicKeyCOSE() {
+		return _publicKeyCOSE;
 	}
 
-	public void setPublicKeyCode(String publicKeyCode) {
-		_publicKeyCode = publicKeyCode;
+	public void setPublicKeyCOSE(String publicKeyCOSE) {
+		_publicKeyCOSE = publicKeyCOSE;
 	}
 
 	public long getSignatureCount() {
@@ -216,9 +225,10 @@ public class MFAFIDO2CredentialEntrySoap implements Serializable {
 	private Date _createDate;
 	private Date _modifiedDate;
 	private String _credentialKey;
+	private long _credentialKeyHash;
 	private int _credentialType;
 	private int _failedAttempts;
-	private String _publicKeyCode;
+	private String _publicKeyCOSE;
 	private long _signatureCount;
 
 }

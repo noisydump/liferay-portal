@@ -1,7 +1,7 @@
 definition {
 
 	macro commerceAdminSetUp {
-		ProductMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Users",
 			panel = "Control Panel",
 			portlet = "Users and Organizations");
@@ -16,9 +16,8 @@ definition {
 			code = "NCU",
 			entryName = "New Currency");
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Commerce",
-			panel = "Control Panel",
+		CommerceNavigator.gotoPortlet(
+			category = "Store Management",
 			portlet = "Channels");
 
 		Click(locator1 = "Button#PLUS");
@@ -37,17 +36,20 @@ definition {
 	macro commerceAdminTearDown {
 		Navigator.openURL();
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Commerce",
-			panel = "Control Panel",
+		CommerceNavigator.gotoPortlet(
+			category = "Order Management",
 			portlet = "Orders");
+
+		Refresh();
 
 		while (IsElementPresent(locator1 = "CommerceEntry#BODY_VERTICAL_ELLIPSIS")) {
 			CommerceEntry.deleteCommerceEntry();
 		}
 
+		Pause(locator1 = "3000");
+
 		if (isSet(userScreenName)) {
-			ProductMenu.gotoPortlet(
+			ApplicationsMenu.gotoPortlet(
 				category = "Users",
 				panel = "Control Panel",
 				portlet = "Users and Organizations");
@@ -57,7 +59,7 @@ definition {
 			}
 		}
 
-		ProductMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Users",
 			panel = "Control Panel",
 			portlet = "Accounts");
@@ -70,20 +72,25 @@ definition {
 			AssertConfirm.waitForConfirmation(value1 = "Are you sure you want to delete this? It will be deleted immediately.");
 		}
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Commerce",
-			panel = "Control Panel",
+		CommerceNavigator.gotoPortlet(
+			category = "Product Management",
 			portlet = "Products");
 
 		while (IsElementPresent(locator1 = "CommerceEntry#BODY_VERTICAL_ELLIPSIS") && (maxIterations = "50")) {
 			CommerceEntry.deleteCommerceEntry();
 		}
 
-		CommerceNavigator.gotoCommercePortletNavItem(navItem = "Options");
+		CommerceNavigator.gotoPortlet(
+			category = "Product Management",
+			portlet = "Options");
 
-		CommerceOptions.deleteOptionsEntries();
+		while (IsElementPresent(locator1 = "CommerceEntry#DELETE_OPTION_BUTTON")) {
+			CommerceOptions.deleteOptionsEntries();
+		}
 
-		CommerceNavigator.gotoCommercePortletNavItem(navItem = "Specifications");
+		CommerceNavigator.gotoPortlet(
+			category = "Product Management",
+			portlet = "Specifications");
 
 		while (IsElementNotPresent(locator1 = "CommerceNavigation#EMPTY_SEARCH_CONTAINER")) {
 			CommerceProducts.deleteEntries(deleteMessage = "Are you sure you want to delete the selected specification labels?");
@@ -95,76 +102,85 @@ definition {
 			CommerceProducts.deleteEntries(deleteMessage = "Are you sure you want to delete the selected specification groups?");
 		}
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Commerce",
-			panel = "Control Panel",
+		CommerceNavigator.gotoPortlet(
+			category = "Store Management",
 			portlet = "Channels");
 
 		while (IsElementNotPresent(locator1 = "CommerceNavigation#EMPTY_SEARCH_CONTAINER")) {
 			CommerceEntry.deleteCommerceEntry();
 		}
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Commerce",
-			panel = "Control Panel",
+		CommerceNavigator.gotoPortlet(
+			category = "Product Management",
 			portlet = "Catalogs");
 
 		CommerceConfiguration.commerceCatalogsTearDown();
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Commerce",
-			panel = "Control Panel",
-			portlet = "Pricing");
-
-		CommerceNavigator.gotoCommercePortletNavItem(navItem = "Price Lists");
+		CommerceNavigator.gotoPortlet(
+			category = "Pricing",
+			portlet = "Price Lists");
 
 		while (IsElementNotPresent(locator1 = "CommerceNavigation#EMPTY_SEARCH_CONTAINER")) {
-			CommerceProducts.deleteEntries(deleteMessage = "Are you sure you want to delete the selected price lists?");
+			CommerceEntry.deleteCommerceEntry();
 		}
 
-		CommerceNavigator.gotoCommercePortletNavItem(navItem = "Discounts");
+		CommerceNavigator.gotoPortlet(
+			category = "Pricing",
+			portlet = "Promotions");
 
 		while (IsElementNotPresent(locator1 = "CommerceNavigation#EMPTY_SEARCH_CONTAINER")) {
-			CommerceProducts.deleteEntries(deleteMessage = "Are you sure you want to delete the selected discounts?");
+			CommerceEntry.deleteCommerceEntry();
 		}
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Commerce",
-			panel = "Control Panel",
+		CommerceNavigator.gotoPortlet(
+			category = "Pricing",
+			portlet = "Discounts");
+
+		while (IsElementNotPresent(locator1 = "CommerceNavigation#EMPTY_SEARCH_CONTAINER")) {
+			CommerceEntry.deleteCommerceEntry();
+		}
+
+		CommerceNavigator.gotoPortlet(
+			category = "Inventory Management",
 			portlet = "Inventory");
 
 		while (IsElementPresent(locator1 = "CommerceEntry#BODY_VERTICAL_ELLIPSIS") && (maxIterations = "100")) {
 			CommerceEntry.deleteCommerceEntry();
 		}
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Commerce",
-			panel = "Control Panel",
-			portlet = "Settings");
-
-		CommerceNavigator.gotoCommercePortletNavItem(navItem = "Availability Estimates");
+		CommerceNavigator.gotoPortlet(
+			category = "Settings",
+			portlet = "Availability Estimates");
 
 		while (IsElementNotPresent(locator1 = "CommerceNavigation#EMPTY_SEARCH_CONTAINER")) {
 			CommerceProducts.deleteEntries(deleteMessage = "Are you sure you want to delete the selected availability estimates?");
 		}
 
-		CommerceNavigator.gotoCommercePortletNavItem(navItem = "Countries");
+		CommerceNavigator.gotoPortlet(
+			category = "Settings",
+			portlet = "Countries");
 
 		if (IsElementNotPresent(locator1 = "CommerceNavigation#EMPTY_SEARCH_CONTAINER")) {
-			Pagination.changePagination(itemsPerPage = "75");
+			if (IsElementPresent(locator1 = "Pagination#ITEMS_PER_PAGE_SELECT")) {
+				Pagination.changePagination(itemsPerPage = "60");
+			}
 
 			while (IsElementNotPresent(locator1 = "CommerceNavigation#EMPTY_SEARCH_CONTAINER")) {
 				CommerceProducts.deleteEntries(deleteMessage = "Are you sure you want to delete the selected countries?");
 			}
 		}
 
-		CommerceNavigator.gotoCommercePortletNavItem(navItem = "Currencies");
+		CommerceNavigator.gotoPortlet(
+			category = "Store Management",
+			portlet = "Currencies");
 
 		while (IsElementNotPresent(locator1 = "CommerceNavigation#EMPTY_SEARCH_CONTAINER")) {
 			CommerceProducts.deleteEntries(deleteMessage = "Are you sure you want to delete the selected currencies?");
 		}
 
-		CommerceNavigator.gotoCommercePortletNavItem(navItem = "Measurement Units");
+		CommerceNavigator.gotoPortlet(
+			category = "Settings",
+			portlet = "Measurement Units");
 
 		while (IsElementNotPresent(locator1 = "CommerceNavigation#EMPTY_SEARCH_CONTAINER")) {
 			CommerceProducts.deleteEntries(deleteMessage = "Are you sure you want to delete the selected measurement units?");
@@ -176,16 +192,19 @@ definition {
 			CommerceProducts.deleteEntries(deleteMessage = "Are you sure you want to delete the selected measurement units?");
 		}
 
-		CommerceNavigator.gotoCommercePortletNavItem(navItem = "Tax Categories");
+		CommerceNavigator.gotoPortlet(
+			category = "Pricing",
+			portlet = "Tax Categories");
 
 		while (IsElementNotPresent(locator1 = "CommerceNavigation#EMPTY_SEARCH_CONTAINER")) {
 			CommerceProducts.deleteEntries(deleteMessage = "Are you sure you want to delete the selected measurement units?");
 		}
 
-		CommerceNavigator.gotoCommercePortletNavItem(navItem = "Warehouses");
+		CommerceNavigator.gotoPortlet(
+			category = "Inventory Management",
+			portlet = "Warehouses");
 
 		while (IsElementNotPresent(locator1 = "CommerceNavigation#EMPTY_SEARCH_CONTAINER")) {
-
 			Click(locator1 = "Icon#BODY_VERTICAL_ELLIPSIS");
 
 			MenuItem.clickNoError(menuItem = "Delete");
@@ -211,64 +230,58 @@ definition {
 			var count = ${count} + 1;
 		}
 
-		for (var catalogName : list "${catalogsList}") {
-			ClickNoError(
-				key_entryName = "${catalogName}",
-				locator1 = "CommerceEntry#ENTRY_NAME_BODY_VERTICAL_ELLIPSIS");
+		if ("${catalogsList}" != "") {
+			for (var catalogName : list "${catalogsList}") {
+				ClickNoError(
+					key_entryName = "${catalogName}",
+					locator1 = "CommerceEntry#ENTRY_NAME_BODY_VERTICAL_ELLIPSIS");
 
-			CommerceEntry.clickNoError(menuItem = "Delete");
+				CommerceEntry.clickNoError(menuItem = "Delete");
 
-			AssertElementPresent(locator1 = "Message#SUCCESS");
+				AssertElementPresent(locator1 = "Message#SUCCESS");
 
-			AssertElementNotPresent(locator1 = "Message#ERROR");
+				AssertElementNotPresent(locator1 = "Message#ERROR");
+			}
 		}
 	}
 
 	macro commerceInitializersTearDown {
-		ProductMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Sites",
 			panel = "Control Panel",
 			portlet = "Sites");
 
-		Site.deleteAllCP();
+		PortletEntry.selectAll();
+
+		if (IsElementPresent(locator1 = "Icon#DELETE")) {
+			ClickNoError(locator1 = "Icon#DELETE");
+
+			AssertConfirm(value1 = "Are you sure you want to delete this? It will be deleted immediately.");
+
+			Alert.viewSuccessMessage();
+		}
 	}
 
 	macro commerceStoreFrontSetUp {
-		ApplicationsMenu.gotoPortlet(
-			category = "Commerce",
-			panel = "Site Administration",
-			portlet = "Settings");
-
-		CommerceNavigator.gotoCommercePortletNavItem(navItem = "Health Check");
+		CommerceNavigator.gotoPortlet(
+			category = "Settings",
+			portlet = "Health Check");
 
 		for (var buttonRowNumber : list "1,2,3,4,5") {
-			if (!(IsElementPresent(locator1 = "CommerceEntry#FIX_ISSUE_BUTTON", key_buttonStatus = "disabled"))) {
+			if (!(IsElementPresent(locator1 = "CommerceEntry#FIX_ISSUE_BUTTON_N", key_buttonStatus = "disabled"))) {
 				Click(
 					key_buttonRowNumber = "${buttonRowNumber}",
 					key_buttonStatus = "",
-					locator1 = "CommerceEntry#FIX_ISSUE_BUTTON");
+					locator1 = "CommerceEntry#FIX_ISSUE_BUTTON_N");
+
+				WaitForElementPresent(
+					key_value = "${buttonRowNumber}",
+					locator1 = "CommerceEntry#HEALTH_CHECK_ICON_CHECK_N");
 			}
 		}
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Commerce",
-			panel = "Control Panel",
-			portlet = "Settings");
-
-		CommerceNavigator.gotoCommercePortletNavItem(navItem = "Health Check");
-
-		for (var buttonRowNumber : list "1,2,3,4") {
-			if (!(IsElementPresent(locator1 = "CommerceEntry#FIX_ISSUE_BUTTON", key_buttonStatus = "disabled"))) {
-				Click(
-					key_buttonRowNumber = "${buttonRowNumber}",
-					key_buttonStatus = "",
-					locator1 = "CommerceEntry#FIX_ISSUE_BUTTON");
-			}
-		}
-
-		ApplicationsMenu.gotoPortlet(
-			category = "Commerce",
-			panel = "Control Panel",
+		CommerceNavigator.gotoPortlet(
+			category = "Store Management",
 			portlet = "Channels");
 
 		Click(locator1 = "Button#PLUS");
@@ -287,16 +300,17 @@ definition {
 	macro commerceStoreFrontTearDown {
 		Navigator.openURL();
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Commerce",
-			panel = "Site Administration",
+		CommerceNavigator.gotoPortlet(
+			category = "Product Management",
 			portlet = "Catalog");
 
 		if (IsElementNotPresent(locator1 = "CommerceNavigation#EMPTY_SEARCH_CONTAINER")) {
 			CommerceProducts.moveCatalogEntriesToRecycleBin();
 		}
 
-		CommerceNavigator.gotoCommercePortletNavItem(navItem = "Options");
+		CommerceNavigator.gotoPortlet(
+			category = "Settings",
+			portlet = "Options");
 
 		Pause(locator1 = "3000");
 

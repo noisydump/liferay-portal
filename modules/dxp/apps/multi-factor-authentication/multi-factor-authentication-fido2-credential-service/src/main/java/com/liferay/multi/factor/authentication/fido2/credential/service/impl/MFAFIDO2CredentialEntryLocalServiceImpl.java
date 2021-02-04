@@ -41,12 +41,12 @@ public class MFAFIDO2CredentialEntryLocalServiceImpl
 	@Override
 	public MFAFIDO2CredentialEntry addMFAFIDO2CredentialEntry(
 			long userId, String credentialKey, int credentialType,
-			String publicKeyCode)
+			String publicKeyCOSE)
 		throws PortalException {
 
 		MFAFIDO2CredentialEntry mfaFIDO2CredentialEntry =
 			mfaFIDO2CredentialEntryPersistence.fetchByU_C(
-				userId, credentialKey);
+				userId, credentialKey.hashCode());
 
 		if (mfaFIDO2CredentialEntry != null) {
 			throw new DuplicateMFAFIDO2CredentialEntryException(
@@ -66,8 +66,9 @@ public class MFAFIDO2CredentialEntryLocalServiceImpl
 		mfaFIDO2CredentialEntry.setUserName(user.getFullName());
 		mfaFIDO2CredentialEntry.setCreateDate(new Date());
 		mfaFIDO2CredentialEntry.setCredentialKey(credentialKey);
+		mfaFIDO2CredentialEntry.setCredentialKeyHash(credentialKey.hashCode());
 		mfaFIDO2CredentialEntry.setCredentialType(credentialType);
-		mfaFIDO2CredentialEntry.setPublicKeyCode(publicKeyCode);
+		mfaFIDO2CredentialEntry.setPublicKeyCOSE(publicKeyCOSE);
 		mfaFIDO2CredentialEntry.setSignatureCount(0);
 
 		return mfaFIDO2CredentialEntryPersistence.update(
@@ -80,15 +81,15 @@ public class MFAFIDO2CredentialEntryLocalServiceImpl
 			long userId, String credentialKey) {
 
 		return mfaFIDO2CredentialEntryPersistence.fetchByU_C(
-			userId, credentialKey);
+			userId, credentialKey.hashCode());
 	}
 
 	@Override
 	public List<MFAFIDO2CredentialEntry>
 		getMFAFIDO2CredentialEntriesByCredentialKey(String credentialKey) {
 
-		return mfaFIDO2CredentialEntryPersistence.findByCredentialKey(
-			credentialKey);
+		return mfaFIDO2CredentialEntryPersistence.findByCredentialKeyHash(
+			credentialKey.hashCode());
 	}
 
 	@Override
@@ -105,7 +106,7 @@ public class MFAFIDO2CredentialEntryLocalServiceImpl
 
 		MFAFIDO2CredentialEntry mfaFIDO2CredentialEntry =
 			mfaFIDO2CredentialEntryPersistence.fetchByU_C(
-				userId, credentialKey);
+				userId, credentialKey.hashCode());
 
 		if (mfaFIDO2CredentialEntry == null) {
 			throw new NoSuchMFAFIDO2CredentialEntryException(

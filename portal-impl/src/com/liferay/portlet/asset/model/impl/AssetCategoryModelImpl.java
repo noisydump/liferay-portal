@@ -259,26 +259,6 @@ public class AssetCategoryModelImpl
 		return models;
 	}
 
-	public static final String MAPPING_TABLE_ASSETENTRIES_ASSETCATEGORIES_NAME =
-		"AssetEntries_AssetCategories";
-
-	public static final Object[][]
-		MAPPING_TABLE_ASSETENTRIES_ASSETCATEGORIES_COLUMNS = {
-			{"companyId", Types.BIGINT}, {"categoryId", Types.BIGINT},
-			{"entryId", Types.BIGINT}
-		};
-
-	public static final String
-		MAPPING_TABLE_ASSETENTRIES_ASSETCATEGORIES_SQL_CREATE =
-			"create table AssetEntries_AssetCategories (companyId LONG not null,categoryId LONG not null,entryId LONG not null,ctCollectionId LONG default 0 not null,ctChangeType BOOLEAN,primary key (categoryId, entryId, ctCollectionId))";
-
-	/**
-	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
-	 */
-	@Deprecated
-	public static final boolean
-		FINDER_CACHE_ENABLED_ASSETENTRIES_ASSETCATEGORIES = true;
-
 	public static final long LOCK_EXPIRATION_TIME = GetterUtil.getLong(
 		com.liferay.portal.util.PropsUtil.get(
 			"lock.expiration.time.com.liferay.asset.kernel.model.AssetCategory"));
@@ -1435,7 +1415,7 @@ public class AssetCategoryModelImpl
 			getAttributeGetterFunctions();
 
 		StringBundler sb = new StringBundler(
-			4 * attributeGetterFunctions.size() + 2);
+			(4 * attributeGetterFunctions.size()) + 2);
 
 		sb.append("{");
 
@@ -1467,7 +1447,7 @@ public class AssetCategoryModelImpl
 			getAttributeGetterFunctions();
 
 		StringBundler sb = new StringBundler(
-			5 * attributeGetterFunctions.size() + 4);
+			(5 * attributeGetterFunctions.size()) + 4);
 
 		sb.append("<model><model-name>");
 		sb.append(getModelClassName());

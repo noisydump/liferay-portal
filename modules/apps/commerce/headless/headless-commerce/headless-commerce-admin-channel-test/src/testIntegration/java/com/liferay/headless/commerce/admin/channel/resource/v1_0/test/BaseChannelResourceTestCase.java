@@ -605,6 +605,7 @@ public abstract class BaseChannelResourceTestCase {
 
 		Channel randomPatchChannel = randomPatchChannel();
 
+		@SuppressWarnings("PMD.UnusedLocalVariable")
 		Channel patchChannel = channelResource.patchChannel(
 			postChannel.getId(), randomPatchChannel);
 
@@ -933,9 +934,11 @@ public abstract class BaseChannelResourceTestCase {
 					return false;
 				}
 			}
+
+			return true;
 		}
 
-		return true;
+		return false;
 	}
 
 	protected java.util.Collection<EntityField> getEntityFields()

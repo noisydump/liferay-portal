@@ -141,6 +141,10 @@ public class HttpUtil {
 		return getHttp().getProtocol(url);
 	}
 
+	public static String getQueryString(HttpServletRequest httpServletRequest) {
+		return getHttp().getQueryString(httpServletRequest);
+	}
+
 	public static String getQueryString(String url) {
 		return getHttp().getQueryString(url);
 	}
@@ -163,6 +167,10 @@ public class HttpUtil {
 
 	public static boolean hasProxyConfig() {
 		return getHttp().hasProxyConfig();
+	}
+
+	public static boolean isForwarded(HttpServletRequest httpServletRequest) {
+		return getHttp().isForwarded(httpServletRequest);
 	}
 
 	public static boolean isNonProxyHost(String host) {

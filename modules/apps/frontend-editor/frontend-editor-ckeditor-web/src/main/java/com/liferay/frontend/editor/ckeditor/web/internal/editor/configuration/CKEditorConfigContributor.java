@@ -24,10 +24,10 @@ import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.model.ColorScheme;
 import com.liferay.portal.kernel.portlet.RequestBackedPortletURLFactory;
+import com.liferay.portal.kernel.resource.bundle.ResourceBundleLoader;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HtmlUtil;
-import com.liferay.portal.kernel.util.ResourceBundleLoader;
 import com.liferay.portal.kernel.util.ResourceBundleUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.xuggler.XugglerUtil;
@@ -206,10 +206,10 @@ public class CKEditorConfigContributor extends BaseCKEditorConfigContributor {
 			toJSONArray("['Styles', 'Bold', 'Italic', 'Underline']"),
 			toJSONArray("['NumberedList', 'BulletedList']"),
 			toJSONArray("['Link', Unlink]"),
-			toJSONArray("['Table', 'ImageSelector', 'VideoEmbed']"));
+			toJSONArray("['Table', 'ImageSelector', 'VideoSelector']"));
 
 		if (XugglerUtil.isEnabled()) {
-			jsonArray.put(toJSONArray("['AudioSelector', 'VideoSelector']"));
+			jsonArray.put(toJSONArray("['AudioSelector']"));
 		}
 
 		if (isShowSource(inputEditorTaglibAttributes)) {

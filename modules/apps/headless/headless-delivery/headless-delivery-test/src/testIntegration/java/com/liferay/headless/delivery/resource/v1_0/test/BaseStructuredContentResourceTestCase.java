@@ -2077,6 +2077,7 @@ public abstract class BaseStructuredContentResourceTestCase {
 		StructuredContent randomPatchStructuredContent =
 			randomPatchStructuredContent();
 
+		@SuppressWarnings("PMD.UnusedLocalVariable")
 		StructuredContent patchStructuredContent =
 			structuredContentResource.patchStructuredContent(
 				postStructuredContent.getId(), randomPatchStructuredContent);
@@ -3235,9 +3236,11 @@ public abstract class BaseStructuredContentResourceTestCase {
 					return false;
 				}
 			}
+
+			return true;
 		}
 
-		return true;
+		return false;
 	}
 
 	protected boolean equals(Rating rating1, Rating rating2) {

@@ -20,6 +20,7 @@ import com.liferay.gogo.shell.client.GogoShellClient;
 import com.liferay.gradle.plugins.internal.util.FileUtil;
 import com.liferay.gradle.plugins.internal.util.GradleUtil;
 import com.liferay.gradle.util.ArrayUtil;
+import com.liferay.gradle.util.GUtil;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -66,7 +67,6 @@ import org.gradle.api.tasks.PathSensitivity;
 import org.gradle.api.tasks.TaskAction;
 import org.gradle.api.tasks.incremental.IncrementalTaskInputs;
 import org.gradle.api.tasks.incremental.InputFileDetails;
-import org.gradle.util.GUtil;
 
 import org.osgi.framework.Bundle;
 import org.osgi.framework.dto.BundleDTO;
@@ -83,7 +83,6 @@ public class WatchTask extends DefaultTask {
 		ignoredManifestKeys(Constants.BND_LASTMODIFIED);
 	}
 
-	@SuppressWarnings("unchecked")
 	public WatchTask classLoaderFileExtensions(
 		Iterable<String> classLoaderFileExtensions) {
 
@@ -135,7 +134,6 @@ public class WatchTask extends DefaultTask {
 		return new File(project.getBuildDir(), "installedBundleId");
 	}
 
-	@SuppressWarnings("unchecked")
 	public WatchTask ignoredManifestKeys(Iterable<String> ignoredManifestKeys) {
 		GUtil.addToCollection(_ignoredManifestKeys, ignoredManifestKeys);
 
@@ -242,7 +240,7 @@ public class WatchTask extends DefaultTask {
 		}
 	}
 
-	private static long _getBundleId(
+	private long _getBundleId(
 			String bundleSymbolicName, GogoShellClient gogoShellClient)
 		throws IOException {
 
@@ -280,7 +278,7 @@ public class WatchTask extends DefaultTask {
 		return -1;
 	}
 
-	private static <K, V> Map<K, V> _getDifferences(
+	private <K, V> Map<K, V> _getDifferences(
 		Map<? extends K, ? extends V> leftMap,
 		Map<? extends K, ? extends V> rightMap) {
 
@@ -299,80 +297,6 @@ public class WatchTask extends DefaultTask {
 		}
 
 		return differences;
-	}
-
-	private static final int _getState(String state) {
-		String bundleState = state.toUpperCase();
-
-		if (Objects.equals(bundleState, "ACTIVE")) {
-			return Bundle.ACTIVE;
-		}
-		else if (Objects.equals(bundleState, "INSTALLED")) {
-			return Bundle.INSTALLED;
-		}
-		else if (Objects.equals(bundleState, "RESOLVED")) {
-			return Bundle.RESOLVED;
-		}
-		else if (Objects.equals(bundleState, "STARTING")) {
-			return Bundle.STARTING;
-		}
-		else if (Objects.equals(bundleState, "STOPPING")) {
-			return Bundle.STOPPING;
-		}
-		else if (Objects.equals(bundleState, "UNINSTALLED")) {
-			return Bundle.UNINSTALLED;
-		}
-
-		return 0;
-	}
-
-	private static boolean _isWarDir(File file) {
-		if (!file.isDirectory()) {
-			return false;
-		}
-
-		File webInfDir = new File(file, "WEB-INF");
-
-		return webInfDir.exists();
-	}
-
-	private static final BundleDTO _newBundleDTO(
-		Long id, int state, String symbolicName) {
-
-		BundleDTO bundle = new BundleDTO();
-
-		bundle.id = id;
-		bundle.state = state;
-		bundle.symbolicName = symbolicName;
-
-		return bundle;
-	}
-
-	private static final BundleDTO _parseBundleDTO(String line) {
-		String[] fields = line.split("\\|");
-
-		Long id = Long.parseLong(fields[0].trim());
-
-		int state = _getState(fields[1].trim());
-
-		String symbolicName = fields[3];
-
-		return _newBundleDTO(id, state, symbolicName);
-	}
-
-	private static String _sendGogoShellCommand(
-			GogoShellClient gogoShellClient, String command)
-		throws IOException {
-
-		String response = gogoShellClient.send(command);
-
-		if (response.startsWith(command)) {
-			response = response.substring(command.length());
-
-			response = response.trim();
-		}
-
-		return response;
 	}
 
 	private String _getFragmentHost() throws IOException {
@@ -479,6 +403,31 @@ public class WatchTask extends DefaultTask {
 		}
 
 		return "reference:" + uri.toASCIIString();
+	}
+
+	private final int _getState(String state) {
+		String bundleState = state.toUpperCase();
+
+		if (Objects.equals(bundleState, "ACTIVE")) {
+			return Bundle.ACTIVE;
+		}
+		else if (Objects.equals(bundleState, "INSTALLED")) {
+			return Bundle.INSTALLED;
+		}
+		else if (Objects.equals(bundleState, "RESOLVED")) {
+			return Bundle.RESOLVED;
+		}
+		else if (Objects.equals(bundleState, "STARTING")) {
+			return Bundle.STARTING;
+		}
+		else if (Objects.equals(bundleState, "STOPPING")) {
+			return Bundle.STOPPING;
+		}
+		else if (Objects.equals(bundleState, "UNINSTALLED")) {
+			return Bundle.UNINSTALLED;
+		}
+
+		return 0;
 	}
 
 	private long _installBundle(
@@ -653,6 +602,40 @@ public class WatchTask extends DefaultTask {
 		return true;
 	}
 
+	private boolean _isWarDir(File file) {
+		if (!file.isDirectory()) {
+			return false;
+		}
+
+		File webInfDir = new File(file, "WEB-INF");
+
+		return webInfDir.exists();
+	}
+
+	private final BundleDTO _newBundleDTO(
+		Long id, int state, String symbolicName) {
+
+		BundleDTO bundle = new BundleDTO();
+
+		bundle.id = id;
+		bundle.state = state;
+		bundle.symbolicName = symbolicName;
+
+		return bundle;
+	}
+
+	private final BundleDTO _parseBundleDTO(String line) {
+		String[] fields = line.split("\\|");
+
+		Long id = Long.parseLong(fields[0].trim());
+
+		int state = _getState(fields[1].trim());
+
+		String symbolicName = fields[3];
+
+		return _newBundleDTO(id, state, symbolicName);
+	}
+
 	private void _refreshBundle(long bundleId, GogoShellClient gogoShellClient)
 		throws IOException {
 
@@ -676,6 +659,21 @@ public class WatchTask extends DefaultTask {
 		if (fragmentHostBundleId > 0) {
 			_refreshBundle(fragmentHostBundleId, gogoShellClient);
 		}
+	}
+
+	private String _sendGogoShellCommand(
+			GogoShellClient gogoShellClient, String command)
+		throws IOException {
+
+		String response = gogoShellClient.send(command);
+
+		if (response.startsWith(command)) {
+			response = response.substring(command.length());
+
+			response = response.trim();
+		}
+
+		return response;
 	}
 
 	private void _startBundle(long bundleId, GogoShellClient gogoShellClient)

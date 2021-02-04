@@ -9,6 +9,13 @@ definition {
 		TestCase.setUpPortalInstance();
 
 		User.firstLoginPG();
+
+		ApplicationsMenu.gotoPortlet(
+			category = "Configuration",
+			panel = "Control Panel",
+			portlet = "Search");
+
+		SearchAdministration.executeSearchActions(actionsDescription = "Reindex all search indexes.");
 	}
 
 	tearDown {
@@ -32,11 +39,10 @@ definition {
 		property portal.acceptance = "quarantine";
 		property test.name.skip.portal.instance = "CPCommerceOrders#EditOrder";
 
-		CommerceAccelerators.initializeAccelerator(siteName = "Minium");
+		CommerceAccelerators.initializeNewSiteViaAccelerator(siteName = "Minium");
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Commerce",
-			panel = "Control Panel",
+		CommerceNavigator.gotoPortlet(
+			category = "Store Management",
 			portlet = "Channels");
 
 		CommerceNavigator.gotoEntry(entryName = "Minium Portal");
@@ -59,7 +65,7 @@ definition {
 			productName = "ABS Sensor",
 			productQuantity = "2");
 
-		Refresh();
+		Pause(locator1 = "5000");
 
 		CommerceNavigator.gotoMiniCart();
 
@@ -79,42 +85,32 @@ definition {
 			productUnitPrice = "50",
 			shippingMethod = "Standard");
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Commerce",
-			panel = "Control Panel",
+		CommerceNavigator.gotoPortlet(
+			category = "Order Management",
 			portlet = "Orders");
 
-		CommerceNavigator.gotoCommercePortletNavItem(navItem = "Pending");
-
-		ClickNoError(locator1 = "CommerceEntry#BODY_VERTICAL_ELLIPSIS");
-
-		CommerceEntry.clickNoError(menuItem = "Edit");
+		CommerceNavigator.gotoOrderEntryViaAdmin(status = "Pending");
 
 		CommerceOrders.editOrderItemDetails(
 			orderItemQuantity = "4",
 			orderItemSKU = "MIN93015");
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Commerce",
-			panel = "Control Panel",
+		CommerceNavigator.gotoPortlet(
+			category = "Order Management",
 			portlet = "Orders");
 
-		CommerceNavigator.gotoCommercePortletNavItem(navItem = "Pending");
-
-		ClickNoError(locator1 = "CommerceEntry#BODY_VERTICAL_ELLIPSIS");
-
-		CommerceEntry.clickNoError(menuItem = "Edit");
+		CommerceNavigator.gotoOrderEntryViaAdmin(status = "Pending");
 
 		CommerceOrders.viewOrdersEntry(
 			addressAddress = "Test Address",
 			addressCity = "Test City",
 			addressZipCode = "Test Zip Code",
 			paymentMethod = "Money Order",
+			productListPrice = "50.00",
 			productName = "ABS Sensor",
-			productPrice = "100.00",
 			productQuantity = "4",
-			productSKU = "MIN93015",
-			productUnitPrice = "50.00");
+			productSKU = "SPEED93015",
+			productTotalPrice = "100.00");
 	}
 
 }

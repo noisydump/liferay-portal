@@ -15,24 +15,22 @@
 package com.liferay.dispatch.internal.messaging;
 
 import com.liferay.dispatch.constants.DispatchConstants;
-import com.liferay.dispatch.executor.ScheduledTaskExecutor;
+import com.liferay.dispatch.executor.DispatchTaskExecutor;
+import com.liferay.dispatch.executor.DispatchTaskExecutorRegistry;
+import com.liferay.dispatch.executor.DispatchTaskStatus;
+import com.liferay.dispatch.model.DispatchLog;
 import com.liferay.dispatch.model.DispatchTrigger;
+import com.liferay.dispatch.service.DispatchLogLocalService;
 import com.liferay.dispatch.service.DispatchTriggerLocalService;
-import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMap;
-import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMapFactory;
-import com.liferay.portal.kernel.json.JSONException;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
-import com.liferay.portal.kernel.log.Log;
-import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.messaging.BaseMessageListener;
 import com.liferay.portal.kernel.messaging.Message;
 import com.liferay.portal.kernel.messaging.MessageListener;
-import com.liferay.portal.kernel.messaging.MessageListenerException;
 
-import org.osgi.framework.BundleContext;
-import org.osgi.service.component.annotations.Activate;
+import java.util.Date;
+
 import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 
 /**
@@ -42,59 +40,48 @@ import org.osgi.service.component.annotations.Reference;
 	property = "destination.name=" + DispatchConstants.EXECUTOR_DESTINATION_NAME,
 	service = MessageListener.class
 )
-public class DispatchMessageListener implements MessageListener {
+public class DispatchMessageListener extends BaseMessageListener {
 
 	@Override
-	public void receive(Message message) throws MessageListenerException {
+	public void doReceive(Message message) throws Exception {
 		String payload = (String)message.getPayload();
 
-		JSONObject jsonObject = null;
-
-		try {
-			jsonObject = JSONFactoryUtil.createJSONObject(payload);
-		}
-		catch (JSONException jsonException) {
-			throw new MessageListenerException(jsonException);
-		}
+		JSONObject jsonObject = JSONFactoryUtil.createJSONObject(payload);
 
 		long dispatchTriggerId = jsonObject.getLong("dispatchTriggerId");
 
-		try {
-			DispatchTrigger dispatchTrigger =
-				_dispatchTriggerLocalService.getDispatchTrigger(
-					dispatchTriggerId);
+		DispatchTrigger dispatchTrigger =
+			_dispatchTriggerLocalService.getDispatchTrigger(dispatchTriggerId);
 
-			ScheduledTaskExecutor scheduledTaskExecutor =
-				_scheduledTaskExecutorServiceTrackerMap.getService(
-					dispatchTrigger.getType());
+		if (!dispatchTrigger.isOverlapAllowed()) {
+			DispatchLog dispatchLog =
+				_dispatchLogLocalService.fetchLatestDispatchLog(
+					dispatchTriggerId, DispatchTaskStatus.IN_PROGRESS);
 
-			scheduledTaskExecutor.execute(dispatchTriggerId);
+			if (dispatchLog != null) {
+				_dispatchLogLocalService.addDispatchLog(
+					dispatchTrigger.getUserId(),
+					dispatchTrigger.getDispatchTriggerId(), null, null, null,
+					new Date(), DispatchTaskStatus.CANCELED);
+
+				return;
+			}
 		}
-		catch (Exception exception) {
-			_log.error(exception, exception);
-		}
+
+		DispatchTaskExecutor dispatchTaskExecutor =
+			_dispatchTaskExecutorRegistry.getDispatchTaskExecutor(
+				dispatchTrigger.getDispatchTaskExecutorType());
+
+		dispatchTaskExecutor.execute(dispatchTriggerId);
 	}
 
-	@Activate
-	protected void activate(BundleContext bundleContext) {
-		_scheduledTaskExecutorServiceTrackerMap =
-			ServiceTrackerMapFactory.openSingleValueMap(
-				bundleContext, ScheduledTaskExecutor.class,
-				"scheduled.task.executor.type");
-	}
+	@Reference
+	private DispatchLogLocalService _dispatchLogLocalService;
 
-	@Deactivate
-	protected void deactivate() {
-		_scheduledTaskExecutorServiceTrackerMap.close();
-	}
-
-	private static final Log _log = LogFactoryUtil.getLog(
-		DispatchMessageListener.class);
+	@Reference
+	private DispatchTaskExecutorRegistry _dispatchTaskExecutorRegistry;
 
 	@Reference
 	private DispatchTriggerLocalService _dispatchTriggerLocalService;
-
-	private ServiceTrackerMap<String, ScheduledTaskExecutor>
-		_scheduledTaskExecutorServiceTrackerMap;
 
 }

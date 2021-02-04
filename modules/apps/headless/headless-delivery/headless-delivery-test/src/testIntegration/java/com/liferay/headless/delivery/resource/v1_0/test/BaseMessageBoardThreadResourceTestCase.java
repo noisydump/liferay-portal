@@ -963,6 +963,7 @@ public abstract class BaseMessageBoardThreadResourceTestCase {
 		MessageBoardThread randomPatchMessageBoardThread =
 			randomPatchMessageBoardThread();
 
+		@SuppressWarnings("PMD.UnusedLocalVariable")
 		MessageBoardThread patchMessageBoardThread =
 			messageBoardThreadResource.patchMessageBoardThread(
 				postMessageBoardThread.getId(), randomPatchMessageBoardThread);
@@ -2576,9 +2577,11 @@ public abstract class BaseMessageBoardThreadResourceTestCase {
 					return false;
 				}
 			}
+
+			return true;
 		}
 
-		return true;
+		return false;
 	}
 
 	protected boolean equals(Rating rating1, Rating rating2) {

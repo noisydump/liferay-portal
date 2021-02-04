@@ -16,7 +16,7 @@
 
 <%@ include file="/init.jsp" %>
 
-<div class="sheet sheet-lg" id="<portlet:namespace/>connectedApp">
+<div class="sheet sheet-lg" id="<portlet:namespace />connectedApp">
 	<div class="sheet-header">
 		<h2 class="sheet-title">
 			<liferay-ui:message key="apps" />
@@ -26,7 +26,7 @@
 	</div>
 
 	<div class="sheet-section">
-		<liferay-portlet:actionURL name="/users_admin/revoke_connected_app" varImpl="actionCommandURL" />
+		<liferay-portlet:actionURL name="/connected_app/revoke_connected_app" varImpl="actionCommandURL" />
 
 		<aui:form action="<%= actionCommandURL.toString() %>" cssClass="portlet-users-admin-edit-user" data-senna-off="true" method="post" name="fm">
 
@@ -85,13 +85,15 @@
 	</div>
 </div>
 
-<aui:script require="metal-dom/src/dom as dom">
+<aui:script require="frontend-js-web/liferay/delegate/delegate.es as delegateModule">
 	var connectedAppKeyInput = document.querySelector(
-		'[name=<portlet:namespace/>connectedAppKey]'
+		'[name=<portlet:namespace />connectedAppKey]'
 	);
 
-	dom.delegate(
-		document.getElementById('<portlet:namespace/>connectedApp'),
+	var delegate = delegateModule.default;
+
+	delegate(
+		document.getElementById('<portlet:namespace />connectedApp'),
 		'click',
 		'[data-key]',
 		function (event) {

@@ -16,6 +16,7 @@ import {getFormViewFields, validateSelectedFormViews} from './utils.es';
 export const ADD_STEP = 'ADD_STEP';
 export const ADD_STEP_ACTION = 'ADD_STEP_ACTION';
 export const ADD_STEP_FORM_VIEW = 'ADD_STEP_FORM_VIEW';
+export const REMOVE_STEP_EMPTY_FORM_VIEWS = 'REMOVE_STEP_EMPTY_FORM_VIEWS';
 export const REMOVE_STEP = 'REMOVE_STEP';
 export const REMOVE_STEP_ACTION = 'REMOVE_STEP_ACTION';
 export const REMOVE_STEP_FORM_VIEW = 'REMOVE_STEP_FORM_VIEW';
@@ -109,6 +110,10 @@ export default (state, action) => {
 			};
 
 			if (stepIndex > 1) {
+				previousStep.appWorkflowDataLayoutLinks = previousStep.appWorkflowDataLayoutLinks.filter(
+					({dataLayoutId}) => dataLayoutId !== undefined
+				);
+
 				currentStep.appWorkflowDataLayoutLinks = previousStep.appWorkflowDataLayoutLinks.map(
 					(dataLayout) => ({
 						...dataLayout,
@@ -209,6 +214,17 @@ export default (state, action) => {
 
 			return {...state, currentStep: state.steps[state.stepIndex]};
 		}
+		case REMOVE_STEP_EMPTY_FORM_VIEWS: {
+			state.steps[
+				action.stepIndex
+			].appWorkflowDataLayoutLinks = state.steps[
+				action.stepIndex
+			].appWorkflowDataLayoutLinks?.filter(
+				({dataLayoutId}) => dataLayoutId !== undefined
+			);
+
+			return {...state};
+		}
 		case REMOVE_STEP_FORM_VIEW: {
 			const currentStep = state.steps[state.stepIndex];
 
@@ -284,19 +300,28 @@ export default (state, action) => {
 			};
 		}
 		case UPDATE_STEP: {
-			const {step, stepIndex} = {...action};
+			const {step: currentStep, stepIndex} = {...action};
 
 			if (stepIndex > 0) {
-				state.steps[
-					stepIndex - 1
-				].appWorkflowTransitions[0].transitionTo = step.name;
+				const previousStep = state.steps?.[stepIndex - 1];
+				const nextStep = state.steps?.[stepIndex + 1];
+
+				if (previousStep?.appWorkflowTransitions?.[0]) {
+					previousStep.appWorkflowTransitions[0].transitionTo =
+						currentStep.name;
+				}
+
+				if (nextStep?.appWorkflowTransitions?.[1]) {
+					nextStep.appWorkflowTransitions[1].transitionTo =
+						currentStep.name;
+				}
 			}
 
-			state.steps[stepIndex] = step;
+			state.steps[stepIndex] = currentStep;
 
 			return {
 				...state,
-				currentStep: step,
+				currentStep,
 			};
 		}
 		case UPDATE_STEP_ACTION: {

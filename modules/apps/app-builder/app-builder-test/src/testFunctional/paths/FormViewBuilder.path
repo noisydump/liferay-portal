@@ -47,6 +47,12 @@
 </tr>
 
 <tr>
+	<td>RULE_LABEL</td>
+	<td>//span[contains(@class,'panel-title') and contains(text(),'${ruleLabel}')]</td>
+	<td></td>
+</tr>
+
+<tr>
 	<td>FIELD_LABEL_AT_SIDEBAR</td>
 	<td>//input[contains (@name,'${key_fieldType}')]</td>
 	<td></td>
@@ -86,6 +92,12 @@
 	<td>SIDEBAR_BASIC_HELP_TEXT</td>
 	<td>//input[contains(@name,'tip')]</td>
 	<td></td>
+</tr>
+
+<tr>
+    <td>HELP_TEXT_AT_APP_DEPLOYED</td>
+    <td>//span[contains(text(),'${fieldValue}')]</td>
+    <td></td>
 </tr>
 
 <tr>
@@ -144,7 +156,13 @@
 
 <tr>
 	<td>FIELD_LABEL_REQUIRED</td>
-	<td>//label[contains(text(),'${fieldLabel}')]/span[@class='reference-mark']/*[contains(@class,'lexicon-icon-asterisk')] | //legend[contains(text(),'${fieldLabel}')]/span[@class='reference-mark']/*[contains(@class,'lexicon-icon-asterisk')]</td>
+	<td>//label[contains(text(),'${fieldLabel}')] | //legend[contains(text(),'${fieldLabel}')] | //label[contains(text(),'${fieldLabel}')]/span[@class='reference-mark']/*[contains(@class,'lexicon-icon-asterisk')] | //legend[contains(text(),'${fieldLabel}')]/span[@class='reference-mark']/*[contains(@class,'lexicon-icon-asterisk')]</td>
+	<td></td>
+</tr>
+
+<tr>
+	<td>SIDEBAR_ADVANCED_FIELD_REFERENCE</td>
+	<td>//input[contains(@name,'fieldReference')]</td>
 	<td></td>
 </tr>
 
@@ -187,6 +205,12 @@
 <tr>
 	<td>PREDEFINED_VALUE_AT_FORM_SELECTLIST</td>
 	<td>//label[contains(text(),'${key_fieldName}')]/..//div[contains(@class,'option-selected') and contains(text(),'${key_fieldValue}')]</td>
+	<td></td>
+</tr>
+
+<tr>
+	<td>PROPAGATE_CHANGES</td>
+	<td>//button[contains(@class,'btn-primary') and contains(text(),'Propagate')]</td>
 	<td></td>
 </tr>
 
@@ -292,7 +316,7 @@
 <!--DELETE_OBJECT-->
 <tr>
 	<td>DELETE_OBJECT_LABEL_CANCEL_BUTTON</td>
-	<td>//div[@class='btn-group-item']//*[contains(text(),'Cancel')]</td>
+	<td>//div[contains(@class,'modal d-block show')]//div[@class='btn-group-item']//*[contains(text(),'Cancel')]</td>
 	<td></td>
 </tr>
 
@@ -349,7 +373,7 @@
 
 <tr>
 	<td>DELETE_OBJECT_LABEL_DELETE_BUTTON</td>
-	<td>//button[contains(@class,'btn btn-primary')][contains(text(),'Delete')]</td>
+	<td>//div[contains(@class,'modal d-block show')]//button[contains(@class,'btn btn-primary')][contains(text(),'Delete')]</td>
 	<td></td>
 </tr>
 
@@ -362,6 +386,213 @@
 <tr>
 	<td>VALIDATE_OBJECT_SIDEBAR_FIELD_NAME</td>
 	<td>//div[contains(@class,'custom-object-field autofit-row autofit-row-center')]//small[contains(text(),'${fieldName}')]</td>
+	<td></td>
+</tr>
+
+<!--TABS-->
+<tr>
+	<td>RULES_TAB</td>
+	<td>//button[@id='rules']</td>
+	<td></td>
+</tr>
+<tr>
+	<td>FIELDS_TAB</td>
+	<td>//button[@id='fields']</td>
+	<td></td>
+</tr>
+<tr>
+	<td>RULE_NAME_TEXT_FIELD</td>
+	<td>//input[@placeholder='Untitled Rule']</td>
+	<td></td>
+</tr>
+<tr>
+	<td>RULE_ADD_BUTTON</td>
+	<td>//div[contains(@class,'multi-panel-sidebar')]//button[@class='btn btn-monospaced btn-primary']</td>
+	<td></td>
+</tr>
+<tr>
+	<td>RULE_BUILDER_NAME</td>
+	<td>//input[@placeholder='Untitled Rule']</td>
+	<td></td>
+</tr>
+
+<tr>
+	<td>CREATE_NEW_RULE_BUTTON</td>
+	<td>//button[contains(text(),'Create New Rule')]</td>
+	<td></td>
+</tr>
+
+<tr>
+	<td>EDIT_RULE_COLLAPSE</td>
+	<td>//button[contains(@class,'collapse') and contains(@aria-expanded,'false')]</td>
+	<td></td>
+</tr>
+
+<tr>
+	<td>EDIT_RULE_EXPANDED</td>
+	<td>//button[contains(@class,'collapse') and contains(@aria-expanded,'true')]</td>
+	<td></td>
+</tr>
+
+<tr>
+	<td>EDIT_RULE</td>
+	<td>//div[contains(@class,'panel-body')]</td>
+	<td></td>
+</tr>
+
+<tr>
+	<td>RULE_BUILDER_FIRST_FIELD</td>
+	<td>//div[contains(@class,'panel-body')]//span[contains(.,'${key_firstField}')]</td>
+	<td></td>
+</tr>
+
+<tr>
+	<td>RULE_BUILDER_SECOND_FIELD</td>
+	<td>//div[contains(@class,'panel-body')]//span[contains(.,'${key_secondField}')]</td>
+	<td></td>
+</tr>
+
+<tr>
+	<td>RULE_BUILDER_CONDITION</td>
+	<td>//div[contains(@class,'panel-body')]//span[contains(.,'${key_condition}')]</td>
+	<td></td>
+</tr>
+
+<tr>
+	<td>RULE_BUILDER_ACTION</td>
+	<td>//div[contains(@class,'panel-body')]//span[contains(.,'${key_action}')]</td>
+	<td></td>
+</tr>
+
+<tr>
+	<td>RULE_BUILDER_SAVE_BUTTON</td>
+	<td>//div[contains(@class, 'modal-item-last')]//button[contains(@class,'btn-primary')][contains(text(),'Save')]</td>
+	<td></td>
+</tr>
+
+<tr>
+	<td>RULE_OR_FIELD_SET_BUILDER_CANCEL_BUTTON</td>
+	<td>xpath=(//div[contains(@class, 'modal-item-last')]//button[contains(@class,'btn-secondary')][contains(text(),'Cancel')])</td>
+	<td></td>
+</tr>
+
+<tr>
+	<td>RULE_BUILDER_DEFAULT_EDIT</td>
+	<td>//div[contains(@class, 'collapse-icon-options')]//button[contains(@class, 'dropdown-toggle')]</td>
+	<td></td>
+</tr>
+
+<tr>
+	<td>RULE_BUILDER_EDIT</td>
+	<td>//button[contains(text(),'Edit')]</td>
+	<td></td>
+</tr>
+
+<tr>
+	<td>RULE_BUILDER_FORM_VIEW_NAME</td>
+	<td>//input[contains(@placeholder,'Untitled Form View')]</td>
+	<td></td>
+</tr>
+
+<tr>
+	<td>ASSERT_FORM</td>
+	<td>//td[contains(@class,'table-cell-expand') and contains(.,'${key_formViewName}')]</td>
+	<td></td>
+</tr>
+
+<tr>
+	<td>BUTTON_LOCALIZATION</td>
+	<td>//button[contains(@class, 'dropdown-toggle btn btn-monospaced btn-secondary') and contains(@symbol, '${key_symbolName}')]</td>
+	<td></td>
+</tr>
+
+<tr>
+	<td>BUTTON_LOCALIZATION_FIELD_SET</td>
+	<td>//div[contains(@class, 'modal-header')]//button[contains(@class, 'dropdown-toggle btn btn-monospaced btn-secondary') and contains(@symbol, '${key_symbolName}')]</td>
+	<td></td>
+</tr>
+
+<tr>
+	<td>LOCALIZATION_LIST</td>
+	<td>//span[contains(@class, 'autofit-section') and contains(., '${key_localizationList}')]</td>
+	<td></td>
+</tr>
+
+<tr>
+	<td>LOCALIZATION_LIST_FIELD_SET</td>
+	<td>xpath=(//span[contains(@class, 'autofit-section') and contains(., '${key_localizationList}')])[2]</td>
+	<td></td>
+</tr>
+
+<tr>
+	<td>TRANSLATED_LIST_FIELD_SET</td>
+	<td>xpath=(//span[contains(@class,'autofit-col-expand') and contains (.,'${key_localizationName}')]/following-sibling::span[contains(@class,'autofit-col') and contains(.,'${key_statusName}')])[2]</td>
+	<td></td>
+</tr>
+
+<tr>
+	<td>RULE_BUILDER_GO_BACK</td>
+	<td>//div[contains(@class, 'sidebar-header')]//button[contains(@class,'btn btn-secondary')]</td>
+	<td></td>
+</tr>
+
+<tr>
+	<td>FIELD_SETS_TAB</td>
+	<td>//button[contains(@class,'btn btn-unstyled') and contains(.,'Fieldsets')]</td>
+	<td></td>
+</tr>
+
+<tr>
+	<td>CREATE_NEW_FIELD_SETS</td>
+	<td>//button[contains(@class,'btn-secondary') and contains(.,'Create New Fieldset')]</td>
+	<td></td>
+</tr>
+
+<tr>
+	<td>FIELD_SET_NAME</td>
+	<td>//input[contains(@placeholder,'Untitled Fieldset')]</td>
+	<td></td>
+</tr>
+
+<tr>
+	<td>FIELD_SET_SAVE_BUTTON</td>
+	<td>//div[contains(@class, 'modal-footer')]//button[contains(@class,'btn-primary')][contains(text(),'Save')]</td>
+	<td></td>
+</tr>
+
+<tr>
+	<td>FIELD_SET_ELLIPSIS_ACTION</td>
+	<td>//div[contains(@class, 'field-type autofit-row autofit-row-center')]['${key_rowNumber}']//div[contains(@class, 'autofit-col pr-2')]//div[contains(@class, 'dropdown')]//button[contains(@class, 'btn btn-monospaced btn-unstyled')]</td>
+	<td></td>
+</tr>
+
+<tr>
+	<td>FIELD_SET_DISABLED_ELLIPSIS_ACTION</td>
+	<td>//div[contains(@class, 'field-type disabled autofit-row autofit-row-center')]['${key_rowNumber}']//div[contains(@class, 'autofit-col pr-2')]//div[contains(@class, 'dropdown')]//button[contains(@class, 'btn btn-monospaced btn-unstyled')]</td>
+	<td></td>
+</tr>
+
+<tr>
+	<td>EMPTY_FORM_FIELD</td>
+	<td>//p[contains(text(),'Drag fields from the sidebar to compose your form.')]</td>
+	<td></td>
+</tr>
+
+<tr>
+	<td>FORM_FIELD_FIRST_ROW</td>
+	<td>//div[contains(@class,"placeholder row")]//div[contains(@data-ddm-field-page, "0") and contains(@data-ddm-field-row, "0")]//div[contains(@class, "ddm-target")]</td>
+	<td></td>
+</tr>
+
+<tr>
+	<td>FORM_FIELD_FIRST_ITEM</td>
+	<td>//div[contains(@class,"form-group") and contains(.,'${key_fieldLabel}')]//label</td>
+	<td></td>
+</tr>
+
+<tr>
+	<td>FORM_FIELD_REQUIRED_ITEM</td>
+	<td>//div[contains(@class, 'ddm-field')]//label[contains(., 'Rich Text')]//span[contains(@class, 'ddm-label-required')]</td>
 	<td></td>
 </tr>
 

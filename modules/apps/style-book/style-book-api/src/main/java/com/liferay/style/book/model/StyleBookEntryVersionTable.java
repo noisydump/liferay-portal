@@ -42,6 +42,8 @@ public class StyleBookEntryVersionTable
 	public final Column<StyleBookEntryVersionTable, Integer> version =
 		createColumn(
 			"version", Integer.class, Types.INTEGER, Column.FLAG_DEFAULT);
+	public final Column<StyleBookEntryVersionTable, String> uuid = createColumn(
+		"uuid_", String.class, Types.VARCHAR, Column.FLAG_DEFAULT);
 	public final Column<StyleBookEntryVersionTable, Long> styleBookEntryId =
 		createColumn(
 			"styleBookEntryId", Long.class, Types.BIGINT, Column.FLAG_DEFAULT);
@@ -58,6 +60,9 @@ public class StyleBookEntryVersionTable
 	public final Column<StyleBookEntryVersionTable, Date> createDate =
 		createColumn(
 			"createDate", Date.class, Types.TIMESTAMP, Column.FLAG_DEFAULT);
+	public final Column<StyleBookEntryVersionTable, Date> modifiedDate =
+		createColumn(
+			"modifiedDate", Date.class, Types.TIMESTAMP, Column.FLAG_DEFAULT);
 	public final Column<StyleBookEntryVersionTable, Boolean>
 		defaultStyleBookEntry = createColumn(
 			"defaultStyleBookEntry", Boolean.class, Types.BOOLEAN,

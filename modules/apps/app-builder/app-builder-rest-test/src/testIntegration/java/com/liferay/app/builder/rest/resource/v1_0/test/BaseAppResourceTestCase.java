@@ -193,6 +193,7 @@ public abstract class BaseAppResourceTestCase {
 		app.setDataDefinitionName(regex);
 		app.setScope(regex);
 		app.setVersion(regex);
+		app.setWorkflowDefinitionName(regex);
 
 		String json = AppSerDes.toJSON(app);
 
@@ -203,6 +204,7 @@ public abstract class BaseAppResourceTestCase {
 		Assert.assertEquals(regex, app.getDataDefinitionName());
 		Assert.assertEquals(regex, app.getScope());
 		Assert.assertEquals(regex, app.getVersion());
+		Assert.assertEquals(regex, app.getWorkflowDefinitionName());
 	}
 
 	@Test
@@ -1161,6 +1163,26 @@ public abstract class BaseAppResourceTestCase {
 				continue;
 			}
 
+			if (Objects.equals(
+					"workflowDefinitionName", additionalAssertFieldName)) {
+
+				if (app.getWorkflowDefinitionName() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals(
+					"workflowDefinitionVersion", additionalAssertFieldName)) {
+
+				if (app.getWorkflowDefinitionVersion() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
 			throw new IllegalArgumentException(
 				"Invalid additional assert field name " +
 					additionalAssertFieldName);
@@ -1391,6 +1413,32 @@ public abstract class BaseAppResourceTestCase {
 				continue;
 			}
 
+			if (Objects.equals(
+					"workflowDefinitionName", additionalAssertFieldName)) {
+
+				if (!Objects.deepEquals(
+						app1.getWorkflowDefinitionName(),
+						app2.getWorkflowDefinitionName())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals(
+					"workflowDefinitionVersion", additionalAssertFieldName)) {
+
+				if (!Objects.deepEquals(
+						app1.getWorkflowDefinitionVersion(),
+						app2.getWorkflowDefinitionVersion())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
 			throw new IllegalArgumentException(
 				"Invalid additional assert field name " +
 					additionalAssertFieldName);
@@ -1418,9 +1466,11 @@ public abstract class BaseAppResourceTestCase {
 					return false;
 				}
 			}
+
+			return true;
 		}
 
-		return true;
+		return false;
 	}
 
 	protected java.util.Collection<EntityField> getEntityFields()
@@ -1609,6 +1659,19 @@ public abstract class BaseAppResourceTestCase {
 			return sb.toString();
 		}
 
+		if (entityFieldName.equals("workflowDefinitionName")) {
+			sb.append("'");
+			sb.append(String.valueOf(app.getWorkflowDefinitionName()));
+			sb.append("'");
+
+			return sb.toString();
+		}
+
+		if (entityFieldName.equals("workflowDefinitionVersion")) {
+			throw new IllegalArgumentException(
+				"Invalid entity field " + entityFieldName);
+		}
+
 		throw new IllegalArgumentException(
 			"Invalid entity field " + entityFieldName);
 	}
@@ -1667,6 +1730,9 @@ public abstract class BaseAppResourceTestCase {
 				siteId = testGroup.getGroupId();
 				userId = RandomTestUtil.randomLong();
 				version = StringUtil.toLowerCase(RandomTestUtil.randomString());
+				workflowDefinitionName = StringUtil.toLowerCase(
+					RandomTestUtil.randomString());
+				workflowDefinitionVersion = RandomTestUtil.randomInt();
 			}
 		};
 	}

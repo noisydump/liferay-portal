@@ -15,6 +15,7 @@
 package com.liferay.commerce.shipment.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
+import com.liferay.commerce.constants.CommerceConstants;
 import com.liferay.commerce.constants.CommerceOrderConstants;
 import com.liferay.commerce.context.CommerceContext;
 import com.liferay.commerce.currency.model.CommerceCurrency;
@@ -23,7 +24,6 @@ import com.liferay.commerce.currency.service.CommerceCurrencyLocalService;
 import com.liferay.commerce.currency.test.util.CommerceCurrencyTestUtil;
 import com.liferay.commerce.discount.CommerceDiscountValue;
 import com.liferay.commerce.exception.CommerceOrderShippingAddressException;
-import com.liferay.commerce.exception.CommerceOrderStatusException;
 import com.liferay.commerce.exception.CommerceShipmentInactiveWarehouseException;
 import com.liferay.commerce.exception.CommerceShipmentItemQuantityException;
 import com.liferay.commerce.exception.NoSuchOrderException;
@@ -50,7 +50,9 @@ import com.liferay.commerce.service.CommerceOrderItemLocalService;
 import com.liferay.commerce.service.CommerceOrderLocalService;
 import com.liferay.commerce.service.CommerceShipmentItemLocalService;
 import com.liferay.commerce.shipment.test.util.CommerceShipmentTestUtil;
+import com.liferay.commerce.tax.model.CommerceTaxMethod;
 import com.liferay.commerce.test.util.CommerceInventoryTestUtil;
+import com.liferay.commerce.test.util.CommerceTaxTestUtil;
 import com.liferay.commerce.test.util.CommerceTestUtil;
 import com.liferay.commerce.test.util.TestCommerceContext;
 import com.liferay.commerce.util.CommerceShippingHelper;
@@ -59,9 +61,17 @@ import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.User;
+import com.liferay.portal.kernel.security.auth.PrincipalThreadLocal;
+import com.liferay.portal.kernel.security.permission.PermissionCheckerFactoryUtil;
+import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
 import com.liferay.portal.kernel.service.CompanyLocalService;
 import com.liferay.portal.kernel.service.UserLocalService;
+import com.liferay.portal.kernel.settings.GroupServiceSettingsLocator;
+import com.liferay.portal.kernel.settings.ModifiableSettings;
+import com.liferay.portal.kernel.settings.Settings;
+import com.liferay.portal.kernel.settings.SettingsFactoryUtil;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
+import com.liferay.portal.kernel.test.rule.DataGuard;
 import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
 import com.liferay.portal.kernel.test.util.CompanyTestUtil;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
@@ -90,6 +100,7 @@ import org.junit.runner.RunWith;
 /**
  * @author Riccardo Alberti
  */
+@DataGuard(scope = DataGuard.Scope.METHOD)
 @RunWith(Arquillian.class)
 public class CommerceShipmentTest {
 
@@ -104,6 +115,11 @@ public class CommerceShipmentTest {
 		_company = CompanyTestUtil.addCompany();
 
 		_user = UserTestUtil.addUser(_company);
+
+		PermissionThreadLocal.setPermissionChecker(
+			PermissionCheckerFactoryUtil.create(_user));
+
+		PrincipalThreadLocal.setName(_user.getUserId());
 
 		_group = GroupTestUtil.addGroup(
 			_company.getCompanyId(), _user.getUserId(), 0);
@@ -367,9 +383,10 @@ public class CommerceShipmentTest {
 			_commerceOrderPriceCalculation.getCommerceOrderPrice(
 				commerceOrder, false, commerceContext);
 
-		CommerceMoney shippableValue = commerceOrderPrice.getShippingValue();
+		CommerceMoney shippableValueCommerceMoney =
+			commerceOrderPrice.getShippingValue();
 
-		Assert.assertEquals(value, shippableValue.getPrice());
+		Assert.assertEquals(value, shippableValueCommerceMoney.getPrice());
 	}
 
 	@Test
@@ -432,16 +449,19 @@ public class CommerceShipmentTest {
 			_commerceOrderPriceCalculation.getCommerceOrderPrice(
 				commerceOrder, false, commerceContext);
 
-		CommerceMoney shippableValue = commerceOrderPrice.getShippingValue();
+		CommerceMoney shippableValueCommerceMoney =
+			commerceOrderPrice.getShippingValue();
 
-		CommerceDiscountValue discountValue =
+		CommerceDiscountValue commerceDiscountValue =
 			commerceOrderPrice.getShippingDiscountValue();
 
-		CommerceMoney discountAmount = discountValue.getDiscountAmount();
-		BigDecimal[] percentages = discountValue.getPercentages();
+		CommerceMoney discountAmountCommerceMoney =
+			commerceDiscountValue.getDiscountAmount();
+		BigDecimal[] percentages = commerceDiscountValue.getPercentages();
 
-		Assert.assertEquals(value, shippableValue.getPrice());
-		Assert.assertEquals(expectedDiscountAmount, discountAmount.getPrice());
+		Assert.assertEquals(value, shippableValueCommerceMoney.getPrice());
+		Assert.assertEquals(
+			expectedDiscountAmount, discountAmountCommerceMoney.getPrice());
 		Assert.assertEquals(expectedL1Discount, percentages[0]);
 	}
 
@@ -597,49 +617,6 @@ public class CommerceShipmentTest {
 	}
 
 	@Test
-	public void testCreateShippingForCancelledOrder() throws Exception {
-		frutillaRule.scenario(
-			"Attach a shipment to an order with order status CANCELLED "
-		).given(
-			"An order is created"
-		).and(
-			"The order status is updated to CANCELLED"
-		).when(
-			"I attach the shipment to the order"
-		).then(
-			"An exception shall be raised"
-		);
-
-		try {
-			BigDecimal value = BigDecimal.valueOf(RandomTestUtil.nextDouble());
-
-			CommerceOrder commerceOrder =
-				CommerceTestUtil.createCommerceOrderForShipping(
-					_user.getUserId(), _commerceChannel.getGroupId(),
-					_commerceCurrency.getCommerceCurrencyId(), value);
-
-			_commerceOrders.add(commerceOrder);
-
-			commerceOrder.setOrderStatus(
-				CommerceOrderConstants.ORDER_STATUS_CANCELLED);
-
-			_commerceOrderLocalService.updateCommerceOrder(commerceOrder);
-
-			CommerceShipmentTestUtil.createEmptyOrderShipment(
-				commerceOrder.getGroupId(), commerceOrder.getCommerceOrderId());
-
-			_commerceOrderEngine.checkoutCommerceOrder(
-				commerceOrder, _user.getUserId());
-		}
-		catch (PortalException portalException) {
-			Throwable throwable = portalException.getCause();
-
-			Assert.assertSame(
-				CommerceOrderStatusException.class, throwable.getClass());
-		}
-	}
-
-	@Test
 	public void testCreateShippingForItemsOnly() throws Exception {
 		frutillaRule.scenario(
 			"Attach a shipment on the order items without a shipment to the " +
@@ -787,6 +764,108 @@ public class CommerceShipmentTest {
 
 		CommerceShipmentTestUtil.createEmptyOrderShipment(
 			_commerceChannel.getGroupId(), 0);
+	}
+
+	@Test
+	public void testShippingAmountAndShippingTaxes() throws Exception {
+		frutillaRule.scenario(
+			"When a shipping amount with tax is associated with an order the " +
+				"price object is correctly set"
+		).given(
+			"An order"
+		).and(
+			"A shipment with a shipping amount and tax on the shipment is set"
+		).when(
+			"I attach the shipment to the order"
+		).then(
+			"The price object has the shipping amount correctly set"
+		);
+
+		long commerceTaxCategoryId = CommerceTaxTestUtil.addTaxCategoryId(
+			_user.getGroupId());
+
+		CommerceTaxMethod commerceTaxMethod =
+			CommerceTaxTestUtil.addCommerceByAddressTaxMethod(
+				_user.getUserId(), _commerceChannel.getGroupId(), true);
+
+		double shippingTaxRate = 10;
+
+		CommerceTaxTestUtil.setCommerceMethodTaxRate(
+			_user.getUserId(), _commerceChannel.getGroupId(),
+			commerceTaxCategoryId, commerceTaxMethod.getCommerceTaxMethodId(),
+			shippingTaxRate);
+
+		Settings settings = SettingsFactoryUtil.getSettings(
+			new GroupServiceSettingsLocator(
+				_commerceChannel.getGroupId(),
+				CommerceConstants.SERVICE_NAME_TAX));
+
+		ModifiableSettings modifiableSettings =
+			settings.getModifiableSettings();
+
+		modifiableSettings.setValue(
+			"taxCategoryId", String.valueOf(commerceTaxCategoryId));
+
+		modifiableSettings.store();
+
+		CPInstance cpInstance = _createCPInstance(BigDecimal.valueOf(25));
+
+		CommerceInventoryWarehouse commerceInventoryWarehouse =
+			_createCommerceInventoryWarehouse(
+				_commerceChannel.getCommerceChannelId(), true);
+
+		int quantity = 10;
+
+		CommerceInventoryTestUtil.addCommerceInventoryWarehouseItem(
+			_user.getUserId(), commerceInventoryWarehouse, cpInstance.getSku(),
+			quantity);
+
+		BigDecimal value = BigDecimal.valueOf(5);
+
+		CommerceOrder commerceOrder =
+			CommerceTestUtil.createCommerceOrderForShipping(
+				_user.getUserId(), _commerceChannel.getGroupId(),
+				_commerceCurrency.getCommerceCurrencyId(), value);
+
+		commerceOrder.setOrderStatus(CommerceOrderConstants.ORDER_STATUS_OPEN);
+
+		_commerceOrderLocalService.updateCommerceOrder(commerceOrder);
+
+		_commerceOrders.add(commerceOrder);
+
+		int orderedQuantity = 1;
+
+		CommerceContext commerceContext = new TestCommerceContext(
+			commerceOrder.getCommerceCurrency(), _commerceChannel, null, null,
+			commerceOrder.getCommerceAccount(), commerceOrder);
+
+		CommerceTestUtil.addCommerceOrderItem(
+			commerceOrder.getCommerceOrderId(), cpInstance.getCPInstanceId(),
+			orderedQuantity, commerceContext);
+
+		CommerceOrderPrice commerceOrderPrice =
+			_commerceOrderPriceCalculation.getCommerceOrderPrice(
+				commerceOrder, false, commerceContext);
+
+		CommerceMoney shippableValueCommerceMoney =
+			commerceOrderPrice.getShippingValue();
+
+		Assert.assertEquals(value, shippableValueCommerceMoney.getPrice());
+
+		BigDecimal expectedTaxValue = value.multiply(
+			BigDecimal.valueOf(shippingTaxRate));
+
+		expectedTaxValue = expectedTaxValue.divide(BigDecimal.valueOf(100));
+
+		CommerceMoney taxValueCommerceMoney = commerceOrderPrice.getTaxValue();
+
+		BigDecimal taxValue = taxValueCommerceMoney.getPrice();
+
+		Assert.assertEquals(expectedTaxValue, taxValue.stripTrailingZeros());
+
+		modifiableSettings.setValue("taxCategoryId", String.valueOf(0));
+
+		modifiableSettings.store();
 	}
 
 	@Test(expected = CommerceShipmentItemQuantityException.class)

@@ -63,6 +63,12 @@ public class PortalUpgradeProcess extends UpgradeProcess {
 		return _upgradeProcesses.lastKey();
 	}
 
+	public static SortedMap<Version, UpgradeProcess> getPendingUpgradeProcesses(
+		Version schemaVersion) {
+
+		return _upgradeProcesses.tailMap(schemaVersion, false);
+	}
+
 	public static Version getRequiredSchemaVersion() {
 		NavigableSet<Version> reverseSchemaVersions =
 			_upgradeProcesses.descendingKeySet();
@@ -156,7 +162,7 @@ public class PortalUpgradeProcess extends UpgradeProcess {
 		}
 	}
 
-	private static void _initializeSchemaVersion(Connection connection)
+	private void _initializeSchemaVersion(Connection connection)
 		throws Exception {
 
 		try (PreparedStatement ps = connection.prepareStatement(
@@ -174,7 +180,9 @@ public class PortalUpgradeProcess extends UpgradeProcess {
 		PortalUpgradeProcessRegistryImpl.class,
 		com.liferay.portal.upgrade.v7_2_x.PortalUpgradeProcessRegistryImpl.
 			class,
-		com.liferay.portal.upgrade.v7_3_x.PortalUpgradeProcessRegistryImpl.class
+		com.liferay.portal.upgrade.v7_3_x.PortalUpgradeProcessRegistryImpl.
+			class,
+		com.liferay.portal.upgrade.v7_4_x.PortalUpgradeProcessRegistryImpl.class
 	};
 
 	private static final Version _initialSchemaVersion = new Version(0, 1, 0);

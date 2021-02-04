@@ -336,6 +336,7 @@ public abstract class BaseDiscountRuleResourceTestCase {
 
 		DiscountRule randomPatchDiscountRule = randomPatchDiscountRule();
 
+		@SuppressWarnings("PMD.UnusedLocalVariable")
 		DiscountRule patchDiscountRule = discountRuleResource.patchDiscountRule(
 			postDiscountRule.getId(), randomPatchDiscountRule);
 
@@ -1143,9 +1144,11 @@ public abstract class BaseDiscountRuleResourceTestCase {
 					return false;
 				}
 			}
+
+			return true;
 		}
 
-		return true;
+		return false;
 	}
 
 	protected java.util.Collection<EntityField> getEntityFields()

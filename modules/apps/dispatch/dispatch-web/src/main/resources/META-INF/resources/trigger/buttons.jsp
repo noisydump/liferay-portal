@@ -26,15 +26,17 @@ String runNowButton = "runNowButton" + row.getRowId();
 
 <span aria-hidden="true" class="<%= "hide icon-spinner icon-spin dispatch-check-row-icon-spinner" + row.getRowId() %>"></span>
 
-<aui:button cssClass="btn-lg" name="<%= runNowButton %>" type="cancel" value="run-now" />
+<c:if test="<%= DispatchTriggerPermission.contains(permissionChecker, dispatchTrigger, ActionKeys.UPDATE) %>">
+	<aui:button name="<%= runNowButton %>" value="run-now" />
+</c:if>
 
 <aui:script use="aui-io-request,aui-parse-content,liferay-notification">
 	A.one('#<portlet:namespace /><%= runNowButton %>').on('click', function (
 		event
 	) {
 		var data = {
-			<portlet:namespace/><%= Constants.CMD %>: 'runProcess',
-			<portlet:namespace/>dispatchTriggerId:
+			<portlet:namespace /><%= Constants.CMD %>: 'runProcess',
+			<portlet:namespace />dispatchTriggerId:
 				'<%= dispatchTrigger.getDispatchTriggerId() %>',
 		};
 
@@ -47,7 +49,7 @@ String runNowButton = "runNowButton" + row.getRowId();
 		iconSpinnerContainer.removeClass('hide');
 
 		A.io.request(
-			'<liferay-portlet:actionURL name="editDispatchTrigger" portletName="<%= portletDisplay.getPortletName() %>" />',
+			'<liferay-portlet:actionURL name="/dispatch/edit_dispatch_trigger" portletName="<%= portletDisplay.getPortletName() %>" />',
 			{
 				data: data,
 				on: {

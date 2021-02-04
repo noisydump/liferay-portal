@@ -28,7 +28,7 @@ String channelQualifiers = ParamUtil.getString(request, "channelQualifiers", com
 boolean hasPermission = commercePriceListQualifiersDisplayContext.hasPermission(commercePriceListId, ActionKeys.UPDATE);
 %>
 
-<portlet:actionURL name="editCommercePriceListQualifiers" var="editCommercePriceListQualifiersActionURL" />
+<portlet:actionURL name="/commerce_price_list/edit_commerce_price_list_qualifiers" var="editCommercePriceListQualifiersActionURL" />
 
 <aui:form action="<%= editCommercePriceListQualifiersActionURL %>" cssClass="pt-4" method="post" name="fm">
 	<aui:input name="<%= Constants.CMD %>" type="hidden" value="<%= (commercePriceList == null) ? Constants.ADD : Constants.UPDATE %>" />
@@ -94,7 +94,7 @@ boolean hasPermission = commercePriceListQualifiersDisplayContext.hasPermission(
 <aui:script>
 	Liferay.provide(
 		window,
-		'<portlet:namespace/>chooseAccountQualifiers',
+		'<portlet:namespace />chooseAccountQualifiers',
 		function (value) {
 			var portletURL = new Liferay.PortletURL.createURL(
 				'<%= currentURLObj %>'
@@ -109,7 +109,7 @@ boolean hasPermission = commercePriceListQualifiersDisplayContext.hasPermission(
 
 	Liferay.provide(
 		window,
-		'<portlet:namespace/>chooseChannelQualifiers',
+		'<portlet:namespace />chooseChannelQualifiers',
 		function (value) {
 			var portletURL = new Liferay.PortletURL.createURL(
 				'<%= currentURLObj %>'

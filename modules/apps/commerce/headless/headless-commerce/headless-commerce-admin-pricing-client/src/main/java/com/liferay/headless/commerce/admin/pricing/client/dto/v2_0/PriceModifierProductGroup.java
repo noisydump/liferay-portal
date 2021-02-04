@@ -17,6 +17,8 @@ package com.liferay.headless.commerce.admin.pricing.client.dto.v2_0;
 import com.liferay.headless.commerce.admin.pricing.client.function.UnsafeSupplier;
 import com.liferay.headless.commerce.admin.pricing.client.serdes.v2_0.PriceModifierProductGroupSerDes;
 
+import java.io.Serializable;
+
 import java.util.Map;
 import java.util.Objects;
 
@@ -27,7 +29,7 @@ import javax.annotation.Generated;
  * @generated
  */
 @Generated("")
-public class PriceModifierProductGroup implements Cloneable {
+public class PriceModifierProductGroup implements Cloneable, Serializable {
 
 	public static PriceModifierProductGroup toDTO(String json) {
 		return PriceModifierProductGroupSerDes.toDTO(json);
@@ -54,25 +56,6 @@ public class PriceModifierProductGroup implements Cloneable {
 	}
 
 	protected Map<String, Map<String, String>> actions;
-
-	public Long getId() {
-		return id;
-	}
-
-	public void setId(Long id) {
-		this.id = id;
-	}
-
-	public void setId(UnsafeSupplier<Long, Exception> idUnsafeSupplier) {
-		try {
-			id = idUnsafeSupplier.get();
-		}
-		catch (Exception e) {
-			throw new RuntimeException(e);
-		}
-	}
-
-	protected Long id;
 
 	public String getPriceModifierExternalReferenceCode() {
 		return priceModifierExternalReferenceCode;
@@ -120,6 +103,31 @@ public class PriceModifierProductGroup implements Cloneable {
 	}
 
 	protected Long priceModifierId;
+
+	public Long getPriceModifierProductGroupId() {
+		return priceModifierProductGroupId;
+	}
+
+	public void setPriceModifierProductGroupId(
+		Long priceModifierProductGroupId) {
+
+		this.priceModifierProductGroupId = priceModifierProductGroupId;
+	}
+
+	public void setPriceModifierProductGroupId(
+		UnsafeSupplier<Long, Exception>
+			priceModifierProductGroupIdUnsafeSupplier) {
+
+		try {
+			priceModifierProductGroupId =
+				priceModifierProductGroupIdUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected Long priceModifierProductGroupId;
 
 	public ProductGroup getProductGroup() {
 		return productGroup;

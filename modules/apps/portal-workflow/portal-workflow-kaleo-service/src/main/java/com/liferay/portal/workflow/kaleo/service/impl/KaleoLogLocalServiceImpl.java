@@ -161,6 +161,9 @@ public class KaleoLogLocalServiceImpl extends KaleoLogLocalServiceBaseImpl {
 			kaleoLog.setDuration(endDate.getTime() - startDate.getTime());
 		}
 		catch (NoSuchLogException noSuchLogException) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(noSuchLogException, noSuchLogException);
+			}
 		}
 
 		return kaleoLogPersistence.update(kaleoLog);
@@ -331,6 +334,9 @@ public class KaleoLogLocalServiceImpl extends KaleoLogLocalServiceBaseImpl {
 			kaleoLog.setDuration(endDate.getTime() - startDate.getTime());
 		}
 		catch (NoSuchLogException noSuchLogException) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(noSuchLogException, noSuchLogException);
+			}
 		}
 
 		return kaleoLogPersistence.update(kaleoLog);
@@ -755,6 +761,8 @@ public class KaleoLogLocalServiceImpl extends KaleoLogLocalServiceBaseImpl {
 			"createDate", _getSortableFieldName(Field.CREATE_DATE, "Number")
 		).put(
 			"kaleoLogId", _getSortableFieldName("kaleoLogId", "Number")
+		).put(
+			"modifiedDate", _getSortableFieldName(Field.MODIFIED_DATE, "Number")
 		).put(
 			"userId", _getSortableFieldName(Field.USER_ID, "Number")
 		).build();

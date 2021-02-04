@@ -344,6 +344,14 @@ public class StyleBookEntryLocalServiceWrapper
 	}
 
 	@Override
+	public com.liferay.style.book.model.StyleBookEntry
+		fetchStyleBookEntryByUuidAndGroupId(String uuid, long groupId) {
+
+		return _styleBookEntryLocalService.fetchStyleBookEntryByUuidAndGroupId(
+			uuid, groupId);
+	}
+
+	@Override
 	public String generateStyleBookEntryKey(long groupId, String name) {
 		return _styleBookEntryLocalService.generateStyleBookEntryKey(
 			groupId, name);
@@ -369,6 +377,16 @@ public class StyleBookEntryLocalServiceWrapper
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _styleBookEntryLocalService.getDraft(styleBookEntry);
+	}
+
+	@Override
+	public com.liferay.portal.kernel.dao.orm.ExportActionableDynamicQuery
+		getExportActionableDynamicQuery(
+			com.liferay.exportimport.kernel.lar.PortletDataContext
+				portletDataContext) {
+
+		return _styleBookEntryLocalService.getExportActionableDynamicQuery(
+			portletDataContext);
 	}
 
 	@Override
@@ -439,6 +457,14 @@ public class StyleBookEntryLocalServiceWrapper
 
 		return _styleBookEntryLocalService.getStyleBookEntries(
 			groupId, name, start, end, orderByComparator);
+	}
+
+	@Override
+	public java.util.List<com.liferay.style.book.model.StyleBookEntry>
+		getStyleBookEntriesByUuidAndCompanyId(String uuid, long companyId) {
+
+		return _styleBookEntryLocalService.
+			getStyleBookEntriesByUuidAndCompanyId(uuid, companyId);
 	}
 
 	/**
@@ -565,6 +591,18 @@ public class StyleBookEntryLocalServiceWrapper
 
 		return _styleBookEntryLocalService.updatePreviewFileEntryId(
 			styleBookEntryId, previewFileEntryId);
+	}
+
+	@Override
+	public com.liferay.style.book.model.StyleBookEntry updateStyleBookEntry(
+			long userId, long styleBookEntryId, boolean defaultStylebookEntry,
+			String frontendTokensValues, String name, String styleBookEntryKey,
+			long previewFileEntryId)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _styleBookEntryLocalService.updateStyleBookEntry(
+			userId, styleBookEntryId, defaultStylebookEntry,
+			frontendTokensValues, name, styleBookEntryKey, previewFileEntryId);
 	}
 
 	@Override

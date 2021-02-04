@@ -133,9 +133,79 @@ out.println(PortalUtil.escapeRedirect("/"));
 			locator1 = "Portlet#BODY");
 	}
 
+	@description = "This is a use case for LPS-80905."
+	@priority = "5"
+	test UserCanAccessPermissionsWindowWithPermissionFromAdmin {
+		property test.name.skip.portal.instance = "SecurityUsecase#UserCanAccessPermissionsWindowWithPermissionFromAdmin";
+
+		var portalURL = PropsUtil.get("portal.url");
+
+		ApplicationsMenu.gotoPortlet(
+			category = "Users",
+			panel = "Control Panel",
+			portlet = "Roles");
+
+		Role.definePermissionsCP(
+			permissionDefinitionKeys = "CONTROL_PANEL_GENERAL_PERMISSIONS_GO_TO_CONTROL_PANEL_CHECKBOX",
+			permissionDefinitionValue = "View Control Panel Menu",
+			roleTitle = "User");
+
+		ApplicationsMenu.gotoPortlet(
+			category = "Users",
+			panel = "Control Panel",
+			portlet = "Roles");
+
+		Role.definePermissionsCP(
+			permissionDefinitionKeys = "CONTROL_PANEL_SITES_SITES_GENERAL_PERMISSIONS_ACCESS_IN_CONTROL_PANEL_CHECKBOX,CONTROL_PANEL_SITES_SITES_GENERAL_PERMISSIONS_VIEW_CHECKBOX",
+			roleTitle = "User");
+
+		ApplicationsMenu.gotoPortlet(
+			category = "Users",
+			panel = "Control Panel",
+			portlet = "Users and Organizations");
+
+		User.addCP(
+			userEmailAddress = "userea@liferay.com",
+			userFirstName = "userfn",
+			userLastName = "userln",
+			userScreenName = "usersn");
+
+		ApplicationsMenu.gotoPortlet(
+			category = "Users",
+			panel = "Control Panel",
+			portlet = "Users and Organizations");
+
+		User.editPasswordCP(
+			userEmailAddress = "userea@liferay.com",
+			userScreenName = "usersn");
+
+		UserBar.gotoDropdownItem(dropdownItem = "My Profile");
+
+		Portlet.addPG(portletName = "Calendar");
+
+		PermissionsInline.gotoConfigurationPG(portletName = "Calendar");
+
+		Role.definePermissionPG(
+			permissionDefinitionKey = "CONFIGURATION_PERMISSIONS_PERMISSIONS_CHECKBOX",
+			roleTitle = "User");
+
+		AssertClick(
+			locator1 = "Button#SAVE",
+			value1 = "Save");
+
+		User.logoutAndLoginPG(
+			userLoginEmailAddress = "userea@liferay.com",
+			userLoginFullName = "userfn userln");
+
+		Navigator.openSpecificURL(url = "${portalURL}/web/test");
+
+		PermissionsInline.gotoConfigurationPG(portletName = "Calendar");
+	}
+
 	@priority = "5"
 	test ValidateCannotOverwriteOSGiServiceIdentifier {
 		property portal.acceptance = "true";
+
 		var portalURL = PropsUtil.get("portal.url");
 		var url = "${portalURL}/c/portal/json_service?serviceClassName=com.liferay.portal.kernel.service.AccountServiceUtil&amp;serviceMethodName=getOSGiServiceIdentifier&amp;p_auth=";
 
@@ -147,6 +217,7 @@ out.println(PortalUtil.escapeRedirect("/"));
 	@priority = "4"
 	test ValidateCannotStealAdminAccount {
 		property test.name.skip.portal.instance = "SecurityUsecase#ValidateCannotStealAdminAccount";
+
 		var pAuth = Api.getPAuth();
 		var portalURL = PropsUtil.get("portal.url");
 
@@ -187,6 +258,7 @@ out.println(PortalUtil.escapeRedirect("/"));
 	test ValidateForwardURLPG {
 		property custom.properties = "virtual.hosts.valid.hosts=localhost,127.0.0.1,${ip.address}";
 		property portal.acceptance = "true";
+
 		var portalURL = PropsUtil.get("portal.url");
 
 		Navigator.openSpecificURL(url = "${portalURL}/html/common/forward_jsp.jsp?FORWARD_URL=http://www.msn.com");

@@ -27,23 +27,6 @@ const SLAInfo = ({processId}) => {
 	const {fetchData} = useFetch({url});
 	const {fetchData: fetchSLABlocked} = useFetch({url: `${url}&status=2`});
 
-	const getSLACount = () => {
-		fetchData().then(({totalCount}) => {
-			if (totalCount === 0) {
-				setAlert({
-					content: `${Liferay.Language.get(
-						'no-slas-are-defined-for-this-process'
-					)}`,
-					link: `/sla/${processId}/new`,
-					linkText: Liferay.Language.get('add-a-new-sla'),
-				});
-			}
-			else {
-				getSLABlockedCount();
-			}
-		});
-	};
-
 	const getSLABlockedCount = () => {
 		fetchSLABlocked().then(({totalCount}) => {
 			if (totalCount > 0) {
@@ -63,6 +46,23 @@ const SLAInfo = ({processId}) => {
 		});
 	};
 
+	const getSLACount = () => {
+		fetchData().then(({totalCount}) => {
+			if (totalCount === 0) {
+				setAlert({
+					content: `${Liferay.Language.get(
+						'no-slas-are-defined-for-this-process'
+					)}`,
+					link: `/sla/${processId}/new`,
+					linkText: Liferay.Language.get('add-a-new-sla'),
+				});
+			}
+			else {
+				getSLABlockedCount();
+			}
+		});
+	};
+
 	useEffect(() => {
 		getSLACount();
 		// eslint-disable-next-line react-hooks/exhaustive-deps
@@ -74,7 +74,6 @@ const SLAInfo = ({processId}) => {
 				<ClayLayout.ContainerFluid>
 					<ClayAlert
 						className="mb-0"
-						data-testid="slaInfoAlert"
 						displayType="warning"
 						onClose={() => setAlert()}
 						title={Liferay.Language.get('warning')}
@@ -82,7 +81,6 @@ const SLAInfo = ({processId}) => {
 						{alert.content}{' '}
 						<ChildLink
 							className="font-weight-bold"
-							data-testid="slaInfoLink"
 							query={{slaInfoLink: true}}
 							to={alert.link}
 						>

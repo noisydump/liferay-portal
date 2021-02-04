@@ -26,6 +26,8 @@ import com.liferay.portal.vulcan.util.ObjectMapperUtil;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
+import java.io.Serializable;
+
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Objects;
@@ -48,7 +50,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 @JsonFilter("Liferay.Vulcan")
 @Schema(requiredProperties = {"channelId", "discountId"})
 @XmlRootElement(name = "DiscountChannel")
-public class DiscountChannel {
+public class DiscountChannel implements Serializable {
 
 	public static DiscountChannel toDTO(String json) {
 		return ObjectMapperUtil.readValue(DiscountChannel.class, json);
@@ -175,6 +177,35 @@ public class DiscountChannel {
 	@NotNull
 	protected Long channelId;
 
+	@DecimalMin("0")
+	@Schema
+	public Long getDiscountChannelId() {
+		return discountChannelId;
+	}
+
+	public void setDiscountChannelId(Long discountChannelId) {
+		this.discountChannelId = discountChannelId;
+	}
+
+	@JsonIgnore
+	public void setDiscountChannelId(
+		UnsafeSupplier<Long, Exception> discountChannelIdUnsafeSupplier) {
+
+		try {
+			discountChannelId = discountChannelIdUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
+	protected Long discountChannelId;
+
 	@Schema
 	public String getDiscountExternalReferenceCode() {
 		return discountExternalReferenceCode;
@@ -236,33 +267,6 @@ public class DiscountChannel {
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	@NotNull
 	protected Long discountId;
-
-	@DecimalMin("0")
-	@Schema
-	public Long getId() {
-		return id;
-	}
-
-	public void setId(Long id) {
-		this.id = id;
-	}
-
-	@JsonIgnore
-	public void setId(UnsafeSupplier<Long, Exception> idUnsafeSupplier) {
-		try {
-			id = idUnsafeSupplier.get();
-		}
-		catch (RuntimeException re) {
-			throw re;
-		}
-		catch (Exception e) {
-			throw new RuntimeException(e);
-		}
-	}
-
-	@GraphQLField
-	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
-	protected Long id;
 
 	@Override
 	public boolean equals(Object object) {
@@ -335,6 +339,16 @@ public class DiscountChannel {
 			sb.append(channelId);
 		}
 
+		if (discountChannelId != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"discountChannelId\": ");
+
+			sb.append(discountChannelId);
+		}
+
 		if (discountExternalReferenceCode != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -357,16 +371,6 @@ public class DiscountChannel {
 			sb.append("\"discountId\": ");
 
 			sb.append(discountId);
-		}
-
-		if (id != null) {
-			if (sb.length() > 1) {
-				sb.append(", ");
-			}
-
-			sb.append("\"id\": ");
-
-			sb.append(id);
 		}
 
 		sb.append("}");

@@ -472,6 +472,7 @@ public abstract class BaseAccountAddressResourceTestCase {
 
 		AccountAddress randomPatchAccountAddress = randomPatchAccountAddress();
 
+		@SuppressWarnings("PMD.UnusedLocalVariable")
 		AccountAddress patchAccountAddress =
 			accountAddressResource.patchAccountAddress(
 				postAccountAddress.getId(), randomPatchAccountAddress);
@@ -1364,9 +1365,11 @@ public abstract class BaseAccountAddressResourceTestCase {
 					return false;
 				}
 			}
+
+			return true;
 		}
 
-		return true;
+		return false;
 	}
 
 	protected java.util.Collection<EntityField> getEntityFields()

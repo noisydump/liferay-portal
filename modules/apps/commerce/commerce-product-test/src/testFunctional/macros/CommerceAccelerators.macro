@@ -1,20 +1,23 @@
 definition {
 
-	macro initializeAccelerator {
-		CommerceAccelerators.initializeNewSiteViaAccelerator(siteName = "${siteName}");
-	}
-
 	macro initializeNewSiteViaAccelerator {
-
-		ProductMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Sites",
 			panel = "Control Panel",
 			portlet = "Sites");
 
-		Site.addCP(
-			membershipType = "Private",
-			siteName = "${siteName}",
-			siteTemplateName = "${siteName}");
+		if (isSet(siteTemplateName)) {
+			Site.addCP(
+				membershipType = "Private",
+				siteName = "${siteName}",
+				siteTemplateName = "${siteTemplateName}");
+		}
+		else {
+			Site.addCP(
+				membershipType = "Private",
+				siteName = "${siteName}",
+				siteTemplateName = "${siteName}");
+		}
 	}
 
 }

@@ -1,4 +1,6 @@
 dependencies {
+	compile project("${apiPath}")
+
 #if (${liferayVersion.startsWith("7.0")} || ${liferayVersion.startsWith("7.1")})
 	compileOnly group: "biz.aQute.bnd", name: "biz.aQute.bnd.annotation", version: "@biz.aQute.bnd.version@"
 #end
@@ -27,7 +29,6 @@ dependencies {
 #else
 	compileOnly group: "com.liferay.portal", name: "release.${product}.api"
 #end
-	compileOnly project("${apiPath}")
 }
 
 buildService {
@@ -35,11 +36,3 @@ buildService {
 }
 
 group = "${package}"
-
-tasks.withType(JavaCompile) {
-
-	// Generated classes using Jodd library are unable to be read when compiled against JDK 11
-
-	sourceCompatibility = JavaVersion.VERSION_1_8
-	targetCompatibility = JavaVersion.VERSION_1_8
-}

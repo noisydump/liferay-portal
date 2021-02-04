@@ -20,6 +20,7 @@ import com.liferay.change.tracking.conflict.ConflictInfo;
 import com.liferay.change.tracking.constants.CTConstants;
 import com.liferay.change.tracking.exception.CTCollectionDescriptionException;
 import com.liferay.change.tracking.exception.CTCollectionNameException;
+import com.liferay.change.tracking.exception.CTLocalizedException;
 import com.liferay.change.tracking.internal.CTEnclosureUtil;
 import com.liferay.change.tracking.internal.CTServiceCopier;
 import com.liferay.change.tracking.internal.CTServiceRegistry;
@@ -35,11 +36,14 @@ import com.liferay.change.tracking.model.CTCollection;
 import com.liferay.change.tracking.model.CTEntry;
 import com.liferay.change.tracking.model.CTPreferences;
 import com.liferay.change.tracking.model.CTProcess;
+import com.liferay.change.tracking.model.CTSchemaVersion;
 import com.liferay.change.tracking.service.CTEntryLocalService;
 import com.liferay.change.tracking.service.CTPreferencesLocalService;
 import com.liferay.change.tracking.service.CTProcessLocalService;
+import com.liferay.change.tracking.service.CTSchemaVersionLocalService;
 import com.liferay.change.tracking.service.base.CTCollectionLocalServiceBaseImpl;
 import com.liferay.change.tracking.service.persistence.CTAutoResolutionInfoPersistence;
+import com.liferay.change.tracking.spi.display.CTDisplayRenderer;
 import com.liferay.change.tracking.spi.resolver.ConstraintResolver;
 import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMap;
 import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMapFactory;
@@ -115,6 +119,13 @@ public class CTCollectionLocalServiceImpl
 
 		ctCollection.setCompanyId(companyId);
 		ctCollection.setUserId(userId);
+
+		CTSchemaVersion latestCTSchemaVersion =
+			_ctSchemaVersionLocalService.getLatestCTSchemaVersion(companyId);
+
+		ctCollection.setSchemaVersionId(
+			latestCTSchemaVersion.getSchemaVersionId());
+
 		ctCollection.setName(name);
 		ctCollection.setDescription(description);
 		ctCollection.setStatus(WorkflowConstants.STATUS_DRAFT);
@@ -153,14 +164,18 @@ public class CTCollectionLocalServiceImpl
 							throw new SystemException(
 								StringBundler.concat(
 									"Unable to check conflicts for ",
-									ctCollection, " because service for ",
-									modelClassNameId, " is missing"));
+									ctCollection.getName(),
+									" because service for ", modelClassNameId,
+									" is missing"));
 						}
 
 						return new CTConflictChecker<>(
+							_classNameLocalService,
+							_constraintResolverServiceTrackerMap,
+							_ctDisplayRendererServiceTrackerMap,
 							_ctEntryLocalService, ctService, modelClassNameId,
-							_serviceTrackerMap,
 							ctCollection.getCtCollectionId(),
+							_tableReferenceDefinitionManager,
 							CTConstants.CT_COLLECTION_ID_PRODUCTION);
 					});
 
@@ -273,7 +288,7 @@ public class CTCollectionLocalServiceImpl
 					CharPool.COMMA);
 
 				ConstraintResolver<?> constraintResolver =
-					_serviceTrackerMap.getService(
+					_constraintResolverServiceTrackerMap.getService(
 						new ConstraintResolverKey(
 							className.getValue(),
 							uniqueIndexes.toArray(new String[0])));
@@ -282,10 +297,9 @@ public class CTCollectionLocalServiceImpl
 					ConstraintResolverConflictInfo
 						constraintResolverConflictInfo =
 							new ConstraintResolverConflictInfo(
-								constraintResolver,
+								constraintResolver, true,
 								ctAutoResolutionInfo.getSourceModelClassPK(),
-								ctAutoResolutionInfo.getTargetModelClassPK(),
-								true);
+								ctAutoResolutionInfo.getTargetModelClassPK());
 
 					constraintResolverConflictInfo.setCtAutoResolutionInfoId(
 						ctAutoResolutionInfo.getCtAutoResolutionInfoId());
@@ -406,6 +420,23 @@ public class CTCollectionLocalServiceImpl
 			ctCollection.getCompanyId(), CTCollection.class.getName(),
 			ResourceConstants.SCOPE_INDIVIDUAL,
 			ctCollection.getCtCollectionId());
+
+		int count = ctCollectionPersistence.countBySchemaVersionId(
+			ctCollection.getSchemaVersionId());
+
+		if (count == 1) {
+			CTSchemaVersion ctSchemaVersion =
+				_ctSchemaVersionLocalService.fetchCTSchemaVersion(
+					ctCollection.getSchemaVersionId());
+
+			if ((ctSchemaVersion != null) &&
+				!_ctSchemaVersionLocalService.isLatestCTSchemaVersion(
+					ctSchemaVersion, true)) {
+
+				_ctSchemaVersionLocalService.deleteCTSchemaVersion(
+					ctSchemaVersion);
+			}
+		}
 
 		return ctCollectionPersistence.remove(ctCollection);
 	}
@@ -591,9 +622,24 @@ public class CTCollectionLocalServiceImpl
 			ctCollectionPersistence.findByPrimaryKey(ctCollectionId);
 
 		if (undoCTCollection.getStatus() != WorkflowConstants.STATUS_APPROVED) {
-			throw new IllegalArgumentException(
-				"Unable to undo " + undoCTCollection +
-					" because it is not published");
+			throw new CTLocalizedException(
+				StringBundler.concat(
+					"Unable to undo ", undoCTCollection.getName(),
+					" because it is not published"),
+				"unable-to-revert-x-because-it-is-not-published",
+				undoCTCollection.getName());
+		}
+
+		if (!_ctSchemaVersionLocalService.isLatestCTSchemaVersion(
+				undoCTCollection.getSchemaVersionId())) {
+
+			throw new CTLocalizedException(
+				StringBundler.concat(
+					"Unable to undo ", undoCTCollection.getName(),
+					" because it is out of date with the current release"),
+				"unable-to-revert-x-because-it-is-out-of-date-with-the-" +
+					"current-release",
+				undoCTCollection.getName());
 		}
 
 		CTCollection newCTCollection = addCTCollection(
@@ -613,7 +659,7 @@ public class CTCollectionLocalServiceImpl
 			ctEntryPersistence.findByCTCollectionId(
 				undoCTCollection.getCtCollectionId());
 
-		Map<Long, CTServiceCopier> ctServiceCopiers = new HashMap<>();
+		Map<Long, CTServiceCopier<?>> ctServiceCopiers = new HashMap<>();
 
 		long batchCounter = counterLocalService.increment(
 			CTEntry.class.getName(), publishedCTEntries.size());
@@ -621,31 +667,36 @@ public class CTCollectionLocalServiceImpl
 		batchCounter -= publishedCTEntries.size();
 
 		for (CTEntry publishedCTEntry : publishedCTEntries) {
-			ctServiceCopiers.computeIfAbsent(
-				publishedCTEntry.getModelClassNameId(),
-				modelClassNameId -> {
-					CTService<?> ctService = _ctServiceRegistry.getCTService(
-						modelClassNameId);
+			long modelClassNameId = publishedCTEntry.getModelClassNameId();
 
-					if (ctService != null) {
-						return new CTServiceCopier<>(
-							ctService, undoCTCollection.getCtCollectionId(),
-							newCTCollection.getCtCollectionId());
-					}
+			if (!ctServiceCopiers.containsKey(modelClassNameId)) {
+				CTService<?> ctService = _ctServiceRegistry.getCTService(
+					modelClassNameId);
 
-					throw new SystemException(
+				if (ctService == null) {
+					throw new CTLocalizedException(
 						StringBundler.concat(
-							"Unable to undo ", undoCTCollection,
+							"Unable to undo ", undoCTCollection.getName(),
 							" because service for ", modelClassNameId,
-							" is missing"));
-				});
+							" is missing"),
+						"unable-to-revert-x-because-service-for-x-is-missing",
+						undoCTCollection.getName(),
+						publishedCTEntry.getModelClassNameId());
+				}
+
+				ctServiceCopiers.put(
+					modelClassNameId,
+					new CTServiceCopier<>(
+						ctService, undoCTCollection.getCtCollectionId(),
+						newCTCollection.getCtCollectionId()));
+			}
 
 			CTEntry ctEntry = ctEntryPersistence.create(++batchCounter);
 
 			ctEntry.setCompanyId(newCTCollection.getCompanyId());
 			ctEntry.setUserId(newCTCollection.getUserId());
 			ctEntry.setCtCollectionId(newCTCollection.getCtCollectionId());
-			ctEntry.setModelClassNameId(publishedCTEntry.getModelClassNameId());
+			ctEntry.setModelClassNameId(modelClassNameId);
 			ctEntry.setModelClassPK(publishedCTEntry.getModelClassPK());
 			ctEntry.setModelMvccVersion(publishedCTEntry.getModelMvccVersion());
 
@@ -664,7 +715,9 @@ public class CTCollectionLocalServiceImpl
 		}
 
 		try {
-			for (CTServiceCopier ctServiceCopier : ctServiceCopiers.values()) {
+			for (CTServiceCopier<?> ctServiceCopier :
+					ctServiceCopiers.values()) {
+
 				ctServiceCopier.copy();
 			}
 
@@ -709,24 +762,42 @@ public class CTCollectionLocalServiceImpl
 
 	@Activate
 	protected void activate(BundleContext bundleContext) {
-		_serviceTrackerMap = ServiceTrackerMapFactory.openSingleValueMap(
-			bundleContext,
-			(Class<ConstraintResolver<?>>)(Class<?>)ConstraintResolver.class,
-			null,
-			(serviceReference, emitter) -> {
-				ConstraintResolver<?> constraintResolver =
-					bundleContext.getService(serviceReference);
+		_constraintResolverServiceTrackerMap =
+			ServiceTrackerMapFactory.openSingleValueMap(
+				bundleContext,
+				(Class<ConstraintResolver<?>>)
+					(Class<?>)ConstraintResolver.class,
+				null,
+				(serviceReference, emitter) -> {
+					ConstraintResolver<?> constraintResolver =
+						bundleContext.getService(serviceReference);
 
-				emitter.emit(
-					new ConstraintResolverKey(
-						constraintResolver.getModelClass(),
-						constraintResolver.getUniqueIndexColumnNames()));
-			});
+					emitter.emit(
+						new ConstraintResolverKey(
+							constraintResolver.getModelClass(),
+							constraintResolver.getUniqueIndexColumnNames()));
+				});
+
+		_ctDisplayRendererServiceTrackerMap =
+			ServiceTrackerMapFactory.openSingleValueMap(
+				bundleContext,
+				(Class<CTDisplayRenderer<?>>)(Class<?>)CTDisplayRenderer.class,
+				null,
+				(serviceReference, emitter) -> {
+					CTDisplayRenderer<?> ctDisplayRenderer =
+						bundleContext.getService(serviceReference);
+
+					Class<?> modelClass = ctDisplayRenderer.getModelClass();
+
+					emitter.emit(modelClass.getName());
+				});
 	}
 
 	@Deactivate
 	protected void deactivate() {
-		_serviceTrackerMap.close();
+		_constraintResolverServiceTrackerMap.close();
+
+		_ctDisplayRendererServiceTrackerMap.close();
 	}
 
 	private void _validate(String name, String description)
@@ -760,11 +831,17 @@ public class CTCollectionLocalServiceImpl
 	@Reference
 	private ClassNameLocalService _classNameLocalService;
 
+	private ServiceTrackerMap<ConstraintResolverKey, ConstraintResolver<?>>
+		_constraintResolverServiceTrackerMap;
+
 	@Reference
 	private CTAutoResolutionInfoPersistence _ctAutoResolutionInfoPersistence;
 
 	@Reference
 	private CTClosureFactory _ctClosureFactory;
+
+	private ServiceTrackerMap<String, CTDisplayRenderer<?>>
+		_ctDisplayRendererServiceTrackerMap;
 
 	@Reference
 	private CTEntryLocalService _ctEntryLocalService;
@@ -776,13 +853,13 @@ public class CTCollectionLocalServiceImpl
 	private CTProcessLocalService _ctProcessLocalService;
 
 	@Reference
+	private CTSchemaVersionLocalService _ctSchemaVersionLocalService;
+
+	@Reference
 	private CTServiceRegistry _ctServiceRegistry;
 
 	@Reference
 	private ResourceLocalService _resourceLocalService;
-
-	private ServiceTrackerMap<ConstraintResolverKey, ConstraintResolver<?>>
-		_serviceTrackerMap;
 
 	@Reference
 	private TableReferenceDefinitionManager _tableReferenceDefinitionManager;

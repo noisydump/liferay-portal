@@ -176,6 +176,19 @@ function DatasetDisplay(props) {
 			});
 	}
 
+	// eslint-disable-next-line react-hooks/exhaustive-deps
+	const refreshData = (successNotification) =>
+		getData(
+			props.apiUrl,
+			props.currentUrl,
+			delta,
+			filters.filter((e) => !!e.value),
+			pageNumber,
+			searchParam,
+			sorting,
+			successNotification
+		);
+
 	useEffect(() => {
 		if (props.apiUrl) {
 			getData(
@@ -246,19 +259,6 @@ function DatasetDisplay(props) {
 		}
 	}
 
-	// eslint-disable-next-line react-hooks/exhaustive-deps
-	const refreshData = (successNotification) =>
-		getData(
-			props.apiUrl,
-			props.currentUrl,
-			delta,
-			filters.filter((e) => !!e.value),
-			pageNumber,
-			searchParam,
-			sorting,
-			successNotification
-		);
-
 	useEffect(() => {
 		if (wrapperRef.current) {
 			const form = closest(wrapperRef.current, 'form');
@@ -308,12 +308,12 @@ function DatasetDisplay(props) {
 				filters={filters}
 				fluid={props.style === 'fluid'}
 				onFiltersChange={updateFilters}
-				selectable={selectable}
 				selectAllItems={() =>
 					selectItems(
 						items.map((item) => item[props.selectedItemsKey])
 					)
 				}
+				selectable={selectable}
 				selectedItemsKey={props.selectedItemsKey}
 				selectedItemsValue={selectedItemsValue}
 				selectionType={props.selectionType}

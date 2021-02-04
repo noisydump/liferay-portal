@@ -24,100 +24,62 @@ import TabsPanel from './TabsPanel';
 
 const BASIC_COMPONENT_COLLECTION = 'BASIC_COMPONENT';
 
-export default function FragmentsSidebar() {
-	const fragments = useSelector((state) => state.fragments);
-	const widgets = useSelector((state) => state.widgets);
+const collectionFilter = (collections, searchValue) => {
+	const searchValueLowerCase = searchValue.toLowerCase();
 
-	const [searchValue, setSearchValue] = useState('');
+	const itemFilter = (item) =>
+		item.label.toLowerCase().indexOf(searchValueLowerCase) !== -1;
 
-	const searchValueLowerCase = useMemo(() => searchValue.toLowerCase(), [
-		searchValue,
-	]);
+	const hasChildren = (collection) => {
+		if (collection.children?.length) {
+			return true;
+		}
 
-	const tabs = useMemo(
-		() => [
-			{
-				collections: fragments.map((collection) => ({
-					children: collection.fragmentEntries.map((fragmentEntry) =>
-						normalizeFragmentEntry(
-							fragmentEntry,
-							collection.fragmentCollectionId
-						)
-					),
-					collectionId: collection.fragmentCollectionId,
-					label: collection.name,
-				})),
-				label: Liferay.Language.get('fragments'),
-			},
-			{
-				collections: widgets.map((collection) =>
-					normalizeCollections(collection)
-				),
-				label: Liferay.Language.get('widgets'),
-			},
-		],
-		[fragments, widgets]
-	);
+		return collection.collections?.some(hasChildren) ?? false;
+	};
 
-	const filteredTabs = useMemo(
-		() =>
-			searchValueLowerCase
-				? tabs
-						.map((tab) => ({
-							...tab,
+	return collections
+		.reduce((acc, collection) => {
+			if (itemFilter(collection)) {
+				return [...acc, collection];
+			}
+			else {
+				const updateCollection = {
+					...collection,
+					children: collection.children.filter(itemFilter),
+					...(collection.collections?.length && {
+						collections: collectionFilter(
+							collection.collections,
+							searchValueLowerCase
+						),
+					}),
+				};
 
-							collections: tab.collections
-								.map((collection) => {
-									let filteredChildren = collection.children;
+				return [...acc, updateCollection];
+			}
+		}, [])
+		.filter(hasChildren);
+};
 
-									if (collection.collections) {
-										filteredChildren = filteredChildren
-											.concat(
-												collection.collections.map(
-													collectionFilter
-												)
-											)
-											.flat();
-									}
-
-									return {
-										...collection,
-										children: filteredChildren.filter(
-											(item) =>
-												item.label
-													.toLowerCase()
-													.indexOf(
-														searchValueLowerCase
-													) !== -1
-										),
-									};
-								})
-								.filter(
-									(collection) => collection.children.length
-								),
-						}))
-						.filter((tab) => tab.collections.length)
-				: tabs,
-		[tabs, searchValueLowerCase]
-	);
-
-	return (
-		<>
-			<SidebarPanelHeader>
-				{Liferay.Language.get('fragments-and-widgets')}
-			</SidebarPanelHeader>
-
-			<SidebarPanelContent className="page-editor__sidebar__fragments-widgets-panel">
-				<SearchForm onChange={setSearchValue} value={searchValue} />
-				{searchValue ? (
-					<SearchResultsPanel filteredTabs={filteredTabs} />
-				) : (
-					<TabsPanel tabs={tabs} />
-				)}
-			</SidebarPanelContent>
-		</>
-	);
-}
+const normalizeWidget = (widget) => {
+	return {
+		data: {
+			instanceable: widget.instanceable,
+			portletId: widget.portletId,
+			portletItemId: widget.portletItemId || null,
+			used: widget.used,
+		},
+		disabled: !widget.instanceable && widget.used,
+		icon: widget.instanceable ? 'cards2' : 'square-hole',
+		itemId: widget.portletId,
+		label: widget.title,
+		portletItems: widget.portletItems?.length
+			? widget.portletItems.map(normalizeWidget)
+			: null,
+		preview: '',
+		type: LAYOUT_DATA_ITEM_TYPES.fragment,
+	};
+};
 
 const normalizeCollections = (collection) => {
 	const normalizedElement = {
@@ -157,30 +119,67 @@ const normalizeFragmentEntry = (fragmentEntry, collectionId) => {
 	};
 };
 
-const normalizeWidget = (widget) => {
-	return {
-		data: {
-			instanceable: widget.instanceable,
-			portletId: widget.portletId,
-			portletItemId: widget.portletItemId || null,
-			used: widget.used,
-		},
-		disabled: !widget.instanceable && widget.used,
-		icon: widget.instanceable ? 'cards2' : 'square-hole',
-		itemId: widget.portletId,
-		label: widget.title,
-		portletItems: widget.portletItems?.length
-			? widget.portletItems.map(normalizeWidget)
-			: null,
-		preview: '',
-		type: LAYOUT_DATA_ITEM_TYPES.fragment,
-	};
-};
+export default function FragmentsSidebar() {
+	const fragments = useSelector((state) => state.fragments);
+	const widgets = useSelector((state) => state.widgets);
 
-const collectionFilter = (collection) => {
-	return collection.collections.reduce((acc, item) => {
-		return item.collections?.length > 0
-			? acc.concat(item.children, collectionFilter(item))
-			: acc.concat(item.children);
-	}, []);
-};
+	const [searchValue, setSearchValue] = useState('');
+
+	const tabs = useMemo(
+		() => [
+			{
+				collections: fragments.map((collection) => ({
+					children: collection.fragmentEntries.map((fragmentEntry) =>
+						normalizeFragmentEntry(
+							fragmentEntry,
+							collection.fragmentCollectionId
+						)
+					),
+					collectionId: collection.fragmentCollectionId,
+					label: collection.name,
+				})),
+				label: Liferay.Language.get('fragments'),
+			},
+			{
+				collections: widgets.map((collection) =>
+					normalizeCollections(collection)
+				),
+				label: Liferay.Language.get('widgets'),
+			},
+		],
+		[fragments, widgets]
+	);
+
+	const filteredTabs = useMemo(
+		() =>
+			searchValue
+				? tabs
+						.map((tab) => ({
+							...tab,
+							collections: collectionFilter(
+								tab.collections,
+								searchValue
+							),
+						}))
+						.filter((item) => item.collections.length)
+				: tabs,
+		[tabs, searchValue]
+	);
+
+	return (
+		<>
+			<SidebarPanelHeader>
+				{Liferay.Language.get('fragments-and-widgets')}
+			</SidebarPanelHeader>
+
+			<SidebarPanelContent className="page-editor__sidebar__fragments-widgets-panel">
+				<SearchForm onChange={setSearchValue} />
+				{searchValue ? (
+					<SearchResultsPanel filteredTabs={filteredTabs} />
+				) : (
+					<TabsPanel tabs={tabs} />
+				)}
+			</SidebarPanelContent>
+		</>
+	);
+}

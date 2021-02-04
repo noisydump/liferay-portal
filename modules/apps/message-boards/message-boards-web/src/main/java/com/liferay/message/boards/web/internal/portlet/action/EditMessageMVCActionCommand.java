@@ -284,6 +284,13 @@ public class EditMessageMVCActionCommand extends BaseMVCActionCommand {
 				actionRequest, actionResponse, message);
 		}
 
+		String portletResource = ParamUtil.getString(
+			actionRequest, "portletResource");
+
+		if (Validator.isNotNull(portletResource)) {
+			return ParamUtil.getString(actionRequest, "redirect");
+		}
+
 		LiferayActionResponse liferayActionResponse =
 			(LiferayActionResponse)actionResponse;
 

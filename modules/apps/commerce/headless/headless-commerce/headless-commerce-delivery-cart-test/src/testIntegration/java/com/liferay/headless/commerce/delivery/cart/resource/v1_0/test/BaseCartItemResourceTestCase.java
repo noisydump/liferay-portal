@@ -321,6 +321,7 @@ public abstract class BaseCartItemResourceTestCase {
 
 		CartItem randomPatchCartItem = randomPatchCartItem();
 
+		@SuppressWarnings("PMD.UnusedLocalVariable")
 		CartItem patchCartItem = cartItemResource.patchCartItem(
 			postCartItem.getId(), randomPatchCartItem);
 
@@ -598,6 +599,14 @@ public abstract class BaseCartItemResourceTestCase {
 				continue;
 			}
 
+			if (Objects.equals("errorMessages", additionalAssertFieldName)) {
+				if (cartItem.getErrorMessages() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
 			if (Objects.equals("name", additionalAssertFieldName)) {
 				if (cartItem.getName() == null) {
 					valid = false;
@@ -680,6 +689,14 @@ public abstract class BaseCartItemResourceTestCase {
 
 			if (Objects.equals("thumbnail", additionalAssertFieldName)) {
 				if (cartItem.getThumbnail() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals("valid", additionalAssertFieldName)) {
+				if (cartItem.getValid() == null) {
 					valid = false;
 				}
 
@@ -790,6 +807,17 @@ public abstract class BaseCartItemResourceTestCase {
 				if (!equals(
 						(Map)cartItem1.getCustomFields(),
 						(Map)cartItem2.getCustomFields())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals("errorMessages", additionalAssertFieldName)) {
+				if (!Objects.deepEquals(
+						cartItem1.getErrorMessages(),
+						cartItem2.getErrorMessages())) {
 
 					return false;
 				}
@@ -917,6 +945,16 @@ public abstract class BaseCartItemResourceTestCase {
 				continue;
 			}
 
+			if (Objects.equals("valid", additionalAssertFieldName)) {
+				if (!Objects.deepEquals(
+						cartItem1.getValid(), cartItem2.getValid())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
 			throw new IllegalArgumentException(
 				"Invalid additional assert field name " +
 					additionalAssertFieldName);
@@ -944,9 +982,11 @@ public abstract class BaseCartItemResourceTestCase {
 					return false;
 				}
 			}
+
+			return true;
 		}
 
-		return true;
+		return false;
 	}
 
 	protected java.util.Collection<EntityField> getEntityFields()
@@ -1005,6 +1045,11 @@ public abstract class BaseCartItemResourceTestCase {
 		}
 
 		if (entityFieldName.equals("customFields")) {
+			throw new IllegalArgumentException(
+				"Invalid entity field " + entityFieldName);
+		}
+
+		if (entityFieldName.equals("errorMessages")) {
 			throw new IllegalArgumentException(
 				"Invalid entity field " + entityFieldName);
 		}
@@ -1081,6 +1126,11 @@ public abstract class BaseCartItemResourceTestCase {
 			return sb.toString();
 		}
 
+		if (entityFieldName.equals("valid")) {
+			throw new IllegalArgumentException(
+				"Invalid entity field " + entityFieldName);
+		}
+
 		throw new IllegalArgumentException(
 			"Invalid entity field " + entityFieldName);
 	}
@@ -1136,6 +1186,7 @@ public abstract class BaseCartItemResourceTestCase {
 				subscription = RandomTestUtil.randomBoolean();
 				thumbnail = StringUtil.toLowerCase(
 					RandomTestUtil.randomString());
+				valid = RandomTestUtil.randomBoolean();
 			}
 		};
 	}

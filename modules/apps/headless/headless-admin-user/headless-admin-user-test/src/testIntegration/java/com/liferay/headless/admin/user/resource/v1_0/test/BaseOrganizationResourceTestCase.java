@@ -646,6 +646,7 @@ public abstract class BaseOrganizationResourceTestCase {
 
 		Organization randomPatchOrganization = randomPatchOrganization();
 
+		@SuppressWarnings("PMD.UnusedLocalVariable")
 		Organization patchOrganization = organizationResource.patchOrganization(
 			postOrganization.getId(), randomPatchOrganization);
 
@@ -1473,9 +1474,11 @@ public abstract class BaseOrganizationResourceTestCase {
 					return false;
 				}
 			}
+
+			return true;
 		}
 
-		return true;
+		return false;
 	}
 
 	protected java.util.Collection<EntityField> getEntityFields()

@@ -17,6 +17,8 @@ package com.liferay.headless.commerce.admin.pricing.client.dto.v2_0;
 import com.liferay.headless.commerce.admin.pricing.client.function.UnsafeSupplier;
 import com.liferay.headless.commerce.admin.pricing.client.serdes.v2_0.DiscountAccountSerDes;
 
+import java.io.Serializable;
+
 import java.util.Map;
 import java.util.Objects;
 
@@ -27,7 +29,7 @@ import javax.annotation.Generated;
  * @generated
  */
 @Generated("")
-public class DiscountAccount implements Cloneable {
+public class DiscountAccount implements Cloneable, Serializable {
 
 	public static DiscountAccount toDTO(String json) {
 		return DiscountAccountSerDes.toDTO(json);
@@ -122,6 +124,27 @@ public class DiscountAccount implements Cloneable {
 
 	protected Map<String, Map<String, String>> actions;
 
+	public Long getDiscountAccountId() {
+		return discountAccountId;
+	}
+
+	public void setDiscountAccountId(Long discountAccountId) {
+		this.discountAccountId = discountAccountId;
+	}
+
+	public void setDiscountAccountId(
+		UnsafeSupplier<Long, Exception> discountAccountIdUnsafeSupplier) {
+
+		try {
+			discountAccountId = discountAccountIdUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected Long discountAccountId;
+
 	public String getDiscountExternalReferenceCode() {
 		return discountExternalReferenceCode;
 	}
@@ -167,25 +190,6 @@ public class DiscountAccount implements Cloneable {
 	}
 
 	protected Long discountId;
-
-	public Long getId() {
-		return id;
-	}
-
-	public void setId(Long id) {
-		this.id = id;
-	}
-
-	public void setId(UnsafeSupplier<Long, Exception> idUnsafeSupplier) {
-		try {
-			id = idUnsafeSupplier.get();
-		}
-		catch (Exception e) {
-			throw new RuntimeException(e);
-		}
-	}
-
-	protected Long id;
 
 	@Override
 	public DiscountAccount clone() throws CloneNotSupportedException {

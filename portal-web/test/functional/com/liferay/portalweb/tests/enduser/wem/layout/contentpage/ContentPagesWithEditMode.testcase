@@ -28,7 +28,7 @@ definition {
 		}
 	}
 
-	@description = "This is a use case for LPS-114438. Only can edit inline content, mapped content and comments of elements when select Content Edition."
+	@description = "This is a use case for LPS-114438. Only can edit inline content, mapped content and comments of elements when select Content Editing."
 	@priority = "5"
 	test OnlyCanEditContentWhenSelectContentEdition {
 		property portal.acceptance = "true";
@@ -136,23 +136,25 @@ definition {
 		}
 
 		task ("Select Blogs Entry in Asset Publisher") {
+			WaitForLiferayEvent.initializeLiferayEventLog();
+
 			AssetPublisherPortlet.configureManualAssetSelectionPG(
 				assetTitle = "Blogs Entry Title",
 				assetType = "Blogs Entry");
 		}
 
-		task ("Select Content Edition") {
+		task ("Select Content Editing") {
 			ContentPagesNavigator.openEditContentPage(
 				pageName = "Test Page Name",
 				siteName = "Test Site Name");
 
 			Click(locator1 = "PageEditor#EDIT_MODE_SELECTOR");
 
-			MenuItem.click(menuItem = "Content Edition");
+			MenuItem.click(menuItem = "Content Editing");
 
 			AssertTextEquals(
 				locator1 = "PageEditor#EDIT_MODE_SELECTOR",
-				value1 = "Content Edition");
+				value1 = "Content Editing");
 		}
 
 		task ("Assert only Selection, Contents and Comments are shown in sidebar") {
@@ -190,7 +192,7 @@ definition {
 
 			AssertElementPresent(locator1 = "//*[contains(@class,'component-heading') and contains(@data-lfr-editable-id,'element-text')]/div[contains(@class,'cke_editable_inline')]");
 
-			Click(locator1 = "PageEditor#FRAGMENT_SIDEBAR_BODY");
+			PageEditor.clickManagementBar();
 		}
 
 		task ("Assert can select mapped content of Paragraph fragment") {
@@ -209,19 +211,19 @@ definition {
 
 			AssertVisible(locator1 = "PageEditor#EDITABLE_FIELD_TOOLBAR_MAP_ASSET_SELECT_POPUP_BUTTON");
 
-			Click(locator1 = "PageEditor#FRAGMENT_SIDEBAR_BODY");
+			PageEditor.clickManagementBar();
 		}
 
 		task ("Assert can edit editable field of Image fragment") {
-			Click(locator1 = "//div[contains(@class,'component-image')]/img[@data-lfr-editable-id='image-square']");
+			Click(locator1 = "//div[contains(@class,'component-image')]//img[@data-lfr-editable-id='image-square']");
 
-			DoubleClick(locator1 = "//div[contains(@class,'component-image')]/img[@data-lfr-editable-id='image-square']");
+			DoubleClick(locator1 = "//div[contains(@class,'component-image')]//img[@data-lfr-editable-id='image-square']");
 
 			ItemSelector.selectDMImage(
 				imageFileName = "Document Title",
 				navTab = "Documents and Media");
 
-			Click(locator1 = "PageEditor#FRAGMENT_SIDEBAR_BODY");
+			PageEditor.clickManagementBar();
 		}
 
 		task ("Assert ellipsis button of Asset Publisher present") {
@@ -239,10 +241,9 @@ definition {
 				if ("${title}" == "Web Content Title") {
 					WebContent.addCP(webContentTitle = "Web Content Title Edit");
 
-					Type.typeCKEditorWaitForCKEditor(
-						key_fieldLabel = "content",
-						locator1 = "CKEditor#BODY_FIELD_WEB_CONTENT_ARTICLE",
-						value1 = "Web Content Content Edit");
+					CKEditor.addContentInWebContent(
+						content = "Web Content Content Edit",
+						fieldLabel = "content");
 
 					PortletEntry.publish();
 				}
@@ -261,7 +262,7 @@ definition {
 
 				Click(locator1 = "PageEditor#EDIT_MODE_SELECTOR");
 
-				MenuItem.click(menuItem = "Content Edition");
+				MenuItem.click(menuItem = "Content Editing");
 
 				Pause(locator1 = "3000");
 			}

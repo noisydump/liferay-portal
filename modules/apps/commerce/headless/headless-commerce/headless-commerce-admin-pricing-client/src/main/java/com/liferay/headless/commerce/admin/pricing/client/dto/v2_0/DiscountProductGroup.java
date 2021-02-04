@@ -17,6 +17,8 @@ package com.liferay.headless.commerce.admin.pricing.client.dto.v2_0;
 import com.liferay.headless.commerce.admin.pricing.client.function.UnsafeSupplier;
 import com.liferay.headless.commerce.admin.pricing.client.serdes.v2_0.DiscountProductGroupSerDes;
 
+import java.io.Serializable;
+
 import java.util.Map;
 import java.util.Objects;
 
@@ -27,7 +29,7 @@ import javax.annotation.Generated;
  * @generated
  */
 @Generated("")
-public class DiscountProductGroup implements Cloneable {
+public class DiscountProductGroup implements Cloneable, Serializable {
 
 	public static DiscountProductGroup toDTO(String json) {
 		return DiscountProductGroupSerDes.toDTO(json);
@@ -101,24 +103,26 @@ public class DiscountProductGroup implements Cloneable {
 
 	protected Long discountId;
 
-	public Long getId() {
-		return id;
+	public Long getDiscountProductGroupId() {
+		return discountProductGroupId;
 	}
 
-	public void setId(Long id) {
-		this.id = id;
+	public void setDiscountProductGroupId(Long discountProductGroupId) {
+		this.discountProductGroupId = discountProductGroupId;
 	}
 
-	public void setId(UnsafeSupplier<Long, Exception> idUnsafeSupplier) {
+	public void setDiscountProductGroupId(
+		UnsafeSupplier<Long, Exception> discountProductGroupIdUnsafeSupplier) {
+
 		try {
-			id = idUnsafeSupplier.get();
+			discountProductGroupId = discountProductGroupIdUnsafeSupplier.get();
 		}
 		catch (Exception e) {
 			throw new RuntimeException(e);
 		}
 	}
 
-	protected Long id;
+	protected Long discountProductGroupId;
 
 	public ProductGroup getProductGroup() {
 		return productGroup;

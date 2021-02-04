@@ -60,6 +60,10 @@ import com.liferay.portal.kernel.model.UserConstants;
 import com.liferay.portal.kernel.portlet.PortletPreferencesFactoryConstants;
 import com.liferay.portal.kernel.portlet.PortletPreferencesFactoryUtil;
 import com.liferay.portal.kernel.repository.model.FileEntry;
+import com.liferay.portal.kernel.resource.bundle.AggregateResourceBundleLoader;
+import com.liferay.portal.kernel.resource.bundle.ClassResourceBundleLoader;
+import com.liferay.portal.kernel.resource.bundle.ResourceBundleLoader;
+import com.liferay.portal.kernel.resource.bundle.ResourceBundleLoaderUtil;
 import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.service.LayoutSetLocalService;
 import com.liferay.portal.kernel.service.PortletPreferencesLocalService;
@@ -67,7 +71,6 @@ import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
 import com.liferay.portal.kernel.service.RoleLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ThemeLocalService;
-import com.liferay.portal.kernel.util.AggregateResourceBundleLoader;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.CalendarFactoryUtil;
 import com.liferay.portal.kernel.util.FileUtil;
@@ -76,9 +79,6 @@ import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.MimeTypesUtil;
 import com.liferay.portal.kernel.util.Portal;
-import com.liferay.portal.kernel.util.ResourceBundleLoader;
-import com.liferay.portal.kernel.util.ResourceBundleLoaderUtil;
-import com.liferay.portal.kernel.util.ResourceBundleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.TextFormatter;
 import com.liferay.portal.kernel.util.UnicodeProperties;
@@ -112,12 +112,12 @@ import org.osgi.service.component.annotations.Reference;
 @Component(enabled = false, immediate = true, service = CPFileImporter.class)
 public class CPFileImporterImpl implements CPFileImporter {
 
-	public static final String GROUP_ID_PLACEHOLDER = "[£groupId£]";
+	public static final String GROUP_ID_PLACEHOLDER = "[$GROUP_ID$]";
 
 	public static final String IMG_TAG =
 		"<img alt='' src='%s' data-fileentryid='%s' />";
 
-	public static final String LOCALE_PLACEHOLDER = "[£LOCALE£]";
+	public static final String LOCALE_PLACEHOLDER = "[$LOCALE$]";
 
 	@Override
 	public void cleanLayouts(ServiceContext serviceContext)
@@ -396,7 +396,6 @@ public class CPFileImporterImpl implements CPFileImporter {
 
 		boolean hidden = jsonObject.getBoolean("hidden");
 		String icon = jsonObject.getString("icon");
-		String layoutTemplateId = jsonObject.getString("layoutTemplateId");
 		String layoutType = jsonObject.getString(
 			"layoutType", LayoutConstants.TYPE_PORTLET);
 		String name = jsonObject.getString("name");
@@ -442,6 +441,8 @@ public class CPFileImporterImpl implements CPFileImporter {
 		JSONArray portletsJSONArray = jsonObject.getJSONArray("portlets");
 
 		if ((portletsJSONArray != null) && (portletsJSONArray.length() > 0)) {
+			String layoutTemplateId = jsonObject.getString("layoutTemplateId");
+
 			addLayoutPortlets(
 				portletsJSONArray, layout, layoutTemplateId, classLoader,
 				serviceContext);
@@ -659,6 +660,14 @@ public class CPFileImporterImpl implements CPFileImporter {
 			String dependenciesFilePath, ServiceContext serviceContext)
 		throws Exception {
 
+		content = StringUtil.replace(
+			content, GROUP_ID_PLACEHOLDER,
+			String.valueOf(serviceContext.getScopeGroupId()));
+
+		content = StringUtil.replace(
+			content, LOCALE_PLACEHOLDER,
+			LocaleUtil.toLanguageId(serviceContext.getLocale()));
+
 		content = _replaceJournalArticleImages(
 			content, _journalArticleHTMLImagePattern,
 			fileEntry -> {
@@ -694,14 +703,6 @@ public class CPFileImporterImpl implements CPFileImporter {
 				return jsonObject.toJSONString();
 			},
 			classLoader, dependenciesFilePath, serviceContext);
-
-		content = StringUtil.replace(
-			content, GROUP_ID_PLACEHOLDER,
-			String.valueOf(serviceContext.getScopeGroupId()));
-
-		content = StringUtil.replace(
-			content, LOCALE_PLACEHOLDER,
-			LocaleUtil.toLanguageId(serviceContext.getLocale()));
 
 		return content;
 	}
@@ -762,8 +763,7 @@ public class CPFileImporterImpl implements CPFileImporter {
 
 		ResourceBundleLoader resourceBundleLoader =
 			new AggregateResourceBundleLoader(
-				ResourceBundleUtil.getResourceBundleLoader(
-					"content.Language", classLoader),
+				new ClassResourceBundleLoader("content.Language", classLoader),
 				ResourceBundleLoaderUtil.getPortalResourceBundleLoader());
 
 		Iterator<String> iterator = jsonObject.keys();
@@ -813,9 +813,8 @@ public class CPFileImporterImpl implements CPFileImporter {
 			if (key.equals("assetEntryId")) {
 				String articleId = jsonObject.getString("articleId");
 
-				long assetEntryId = getAssetEntryId(articleId, serviceContext);
-
-				value = String.valueOf(assetEntryId);
+				value = String.valueOf(
+					getAssetEntryId(articleId, serviceContext));
 			}
 			else if (key.equals("groupId")) {
 				value = String.valueOf(serviceContext.getScopeGroupId());
@@ -838,15 +837,14 @@ public class CPFileImporterImpl implements CPFileImporter {
 			theme.getConfigurableSettings();
 
 		for (Map.Entry<String, ThemeSetting> entry : themeSettings.entrySet()) {
-			String key = entry.getKey();
-
 			ThemeSetting themeSetting = entry.getValue();
 
 			String value = themeSetting.getValue();
 
 			if (!value.equals(themeSetting.getValue())) {
 				typeSettingUnicodeProperties.setProperty(
-					ThemeSettingImpl.namespaceProperty(device, key), value);
+					ThemeSettingImpl.namespaceProperty(device, entry.getKey()),
+					value);
 			}
 		}
 	}

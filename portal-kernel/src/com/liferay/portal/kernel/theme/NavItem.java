@@ -53,11 +53,9 @@ import javax.servlet.http.HttpServletRequest;
 public class NavItem implements Serializable {
 
 	public static List<NavItem> fromLayouts(
-			HttpServletRequest httpServletRequest, ThemeDisplay themeDisplay,
-			Map<String, Object> contextObjects)
+			HttpServletRequest httpServletRequest, List<Layout> parentLayouts,
+			ThemeDisplay themeDisplay, Map<String, Object> contextObjects)
 		throws PortalException {
-
-		List<Layout> parentLayouts = themeDisplay.getLayouts();
 
 		if (parentLayouts == null) {
 			return Collections.emptyList();
@@ -100,6 +98,16 @@ public class NavItem implements Serializable {
 		}
 
 		return navItems;
+	}
+
+	public static List<NavItem> fromLayouts(
+			HttpServletRequest httpServletRequest, ThemeDisplay themeDisplay,
+			Map<String, Object> contextObjects)
+		throws PortalException {
+
+		return fromLayouts(
+			httpServletRequest, themeDisplay.getLayouts(), themeDisplay,
+			contextObjects);
 	}
 
 	public NavItem(
@@ -384,25 +392,6 @@ public class NavItem implements Serializable {
 			layout.getAncestorPlid());
 	}
 
-	private static List<NavItem> _fromLayouts(
-		HttpServletRequest httpServletRequest, ThemeDisplay themeDisplay,
-		List<Layout> layouts, Map<String, Object> contextObjects) {
-
-		if ((layouts == null) || layouts.isEmpty()) {
-			return Collections.emptyList();
-		}
-
-		List<NavItem> navItems = new ArrayList<>(layouts.size());
-
-		for (Layout layout : layouts) {
-			navItems.add(
-				new NavItem(
-					httpServletRequest, themeDisplay, layout, contextObjects));
-		}
-
-		return navItems;
-	}
-
 	private static boolean _isContentLayoutDraft(Layout layout) {
 		if (!layout.isTypeContent()) {
 			return false;
@@ -436,6 +425,25 @@ public class NavItem implements Serializable {
 
 		_children = _fromLayouts(
 			httpServletRequest, themeDisplay, childLayouts, contextObjects);
+	}
+
+	private List<NavItem> _fromLayouts(
+		HttpServletRequest httpServletRequest, ThemeDisplay themeDisplay,
+		List<Layout> layouts, Map<String, Object> contextObjects) {
+
+		if ((layouts == null) || layouts.isEmpty()) {
+			return Collections.emptyList();
+		}
+
+		List<NavItem> navItems = new ArrayList<>(layouts.size());
+
+		for (Layout layout : layouts) {
+			navItems.add(
+				new NavItem(
+					httpServletRequest, themeDisplay, layout, contextObjects));
+		}
+
+		return navItems;
 	}
 
 	private List<NavItem> _browsableChildren;

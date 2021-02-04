@@ -37,6 +37,14 @@ public class DepotEntryGroupRelLocalServiceUtil {
 	 *
 	 * Never modify this class directly. Add custom service methods to <code>com.liferay.depot.service.impl.DepotEntryGroupRelLocalServiceImpl</code> and rerun ServiceBuilder to regenerate this class.
 	 */
+	public static com.liferay.depot.model.DepotEntryGroupRel
+		addDepotEntryGroupRel(
+			boolean ddmStructuresAvailable, long depotEntryId, long toGroupId,
+			boolean searchable) {
+
+		return getService().addDepotEntryGroupRel(
+			ddmStructuresAvailable, depotEntryId, toGroupId, searchable);
+	}
 
 	/**
 	 * Adds the depot entry group rel to the database. Also notifies the appropriate model listeners.
@@ -238,6 +246,28 @@ public class DepotEntryGroupRelLocalServiceUtil {
 		return getService().fetchDepotEntryGroupRel(depotEntryGroupRelId);
 	}
 
+	public static com.liferay.depot.model.DepotEntryGroupRel
+		fetchDepotEntryGroupRelByDepotEntryIdToGroupId(
+			long depotEntryId, long toGroupId) {
+
+		return getService().fetchDepotEntryGroupRelByDepotEntryIdToGroupId(
+			depotEntryId, toGroupId);
+	}
+
+	/**
+	 * Returns the depot entry group rel matching the UUID and group.
+	 *
+	 * @param uuid the depot entry group rel's UUID
+	 * @param groupId the primary key of the group
+	 * @return the matching depot entry group rel, or <code>null</code> if a matching depot entry group rel could not be found
+	 */
+	public static com.liferay.depot.model.DepotEntryGroupRel
+		fetchDepotEntryGroupRelByUuidAndGroupId(String uuid, long groupId) {
+
+		return getService().fetchDepotEntryGroupRelByUuidAndGroupId(
+			uuid, groupId);
+	}
+
 	public static com.liferay.portal.kernel.dao.orm.ActionableDynamicQuery
 		getActionableDynamicQuery() {
 
@@ -256,6 +286,22 @@ public class DepotEntryGroupRelLocalServiceUtil {
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return getService().getDepotEntryGroupRel(depotEntryGroupRelId);
+	}
+
+	/**
+	 * Returns the depot entry group rel matching the UUID and group.
+	 *
+	 * @param uuid the depot entry group rel's UUID
+	 * @param groupId the primary key of the group
+	 * @return the matching depot entry group rel
+	 * @throws PortalException if a matching depot entry group rel could not be found
+	 */
+	public static com.liferay.depot.model.DepotEntryGroupRel
+			getDepotEntryGroupRelByUuidAndGroupId(String uuid, long groupId)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return getService().getDepotEntryGroupRelByUuidAndGroupId(
+			uuid, groupId);
 	}
 
 	public static java.util.List<com.liferay.depot.model.DepotEntryGroupRel>
@@ -288,6 +334,41 @@ public class DepotEntryGroupRelLocalServiceUtil {
 	}
 
 	/**
+	 * Returns all the depot entry group rels matching the UUID and company.
+	 *
+	 * @param uuid the UUID of the depot entry group rels
+	 * @param companyId the primary key of the company
+	 * @return the matching depot entry group rels, or an empty list if no matches were found
+	 */
+	public static java.util.List<com.liferay.depot.model.DepotEntryGroupRel>
+		getDepotEntryGroupRelsByUuidAndCompanyId(String uuid, long companyId) {
+
+		return getService().getDepotEntryGroupRelsByUuidAndCompanyId(
+			uuid, companyId);
+	}
+
+	/**
+	 * Returns a range of depot entry group rels matching the UUID and company.
+	 *
+	 * @param uuid the UUID of the depot entry group rels
+	 * @param companyId the primary key of the company
+	 * @param start the lower bound of the range of depot entry group rels
+	 * @param end the upper bound of the range of depot entry group rels (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @return the range of matching depot entry group rels, or an empty list if no matches were found
+	 */
+	public static java.util.List<com.liferay.depot.model.DepotEntryGroupRel>
+		getDepotEntryGroupRelsByUuidAndCompanyId(
+			String uuid, long companyId, int start, int end,
+			com.liferay.portal.kernel.util.OrderByComparator
+				<com.liferay.depot.model.DepotEntryGroupRel>
+					orderByComparator) {
+
+		return getService().getDepotEntryGroupRelsByUuidAndCompanyId(
+			uuid, companyId, start, end, orderByComparator);
+	}
+
+	/**
 	 * Returns the number of depot entry group rels.
 	 *
 	 * @return the number of depot entry group rels
@@ -304,6 +385,14 @@ public class DepotEntryGroupRelLocalServiceUtil {
 
 	public static int getDepotEntryGroupRelsCount(long groupId) {
 		return getService().getDepotEntryGroupRelsCount(groupId);
+	}
+
+	public static com.liferay.portal.kernel.dao.orm.ExportActionableDynamicQuery
+		getExportActionableDynamicQuery(
+			com.liferay.exportimport.kernel.lar.PortletDataContext
+				portletDataContext) {
+
+		return getService().getExportActionableDynamicQuery(portletDataContext);
 	}
 
 	public static

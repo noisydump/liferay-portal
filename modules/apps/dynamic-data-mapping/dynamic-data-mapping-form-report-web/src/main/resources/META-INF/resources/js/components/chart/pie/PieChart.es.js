@@ -86,7 +86,7 @@ export default ({data, height, totalEntries, width}) => {
 	};
 
 	return (
-		<>
+		<div className="custom-chart-size pie-chart">
 			<ResponsiveContainer
 				height={height || '99%'}
 				width={width || '50%'}
@@ -109,7 +109,16 @@ export default ({data, height, totalEntries, width}) => {
 						paddingAngle={0}
 					>
 						{data.map((_, index) => (
-							<Cell fill={colors(index)} key={index} />
+							<Cell
+								fill={colors(index)}
+								fillOpacity={
+									activeIndex !== null &&
+									activeIndex !== index
+										? 0.5
+										: 1
+								}
+								key={index}
+							/>
 						))}
 					</Pie>
 
@@ -131,6 +140,6 @@ export default ({data, height, totalEntries, width}) => {
 				onMouseOut={handleOnMouseOut}
 				onMouseOver={handleOnMouseOver}
 			/>
-		</>
+		</div>
 	);
 };

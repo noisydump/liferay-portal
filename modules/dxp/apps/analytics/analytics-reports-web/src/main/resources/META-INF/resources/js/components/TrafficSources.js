@@ -11,20 +11,23 @@
 
 import ClayButton from '@clayui/button';
 import className from 'classnames';
-import {useIsMounted} from 'frontend-js-react-web';
+import {useStateSafe} from 'frontend-js-react-web';
 import PropTypes from 'prop-types';
 import React, {useContext, useEffect, useMemo, useState} from 'react';
 import {Cell, Pie, PieChart, Tooltip} from 'recharts';
 
 import ConnectionContext from '../context/ConnectionContext';
-import {StoreContext, useWarning} from '../context/store';
+import {StoreContext, useWarning} from '../context/StoreContext';
 import {numberFormat} from '../utils/numberFormat';
 import EmptyPieChart from './EmptyPieChart';
 import Hint from './Hint';
 
 const COLORS_MAP = {
-	organic: '#7785FF',
+	direct: '#FF73C3',
+	organic: '#4B9FFF',
 	paid: '#FFB46E',
+	referral: '#FF5F5F',
+	social: '#50D2A0',
 };
 
 const PIE_CHART_SIZES = {
@@ -55,26 +58,18 @@ export default function TrafficSources({
 
 	const [{publishedToday}] = useContext(StoreContext);
 
-	const [trafficSources, setTrafficSources] = useState([]);
-
-	const isMounted = useIsMounted();
+	const [trafficSources, setTrafficSources] = useStateSafe([]);
 
 	useEffect(() => {
 		if (validAnalyticsConnection) {
 			dataProvider()
-				.then((trafficSources) => {
-					if (isMounted()) {
-						setTrafficSources(trafficSources);
-					}
-				})
+				.then((response) => setTrafficSources(response.trafficSources))
 				.catch(() => {
 					setTrafficSources([]);
-					if (isMounted()) {
-						addWarning();
-					}
+					addWarning();
 				});
 		}
-	}, [addWarning, dataProvider, isMounted, validAnalyticsConnection]);
+	}, [addWarning, dataProvider, setTrafficSources, validAnalyticsConnection]);
 
 	const fullPieChart = useMemo(
 		() => trafficSources.some(({value}) => value),
@@ -103,20 +98,18 @@ export default function TrafficSources({
 	return (
 		<>
 			<h5 className="mt-3 sheet-subtitle">
-				{Liferay.Language.get('search-engines-traffic')}
+				{Liferay.Language.get('traffic-channels')}
 				<Hint
-					message={Liferay.Language.get(
-						'search-engines-traffic-help'
-					)}
+					message={Liferay.Language.get('traffic-channels-help')}
 					secondary={true}
-					title={Liferay.Language.get('search-engines-traffic')}
+					title={Liferay.Language.get('traffic-channels')}
 				/>
 			</h5>
 
 			{!fullPieChart && !missingTrafficSourceValue && (
 				<div className="mb-3 text-secondary">
 					{Liferay.Language.get(
-						'your-page-has-no-incoming-traffic-from-search-engines-yet'
+						'your-page-has-no-incoming-traffic-from-traffic-channels-yet'
 					)}
 				</div>
 			)}
@@ -125,6 +118,12 @@ export default function TrafficSources({
 					<table>
 						<tbody>
 							{trafficSources.map((entry) => {
+								const hasDetails =
+									entry?.countryKeywords ||
+									(entry?.referringPages &&
+										entry?.referringDomains) ||
+									entry?.referringSocialMedia;
+
 								return (
 									<tr key={entry.name}>
 										<td
@@ -146,7 +145,7 @@ export default function TrafficSources({
 											></span>
 										</td>
 										<td
-											className="pie-chart-wrapper--legend--title text-secondary"
+											className="c-py-1 text-secondary"
 											onMouseOut={handleLegendMouseLeave}
 											onMouseOver={() =>
 												handleLegendMouseEnter(
@@ -154,9 +153,9 @@ export default function TrafficSources({
 												)
 											}
 										>
-											{entry.value > 0 ? (
+											{entry.value > 0 && hasDetails ? (
 												<ClayButton
-													className="font-weight-semi-bold px-0 py-1 text-primary"
+													className="px-0 py-1 text-primary"
 													displayType="link"
 													onClick={() =>
 														onTrafficSourceClick(
@@ -178,7 +177,7 @@ export default function TrafficSources({
 												title={entry.title}
 											/>
 										</td>
-										<td className="font-weight-bold">
+										<td className="font-weight-semi-bold">
 											{entry.value !== undefined &&
 											!publishedToday
 												? numberFormat(
@@ -215,6 +214,7 @@ export default function TrafficSources({
 								data={trafficSources}
 								dataKey="value"
 								innerRadius={PIE_CHART_SIZES.innerRadius}
+								isAnimationActive={false}
 								nameKey={'name'}
 								outerRadius={PIE_CHART_SIZES.radius}
 								paddingAngle={PIE_CHART_SIZES.paddingAngle}

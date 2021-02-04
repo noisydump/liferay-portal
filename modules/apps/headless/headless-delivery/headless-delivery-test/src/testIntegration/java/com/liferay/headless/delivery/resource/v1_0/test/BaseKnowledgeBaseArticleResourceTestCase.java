@@ -364,6 +364,7 @@ public abstract class BaseKnowledgeBaseArticleResourceTestCase {
 		KnowledgeBaseArticle randomPatchKnowledgeBaseArticle =
 			randomPatchKnowledgeBaseArticle();
 
+		@SuppressWarnings("PMD.UnusedLocalVariable")
 		KnowledgeBaseArticle patchKnowledgeBaseArticle =
 			knowledgeBaseArticleResource.patchKnowledgeBaseArticle(
 				postKnowledgeBaseArticle.getId(),
@@ -2641,9 +2642,11 @@ public abstract class BaseKnowledgeBaseArticleResourceTestCase {
 					return false;
 				}
 			}
+
+			return true;
 		}
 
-		return true;
+		return false;
 	}
 
 	protected boolean equals(Rating rating1, Rating rating2) {

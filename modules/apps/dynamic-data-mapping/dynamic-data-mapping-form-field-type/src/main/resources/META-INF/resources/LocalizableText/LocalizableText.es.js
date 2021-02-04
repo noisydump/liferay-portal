@@ -19,7 +19,7 @@ import ClayIcon from '@clayui/icon';
 import ClayLabel from '@clayui/label';
 import ClayLayout from '@clayui/layout';
 import classNames from 'classnames';
-import React, {forwardRef, useState} from 'react';
+import React, {useRef, useState} from 'react';
 
 import {FieldBase} from '../FieldBase/ReactFieldBase.es';
 import InputComponent from './InputComponent.es';
@@ -40,41 +40,28 @@ const INITIAL_EDITING_LOCALE = {
 	localeId: themeDisplay.getDefaultLanguageId(),
 };
 
-const DropdownTrigger = forwardRef(({editingLocale, ...otherProps}, ref) => {
-	return (
-		<ClayButton
-			aria-expanded="false"
-			aria-haspopup="true"
-			className="dropdown-toggle"
-			data-testid="triggerButton"
-			displayType="secondary"
-			monospaced
-			ref={ref}
-			{...otherProps}
-		>
-			<span className="inline-item">
-				<ClayIcon symbol={editingLocale.icon} />
-			</span>
-			<span className="btn-section" data-testid="triggerText">
-				{editingLocale.icon}
-			</span>
-		</ClayButton>
-	);
-});
+const AvailableLocaleLabel = ({isDefault, isSubmitLabel, isTranslated}) => {
+	let labelText = '';
 
-const AvailableLocaleLabel = ({isDefault, isTranslated}) => {
-	const labelText = isDefault
-		? 'default'
-		: isTranslated
-		? 'translated'
-		: 'not-translated';
+	if (isSubmitLabel) {
+		labelText = isTranslated ? 'customized' : 'not-customized';
+	}
+	else {
+		labelText = isDefault
+			? 'default'
+			: isTranslated
+			? 'translated'
+			: 'not-translated';
+	}
 
 	return (
 		<ClayLabel
 			displayType={classNames({
-				info: isDefault,
+				info: isDefault && !isSubmitLabel,
 				success: isTranslated,
-				warning: !isDefault && !isTranslated,
+				warning:
+					(!isDefault && !isTranslated) ||
+					(!isTranslated && isSubmitLabel),
 			})}
 		>
 			{Liferay.Language.get(labelText)}
@@ -85,16 +72,38 @@ const AvailableLocaleLabel = ({isDefault, isTranslated}) => {
 const LocalesDropdown = ({
 	availableLocales,
 	editingLocale,
+	fieldName,
 	onLanguageClicked = () => {},
 }) => {
+	const alignElementRef = useRef(null);
+	const dropdownMenuRef = useRef(null);
+
 	const [dropdownActive, setDropdownActive] = useState(false);
 
 	return (
 		<div>
-			<ClayDropDown
+			<ClayButton
+				aria-expanded="false"
+				aria-haspopup="true"
+				className="dropdown-toggle"
+				data-testid="triggerButton"
+				displayType="secondary"
+				monospaced
+				onClick={() => setDropdownActive(!dropdownActive)}
+				ref={alignElementRef}
+			>
+				<span className="inline-item">
+					<ClayIcon symbol={editingLocale.icon} />
+				</span>
+				<span className="btn-section" data-testid="triggerText">
+					{editingLocale.icon}
+				</span>
+			</ClayButton>
+			<ClayDropDown.Menu
 				active={dropdownActive}
-				onActiveChange={setDropdownActive}
-				trigger={<DropdownTrigger editingLocale={editingLocale} />}
+				alignElementRef={alignElementRef}
+				onSetActive={setDropdownActive}
+				ref={dropdownMenuRef}
 			>
 				<ClayDropDown.ItemList>
 					{availableLocales.map(
@@ -130,6 +139,9 @@ const LocalesDropdown = ({
 									<ClayLayout.ContentCol containerElement="span">
 										<AvailableLocaleLabel
 											isDefault={isDefault}
+											isSubmitLabel={
+												fieldName === 'submitLabel'
+											}
 											isTranslated={isTranslated}
 										/>
 									</ClayLayout.ContentCol>
@@ -138,7 +150,7 @@ const LocalesDropdown = ({
 						)
 					)}
 				</ClayDropDown.ItemList>
-			</ClayDropDown>
+			</ClayDropDown.Menu>
 		</div>
 	);
 };
@@ -148,12 +160,14 @@ const LocalizableText = ({
 	defaultLocale = INITIAL_DEFAULT_LOCALE,
 	displayStyle = 'singleline',
 	editingLocale = INITIAL_EDITING_LOCALE,
+	fieldName,
 	id,
 	name,
 	onFieldBlurred,
 	onFieldChanged = () => {},
 	onFieldFocused,
 	placeholder = '',
+	placeholdersSubmitLabel = [],
 	predefinedValue = '',
 	readOnly,
 	value,
@@ -168,6 +182,16 @@ const LocalizableText = ({
 		getInitialInternalValue({editingLocale: currentEditingLocale, value})
 	);
 
+	const getPlaceholder = (currentEditingLocale) => {
+		if (fieldName !== 'submitLabel') {
+			return placeholder;
+		}
+
+		return placeholdersSubmitLabel.find(
+			({localeId}) => localeId === currentEditingLocale.localeId
+		).placeholderSubmitLabel;
+	};
+
 	const inputValue = currentInternalValue
 		? currentInternalValue
 		: predefinedValue;
@@ -176,6 +200,7 @@ const LocalizableText = ({
 		<ClayInput.Group>
 			<InputComponent
 				displayStyle={displayStyle}
+				fieldName={fieldName}
 				id={id}
 				inputValue={inputValue}
 				name={name}
@@ -195,7 +220,7 @@ const LocalizableText = ({
 					onFieldChanged({event, value: newValue});
 				}}
 				onFieldFocused={onFieldFocused}
-				placeholder={placeholder}
+				placeholder={getPlaceholder(currentEditingLocale)}
 				readOnly={readOnly}
 			/>
 
@@ -213,6 +238,7 @@ const LocalizableText = ({
 				<LocalesDropdown
 					availableLocales={availableLocales}
 					editingLocale={currentEditingLocale}
+					fieldName={fieldName}
 					onLanguageClicked={({localeId}) => {
 						const newEditingLocale = availableLocales.find(
 							(availableLocale) =>
@@ -243,12 +269,14 @@ const Main = ({
 	defaultLocale,
 	displayStyle,
 	editingLocale,
+	fieldName,
 	id,
 	name,
 	onBlur,
 	onChange,
 	onFocus,
 	placeholder,
+	placeholdersSubmitLabel,
 	predefinedValue,
 	readOnly,
 	value = {},
@@ -263,12 +291,14 @@ const Main = ({
 			})}
 			displayStyle={displayStyle}
 			editingLocale={editingLocale}
+			fieldName={fieldName}
 			id={id}
 			name={name}
 			onFieldBlurred={onBlur}
 			onFieldChanged={({event, value}) => onChange(event, value)}
 			onFieldFocused={onFocus}
 			placeholder={placeholder}
+			placeholdersSubmitLabel={placeholdersSubmitLabel}
 			predefinedValue={predefinedValue}
 			readOnly={readOnly}
 		/>

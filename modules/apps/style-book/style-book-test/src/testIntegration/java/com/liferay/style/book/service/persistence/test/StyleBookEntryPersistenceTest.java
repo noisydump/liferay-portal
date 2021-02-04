@@ -126,6 +126,8 @@ public class StyleBookEntryPersistenceTest {
 
 		newStyleBookEntry.setMvccVersion(RandomTestUtil.nextLong());
 
+		newStyleBookEntry.setUuid(RandomTestUtil.randomString());
+
 		newStyleBookEntry.setHeadId(RandomTestUtil.nextLong());
 
 		newStyleBookEntry.setGroupId(RandomTestUtil.nextLong());
@@ -137,6 +139,8 @@ public class StyleBookEntryPersistenceTest {
 		newStyleBookEntry.setUserName(RandomTestUtil.randomString());
 
 		newStyleBookEntry.setCreateDate(RandomTestUtil.nextDate());
+
+		newStyleBookEntry.setModifiedDate(RandomTestUtil.nextDate());
 
 		newStyleBookEntry.setDefaultStyleBookEntry(
 			RandomTestUtil.randomBoolean());
@@ -159,6 +163,8 @@ public class StyleBookEntryPersistenceTest {
 			existingStyleBookEntry.getMvccVersion(),
 			newStyleBookEntry.getMvccVersion());
 		Assert.assertEquals(
+			existingStyleBookEntry.getUuid(), newStyleBookEntry.getUuid());
+		Assert.assertEquals(
 			existingStyleBookEntry.getHeadId(), newStyleBookEntry.getHeadId());
 		Assert.assertEquals(
 			existingStyleBookEntry.getStyleBookEntryId(),
@@ -178,6 +184,9 @@ public class StyleBookEntryPersistenceTest {
 			Time.getShortTimestamp(existingStyleBookEntry.getCreateDate()),
 			Time.getShortTimestamp(newStyleBookEntry.getCreateDate()));
 		Assert.assertEquals(
+			Time.getShortTimestamp(existingStyleBookEntry.getModifiedDate()),
+			Time.getShortTimestamp(newStyleBookEntry.getModifiedDate()));
+		Assert.assertEquals(
 			existingStyleBookEntry.isDefaultStyleBookEntry(),
 			newStyleBookEntry.isDefaultStyleBookEntry());
 		Assert.assertEquals(
@@ -191,6 +200,67 @@ public class StyleBookEntryPersistenceTest {
 		Assert.assertEquals(
 			existingStyleBookEntry.getStyleBookEntryKey(),
 			newStyleBookEntry.getStyleBookEntryKey());
+	}
+
+	@Test
+	public void testCountByUuid() throws Exception {
+		_persistence.countByUuid("");
+
+		_persistence.countByUuid("null");
+
+		_persistence.countByUuid((String)null);
+	}
+
+	@Test
+	public void testCountByUuid_Head() throws Exception {
+		_persistence.countByUuid_Head("", RandomTestUtil.randomBoolean());
+
+		_persistence.countByUuid_Head("null", RandomTestUtil.randomBoolean());
+
+		_persistence.countByUuid_Head(
+			(String)null, RandomTestUtil.randomBoolean());
+	}
+
+	@Test
+	public void testCountByUUID_G() throws Exception {
+		_persistence.countByUUID_G("", RandomTestUtil.nextLong());
+
+		_persistence.countByUUID_G("null", 0L);
+
+		_persistence.countByUUID_G((String)null, 0L);
+	}
+
+	@Test
+	public void testCountByUUID_G_Head() throws Exception {
+		_persistence.countByUUID_G_Head(
+			"", RandomTestUtil.nextLong(), RandomTestUtil.randomBoolean());
+
+		_persistence.countByUUID_G_Head(
+			"null", 0L, RandomTestUtil.randomBoolean());
+
+		_persistence.countByUUID_G_Head(
+			(String)null, 0L, RandomTestUtil.randomBoolean());
+	}
+
+	@Test
+	public void testCountByUuid_C() throws Exception {
+		_persistence.countByUuid_C("", RandomTestUtil.nextLong());
+
+		_persistence.countByUuid_C("null", 0L);
+
+		_persistence.countByUuid_C((String)null, 0L);
+	}
+
+	@Test
+	public void testCountByUuid_C_Head() throws Exception {
+		_persistence.countByUuid_C_Head(
+			"", RandomTestUtil.nextLong(), RandomTestUtil.randomBoolean());
+
+		_persistence.countByUuid_C_Head(
+			"null", 0L, RandomTestUtil.randomBoolean());
+
+		_persistence.countByUuid_C_Head(
+			(String)null, 0L, RandomTestUtil.randomBoolean());
 	}
 
 	@Test
@@ -300,11 +370,11 @@ public class StyleBookEntryPersistenceTest {
 
 	protected OrderByComparator<StyleBookEntry> getOrderByComparator() {
 		return OrderByComparatorFactoryUtil.create(
-			"StyleBookEntry", "mvccVersion", true, "headId", true,
+			"StyleBookEntry", "mvccVersion", true, "uuid", true, "headId", true,
 			"styleBookEntryId", true, "groupId", true, "companyId", true,
 			"userId", true, "userName", true, "createDate", true,
-			"defaultStyleBookEntry", true, "name", true, "previewFileEntryId",
-			true, "styleBookEntryKey", true);
+			"modifiedDate", true, "defaultStyleBookEntry", true, "name", true,
+			"previewFileEntryId", true, "styleBookEntryKey", true);
 	}
 
 	@Test
@@ -573,6 +643,17 @@ public class StyleBookEntryPersistenceTest {
 
 	private void _assertOriginalValues(StyleBookEntry styleBookEntry) {
 		Assert.assertEquals(
+			styleBookEntry.getUuid(),
+			ReflectionTestUtil.invoke(
+				styleBookEntry, "getColumnOriginalValue",
+				new Class<?>[] {String.class}, "uuid_"));
+		Assert.assertEquals(
+			Long.valueOf(styleBookEntry.getGroupId()),
+			ReflectionTestUtil.<Long>invoke(
+				styleBookEntry, "getColumnOriginalValue",
+				new Class<?>[] {String.class}, "groupId"));
+
+		Assert.assertEquals(
 			Long.valueOf(styleBookEntry.getGroupId()),
 			ReflectionTestUtil.<Long>invoke(
 				styleBookEntry, "getColumnOriginalValue",
@@ -597,6 +678,8 @@ public class StyleBookEntryPersistenceTest {
 
 		styleBookEntry.setMvccVersion(RandomTestUtil.nextLong());
 
+		styleBookEntry.setUuid(RandomTestUtil.randomString());
+
 		styleBookEntry.setHeadId(RandomTestUtil.nextLong());
 
 		styleBookEntry.setGroupId(RandomTestUtil.nextLong());
@@ -608,6 +691,8 @@ public class StyleBookEntryPersistenceTest {
 		styleBookEntry.setUserName(RandomTestUtil.randomString());
 
 		styleBookEntry.setCreateDate(RandomTestUtil.nextDate());
+
+		styleBookEntry.setModifiedDate(RandomTestUtil.nextDate());
 
 		styleBookEntry.setDefaultStyleBookEntry(RandomTestUtil.randomBoolean());
 

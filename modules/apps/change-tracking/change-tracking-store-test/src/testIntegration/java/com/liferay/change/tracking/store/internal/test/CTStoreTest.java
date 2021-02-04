@@ -21,7 +21,6 @@ import com.liferay.change.tracking.service.CTProcessLocalService;
 import com.liferay.change.tracking.store.exception.NoSuchContentException;
 import com.liferay.change.tracking.store.model.CTSContent;
 import com.liferay.change.tracking.store.service.CTSContentLocalService;
-import com.liferay.counter.kernel.service.CounterLocalService;
 import com.liferay.document.library.kernel.exception.NoSuchFileException;
 import com.liferay.document.library.kernel.store.Store;
 import com.liferay.petra.function.UnsafeRunnable;
@@ -40,7 +39,6 @@ import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.util.ProxyUtil;
-import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 
@@ -78,12 +76,14 @@ public class CTStoreTest {
 		new LiferayIntegrationTestRule();
 
 	@BeforeClass
-	public static void setUpClass() {
+	public static void setUpClass() throws Exception {
 		_ctStore = _ctStoreFactory.createCTStore(
 			(Store)ProxyUtil.newProxyInstance(
 				Store.class.getClassLoader(), new Class<?>[] {Store.class},
 				new RecorderInvocationHandler(_fileSystemStore)),
 			_STORE_TYPE);
+
+		_companyId = TestPropsValues.getCompanyId();
 	}
 
 	@AfterClass
@@ -101,7 +101,7 @@ public class CTStoreTest {
 	@After
 	public void tearDown() {
 		_fileSystemStore.deleteDirectory(
-			_COMPANY_ID, _REPOSITORY_ID, StringPool.BLANK);
+			_companyId, _REPOSITORY_ID, StringPool.BLANK);
 	}
 
 	@Test
@@ -807,29 +807,16 @@ public class CTStoreTest {
 				data,
 				StreamUtil.toByteArray(
 					_ctStore.getFileAsStream(
-						_COMPANY_ID, _REPOSITORY_ID, fileName,
+						_companyId, _REPOSITORY_ID, fileName,
 						StringPool.BLANK))),
 			this::_assertFile, _GET_FILE_AS_STREAM_METHOD);
-	}
-
-	private static String _toVersion(byte[] data) {
-		String version = _VERSION_1;
-
-		if (data == _DATA_3) {
-			version = _VERSION_3;
-		}
-		else if (data == _DATA_2) {
-			version = _VERSION_2;
-		}
-
-		return version;
 	}
 
 	private void _addCTFile(String fileName, byte[] data)
 		throws PortalException {
 
 		_ctStore.addFile(
-			_COMPANY_ID, _REPOSITORY_ID, fileName, _VERSION_1,
+			_companyId, _REPOSITORY_ID, fileName, _VERSION_1,
 			new UnsyncByteArrayInputStream(data));
 	}
 
@@ -839,7 +826,7 @@ public class CTStoreTest {
 
 	private void _addCTSContent(String fileName, byte[] data, String version) {
 		_ctsContentLocalService.addCTSContent(
-			_COMPANY_ID, _REPOSITORY_ID, fileName, version, _STORE_TYPE,
+			_companyId, _REPOSITORY_ID, fileName, version, _STORE_TYPE,
 			new UnsyncByteArrayInputStream(data));
 	}
 
@@ -853,7 +840,7 @@ public class CTStoreTest {
 				byte[] data = _toData(version);
 
 				_ctsContentLocalService.addCTSContent(
-					_COMPANY_ID, _REPOSITORY_ID, path, _toVersion(data),
+					_companyId, _REPOSITORY_ID, path, _toVersion(data),
 					_STORE_TYPE, new UnsyncByteArrayInputStream(data));
 			}
 		}
@@ -861,7 +848,7 @@ public class CTStoreTest {
 
 	private void _addFile(String fileName, byte[] data) throws PortalException {
 		_fileSystemStore.addFile(
-			_COMPANY_ID, _REPOSITORY_ID, fileName, _toVersion(data),
+			_companyId, _REPOSITORY_ID, fileName, _toVersion(data),
 			new UnsyncByteArrayInputStream(data));
 	}
 
@@ -875,7 +862,7 @@ public class CTStoreTest {
 				byte[] data = _toData(version);
 
 				_fileSystemStore.addFile(
-					_COMPANY_ID, _REPOSITORY_ID, path, _toVersion(data),
+					_companyId, _REPOSITORY_ID, path, _toVersion(data),
 					new UnsyncByteArrayInputStream(data));
 			}
 		}
@@ -888,7 +875,7 @@ public class CTStoreTest {
 
 		for (CTSContent ctsContent :
 				_ctsContentLocalService.getCTSContentsByDirectory(
-					_COMPANY_ID, _REPOSITORY_ID, dirName, _STORE_TYPE)) {
+					_companyId, _REPOSITORY_ID, dirName, _STORE_TYPE)) {
 
 			ctsContentNameSet.add(ctsContent.getPath());
 		}
@@ -905,7 +892,7 @@ public class CTStoreTest {
 			data,
 			StreamUtil.toByteArray(
 				_ctStore.getFileAsStream(
-					_COMPANY_ID, _REPOSITORY_ID, fileName, _VERSION_1)));
+					_companyId, _REPOSITORY_ID, fileName, _VERSION_1)));
 	}
 
 	private void _assertCTFileNames(String dirName, String... fileNames)
@@ -913,14 +900,14 @@ public class CTStoreTest {
 
 		Assert.assertArrayEquals(
 			fileNames,
-			_ctStore.getFileNames(_COMPANY_ID, _REPOSITORY_ID, dirName));
+			_ctStore.getFileNames(_companyId, _REPOSITORY_ID, dirName));
 	}
 
 	private void _assertCTFileSize(String fileName, byte[] data)
 		throws Exception {
 
 		long fileSize = _ctStore.getFileSize(
-			_COMPANY_ID, _REPOSITORY_ID, fileName, _VERSION_1);
+			_companyId, _REPOSITORY_ID, fileName, _VERSION_1);
 
 		Assert.assertEquals(data.length, fileSize);
 	}
@@ -930,7 +917,7 @@ public class CTStoreTest {
 
 		Assert.assertArrayEquals(
 			versions,
-			_ctStore.getFileVersions(_COMPANY_ID, _REPOSITORY_ID, fileName));
+			_ctStore.getFileVersions(_companyId, _REPOSITORY_ID, fileName));
 
 		_assertMethods(_GET_FILE_VERSIONS);
 	}
@@ -939,7 +926,7 @@ public class CTStoreTest {
 		throws Exception {
 
 		CTSContent ctsContent = _ctsContentLocalService.getCTSContent(
-			_COMPANY_ID, _REPOSITORY_ID, fileName, _VERSION_1, _STORE_TYPE);
+			_companyId, _REPOSITORY_ID, fileName, _VERSION_1, _STORE_TYPE);
 
 		Assert.assertArrayEquals(
 			data,
@@ -953,7 +940,7 @@ public class CTStoreTest {
 			data,
 			StreamUtil.toByteArray(
 				_fileSystemStore.getFileAsStream(
-					_COMPANY_ID, _REPOSITORY_ID, fileName, _VERSION_1)));
+					_companyId, _REPOSITORY_ID, fileName, _VERSION_1)));
 	}
 
 	private void _assertFileNames(String dirName, String... fileNames)
@@ -961,15 +948,14 @@ public class CTStoreTest {
 
 		Assert.assertArrayEquals(
 			fileNames,
-			_fileSystemStore.getFileNames(
-				_COMPANY_ID, _REPOSITORY_ID, dirName));
+			_fileSystemStore.getFileNames(_companyId, _REPOSITORY_ID, dirName));
 	}
 
 	private void _assertFileSize(String fileName, byte[] data)
 		throws Exception {
 
 		long fileSize = _fileSystemStore.getFileSize(
-			_COMPANY_ID, _REPOSITORY_ID, fileName, _VERSION_1);
+			_companyId, _REPOSITORY_ID, fileName, _VERSION_1);
 
 		Assert.assertEquals(data.length, fileSize);
 	}
@@ -980,7 +966,7 @@ public class CTStoreTest {
 		if (data == null) {
 			Assert.assertFalse(
 				_ctStore.hasFile(
-					_COMPANY_ID, _REPOSITORY_ID, fileName, _VERSION_1));
+					_companyId, _REPOSITORY_ID, fileName, _VERSION_1));
 
 			throw new NoSuchFileException(
 				StringBundler.concat(
@@ -988,15 +974,14 @@ public class CTStoreTest {
 		}
 
 		Assert.assertTrue(
-			_ctStore.hasFile(
-				_COMPANY_ID, _REPOSITORY_ID, fileName, _VERSION_1));
+			_ctStore.hasFile(_companyId, _REPOSITORY_ID, fileName, _VERSION_1));
 	}
 
 	private void _assertHasFile(String fileName, byte[] data) throws Exception {
 		if (data == null) {
 			Assert.assertFalse(
 				_fileSystemStore.hasFile(
-					_COMPANY_ID, _REPOSITORY_ID, fileName, _VERSION_1));
+					_companyId, _REPOSITORY_ID, fileName, _VERSION_1));
 
 			throw new NoSuchFileException(
 				StringBundler.concat(
@@ -1005,7 +990,7 @@ public class CTStoreTest {
 
 		Assert.assertTrue(
 			_fileSystemStore.hasFile(
-				_COMPANY_ID, _REPOSITORY_ID, fileName, _VERSION_1));
+				_companyId, _REPOSITORY_ID, fileName, _VERSION_1));
 	}
 
 	private void _assertMethods(Method... methods) {
@@ -1022,50 +1007,41 @@ public class CTStoreTest {
 	private void _assertNoSuchCTSContent(String fileName) {
 		Assert.assertFalse(
 			_ctsContentLocalService.hasCTSContent(
-				_COMPANY_ID, _REPOSITORY_ID, fileName, _VERSION_1,
-				_STORE_TYPE));
+				_companyId, _REPOSITORY_ID, fileName, _VERSION_1, _STORE_TYPE));
 	}
 
 	private void _assertNoSuchFile(String fileName) {
 		Assert.assertFalse(
 			_fileSystemStore.hasFile(
-				_COMPANY_ID, _REPOSITORY_ID, fileName, _VERSION_1));
+				_companyId, _REPOSITORY_ID, fileName, _VERSION_1));
 	}
 
 	private CTCollection _createCTCollection() throws PortalException {
-		long ctCollectionId = _counterLocalService.increment(
-			CTCollection.class.getName());
-
-		CTCollection ctCollection =
-			_ctCollectionLocalService.createCTCollection(ctCollectionId);
-
-		ctCollection.setUserId(TestPropsValues.getUserId());
-		ctCollection.setName(String.valueOf(ctCollectionId));
-		ctCollection.setStatus(WorkflowConstants.STATUS_DRAFT);
-
-		return _ctCollectionLocalService.updateCTCollection(ctCollection);
+		return _ctCollectionLocalService.addCTCollection(
+			TestPropsValues.getCompanyId(), TestPropsValues.getUserId(),
+			CTStoreTest.class.getName(), null);
 	}
 
 	private void _deleteCTDirectory(String dirName) {
-		_ctStore.deleteDirectory(_COMPANY_ID, _REPOSITORY_ID, dirName);
+		_ctStore.deleteDirectory(_companyId, _REPOSITORY_ID, dirName);
 	}
 
 	private void _deleteCTFile(String fileName) {
-		_ctStore.deleteFile(_COMPANY_ID, _REPOSITORY_ID, fileName, _VERSION_1);
+		_ctStore.deleteFile(_companyId, _REPOSITORY_ID, fileName, _VERSION_1);
 	}
 
 	private void _deleteCTSContent(String fileName, String version) {
 		_ctsContentLocalService.deleteCTSContent(
-			_COMPANY_ID, _REPOSITORY_ID, fileName, version, _STORE_TYPE);
+			_companyId, _REPOSITORY_ID, fileName, version, _STORE_TYPE);
 	}
 
 	private void _deleteDirectory(String dirName) {
-		_fileSystemStore.deleteDirectory(_COMPANY_ID, _REPOSITORY_ID, dirName);
+		_fileSystemStore.deleteDirectory(_companyId, _REPOSITORY_ID, dirName);
 	}
 
 	private void _deleteFile(String fileName, String version) {
 		_fileSystemStore.deleteFile(
-			_COMPANY_ID, _REPOSITORY_ID, fileName, version);
+			_companyId, _REPOSITORY_ID, fileName, version);
 	}
 
 	private void _publish(CTCollection ctCollection) throws Exception {
@@ -1254,9 +1230,20 @@ public class CTStoreTest {
 		throw new IllegalArgumentException("Unknown version : " + s);
 	}
 
-	private static final Method _ADD_FILE_METHOD;
+	private String _toVersion(byte[] data) {
+		String version = _VERSION_1;
 
-	private static final long _COMPANY_ID = 10000;
+		if (data == _DATA_3) {
+			version = _VERSION_3;
+		}
+		else if (data == _DATA_2) {
+			version = _VERSION_2;
+		}
+
+		return version;
+	}
+
+	private static final Method _ADD_FILE_METHOD;
 
 	private static final byte[] _DATA_1 = "Data1 a".getBytes();
 
@@ -1278,7 +1265,7 @@ public class CTStoreTest {
 
 	private static final Method _HAS_FILE_METHOD;
 
-	private static final long _REPOSITORY_ID = 20000;
+	private static final long _REPOSITORY_ID = 0;
 
 	private static final String _ROOT = StringPool.BLANK;
 
@@ -1291,8 +1278,7 @@ public class CTStoreTest {
 
 	private static final String _VERSION_3 = "3.0";
 
-	@Inject
-	private static CounterLocalService _counterLocalService;
+	private static long _companyId;
 
 	@Inject
 	private static CTCollectionLocalService _ctCollectionLocalService;

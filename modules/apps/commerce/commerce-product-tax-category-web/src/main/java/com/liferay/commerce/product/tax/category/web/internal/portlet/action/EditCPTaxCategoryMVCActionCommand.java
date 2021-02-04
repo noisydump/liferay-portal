@@ -47,7 +47,7 @@ import org.osgi.service.component.annotations.Reference;
 	enabled = false, immediate = true,
 	property = {
 		"javax.portlet.name=" + CPPortletKeys.CP_TAX_CATEGORY,
-		"mvc.command.name=editCPTaxCategory"
+		"mvc.command.name=/cp_tax_category/edit_cp_tax_category"
 	},
 	service = MVCActionCommand.class
 )
@@ -107,7 +107,8 @@ public class EditCPTaxCategoryMVCActionCommand extends BaseMVCActionCommand {
 				SessionErrors.add(actionRequest, exception.getClass());
 
 				actionResponse.setRenderParameter(
-					"mvcRenderCommandName", "editCPTaxCategory");
+					"mvcRenderCommandName",
+					"/cp_tax_category/edit_cp_tax_category");
 			}
 			else {
 				throw exception;
@@ -121,21 +122,26 @@ public class EditCPTaxCategoryMVCActionCommand extends BaseMVCActionCommand {
 		long cpTaxCategoryId = ParamUtil.getLong(
 			actionRequest, "cpTaxCategoryId");
 
+		String externalReferenceCode = ParamUtil.getString(
+			actionRequest, "externalReferenceCode");
+
 		Map<Locale, String> nameMap = LocalizationUtil.getLocalizationMap(
 			actionRequest, "name");
+
 		Map<Locale, String> descriptionMap =
 			LocalizationUtil.getLocalizationMap(actionRequest, "description");
 
-		ServiceContext serviceContext = ServiceContextFactory.getInstance(
-			CPTaxCategory.class.getName(), actionRequest);
-
 		if (cpTaxCategoryId <= 0) {
+			ServiceContext serviceContext = ServiceContextFactory.getInstance(
+				CPTaxCategory.class.getName(), actionRequest);
+
 			_cpTaxCategoryService.addCPTaxCategory(
-				nameMap, descriptionMap, serviceContext);
+				externalReferenceCode, nameMap, descriptionMap, serviceContext);
 		}
 		else {
 			_cpTaxCategoryService.updateCPTaxCategory(
-				cpTaxCategoryId, nameMap, descriptionMap);
+				externalReferenceCode, cpTaxCategoryId, nameMap,
+				descriptionMap);
 		}
 	}
 

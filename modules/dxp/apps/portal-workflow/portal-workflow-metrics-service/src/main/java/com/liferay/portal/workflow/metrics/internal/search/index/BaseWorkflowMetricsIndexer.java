@@ -23,7 +23,6 @@ import com.liferay.portal.kernel.util.DateUtil;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.PortalRunMode;
-import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.search.document.Document;
 import com.liferay.portal.search.document.DocumentBuilder;
 import com.liferay.portal.search.document.DocumentBuilderFactory;
@@ -32,10 +31,12 @@ import com.liferay.portal.search.engine.adapter.document.BulkDocumentRequest;
 import com.liferay.portal.search.engine.adapter.document.IndexDocumentRequest;
 import com.liferay.portal.search.engine.adapter.document.UpdateByQueryDocumentRequest;
 import com.liferay.portal.search.engine.adapter.document.UpdateDocumentRequest;
+import com.liferay.portal.search.query.BooleanQuery;
 import com.liferay.portal.search.query.Queries;
 import com.liferay.portal.search.query.Query;
 import com.liferay.portal.search.script.Scripts;
 import com.liferay.portal.workflow.metrics.internal.petra.executor.WorkflowMetricsPortalExecutor;
+import com.liferay.portal.workflow.metrics.internal.search.index.util.WorkflowMetricsIndexerUtil;
 
 import java.io.Serializable;
 
@@ -48,8 +49,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Stream;
-
-import org.apache.commons.codec.digest.DigestUtils;
 
 import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ReferenceCardinality;
@@ -122,14 +121,7 @@ public abstract class BaseWorkflowMetricsIndexer {
 	}
 
 	protected String digest(Serializable... parts) {
-		StringBuilder sb = new StringBuilder();
-
-		for (Serializable part : parts) {
-			sb.append(part);
-		}
-
-		return StringUtil.removeSubstring(getIndexType(), "Type") +
-			DigestUtils.sha256Hex(sb.toString());
+		return WorkflowMetricsIndexerUtil.digest(getIndexType(), parts);
 	}
 
 	protected String formatLocalDateTime(LocalDateTime localDateTime) {
@@ -180,11 +172,13 @@ public abstract class BaseWorkflowMetricsIndexer {
 	}
 
 	protected void updateDocuments(
-		long companyId, Map<String, Object> fieldsMap, Query query) {
+		long companyId, Map<String, Object> fieldsMap, Query filterQuery) {
 
 		if (searchEngineAdapter == null) {
 			return;
 		}
+
+		BooleanQuery booleanQuery = queries.booleanQuery();
 
 		StringBundler sb = new StringBundler("");
 
@@ -230,7 +224,8 @@ public abstract class BaseWorkflowMetricsIndexer {
 
 		UpdateByQueryDocumentRequest updateByQueryDocumentRequest =
 			new UpdateByQueryDocumentRequest(
-				query, scripts.script(sb.toString()), getIndexName(companyId));
+				booleanQuery.addFilterQueryClauses(filterQuery),
+				scripts.script(sb.toString()), getIndexName(companyId));
 
 		if (PortalRunMode.isTestMode()) {
 			updateByQueryDocumentRequest.setRefresh(true);

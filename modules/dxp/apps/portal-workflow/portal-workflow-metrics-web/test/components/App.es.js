@@ -72,7 +72,7 @@ const mockProps = {
 };
 
 describe('The App component should', () => {
-	let container, getAllByTestId, getByTestId;
+	let container, getByText;
 
 	beforeAll(() => {
 		const header = document.createElement('div');
@@ -85,16 +85,16 @@ describe('The App component should', () => {
 		const renderResult = render(<App {...mockProps} />);
 
 		container = renderResult.container;
-		getAllByTestId = renderResult.getAllByTestId;
-		getByTestId = renderResult.getByTestId;
+		getByText = renderResult.getByText;
 	});
 
 	test('Navigate to settings indexes page', () => {
-		const kebabButton = getByTestId('headerKebabButton');
+		const kebabButton = document.getElementById('headerKebab').children[0]
+			.children[0].children[0];
 
 		fireEvent.click(kebabButton);
 
-		const dropDownItems = getAllByTestId('headerKebabItem');
+		const dropDownItems = document.querySelectorAll('.dropdown-item');
 
 		expect(dropDownItems[0]).toHaveTextContent('settings');
 
@@ -102,15 +102,15 @@ describe('The App component should', () => {
 
 		expect(window.location.hash).toContain('#/settings/indexes');
 
-		fireEvent.click(getByTestId('headerBackButton'));
+		fireEvent.click(document.getElementById('backButton').children[0]);
 	});
 
 	test('Return to process list page', () => {
-		const processName = getAllByTestId('processName');
+		const processName = container.querySelectorAll('.table-title');
+
 		const processNameLink = processName[0].children[0];
 
 		expect(processNameLink).toHaveTextContent('Single Approver');
-
 		expect(window.location.hash).toContain('#/processes');
 
 		fireEvent.click(processNameLink);
@@ -150,7 +150,7 @@ describe('The App component should', () => {
 	});
 
 	test('Navigate to new SLA page', () => {
-		const slaInfoLink = getByTestId('slaInfoLink');
+		const slaInfoLink = getByText('add-a-new-sla');
 
 		fireEvent.click(slaInfoLink);
 

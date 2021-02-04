@@ -32,6 +32,7 @@ import com.liferay.portal.kernel.util.FileUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.Http;
 import com.liferay.portal.kernel.util.InetAddressUtil;
+import com.liferay.portal.kernel.util.JavaConstants;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.SystemProperties;
@@ -319,6 +320,9 @@ public class HttpImpl implements Http {
 				Thread.sleep(500);
 			}
 			catch (InterruptedException interruptedException) {
+				if (_log.isDebugEnabled()) {
+					_log.debug(interruptedException, interruptedException);
+				}
 			}
 
 			retry++;
@@ -496,6 +500,10 @@ public class HttpImpl implements Http {
 			return address.getHostAddress();
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception, exception);
+			}
+
 			return url;
 		}
 	}
@@ -607,6 +615,17 @@ public class HttpImpl implements Http {
 	}
 
 	@Override
+	public String getQueryString(HttpServletRequest httpServletRequest) {
+		if (isForwarded(httpServletRequest)) {
+			return GetterUtil.getString(
+				httpServletRequest.getAttribute(
+					JavaConstants.JAVAX_SERVLET_FORWARD_QUERY_STRING));
+		}
+
+		return httpServletRequest.getQueryString();
+	}
+
+	@Override
 	public String getQueryString(String url) {
 		if (Validator.isNull(url)) {
 			return url;
@@ -638,6 +657,10 @@ public class HttpImpl implements Http {
 			return _getURI(uriString);
 		}
 		catch (URISyntaxException uriSyntaxException) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(uriSyntaxException, uriSyntaxException);
+			}
+
 			return null;
 		}
 	}
@@ -663,6 +686,18 @@ public class HttpImpl implements Http {
 	@Override
 	public boolean hasProxyConfig() {
 		if (Validator.isNotNull(_PROXY_HOST) && (_PROXY_PORT > 0)) {
+			return true;
+		}
+
+		return false;
+	}
+
+	@Override
+	public boolean isForwarded(HttpServletRequest httpServletRequest) {
+		String forwardedRequestURI = (String)httpServletRequest.getAttribute(
+			JavaConstants.JAVAX_SERVLET_FORWARD_REQUEST_URI);
+
+		if (forwardedRequestURI != null) {
 			return true;
 		}
 
@@ -923,6 +958,10 @@ public class HttpImpl implements Http {
 			return urlObj.toString();
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception, exception);
+			}
+
 			return url;
 		}
 	}
@@ -1869,7 +1908,7 @@ public class HttpImpl implements Http {
 				}
 				catch (IOException ioException) {
 					if (_log.isWarnEnabled()) {
-						_log.warn("Unable to close response", exception);
+						_log.warn("Unable to close response", ioException);
 					}
 				}
 			}

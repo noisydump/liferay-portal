@@ -1,6 +1,21 @@
+/**
+ * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
+ *
+ * This library is free software; you can redistribute it and/or modify it under
+ * the terms of the GNU Lesser General Public License as published by the Free
+ * Software Foundation; either version 2.1 of the License, or (at your option)
+ * any later version.
+ *
+ * This library is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
+ * details.
+ */
+
 import {LayoutTypes} from './LayoutTypes';
 
 export interface Config {
+	adaptiveMediaEnabled: boolean;
 	addFragmentCompositionURL: string;
 	addFragmentEntryLinkCommentURL: string;
 	addFragmentEntryLinkURL: string;
@@ -8,6 +23,8 @@ export interface Config {
 	addItemURL: string;
 	addPortletURL: string;
 	addSegmentsExperienceURL: string;
+
+	assetCategoryTreeNodeItemSelectorURL: string;
 
 	autoExtendSessionEnabled: boolean;
 
@@ -56,7 +73,7 @@ export interface Config {
 				label: string;
 				value: string | object;
 			}>;
-		}>
+		}>;
 	}>;
 
 	containerItemFlexEnabled: boolean;
@@ -80,6 +97,7 @@ export interface Config {
 	discardDraftURL: string;
 	draft: boolean;
 	duplicateItemURL: string;
+	duplicateSegmentsExperienceURL: string;
 	editFragmentEntryLinkCommentURL: string;
 	editFragmentEntryLinkURL: string;
 	editSegmentsEntryURL: string;
@@ -91,7 +109,8 @@ export interface Config {
 			name: string;
 			value: string;
 		};
-	}
+	};
+	getAvailableImageConfigurationsURL: string;
 	getAvailableListRenderersURL: string;
 	getAvailableListItemRenderersURL: string;
 	getAvailableTemplatesURL: string;
@@ -126,7 +145,7 @@ export interface Config {
 		label: string;
 		value: string;
 	}>;
-	panels: string[][]
+	panels: string[][];
 	pending: boolean;
 	plid: string;
 	pluginsRootPath: string;
@@ -149,6 +168,8 @@ export interface Config {
 	};
 
 	singleSegmentsExperienceMode: boolean;
+	siteNavigationMenuItemSelectorURL: string;
+	styleBookEnabled: boolean;
 	stylebookEntryId: string;
 	styleBooks: Array<{
 		imagePreviewURL: string;

@@ -25,11 +25,12 @@ taglib uri="http://liferay.com/tld/frontend" prefix="liferay-frontend" %><%@
 taglib uri="http://liferay.com/tld/theme" prefix="liferay-theme" %><%@
 taglib uri="http://liferay.com/tld/ui" prefix="liferay-ui" %>
 
-<%@ page import="com.liferay.commerce.account.admin.web.internal.display.context.CommerceAccountAddressAdminDisplayContext" %><%@
+<%@ page import="com.liferay.account.model.AccountEntry" %><%@
+page import="com.liferay.commerce.account.admin.web.internal.display.context.CommerceAccountAddressAdminDisplayContext" %><%@
 page import="com.liferay.commerce.account.admin.web.internal.display.context.CommerceAccountAdminDisplayContext" %><%@
 page import="com.liferay.commerce.account.admin.web.internal.display.context.CommerceAccountOrganizationRelAdminDisplayContext" %><%@
 page import="com.liferay.commerce.account.admin.web.internal.display.context.CommerceAccountUserRelAdminDisplayContext" %><%@
-page import="com.liferay.commerce.account.admin.web.internal.servlet.taglib.ui.CommerceAccountScreenNavigationConstants" %><%@
+page import="com.liferay.commerce.account.admin.web.internal.servlet.taglib.ui.constants.CommerceAccountScreenNavigationConstants" %><%@
 page import="com.liferay.commerce.account.constants.CommerceAccountActionKeys" %><%@
 page import="com.liferay.commerce.account.constants.CommerceAccountConstants" %><%@
 page import="com.liferay.commerce.account.exception.CommerceAccountNameException" %><%@

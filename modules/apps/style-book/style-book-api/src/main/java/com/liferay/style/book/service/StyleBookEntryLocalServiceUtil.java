@@ -321,6 +321,12 @@ public class StyleBookEntryLocalServiceUtil {
 		return getService().fetchStyleBookEntry(groupId, styleBookEntryKey);
 	}
 
+	public static com.liferay.style.book.model.StyleBookEntry
+		fetchStyleBookEntryByUuidAndGroupId(String uuid, long groupId) {
+
+		return getService().fetchStyleBookEntryByUuidAndGroupId(uuid, groupId);
+	}
+
 	public static String generateStyleBookEntryKey(long groupId, String name) {
 		return getService().generateStyleBookEntryKey(groupId, name);
 	}
@@ -343,6 +349,14 @@ public class StyleBookEntryLocalServiceUtil {
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return getService().getDraft(styleBookEntry);
+	}
+
+	public static com.liferay.portal.kernel.dao.orm.ExportActionableDynamicQuery
+		getExportActionableDynamicQuery(
+			com.liferay.exportimport.kernel.lar.PortletDataContext
+				portletDataContext) {
+
+		return getService().getExportActionableDynamicQuery(portletDataContext);
 	}
 
 	public static
@@ -408,6 +422,13 @@ public class StyleBookEntryLocalServiceUtil {
 
 		return getService().getStyleBookEntries(
 			groupId, name, start, end, orderByComparator);
+	}
+
+	public static java.util.List<com.liferay.style.book.model.StyleBookEntry>
+		getStyleBookEntriesByUuidAndCompanyId(String uuid, long companyId) {
+
+		return getService().getStyleBookEntriesByUuidAndCompanyId(
+			uuid, companyId);
 	}
 
 	/**
@@ -520,6 +541,18 @@ public class StyleBookEntryLocalServiceUtil {
 
 		return getService().updatePreviewFileEntryId(
 			styleBookEntryId, previewFileEntryId);
+	}
+
+	public static com.liferay.style.book.model.StyleBookEntry
+			updateStyleBookEntry(
+				long userId, long styleBookEntryId,
+				boolean defaultStylebookEntry, String frontendTokensValues,
+				String name, String styleBookEntryKey, long previewFileEntryId)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return getService().updateStyleBookEntry(
+			userId, styleBookEntryId, defaultStylebookEntry,
+			frontendTokensValues, name, styleBookEntryKey, previewFileEntryId);
 	}
 
 	public static com.liferay.style.book.model.StyleBookEntry

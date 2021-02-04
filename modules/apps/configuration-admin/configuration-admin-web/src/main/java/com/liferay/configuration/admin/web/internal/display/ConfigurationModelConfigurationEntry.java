@@ -17,7 +17,7 @@ package com.liferay.configuration.admin.web.internal.display;
 import com.liferay.configuration.admin.web.internal.model.ConfigurationModel;
 import com.liferay.configuration.admin.web.internal.util.ResourceBundleLoaderProvider;
 import com.liferay.portal.kernel.language.LanguageUtil;
-import com.liferay.portal.kernel.util.ResourceBundleLoader;
+import com.liferay.portal.kernel.resource.bundle.ResourceBundleLoader;
 
 import java.util.Locale;
 import java.util.Objects;
@@ -69,11 +69,13 @@ public class ConfigurationModelConfigurationEntry
 
 		if (_configurationModel.isFactory()) {
 			portletURL.setParameter(
-				"mvcRenderCommandName", "/view_factory_instances");
+				"mvcRenderCommandName",
+				"/configuration_admin/view_factory_instances");
 		}
 		else {
 			portletURL.setParameter(
-				"mvcRenderCommandName", "/edit_configuration");
+				"mvcRenderCommandName",
+				"/configuration_admin/edit_configuration");
 			portletURL.setParameter("pid", _configurationModel.getID());
 		}
 

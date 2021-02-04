@@ -14,6 +14,7 @@
 
 import {
 	FLUSH_INTERVAL,
+	HEADER_PROJECT_ID,
 	LIMIT_FAILED_ATTEMPTS,
 	QUEUE_PRIORITY_DEFAULT,
 	REQUEST_TIMEOUT,
@@ -38,9 +39,10 @@ import {getRetryDelay} from './utils/delay';
 class Client {
 	constructor(config = {}) {
 		this.attemptNumber = 1;
-		this.initialDelay = config.delay || FLUSH_INTERVAL;
 		this.delay = this.initialDelay;
+		this.initialDelay = config.delay || FLUSH_INTERVAL;
 		this.processing = false;
+		this.projectId = config.projectId;
 		this.queues = [];
 
 		this._startsFlushLoop();
@@ -55,9 +57,11 @@ class Client {
 	 * @returns {Object} Parameters of the request to be sent.
 	 */
 	_getRequestParameters() {
-		const headers = new Headers();
+		const headers = {'Content-Type': 'application/json'};
 
-		headers.append('Content-Type', 'application/json');
+		if (this.projectId) {
+			Object.assign(headers, {[HEADER_PROJECT_ID]: this.projectId});
+		}
 
 		return {
 			cache: 'default',
@@ -99,10 +103,13 @@ class Client {
 	 * Send a request with given payload and url.
 	 */
 	send({payload, url}) {
-		return fetch(url, {
-			...this._getRequestParameters(),
+		const parameters = this._getRequestParameters();
+
+		Object.assign(parameters, {
 			body: JSON.stringify(payload),
-		}).then(this._validateResponse);
+		});
+
+		return fetch(url, parameters).then(this._validateResponse);
 	}
 
 	/**
@@ -120,7 +127,7 @@ class Client {
 	 * @param {QueueConfig} config
 	 */
 	addQueue(queueInstance, config) {
-		this.queues.push({instance: queueInstance, ...config});
+		this.queues.push(Object.assign(config, {instance: queueInstance}));
 		this.queues.sort(this._prioritize);
 	}
 
@@ -206,21 +213,15 @@ class Client {
 							}
 
 							return Promise.all(
-								messages.map(({item, ...newItem}) => {
-									let payload = newItem;
-
-									if (item) {
-										payload = item;
-									}
-
-									return this.sendWithTimeout({
+								messages.map((payload) =>
+									this.sendWithTimeout({
 										payload,
 										timeout: REQUEST_TIMEOUT,
 										url: endpointUrl,
 									}).then(() => {
 										queue._dequeue(payload.id);
-									});
-								})
+									})
+								)
 							)
 								.then(() => {
 									this.onRequestSuccess();

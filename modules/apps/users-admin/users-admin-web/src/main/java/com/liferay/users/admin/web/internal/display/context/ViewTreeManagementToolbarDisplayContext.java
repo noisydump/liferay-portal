@@ -214,7 +214,8 @@ public class ViewTreeManagementToolbarDisplayContext {
 
 				if (hasAddOrganizationPermission()) {
 					for (String organizationType :
-							OrganizationLocalServiceUtil.getTypes()) {
+							OrganizationLocalServiceUtil.getChildrenTypes(
+								_organization.getType())) {
 
 						PortletURL addOrganizationTypeURL =
 							_renderResponse.createRenderURL();
@@ -223,7 +224,7 @@ public class ViewTreeManagementToolbarDisplayContext {
 							"mvcRenderCommandName",
 							"/users_admin/edit_organization");
 						addOrganizationTypeURL.setParameter(
-							"redirect", currentURL.toString());
+							"backURL", currentURL.toString());
 						addOrganizationTypeURL.setParameter(
 							"parentOrganizationSearchContainerPrimaryKeys",
 							String.valueOf(_organization.getOrganizationId()));

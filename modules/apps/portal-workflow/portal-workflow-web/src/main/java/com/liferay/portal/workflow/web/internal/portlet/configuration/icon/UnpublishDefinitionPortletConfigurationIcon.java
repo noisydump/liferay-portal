@@ -17,8 +17,8 @@ package com.liferay.portal.workflow.web.internal.portlet.configuration.icon;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.portlet.configuration.icon.BasePortletConfigurationIcon;
 import com.liferay.portal.kernel.portlet.configuration.icon.PortletConfigurationIcon;
+import com.liferay.portal.kernel.resource.bundle.ResourceBundleLoader;
 import com.liferay.portal.kernel.util.Portal;
-import com.liferay.portal.kernel.util.ResourceBundleLoader;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.workflow.WorkflowDefinition;
 import com.liferay.portal.workflow.constants.WorkflowPortletKeys;
@@ -76,7 +76,8 @@ public class UnpublishDefinitionPortletConfigurationIcon
 			PortletRequest.ACTION_PHASE);
 
 		portletURL.setParameter(
-			ActionRequest.ACTION_NAME, "deactivateWorkflowDefinition");
+			ActionRequest.ACTION_NAME,
+			"/portal_workflow/deactivate_workflow_definition");
 		portletURL.setParameter(
 			"mvcPath", portletRequest.getParameter("mvcPath"));
 		portletURL.setParameter("name", portletRequest.getParameter("name"));

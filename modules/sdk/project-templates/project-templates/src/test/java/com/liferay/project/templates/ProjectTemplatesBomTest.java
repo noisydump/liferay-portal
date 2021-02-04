@@ -28,6 +28,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 import java.util.Properties;
+import java.util.stream.IntStream;
 
 import org.junit.Assert;
 import org.junit.Assume;
@@ -61,8 +62,20 @@ public class ProjectTemplatesBomTest implements BaseProjectTemplatesTestCase {
 	public void testBomVersion() throws Exception {
 		Assume.assumeTrue(_isBomTest());
 
-		Version version = Version.parseVersion(
-			_BOM_VERSION.replaceAll("-", "."));
+		String normalizedBomVersion = _BOM_VERSION.replaceAll("-", ".");
+
+		IntStream intStream = normalizedBomVersion.chars();
+
+		long componentCount = intStream.filter(
+			components -> components == '.'
+		).count();
+
+		if (componentCount > 3) {
+			normalizedBomVersion = normalizedBomVersion.substring(
+				0, normalizedBomVersion.lastIndexOf("."));
+		}
+
+		Version version = Version.parseVersion(normalizedBomVersion);
 
 		File workspaceDir = buildWorkspace(
 			temporaryFolder, version.getMajor() + "." + version.getMinor());
@@ -71,31 +84,42 @@ public class ProjectTemplatesBomTest implements BaseProjectTemplatesTestCase {
 			workspaceDir,
 			"liferay.workspace.target.platform.version=" + _BOM_VERSION);
 
+		String product = "portal";
+
+		if (version.getMicro() >= 10) {
+			product = "dxp";
+		}
+
 		File modulesDir = new File(workspaceDir, "modules");
 
-		_buildTemplateTestOutput(modulesDir, "api", workspaceDir);
+		_buildTemplateTestOutput(modulesDir, "api", workspaceDir, product);
 
 		_buildTemplateTestOutput(
-			modulesDir, "control-menu-entry", workspaceDir);
-
-		_buildTemplateTestOutput(modulesDir, "mvc-portlet", workspaceDir);
-
-		_buildTemplateTestOutput(modulesDir, "npm-react-portlet", workspaceDir);
-
-		_buildTemplateTestOutput(modulesDir, "panel-app", workspaceDir);
+			modulesDir, "control-menu-entry", workspaceDir, product);
 
 		_buildTemplateTestOutput(
-			modulesDir, "portlet-configuration-icon", workspaceDir);
-
-		_buildTemplateTestOutput(modulesDir, "portlet-provider", workspaceDir);
+			modulesDir, "mvc-portlet", workspaceDir, product);
 
 		_buildTemplateTestOutput(
-			modulesDir, "portlet-toolbar-contributor", workspaceDir);
+			modulesDir, "npm-react-portlet", workspaceDir, product);
+
+		_buildTemplateTestOutput(
+			modulesDir, "panel-app", workspaceDir, product);
+
+		_buildTemplateTestOutput(
+			modulesDir, "portlet-configuration-icon", workspaceDir, product);
+
+		_buildTemplateTestOutput(
+			modulesDir, "portlet-provider", workspaceDir, product);
+
+		_buildTemplateTestOutput(
+			modulesDir, "portlet-toolbar-contributor", workspaceDir, product);
 
 		String template = "service-builder";
 
 		File serviceBuilderProjectDir = buildTemplateWithGradle(
-			modulesDir, template, template + "test");
+			modulesDir, template, template + "test", "--product", product,
+			"--liferay-version", _BOM_VERSION);
 
 		String serviceProjectName = template + "test-service";
 
@@ -112,19 +136,21 @@ public class ProjectTemplatesBomTest implements BaseProjectTemplatesTestCase {
 
 		File serviceWrapperProjectDir = buildTemplateWithGradle(
 			modulesDir, template, template + "test", "--service",
-			"com.liferay.portal.kernel.service.UserLocalServiceWrapper");
+			"com.liferay.portal.kernel.service.UserLocalServiceWrapper",
+			"--product", product, "--liferay-version", _BOM_VERSION);
 
 		testOutput(serviceWrapperProjectDir, template, workspaceDir);
 
 		_buildTemplateTestOutput(
-			modulesDir, "simulation-panel-entry", workspaceDir);
+			modulesDir, "simulation-panel-entry", workspaceDir, product);
 
 		_buildTemplateTestOutput(
-			modulesDir, "template-context-contributor", workspaceDir);
+			modulesDir, "template-context-contributor", workspaceDir, product);
 
-		_buildTemplateTestOutput(modulesDir, "war-hook", workspaceDir);
+		_buildTemplateTestOutput(modulesDir, "war-hook", workspaceDir, product);
 
-		_buildTemplateTestOutput(modulesDir, "war-mvc-portlet", workspaceDir);
+		_buildTemplateTestOutput(
+			modulesDir, "war-mvc-portlet", workspaceDir, product);
 	}
 
 	public void testOutput(
@@ -161,26 +187,27 @@ public class ProjectTemplatesBomTest implements BaseProjectTemplatesTestCase {
 	@Rule
 	public TemporaryFolder temporaryFolder = new TemporaryFolder();
 
-	private static boolean _isBomTest() {
+	private void _buildTemplateTestOutput(
+			File modulesDir, String template, File workspaceDir, String product)
+		throws Exception {
+
+		File projectDir = buildTemplateWithGradle(
+			modulesDir, template, template + "test", "--product", product,
+			"--liferay-version", _BOM_VERSION);
+
+		testOutput(projectDir, template, workspaceDir);
+
+		if (!template.contains("war")) {
+			_resolveProject(template, workspaceDir);
+		}
+	}
+
+	private boolean _isBomTest() {
 		if (Validator.isNotNull(_BOM_VERSION)) {
 			return true;
 		}
 
 		return false;
-	}
-
-	private void _buildTemplateTestOutput(
-			File modulesDir, String template, File workspaceDir)
-		throws Exception {
-
-		File apiProjectDir = buildTemplateWithGradle(
-			modulesDir, template, template + "test");
-
-		testOutput(apiProjectDir, template, workspaceDir);
-
-		if (!template.contains("war")) {
-			_resolveProject(template, workspaceDir);
-		}
 	}
 
 	private void _resolveProject(String projectName, File workspaceDir)

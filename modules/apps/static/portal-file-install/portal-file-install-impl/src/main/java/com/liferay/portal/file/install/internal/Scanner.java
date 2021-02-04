@@ -14,9 +14,17 @@
 
 package com.liferay.portal.file.install.internal;
 
+import com.liferay.petra.reflect.ReflectionUtil;
+
 import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
+
+import java.nio.file.FileVisitResult;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.attribute.BasicFileAttributes;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -57,7 +65,7 @@ public class Scanner {
 			};
 		}
 		else {
-			_filenameFilter = null;
+			_filenameFilter = (dir, name) -> true;
 		}
 
 		_recurseSubdir = SUBDIR_MODE_RECURSE.equals(subdirMode);
@@ -89,21 +97,6 @@ public class Scanner {
 
 			_storedChecksums.put(file, newChecksum);
 		}
-	}
-
-	private static List<File> _canononize(List<File> files) {
-		List<File> canonicalFiles = new ArrayList<>(files.size());
-
-		for (File file : files) {
-			try {
-				canonicalFiles.add(file.getCanonicalFile());
-			}
-			catch (IOException ioException) {
-				canonicalFiles.add(file);
-			}
-		}
-
-		return canonicalFiles;
 	}
 
 	private static long _checksum(File file) {
@@ -142,14 +135,60 @@ public class Scanner {
 		}
 	}
 
+	private List<File> _canononize(List<File> files) {
+		List<File> canonicalFiles = new ArrayList<>(files.size());
+
+		for (File file : files) {
+			try {
+				canonicalFiles.add(file.getCanonicalFile());
+			}
+			catch (IOException ioException) {
+				canonicalFiles.add(file);
+			}
+		}
+
+		return canonicalFiles;
+	}
+
 	private File[] _list() {
 		List<File> files = new ArrayList<>();
 
 		for (File dir : _watchedDirs) {
-			File[] list = dir.listFiles(_filenameFilter);
+			if (_recurseSubdir) {
+				try {
+					Files.walkFileTree(
+						dir.toPath(),
+						new SimpleFileVisitor<Path>() {
 
-			if (list != null) {
-				Collections.addAll(files, list);
+							@Override
+							public FileVisitResult visitFile(
+									Path path,
+									BasicFileAttributes basicFileAttributes)
+								throws IOException {
+
+								File file = path.toFile();
+
+								if (_filenameFilter.accept(
+										file.getParentFile(), file.getName())) {
+
+									files.add(file);
+								}
+
+								return FileVisitResult.CONTINUE;
+							}
+
+						});
+				}
+				catch (IOException ioException) {
+					ReflectionUtil.throwException(ioException);
+				}
+			}
+			else {
+				File[] list = dir.listFiles(_filenameFilter);
+
+				if (list != null) {
+					Collections.addAll(files, list);
+				}
 			}
 		}
 
@@ -167,13 +206,6 @@ public class Scanner {
 
 		for (File file : list) {
 			if (file.isDirectory()) {
-				if (_recurseSubdir) {
-					files.addAll(
-						_processFiles(
-							reportImmediately,
-							file.listFiles(_filenameFilter)));
-				}
-
 				continue;
 			}
 

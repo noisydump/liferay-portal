@@ -78,6 +78,7 @@ import com.liferay.portal.kernel.model.Repository;
 import com.liferay.portal.kernel.model.ResourceConstants;
 import com.liferay.portal.kernel.model.SystemEventConstants;
 import com.liferay.portal.kernel.model.User;
+import com.liferay.portal.kernel.model.WebDAVProps;
 import com.liferay.portal.kernel.repository.event.RepositoryEventTrigger;
 import com.liferay.portal.kernel.repository.event.RepositoryEventType;
 import com.liferay.portal.kernel.repository.model.FileEntry;
@@ -105,7 +106,6 @@ import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.PropsKeys;
 import com.liferay.portal.kernel.util.ServiceProxyFactory;
 import com.liferay.portal.kernel.util.StringUtil;
-import com.liferay.portal.kernel.util.TempFileEntryUtil;
 import com.liferay.portal.kernel.util.UnicodeProperties;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.view.count.ViewCountManager;
@@ -117,7 +117,6 @@ import com.liferay.portal.util.PropsValues;
 import com.liferay.portal.util.RepositoryUtil;
 import com.liferay.portlet.documentlibrary.model.impl.DLFileEntryImpl;
 import com.liferay.portlet.documentlibrary.service.base.DLFileEntryLocalServiceBaseImpl;
-import com.liferay.portlet.documentlibrary.util.DLAppUtil;
 
 import java.awt.image.RenderedImage;
 
@@ -183,9 +182,18 @@ public class DLFileEntryLocalServiceImpl
 		String name = String.valueOf(
 			counterLocalService.increment(DLFileEntry.class.getName()));
 
-		String extension = DLAppUtil.getExtension(title, sourceFileName);
+		String extension = FileUtil.getExtension(sourceFileName);
 
-		String fileName = DLUtil.getSanitizedFileName(title, extension);
+		String fileName = null;
+
+		if (Validator.isNotNull(sourceFileName)) {
+			fileName = DLUtil.getSanitizedFileName(
+				FileUtil.stripExtension(sourceFileName), extension);
+		}
+		else {
+			fileName = DLValidatorUtil.fixName(
+				DLUtil.getSanitizedFileName(title, extension));
+		}
 
 		if (fileEntryTypeId == -1) {
 			fileEntryTypeId =
@@ -196,8 +204,7 @@ public class DLFileEntryLocalServiceImpl
 			PortalUtil.getCurrentAndAncestorSiteGroupIds(groupId), folderId,
 			fileEntryTypeId);
 
-		validateFile(
-			groupId, folderId, 0, sourceFileName, fileName, extension, title);
+		validateFile(groupId, folderId, 0, fileName, extension, title);
 
 		long fileEntryId = counterLocalService.increment();
 
@@ -639,11 +646,12 @@ public class DLFileEntryLocalServiceImpl
 
 		// WebDAVProps
 
-		String fileName = dlFileEntry.getFileName();
+		WebDAVProps webDAVProps = webDAVPropsPersistence.fetchByC_C(
+			classNameLocalService.getClassNameId(DLFileEntry.class),
+			dlFileEntry.getFileEntryId());
 
-		if (!fileName.contains(TempFileEntryUtil.TEMP_RANDOM_SUFFIX)) {
-			webDAVPropsLocalService.deleteWebDAVProps(
-				DLFileEntry.class.getName(), dlFileEntry.getFileEntryId());
+		if (webDAVProps != null) {
+			webDAVPropsLocalService.deleteWebDAVProps(webDAVProps);
 		}
 
 		// File entry metadata
@@ -1180,6 +1188,14 @@ public class DLFileEntryLocalServiceImpl
 	}
 
 	@Override
+	public DLFileEntry getFileEntryByFileName(
+			long groupId, long folderId, String fileName)
+		throws PortalException {
+
+		return dlFileEntryPersistence.findByG_F_FN(groupId, folderId, fileName);
+	}
+
+	@Override
 	public DLFileEntry getFileEntryByName(
 			long groupId, long folderId, String name)
 		throws PortalException {
@@ -1485,7 +1501,7 @@ public class DLFileEntryLocalServiceImpl
 				"Unable to revert from the latest file version");
 		}
 
-		String sourceFileName = dlFileVersion.getTitle();
+		String sourceFileName = dlFileVersion.getFileName();
 		String extension = dlFileVersion.getExtension();
 		String mimeType = dlFileVersion.getMimeType();
 		String title = dlFileVersion.getTitle();
@@ -1607,7 +1623,7 @@ public class DLFileEntryLocalServiceImpl
 			(DLFileEntry dlFileEntry) -> {
 				dlFileEntry.setTreePath(treePath);
 
-				updateDLFileEntry(dlFileEntry);
+				dlFileEntryLocalService.updateDLFileEntry(dlFileEntry);
 
 				if (!reindex) {
 					return;
@@ -1638,10 +1654,13 @@ public class DLFileEntryLocalServiceImpl
 		DLFileEntry dlFileEntry = dlFileEntryPersistence.findByPrimaryKey(
 			fileEntryId);
 
-		String extension = DLAppUtil.getExtension(title, sourceFileName);
+		String extension = FileUtil.getExtension(sourceFileName);
 
 		if ((file == null) && (inputStream == null)) {
-			extension = dlFileEntry.getExtension();
+			if (Validator.isNull(extension)) {
+				extension = dlFileEntry.getExtension();
+			}
+
 			mimeType = dlFileEntry.getMimeType();
 		}
 
@@ -1910,7 +1929,7 @@ public class DLFileEntryLocalServiceImpl
 			(dlFileEntry.getFileEntryId() != fileEntryId)) {
 
 			throw new DuplicateFileEntryException(
-				"A file entry already exists with file name " + title);
+				"A file entry already exists with file name " + fileName);
 		}
 	}
 
@@ -2401,12 +2420,16 @@ public class DLFileEntryLocalServiceImpl
 
 			String fileName = DLUtil.getSanitizedFileName(title, extension);
 
+			if (Validator.isNotNull(sourceFileName)) {
+				fileName = DLUtil.getSanitizedFileName(
+					FileUtil.stripExtension(sourceFileName), extension);
+			}
+
 			Date now = new Date();
 
 			validateFile(
 				dlFileEntry.getGroupId(), dlFileEntry.getFolderId(),
-				dlFileEntry.getFileEntryId(), sourceFileName, fileName,
-				extension, title);
+				dlFileEntry.getFileEntryId(), fileName, extension, title);
 
 			// File version
 
@@ -2530,12 +2553,11 @@ public class DLFileEntryLocalServiceImpl
 	}
 
 	protected void validateFile(
-			long groupId, long folderId, long fileEntryId,
-			String sourceFileName, String fileName, String extension,
-			String title)
+			long groupId, long folderId, long fileEntryId, String fileName,
+			String extension, String title)
 		throws PortalException {
 
-		DLValidatorUtil.validateFileName(title);
+		DLValidatorUtil.validateFileName(fileName);
 
 		validateFileExtension(fileName, extension);
 

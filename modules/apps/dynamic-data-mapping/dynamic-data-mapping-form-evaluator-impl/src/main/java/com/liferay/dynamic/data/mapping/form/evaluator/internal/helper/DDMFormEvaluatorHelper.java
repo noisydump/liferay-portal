@@ -30,6 +30,7 @@ import com.liferay.dynamic.data.mapping.form.evaluator.internal.expression.DDMFo
 import com.liferay.dynamic.data.mapping.form.evaluator.internal.expression.DDMFormEvaluatorExpressionParameterAccessor;
 import com.liferay.dynamic.data.mapping.form.field.type.DDMFormFieldTypeServicesTracker;
 import com.liferay.dynamic.data.mapping.form.field.type.DDMFormFieldValueAccessor;
+import com.liferay.dynamic.data.mapping.form.field.type.DDMFormFieldValueEditingAware;
 import com.liferay.dynamic.data.mapping.form.field.type.DDMFormFieldValueLocalizer;
 import com.liferay.dynamic.data.mapping.form.field.type.DefaultDDMFormFieldValueAccessor;
 import com.liferay.dynamic.data.mapping.model.DDMForm;
@@ -41,15 +42,16 @@ import com.liferay.dynamic.data.mapping.model.DDMFormRule;
 import com.liferay.dynamic.data.mapping.model.LocalizedValue;
 import com.liferay.dynamic.data.mapping.model.Value;
 import com.liferay.dynamic.data.mapping.storage.DDMFormFieldValue;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.resource.bundle.ResourceBundleLoader;
+import com.liferay.portal.kernel.resource.bundle.ResourceBundleLoaderUtil;
 import com.liferay.portal.kernel.util.AggregateResourceBundle;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.MapUtil;
-import com.liferay.portal.kernel.util.ResourceBundleLoader;
-import com.liferay.portal.kernel.util.ResourceBundleLoaderUtil;
 import com.liferay.portal.kernel.util.ResourceBundleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
@@ -135,7 +137,11 @@ public class DDMFormEvaluatorHelper {
 		stream.filter(
 			DDMFormRule::isEnabled
 		).forEach(
-			this::evaluateDDMFormRule
+			rule -> {
+				evaluateDDMFormRule(rule);
+
+				_resetInvisibleFieldValue();
+			}
 		);
 
 		verifyFieldsMarkedAsRequired();
@@ -428,6 +434,13 @@ public class DDMFormEvaluatorHelper {
 		return false;
 	}
 
+	protected boolean isFieldNative(
+		DDMFormEvaluatorFieldContextKey ddmFormFieldContextKey) {
+
+		return getBooleanPropertyValue(
+			ddmFormFieldContextKey, "nativeField", true);
+	}
+
 	protected boolean isFieldReadOnly(
 		DDMFormEvaluatorFieldContextKey ddmFormEvaluatorFieldContextKey) {
 
@@ -689,6 +702,19 @@ public class DDMFormEvaluatorHelper {
 								ddmFormFieldValue.getType());
 
 					if (ddmFormFieldValueLocalizer != null) {
+						if (ddmFormFieldValueLocalizer instanceof
+								DDMFormFieldValueEditingAware) {
+
+							DDMFormFieldValueEditingAware
+								ddmFormFieldValueEditingAware =
+									(DDMFormFieldValueEditingAware)
+										ddmFormFieldValueLocalizer;
+
+							ddmFormFieldValueEditingAware.setEditingFieldValue(
+								_ddmFormEvaluatorEvaluateRequest.
+									isEditingFieldValue());
+						}
+
 						value.addString(
 							entry.getKey(),
 							ddmFormFieldValueLocalizer.localize(
@@ -711,6 +737,19 @@ public class DDMFormEvaluatorHelper {
 		).forEach(
 			this::_localizeDDMFormFieldValue
 		);
+	}
+
+	private void _resetInvisibleFieldValue() {
+		_ddmFormFieldsPropertyChanges.forEach(
+			(ddmFormFieldContextKey, ddmFormFieldProperties) -> {
+				if (_ddmFormEvaluatorEvaluateRequest.isViewMode() &&
+					_ddmFormEvaluatorEvaluateRequest.isEditingFieldValue() &&
+					!isFieldNative(ddmFormFieldContextKey) &&
+					!isFieldVisible(ddmFormFieldContextKey)) {
+
+					ddmFormFieldProperties.put("value", StringPool.BLANK);
+				}
+			});
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(

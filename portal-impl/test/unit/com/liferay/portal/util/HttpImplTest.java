@@ -24,6 +24,7 @@ import com.liferay.portal.kernel.test.rule.CodeCoverageAssertor;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.Http;
+import com.liferay.portal.kernel.util.JavaConstants;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.URLCodec;
 
@@ -39,6 +40,8 @@ import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
+
+import org.springframework.mock.web.MockHttpServletRequest;
 
 /**
  * @author Miguel Pastor
@@ -297,6 +300,53 @@ public class HttpImplTest {
 		Assert.assertEquals(
 			queryString,
 			_httpImpl.getQueryString("http://localhost:8080/?" + queryString));
+	}
+
+	@Test
+	public void testGetQueryStringWithHttpServletRequest() {
+		MockHttpServletRequest mockHttpServletRequest =
+			new MockHttpServletRequest();
+
+		mockHttpServletRequest.setAttribute(
+			JavaConstants.JAVAX_SERVLET_FORWARD_QUERY_STRING, "b=2");
+		mockHttpServletRequest.setQueryString("a=1");
+
+		Assert.assertEquals(
+			"a=1", _httpImpl.getQueryString(mockHttpServletRequest));
+	}
+
+	@Test
+	public void testGetQueryStringWithHttpServletRequestForwarded() {
+		MockHttpServletRequest mockHttpServletRequest =
+			new MockHttpServletRequest();
+
+		mockHttpServletRequest.setAttribute(
+			JavaConstants.JAVAX_SERVLET_FORWARD_QUERY_STRING, "b=2");
+		mockHttpServletRequest.setAttribute(
+			JavaConstants.JAVAX_SERVLET_FORWARD_REQUEST_URI, "https://foo.com");
+		mockHttpServletRequest.setQueryString("a=1");
+
+		Assert.assertEquals(
+			"b=2", _httpImpl.getQueryString(mockHttpServletRequest));
+	}
+
+	@Test
+	public void testIsForwarded() {
+		MockHttpServletRequest mockHttpServletRequest =
+			new MockHttpServletRequest();
+
+		Assert.assertFalse(_httpImpl.isForwarded(mockHttpServletRequest));
+	}
+
+	@Test
+	public void testIsForwardedWithHttpServletRequestForwarded() {
+		MockHttpServletRequest mockHttpServletRequest =
+			new MockHttpServletRequest();
+
+		mockHttpServletRequest.setAttribute(
+			JavaConstants.JAVAX_SERVLET_FORWARD_REQUEST_URI, "https://foo.com");
+
+		Assert.assertTrue(_httpImpl.isForwarded(mockHttpServletRequest));
 	}
 
 	@Test

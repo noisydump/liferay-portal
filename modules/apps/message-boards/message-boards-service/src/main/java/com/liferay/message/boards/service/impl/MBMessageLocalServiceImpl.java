@@ -402,12 +402,10 @@ public class MBMessageLocalServiceImpl extends MBMessageLocalServiceBaseImpl {
 		message.setAnonymous(anonymous);
 
 		if (message.isDiscussion()) {
-			long classNameId = classNameLocalService.getClassNameId(
-				(String)serviceContext.getAttribute("className"));
-			long classPK = ParamUtil.getLong(serviceContext, "classPK");
-
-			message.setClassNameId(classNameId);
-			message.setClassPK(classPK);
+			message.setClassNameId(
+				classNameLocalService.getClassNameId(
+					(String)serviceContext.getAttribute("className")));
+			message.setClassPK(ParamUtil.getLong(serviceContext, "classPK"));
 		}
 
 		message.setExpandoBridgeAttributes(serviceContext);
@@ -2472,23 +2470,6 @@ public class MBMessageLocalServiceImpl extends MBMessageLocalServiceBaseImpl {
 		}
 	}
 
-	private static String _getLocalizedRootCategoryName(
-		Group group, Locale locale) {
-
-		try {
-			return LanguageUtil.get(locale, "home") + " - " +
-				group.getDescriptiveName(locale);
-		}
-		catch (PortalException portalException) {
-			_log.error(
-				"Unable to get descriptive name for group " +
-					group.getGroupId(),
-				portalException);
-
-			return LanguageUtil.get(locale, "home");
-		}
-	}
-
 	private CommentGroupServiceConfiguration
 			_getCommentGroupServiceConfiguration(long groupId)
 		throws ConfigurationException {
@@ -2533,6 +2514,21 @@ public class MBMessageLocalServiceImpl extends MBMessageLocalServiceBaseImpl {
 		}
 
 		return StringPool.BLANK;
+	}
+
+	private String _getLocalizedRootCategoryName(Group group, Locale locale) {
+		try {
+			return LanguageUtil.get(locale, "home") + " - " +
+				group.getDescriptiveName(locale);
+		}
+		catch (PortalException portalException) {
+			_log.error(
+				"Unable to get descriptive name for group " +
+					group.getGroupId(),
+				portalException);
+
+			return LanguageUtil.get(locale, "home");
+		}
 	}
 
 	private long _getRootDiscussionMessageId(String className, long classPK)

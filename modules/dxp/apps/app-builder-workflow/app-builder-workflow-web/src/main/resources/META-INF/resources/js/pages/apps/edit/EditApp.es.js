@@ -12,7 +12,7 @@
 import {AppContext} from 'app-builder-web/js/AppContext.es';
 import ControlMenu from 'app-builder-web/js/components/control-menu/ControlMenu.es';
 import {Loading} from 'app-builder-web/js/components/loading/Loading.es';
-import {getDataObjects} from 'app-builder-web/js/pages/apps/SelectObjectsDropDown.es';
+import {getDataObjects} from 'app-builder-web/js/components/select-objects/SelectObjects.es';
 import EditAppContext, {
 	UPDATE_APP,
 	reducer,
@@ -39,6 +39,7 @@ import configReducer, {
 	getInitialConfig,
 } from './configReducer.es';
 import EditAppSidebar from './sidebar/EditAppSidebar.es';
+import {checkRequiredFields} from './utils.es';
 import WorkflowBuilder from './workflow-builder/WorkflowBuilder.es';
 
 export default ({
@@ -106,7 +107,10 @@ export default ({
 					dispatchConfig({
 						listItems: {
 							fetching: false,
-							formViews,
+							formViews: checkRequiredFields(
+								formViews,
+								config.dataObject
+							),
 							tableViews,
 						},
 						type: UPDATE_LIST_ITEMS,
@@ -119,6 +123,7 @@ export default ({
 					});
 				});
 		}
+		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [app.dataDefinitionId, defaultLanguageId]);
 
 	useEffect(() => {
@@ -205,6 +210,21 @@ export default ({
 		}
 	}, [appId]);
 
+	useEffect(() => {
+		if (!app.active && config.dataObject.id) {
+			dispatchConfig({
+				config: {
+					formView: checkRequiredFields(
+						[config.formView],
+						config.dataObject
+					)[0],
+				},
+				type: UPDATE_CONFIG,
+			});
+		}
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [app.active]);
+
 	let title = Liferay.Language.get('new-workflow-powered-app');
 
 	if (appId) {
@@ -264,7 +284,7 @@ export default ({
 
 		fetch(
 			createResourceURL(baseResourceURL, {
-				p_p_resource_id: `/app_builder/${resource}_workflow_app`,
+				p_p_resource_id: `/app_builder_workflow/${resource}_app_builder_app`,
 			}),
 			{
 				body: new URLSearchParams(Liferay.Util.ns(namespace, params)),

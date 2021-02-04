@@ -26,10 +26,10 @@ import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.portlet.JSONPortletResponseUtil;
 import com.liferay.portal.kernel.portlet.LiferayPortletURL;
 import com.liferay.portal.kernel.portlet.PortletURLFactory;
+import com.liferay.portal.kernel.resource.bundle.ResourceBundleLoader;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.PwdGenerator;
-import com.liferay.portal.kernel.util.ResourceBundleLoader;
 import com.liferay.portal.kernel.util.WebKeys;
 
 import java.io.IOException;
@@ -150,20 +150,23 @@ public class OAuth2ControllerFactory {
 	private static class OAuth2Result {
 
 		public OAuth2Result(JSONObject responseJSONObject) {
-			_portalException = null;
 			_responseJSONObject = responseJSONObject;
+
+			_portalException = null;
 			_redirectURL = null;
 		}
 
 		public OAuth2Result(PortalException portalException) {
 			_portalException = portalException;
+
 			_responseJSONObject = null;
 			_redirectURL = null;
 		}
 
 		public OAuth2Result(String redirectURL) {
-			_portalException = null;
 			_redirectURL = redirectURL;
+
+			_portalException = null;
 			_responseJSONObject = null;
 		}
 

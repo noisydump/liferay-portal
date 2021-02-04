@@ -1058,6 +1058,11 @@ public class TemplateContextHelper {
 		}
 
 		@Override
+		public String getQueryString(HttpServletRequest httpServletRequest) {
+			return _http.getQueryString(httpServletRequest);
+		}
+
+		@Override
 		public String getQueryString(String url) {
 			return _http.getQueryString(url);
 		}
@@ -1085,6 +1090,11 @@ public class TemplateContextHelper {
 		@Override
 		public boolean hasProxyConfig() {
 			return _http.hasProxyConfig();
+		}
+
+		@Override
+		public boolean isForwarded(HttpServletRequest httpServletRequest) {
+			return _http.isForwarded(httpServletRequest);
 		}
 
 		@Override

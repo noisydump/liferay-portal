@@ -822,6 +822,14 @@ public abstract class BaseDataLayoutResourceTestCase {
 				continue;
 			}
 
+			if (Objects.equals("dataLayoutFields", additionalAssertFieldName)) {
+				if (dataLayout.getDataLayoutFields() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
 			if (Objects.equals("dataLayoutKey", additionalAssertFieldName)) {
 				if (dataLayout.getDataLayoutKey() == null) {
 					valid = false;
@@ -995,6 +1003,17 @@ public abstract class BaseDataLayoutResourceTestCase {
 				continue;
 			}
 
+			if (Objects.equals("dataLayoutFields", additionalAssertFieldName)) {
+				if (!equals(
+						(Map)dataLayout1.getDataLayoutFields(),
+						(Map)dataLayout2.getDataLayoutFields())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
 			if (Objects.equals("dataLayoutKey", additionalAssertFieldName)) {
 				if (!Objects.deepEquals(
 						dataLayout1.getDataLayoutKey(),
@@ -1130,9 +1149,11 @@ public abstract class BaseDataLayoutResourceTestCase {
 					return false;
 				}
 			}
+
+			return true;
 		}
 
-		return true;
+		return false;
 	}
 
 	protected java.util.Collection<EntityField> getEntityFields()
@@ -1194,6 +1215,11 @@ public abstract class BaseDataLayoutResourceTestCase {
 		}
 
 		if (entityFieldName.equals("dataDefinitionId")) {
+			throw new IllegalArgumentException(
+				"Invalid entity field " + entityFieldName);
+		}
+
+		if (entityFieldName.equals("dataLayoutFields")) {
 			throw new IllegalArgumentException(
 				"Invalid entity field " + entityFieldName);
 		}

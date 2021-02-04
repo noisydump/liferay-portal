@@ -31,6 +31,7 @@ import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.CompanyConstants;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.GroupConstants;
+import com.liferay.portal.kernel.resource.bundle.ResourceBundleLoader;
 import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.service.GroupLocalServiceUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
@@ -47,7 +48,6 @@ import com.liferay.portal.kernel.util.ObjectValuePair;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.PropsKeys;
-import com.liferay.portal.kernel.util.ResourceBundleLoader;
 import com.liferay.portal.kernel.util.ResourceBundleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Time;
@@ -1040,6 +1040,9 @@ public class LanguageImpl implements Language, Serializable {
 			}
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception, exception);
+			}
 		}
 
 		Map<String, Locale> groupLanguageIdLocalesMap =
@@ -1144,7 +1147,8 @@ public class LanguageImpl implements Language, Serializable {
 		}
 		catch (Exception exception) {
 			if (_log.isWarnEnabled()) {
-				_log.warn("Unable to check if group inherits locales");
+				_log.warn(
+					"Unable to check if group inherits locales", exception);
 			}
 		}
 
@@ -1168,9 +1172,23 @@ public class LanguageImpl implements Language, Serializable {
 		return companyLocalesBag.getByLanguageCode(languageCode);
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #getResourceBundleLoader}
+	 */
+	@Deprecated
 	@Override
-	public ResourceBundleLoader getPortalResourceBundleLoader() {
-		return LanguageResources.RESOURCE_BUNDLE_LOADER;
+	public com.liferay.portal.kernel.util.ResourceBundleLoader
+		getPortalResourceBundleLoader() {
+
+		ResourceBundleLoader resourceBundleLoader = getResourceBundleLoader();
+
+		return locale -> resourceBundleLoader.loadResourceBundle(locale);
+	}
+
+	@Override
+	public ResourceBundleLoader getResourceBundleLoader() {
+		return LanguageResources.PORTAL_RESOURCE_BUNDLE_LOADER;
 	}
 
 	@Override
@@ -1547,6 +1565,9 @@ public class LanguageImpl implements Language, Serializable {
 			}
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception, exception);
+			}
 		}
 
 		Map<String, Locale> groupLanguageIdLocalesMap =
@@ -1719,10 +1740,6 @@ public class LanguageImpl implements Language, Serializable {
 		return companyLocalesBag;
 	}
 
-	private static void _updateLastModified() {
-		_lastModified = System.currentTimeMillis();
-	}
-
 	private ObjectValuePair<HashMap<String, Locale>, HashMap<String, Locale>>
 		_createGroupLocales(long groupId) {
 
@@ -1746,6 +1763,9 @@ public class LanguageImpl implements Language, Serializable {
 			}
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception, exception);
+			}
 		}
 
 		HashMap<String, Locale> groupLanguageIdLocalesMap =
@@ -1788,9 +1808,8 @@ public class LanguageImpl implements Language, Serializable {
 		HttpServletRequest httpServletRequest, String pattern,
 		Object[] formattedArguments) {
 
-		Locale locale = _getLocale(httpServletRequest);
-
-		return _decorateMessageFormat(locale, pattern, formattedArguments);
+		return _decorateMessageFormat(
+			_getLocale(httpServletRequest), pattern, formattedArguments);
 	}
 
 	private String _decorateMessageFormat(
@@ -1978,6 +1997,10 @@ public class LanguageImpl implements Language, Serializable {
 		_companyLocalesPortalCache.remove(companyId);
 
 		_updateLastModified();
+	}
+
+	private void _updateLastModified() {
+		_lastModified = System.currentTimeMillis();
 	}
 
 	private static final String _COMPANY_LOCALES_PORTAL_CACHE_NAME =

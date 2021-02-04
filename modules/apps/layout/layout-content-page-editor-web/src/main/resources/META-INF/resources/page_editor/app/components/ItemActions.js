@@ -134,10 +134,11 @@ export default function ItemActions({item}) {
 				</ClayDropDown.ItemList>
 			</ClayDropDown>
 
-			<SaveFragmentCompositionModal
-				onCloseModal={() => setOpenSaveModal(false)}
-				open={openSaveModal}
-			/>
+			{openSaveModal && (
+				<SaveFragmentCompositionModal
+					onCloseModal={() => setOpenSaveModal(false)}
+				/>
+			)}
 		</>
 	) : null;
 }

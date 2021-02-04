@@ -377,6 +377,1012 @@ public class StyleBookEntryVersionUtil {
 	}
 
 	/**
+	 * Returns all the style book entry versions where uuid = &#63;.
+	 *
+	 * @param uuid the uuid
+	 * @return the matching style book entry versions
+	 */
+	public static List<StyleBookEntryVersion> findByUuid(String uuid) {
+		return getPersistence().findByUuid(uuid);
+	}
+
+	/**
+	 * Returns a range of all the style book entry versions where uuid = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>StyleBookEntryVersionModelImpl</code>.
+	 * </p>
+	 *
+	 * @param uuid the uuid
+	 * @param start the lower bound of the range of style book entry versions
+	 * @param end the upper bound of the range of style book entry versions (not inclusive)
+	 * @return the range of matching style book entry versions
+	 */
+	public static List<StyleBookEntryVersion> findByUuid(
+		String uuid, int start, int end) {
+
+		return getPersistence().findByUuid(uuid, start, end);
+	}
+
+	/**
+	 * Returns an ordered range of all the style book entry versions where uuid = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>StyleBookEntryVersionModelImpl</code>.
+	 * </p>
+	 *
+	 * @param uuid the uuid
+	 * @param start the lower bound of the range of style book entry versions
+	 * @param end the upper bound of the range of style book entry versions (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @return the ordered range of matching style book entry versions
+	 */
+	public static List<StyleBookEntryVersion> findByUuid(
+		String uuid, int start, int end,
+		OrderByComparator<StyleBookEntryVersion> orderByComparator) {
+
+		return getPersistence().findByUuid(uuid, start, end, orderByComparator);
+	}
+
+	/**
+	 * Returns an ordered range of all the style book entry versions where uuid = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>StyleBookEntryVersionModelImpl</code>.
+	 * </p>
+	 *
+	 * @param uuid the uuid
+	 * @param start the lower bound of the range of style book entry versions
+	 * @param end the upper bound of the range of style book entry versions (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @param useFinderCache whether to use the finder cache
+	 * @return the ordered range of matching style book entry versions
+	 */
+	public static List<StyleBookEntryVersion> findByUuid(
+		String uuid, int start, int end,
+		OrderByComparator<StyleBookEntryVersion> orderByComparator,
+		boolean useFinderCache) {
+
+		return getPersistence().findByUuid(
+			uuid, start, end, orderByComparator, useFinderCache);
+	}
+
+	/**
+	 * Returns the first style book entry version in the ordered set where uuid = &#63;.
+	 *
+	 * @param uuid the uuid
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the first matching style book entry version
+	 * @throws NoSuchEntryVersionException if a matching style book entry version could not be found
+	 */
+	public static StyleBookEntryVersion findByUuid_First(
+			String uuid,
+			OrderByComparator<StyleBookEntryVersion> orderByComparator)
+		throws com.liferay.style.book.exception.NoSuchEntryVersionException {
+
+		return getPersistence().findByUuid_First(uuid, orderByComparator);
+	}
+
+	/**
+	 * Returns the first style book entry version in the ordered set where uuid = &#63;.
+	 *
+	 * @param uuid the uuid
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the first matching style book entry version, or <code>null</code> if a matching style book entry version could not be found
+	 */
+	public static StyleBookEntryVersion fetchByUuid_First(
+		String uuid,
+		OrderByComparator<StyleBookEntryVersion> orderByComparator) {
+
+		return getPersistence().fetchByUuid_First(uuid, orderByComparator);
+	}
+
+	/**
+	 * Returns the last style book entry version in the ordered set where uuid = &#63;.
+	 *
+	 * @param uuid the uuid
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the last matching style book entry version
+	 * @throws NoSuchEntryVersionException if a matching style book entry version could not be found
+	 */
+	public static StyleBookEntryVersion findByUuid_Last(
+			String uuid,
+			OrderByComparator<StyleBookEntryVersion> orderByComparator)
+		throws com.liferay.style.book.exception.NoSuchEntryVersionException {
+
+		return getPersistence().findByUuid_Last(uuid, orderByComparator);
+	}
+
+	/**
+	 * Returns the last style book entry version in the ordered set where uuid = &#63;.
+	 *
+	 * @param uuid the uuid
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the last matching style book entry version, or <code>null</code> if a matching style book entry version could not be found
+	 */
+	public static StyleBookEntryVersion fetchByUuid_Last(
+		String uuid,
+		OrderByComparator<StyleBookEntryVersion> orderByComparator) {
+
+		return getPersistence().fetchByUuid_Last(uuid, orderByComparator);
+	}
+
+	/**
+	 * Returns the style book entry versions before and after the current style book entry version in the ordered set where uuid = &#63;.
+	 *
+	 * @param styleBookEntryVersionId the primary key of the current style book entry version
+	 * @param uuid the uuid
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the previous, current, and next style book entry version
+	 * @throws NoSuchEntryVersionException if a style book entry version with the primary key could not be found
+	 */
+	public static StyleBookEntryVersion[] findByUuid_PrevAndNext(
+			long styleBookEntryVersionId, String uuid,
+			OrderByComparator<StyleBookEntryVersion> orderByComparator)
+		throws com.liferay.style.book.exception.NoSuchEntryVersionException {
+
+		return getPersistence().findByUuid_PrevAndNext(
+			styleBookEntryVersionId, uuid, orderByComparator);
+	}
+
+	/**
+	 * Removes all the style book entry versions where uuid = &#63; from the database.
+	 *
+	 * @param uuid the uuid
+	 */
+	public static void removeByUuid(String uuid) {
+		getPersistence().removeByUuid(uuid);
+	}
+
+	/**
+	 * Returns the number of style book entry versions where uuid = &#63;.
+	 *
+	 * @param uuid the uuid
+	 * @return the number of matching style book entry versions
+	 */
+	public static int countByUuid(String uuid) {
+		return getPersistence().countByUuid(uuid);
+	}
+
+	/**
+	 * Returns all the style book entry versions where uuid = &#63; and version = &#63;.
+	 *
+	 * @param uuid the uuid
+	 * @param version the version
+	 * @return the matching style book entry versions
+	 */
+	public static List<StyleBookEntryVersion> findByUuid_Version(
+		String uuid, int version) {
+
+		return getPersistence().findByUuid_Version(uuid, version);
+	}
+
+	/**
+	 * Returns a range of all the style book entry versions where uuid = &#63; and version = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>StyleBookEntryVersionModelImpl</code>.
+	 * </p>
+	 *
+	 * @param uuid the uuid
+	 * @param version the version
+	 * @param start the lower bound of the range of style book entry versions
+	 * @param end the upper bound of the range of style book entry versions (not inclusive)
+	 * @return the range of matching style book entry versions
+	 */
+	public static List<StyleBookEntryVersion> findByUuid_Version(
+		String uuid, int version, int start, int end) {
+
+		return getPersistence().findByUuid_Version(uuid, version, start, end);
+	}
+
+	/**
+	 * Returns an ordered range of all the style book entry versions where uuid = &#63; and version = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>StyleBookEntryVersionModelImpl</code>.
+	 * </p>
+	 *
+	 * @param uuid the uuid
+	 * @param version the version
+	 * @param start the lower bound of the range of style book entry versions
+	 * @param end the upper bound of the range of style book entry versions (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @return the ordered range of matching style book entry versions
+	 */
+	public static List<StyleBookEntryVersion> findByUuid_Version(
+		String uuid, int version, int start, int end,
+		OrderByComparator<StyleBookEntryVersion> orderByComparator) {
+
+		return getPersistence().findByUuid_Version(
+			uuid, version, start, end, orderByComparator);
+	}
+
+	/**
+	 * Returns an ordered range of all the style book entry versions where uuid = &#63; and version = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>StyleBookEntryVersionModelImpl</code>.
+	 * </p>
+	 *
+	 * @param uuid the uuid
+	 * @param version the version
+	 * @param start the lower bound of the range of style book entry versions
+	 * @param end the upper bound of the range of style book entry versions (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @param useFinderCache whether to use the finder cache
+	 * @return the ordered range of matching style book entry versions
+	 */
+	public static List<StyleBookEntryVersion> findByUuid_Version(
+		String uuid, int version, int start, int end,
+		OrderByComparator<StyleBookEntryVersion> orderByComparator,
+		boolean useFinderCache) {
+
+		return getPersistence().findByUuid_Version(
+			uuid, version, start, end, orderByComparator, useFinderCache);
+	}
+
+	/**
+	 * Returns the first style book entry version in the ordered set where uuid = &#63; and version = &#63;.
+	 *
+	 * @param uuid the uuid
+	 * @param version the version
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the first matching style book entry version
+	 * @throws NoSuchEntryVersionException if a matching style book entry version could not be found
+	 */
+	public static StyleBookEntryVersion findByUuid_Version_First(
+			String uuid, int version,
+			OrderByComparator<StyleBookEntryVersion> orderByComparator)
+		throws com.liferay.style.book.exception.NoSuchEntryVersionException {
+
+		return getPersistence().findByUuid_Version_First(
+			uuid, version, orderByComparator);
+	}
+
+	/**
+	 * Returns the first style book entry version in the ordered set where uuid = &#63; and version = &#63;.
+	 *
+	 * @param uuid the uuid
+	 * @param version the version
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the first matching style book entry version, or <code>null</code> if a matching style book entry version could not be found
+	 */
+	public static StyleBookEntryVersion fetchByUuid_Version_First(
+		String uuid, int version,
+		OrderByComparator<StyleBookEntryVersion> orderByComparator) {
+
+		return getPersistence().fetchByUuid_Version_First(
+			uuid, version, orderByComparator);
+	}
+
+	/**
+	 * Returns the last style book entry version in the ordered set where uuid = &#63; and version = &#63;.
+	 *
+	 * @param uuid the uuid
+	 * @param version the version
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the last matching style book entry version
+	 * @throws NoSuchEntryVersionException if a matching style book entry version could not be found
+	 */
+	public static StyleBookEntryVersion findByUuid_Version_Last(
+			String uuid, int version,
+			OrderByComparator<StyleBookEntryVersion> orderByComparator)
+		throws com.liferay.style.book.exception.NoSuchEntryVersionException {
+
+		return getPersistence().findByUuid_Version_Last(
+			uuid, version, orderByComparator);
+	}
+
+	/**
+	 * Returns the last style book entry version in the ordered set where uuid = &#63; and version = &#63;.
+	 *
+	 * @param uuid the uuid
+	 * @param version the version
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the last matching style book entry version, or <code>null</code> if a matching style book entry version could not be found
+	 */
+	public static StyleBookEntryVersion fetchByUuid_Version_Last(
+		String uuid, int version,
+		OrderByComparator<StyleBookEntryVersion> orderByComparator) {
+
+		return getPersistence().fetchByUuid_Version_Last(
+			uuid, version, orderByComparator);
+	}
+
+	/**
+	 * Returns the style book entry versions before and after the current style book entry version in the ordered set where uuid = &#63; and version = &#63;.
+	 *
+	 * @param styleBookEntryVersionId the primary key of the current style book entry version
+	 * @param uuid the uuid
+	 * @param version the version
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the previous, current, and next style book entry version
+	 * @throws NoSuchEntryVersionException if a style book entry version with the primary key could not be found
+	 */
+	public static StyleBookEntryVersion[] findByUuid_Version_PrevAndNext(
+			long styleBookEntryVersionId, String uuid, int version,
+			OrderByComparator<StyleBookEntryVersion> orderByComparator)
+		throws com.liferay.style.book.exception.NoSuchEntryVersionException {
+
+		return getPersistence().findByUuid_Version_PrevAndNext(
+			styleBookEntryVersionId, uuid, version, orderByComparator);
+	}
+
+	/**
+	 * Removes all the style book entry versions where uuid = &#63; and version = &#63; from the database.
+	 *
+	 * @param uuid the uuid
+	 * @param version the version
+	 */
+	public static void removeByUuid_Version(String uuid, int version) {
+		getPersistence().removeByUuid_Version(uuid, version);
+	}
+
+	/**
+	 * Returns the number of style book entry versions where uuid = &#63; and version = &#63;.
+	 *
+	 * @param uuid the uuid
+	 * @param version the version
+	 * @return the number of matching style book entry versions
+	 */
+	public static int countByUuid_Version(String uuid, int version) {
+		return getPersistence().countByUuid_Version(uuid, version);
+	}
+
+	/**
+	 * Returns all the style book entry versions where uuid = &#63; and groupId = &#63;.
+	 *
+	 * @param uuid the uuid
+	 * @param groupId the group ID
+	 * @return the matching style book entry versions
+	 */
+	public static List<StyleBookEntryVersion> findByUUID_G(
+		String uuid, long groupId) {
+
+		return getPersistence().findByUUID_G(uuid, groupId);
+	}
+
+	/**
+	 * Returns a range of all the style book entry versions where uuid = &#63; and groupId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>StyleBookEntryVersionModelImpl</code>.
+	 * </p>
+	 *
+	 * @param uuid the uuid
+	 * @param groupId the group ID
+	 * @param start the lower bound of the range of style book entry versions
+	 * @param end the upper bound of the range of style book entry versions (not inclusive)
+	 * @return the range of matching style book entry versions
+	 */
+	public static List<StyleBookEntryVersion> findByUUID_G(
+		String uuid, long groupId, int start, int end) {
+
+		return getPersistence().findByUUID_G(uuid, groupId, start, end);
+	}
+
+	/**
+	 * Returns an ordered range of all the style book entry versions where uuid = &#63; and groupId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>StyleBookEntryVersionModelImpl</code>.
+	 * </p>
+	 *
+	 * @param uuid the uuid
+	 * @param groupId the group ID
+	 * @param start the lower bound of the range of style book entry versions
+	 * @param end the upper bound of the range of style book entry versions (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @return the ordered range of matching style book entry versions
+	 */
+	public static List<StyleBookEntryVersion> findByUUID_G(
+		String uuid, long groupId, int start, int end,
+		OrderByComparator<StyleBookEntryVersion> orderByComparator) {
+
+		return getPersistence().findByUUID_G(
+			uuid, groupId, start, end, orderByComparator);
+	}
+
+	/**
+	 * Returns an ordered range of all the style book entry versions where uuid = &#63; and groupId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>StyleBookEntryVersionModelImpl</code>.
+	 * </p>
+	 *
+	 * @param uuid the uuid
+	 * @param groupId the group ID
+	 * @param start the lower bound of the range of style book entry versions
+	 * @param end the upper bound of the range of style book entry versions (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @param useFinderCache whether to use the finder cache
+	 * @return the ordered range of matching style book entry versions
+	 */
+	public static List<StyleBookEntryVersion> findByUUID_G(
+		String uuid, long groupId, int start, int end,
+		OrderByComparator<StyleBookEntryVersion> orderByComparator,
+		boolean useFinderCache) {
+
+		return getPersistence().findByUUID_G(
+			uuid, groupId, start, end, orderByComparator, useFinderCache);
+	}
+
+	/**
+	 * Returns the first style book entry version in the ordered set where uuid = &#63; and groupId = &#63;.
+	 *
+	 * @param uuid the uuid
+	 * @param groupId the group ID
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the first matching style book entry version
+	 * @throws NoSuchEntryVersionException if a matching style book entry version could not be found
+	 */
+	public static StyleBookEntryVersion findByUUID_G_First(
+			String uuid, long groupId,
+			OrderByComparator<StyleBookEntryVersion> orderByComparator)
+		throws com.liferay.style.book.exception.NoSuchEntryVersionException {
+
+		return getPersistence().findByUUID_G_First(
+			uuid, groupId, orderByComparator);
+	}
+
+	/**
+	 * Returns the first style book entry version in the ordered set where uuid = &#63; and groupId = &#63;.
+	 *
+	 * @param uuid the uuid
+	 * @param groupId the group ID
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the first matching style book entry version, or <code>null</code> if a matching style book entry version could not be found
+	 */
+	public static StyleBookEntryVersion fetchByUUID_G_First(
+		String uuid, long groupId,
+		OrderByComparator<StyleBookEntryVersion> orderByComparator) {
+
+		return getPersistence().fetchByUUID_G_First(
+			uuid, groupId, orderByComparator);
+	}
+
+	/**
+	 * Returns the last style book entry version in the ordered set where uuid = &#63; and groupId = &#63;.
+	 *
+	 * @param uuid the uuid
+	 * @param groupId the group ID
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the last matching style book entry version
+	 * @throws NoSuchEntryVersionException if a matching style book entry version could not be found
+	 */
+	public static StyleBookEntryVersion findByUUID_G_Last(
+			String uuid, long groupId,
+			OrderByComparator<StyleBookEntryVersion> orderByComparator)
+		throws com.liferay.style.book.exception.NoSuchEntryVersionException {
+
+		return getPersistence().findByUUID_G_Last(
+			uuid, groupId, orderByComparator);
+	}
+
+	/**
+	 * Returns the last style book entry version in the ordered set where uuid = &#63; and groupId = &#63;.
+	 *
+	 * @param uuid the uuid
+	 * @param groupId the group ID
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the last matching style book entry version, or <code>null</code> if a matching style book entry version could not be found
+	 */
+	public static StyleBookEntryVersion fetchByUUID_G_Last(
+		String uuid, long groupId,
+		OrderByComparator<StyleBookEntryVersion> orderByComparator) {
+
+		return getPersistence().fetchByUUID_G_Last(
+			uuid, groupId, orderByComparator);
+	}
+
+	/**
+	 * Returns the style book entry versions before and after the current style book entry version in the ordered set where uuid = &#63; and groupId = &#63;.
+	 *
+	 * @param styleBookEntryVersionId the primary key of the current style book entry version
+	 * @param uuid the uuid
+	 * @param groupId the group ID
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the previous, current, and next style book entry version
+	 * @throws NoSuchEntryVersionException if a style book entry version with the primary key could not be found
+	 */
+	public static StyleBookEntryVersion[] findByUUID_G_PrevAndNext(
+			long styleBookEntryVersionId, String uuid, long groupId,
+			OrderByComparator<StyleBookEntryVersion> orderByComparator)
+		throws com.liferay.style.book.exception.NoSuchEntryVersionException {
+
+		return getPersistence().findByUUID_G_PrevAndNext(
+			styleBookEntryVersionId, uuid, groupId, orderByComparator);
+	}
+
+	/**
+	 * Removes all the style book entry versions where uuid = &#63; and groupId = &#63; from the database.
+	 *
+	 * @param uuid the uuid
+	 * @param groupId the group ID
+	 */
+	public static void removeByUUID_G(String uuid, long groupId) {
+		getPersistence().removeByUUID_G(uuid, groupId);
+	}
+
+	/**
+	 * Returns the number of style book entry versions where uuid = &#63; and groupId = &#63;.
+	 *
+	 * @param uuid the uuid
+	 * @param groupId the group ID
+	 * @return the number of matching style book entry versions
+	 */
+	public static int countByUUID_G(String uuid, long groupId) {
+		return getPersistence().countByUUID_G(uuid, groupId);
+	}
+
+	/**
+	 * Returns the style book entry version where uuid = &#63; and groupId = &#63; and version = &#63; or throws a <code>NoSuchEntryVersionException</code> if it could not be found.
+	 *
+	 * @param uuid the uuid
+	 * @param groupId the group ID
+	 * @param version the version
+	 * @return the matching style book entry version
+	 * @throws NoSuchEntryVersionException if a matching style book entry version could not be found
+	 */
+	public static StyleBookEntryVersion findByUUID_G_Version(
+			String uuid, long groupId, int version)
+		throws com.liferay.style.book.exception.NoSuchEntryVersionException {
+
+		return getPersistence().findByUUID_G_Version(uuid, groupId, version);
+	}
+
+	/**
+	 * Returns the style book entry version where uuid = &#63; and groupId = &#63; and version = &#63; or returns <code>null</code> if it could not be found. Uses the finder cache.
+	 *
+	 * @param uuid the uuid
+	 * @param groupId the group ID
+	 * @param version the version
+	 * @return the matching style book entry version, or <code>null</code> if a matching style book entry version could not be found
+	 */
+	public static StyleBookEntryVersion fetchByUUID_G_Version(
+		String uuid, long groupId, int version) {
+
+		return getPersistence().fetchByUUID_G_Version(uuid, groupId, version);
+	}
+
+	/**
+	 * Returns the style book entry version where uuid = &#63; and groupId = &#63; and version = &#63; or returns <code>null</code> if it could not be found, optionally using the finder cache.
+	 *
+	 * @param uuid the uuid
+	 * @param groupId the group ID
+	 * @param version the version
+	 * @param useFinderCache whether to use the finder cache
+	 * @return the matching style book entry version, or <code>null</code> if a matching style book entry version could not be found
+	 */
+	public static StyleBookEntryVersion fetchByUUID_G_Version(
+		String uuid, long groupId, int version, boolean useFinderCache) {
+
+		return getPersistence().fetchByUUID_G_Version(
+			uuid, groupId, version, useFinderCache);
+	}
+
+	/**
+	 * Removes the style book entry version where uuid = &#63; and groupId = &#63; and version = &#63; from the database.
+	 *
+	 * @param uuid the uuid
+	 * @param groupId the group ID
+	 * @param version the version
+	 * @return the style book entry version that was removed
+	 */
+	public static StyleBookEntryVersion removeByUUID_G_Version(
+			String uuid, long groupId, int version)
+		throws com.liferay.style.book.exception.NoSuchEntryVersionException {
+
+		return getPersistence().removeByUUID_G_Version(uuid, groupId, version);
+	}
+
+	/**
+	 * Returns the number of style book entry versions where uuid = &#63; and groupId = &#63; and version = &#63;.
+	 *
+	 * @param uuid the uuid
+	 * @param groupId the group ID
+	 * @param version the version
+	 * @return the number of matching style book entry versions
+	 */
+	public static int countByUUID_G_Version(
+		String uuid, long groupId, int version) {
+
+		return getPersistence().countByUUID_G_Version(uuid, groupId, version);
+	}
+
+	/**
+	 * Returns all the style book entry versions where uuid = &#63; and companyId = &#63;.
+	 *
+	 * @param uuid the uuid
+	 * @param companyId the company ID
+	 * @return the matching style book entry versions
+	 */
+	public static List<StyleBookEntryVersion> findByUuid_C(
+		String uuid, long companyId) {
+
+		return getPersistence().findByUuid_C(uuid, companyId);
+	}
+
+	/**
+	 * Returns a range of all the style book entry versions where uuid = &#63; and companyId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>StyleBookEntryVersionModelImpl</code>.
+	 * </p>
+	 *
+	 * @param uuid the uuid
+	 * @param companyId the company ID
+	 * @param start the lower bound of the range of style book entry versions
+	 * @param end the upper bound of the range of style book entry versions (not inclusive)
+	 * @return the range of matching style book entry versions
+	 */
+	public static List<StyleBookEntryVersion> findByUuid_C(
+		String uuid, long companyId, int start, int end) {
+
+		return getPersistence().findByUuid_C(uuid, companyId, start, end);
+	}
+
+	/**
+	 * Returns an ordered range of all the style book entry versions where uuid = &#63; and companyId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>StyleBookEntryVersionModelImpl</code>.
+	 * </p>
+	 *
+	 * @param uuid the uuid
+	 * @param companyId the company ID
+	 * @param start the lower bound of the range of style book entry versions
+	 * @param end the upper bound of the range of style book entry versions (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @return the ordered range of matching style book entry versions
+	 */
+	public static List<StyleBookEntryVersion> findByUuid_C(
+		String uuid, long companyId, int start, int end,
+		OrderByComparator<StyleBookEntryVersion> orderByComparator) {
+
+		return getPersistence().findByUuid_C(
+			uuid, companyId, start, end, orderByComparator);
+	}
+
+	/**
+	 * Returns an ordered range of all the style book entry versions where uuid = &#63; and companyId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>StyleBookEntryVersionModelImpl</code>.
+	 * </p>
+	 *
+	 * @param uuid the uuid
+	 * @param companyId the company ID
+	 * @param start the lower bound of the range of style book entry versions
+	 * @param end the upper bound of the range of style book entry versions (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @param useFinderCache whether to use the finder cache
+	 * @return the ordered range of matching style book entry versions
+	 */
+	public static List<StyleBookEntryVersion> findByUuid_C(
+		String uuid, long companyId, int start, int end,
+		OrderByComparator<StyleBookEntryVersion> orderByComparator,
+		boolean useFinderCache) {
+
+		return getPersistence().findByUuid_C(
+			uuid, companyId, start, end, orderByComparator, useFinderCache);
+	}
+
+	/**
+	 * Returns the first style book entry version in the ordered set where uuid = &#63; and companyId = &#63;.
+	 *
+	 * @param uuid the uuid
+	 * @param companyId the company ID
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the first matching style book entry version
+	 * @throws NoSuchEntryVersionException if a matching style book entry version could not be found
+	 */
+	public static StyleBookEntryVersion findByUuid_C_First(
+			String uuid, long companyId,
+			OrderByComparator<StyleBookEntryVersion> orderByComparator)
+		throws com.liferay.style.book.exception.NoSuchEntryVersionException {
+
+		return getPersistence().findByUuid_C_First(
+			uuid, companyId, orderByComparator);
+	}
+
+	/**
+	 * Returns the first style book entry version in the ordered set where uuid = &#63; and companyId = &#63;.
+	 *
+	 * @param uuid the uuid
+	 * @param companyId the company ID
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the first matching style book entry version, or <code>null</code> if a matching style book entry version could not be found
+	 */
+	public static StyleBookEntryVersion fetchByUuid_C_First(
+		String uuid, long companyId,
+		OrderByComparator<StyleBookEntryVersion> orderByComparator) {
+
+		return getPersistence().fetchByUuid_C_First(
+			uuid, companyId, orderByComparator);
+	}
+
+	/**
+	 * Returns the last style book entry version in the ordered set where uuid = &#63; and companyId = &#63;.
+	 *
+	 * @param uuid the uuid
+	 * @param companyId the company ID
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the last matching style book entry version
+	 * @throws NoSuchEntryVersionException if a matching style book entry version could not be found
+	 */
+	public static StyleBookEntryVersion findByUuid_C_Last(
+			String uuid, long companyId,
+			OrderByComparator<StyleBookEntryVersion> orderByComparator)
+		throws com.liferay.style.book.exception.NoSuchEntryVersionException {
+
+		return getPersistence().findByUuid_C_Last(
+			uuid, companyId, orderByComparator);
+	}
+
+	/**
+	 * Returns the last style book entry version in the ordered set where uuid = &#63; and companyId = &#63;.
+	 *
+	 * @param uuid the uuid
+	 * @param companyId the company ID
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the last matching style book entry version, or <code>null</code> if a matching style book entry version could not be found
+	 */
+	public static StyleBookEntryVersion fetchByUuid_C_Last(
+		String uuid, long companyId,
+		OrderByComparator<StyleBookEntryVersion> orderByComparator) {
+
+		return getPersistence().fetchByUuid_C_Last(
+			uuid, companyId, orderByComparator);
+	}
+
+	/**
+	 * Returns the style book entry versions before and after the current style book entry version in the ordered set where uuid = &#63; and companyId = &#63;.
+	 *
+	 * @param styleBookEntryVersionId the primary key of the current style book entry version
+	 * @param uuid the uuid
+	 * @param companyId the company ID
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the previous, current, and next style book entry version
+	 * @throws NoSuchEntryVersionException if a style book entry version with the primary key could not be found
+	 */
+	public static StyleBookEntryVersion[] findByUuid_C_PrevAndNext(
+			long styleBookEntryVersionId, String uuid, long companyId,
+			OrderByComparator<StyleBookEntryVersion> orderByComparator)
+		throws com.liferay.style.book.exception.NoSuchEntryVersionException {
+
+		return getPersistence().findByUuid_C_PrevAndNext(
+			styleBookEntryVersionId, uuid, companyId, orderByComparator);
+	}
+
+	/**
+	 * Removes all the style book entry versions where uuid = &#63; and companyId = &#63; from the database.
+	 *
+	 * @param uuid the uuid
+	 * @param companyId the company ID
+	 */
+	public static void removeByUuid_C(String uuid, long companyId) {
+		getPersistence().removeByUuid_C(uuid, companyId);
+	}
+
+	/**
+	 * Returns the number of style book entry versions where uuid = &#63; and companyId = &#63;.
+	 *
+	 * @param uuid the uuid
+	 * @param companyId the company ID
+	 * @return the number of matching style book entry versions
+	 */
+	public static int countByUuid_C(String uuid, long companyId) {
+		return getPersistence().countByUuid_C(uuid, companyId);
+	}
+
+	/**
+	 * Returns all the style book entry versions where uuid = &#63; and companyId = &#63; and version = &#63;.
+	 *
+	 * @param uuid the uuid
+	 * @param companyId the company ID
+	 * @param version the version
+	 * @return the matching style book entry versions
+	 */
+	public static List<StyleBookEntryVersion> findByUuid_C_Version(
+		String uuid, long companyId, int version) {
+
+		return getPersistence().findByUuid_C_Version(uuid, companyId, version);
+	}
+
+	/**
+	 * Returns a range of all the style book entry versions where uuid = &#63; and companyId = &#63; and version = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>StyleBookEntryVersionModelImpl</code>.
+	 * </p>
+	 *
+	 * @param uuid the uuid
+	 * @param companyId the company ID
+	 * @param version the version
+	 * @param start the lower bound of the range of style book entry versions
+	 * @param end the upper bound of the range of style book entry versions (not inclusive)
+	 * @return the range of matching style book entry versions
+	 */
+	public static List<StyleBookEntryVersion> findByUuid_C_Version(
+		String uuid, long companyId, int version, int start, int end) {
+
+		return getPersistence().findByUuid_C_Version(
+			uuid, companyId, version, start, end);
+	}
+
+	/**
+	 * Returns an ordered range of all the style book entry versions where uuid = &#63; and companyId = &#63; and version = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>StyleBookEntryVersionModelImpl</code>.
+	 * </p>
+	 *
+	 * @param uuid the uuid
+	 * @param companyId the company ID
+	 * @param version the version
+	 * @param start the lower bound of the range of style book entry versions
+	 * @param end the upper bound of the range of style book entry versions (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @return the ordered range of matching style book entry versions
+	 */
+	public static List<StyleBookEntryVersion> findByUuid_C_Version(
+		String uuid, long companyId, int version, int start, int end,
+		OrderByComparator<StyleBookEntryVersion> orderByComparator) {
+
+		return getPersistence().findByUuid_C_Version(
+			uuid, companyId, version, start, end, orderByComparator);
+	}
+
+	/**
+	 * Returns an ordered range of all the style book entry versions where uuid = &#63; and companyId = &#63; and version = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>StyleBookEntryVersionModelImpl</code>.
+	 * </p>
+	 *
+	 * @param uuid the uuid
+	 * @param companyId the company ID
+	 * @param version the version
+	 * @param start the lower bound of the range of style book entry versions
+	 * @param end the upper bound of the range of style book entry versions (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @param useFinderCache whether to use the finder cache
+	 * @return the ordered range of matching style book entry versions
+	 */
+	public static List<StyleBookEntryVersion> findByUuid_C_Version(
+		String uuid, long companyId, int version, int start, int end,
+		OrderByComparator<StyleBookEntryVersion> orderByComparator,
+		boolean useFinderCache) {
+
+		return getPersistence().findByUuid_C_Version(
+			uuid, companyId, version, start, end, orderByComparator,
+			useFinderCache);
+	}
+
+	/**
+	 * Returns the first style book entry version in the ordered set where uuid = &#63; and companyId = &#63; and version = &#63;.
+	 *
+	 * @param uuid the uuid
+	 * @param companyId the company ID
+	 * @param version the version
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the first matching style book entry version
+	 * @throws NoSuchEntryVersionException if a matching style book entry version could not be found
+	 */
+	public static StyleBookEntryVersion findByUuid_C_Version_First(
+			String uuid, long companyId, int version,
+			OrderByComparator<StyleBookEntryVersion> orderByComparator)
+		throws com.liferay.style.book.exception.NoSuchEntryVersionException {
+
+		return getPersistence().findByUuid_C_Version_First(
+			uuid, companyId, version, orderByComparator);
+	}
+
+	/**
+	 * Returns the first style book entry version in the ordered set where uuid = &#63; and companyId = &#63; and version = &#63;.
+	 *
+	 * @param uuid the uuid
+	 * @param companyId the company ID
+	 * @param version the version
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the first matching style book entry version, or <code>null</code> if a matching style book entry version could not be found
+	 */
+	public static StyleBookEntryVersion fetchByUuid_C_Version_First(
+		String uuid, long companyId, int version,
+		OrderByComparator<StyleBookEntryVersion> orderByComparator) {
+
+		return getPersistence().fetchByUuid_C_Version_First(
+			uuid, companyId, version, orderByComparator);
+	}
+
+	/**
+	 * Returns the last style book entry version in the ordered set where uuid = &#63; and companyId = &#63; and version = &#63;.
+	 *
+	 * @param uuid the uuid
+	 * @param companyId the company ID
+	 * @param version the version
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the last matching style book entry version
+	 * @throws NoSuchEntryVersionException if a matching style book entry version could not be found
+	 */
+	public static StyleBookEntryVersion findByUuid_C_Version_Last(
+			String uuid, long companyId, int version,
+			OrderByComparator<StyleBookEntryVersion> orderByComparator)
+		throws com.liferay.style.book.exception.NoSuchEntryVersionException {
+
+		return getPersistence().findByUuid_C_Version_Last(
+			uuid, companyId, version, orderByComparator);
+	}
+
+	/**
+	 * Returns the last style book entry version in the ordered set where uuid = &#63; and companyId = &#63; and version = &#63;.
+	 *
+	 * @param uuid the uuid
+	 * @param companyId the company ID
+	 * @param version the version
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the last matching style book entry version, or <code>null</code> if a matching style book entry version could not be found
+	 */
+	public static StyleBookEntryVersion fetchByUuid_C_Version_Last(
+		String uuid, long companyId, int version,
+		OrderByComparator<StyleBookEntryVersion> orderByComparator) {
+
+		return getPersistence().fetchByUuid_C_Version_Last(
+			uuid, companyId, version, orderByComparator);
+	}
+
+	/**
+	 * Returns the style book entry versions before and after the current style book entry version in the ordered set where uuid = &#63; and companyId = &#63; and version = &#63;.
+	 *
+	 * @param styleBookEntryVersionId the primary key of the current style book entry version
+	 * @param uuid the uuid
+	 * @param companyId the company ID
+	 * @param version the version
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the previous, current, and next style book entry version
+	 * @throws NoSuchEntryVersionException if a style book entry version with the primary key could not be found
+	 */
+	public static StyleBookEntryVersion[] findByUuid_C_Version_PrevAndNext(
+			long styleBookEntryVersionId, String uuid, long companyId,
+			int version,
+			OrderByComparator<StyleBookEntryVersion> orderByComparator)
+		throws com.liferay.style.book.exception.NoSuchEntryVersionException {
+
+		return getPersistence().findByUuid_C_Version_PrevAndNext(
+			styleBookEntryVersionId, uuid, companyId, version,
+			orderByComparator);
+	}
+
+	/**
+	 * Removes all the style book entry versions where uuid = &#63; and companyId = &#63; and version = &#63; from the database.
+	 *
+	 * @param uuid the uuid
+	 * @param companyId the company ID
+	 * @param version the version
+	 */
+	public static void removeByUuid_C_Version(
+		String uuid, long companyId, int version) {
+
+		getPersistence().removeByUuid_C_Version(uuid, companyId, version);
+	}
+
+	/**
+	 * Returns the number of style book entry versions where uuid = &#63; and companyId = &#63; and version = &#63;.
+	 *
+	 * @param uuid the uuid
+	 * @param companyId the company ID
+	 * @param version the version
+	 * @return the number of matching style book entry versions
+	 */
+	public static int countByUuid_C_Version(
+		String uuid, long companyId, int version) {
+
+		return getPersistence().countByUuid_C_Version(uuid, companyId, version);
+	}
+
+	/**
 	 * Returns all the style book entry versions where groupId = &#63;.
 	 *
 	 * @param groupId the group ID

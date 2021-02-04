@@ -26,6 +26,8 @@ import com.liferay.portal.vulcan.util.ObjectMapperUtil;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
+import java.io.Serializable;
+
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Objects;
@@ -48,7 +50,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 @JsonFilter("Liferay.Vulcan")
 @Schema(requiredProperties = {"accountGroupId", "priceListId"})
 @XmlRootElement(name = "PriceListAccountGroup")
-public class PriceListAccountGroup {
+public class PriceListAccountGroup implements Serializable {
 
 	public static PriceListAccountGroup toDTO(String json) {
 		return ObjectMapperUtil.readValue(PriceListAccountGroup.class, json);
@@ -178,33 +180,6 @@ public class PriceListAccountGroup {
 
 	@DecimalMin("0")
 	@Schema
-	public Long getId() {
-		return id;
-	}
-
-	public void setId(Long id) {
-		this.id = id;
-	}
-
-	@JsonIgnore
-	public void setId(UnsafeSupplier<Long, Exception> idUnsafeSupplier) {
-		try {
-			id = idUnsafeSupplier.get();
-		}
-		catch (RuntimeException re) {
-			throw re;
-		}
-		catch (Exception e) {
-			throw new RuntimeException(e);
-		}
-	}
-
-	@GraphQLField
-	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
-	protected Long id;
-
-	@DecimalMin("0")
-	@Schema
 	public Integer getOrder() {
 		return order;
 	}
@@ -231,6 +206,36 @@ public class PriceListAccountGroup {
 	@GraphQLField
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected Integer order;
+
+	@DecimalMin("0")
+	@Schema
+	public Long getPriceListAccountGroupId() {
+		return priceListAccountGroupId;
+	}
+
+	public void setPriceListAccountGroupId(Long priceListAccountGroupId) {
+		this.priceListAccountGroupId = priceListAccountGroupId;
+	}
+
+	@JsonIgnore
+	public void setPriceListAccountGroupId(
+		UnsafeSupplier<Long, Exception> priceListAccountGroupIdUnsafeSupplier) {
+
+		try {
+			priceListAccountGroupId =
+				priceListAccountGroupIdUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
+	protected Long priceListAccountGroupId;
 
 	@Schema
 	public String getPriceListExternalReferenceCode() {
@@ -366,16 +371,6 @@ public class PriceListAccountGroup {
 			sb.append(_toJSON(actions));
 		}
 
-		if (id != null) {
-			if (sb.length() > 1) {
-				sb.append(", ");
-			}
-
-			sb.append("\"id\": ");
-
-			sb.append(id);
-		}
-
 		if (order != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -384,6 +379,16 @@ public class PriceListAccountGroup {
 			sb.append("\"order\": ");
 
 			sb.append(order);
+		}
+
+		if (priceListAccountGroupId != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"priceListAccountGroupId\": ");
+
+			sb.append(priceListAccountGroupId);
 		}
 
 		if (priceListExternalReferenceCode != null) {

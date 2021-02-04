@@ -15,7 +15,7 @@
 module.exports = {
 	liferay: {
 		excludes: {
-			// eslint-disable-next-line liferay-portal/no-explicit-extend
+			// eslint-disable-next-line @liferay/portal/no-explicit-extend
 			presets: ['@babel/preset-react'],
 		},
 	},
@@ -27,6 +27,14 @@ module.exports = {
 				namespaceAttributes: true,
 				prefix: 'IncrementalDOM',
 				runtime: 'iDOMHelpers',
+			},
+		],
+	],
+	presets: [
+		[
+			'@babel/preset-env',
+			{
+				targets: 'defaults',
 			},
 		],
 	],

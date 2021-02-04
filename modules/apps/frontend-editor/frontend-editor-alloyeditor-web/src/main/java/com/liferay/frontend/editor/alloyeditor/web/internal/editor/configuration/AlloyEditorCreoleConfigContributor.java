@@ -23,8 +23,8 @@ import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.portlet.RequestBackedPortletURLFactory;
+import com.liferay.portal.kernel.resource.bundle.ResourceBundleLoader;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
-import com.liferay.portal.kernel.util.ResourceBundleLoader;
 import com.liferay.portal.kernel.util.ResourceBundleUtil;
 import com.liferay.portal.kernel.util.Validator;
 
@@ -107,7 +107,7 @@ public class AlloyEditorCreoleConfigContributor
 
 		StringBundler sb = new StringBundler(4);
 
-		sb.append("ae_dragresize,ae_tableresize,bidi,div,flash,font,forms,");
+		sb.append("ae_dragresize,ae_tableresize,bidi,div,font,forms,");
 		sb.append("indentblock,justify,keystrokes,maximize,newpage,pagebreak,");
 		sb.append("preview,print,save,showblocks,smiley,stylescombo,");
 		sb.append("templates,video");

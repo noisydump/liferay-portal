@@ -50,7 +50,7 @@ if (fileEntryId != 0) {
 	<liferay-util:buffer
 		var="selectFileLink"
 	>
-		<a class="browse-image btn btn-secondary" href="javascript:;" id="<%= randomNamespace + "browseImage" %>"><liferay-ui:message key="select-file" /></a>
+		<a class="browse-image btn btn-secondary" href="javascript:;" id="<%= randomNamespace %>browseImage"><liferay-ui:message key="select-file" /></a>
 	</liferay-util:buffer>
 
 	<div class="browse-image-controls <%= (fileEntryId != 0) ? "hide" : StringPool.BLANK %>">
@@ -106,7 +106,7 @@ if (fileEntryId != 0) {
 	<div class="progress-wrapper">
 		<p class="file-name"></p>
 
-		<div class="progress-xs progressbar"></div>
+		<div class="progressbar"></div>
 
 		<p class="progress-data size"></p>
 

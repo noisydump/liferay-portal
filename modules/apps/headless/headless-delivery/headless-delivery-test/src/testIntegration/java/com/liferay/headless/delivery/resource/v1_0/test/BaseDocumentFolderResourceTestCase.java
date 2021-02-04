@@ -715,6 +715,7 @@ public abstract class BaseDocumentFolderResourceTestCase {
 
 		DocumentFolder randomPatchDocumentFolder = randomPatchDocumentFolder();
 
+		@SuppressWarnings("PMD.UnusedLocalVariable")
 		DocumentFolder patchDocumentFolder =
 			documentFolderResource.patchDocumentFolder(
 				postDocumentFolder.getId(), randomPatchDocumentFolder);
@@ -2111,9 +2112,11 @@ public abstract class BaseDocumentFolderResourceTestCase {
 					return false;
 				}
 			}
+
+			return true;
 		}
 
-		return true;
+		return false;
 	}
 
 	protected java.util.Collection<EntityField> getEntityFields()

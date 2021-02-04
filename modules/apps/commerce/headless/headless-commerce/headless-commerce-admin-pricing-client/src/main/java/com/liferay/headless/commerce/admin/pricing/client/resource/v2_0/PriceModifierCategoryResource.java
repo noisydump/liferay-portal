@@ -40,19 +40,20 @@ public interface PriceModifierCategoryResource {
 		return new Builder();
 	}
 
-	public void deletePriceModifierCategory(Long id) throws Exception;
+	public void deletePriceModifierCategory(Long priceModifierCategoryId)
+		throws Exception;
 
 	public HttpInvoker.HttpResponse deletePriceModifierCategoryHttpResponse(
-			Long id)
+			Long priceModifierCategoryId)
 		throws Exception;
 
 	public void deletePriceModifierCategoryBatch(
-			Long id, String callbackURL, Object object)
+			String callbackURL, Object object)
 		throws Exception;
 
 	public HttpInvoker.HttpResponse
 			deletePriceModifierCategoryBatchHttpResponse(
-				Long id, String callbackURL, Object object)
+				String callbackURL, Object object)
 		throws Exception;
 
 	public Page<PriceModifierCategory>
@@ -163,9 +164,12 @@ public interface PriceModifierCategoryResource {
 	public static class PriceModifierCategoryResourceImpl
 		implements PriceModifierCategoryResource {
 
-		public void deletePriceModifierCategory(Long id) throws Exception {
+		public void deletePriceModifierCategory(Long priceModifierCategoryId)
+			throws Exception {
+
 			HttpInvoker.HttpResponse httpResponse =
-				deletePriceModifierCategoryHttpResponse(id);
+				deletePriceModifierCategoryHttpResponse(
+					priceModifierCategoryId);
 
 			String content = httpResponse.getContent();
 
@@ -188,7 +192,7 @@ public interface PriceModifierCategoryResource {
 		}
 
 		public HttpInvoker.HttpResponse deletePriceModifierCategoryHttpResponse(
-				Long id)
+				Long priceModifierCategoryId)
 			throws Exception {
 
 			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
@@ -215,8 +219,10 @@ public interface PriceModifierCategoryResource {
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port +
-						"/o/headless-commerce-admin-pricing/v2.0/price-modifier-categories/{id}",
-				id);
+						"/o/headless-commerce-admin-pricing/v2.0/price-modifier-categories/{priceModifierCategoryId}");
+
+			httpInvoker.path(
+				"priceModifierCategoryId", priceModifierCategoryId);
 
 			httpInvoker.userNameAndPassword(
 				_builder._login + ":" + _builder._password);
@@ -225,12 +231,12 @@ public interface PriceModifierCategoryResource {
 		}
 
 		public void deletePriceModifierCategoryBatch(
-				Long id, String callbackURL, Object object)
+				String callbackURL, Object object)
 			throws Exception {
 
 			HttpInvoker.HttpResponse httpResponse =
 				deletePriceModifierCategoryBatchHttpResponse(
-					id, callbackURL, object);
+					callbackURL, object);
 
 			String content = httpResponse.getContent();
 
@@ -243,7 +249,7 @@ public interface PriceModifierCategoryResource {
 
 		public HttpInvoker.HttpResponse
 				deletePriceModifierCategoryBatchHttpResponse(
-					Long id, String callbackURL, Object object)
+					String callbackURL, Object object)
 			throws Exception {
 
 			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
@@ -275,8 +281,7 @@ public interface PriceModifierCategoryResource {
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port +
-						"/o/headless-commerce-admin-pricing/v2.0/price-modifier-categories/batch",
-				id);
+						"/o/headless-commerce-admin-pricing/v2.0/price-modifier-categories/batch");
 
 			httpInvoker.userNameAndPassword(
 				_builder._login + ":" + _builder._password);
@@ -349,8 +354,9 @@ public interface PriceModifierCategoryResource {
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port +
-						"/o/headless-commerce-admin-pricing/v2.0/price-modifiers/by-externalReferenceCode/{externalReferenceCode}/price-modifier-categories",
-				externalReferenceCode);
+						"/o/headless-commerce-admin-pricing/v2.0/price-modifiers/by-externalReferenceCode/{externalReferenceCode}/price-modifier-categories");
+
+			httpInvoker.path("externalReferenceCode", externalReferenceCode);
 
 			httpInvoker.userNameAndPassword(
 				_builder._login + ":" + _builder._password);
@@ -421,8 +427,9 @@ public interface PriceModifierCategoryResource {
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port +
-						"/o/headless-commerce-admin-pricing/v2.0/price-modifiers/by-externalReferenceCode/{externalReferenceCode}/price-modifier-categories",
-				externalReferenceCode);
+						"/o/headless-commerce-admin-pricing/v2.0/price-modifiers/by-externalReferenceCode/{externalReferenceCode}/price-modifier-categories");
+
+			httpInvoker.path("externalReferenceCode", externalReferenceCode);
 
 			httpInvoker.userNameAndPassword(
 				_builder._login + ":" + _builder._password);
@@ -509,8 +516,9 @@ public interface PriceModifierCategoryResource {
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port +
-						"/o/headless-commerce-admin-pricing/v2.0/price-modifiers/{id}/price-modifier-categories",
-				id);
+						"/o/headless-commerce-admin-pricing/v2.0/price-modifiers/{id}/price-modifier-categories");
+
+			httpInvoker.path("id", id);
 
 			httpInvoker.userNameAndPassword(
 				_builder._login + ":" + _builder._password);
@@ -578,8 +586,9 @@ public interface PriceModifierCategoryResource {
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port +
-						"/o/headless-commerce-admin-pricing/v2.0/price-modifiers/{id}/price-modifier-categories",
-				id);
+						"/o/headless-commerce-admin-pricing/v2.0/price-modifiers/{id}/price-modifier-categories");
+
+			httpInvoker.path("id", id);
 
 			httpInvoker.userNameAndPassword(
 				_builder._login + ":" + _builder._password);
@@ -640,8 +649,9 @@ public interface PriceModifierCategoryResource {
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port +
-						"/o/headless-commerce-admin-pricing/v2.0/price-modifiers/price-modifier-categories/batch",
-				id);
+						"/o/headless-commerce-admin-pricing/v2.0/price-modifiers/price-modifier-categories/batch");
+
+			httpInvoker.path("id", id);
 
 			httpInvoker.userNameAndPassword(
 				_builder._login + ":" + _builder._password);

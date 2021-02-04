@@ -250,13 +250,13 @@ else {
 	</liferay-frontend:edit-form-footer>
 </liferay-frontend:edit-form>
 
-<aui:script require="metal-dom/src/dom as dom">
+<aui:script require="frontend-js-web/liferay/delegate/delegate.es as delegateModule">
 	var form = document.<portlet:namespace />fm;
 
-	form.addEventListener('change', <portlet:namespace/>resetPreview);
-	form.addEventListener('select', <portlet:namespace/>resetPreview);
+	form.addEventListener('change', <portlet:namespace />resetPreview);
+	form.addEventListener('select', <portlet:namespace />resetPreview);
 
-	function <portlet:namespace/>resetPreview() {
+	function <portlet:namespace />resetPreview() {
 		var displayDepthSelect = Liferay.Util.getFormElement(form, 'displayDepth');
 		var displayStyleSelect = Liferay.Util.getFormElement(form, 'displayStyle');
 		var expandedLevelsSelect = Liferay.Util.getFormElement(
@@ -364,7 +364,7 @@ else {
 						rootMenuItemNameSpan.innerText =
 							selectedItem.selectSiteNavigationMenuItemName;
 
-						<portlet:namespace/>resetPreview();
+						<portlet:namespace />resetPreview();
 					}
 				},
 				selectEventName:
@@ -404,9 +404,9 @@ else {
 						rootMenuItemNameSpan.innerText = selectedItem.name;
 						siteNavigationMenuIdInput.value = selectedItem.id;
 
-						dom.toggleClasses(removeSiteNavigationMenu, 'hide');
+						removeSiteNavigationMenu.classList.toggle('hide');
 
-						<portlet:namespace/>resetPreview();
+						<portlet:namespace />resetPreview();
 					}
 				},
 				selectEventName:
@@ -436,9 +436,9 @@ else {
 			rootMenuItemNameSpan.innerText = '';
 			siteNavigationMenuIdInput.value = '0';
 
-			dom.toggleClasses(removeSiteNavigationMenu, 'hide');
+			removeSiteNavigationMenu.classList.toggle('hide');
 
-			<portlet:namespace/>resetPreview();
+			<portlet:namespace />resetPreview();
 		});
 	}
 
@@ -490,7 +490,9 @@ else {
 		siteNavigationMenuIdInput &&
 		siteNavigationMenuType
 	) {
-		dom.delegate(
+		var delegate = delegateModule.default;
+
+		delegate(
 			document.<portlet:namespace />fm,
 			'change',
 			'.select-navigation',
@@ -513,7 +515,7 @@ else {
 
 				removeSiteNavigationMenu.classList.add('hide');
 
-				<portlet:namespace/>resetPreview();
+				<portlet:namespace />resetPreview();
 			}
 		);
 	}

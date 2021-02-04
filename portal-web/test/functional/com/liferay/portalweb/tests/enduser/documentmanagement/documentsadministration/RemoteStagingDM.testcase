@@ -1,6 +1,9 @@
 @component-name = "portal-collaboration"
 definition {
 
+	property app.server.bundles.size = "1";
+	property custom.properties = "tunneling.servlet.shared.secret=1234567890123456${line.separator}auth.verifier.TunnelAuthVerifier.hosts.allowed=";
+	property databases.size = "1";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.main.component.name = "Documents Management";
@@ -12,13 +15,22 @@ definition {
 
 		JSONGroup.addGroup(groupName = "Site Name");
 
-		SitePages.openPagesAdmin(siteURLKey = "Site Name");
+		JSONLayout.addPublicLayout(
+			groupName = "Site Name",
+			layoutName = "Staging DM Page");
 
-		ProductMenu.gotoPortlet(
-			category = "Site Builder",
-			portlet = "Pages");
+		Navigator.gotoSitePage(
+			pageName = "Staging DM Page",
+			siteName = "Site Name");
 
-		SitePages.addPublicPage(pageName = "Staging DM Page");
+		Portlet.addPG(portletName = "Documents and Media");
+
+		DMDocument.enableActionsMenuOnPortlet();
+
+		Staging.remoteStagingSetUp(
+			remotePort = "9080",
+			remoteStaging = "true",
+			siteName = "Site Name");
 	}
 
 	tearDown {
@@ -29,24 +41,60 @@ definition {
 		}
 		else {
 			JSONGroup.deleteGroupByName(groupName = "Site Name");
+
 			JSONGroup.deleteGroupByName(groupName = "Remote Site");
+
+			User.logoutPG();
 		}
+	}
+
+	@description = "This ensures that the document using custom document type can be deleted and republished."
+	@ignore = "true"
+	@priority = "5"
+	test DeleteDocumentWithCustomType {
+
+		// TODO LPS-127173 DeleteDocumentWithCustomType pending implementation
+
+	}
+
+	@description = "This ensures that the document using custom document type can be edited and republished."
+	@ignore = "true"
+	@priority = "5"
+	test EditDocumentWithCustomType {
+
+		// TODO LPS-127173 EditDocumentWithCustomType pending implementation
+	}
+
+	@description = "This ensures that the custom document type being used by document can be edited and republished."
+	@ignore = "true"
+	@priority = "5"
+	test PublishEditsToDocumentType {
+
+		// TODO LPS-127173 PublishEditsToDocumentType pending implementation
+	}
+
+	@description = "This ensures that the document using custom document type and custom metadataset can be edited and republished."
+	@ignore = "true"
+	@priority = "5"
+	test PublishEditsToDocumentUsingCustomTypeAndSet {
+
+		// TODO LPS-127173 PublishEditsToDocumentUsingCustomTypeAndSet pending implementation
+	}
+
+	@description = "This ensures that the custom metadataset used in custom document type can be edited and republished."
+	@ignore = "true"
+	@priority = "5"
+	test PublishEditsToMetadataSet {
+
+		// TODO LPS-127173 PublishEditsToMetadataSet pending implementation
 	}
 
 	@description = "This is a use case for LPS-89175."
 	@priority = "3"
 	test StagingRemoteLiveDeleteDocumentWithWebContentField {
-		property custom.properties = "tunneling.servlet.shared.secret=1234567890123456${line.separator}auth.verifier.TunnelAuthVerifier.hosts.allowed=";
-
-		Staging.remoteStagingSetUp(siteName = "Site Name");
-
 		Navigator.gotoSitePage(
 			pageName = "Staging DM Page",
 			siteName = "Site Name");
-
-		Portlet.addPG(portletName = "Documents and Media");
-
-		DMDocument.enableActionsMenuOnPortlet();
 
 		ProductMenu.gotoPortlet(
 			category = "Content &amp; Data",
@@ -106,13 +154,43 @@ definition {
 
 		AssertConsoleTextNotPresent(value1 = "RuntimeException");
 
+		User.loginPG(
+			nodePort = "9080",
+			password = "test",
+			userEmailAddress = "test@liferay.com");
+
 		Navigator.gotoSitePage(
+			baseURL = "http://localhost:9080",
 			pageName = "Staging DM Page",
 			siteName = "Remote Site");
 
 		DMDocument.viewPG(
 			dmDocumentTitle = "DM Document Title",
 			dmDocumentType = "DM Document Type Name");
+	}
+
+	@description = "This ensures that the document info is displayed correctly after publishing and republishing."
+	@ignore = "true"
+	@priority = "5"
+	test ViewRepublishedDocumentInfo {
+
+		// TODO LPS-127173 ViewRepublishedDocumentInfo pending implementation
+	}
+
+	@description = "This ensures that the image can be deleted and republished in web content."
+	@ignore = "true"
+	@priority = "4"
+	test ViewWebContentWithDeletedImage {
+
+		// TODO LPS-127173 ViewWebContentWithDeletedImage pending implementation
+	}
+
+	@description = "This ensures that the image can be edited and republished in web content."
+	@ignore = "true"
+	@priority = "4"
+	test ViewWebContentWithRepublishedImage {
+
+		// TODO LPS-127173 ViewWebContentWithRepublishedImage pending implementation
 	}
 
 }

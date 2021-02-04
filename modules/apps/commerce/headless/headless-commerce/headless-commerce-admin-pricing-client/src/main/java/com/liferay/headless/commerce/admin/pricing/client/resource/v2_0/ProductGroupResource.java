@@ -37,17 +37,22 @@ public interface ProductGroupResource {
 		return new Builder();
 	}
 
-	public ProductGroup getDiscountIdProductGroupPage(Long id) throws Exception;
-
-	public HttpInvoker.HttpResponse getDiscountIdProductGroupPageHttpResponse(
-			Long id)
+	public ProductGroup getDiscountProductGroupProductGroup(
+			Long discountProductGroupId)
 		throws Exception;
 
-	public ProductGroup getPriceModifierIdProductGroup(Long id)
+	public HttpInvoker.HttpResponse
+			getDiscountProductGroupProductGroupHttpResponse(
+				Long discountProductGroupId)
 		throws Exception;
 
-	public HttpInvoker.HttpResponse getPriceModifierIdProductGroupHttpResponse(
-			Long id)
+	public ProductGroup getPriceModifierProductGroupProductGroup(
+			Long priceModifierProductGroupId)
+		throws Exception;
+
+	public HttpInvoker.HttpResponse
+			getPriceModifierProductGroupProductGroupHttpResponse(
+				Long priceModifierProductGroupId)
 		throws Exception;
 
 	public static class Builder {
@@ -106,11 +111,13 @@ public interface ProductGroupResource {
 	public static class ProductGroupResourceImpl
 		implements ProductGroupResource {
 
-		public ProductGroup getDiscountIdProductGroupPage(Long id)
+		public ProductGroup getDiscountProductGroupProductGroup(
+				Long discountProductGroupId)
 			throws Exception {
 
 			HttpInvoker.HttpResponse httpResponse =
-				getDiscountIdProductGroupPageHttpResponse(id);
+				getDiscountProductGroupProductGroupHttpResponse(
+					discountProductGroupId);
 
 			String content = httpResponse.getContent();
 
@@ -134,7 +141,8 @@ public interface ProductGroupResource {
 		}
 
 		public HttpInvoker.HttpResponse
-				getDiscountIdProductGroupPageHttpResponse(Long id)
+				getDiscountProductGroupProductGroupHttpResponse(
+					Long discountProductGroupId)
 			throws Exception {
 
 			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
@@ -161,8 +169,9 @@ public interface ProductGroupResource {
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port +
-						"/o/headless-commerce-admin-pricing/v2.0/discounts/{id}/product-group",
-				id);
+						"/o/headless-commerce-admin-pricing/v2.0/discount-product-groups/{discountProductGroupId}/product-group");
+
+			httpInvoker.path("discountProductGroupId", discountProductGroupId);
 
 			httpInvoker.userNameAndPassword(
 				_builder._login + ":" + _builder._password);
@@ -170,11 +179,13 @@ public interface ProductGroupResource {
 			return httpInvoker.invoke();
 		}
 
-		public ProductGroup getPriceModifierIdProductGroup(Long id)
+		public ProductGroup getPriceModifierProductGroupProductGroup(
+				Long priceModifierProductGroupId)
 			throws Exception {
 
 			HttpInvoker.HttpResponse httpResponse =
-				getPriceModifierIdProductGroupHttpResponse(id);
+				getPriceModifierProductGroupProductGroupHttpResponse(
+					priceModifierProductGroupId);
 
 			String content = httpResponse.getContent();
 
@@ -198,7 +209,8 @@ public interface ProductGroupResource {
 		}
 
 		public HttpInvoker.HttpResponse
-				getPriceModifierIdProductGroupHttpResponse(Long id)
+				getPriceModifierProductGroupProductGroupHttpResponse(
+					Long priceModifierProductGroupId)
 			throws Exception {
 
 			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
@@ -225,8 +237,10 @@ public interface ProductGroupResource {
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port +
-						"/o/headless-commerce-admin-pricing/v2.0/price-modifiers/{id}/product-group",
-				id);
+						"/o/headless-commerce-admin-pricing/v2.0/price-modifier-product-groups/{priceModifierProductGroupId}/product-group");
+
+			httpInvoker.path(
+				"priceModifierProductGroupId", priceModifierProductGroupId);
 
 			httpInvoker.userNameAndPassword(
 				_builder._login + ":" + _builder._password);

@@ -9,6 +9,13 @@ definition {
 		TestCase.setUpPortalInstance();
 
 		User.firstLoginPG();
+
+		ApplicationsMenu.gotoPortlet(
+			category = "Configuration",
+			panel = "Control Panel",
+			portlet = "Search");
+
+		SearchAdministration.executeSearchActions(actionsDescription = "Reindex all search indexes.");
 	}
 
 	tearDown {
@@ -20,14 +27,11 @@ definition {
 		else {
 			Navigator.openURL();
 
-			ApplicationsMenu.gotoPortlet(
-				category = "Commerce",
-				panel = "Control Panel",
+			CommerceNavigator.gotoPortlet(
+				category = "Produt Management",
 				portlet = "Catalogs");
 
-			if (IsElementNotPresent(locator1 = "CommerceNavigation#EMPTY_SEARCH_CONTAINER")) {
-				CommerceProducts.deleteProductsEntry();
-			}
+			CommerceConfiguration.commerceCatalogsTearDown();
 		}
 	}
 
@@ -35,9 +39,8 @@ definition {
 		property portal.acceptance = "quarantine";
 		property test.name.skip.portal.instance = "CPCommerceCatalogs#CreateNewCatalog";
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Commerce",
-			panel = "Control Panel",
+		CommerceNavigator.gotoPortlet(
+			category = "Product Management",
 			portlet = "Catalogs");
 
 		Click(locator1 = "Button#PLUS");
@@ -53,9 +56,8 @@ definition {
 
 		Refresh();
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Commerce",
-			panel = "Control Panel",
+		CommerceNavigator.gotoPortlet(
+			category = "Product Management",
 			portlet = "Catalogs");
 
 		CommerceNavigator.gotoEntry(entryName = "Test Catalog");

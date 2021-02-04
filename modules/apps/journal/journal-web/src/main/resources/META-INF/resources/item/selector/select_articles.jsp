@@ -20,7 +20,7 @@
 JournalArticleItemSelectorViewDisplayContext journalArticleItemSelectorViewDisplayContext = (JournalArticleItemSelectorViewDisplayContext)request.getAttribute(JournalWebConstants.JOURNAL_ARTICLE_ITEM_SELECTOR_VIEW_DISPLAY_CONTEXT);
 %>
 
-<clay:management-toolbar
+<clay:management-toolbar-v2
 	displayContext="<%= new JournalArticleItemSelectorViewManagementToolbarDisplayContext(request, liferayPortletRequest, liferayPortletResponse, journalArticleItemSelectorViewDisplayContext) %>"
 />
 
@@ -39,7 +39,6 @@ JournalArticleItemSelectorViewDisplayContext journalArticleItemSelectorViewDispl
 	>
 		<liferay-ui:search-container-row
 			className="Object"
-			cssClass="entry-display-style"
 			modelVar="object"
 		>
 
@@ -73,17 +72,22 @@ JournalArticleItemSelectorViewDisplayContext journalArticleItemSelectorViewDispl
 
 					String title = curArticle.getTitle(locale);
 
+					String defaultTitle = curArticle.getTitle(LocaleUtil.fromLanguageId(curArticle.getDefaultLanguageId()));
+
 					if (Validator.isNull(title)) {
-						title = curArticle.getTitle(LocaleUtil.fromLanguageId(curArticle.getDefaultLanguageId()));
+						title = defaultTitle;
 					}
 
-					articleJSONObject.put("title", title);
+					articleJSONObject.put(
+						"title", defaultTitle
+					).put(
+						"titleMap", curArticle.getTitleMap()
+					);
 
-					Map<String, Object> data = HashMapBuilder.<String, Object>put(
-						"value", articleJSONObject.toString()
-					).build();
-
-					row.setData(data);
+					row.setData(
+						HashMapBuilder.<String, Object>put(
+							"value", articleJSONObject.toString()
+						).build());
 					%>
 
 					<c:choose>
@@ -132,11 +136,6 @@ JournalArticleItemSelectorViewDisplayContext journalArticleItemSelectorViewDispl
 							</liferay-ui:search-container-column-text>
 						</c:when>
 						<c:when test='<%= Objects.equals(journalArticleItemSelectorViewDisplayContext.getDisplayStyle(), "icon") %>'>
-
-							<%
-							row.setCssClass("entry-card lfr-asset-item " + row.getCssClass());
-							%>
-
 							<liferay-ui:search-container-column-text>
 								<clay:vertical-card
 									verticalCard="<%= new JournalArticleItemSelectorVerticalCard(curArticle, renderRequest) %>"
@@ -265,7 +264,7 @@ JournalArticleItemSelectorViewDisplayContext journalArticleItemSelectorViewDispl
 						<c:when test='<%= Objects.equals(journalArticleItemSelectorViewDisplayContext.getDisplayStyle(), "icon") %>'>
 
 							<%
-							row.setCssClass("entry-card lfr-asset-folder " + row.getCssClass());
+							row.setCssClass("card-page-item card-page-item-directory " + row.getCssClass());
 							%>
 
 							<liferay-ui:search-container-column-text
@@ -368,32 +367,45 @@ JournalArticleItemSelectorViewDisplayContext journalArticleItemSelectorViewDispl
 	</liferay-ui:search-container>
 </clay:container-fluid>
 
-<aui:script require="metal-dom/src/all/dom as dom">
-	var selectArticleHandler = dom.delegate(
-		document.querySelector('#<portlet:namespace/>articlesContainer'),
+<aui:script require="frontend-js-web/liferay/delegate/delegate.es as delegateModule" sandbox="<%= true %>">
+	var delegate = delegateModule.default;
+
+	var selectArticleHandler = delegate(
+		document.querySelector('#<portlet:namespace />articlesContainer'),
 		'click',
 		'.articles',
 		function (event) {
 			<c:choose>
 				<c:when test='<%= Objects.equals(journalArticleItemSelectorViewDisplayContext.getDisplayStyle(), "icon") %>'>
-					dom.removeClasses(
-						document.querySelectorAll('.form-check-card.active'),
-						'active'
+					var activeFormCheckCards = document.querySelectorAll(
+						'.form-check-card.active'
 					);
-					dom.addClasses(
-						dom.closest(event.delegateTarget, '.form-check-card'),
-						'active'
-					);
+
+					var formCheckCard = event.delegateTarget.closest('.form-check-card');
+
+					if (activeFormCheckCards.length) {
+						activeFormCheckCards.forEach(function (card) {
+							card.classList.remove('active');
+						});
+					}
+
+					if (formCheckCard) {
+						formCheckCard.classList.add('active');
+					}
 				</c:when>
 				<c:otherwise>
-					dom.removeClasses(
-						document.querySelectorAll('.articles.active'),
-						'active'
-					);
-					dom.addClasses(
-						dom.closest(event.delegateTarget, '.articles'),
-						'active'
-					);
+					var activeArticles = document.querySelectorAll('.articles.active');
+					var articles = event.delegateTarget.closest('.articles');
+
+					if (activeArticles.length) {
+						activeArticles.forEach(function (article) {
+							article.classList.remove('active');
+						});
+					}
+
+					if (articles) {
+						articles.classList.add('active');
+					}
 				</c:otherwise>
 			</c:choose>
 
@@ -411,7 +423,7 @@ JournalArticleItemSelectorViewDisplayContext journalArticleItemSelectorViewDispl
 	);
 
 	Liferay.on('destroyPortlet', function removeListener() {
-		selectArticleHandler.removeListener();
+		selectArticleHandler.dispose();
 
 		Liferay.detach('destroyPortlet', removeListener);
 	});

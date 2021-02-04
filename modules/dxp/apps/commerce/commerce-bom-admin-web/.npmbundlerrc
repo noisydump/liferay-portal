@@ -29,11 +29,6 @@
       "dist\/Recompose.min.js",
       "dist\/Recompose.umd.js"
     ],
-    "redux": [
-      "lib\/**\/*",
-      "es\/**\/*",
-      "src\/**\/*"
-    ],
     "regenerator-runtime": true,
     "scheduler": [
       "umd\/**\/*"

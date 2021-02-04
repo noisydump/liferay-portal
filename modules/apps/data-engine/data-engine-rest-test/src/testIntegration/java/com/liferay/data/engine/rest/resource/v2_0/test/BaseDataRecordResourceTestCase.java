@@ -862,6 +862,33 @@ public abstract class BaseDataRecordResourceTestCase {
 	}
 
 	@Test
+	public void testPatchDataRecord() throws Exception {
+		DataRecord postDataRecord = testPatchDataRecord_addDataRecord();
+
+		DataRecord randomPatchDataRecord = randomPatchDataRecord();
+
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		DataRecord patchDataRecord = dataRecordResource.patchDataRecord(
+			postDataRecord.getId(), randomPatchDataRecord);
+
+		DataRecord expectedPatchDataRecord = postDataRecord.clone();
+
+		_beanUtilsBean.copyProperties(
+			expectedPatchDataRecord, randomPatchDataRecord);
+
+		DataRecord getDataRecord = dataRecordResource.getDataRecord(
+			patchDataRecord.getId());
+
+		assertEquals(expectedPatchDataRecord, getDataRecord);
+		assertValid(getDataRecord);
+	}
+
+	protected DataRecord testPatchDataRecord_addDataRecord() throws Exception {
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
 	public void testPutDataRecord() throws Exception {
 		DataRecord postDataRecord = testPutDataRecord_addDataRecord();
 
@@ -964,6 +991,14 @@ public abstract class BaseDataRecordResourceTestCase {
 
 			if (Objects.equals("dataRecordValues", additionalAssertFieldName)) {
 				if (dataRecord.getDataRecordValues() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals("status", additionalAssertFieldName)) {
+				if (dataRecord.getStatus() == null) {
 					valid = false;
 				}
 
@@ -1093,6 +1128,16 @@ public abstract class BaseDataRecordResourceTestCase {
 				continue;
 			}
 
+			if (Objects.equals("status", additionalAssertFieldName)) {
+				if (!Objects.deepEquals(
+						dataRecord1.getStatus(), dataRecord2.getStatus())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
 			throw new IllegalArgumentException(
 				"Invalid additional assert field name " +
 					additionalAssertFieldName);
@@ -1120,9 +1165,11 @@ public abstract class BaseDataRecordResourceTestCase {
 					return false;
 				}
 			}
+
+			return true;
 		}
 
-		return true;
+		return false;
 	}
 
 	protected java.util.Collection<EntityField> getEntityFields()
@@ -1190,6 +1237,11 @@ public abstract class BaseDataRecordResourceTestCase {
 				"Invalid entity field " + entityFieldName);
 		}
 
+		if (entityFieldName.equals("status")) {
+			throw new IllegalArgumentException(
+				"Invalid entity field " + entityFieldName);
+		}
+
 		throw new IllegalArgumentException(
 			"Invalid entity field " + entityFieldName);
 	}
@@ -1236,6 +1288,7 @@ public abstract class BaseDataRecordResourceTestCase {
 			{
 				dataRecordCollectionId = RandomTestUtil.randomLong();
 				id = RandomTestUtil.randomLong();
+				status = RandomTestUtil.randomInt();
 			}
 		};
 	}

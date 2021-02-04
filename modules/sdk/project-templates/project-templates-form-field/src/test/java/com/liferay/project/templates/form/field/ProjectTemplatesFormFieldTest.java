@@ -72,6 +72,9 @@ public class ProjectTemplatesFormFieldTest
 		File gradleWorkspaceDir = buildWorkspace(
 			temporaryFolder, liferayVersion);
 
+		writeGradlePropertiesInWorkspace(
+			gradleWorkspaceDir, "liferay.workspace.product=portal-7.0-ga7");
+
 		File gradleProjectDir = buildTemplateWithGradle(
 			new File(gradleWorkspaceDir, "modules"), template, name,
 			"--liferay-version", liferayVersion);
@@ -142,6 +145,9 @@ public class ProjectTemplatesFormFieldTest
 
 		File gradleWorkspaceDir = buildWorkspace(
 			temporaryFolder, liferayVersion);
+
+		writeGradlePropertiesInWorkspace(
+			gradleWorkspaceDir, "liferay.workspace.product=portal-7.1-ga4");
 
 		File gradleProjectDir = buildTemplateWithGradle(
 			new File(gradleWorkspaceDir, "modules"), template, name,
@@ -229,6 +235,9 @@ public class ProjectTemplatesFormFieldTest
 		File gradleWorkspaceDir = buildWorkspace(
 			temporaryFolder, liferayVersion);
 
+		writeGradlePropertiesInWorkspace(
+			gradleWorkspaceDir, "liferay.workspace.product=portal-7.1-ga4");
+
 		File gradleProjectDir = buildTemplateWithGradle(
 			new File(gradleWorkspaceDir, "modules"), template, name,
 			"--liferay-version", liferayVersion);
@@ -313,6 +322,9 @@ public class ProjectTemplatesFormFieldTest
 
 		File workspaceDir = buildWorkspace(temporaryFolder, liferayVersion);
 
+		writeGradlePropertiesInWorkspace(
+			workspaceDir, "liferay.workspace.product=portal-7.2-ga2");
+
 		File gradleProjectDir = buildTemplateWithGradle(
 			new File(workspaceDir, "modules"), "form-field", name,
 			"--liferay-version", liferayVersion);
@@ -380,6 +392,9 @@ public class ProjectTemplatesFormFieldTest
 		String name = "foobar";
 
 		File workspaceDir = buildWorkspace(temporaryFolder, liferayVersion);
+
+		writeGradlePropertiesInWorkspace(
+			workspaceDir, "liferay.workspace.product=portal-7.2-ga2");
 
 		File gradleProjectDir = buildTemplateWithGradle(
 			new File(workspaceDir, "modules"), "form-field", name,
@@ -454,7 +469,7 @@ public class ProjectTemplatesFormFieldTest
 
 	@Test
 	public void testBuildTemplateFormField73() throws Exception {
-		String liferayVersion = "7.3.3";
+		String liferayVersion = "7.3.5";
 		String name = "foobar";
 
 		File workspaceDir = buildWorkspace(temporaryFolder, liferayVersion);
@@ -462,6 +477,9 @@ public class ProjectTemplatesFormFieldTest
 		File gradleProjectDir = buildTemplateWithGradle(
 			new File(workspaceDir, "modules"), "form-field", name,
 			"--liferay-version", liferayVersion);
+
+		writeGradlePropertiesInWorkspace(
+			workspaceDir, "liferay.workspace.product=portal-7.3-ga6");
 
 		testContains(
 			gradleProjectDir, "bnd.bnd", "Provide-Capability:", "soy;",
@@ -525,10 +543,13 @@ public class ProjectTemplatesFormFieldTest
 		throws Exception {
 
 		String jsFramework = "react";
-		String liferayVersion = "7.3.3";
+		String liferayVersion = "7.3.5";
 		String name = "foobar";
 
 		File workspaceDir = buildWorkspace(temporaryFolder, liferayVersion);
+
+		writeGradlePropertiesInWorkspace(
+			workspaceDir, "liferay.workspace.product=portal-7.3-ga6");
 
 		File gradleProjectDir = buildTemplateWithGradle(
 			new File(workspaceDir, "modules"), "form-field", name,

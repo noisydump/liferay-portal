@@ -67,29 +67,29 @@ public interface PriceEntryResource {
 				String externalReferenceCode, PriceEntry priceEntry)
 		throws Exception;
 
-	public void deletePriceEntry(Long id) throws Exception;
+	public void deletePriceEntry(Long priceEntryId) throws Exception;
 
-	public HttpInvoker.HttpResponse deletePriceEntryHttpResponse(Long id)
+	public HttpInvoker.HttpResponse deletePriceEntryHttpResponse(
+			Long priceEntryId)
 		throws Exception;
 
-	public void deletePriceEntryBatch(
-			Long id, String callbackURL, Object object)
+	public void deletePriceEntryBatch(String callbackURL, Object object)
 		throws Exception;
 
 	public HttpInvoker.HttpResponse deletePriceEntryBatchHttpResponse(
-			Long id, String callbackURL, Object object)
+			String callbackURL, Object object)
 		throws Exception;
 
-	public PriceEntry getPriceEntry(Long id) throws Exception;
+	public PriceEntry getPriceEntry(Long priceEntryId) throws Exception;
 
-	public HttpInvoker.HttpResponse getPriceEntryHttpResponse(Long id)
+	public HttpInvoker.HttpResponse getPriceEntryHttpResponse(Long priceEntryId)
 		throws Exception;
 
-	public PriceEntry patchPriceEntry(Long id, PriceEntry priceEntry)
+	public PriceEntry patchPriceEntry(Long priceEntryId, PriceEntry priceEntry)
 		throws Exception;
 
 	public HttpInvoker.HttpResponse patchPriceEntryHttpResponse(
-			Long id, PriceEntry priceEntry)
+			Long priceEntryId, PriceEntry priceEntry)
 		throws Exception;
 
 	public Page<PriceEntry> getPriceListByExternalReferenceCodePriceEntriesPage(
@@ -247,8 +247,9 @@ public interface PriceEntryResource {
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port +
-						"/o/headless-commerce-admin-pricing/v2.0/price-entries/by-externalReferenceCode/{externalReferenceCode}",
-				externalReferenceCode);
+						"/o/headless-commerce-admin-pricing/v2.0/price-entries/by-externalReferenceCode/{externalReferenceCode}");
+
+			httpInvoker.path("externalReferenceCode", externalReferenceCode);
 
 			httpInvoker.userNameAndPassword(
 				_builder._login + ":" + _builder._password);
@@ -313,8 +314,9 @@ public interface PriceEntryResource {
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port +
-						"/o/headless-commerce-admin-pricing/v2.0/price-entries/by-externalReferenceCode/{externalReferenceCode}",
-				externalReferenceCode);
+						"/o/headless-commerce-admin-pricing/v2.0/price-entries/by-externalReferenceCode/{externalReferenceCode}");
+
+			httpInvoker.path("externalReferenceCode", externalReferenceCode);
 
 			httpInvoker.userNameAndPassword(
 				_builder._login + ":" + _builder._password);
@@ -381,8 +383,9 @@ public interface PriceEntryResource {
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port +
-						"/o/headless-commerce-admin-pricing/v2.0/price-entries/by-externalReferenceCode/{externalReferenceCode}",
-				externalReferenceCode);
+						"/o/headless-commerce-admin-pricing/v2.0/price-entries/by-externalReferenceCode/{externalReferenceCode}");
+
+			httpInvoker.path("externalReferenceCode", externalReferenceCode);
 
 			httpInvoker.userNameAndPassword(
 				_builder._login + ":" + _builder._password);
@@ -390,9 +393,9 @@ public interface PriceEntryResource {
 			return httpInvoker.invoke();
 		}
 
-		public void deletePriceEntry(Long id) throws Exception {
+		public void deletePriceEntry(Long priceEntryId) throws Exception {
 			HttpInvoker.HttpResponse httpResponse =
-				deletePriceEntryHttpResponse(id);
+				deletePriceEntryHttpResponse(priceEntryId);
 
 			String content = httpResponse.getContent();
 
@@ -414,7 +417,8 @@ public interface PriceEntryResource {
 			}
 		}
 
-		public HttpInvoker.HttpResponse deletePriceEntryHttpResponse(Long id)
+		public HttpInvoker.HttpResponse deletePriceEntryHttpResponse(
+				Long priceEntryId)
 			throws Exception {
 
 			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
@@ -441,8 +445,9 @@ public interface PriceEntryResource {
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port +
-						"/o/headless-commerce-admin-pricing/v2.0/price-entries/{id}",
-				id);
+						"/o/headless-commerce-admin-pricing/v2.0/price-entries/{priceEntryId}");
+
+			httpInvoker.path("priceEntryId", priceEntryId);
 
 			httpInvoker.userNameAndPassword(
 				_builder._login + ":" + _builder._password);
@@ -450,12 +455,11 @@ public interface PriceEntryResource {
 			return httpInvoker.invoke();
 		}
 
-		public void deletePriceEntryBatch(
-				Long id, String callbackURL, Object object)
+		public void deletePriceEntryBatch(String callbackURL, Object object)
 			throws Exception {
 
 			HttpInvoker.HttpResponse httpResponse =
-				deletePriceEntryBatchHttpResponse(id, callbackURL, object);
+				deletePriceEntryBatchHttpResponse(callbackURL, object);
 
 			String content = httpResponse.getContent();
 
@@ -467,7 +471,7 @@ public interface PriceEntryResource {
 		}
 
 		public HttpInvoker.HttpResponse deletePriceEntryBatchHttpResponse(
-				Long id, String callbackURL, Object object)
+				String callbackURL, Object object)
 			throws Exception {
 
 			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
@@ -499,8 +503,7 @@ public interface PriceEntryResource {
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port +
-						"/o/headless-commerce-admin-pricing/v2.0/price-entries/batch",
-				id);
+						"/o/headless-commerce-admin-pricing/v2.0/price-entries/batch");
 
 			httpInvoker.userNameAndPassword(
 				_builder._login + ":" + _builder._password);
@@ -508,9 +511,9 @@ public interface PriceEntryResource {
 			return httpInvoker.invoke();
 		}
 
-		public PriceEntry getPriceEntry(Long id) throws Exception {
+		public PriceEntry getPriceEntry(Long priceEntryId) throws Exception {
 			HttpInvoker.HttpResponse httpResponse = getPriceEntryHttpResponse(
-				id);
+				priceEntryId);
 
 			String content = httpResponse.getContent();
 
@@ -532,7 +535,8 @@ public interface PriceEntryResource {
 			}
 		}
 
-		public HttpInvoker.HttpResponse getPriceEntryHttpResponse(Long id)
+		public HttpInvoker.HttpResponse getPriceEntryHttpResponse(
+				Long priceEntryId)
 			throws Exception {
 
 			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
@@ -559,8 +563,9 @@ public interface PriceEntryResource {
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port +
-						"/o/headless-commerce-admin-pricing/v2.0/price-entries/{id}",
-				id);
+						"/o/headless-commerce-admin-pricing/v2.0/price-entries/{priceEntryId}");
+
+			httpInvoker.path("priceEntryId", priceEntryId);
 
 			httpInvoker.userNameAndPassword(
 				_builder._login + ":" + _builder._password);
@@ -568,11 +573,12 @@ public interface PriceEntryResource {
 			return httpInvoker.invoke();
 		}
 
-		public PriceEntry patchPriceEntry(Long id, PriceEntry priceEntry)
+		public PriceEntry patchPriceEntry(
+				Long priceEntryId, PriceEntry priceEntry)
 			throws Exception {
 
 			HttpInvoker.HttpResponse httpResponse = patchPriceEntryHttpResponse(
-				id, priceEntry);
+				priceEntryId, priceEntry);
 
 			String content = httpResponse.getContent();
 
@@ -595,7 +601,7 @@ public interface PriceEntryResource {
 		}
 
 		public HttpInvoker.HttpResponse patchPriceEntryHttpResponse(
-				Long id, PriceEntry priceEntry)
+				Long priceEntryId, PriceEntry priceEntry)
 			throws Exception {
 
 			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
@@ -624,8 +630,9 @@ public interface PriceEntryResource {
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port +
-						"/o/headless-commerce-admin-pricing/v2.0/price-entries/{id}",
-				id);
+						"/o/headless-commerce-admin-pricing/v2.0/price-entries/{priceEntryId}");
+
+			httpInvoker.path("priceEntryId", priceEntryId);
 
 			httpInvoker.userNameAndPassword(
 				_builder._login + ":" + _builder._password);
@@ -698,8 +705,9 @@ public interface PriceEntryResource {
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port +
-						"/o/headless-commerce-admin-pricing/v2.0/price-lists/by-externalReferenceCode/{externalReferenceCode}/price-entries",
-				externalReferenceCode);
+						"/o/headless-commerce-admin-pricing/v2.0/price-lists/by-externalReferenceCode/{externalReferenceCode}/price-entries");
+
+			httpInvoker.path("externalReferenceCode", externalReferenceCode);
 
 			httpInvoker.userNameAndPassword(
 				_builder._login + ":" + _builder._password);
@@ -766,8 +774,9 @@ public interface PriceEntryResource {
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port +
-						"/o/headless-commerce-admin-pricing/v2.0/price-lists/by-externalReferenceCode/{externalReferenceCode}/price-entries",
-				externalReferenceCode);
+						"/o/headless-commerce-admin-pricing/v2.0/price-lists/by-externalReferenceCode/{externalReferenceCode}/price-entries");
+
+			httpInvoker.path("externalReferenceCode", externalReferenceCode);
 
 			httpInvoker.userNameAndPassword(
 				_builder._login + ":" + _builder._password);
@@ -853,8 +862,9 @@ public interface PriceEntryResource {
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port +
-						"/o/headless-commerce-admin-pricing/v2.0/price-lists/{id}/price-entries",
-				id);
+						"/o/headless-commerce-admin-pricing/v2.0/price-lists/{id}/price-entries");
+
+			httpInvoker.path("id", id);
 
 			httpInvoker.userNameAndPassword(
 				_builder._login + ":" + _builder._password);
@@ -919,8 +929,9 @@ public interface PriceEntryResource {
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port +
-						"/o/headless-commerce-admin-pricing/v2.0/price-lists/{id}/price-entries",
-				id);
+						"/o/headless-commerce-admin-pricing/v2.0/price-lists/{id}/price-entries");
+
+			httpInvoker.path("id", id);
 
 			httpInvoker.userNameAndPassword(
 				_builder._login + ":" + _builder._password);
@@ -981,8 +992,9 @@ public interface PriceEntryResource {
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port +
-						"/o/headless-commerce-admin-pricing/v2.0/price-lists/price-entries/batch",
-				id);
+						"/o/headless-commerce-admin-pricing/v2.0/price-lists/price-entries/batch");
+
+			httpInvoker.path("id", id);
 
 			httpInvoker.userNameAndPassword(
 				_builder._login + ":" + _builder._password);

@@ -145,6 +145,10 @@ public class SiteMySitesDisplayContext {
 	}
 
 	public int getGroupUsersCounts(long groupId) {
+		if (_groupUsersCounts != null) {
+			return GetterUtil.getInteger(_groupUsersCounts.get(groupId));
+		}
+
 		ThemeDisplay themeDisplay = (ThemeDisplay)_renderRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
 
@@ -153,11 +157,11 @@ public class SiteMySitesDisplayContext {
 		long[] groupIds = ListUtil.toLongArray(
 			groupSearch.getResults(), Group.GROUP_ID_ACCESSOR);
 
-		Map<Long, Integer> groupUsersCounts = UserLocalServiceUtil.searchCounts(
+		_groupUsersCounts = UserLocalServiceUtil.searchCounts(
 			themeDisplay.getCompanyId(), WorkflowConstants.STATUS_APPROVED,
 			groupIds);
 
-		return GetterUtil.getInteger(groupUsersCounts.get(groupId));
+		return GetterUtil.getInteger(_groupUsersCounts.get(groupId));
 	}
 
 	public List<NavigationItem> getNavigationItems() {
@@ -234,6 +238,7 @@ public class SiteMySitesDisplayContext {
 
 	private String _displayStyle;
 	private GroupSearch _groupSearch;
+	private Map<Long, Integer> _groupUsersCounts;
 	private final HttpServletRequest _httpServletRequest;
 	private String _orderByCol;
 	private String _orderByType;

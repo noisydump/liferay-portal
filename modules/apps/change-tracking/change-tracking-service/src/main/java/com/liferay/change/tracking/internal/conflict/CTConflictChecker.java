@@ -17,12 +17,22 @@ package com.liferay.change.tracking.internal.conflict;
 import com.liferay.change.tracking.conflict.ConflictInfo;
 import com.liferay.change.tracking.constants.CTConstants;
 import com.liferay.change.tracking.internal.CTRowUtil;
+import com.liferay.change.tracking.internal.reference.TableJoinHolder;
+import com.liferay.change.tracking.internal.reference.TableReferenceDefinitionManager;
+import com.liferay.change.tracking.internal.reference.TableReferenceInfo;
 import com.liferay.change.tracking.internal.resolver.ConstraintResolverContextImpl;
 import com.liferay.change.tracking.internal.resolver.ConstraintResolverKey;
 import com.liferay.change.tracking.model.CTEntry;
 import com.liferay.change.tracking.service.CTEntryLocalService;
+import com.liferay.change.tracking.spi.display.CTDisplayRenderer;
 import com.liferay.change.tracking.spi.resolver.ConstraintResolver;
 import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMap;
+import com.liferay.petra.sql.dsl.Column;
+import com.liferay.petra.sql.dsl.Table;
+import com.liferay.petra.sql.dsl.expression.Predicate;
+import com.liferay.petra.sql.dsl.query.DSLQuery;
+import com.liferay.petra.sql.dsl.query.WhereStep;
+import com.liferay.petra.sql.dsl.spi.ast.DefaultASTNodeListener;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.dao.orm.common.SQLTransformer;
 import com.liferay.portal.kernel.change.tracking.CTColumnResolutionType;
@@ -30,7 +40,9 @@ import com.liferay.portal.kernel.dao.jdbc.CurrentConnectionUtil;
 import com.liferay.portal.kernel.dao.orm.ORMException;
 import com.liferay.portal.kernel.dao.orm.Session;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.model.ClassName;
 import com.liferay.portal.kernel.model.change.tracking.CTModel;
+import com.liferay.portal.kernel.service.ClassNameLocalService;
 import com.liferay.portal.kernel.service.change.tracking.CTService;
 import com.liferay.portal.kernel.service.persistence.change.tracking.CTPersistence;
 
@@ -59,17 +71,26 @@ import java.util.Set;
 public class CTConflictChecker<T extends CTModel<T>> {
 
 	public CTConflictChecker(
-		CTEntryLocalService ctEntryLocalService, CTService<T> ctService,
-		long modelClassNameId,
+		ClassNameLocalService classNameLocalService,
 		ServiceTrackerMap<ConstraintResolverKey, ConstraintResolver<?>>
-			serviceTrackerMap,
-		long sourceCTCollectionId, long targetCTCollectionId) {
+			constraintResolverServiceTrackerMap,
+		ServiceTrackerMap<String, CTDisplayRenderer<?>>
+			ctDisplayRendererServiceTrackerMap,
+		CTEntryLocalService ctEntryLocalService, CTService<T> ctService,
+		long modelClassNameId, long sourceCTCollectionId,
+		TableReferenceDefinitionManager tableReferenceDefinitionManager,
+		long targetCTCollectionId) {
 
+		_classNameLocalService = classNameLocalService;
+		_constraintResolverServiceTrackerMap =
+			constraintResolverServiceTrackerMap;
+		_ctDisplayRendererServiceTrackerMap =
+			ctDisplayRendererServiceTrackerMap;
 		_ctEntryLocalService = ctEntryLocalService;
 		_ctService = ctService;
 		_modelClassNameId = modelClassNameId;
-		_serviceTrackerMap = serviceTrackerMap;
 		_sourceCTCollectionId = sourceCTCollectionId;
+		_tableReferenceDefinitionManager = tableReferenceDefinitionManager;
 		_targetCTCollectionId = targetCTCollectionId;
 	}
 
@@ -111,6 +132,9 @@ public class CTConflictChecker<T extends CTModel<T>> {
 
 		List<ConflictInfo> conflictInfos = new ArrayList<>();
 
+		_checkAdditions(
+			connection, ctPersistence, conflictInfos, primaryKeyName);
+
 		if (_modificationCTEntries != null) {
 			_checkModifications(
 				connection, ctPersistence, conflictInfos, primaryKeyName);
@@ -127,7 +151,37 @@ public class CTConflictChecker<T extends CTModel<T>> {
 			}
 		}
 
+		_checkMissingRequirements(connection, ctPersistence, conflictInfos);
+
 		return conflictInfos;
+	}
+
+	private void _checkAdditions(
+		Connection connection, CTPersistence<T> ctPersistence,
+		List<ConflictInfo> conflictInfos, String primaryKeyName) {
+
+		try (PreparedStatement preparedStatement = connection.prepareStatement(
+				StringBundler.concat(
+					"select ", ctPersistence.getTableName(), ".",
+					primaryKeyName, " from ", ctPersistence.getTableName(),
+					" inner join CTEntry on CTEntry.modelClassPK = ",
+					ctPersistence.getTableName(), ".", primaryKeyName,
+					" where CTEntry.ctCollectionId = ", _sourceCTCollectionId,
+					" and CTEntry.modelClassNameId = ", _modelClassNameId,
+					" and CTEntry.changeType = ",
+					CTConstants.CT_CHANGE_TYPE_ADDITION, " and ",
+					ctPersistence.getTableName(), ".ctCollectionId = ",
+					_targetCTCollectionId));
+			ResultSet resultSet = preparedStatement.executeQuery()) {
+
+			while (resultSet.next()) {
+				conflictInfos.add(
+					new AdditionConflictInfo(resultSet.getLong(1)));
+			}
+		}
+		catch (SQLException sqlException) {
+			throw new ORMException(sqlException);
+		}
 	}
 
 	private void _checkConstraint(
@@ -138,7 +192,7 @@ public class CTConflictChecker<T extends CTModel<T>> {
 
 		String constraintConflictsSQL = CTRowUtil.getConstraintConflictsSQL(
 			ctPersistence.getTableName(), primaryKeyName, columnNames,
-			_sourceCTCollectionId, _targetCTCollectionId, true);
+			_sourceCTCollectionId, _targetCTCollectionId);
 
 		List<Map.Entry<Long, Long>> nextPrimaryKeys =
 			_getConflictingPrimaryKeys(connection, constraintConflictsSQL);
@@ -148,9 +202,10 @@ public class CTConflictChecker<T extends CTModel<T>> {
 		}
 
 		ConstraintResolver<T> constraintResolver =
-			(ConstraintResolver<T>)_serviceTrackerMap.getService(
-				new ConstraintResolverKey(
-					ctPersistence.getModelClass(), columnNames));
+			(ConstraintResolver<T>)
+				_constraintResolverServiceTrackerMap.getService(
+					new ConstraintResolverKey(
+						ctPersistence.getModelClass(), columnNames));
 
 		if (constraintResolver == null) {
 			StringBundler sb = new StringBundler(2 * columnNames.length);
@@ -214,8 +269,8 @@ public class CTConflictChecker<T extends CTModel<T>> {
 		for (Map.Entry<Long, Long> currentPrimaryKeys : resolvedPrimaryKeys) {
 			conflictInfos.add(
 				new ConstraintResolverConflictInfo(
-					constraintResolver, currentPrimaryKeys.getKey(),
-					currentPrimaryKeys.getValue(), true));
+					constraintResolver, true, currentPrimaryKeys.getKey(),
+					currentPrimaryKeys.getValue()));
 		}
 
 		if (unresolvedPrimaryKeys.isEmpty()) {
@@ -225,8 +280,143 @@ public class CTConflictChecker<T extends CTModel<T>> {
 		for (Map.Entry<Long, Long> currentPrimaryKeys : unresolvedPrimaryKeys) {
 			conflictInfos.add(
 				new ConstraintResolverConflictInfo(
-					constraintResolver, currentPrimaryKeys.getKey(),
-					currentPrimaryKeys.getValue(), false));
+					constraintResolver, false, currentPrimaryKeys.getKey(),
+					currentPrimaryKeys.getValue()));
+		}
+	}
+
+	private void _checkMissingRequirements(
+			Connection connection, CTPersistence<T> ctPersistence,
+			List<ConflictInfo> conflictInfos)
+		throws PortalException {
+
+		Set<Long> primaryKeys = new HashSet<>();
+
+		for (CTEntry ctEntry :
+				_ctEntryLocalService.getCTEntries(
+					_sourceCTCollectionId, _modelClassNameId)) {
+
+			if (ctEntry.getChangeType() ==
+					CTConstants.CT_CHANGE_TYPE_ADDITION) {
+
+				primaryKeys.add(ctEntry.getModelClassPK());
+			}
+		}
+
+		if (primaryKeys.isEmpty()) {
+			return;
+		}
+
+		Long[] primaryKeysArray = primaryKeys.toArray(new Long[0]);
+
+		Map<Long, TableReferenceInfo<?>> combinedTableReferenceInfos =
+			_tableReferenceDefinitionManager.getCombinedTableReferenceInfos();
+
+		TableReferenceInfo<?> tableReferenceInfo =
+			combinedTableReferenceInfos.get(_modelClassNameId);
+
+		if (tableReferenceInfo == null) {
+			throw new IllegalArgumentException(
+				"No table reference definition for " +
+					ctPersistence.getModelClass());
+		}
+
+		DSLQuery dslQuery = null;
+
+		Map<Table<?>, List<TableJoinHolder>> parentTableJoinHoldersMap =
+			tableReferenceInfo.getParentTableJoinHoldersMap();
+
+		for (List<TableJoinHolder> tableJoinHolders :
+				parentTableJoinHoldersMap.values()) {
+
+			for (TableJoinHolder tableJoinHolder : tableJoinHolders) {
+				if (tableJoinHolder.isReversed()) {
+					continue;
+				}
+
+				Column<?, Long> childPKColumn =
+					tableJoinHolder.getChildPKColumn();
+
+				Table<?> childTable = childPKColumn.getTable();
+
+				Column<?, Long> ctCollectionIdColumn = childTable.getColumn(
+					"ctCollectionId", Long.class);
+
+				Predicate missingRequirementWherePredicate =
+					tableJoinHolder.getMissingRequirementWherePredicate();
+
+				missingRequirementWherePredicate =
+					missingRequirementWherePredicate.and(
+						childPKColumn.in(
+							primaryKeysArray
+						).and(
+							ctCollectionIdColumn.eq(_sourceCTCollectionId)
+						));
+
+				Column<?, Long> parentPKColumn =
+					tableJoinHolder.getParentPKColumn();
+
+				Table<?> parentTable = parentPKColumn.getTable();
+
+				ctCollectionIdColumn = parentTable.getColumn(
+					"ctCollectionId", Long.class);
+
+				if ((ctCollectionIdColumn != null) &&
+					ctCollectionIdColumn.isPrimaryKey()) {
+
+					missingRequirementWherePredicate =
+						missingRequirementWherePredicate.and(
+							ctCollectionIdColumn.neq(
+								_sourceCTCollectionId
+							).or(
+								ctCollectionIdColumn.neq(_targetCTCollectionId)
+							).or(
+								parentPKColumn.isNull()
+							).withParentheses());
+				}
+
+				WhereStep whereStep =
+					tableJoinHolder.getMissingRequirementWhereStep();
+
+				DSLQuery nextDSLQuery = whereStep.where(
+					missingRequirementWherePredicate);
+
+				if (dslQuery == null) {
+					dslQuery = nextDSLQuery;
+				}
+				else {
+					dslQuery = dslQuery.union(nextDSLQuery);
+				}
+			}
+		}
+
+		if (dslQuery != null) {
+			try (PreparedStatement preparedStatement = _getPreparedStatement(
+					connection, dslQuery);
+				ResultSet resultSet = preparedStatement.executeQuery()) {
+
+				if (resultSet.next()) {
+					long modelClassPK = resultSet.getLong(1);
+
+					String tableName = resultSet.getString(2);
+
+					ClassName className = _classNameLocalService.getClassName(
+						_tableReferenceDefinitionManager.getClassNameId(
+							tableName));
+
+					String classNameValue = className.getValue();
+
+					conflictInfos.add(
+						new MissingRequirementConflictInfo(
+							classNameValue, modelClassPK,
+							_ctDisplayRendererServiceTrackerMap.getService(
+								classNameValue)));
+				}
+			}
+			catch (SQLException sqlException) {
+				throw new ORMException(
+					"Unable to execute query: " + dslQuery, sqlException);
+			}
 		}
 	}
 
@@ -435,6 +625,25 @@ public class CTConflictChecker<T extends CTModel<T>> {
 		}
 	}
 
+	private PreparedStatement _getPreparedStatement(
+			Connection connection, DSLQuery dslQuery)
+		throws SQLException {
+
+		DefaultASTNodeListener defaultASTNodeListener =
+			new DefaultASTNodeListener();
+
+		PreparedStatement preparedStatement = connection.prepareStatement(
+			SQLTransformer.transform(dslQuery.toSQL(defaultASTNodeListener)));
+
+		List<Object> scalarValues = defaultASTNodeListener.getScalarValues();
+
+		for (int i = 0; i < scalarValues.size(); i++) {
+			preparedStatement.setObject(i + 1, scalarValues.get(i));
+		}
+
+		return preparedStatement;
+	}
+
 	private void _resolveModificationConflicts(
 		Connection connection, CTPersistence<T> ctPersistence,
 		String primaryKeyName, List<Long> resolvedPrimaryKeys) {
@@ -592,13 +801,19 @@ public class CTConflictChecker<T extends CTModel<T>> {
 		}
 	}
 
+	private final ClassNameLocalService _classNameLocalService;
+	private final ServiceTrackerMap
+		<ConstraintResolverKey, ConstraintResolver<?>>
+			_constraintResolverServiceTrackerMap;
+	private final ServiceTrackerMap<String, CTDisplayRenderer<?>>
+		_ctDisplayRendererServiceTrackerMap;
 	private final CTEntryLocalService _ctEntryLocalService;
 	private final CTService<T> _ctService;
 	private final long _modelClassNameId;
 	private Map<Serializable, CTEntry> _modificationCTEntries;
-	private final ServiceTrackerMap
-		<ConstraintResolverKey, ConstraintResolver<?>> _serviceTrackerMap;
 	private final long _sourceCTCollectionId;
+	private final TableReferenceDefinitionManager
+		_tableReferenceDefinitionManager;
 	private final long _targetCTCollectionId;
 
 }

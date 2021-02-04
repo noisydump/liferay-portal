@@ -37,16 +37,22 @@ public interface AccountGroupResource {
 		return new Builder();
 	}
 
-	public AccountGroup getDiscountIdAccountGroup(Long id) throws Exception;
-
-	public HttpInvoker.HttpResponse getDiscountIdAccountGroupHttpResponse(
-			Long id)
+	public AccountGroup getDiscountAccountGroupAccountGroup(
+			Long discountAccountGroupId)
 		throws Exception;
 
-	public AccountGroup getPriceListIdAccountGroup(Long id) throws Exception;
+	public HttpInvoker.HttpResponse
+			getDiscountAccountGroupAccountGroupHttpResponse(
+				Long discountAccountGroupId)
+		throws Exception;
 
-	public HttpInvoker.HttpResponse getPriceListIdAccountGroupHttpResponse(
-			Long id)
+	public AccountGroup getPriceListAccountGroupAccountGroup(
+			Long priceListAccountGroupId)
+		throws Exception;
+
+	public HttpInvoker.HttpResponse
+			getPriceListAccountGroupAccountGroupHttpResponse(
+				Long priceListAccountGroupId)
 		throws Exception;
 
 	public static class Builder {
@@ -105,11 +111,13 @@ public interface AccountGroupResource {
 	public static class AccountGroupResourceImpl
 		implements AccountGroupResource {
 
-		public AccountGroup getDiscountIdAccountGroup(Long id)
+		public AccountGroup getDiscountAccountGroupAccountGroup(
+				Long discountAccountGroupId)
 			throws Exception {
 
 			HttpInvoker.HttpResponse httpResponse =
-				getDiscountIdAccountGroupHttpResponse(id);
+				getDiscountAccountGroupAccountGroupHttpResponse(
+					discountAccountGroupId);
 
 			String content = httpResponse.getContent();
 
@@ -132,8 +140,9 @@ public interface AccountGroupResource {
 			}
 		}
 
-		public HttpInvoker.HttpResponse getDiscountIdAccountGroupHttpResponse(
-				Long id)
+		public HttpInvoker.HttpResponse
+				getDiscountAccountGroupAccountGroupHttpResponse(
+					Long discountAccountGroupId)
 			throws Exception {
 
 			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
@@ -160,8 +169,9 @@ public interface AccountGroupResource {
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port +
-						"/o/headless-commerce-admin-pricing/v2.0/discounts/{id}/account-group",
-				id);
+						"/o/headless-commerce-admin-pricing/v2.0/discount-account-groups/{discountAccountGroupId}/account-group");
+
+			httpInvoker.path("discountAccountGroupId", discountAccountGroupId);
 
 			httpInvoker.userNameAndPassword(
 				_builder._login + ":" + _builder._password);
@@ -169,11 +179,13 @@ public interface AccountGroupResource {
 			return httpInvoker.invoke();
 		}
 
-		public AccountGroup getPriceListIdAccountGroup(Long id)
+		public AccountGroup getPriceListAccountGroupAccountGroup(
+				Long priceListAccountGroupId)
 			throws Exception {
 
 			HttpInvoker.HttpResponse httpResponse =
-				getPriceListIdAccountGroupHttpResponse(id);
+				getPriceListAccountGroupAccountGroupHttpResponse(
+					priceListAccountGroupId);
 
 			String content = httpResponse.getContent();
 
@@ -196,8 +208,9 @@ public interface AccountGroupResource {
 			}
 		}
 
-		public HttpInvoker.HttpResponse getPriceListIdAccountGroupHttpResponse(
-				Long id)
+		public HttpInvoker.HttpResponse
+				getPriceListAccountGroupAccountGroupHttpResponse(
+					Long priceListAccountGroupId)
 			throws Exception {
 
 			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
@@ -224,8 +237,10 @@ public interface AccountGroupResource {
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port +
-						"/o/headless-commerce-admin-pricing/v2.0/price-lists/{id}/account-group",
-				id);
+						"/o/headless-commerce-admin-pricing/v2.0/price-list-account-groups/{priceListAccountGroupId}/account-group");
+
+			httpInvoker.path(
+				"priceListAccountGroupId", priceListAccountGroupId);
 
 			httpInvoker.userNameAndPassword(
 				_builder._login + ":" + _builder._password);

@@ -37,13 +37,17 @@ import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HttpUtil;
 import com.liferay.portal.kernel.util.JavaConstants;
+import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.Validator;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 
 import javax.portlet.PortletRequest;
 import javax.portlet.PortletResponse;
@@ -135,10 +139,15 @@ public class TemplateNode extends LinkedHashMap<String, Object> {
 	public String getData() {
 		String type = getType();
 
-		if (type.equals("document_library") || type.equals("image")) {
+		if (type.equals("ddm-journal-article")) {
+			return _getLatestArticleData();
+		}
+		else if (type.equals("document_library") || type.equals("image")) {
 			return _getFileEntryData();
 		}
-		else if (type.equals("link_to_layout")) {
+		else if (type.equals("ddm-link-to-page") ||
+				 type.equals("link_to_layout")) {
+
 			return _getLinkToLayoutData();
 		}
 
@@ -153,7 +162,9 @@ public class TemplateNode extends LinkedHashMap<String, Object> {
 
 			return _getDDMJournalArticleFriendlyURL();
 		}
-		else if (type.equals("link_to_layout")) {
+		else if (type.equals("ddm-link-to-page") ||
+				 type.equals("link_to_layout")) {
+
 			return _getLinkToLayoutFriendlyURL();
 		}
 
@@ -161,7 +172,13 @@ public class TemplateNode extends LinkedHashMap<String, Object> {
 	}
 
 	public String getName() {
-		return (String)get("name");
+		Object name = get("name");
+
+		if ((name == null) || (name instanceof String)) {
+			return (String)name;
+		}
+
+		return "name";
 	}
 
 	public List<String> getOptions() {
@@ -183,13 +200,15 @@ public class TemplateNode extends LinkedHashMap<String, Object> {
 	public String getUrl() {
 		String type = getType();
 
-		if (!type.equals("link_to_layout")) {
+		if (!type.equals("ddm-link-to-page") &&
+			!type.equals("link_to_layout")) {
+
 			return StringPool.BLANK;
 		}
 
-		long layoutGroupId = getLayoutGroupId();
-		long layoutId = getLayoutId();
-		String layoutType = getLayoutType();
+		long layoutGroupId = 0;
+		long layoutId = 0;
+		String layoutType = StringPool.BLANK;
 
 		String data = (String)get("data");
 
@@ -214,6 +233,11 @@ public class TemplateNode extends LinkedHashMap<String, Object> {
 
 				return StringPool.BLANK;
 			}
+		}
+		else {
+			layoutGroupId = getLayoutGroupId();
+			layoutId = getLayoutId();
+			layoutType = getLayoutType();
 		}
 
 		if (Validator.isNull(layoutType)) {
@@ -247,6 +271,10 @@ public class TemplateNode extends LinkedHashMap<String, Object> {
 			sb.append(name);
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception, exception);
+			}
+
 			sb.append("@group_id@");
 		}
 
@@ -341,6 +369,9 @@ public class TemplateNode extends LinkedHashMap<String, Object> {
 				StringPool.BLANK);
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception, exception);
+			}
 		}
 
 		return StringPool.BLANK;
@@ -368,9 +399,80 @@ public class TemplateNode extends LinkedHashMap<String, Object> {
 				false, true);
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception, exception);
+			}
 		}
 
 		return StringPool.BLANK;
+	}
+
+	private String _getLatestArticleData() {
+		String data = (String)get("data");
+
+		try {
+			JSONObject jsonObject = JSONFactoryUtil.createJSONObject(data);
+
+			AssetRendererFactory<?> assetRendererFactory =
+				AssetRendererFactoryRegistryUtil.
+					getAssetRendererFactoryByClassName(
+						jsonObject.getString("className"));
+
+			if (assetRendererFactory == null) {
+				return StringPool.BLANK;
+			}
+
+			long classPK = GetterUtil.getLong(jsonObject.getLong("classPK"));
+
+			AssetRenderer<?> assetRenderer =
+				assetRendererFactory.getAssetRenderer(classPK);
+
+			if (assetRenderer == null) {
+				return StringPool.BLANK;
+			}
+
+			if (Objects.equals(
+					jsonObject.getString("uuid"), assetRenderer.getUuid())) {
+
+				return data;
+			}
+
+			String updatedTitle = assetRenderer.getTitle(
+				LocaleUtil.fromLanguageId(
+					assetRenderer.getDefaultLanguageId()));
+
+			jsonObject.put("title", updatedTitle);
+
+			Map<Locale, String> titleMap = new HashMap<>();
+
+			for (String languageId : assetRenderer.getAvailableLanguageIds()) {
+				Locale locale = LocaleUtil.fromLanguageId(languageId);
+
+				if (locale != null) {
+					titleMap.put(locale, assetRenderer.getTitle(locale));
+				}
+			}
+
+			jsonObject.put(
+				"titleMap", titleMap
+			).put(
+				"uuid", assetRenderer.getUuid()
+			);
+
+			return jsonObject.toJSONString();
+		}
+		catch (JSONException jsonException) {
+			if (_log.isDebugEnabled()) {
+				_log.debug("Unable to parse JSON from data: " + data);
+			}
+		}
+		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception.getMessage());
+			}
+		}
+
+		return (String)get("data");
 	}
 
 	private String _getLinkToLayoutData() {
@@ -387,6 +489,12 @@ public class TemplateNode extends LinkedHashMap<String, Object> {
 
 	private String _getLinkToLayoutFriendlyURL() {
 		if (_themeDisplay == null) {
+			return getUrl();
+		}
+
+		String data = (String)get("data");
+
+		if (JSONUtil.isValid(data)) {
 			return getUrl();
 		}
 

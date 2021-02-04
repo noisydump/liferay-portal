@@ -74,44 +74,62 @@ public class EditSyncedContactsMVCActionCommand
 		if (!syncAllContacts) {
 			String referrer = ParamUtil.getString(actionRequest, "referrer");
 
-			boolean includeSyncContactsFields = ParamUtil.getBoolean(
-				actionRequest, "includeSyncContactsFields");
-
-			if (!includeSyncContactsFields) {
-				referrer = cmd;
-			}
-
 			if (Objects.equals(referrer, "update_synced_groups")) {
 				configurationProperties.put(
 					"syncedUserGroupIds", syncedUserGroupIds);
 
-				syncedOrganizationIds = GetterUtil.getStringValues(
-					configurationProperties.get("syncedOrganizationIds"));
+				syncedUserGroupIds = GetterUtil.getStringValues(
+					configurationProperties.get("syncedUserGroupIds"));
 			}
 			else if (Objects.equals(referrer, "update_synced_organizations")) {
 				configurationProperties.put(
 					"syncedOrganizationIds", syncedOrganizationIds);
 
-				syncedUserGroupIds = GetterUtil.getStringValues(
-					configurationProperties.get("syncedUserGroupIds"));
+				syncedOrganizationIds = GetterUtil.getStringValues(
+					configurationProperties.get("syncedOrganizationIds"));
 			}
 		}
 
 		if (Objects.equals(cmd, "update_synced_contacts_fields")) {
-			String[] syncedContactFieldNames = ArrayUtil.append(
-				FieldDisplayContext.REQUIRED_CONTACT_FIELD_NAMES,
-				ParamUtil.getStringValues(
-					actionRequest, "syncedContactFieldNames"));
+			boolean exit = ParamUtil.getBoolean(actionRequest, "exit");
 
-			String[] syncedUserFieldNames = ArrayUtil.append(
-				FieldDisplayContext.REQUIRED_USER_FIELD_NAMES,
-				ParamUtil.getStringValues(
-					actionRequest, "syncedUserFieldNames"));
+			if (exit) {
+				if (ArrayUtil.isEmpty(
+						GetterUtil.getStringValues(
+							configurationProperties.get(
+								"syncedContactFieldNames")))) {
 
-			configurationProperties.put(
-				"syncedContactFieldNames", syncedContactFieldNames);
-			configurationProperties.put(
-				"syncedUserFieldNames", syncedUserFieldNames);
+					configurationProperties.put(
+						"syncedContactFieldNames",
+						FieldDisplayContext.REQUIRED_CONTACT_FIELD_NAMES);
+				}
+
+				if (ArrayUtil.isEmpty(
+						GetterUtil.getStringValues(
+							configurationProperties.get(
+								"syncedUserFieldNames")))) {
+
+					configurationProperties.put(
+						"syncedUserFieldNames",
+						FieldDisplayContext.REQUIRED_USER_FIELD_NAMES);
+				}
+			}
+			else {
+				String[] syncedContactFieldNames = ArrayUtil.append(
+					FieldDisplayContext.REQUIRED_CONTACT_FIELD_NAMES,
+					ParamUtil.getStringValues(
+						actionRequest, "syncedContactFieldNames"));
+
+				String[] syncedUserFieldNames = ArrayUtil.append(
+					FieldDisplayContext.REQUIRED_USER_FIELD_NAMES,
+					ParamUtil.getStringValues(
+						actionRequest, "syncedUserFieldNames"));
+
+				configurationProperties.put(
+					"syncedContactFieldNames", syncedContactFieldNames);
+				configurationProperties.put(
+					"syncedUserFieldNames", syncedUserFieldNames);
+			}
 		}
 
 		_notifyAnalyticsCloud(
@@ -146,7 +164,7 @@ public class EditSyncedContactsMVCActionCommand
 			themeDisplay.getCompanyId(),
 			String.format(
 				"api/1.0/data-sources/%s/details",
-				AnalyticsSettingsUtil.getAsahFaroBackendDataSourceId(
+				AnalyticsSettingsUtil.getDataSourceId(
 					themeDisplay.getCompanyId())));
 
 		StatusLine statusLine = httpResponse.getStatusLine();

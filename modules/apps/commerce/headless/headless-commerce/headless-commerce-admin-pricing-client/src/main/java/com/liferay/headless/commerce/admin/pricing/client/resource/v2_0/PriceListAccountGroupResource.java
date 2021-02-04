@@ -40,19 +40,20 @@ public interface PriceListAccountGroupResource {
 		return new Builder();
 	}
 
-	public void deletePriceListAccountGroup(Long id) throws Exception;
+	public void deletePriceListAccountGroup(Long priceListAccountGroupId)
+		throws Exception;
 
 	public HttpInvoker.HttpResponse deletePriceListAccountGroupHttpResponse(
-			Long id)
+			Long priceListAccountGroupId)
 		throws Exception;
 
 	public void deletePriceListAccountGroupBatch(
-			Long id, String callbackURL, Object object)
+			String callbackURL, Object object)
 		throws Exception;
 
 	public HttpInvoker.HttpResponse
 			deletePriceListAccountGroupBatchHttpResponse(
-				Long id, String callbackURL, Object object)
+				String callbackURL, Object object)
 		throws Exception;
 
 	public Page<PriceListAccountGroup>
@@ -162,9 +163,12 @@ public interface PriceListAccountGroupResource {
 	public static class PriceListAccountGroupResourceImpl
 		implements PriceListAccountGroupResource {
 
-		public void deletePriceListAccountGroup(Long id) throws Exception {
+		public void deletePriceListAccountGroup(Long priceListAccountGroupId)
+			throws Exception {
+
 			HttpInvoker.HttpResponse httpResponse =
-				deletePriceListAccountGroupHttpResponse(id);
+				deletePriceListAccountGroupHttpResponse(
+					priceListAccountGroupId);
 
 			String content = httpResponse.getContent();
 
@@ -187,7 +191,7 @@ public interface PriceListAccountGroupResource {
 		}
 
 		public HttpInvoker.HttpResponse deletePriceListAccountGroupHttpResponse(
-				Long id)
+				Long priceListAccountGroupId)
 			throws Exception {
 
 			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
@@ -214,8 +218,10 @@ public interface PriceListAccountGroupResource {
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port +
-						"/o/headless-commerce-admin-pricing/v2.0/price-list-account-groups/{id}",
-				id);
+						"/o/headless-commerce-admin-pricing/v2.0/price-list-account-groups/{priceListAccountGroupId}");
+
+			httpInvoker.path(
+				"priceListAccountGroupId", priceListAccountGroupId);
 
 			httpInvoker.userNameAndPassword(
 				_builder._login + ":" + _builder._password);
@@ -224,12 +230,12 @@ public interface PriceListAccountGroupResource {
 		}
 
 		public void deletePriceListAccountGroupBatch(
-				Long id, String callbackURL, Object object)
+				String callbackURL, Object object)
 			throws Exception {
 
 			HttpInvoker.HttpResponse httpResponse =
 				deletePriceListAccountGroupBatchHttpResponse(
-					id, callbackURL, object);
+					callbackURL, object);
 
 			String content = httpResponse.getContent();
 
@@ -242,7 +248,7 @@ public interface PriceListAccountGroupResource {
 
 		public HttpInvoker.HttpResponse
 				deletePriceListAccountGroupBatchHttpResponse(
-					Long id, String callbackURL, Object object)
+					String callbackURL, Object object)
 			throws Exception {
 
 			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
@@ -274,8 +280,7 @@ public interface PriceListAccountGroupResource {
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port +
-						"/o/headless-commerce-admin-pricing/v2.0/price-list-account-groups/batch",
-				id);
+						"/o/headless-commerce-admin-pricing/v2.0/price-list-account-groups/batch");
 
 			httpInvoker.userNameAndPassword(
 				_builder._login + ":" + _builder._password);
@@ -348,8 +353,9 @@ public interface PriceListAccountGroupResource {
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port +
-						"/o/headless-commerce-admin-pricing/v2.0/price-lists/by-externalReferenceCode/{externalReferenceCode}/price-list-account-groups",
-				externalReferenceCode);
+						"/o/headless-commerce-admin-pricing/v2.0/price-lists/by-externalReferenceCode/{externalReferenceCode}/price-list-account-groups");
+
+			httpInvoker.path("externalReferenceCode", externalReferenceCode);
 
 			httpInvoker.userNameAndPassword(
 				_builder._login + ":" + _builder._password);
@@ -420,8 +426,9 @@ public interface PriceListAccountGroupResource {
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port +
-						"/o/headless-commerce-admin-pricing/v2.0/price-lists/by-externalReferenceCode/{externalReferenceCode}/price-list-account-groups",
-				externalReferenceCode);
+						"/o/headless-commerce-admin-pricing/v2.0/price-lists/by-externalReferenceCode/{externalReferenceCode}/price-list-account-groups");
+
+			httpInvoker.path("externalReferenceCode", externalReferenceCode);
 
 			httpInvoker.userNameAndPassword(
 				_builder._login + ":" + _builder._password);
@@ -508,8 +515,9 @@ public interface PriceListAccountGroupResource {
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port +
-						"/o/headless-commerce-admin-pricing/v2.0/price-lists/{id}/price-list-account-groups",
-				id);
+						"/o/headless-commerce-admin-pricing/v2.0/price-lists/{id}/price-list-account-groups");
+
+			httpInvoker.path("id", id);
 
 			httpInvoker.userNameAndPassword(
 				_builder._login + ":" + _builder._password);
@@ -577,8 +585,9 @@ public interface PriceListAccountGroupResource {
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port +
-						"/o/headless-commerce-admin-pricing/v2.0/price-lists/{id}/price-list-account-groups",
-				id);
+						"/o/headless-commerce-admin-pricing/v2.0/price-lists/{id}/price-list-account-groups");
+
+			httpInvoker.path("id", id);
 
 			httpInvoker.userNameAndPassword(
 				_builder._login + ":" + _builder._password);
@@ -639,8 +648,9 @@ public interface PriceListAccountGroupResource {
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port +
-						"/o/headless-commerce-admin-pricing/v2.0/price-lists/price-list-account-groups/batch",
-				id);
+						"/o/headless-commerce-admin-pricing/v2.0/price-lists/price-list-account-groups/batch");
+
+			httpInvoker.path("id", id);
 
 			httpInvoker.userNameAndPassword(
 				_builder._login + ":" + _builder._password);

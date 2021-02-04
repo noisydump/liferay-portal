@@ -22,7 +22,7 @@
 			padding: 0;
 
 			.dim {
-				opacity: 0.4;
+				opacity: 0.5;
 			}
 
 			.empty-message {
@@ -31,21 +31,20 @@
 			}
 
 			.legend-container {
+				margin-left: 50px;
 				width: 50%;
+
 				ul {
 					font-size: 14px;
+					padding-left: 0;
 
 					li {
 						display: flex;
 						padding-bottom: 10px;
 
-						svg {
-							width: 7%;
-						}
-
 						p {
 							margin-bottom: 0;
-							max-width: 94%;
+							max-width: 90%;
 							min-width: auto;
 							padding-left: 8px;
 							position: relative;
@@ -137,6 +136,10 @@
 				padding-bottom: 10px;
 				width: 100%;
 			}
+
+			#tooltip-label {
+				max-width: 90%;
+			}
 		}
 
 		.field-info {
@@ -201,6 +204,25 @@
 		}
 	}
 
+	.custom-chart-size {
+		display: flex;
+		min-height: 400px;
+		min-width: 400px;
+		width: 100%;
+
+		&.multi-bar-chart {
+			margin-left: -32px;
+		}
+
+		&.pie-chart {
+			margin-left: 63px;
+		}
+
+		&.simple-bar-chart {
+			margin-left: -43px;
+		}
+	}
+
 	.empty-message {
 		margin-top: 104px;
 
@@ -243,6 +265,10 @@
 	.form-report {
 		display: flex;
 
+		.card-item {
+			width: 808px;
+		}
+
 		.card-item::before {
 			content: ' ';
 			display: block;
@@ -262,6 +288,7 @@
 			ul {
 				list-style-type: none;
 				padding: 0;
+				width: 240px;
 
 				li {
 					padding-bottom: 16px;
@@ -278,6 +305,7 @@
 							font-size: 14px;
 							font-weight: normal;
 							line-height: 150%;
+							word-break: break-word;
 						}
 
 						&:hover {
@@ -486,9 +514,7 @@
 	}
 
 	.report-cards-area {
-		margin-left: 384px;
 		transition: all 0.3s cubic-bezier(0.25, 0.11, 0.25, 1);
-		width: 808px;
 
 		.sheet {
 			margin-top: 24px;

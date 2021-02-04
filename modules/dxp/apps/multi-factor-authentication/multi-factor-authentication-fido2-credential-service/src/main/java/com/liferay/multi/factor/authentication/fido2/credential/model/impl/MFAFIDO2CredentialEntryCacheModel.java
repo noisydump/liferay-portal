@@ -78,7 +78,7 @@ public class MFAFIDO2CredentialEntryCacheModel
 
 	@Override
 	public String toString() {
-		StringBundler sb = new StringBundler(25);
+		StringBundler sb = new StringBundler(27);
 
 		sb.append("{mvccVersion=");
 		sb.append(mvccVersion);
@@ -96,12 +96,14 @@ public class MFAFIDO2CredentialEntryCacheModel
 		sb.append(modifiedDate);
 		sb.append(", credentialKey=");
 		sb.append(credentialKey);
+		sb.append(", credentialKeyHash=");
+		sb.append(credentialKeyHash);
 		sb.append(", credentialType=");
 		sb.append(credentialType);
 		sb.append(", failedAttempts=");
 		sb.append(failedAttempts);
-		sb.append(", publicKeyCode=");
-		sb.append(publicKeyCode);
+		sb.append(", publicKeyCOSE=");
+		sb.append(publicKeyCOSE);
 		sb.append(", signatureCount=");
 		sb.append(signatureCount);
 		sb.append("}");
@@ -148,14 +150,15 @@ public class MFAFIDO2CredentialEntryCacheModel
 			mfaFIDO2CredentialEntryImpl.setCredentialKey(credentialKey);
 		}
 
+		mfaFIDO2CredentialEntryImpl.setCredentialKeyHash(credentialKeyHash);
 		mfaFIDO2CredentialEntryImpl.setCredentialType(credentialType);
 		mfaFIDO2CredentialEntryImpl.setFailedAttempts(failedAttempts);
 
-		if (publicKeyCode == null) {
-			mfaFIDO2CredentialEntryImpl.setPublicKeyCode("");
+		if (publicKeyCOSE == null) {
+			mfaFIDO2CredentialEntryImpl.setPublicKeyCOSE("");
 		}
 		else {
-			mfaFIDO2CredentialEntryImpl.setPublicKeyCode(publicKeyCode);
+			mfaFIDO2CredentialEntryImpl.setPublicKeyCOSE(publicKeyCOSE);
 		}
 
 		mfaFIDO2CredentialEntryImpl.setSignatureCount(signatureCount);
@@ -166,7 +169,9 @@ public class MFAFIDO2CredentialEntryCacheModel
 	}
 
 	@Override
-	public void readExternal(ObjectInput objectInput) throws IOException {
+	public void readExternal(ObjectInput objectInput)
+		throws ClassNotFoundException, IOException {
+
 		mvccVersion = objectInput.readLong();
 
 		mfaFIDO2CredentialEntryId = objectInput.readLong();
@@ -177,12 +182,14 @@ public class MFAFIDO2CredentialEntryCacheModel
 		userName = objectInput.readUTF();
 		createDate = objectInput.readLong();
 		modifiedDate = objectInput.readLong();
-		credentialKey = objectInput.readUTF();
+		credentialKey = (String)objectInput.readObject();
+
+		credentialKeyHash = objectInput.readLong();
 
 		credentialType = objectInput.readInt();
 
 		failedAttempts = objectInput.readInt();
-		publicKeyCode = objectInput.readUTF();
+		publicKeyCOSE = objectInput.readUTF();
 
 		signatureCount = objectInput.readLong();
 	}
@@ -208,21 +215,23 @@ public class MFAFIDO2CredentialEntryCacheModel
 		objectOutput.writeLong(modifiedDate);
 
 		if (credentialKey == null) {
-			objectOutput.writeUTF("");
+			objectOutput.writeObject("");
 		}
 		else {
-			objectOutput.writeUTF(credentialKey);
+			objectOutput.writeObject(credentialKey);
 		}
+
+		objectOutput.writeLong(credentialKeyHash);
 
 		objectOutput.writeInt(credentialType);
 
 		objectOutput.writeInt(failedAttempts);
 
-		if (publicKeyCode == null) {
+		if (publicKeyCOSE == null) {
 			objectOutput.writeUTF("");
 		}
 		else {
-			objectOutput.writeUTF(publicKeyCode);
+			objectOutput.writeUTF(publicKeyCOSE);
 		}
 
 		objectOutput.writeLong(signatureCount);
@@ -236,9 +245,10 @@ public class MFAFIDO2CredentialEntryCacheModel
 	public long createDate;
 	public long modifiedDate;
 	public String credentialKey;
+	public long credentialKeyHash;
 	public int credentialType;
 	public int failedAttempts;
-	public String publicKeyCode;
+	public String publicKeyCOSE;
 	public long signatureCount;
 
 }

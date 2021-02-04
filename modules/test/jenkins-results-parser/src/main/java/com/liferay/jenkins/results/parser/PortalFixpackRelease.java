@@ -132,7 +132,7 @@ public class PortalFixpackRelease {
 		return _portalRelease;
 	}
 
-	private static String _getPortalVersion(
+	private String _getPortalVersion(
 		String portalBuildVersion, String portalFixpackVersion) {
 
 		String basePortalVersionRegex = "(\\d)(\\d)(\\d\\d)";
@@ -209,7 +209,7 @@ public class PortalFixpackRelease {
 
 	private static final Pattern _fixpackFileNamePattern = Pattern.compile(
 		"liferay-fix-pack-(de|dxp|portal)-(?<portalFixpackVersion>\\d+)-" +
-			"(?<portalBuildVersion>\\d+)(-build\\d*)?.zip");
+			"(?<portalBuildVersion>\\d+)(-build\\d*)?(-src)?.zip");
 	private static final Pattern _fixpackURLPattern = Pattern.compile(
 		"https?://.+/(?<fixpackFileName>[^/]+.zip)");
 

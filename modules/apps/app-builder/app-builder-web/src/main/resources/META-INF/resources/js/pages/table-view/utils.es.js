@@ -13,18 +13,17 @@
  */
 
 import {DataDefinitionUtils} from 'data-engine-taglib';
-import dom from 'metal-dom';
 
 import {addItem, updateItem} from '../../utils/client.es';
 
 export const getColumnIndex = (node) => {
-	const rowNode = dom.closest(node, 'tr');
+	const rowNode = node.closest('tr');
 
 	if (!rowNode) {
 		return -1;
 	}
 
-	const columnNode = dom.closest(node, 'td,th');
+	const columnNode = node.closest('td,th');
 
 	if (!columnNode) {
 		return -1;
@@ -115,10 +114,10 @@ export const getTableViewTitle = ({id}) => {
 
 export const saveTableView = (dataDefinition, dataListView) => {
 	if (dataListView.id) {
-		return updateItem(
-			`/o/data-engine/v2.0/data-list-views/${dataListView.id}`,
-			dataListView
-		);
+		return updateItem({
+			endpoint: `/o/data-engine/v2.0/data-list-views/${dataListView.id}`,
+			item: dataListView,
+		});
 	}
 
 	return addItem(

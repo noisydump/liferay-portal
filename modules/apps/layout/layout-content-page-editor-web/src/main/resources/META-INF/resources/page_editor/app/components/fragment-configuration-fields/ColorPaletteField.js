@@ -14,16 +14,13 @@
 
 import ClayForm from '@clayui/form';
 import PropTypes from 'prop-types';
-import React from 'react';
+import React, {useState} from 'react';
 
 import ColorPalette from '../../../common/components/ColorPalette';
-import useControlledState from '../../../core/hooks/useControlledState';
 import {ConfigurationFieldPropTypes} from '../../../prop-types/index';
 
 export const ColorPaletteField = ({field, onValueSelect, value}) => {
-	const [nextValue, setNextValue] = useControlledState(
-		value && value.cssClass
-	);
+	const [nextValue, setNextValue] = useState(value && value.cssClass);
 
 	return (
 		<ClayForm.Group>
@@ -34,14 +31,13 @@ export const ColorPaletteField = ({field, onValueSelect, value}) => {
 
 					onValueSelect(field.name, '');
 				}}
-				onColorSelect={(color, event) => {
+				onColorSelect={(color) => {
 					setNextValue(color);
 
 					onValueSelect(field.name, {
 						color,
 						cssClass: color,
-						rgbValue: getComputedStyle(event.target)
-							.backgroundColor,
+						rgbValue: getRgbValue(color),
 					});
 				}}
 				selectedColor={nextValue}
@@ -49,6 +45,21 @@ export const ColorPaletteField = ({field, onValueSelect, value}) => {
 		</ClayForm.Group>
 	);
 };
+
+function getRgbValue(className) {
+	const node = document.createElement('div');
+
+	node.classList.add(`bg-${className}`);
+	node.style.display = 'none';
+
+	document.body.append(node);
+
+	const rgbValue = getComputedStyle(node).backgroundColor;
+
+	document.body.removeChild(node);
+
+	return rgbValue;
+}
 
 ColorPaletteField.propTypes = {
 	field: PropTypes.shape(ConfigurationFieldPropTypes).isRequired,

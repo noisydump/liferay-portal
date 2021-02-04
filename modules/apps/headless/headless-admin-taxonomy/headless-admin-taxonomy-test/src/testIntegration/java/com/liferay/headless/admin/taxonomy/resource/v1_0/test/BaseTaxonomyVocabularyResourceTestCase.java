@@ -1138,6 +1138,7 @@ public abstract class BaseTaxonomyVocabularyResourceTestCase {
 		TaxonomyVocabulary randomPatchTaxonomyVocabulary =
 			randomPatchTaxonomyVocabulary();
 
+		@SuppressWarnings("PMD.UnusedLocalVariable")
 		TaxonomyVocabulary patchTaxonomyVocabulary =
 			taxonomyVocabularyResource.patchTaxonomyVocabulary(
 				postTaxonomyVocabulary.getId(), randomPatchTaxonomyVocabulary);
@@ -1760,9 +1761,11 @@ public abstract class BaseTaxonomyVocabularyResourceTestCase {
 					return false;
 				}
 			}
+
+			return true;
 		}
 
-		return true;
+		return false;
 	}
 
 	protected java.util.Collection<EntityField> getEntityFields()

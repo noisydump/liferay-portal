@@ -46,12 +46,14 @@ public class StyleBookEntryVersionWrapper
 
 		attributes.put("styleBookEntryVersionId", getStyleBookEntryVersionId());
 		attributes.put("version", getVersion());
+		attributes.put("uuid", getUuid());
 		attributes.put("styleBookEntryId", getStyleBookEntryId());
 		attributes.put("groupId", getGroupId());
 		attributes.put("companyId", getCompanyId());
 		attributes.put("userId", getUserId());
 		attributes.put("userName", getUserName());
 		attributes.put("createDate", getCreateDate());
+		attributes.put("modifiedDate", getModifiedDate());
 		attributes.put("defaultStyleBookEntry", isDefaultStyleBookEntry());
 		attributes.put("frontendTokensValues", getFrontendTokensValues());
 		attributes.put("name", getName());
@@ -74,6 +76,12 @@ public class StyleBookEntryVersionWrapper
 
 		if (version != null) {
 			setVersion(version);
+		}
+
+		String uuid = (String)attributes.get("uuid");
+
+		if (uuid != null) {
+			setUuid(uuid);
 		}
 
 		Long styleBookEntryId = (Long)attributes.get("styleBookEntryId");
@@ -110,6 +118,12 @@ public class StyleBookEntryVersionWrapper
 
 		if (createDate != null) {
 			setCreateDate(createDate);
+		}
+
+		Date modifiedDate = (Date)attributes.get("modifiedDate");
+
+		if (modifiedDate != null) {
+			setModifiedDate(modifiedDate);
 		}
 
 		Boolean defaultStyleBookEntry = (Boolean)attributes.get(
@@ -193,6 +207,16 @@ public class StyleBookEntryVersionWrapper
 	@Override
 	public long getGroupId() {
 		return model.getGroupId();
+	}
+
+	/**
+	 * Returns the modified date of this style book entry version.
+	 *
+	 * @return the modified date of this style book entry version
+	 */
+	@Override
+	public Date getModifiedDate() {
+		return model.getModifiedDate();
 	}
 
 	/**
@@ -286,6 +310,16 @@ public class StyleBookEntryVersionWrapper
 	}
 
 	/**
+	 * Returns the uuid of this style book entry version.
+	 *
+	 * @return the uuid of this style book entry version
+	 */
+	@Override
+	public String getUuid() {
+		return model.getUuid();
+	}
+
+	/**
 	 * Returns the version of this style book entry version.
 	 *
 	 * @return the version of this style book entry version
@@ -353,6 +387,16 @@ public class StyleBookEntryVersionWrapper
 	@Override
 	public void setGroupId(long groupId) {
 		model.setGroupId(groupId);
+	}
+
+	/**
+	 * Sets the modified date of this style book entry version.
+	 *
+	 * @param modifiedDate the modified date of this style book entry version
+	 */
+	@Override
+	public void setModifiedDate(Date modifiedDate) {
+		model.setModifiedDate(modifiedDate);
 	}
 
 	/**
@@ -443,6 +487,16 @@ public class StyleBookEntryVersionWrapper
 	@Override
 	public void setUserUuid(String userUuid) {
 		model.setUserUuid(userUuid);
+	}
+
+	/**
+	 * Sets the uuid of this style book entry version.
+	 *
+	 * @param uuid the uuid of this style book entry version
+	 */
+	@Override
+	public void setUuid(String uuid) {
+		model.setUuid(uuid);
 	}
 
 	/**

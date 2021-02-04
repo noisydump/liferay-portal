@@ -94,6 +94,7 @@ Layout curLayout = (Layout)row.getObject();
 
 	<c:if test="<%= layoutsAdminDisplayContext.isShowDeleteAction(curLayout) %>">
 		<liferay-ui:icon-delete
+			confirmation='<%= curLayout.hasChildren() ? "this-page-has-child-pages-that-will-also-be-removed-are-you-sure-you-want-to-delete-this-page" : "are-you-sure-you-want-to-delete-this-page" %>'
 			url="<%= layoutsAdminDisplayContext.getDeleteLayoutURL(curLayout) %>"
 		/>
 	</c:if>
@@ -114,8 +115,10 @@ Layout curLayout = (Layout)row.getObject();
 	</c:if>
 </liferay-ui:icon-menu>
 
-<aui:script require="metal-dom/src/all/dom as dom">
-	var copyLayoutActionOptionQueryClickHandler = dom.delegate(
+<aui:script require="frontend-js-web/liferay/delegate/delegate.es as delegateModule">
+	var delegate = delegateModule.default;
+
+	var copyLayoutActionOptionQueryClickHandler = delegate(
 		document.body,
 		'click',
 		'.<portlet:namespace />copy-layout-action-option',
@@ -129,7 +132,7 @@ Layout curLayout = (Layout)row.getObject();
 		}
 	);
 
-	var viewCollectionItemsActionOptionQueryClickHandler = dom.delegate(
+	var viewCollectionItemsActionOptionQueryClickHandler = delegate(
 		document.body,
 		'click',
 		'.<portlet:namespace />view-collection-items-action-option',
@@ -144,8 +147,8 @@ Layout curLayout = (Layout)row.getObject();
 	);
 
 	function handleDestroyPortlet() {
-		copyLayoutActionOptionQueryClickHandler.removeListener();
-		viewCollectionItemsActionOptionQueryClickHandler.removeListener();
+		copyLayoutActionOptionQueryClickHandler.dispose();
+		viewCollectionItemsActionOptionQueryClickHandler.dispose();
 
 		Liferay.detach('destroyPortlet', handleDestroyPortlet);
 	}

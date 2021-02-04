@@ -47,6 +47,7 @@ import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextFactory;
 import com.liferay.portal.kernel.service.permission.LayoutPermission;
 import com.liferay.portal.kernel.servlet.DummyHttpServletResponse;
+import com.liferay.portal.kernel.servlet.DynamicServletRequest;
 import com.liferay.portal.kernel.servlet.ServletContextPool;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.Portal;
@@ -165,6 +166,9 @@ public class PageDefinitionResourceImpl extends BasePageDefinitionResourceImpl {
 				"Unable to post page definition preview"
 			).build();
 		}
+
+		contextHttpServletRequest = DynamicServletRequest.addQueryString(
+			contextHttpServletRequest, "p_l_id=" + layout.getPlid(), false);
 
 		contextHttpServletRequest.setAttribute(
 			WebKeys.THEME_DISPLAY, _getThemeDisplay(layout));

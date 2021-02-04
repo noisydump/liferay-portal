@@ -90,17 +90,17 @@
 </tr>
 <tr>
 	<td>METRICS_ALL_ITEMS_TABLE_INSTANCE</td>
-	<td>//td[contains(@data-testid,'assetInfoCell') and contains(text(),'${key_instanceInfo}')]</td>
+	<td>//td[(3) and contains(text(),'${key_instanceInfo}')]</td>
 	<td></td>
 </tr>
 <tr>
 	<td>METRICS_ALL_ITEMS_TABLE_NAME</td>
-	<td>//td[contains(@data-testid,'assetInfoCell') and contains(text(),'${key_instanceInfo}')]/following-sibling::td[contains(@data-testid,'taskNamesCell') and contains(text(),'${key_taskName}')]/following-sibling::td[contains(@data-testid,'assigneesCell') and contains(text(),'${key_assigneeName}')]</td>
+	<td>//td[(3) and contains(text(),'${key_instanceInfo}')]/following-sibling::td[(4) and contains(text(),'${key_taskName}')]/following-sibling::td[(5) and contains(text(),'${key_assigneeName}')]</td>
 	<td></td>
 </tr>
 <tr>
 	<td>METRICS_ALL_ITEMS_TABLE_TASK</td>
-	<td>//td[contains(@data-testid,'assetInfoCell') and contains(text(),'${key_instanceInfo}')]/following-sibling::td[contains(@data-testid,'taskNamesCell') and contains(text(),'${key_taskName}')]</td>
+	<td>//td[(3) and contains(text(),'${key_instanceInfo}')]/following-sibling::td[(4) and contains(text(),'${key_taskName}')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -210,7 +210,7 @@
 </tr>
 <tr>
 	<td>METRICS_PERFORMANCE_BY_STEP_AVG_COMPLETION_TIME_VALUE</td>
-	<td>//tr[contains(*, '${key_rowName}')]//td[@data-testid='avgCompletionTime'] | //tr[contains(*, '${key_rowName}')]//td[@data-testid='durationTaskAvg']</td>
+	<td>//tr[contains(*, '${key_rowName}')]//td[3]</td>
 	<td></td>
 </tr>
 <tr>
@@ -220,7 +220,7 @@
 </tr>
 <tr>
 	<td>METRICS_PERFORMANCE_BY_STEP_SLA_BREACHED_VALUE</td>
-	<td>//tr[contains(*, '${key_rowName}')]//td[@data-testid='slaBreached'] | //tr[contains(*, '${key_rowName}')]//td[@data-testid='stepSla']</td>
+	<td>//tr[contains(*, '${key_rowName}')]//td[2]</td>
 	<td></td>
 </tr>
 <tr>
@@ -245,13 +245,13 @@
 </tr>
 <tr>
 	<td>METRICS_PERFORMANCE_BY_ASSIGNEE_AVG_COMPLETION_TIME</td>
-	<td>xpath=(//span[contains(text(),'${key_assignee}')]/ancestor::td[contains(@data-testid,'assigneeProfileInfo')]/following-sibling::td//span)[2]
+	<td>xpath=(//span[contains(text(),'${key_assignee}')]/ancestor::td[1]/following-sibling::td//span)[2]
 </td>
 	<td></td>
 </tr>
 <tr>
 	<td>METRICS_PERFORMANCE_BY_ASSIGNEE_CARD_EMPTY_STATE</td>
-	<td>//span[contains(text(),'Performance by Assignee')]/ancestor::div[contains(@data-testid, 'panelHeader')]/following-sibling::div//p[contains(.,'There is no data at the moment')]</td>
+	<td>//span[contains(text(),'Performance by Assignee')]/ancestor::div[contains(@class, 'panel-header')]/following-sibling::div//p[contains(.,'There is no data at the moment')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -266,7 +266,7 @@
 </tr>
 <tr>
 	<td>METRICS_PERFORMANCE_BY_ASSIGNEE_CARD_NO_RESULTS</td>
-	<td>//span[contains(text(),'Performance by Assignee')]/ancestor::div[contains(@data-testid, 'panelHeader')]/following-sibling::div//p[contains(.,'No results were found.')]</td>
+	<td>//span[contains(text(),'Performance by Assignee')]/ancestor::div[contains(@class, 'panel-header')]/following-sibling::div//p[contains(.,'No results were found.')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -281,12 +281,12 @@
 </tr>
 <tr>
 	<td>METRICS_PERFORMANCE_BY_ASSIGNEE_NAME</td>
-	<td>//td[contains(@data-testid,'assigneeProfileInfo')]//span[contains(text(),'${key_assignee}')]</td>
+	<td>//td[1]//span[contains(text(),'${key_assignee}')]</td>
 	<td></td>
 </tr>
 <tr>
 	<td>METRICS_PERFORMANCE_BY_ASSIGNEE_TASK_COUNT</td>
-	<td>xpath=(//span[contains(text(),'${key_assignee}')]/ancestor::td[contains(@data-testid,'assigneeProfileInfo')]/following-sibling::td//span)[1]</td>
+	<td>xpath=(//span[contains(text(),'${key_assignee}')]/ancestor::td[1]/following-sibling::td//span)[1]</td>
 	<td></td>
 </tr>
 <tr>
@@ -366,7 +366,7 @@
 </tr>
 <tr>
 	<td>METRICS_WORKLOAD_BY_ASSIGNEE_PAGE_TASKCOUNT</td>
-	<td>//td[contains(@class,'table-title')]//span[contains(text(),'${key_assigneeName}')]/../../following-sibling::td[contains(@data-testid,'taskCount')]//a[contains(text(),'${key_taskCount}')]</td>
+	<td>//td[contains(@class,'table-title')]//span[contains(text(),'${key_assigneeName}')]/../../following-sibling::td[3]//a[contains(text(),'${key_taskCount}')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -391,7 +391,17 @@
 </tr>
 <tr>
 	<td>KEBAB_BUTTON_DISABLED</td>
-	<td>//button[@data-testid="kebab" and @disabled]</td>
+	<td>//button[contains(@class,'dropdown-toggle component-action') and @disabled]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>SEARCH_FIELD_MAPPINGS_HEADER</td>
+	<td>//a[contains(text(),'Field Mappings')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>SEARCH_FIELD_MAPPINGS_METRICS_INDEXES</td>
+	<td>//a[contains(text(),'${key_index}')]</td>
 	<td></td>
 </tr>
 </tbody>

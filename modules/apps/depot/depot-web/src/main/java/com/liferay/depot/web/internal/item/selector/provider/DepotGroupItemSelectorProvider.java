@@ -25,9 +25,9 @@ import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.LayoutPrototype;
+import com.liferay.portal.kernel.resource.bundle.ResourceBundleLoader;
 import com.liferay.portal.kernel.service.GroupService;
 import com.liferay.portal.kernel.service.LayoutPrototypeService;
-import com.liferay.portal.kernel.util.ResourceBundleLoader;
 import com.liferay.portal.kernel.util.ResourceBundleUtil;
 
 import java.util.ArrayList;
@@ -130,10 +130,6 @@ public class DepotGroupItemSelectorProvider
 				group = _groupService.getGroup(
 					layoutPageTemplateEntry.getGroupId());
 			}
-		}
-
-		if (group.isStagingGroup()) {
-			return group.getLiveGroupId();
 		}
 
 		return group.getGroupId();

@@ -17,10 +17,11 @@ import {PagesVisitor} from 'dynamic-data-mapping-form-renderer';
 import {createFieldSet} from '../util/fieldset.es';
 import {updateField} from '../util/settingsContext.es';
 import {addField} from './fieldAddedHandler.es';
+import handleSectionAdded from './sectionAddedHandler.es';
 
 const handleFieldSetAdded = (props, state, event) => {
 	const {
-		defaultLanguageId,
+		fieldName,
 		fieldSet,
 		indexes,
 		parentFieldName,
@@ -34,12 +35,7 @@ const handleFieldSetAdded = (props, state, event) => {
 
 	visitor.mapFields((nestedField) => {
 		nestedFields.push(
-			updateField(
-				props,
-				nestedField,
-				'label',
-				nestedField.label[defaultLanguageId]
-			)
+			updateField(props, nestedField, 'label', nestedField.label)
 		);
 	});
 
@@ -73,13 +69,36 @@ const handleFieldSetAdded = (props, state, event) => {
 		fieldSetField = updateField(props, fieldSetField, 'rows', rows);
 	}
 
+	if (fieldName) {
+		return handleSectionAdded(
+			props,
+			{
+				...state,
+				pages,
+			},
+			{
+				data: {
+					fieldName,
+					parentFieldName,
+				},
+				indexes,
+				newField: updateField(
+					props,
+					fieldSetField,
+					'label',
+					fieldSet.localizedTitle
+				),
+			}
+		);
+	}
+
 	return addField(props, {
 		indexes,
 		newField: updateField(
 			props,
 			fieldSetField,
 			'label',
-			fieldSet.localizedTitle[defaultLanguageId]
+			fieldSet.localizedTitle
 		),
 		pages,
 		parentFieldName,

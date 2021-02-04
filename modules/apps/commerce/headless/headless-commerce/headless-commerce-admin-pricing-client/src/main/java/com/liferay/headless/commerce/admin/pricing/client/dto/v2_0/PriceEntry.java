@@ -17,6 +17,8 @@ package com.liferay.headless.commerce.admin.pricing.client.dto.v2_0;
 import com.liferay.headless.commerce.admin.pricing.client.function.UnsafeSupplier;
 import com.liferay.headless.commerce.admin.pricing.client.serdes.v2_0.PriceEntrySerDes;
 
+import java.io.Serializable;
+
 import java.math.BigDecimal;
 
 import java.util.Date;
@@ -30,7 +32,7 @@ import javax.annotation.Generated;
  * @generated
  */
 @Generated("")
-public class PriceEntry implements Cloneable {
+public class PriceEntry implements Cloneable, Serializable {
 
 	public static PriceEntry toDTO(String json) {
 		return PriceEntrySerDes.toDTO(json);
@@ -333,25 +335,6 @@ public class PriceEntry implements Cloneable {
 
 	protected Boolean hasTierPrice;
 
-	public Long getId() {
-		return id;
-	}
-
-	public void setId(Long id) {
-		this.id = id;
-	}
-
-	public void setId(UnsafeSupplier<Long, Exception> idUnsafeSupplier) {
-		try {
-			id = idUnsafeSupplier.get();
-		}
-		catch (Exception e) {
-			throw new RuntimeException(e);
-		}
-	}
-
-	protected Long id;
-
 	public Boolean getNeverExpire() {
 		return neverExpire;
 	}
@@ -393,6 +376,27 @@ public class PriceEntry implements Cloneable {
 	}
 
 	protected Double price;
+
+	public Long getPriceEntryId() {
+		return priceEntryId;
+	}
+
+	public void setPriceEntryId(Long priceEntryId) {
+		this.priceEntryId = priceEntryId;
+	}
+
+	public void setPriceEntryId(
+		UnsafeSupplier<Long, Exception> priceEntryIdUnsafeSupplier) {
+
+		try {
+			priceEntryId = priceEntryIdUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected Long priceEntryId;
 
 	public String getPriceFormatted() {
 		return priceFormatted;

@@ -49,7 +49,7 @@ public class UpgradeKernelPackage extends UpgradeProcess {
 				"Lock_", "className", getClassNames(), WildcardMode.SURROUND);
 			upgradeTable(
 				"ResourceAction", "name", getClassNames(),
-				WildcardMode.SURROUND);
+				WildcardMode.SURROUND, true);
 			upgradeTable(
 				"ResourcePermission", "name", getClassNames(),
 				WildcardMode.SURROUND);
@@ -61,7 +61,7 @@ public class UpgradeKernelPackage extends UpgradeProcess {
 				"ListType", "type_", getClassNames(), WildcardMode.TRAILING);
 			upgradeTable(
 				"ResourceAction", "name", getResourceNames(),
-				WildcardMode.LEADING);
+				WildcardMode.LEADING, true);
 			upgradeTable(
 				"ResourcePermission", "name", getResourceNames(),
 				WildcardMode.LEADING);
@@ -336,6 +336,7 @@ public class UpgradeKernelPackage extends UpgradeProcess {
 			"com.liferay.portlet.expando.model.",
 			"com.liferay.expando.kernel.model."
 		},
+		{"com.liferay.portlet.journal.model.", "com.liferay.journal.model."},
 		{
 			"com.liferay.portlet.messageboards.model.",
 			"com.liferay.message.boards.kernel.model."
@@ -363,6 +364,7 @@ public class UpgradeKernelPackage extends UpgradeProcess {
 		{"com.liferay.portlet.asset", "com.liferay.asset"},
 		{"com.liferay.portlet.blogs", "com.liferay.blogs"},
 		{"com.liferay.portlet.documentlibrary", "com.liferay.document.library"},
+		{"com.liferay.portlet.journal", "com.liferay.journal"},
 		{"com.liferay.portlet.messageboards", "com.liferay.message.boards"}
 	};
 

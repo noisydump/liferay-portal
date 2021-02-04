@@ -170,6 +170,22 @@ public class ElasticsearchConfigurationWrapper
 		return _elasticsearchConfiguration.productionModeEnabled();
 	}
 
+	public String proxyHost() {
+		return _elasticsearchConfiguration.proxyHost();
+	}
+
+	public String proxyPassword() {
+		return _elasticsearchConfiguration.proxyPassword();
+	}
+
+	public int proxyPort() {
+		return _elasticsearchConfiguration.proxyPort();
+	}
+
+	public String proxyUserName() {
+		return _elasticsearchConfiguration.proxyUserName();
+	}
+
 	public void register(
 		ElasticsearchConfigurationObserver elasticsearchConfigurationObserver) {
 
@@ -276,7 +292,7 @@ public class ElasticsearchConfigurationWrapper
 		_props = props;
 	}
 
-	private static Map<String, Object> _getPropsMap(
+	private Map<String, Object> _getPropsMap(
 		String[] keys, Class<?> clazz, Props props) {
 
 		if (props == null) {

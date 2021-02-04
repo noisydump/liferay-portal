@@ -53,6 +53,14 @@ public final class DDMFormEvaluatorEvaluateRequest {
 		return _userId;
 	}
 
+	public boolean isEditingFieldValue() {
+		return _editingFieldValue;
+	}
+
+	public boolean isViewMode() {
+		return _viewMode;
+	}
+
 	public static class Builder {
 
 		public static Builder newBuilder(
@@ -77,6 +85,13 @@ public final class DDMFormEvaluatorEvaluateRequest {
 			return this;
 		}
 
+		public Builder withEditingFieldValue(boolean editingFieldValue) {
+			_ddmFormEvaluatorEvaluateRequest._editingFieldValue =
+				editingFieldValue;
+
+			return this;
+		}
+
 		public Builder withGroupId(long groupId) {
 			_ddmFormEvaluatorEvaluateRequest._groupId = groupId;
 
@@ -85,6 +100,12 @@ public final class DDMFormEvaluatorEvaluateRequest {
 
 		public Builder withUserId(long userId) {
 			_ddmFormEvaluatorEvaluateRequest._userId = userId;
+
+			return this;
+		}
+
+		public Builder withViewMode(boolean viewMode) {
+			_ddmFormEvaluatorEvaluateRequest._viewMode = viewMode;
 
 			return this;
 		}
@@ -110,8 +131,10 @@ public final class DDMFormEvaluatorEvaluateRequest {
 	private DDMForm _ddmForm;
 	private DDMFormLayout _ddmFormLayout;
 	private DDMFormValues _ddmFormValues;
+	private boolean _editingFieldValue;
 	private long _groupId;
 	private Locale _locale;
 	private long _userId;
+	private boolean _viewMode;
 
 }

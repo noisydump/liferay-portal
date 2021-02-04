@@ -815,6 +815,7 @@ public abstract class BaseTaxonomyCategoryResourceTestCase {
 		TaxonomyCategory randomPatchTaxonomyCategory =
 			randomPatchTaxonomyCategory();
 
+		@SuppressWarnings("PMD.UnusedLocalVariable")
 		TaxonomyCategory patchTaxonomyCategory =
 			taxonomyCategoryResource.patchTaxonomyCategory(
 				postTaxonomyCategory.getId(), randomPatchTaxonomyCategory);
@@ -1755,9 +1756,11 @@ public abstract class BaseTaxonomyCategoryResourceTestCase {
 					return false;
 				}
 			}
+
+			return true;
 		}
 
-		return true;
+		return false;
 	}
 
 	protected java.util.Collection<EntityField> getEntityFields()

@@ -21,9 +21,9 @@ import com.liferay.document.library.item.selector.web.internal.display.context.D
 import com.liferay.item.selector.ItemSelectorCriterion;
 import com.liferay.item.selector.ItemSelectorReturnTypeResolverHandler;
 import com.liferay.portal.kernel.repository.model.Folder;
+import com.liferay.portal.kernel.resource.bundle.ResourceBundleLoader;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
 import com.liferay.portal.kernel.service.ClassNameLocalService;
-import com.liferay.portal.kernel.util.ResourceBundleLoader;
 import com.liferay.portal.kernel.util.ResourceBundleUtil;
 import com.liferay.portal.language.LanguageResources;
 import com.liferay.staging.StagingGroupHelper;
@@ -70,7 +70,7 @@ public abstract class BaseDLItemSelectorView<T extends ItemSelectorCriterion>
 	@Override
 	public String getTitle(Locale locale) {
 		ResourceBundleLoader resourceBundleLoader =
-			LanguageResources.RESOURCE_BUNDLE_LOADER;
+			LanguageResources.PORTAL_RESOURCE_BUNDLE_LOADER;
 
 		ResourceBundle resourceBundle = resourceBundleLoader.loadResourceBundle(
 			locale);
@@ -96,11 +96,18 @@ public abstract class BaseDLItemSelectorView<T extends ItemSelectorCriterion>
 				itemSelectorReturnTypeResolverHandler, portletURL, search,
 				stagingGroupHelper);
 
+		prepareDLItemSelectorViewDisplayContext(
+			dlItemSelectorViewDisplayContext);
+
 		servletRequest.setAttribute(
 			DLItemSelectorWebKeys.DL_ITEM_SELECTOR_VIEW_DISPLAY_CONTEXT,
 			dlItemSelectorViewDisplayContext);
 
 		requestDispatcher.include(servletRequest, servletResponse);
+	}
+
+	protected void prepareDLItemSelectorViewDisplayContext(
+		DLItemSelectorViewDisplayContext dlItemSelectorViewDisplayContext) {
 	}
 
 	@Reference

@@ -47,7 +47,7 @@ export default ({history}) => {
 			if (confirmed) {
 				fetch(
 					createResourceURL(baseResourceURL, {
-						p_p_resource_id: '/objects/delete_data_definition',
+						p_p_resource_id: '/app_builder/delete_data_definition',
 					}),
 					{
 						body: new URLSearchParams(
@@ -81,13 +81,16 @@ export default ({history}) => {
 	};
 
 	const onRenameAction = ({originalItem}, value, refetch) => {
-		updateItem(`/o/data-engine/v2.0/data-definitions/${originalItem.id}`, {
-			...originalItem,
-			name: {
-				[originalItem.defaultLanguageId]: getValidName(
-					Liferay.Language.get('untitled-custom-object'),
-					value
-				),
+		updateItem({
+			endpoint: `/o/data-engine/v2.0/data-definitions/${originalItem.id}`,
+			item: {
+				...originalItem,
+				name: {
+					[originalItem.defaultLanguageId]: getValidName(
+						Liferay.Language.get('untitled-custom-object'),
+						value
+					),
+				},
 			},
 		})
 			.then(refetch)
@@ -149,7 +152,8 @@ export default ({history}) => {
 							basePortletURL,
 							{
 								dataDefinitionId: id,
-								mvcRenderCommandName: '/edit_form_view',
+								mvcRenderCommandName:
+									'/app_builder/edit_form_view',
 								newCustomObject: true,
 							}
 						)

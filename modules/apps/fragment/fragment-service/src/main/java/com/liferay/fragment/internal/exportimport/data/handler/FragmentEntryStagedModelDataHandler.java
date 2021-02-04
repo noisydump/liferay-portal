@@ -184,11 +184,10 @@ public class FragmentEntryStagedModelDataHandler
 			long previewFileEntryId = MapUtil.getLong(
 				fileEntryIds, fragmentEntry.getPreviewFileEntryId(), 0);
 
-			importedFragmentEntry.setPreviewFileEntryId(previewFileEntryId);
-
 			importedFragmentEntry =
 				_fragmentEntryLocalService.updateFragmentEntry(
-					importedFragmentEntry);
+					importedFragmentEntry.getFragmentEntryId(),
+					previewFileEntryId);
 		}
 
 		portletDataContext.importClassedModel(

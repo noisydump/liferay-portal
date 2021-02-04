@@ -14,6 +14,7 @@
 
 package com.liferay.portal.upgrade.v7_3_x;
 
+import com.liferay.portal.kernel.upgrade.DummyUpgradeProcess;
 import com.liferay.portal.kernel.upgrade.UpgradeCTModel;
 import com.liferay.portal.kernel.upgrade.UpgradeProcess;
 import com.liferay.portal.kernel.version.Version;
@@ -33,7 +34,7 @@ public class PortalUpgradeProcessRegistryImpl
 
 		upgradeProcesses.put(new Version(6, 0, 0), new UpgradeMVCCVersion());
 
-		upgradeProcesses.put(new Version(6, 0, 1), new UpgradeLayout());
+		upgradeProcesses.put(new Version(6, 0, 1), new DummyUpgradeProcess());
 
 		upgradeProcesses.put(new Version(6, 0, 2), new UpgradeLayoutSet());
 
@@ -132,6 +133,8 @@ public class PortalUpgradeProcessRegistryImpl
 			new Version(8, 18, 0), new UpgradeLayoutStyleBookEntry());
 
 		upgradeProcesses.put(new Version(8, 18, 1), new UpgradeModules());
+
+		upgradeProcesses.put(new Version(8, 18, 2), new UpgradeLayout());
 	}
 
 }

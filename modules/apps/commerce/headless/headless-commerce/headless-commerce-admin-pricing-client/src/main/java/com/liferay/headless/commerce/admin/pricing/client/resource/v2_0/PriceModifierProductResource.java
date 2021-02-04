@@ -40,18 +40,19 @@ public interface PriceModifierProductResource {
 		return new Builder();
 	}
 
-	public void deletePriceModifierProduct(Long id) throws Exception;
+	public void deletePriceModifierProduct(Long priceModifierProductId)
+		throws Exception;
 
 	public HttpInvoker.HttpResponse deletePriceModifierProductHttpResponse(
-			Long id)
+			Long priceModifierProductId)
 		throws Exception;
 
 	public void deletePriceModifierProductBatch(
-			Long id, String callbackURL, Object object)
+			String callbackURL, Object object)
 		throws Exception;
 
 	public HttpInvoker.HttpResponse deletePriceModifierProductBatchHttpResponse(
-			Long id, String callbackURL, Object object)
+			String callbackURL, Object object)
 		throws Exception;
 
 	public Page<PriceModifierProduct>
@@ -162,9 +163,11 @@ public interface PriceModifierProductResource {
 	public static class PriceModifierProductResourceImpl
 		implements PriceModifierProductResource {
 
-		public void deletePriceModifierProduct(Long id) throws Exception {
+		public void deletePriceModifierProduct(Long priceModifierProductId)
+			throws Exception {
+
 			HttpInvoker.HttpResponse httpResponse =
-				deletePriceModifierProductHttpResponse(id);
+				deletePriceModifierProductHttpResponse(priceModifierProductId);
 
 			String content = httpResponse.getContent();
 
@@ -187,7 +190,7 @@ public interface PriceModifierProductResource {
 		}
 
 		public HttpInvoker.HttpResponse deletePriceModifierProductHttpResponse(
-				Long id)
+				Long priceModifierProductId)
 			throws Exception {
 
 			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
@@ -214,8 +217,9 @@ public interface PriceModifierProductResource {
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port +
-						"/o/headless-commerce-admin-pricing/v2.0/price-modifier-products/{id}",
-				id);
+						"/o/headless-commerce-admin-pricing/v2.0/price-modifier-products/{priceModifierProductId}");
+
+			httpInvoker.path("priceModifierProductId", priceModifierProductId);
 
 			httpInvoker.userNameAndPassword(
 				_builder._login + ":" + _builder._password);
@@ -224,12 +228,12 @@ public interface PriceModifierProductResource {
 		}
 
 		public void deletePriceModifierProductBatch(
-				Long id, String callbackURL, Object object)
+				String callbackURL, Object object)
 			throws Exception {
 
 			HttpInvoker.HttpResponse httpResponse =
 				deletePriceModifierProductBatchHttpResponse(
-					id, callbackURL, object);
+					callbackURL, object);
 
 			String content = httpResponse.getContent();
 
@@ -242,7 +246,7 @@ public interface PriceModifierProductResource {
 
 		public HttpInvoker.HttpResponse
 				deletePriceModifierProductBatchHttpResponse(
-					Long id, String callbackURL, Object object)
+					String callbackURL, Object object)
 			throws Exception {
 
 			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
@@ -274,8 +278,7 @@ public interface PriceModifierProductResource {
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port +
-						"/o/headless-commerce-admin-pricing/v2.0/price-modifier-products/batch",
-				id);
+						"/o/headless-commerce-admin-pricing/v2.0/price-modifier-products/batch");
 
 			httpInvoker.userNameAndPassword(
 				_builder._login + ":" + _builder._password);
@@ -348,8 +351,9 @@ public interface PriceModifierProductResource {
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port +
-						"/o/headless-commerce-admin-pricing/v2.0/price-modifiers/by-externalReferenceCode/{externalReferenceCode}/price-modifier-products",
-				externalReferenceCode);
+						"/o/headless-commerce-admin-pricing/v2.0/price-modifiers/by-externalReferenceCode/{externalReferenceCode}/price-modifier-products");
+
+			httpInvoker.path("externalReferenceCode", externalReferenceCode);
 
 			httpInvoker.userNameAndPassword(
 				_builder._login + ":" + _builder._password);
@@ -420,8 +424,9 @@ public interface PriceModifierProductResource {
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port +
-						"/o/headless-commerce-admin-pricing/v2.0/price-modifiers/by-externalReferenceCode/{externalReferenceCode}/price-modifier-products",
-				externalReferenceCode);
+						"/o/headless-commerce-admin-pricing/v2.0/price-modifiers/by-externalReferenceCode/{externalReferenceCode}/price-modifier-products");
+
+			httpInvoker.path("externalReferenceCode", externalReferenceCode);
 
 			httpInvoker.userNameAndPassword(
 				_builder._login + ":" + _builder._password);
@@ -508,8 +513,9 @@ public interface PriceModifierProductResource {
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port +
-						"/o/headless-commerce-admin-pricing/v2.0/price-modifiers/{id}/price-modifier-products",
-				id);
+						"/o/headless-commerce-admin-pricing/v2.0/price-modifiers/{id}/price-modifier-products");
+
+			httpInvoker.path("id", id);
 
 			httpInvoker.userNameAndPassword(
 				_builder._login + ":" + _builder._password);
@@ -577,8 +583,9 @@ public interface PriceModifierProductResource {
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port +
-						"/o/headless-commerce-admin-pricing/v2.0/price-modifiers/{id}/price-modifier-products",
-				id);
+						"/o/headless-commerce-admin-pricing/v2.0/price-modifiers/{id}/price-modifier-products");
+
+			httpInvoker.path("id", id);
 
 			httpInvoker.userNameAndPassword(
 				_builder._login + ":" + _builder._password);
@@ -639,8 +646,9 @@ public interface PriceModifierProductResource {
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port +
-						"/o/headless-commerce-admin-pricing/v2.0/price-modifiers/price-modifier-products/batch",
-				id);
+						"/o/headless-commerce-admin-pricing/v2.0/price-modifiers/price-modifier-products/batch");
+
+			httpInvoker.path("id", id);
 
 			httpInvoker.userNameAndPassword(
 				_builder._login + ":" + _builder._password);

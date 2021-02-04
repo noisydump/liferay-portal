@@ -14,6 +14,10 @@
 
 package com.liferay.headless.commerce.admin.pricing.internal.resource.v2_0;
 
+import com.liferay.commerce.discount.model.CommerceDiscountRel;
+import com.liferay.commerce.discount.service.CommerceDiscountRelService;
+import com.liferay.commerce.pricing.model.CommercePriceModifierRel;
+import com.liferay.commerce.pricing.service.CommercePriceModifierRelService;
 import com.liferay.headless.commerce.admin.pricing.dto.v2_0.Category;
 import com.liferay.headless.commerce.admin.pricing.dto.v2_0.DiscountCategory;
 import com.liferay.headless.commerce.admin.pricing.dto.v2_0.PriceModifierCategory;
@@ -21,9 +25,7 @@ import com.liferay.headless.commerce.admin.pricing.internal.dto.v2_0.converter.C
 import com.liferay.headless.commerce.admin.pricing.resource.v2_0.CategoryResource;
 import com.liferay.portal.vulcan.dto.converter.DefaultDTOConverterContext;
 import com.liferay.portal.vulcan.fields.NestedField;
-import com.liferay.portal.vulcan.fields.NestedFieldId;
-
-import javax.validation.constraints.NotNull;
+import com.liferay.portal.vulcan.fields.NestedFieldSupport;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -35,33 +37,43 @@ import org.osgi.service.component.annotations.ServiceScope;
 @Component(
 	enabled = false,
 	properties = "OSGI-INF/liferay/rest/v2_0/category.properties",
-	scope = ServiceScope.PROTOTYPE, service = CategoryResource.class
+	scope = ServiceScope.PROTOTYPE,
+	service = {CategoryResource.class, NestedFieldSupport.class}
 )
-public class CategoryResourceImpl extends BaseCategoryResourceImpl {
+public class CategoryResourceImpl
+	extends BaseCategoryResourceImpl implements NestedFieldSupport {
 
 	@NestedField(parentClass = DiscountCategory.class, value = "category")
 	@Override
-	public Category getDiscountIdCategoryPage(
-			@NestedFieldId(value = "categoryId") @NotNull Long id)
-		throws Exception {
+	public Category getDiscountCategoryCategory(Long id) throws Exception {
+		CommerceDiscountRel commerceDiscountRel =
+			_commerceDiscountRelService.getCommerceDiscountRel(id);
 
 		return _categoryDTOConverter.toDTO(
 			new DefaultDTOConverterContext(
-				id, contextAcceptLanguage.getPreferredLocale()));
+				commerceDiscountRel.getClassPK(),
+				contextAcceptLanguage.getPreferredLocale()));
 	}
 
 	@NestedField(parentClass = PriceModifierCategory.class, value = "category")
 	@Override
-	public Category getPriceModifierIdCategory(
-			@NestedFieldId(value = "categoryId") @NotNull Long id)
-		throws Exception {
+	public Category getPriceModifierCategoryCategory(Long id) throws Exception {
+		CommercePriceModifierRel commercePriceModifierRel =
+			_commercePriceModifierRelService.getCommercePriceModifierRel(id);
 
 		return _categoryDTOConverter.toDTO(
 			new DefaultDTOConverterContext(
-				id, contextAcceptLanguage.getPreferredLocale()));
+				commercePriceModifierRel.getClassPK(),
+				contextAcceptLanguage.getPreferredLocale()));
 	}
 
 	@Reference
 	private CategoryDTOConverter _categoryDTOConverter;
+
+	@Reference
+	private CommerceDiscountRelService _commerceDiscountRelService;
+
+	@Reference
+	private CommercePriceModifierRelService _commercePriceModifierRelService;
 
 }

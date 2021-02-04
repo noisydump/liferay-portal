@@ -13,22 +13,32 @@
  */
 
 import {openImageSelector} from '../../core/openImageSelector';
+import {config} from '../config/index';
 
 /**
  * @param {HTMLElement} element HTMLElement where the editor
  *  should be applied to.
  * @param {function} changeCallback Function that should be called whenever the
- *  editor produces a change. It must receive a string with
- *  the new editable value.
+ *  editor produces a change. It must receive two parameters, the editable value
+ *  and the editable config.
  * @param {function} destroyCallback Function that should be called if
  *  the editor is destroyed for any internal reason. This function does NOT need
  *  to be called if the editor is destroyed with destroyEditor function.
  */
 function createEditor(element, changeCallback, destroyCallback) {
-	openImageSelector(
-		(image) => changeCallback(image && image.url ? image.url : ''),
-		destroyCallback
-	);
+	openImageSelector((image) => {
+		const url = image && image.url ? image.url : '';
+
+		changeCallback(
+			config.adaptiveMediaEnabled
+				? {
+						fileEntryId: image ? image.fileEntryId : undefined,
+						url,
+				  }
+				: url,
+			{imageTitle: image && image.title ? image.title : ''}
+		);
+	}, destroyCallback);
 }
 
 /**
@@ -42,8 +52,9 @@ function destroyEditor() {}
  * @param {object} config Editable value's config object
  * @param {string} [config.href] Image anchor url
  * @param {string} [config.target] Image anchor target
+ * @param {string} languageId Language id
  */
-function render(element, value, config = {}) {
+function render(element, value, editableConfig = {}, languageId) {
 	let image = null;
 
 	if (element instanceof HTMLImageElement) {
@@ -54,21 +65,37 @@ function render(element, value, config = {}) {
 	}
 
 	if (image) {
-		image.alt = value.alt || config.alt || image.alt;
+		if (editableConfig.alt && typeof editableConfig.alt === 'object') {
+			image.alt =
+				editableConfig.alt[languageId] ||
+				editableConfig.alt[config.defaultLanguageId] ||
+				'';
+		}
+		else if (typeof editableConfig.alt === 'string') {
+			image.alt = editableConfig.alt;
+		}
+		else {
+			image.alt = '';
+		}
 
-		if (config.href) {
+		const link =
+			editableConfig[languageId] ||
+			editableConfig[config.defaultLanguageId] ||
+			editableConfig;
+
+		if (link.href) {
 			if (image.parentElement instanceof HTMLAnchorElement) {
-				image.parentElement.href = config.href;
-				image.parentElement.target = config.target || '';
+				image.parentElement.href = link.href;
+				image.parentElement.target = link.target || '';
 			}
 			else {
-				const link = document.createElement('a');
+				const anchorElement = document.createElement('a');
 
-				link.href = config.href;
-				link.target = config.target || '';
+				anchorElement.href = link.href;
+				anchorElement.target = link.target || '';
 
-				image.parentElement.replaceChild(link, image);
-				link.appendChild(image);
+				image.parentElement.replaceChild(anchorElement, image);
+				anchorElement.appendChild(image);
 			}
 		}
 

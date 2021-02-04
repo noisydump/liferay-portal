@@ -23,11 +23,14 @@ import {
 	DELETE_DATA_LAYOUT_FIELD,
 	DELETE_DATA_LAYOUT_RULE,
 	EDIT_CUSTOM_OBJECT_FIELD,
+	SET_FORM_RENDERER_CUSTOM_FIELDS,
 	SWITCH_SIDEBAR_PANEL,
 	UPDATE_APP_PROPS,
 	UPDATE_CONFIG,
 	UPDATE_DATA_DEFINITION,
+	UPDATE_DATA_DEFINITION_FIELDS,
 	UPDATE_DATA_LAYOUT,
+	UPDATE_DATA_LAYOUT_FIELDS,
 	UPDATE_DATA_LAYOUT_NAME,
 	UPDATE_DATA_LAYOUT_RULE,
 	UPDATE_EDITING_DATA_DEFINITION_ID,
@@ -42,6 +45,7 @@ import {
 } from './actions.es';
 import {getDataDefinitionField} from './utils/dataDefinition.es';
 import * as DataLayoutVisitor from './utils/dataLayoutVisitor.es';
+import {normalizeRule} from './utils/normalizers.es';
 
 const AppContext = createContext();
 
@@ -60,10 +64,12 @@ const initialState = {
 	dataDefinition: {
 		availableLanguageIds: [],
 		dataDefinitionFields: [],
+		defaultLanguageId: themeDisplay.getDefaultLanguageId(),
 		name: {},
 	},
 	dataDefinitionId: 0,
 	dataLayout: {
+		dataLayoutFields: {},
 		dataLayoutPages: [],
 		dataRules: [],
 		name: {},
@@ -71,12 +77,13 @@ const initialState = {
 	},
 	dataLayoutId: 0,
 	editingDataDefinitionId: 0,
-	editingLanguageId: themeDisplay.getLanguageId(),
+	editingLanguageId: themeDisplay.getDefaultLanguageId(),
 	fieldSets: [],
 	fieldTypes: [],
 	focusedCustomObjectField: {},
 	focusedField: {},
 	hoveredField: {},
+	initialAvailableLanguageIds: [],
 	sidebarOpen: true,
 	sidebarPanelId: 'fields',
 	spritemap: `${Liferay.ThemeDisplay.getPathThemeImages()}/clay/icons.svg`,
@@ -113,6 +120,13 @@ const deleteDataDefinitionField = (dataDefinition, fieldName) => {
 const deleteDataLayoutField = (dataLayout, fieldName) => {
 	return {
 		...dataLayout,
+		dataLayoutFields: {
+			...dataLayout.dataLayoutFields,
+			[fieldName]: {
+				...dataLayout.dataLayoutFields[fieldName],
+				required: false,
+			},
+		},
 		dataLayoutPages: DataLayoutVisitor.deleteField(
 			dataLayout.dataLayoutPages,
 			fieldName
@@ -163,6 +177,24 @@ const editFocusedCustomObjectField = ({
 	};
 };
 
+/**
+ * Get unformatted definition field
+ * @param {object} dataDefinition
+ * @param {object} field
+ */
+const getUnformattedDefinitionField = (dataDefinition, {fieldName}) => {
+	return getDataDefinitionField(dataDefinition, fieldName);
+};
+
+/**
+ * Get formatted definition field
+ * @param {object} dataLayoutBuilder
+ * @param {object} ddmfield
+ */
+const getFormattedDefinitionField = (dataLayoutBuilder, field) => {
+	return dataLayoutBuilder.getDataDefinitionField(field);
+};
+
 const setDataDefinitionFields = (
 	dataLayoutBuilder,
 	dataDefinition,
@@ -177,9 +209,21 @@ const setDataDefinitionFields = (
 	const newFields = [];
 
 	visitor.mapFields((field) => {
-		const definitionField = dataLayoutBuilder.getDataDefinitionField(field);
+		const formattedDefinitionField = getFormattedDefinitionField(
+			dataLayoutBuilder,
+			field
+		);
 
-		newFields.push(definitionField);
+		if (dataLayoutBuilder.props.contentType === 'app-builder') {
+			newFields.push({
+				...formattedDefinitionField,
+				required: !!getUnformattedDefinitionField(dataDefinition, field)
+					?.required,
+			});
+		}
+		else {
+			newFields.push(formattedDefinitionField);
+		}
 	});
 
 	return newFields.concat(
@@ -192,12 +236,39 @@ const setDataDefinitionFields = (
 };
 
 const setDataLayout = (dataLayout, dataLayoutBuilder) => {
-	const {dataRules} = dataLayout;
+	const {dataLayoutFields, dataRules} = dataLayout;
 	const {pages} = dataLayoutBuilder.getStore();
 	const {layout} = dataLayoutBuilder.getDataDefinitionAndDataLayout(
 		pages,
 		dataRules || []
 	);
+
+	if (dataLayoutBuilder.props.contentType === 'app-builder') {
+		const visitor = new PagesVisitor(pages);
+		const fields = [];
+
+		visitor.mapFields((field) => {
+			const formattedDefinitionField = getFormattedDefinitionField(
+				dataLayoutBuilder,
+				field
+			);
+
+			fields.push(formattedDefinitionField);
+		});
+
+		return {
+			...layout,
+			dataLayoutFields: fields.reduce((allFields, field) => {
+				return {
+					...allFields,
+					[field.name]: {
+						...dataLayoutFields[field.name],
+						required: !!field?.required,
+					},
+				};
+			}, {}),
+		};
+	}
 
 	return layout;
 };
@@ -239,7 +310,7 @@ const createReducer = (dataLayoutBuilder) => {
 					dataLayout: {dataRules},
 				} = state;
 
-				dataRule = DataLayoutVisitor.normalizeRule(dataRule);
+				dataRule = normalizeRule(dataRule);
 
 				return {
 					...state,
@@ -332,6 +403,12 @@ const createReducer = (dataLayoutBuilder) => {
 					},
 				};
 			}
+			case SET_FORM_RENDERER_CUSTOM_FIELDS: {
+				return {
+					...state,
+					customFields: action.payload,
+				};
+			}
 			case SWITCH_SIDEBAR_PANEL: {
 				const {sidebarOpen, sidebarPanelId} = action.payload;
 
@@ -356,6 +433,19 @@ const createReducer = (dataLayoutBuilder) => {
 						...state.dataDefinition,
 						...dataDefinition,
 					},
+					initialAvailableLanguageIds:
+						dataDefinition.availableLanguageIds,
+				};
+			}
+			case UPDATE_DATA_DEFINITION_FIELDS: {
+				const {dataDefinitionFields} = action.payload;
+
+				return {
+					...state,
+					dataDefinition: {
+						...state.dataDefinition,
+						dataDefinitionFields,
+					},
 				};
 			}
 			case UPDATE_DATA_LAYOUT: {
@@ -372,6 +462,17 @@ const createReducer = (dataLayoutBuilder) => {
 					},
 				};
 			}
+			case UPDATE_DATA_LAYOUT_FIELDS: {
+				const {dataLayoutFields} = action.payload;
+
+				return {
+					...state,
+					dataLayout: {
+						...state.dataLayout,
+						dataLayoutFields,
+					},
+				};
+			}
 			case UPDATE_DATA_LAYOUT_NAME: {
 				const {name} = action.payload;
 
@@ -384,20 +485,18 @@ const createReducer = (dataLayoutBuilder) => {
 				};
 			}
 			case UPDATE_DATA_LAYOUT_RULE: {
-				let {dataRule} = action.payload;
+				const {dataRule, loc} = action.payload;
 				const {
 					dataLayout: {dataRules},
 				} = state;
-
-				dataRule = DataLayoutVisitor.normalizeRule(dataRule);
 
 				return {
 					...state,
 					dataLayout: {
 						...state.dataLayout,
 						dataRules: dataRules.map((rule, index) => {
-							if (index === dataRule.ruleEditedIndex) {
-								return dataRule;
+							if (index === loc) {
+								return normalizeRule(dataRule);
 							}
 
 							return rule;

@@ -37,21 +37,19 @@ type ClientOptions = {
 };
 
 /**
- * Payloads may only contain properties which we can send across iframes
- * using the `postMessage` API. Complex properties like functions cannot
- * be sent because the "Structured clone algorithm" does not support
- * them.
- *
- * @see https://developer.mozilla.org/en-US/docs/Web/API/Client/postMessage
+ * Properties accessible via the `get()` method. The remote-app-support-web
+ * module will reject requests for properties outside of this list.
  */
-type Payload = {[key: string]: StructuredClonable};
-
-type PromiseMap<T = unknown> = {
-	[key: string]: {
-		reject: (reason?: any) => void;
-		resolve: (value?: T) => void;
-	};
-};
+type GettableProperties =
+	| 'companyId'
+	| 'css'
+	| 'defaultLanguageId'
+	| 'isControlPanel'
+	| 'isSignedIn'
+	| 'languageId'
+	| 'siteGroupId'
+	| 'userId'
+	| 'userName';
 
 /**
  * @see https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Structured_clone_algorithm
@@ -77,6 +75,23 @@ type StructuredClonable =
 	| string
 	| undefined
 	| {[key: string]: StructuredClonable};
+
+/**
+ * Payloads may only contain properties which we can send across iframes
+ * using the `postMessage` API. Complex properties like functions cannot
+ * be sent because the "Structured clone algorithm" does not support
+ * them.
+ *
+ * @see https://developer.mozilla.org/en-US/docs/Web/API/Client/postMessage
+ */
+type Payload = {[key: string]: StructuredClonable};
+
+type PromiseMap<T = unknown> = {
+	[key: string]: {
+		reject: (reason?: any) => void;
+		resolve: (value?: T) => void;
+	};
+};
 
 type State =
 	| 'disposed'
@@ -306,9 +321,23 @@ function serializeBody(body: BodyInit | null): StructuredClonable {
 		isArrayBufferView(body)
 	) {
 		return body;
-	} else {
-		// warn about unserializable body type (eg. FormData, search params,
+	}
+	else if (body instanceof FormData) {
+		const serializedFormData: {[key: string]: File | string} = {};
+
+		body.forEach((value: File | string, key: string) => {
+			serializedFormData[key] = value;
+		});
+
+		return {
+			__FORM_DATA__: serializedFormData,
+		};
+	}
+	else {
+
+		// warn about unserializable body type (eg. search params,
 		// readable stream),
+
 	}
 }
 
@@ -418,483 +447,490 @@ type Listeners = {
 	};
 };
 
-const SDK = Object.freeze({
-	VERSION,
+function Client({debug}: ClientOptions = {debug: false}) {
 
-	Client({debug}: ClientOptions = {debug: false}) {
-		// TODO: warn if no promise polyfill present
-		// (need that just like we expect DXP environment ot have it)
-		// or provide very minimal fallback ponyfill
+	// TODO: warn if no promise polyfill present
+	// (need that just like we expect DXP environment ot have it)
+	// or provide very minimal fallback ponyfill
 
-		// TODO: consider renaming this to clientID for consistency with name of
-		// constructor
-		let appID = getUUID();
+	// TODO: consider renaming this to clientID for consistency with name of
+	// constructor
 
-		let listenerID = 0;
+	const appID = getUUID();
 
-		const listeners: Listeners = {
-			error: {},
-		};
-		const messageQueue: Array<Payload> = [];
+	let listenerID = 0;
 
-		const promises = {
-			fetch: {} as PromiseMap<BasicResponse>,
-			'fetch:response:blob': {} as PromiseMap<Blob>,
-			'fetch:response:json': {} as PromiseMap<JSONValue>,
-			'fetch:response:text': {} as PromiseMap<string>,
-			get: {} as PromiseMap<string>,
-		} as const;
+	const listeners: Listeners = {
+		error: {},
+	};
+	const messageQueue: Array<Payload> = [];
 
-		let state: State = 'unregistered';
+	const promises = {
+		fetch: {} as PromiseMap<BasicResponse>,
+		'fetch:response:blob': {} as PromiseMap<Blob>,
+		'fetch:response:json': {} as PromiseMap<JSONValue>,
+		'fetch:response:text': {} as PromiseMap<string>,
+		get: {} as PromiseMap<string>,
+	} as const;
 
-		register();
+	let state: State = 'unregistered';
 
-		function handleError(message: string, code: number) {
-			log(`Error: ${message} (${code})`);
+	register();
 
-			if (code === ERROR_CODES.ALREADY_REGISTERED) {
-				state = 'invalid';
+	function handleError(message: string, code: number) {
+		log(`Error: ${message} (${code})`);
+
+		if (code === ERROR_CODES.ALREADY_REGISTERED) {
+			state = 'invalid';
+		}
+
+		Object.keys(listeners.error).forEach((key) => {
+			try {
+				listeners.error[key]({
+					code,
+					message,
+					type: 'error',
+				});
 			}
+			catch (error) {
+				log(`Error caught while notifying listener: ${error}`);
+			}
+		});
+	}
 
-			Object.keys(listeners.error).forEach((key) => {
+	function log(...messages: Array<unknown>) {
+		if (debug) {
+			logger(`[CLIENT: ${appID.slice(0, 8)}...]`, ...messages);
+		}
+	}
+
+	function postMessage(
+		data: Payload,
+		{force}: {force: boolean} = {force: false}
+	) {
+		if (state === 'disposed') {
+			log('ignoring message (disposed client)...', data);
+		}
+		else if (state === 'registered' || force) {
+			log('posting message...', data);
+
+			if (window.parent) {
 				try {
-					listeners.error[key]({
-						code,
-						message,
-						type: 'error',
-					});
-				} catch (error) {
-					log(`Error caught while notifying listener: ${error}`);
+					window.parent.postMessage(
+						{
+							...data,
+							appID,
+							protocol: REMOTE_APP_PROTOCOL,
+							role: 'client',
+							version: VERSION,
+						},
+						'*'
+					);
 				}
-			});
-		}
-
-		function log(...messages: Array<unknown>) {
-			if (debug) {
-				logger(`[CLIENT: ${appID.slice(0, 8)}...]`, ...messages);
+				catch (error) {
+					log(`error sending message: ${error}`);
+				}
+			}
+			else {
+				log('no parent...');
 			}
 		}
+		else if (state === 'invalid') {
+			log('ignoring message (invalid client)...', data);
+		}
+		else if (state === 'registering') {
+			log('enqueuing message...', data);
 
-		function postMessage(
-			data: Payload,
-			{force}: {force: boolean} = {force: false}
+			messageQueue.push(data);
+		}
+	}
+
+	function receiveMessage(event: MessageEvent) {
+		const {data, source} = event;
+
+		if (source !== parent.window) {
+			return;
+		}
+
+		log('received', data);
+
+		// TODO: may want to parse event into structured type in one place
+
+		if (
+			data &&
+			getString(data, 'protocol') === REMOTE_APP_PROTOCOL &&
+			getString(data, 'role') === 'host' &&
+			getNumber(data, 'version') === VERSION
 		) {
-			if (state === 'disposed') {
-				log('ignoring message (disposed client)...', data);
-			} else if (state === 'registered' || force) {
-				log('posting message...', data);
+			const kind = getString(data, 'kind');
 
-				if (window.parent) {
-					try {
-						window.parent.postMessage(
-							{
-								...data,
-								appID,
-								protocol: REMOTE_APP_PROTOCOL,
-								role: 'client',
-								version: VERSION,
-							},
-							'*'
-						);
-					} catch (error) {
-						log(`error sending message: ${error}`);
-					}
-				} else {
-					log('no parent...');
+			if (getString(data, 'appID') !== appID) {
+				log('appID mismatch');
+			}
+			else if (kind === 'error') {
+				const message = getString(data, 'message', 'unknown');
+
+				const code = getNumber(data, 'code', ERROR_CODES.UNKNOWN);
+
+				handleError(message, code);
+			}
+			else if (kind === 'fetch:reject') {
+				const requestID = getString(data, 'requestID');
+
+				if (requestID) {
+					promises.fetch[requestID]?.reject?.(data.error);
 				}
-			} else if (state === 'invalid') {
-				log('ignoring message (invalid client)...', data);
-			} else if (state === 'registering') {
-				log('enqueuing message...', data);
-
-				messageQueue.push(data);
 			}
-		}
+			else if (kind === 'fetch:resolve') {
+				const requestID = getString(data, 'requestID');
 
-		function receiveMessage(event: MessageEvent) {
-			const {data, source} = event;
+				if (requestID) {
+					promises.fetch[requestID]?.resolve?.({
+						blob() {
+							postMessage({
+								command: 'fetch:response:blob',
+								requestID,
+							});
 
-			if (source !== parent.window) {
-				return;
-			}
+							return new Promise((resolve, reject) => {
+								promises['fetch:response:blob'][requestID] = {
+									reject,
+									resolve,
+								};
+							});
+						},
 
-			log('received', data);
+						// TODO: consider also propagating trailer
+						/**
+						 * Partial proxy for Headers object.
+						 *
+						 * @see https://developer.mozilla.org/en-US/docs/Web/API/Headers
+						 */
+						headers: {
+							get(name: string): string | null {
+								const headers = getArray(data, 'headers', []);
 
-			// TODO: may want to parse event into structured type in one place
-			if (
-				data &&
-				getString(data, 'protocol') === REMOTE_APP_PROTOCOL &&
-				getString(data, 'role') === 'host' &&
-				getNumber(data, 'version') === VERSION
-			) {
-				const kind = getString(data, 'kind');
-
-				if (getString(data, 'appID') !== appID) {
-					log('appID mismatch');
-				} else if (kind === 'error') {
-					const message = getString(data, 'message', 'unknown');
-
-					const code = getNumber(data, 'code', ERROR_CODES.UNKNOWN);
-
-					handleError(message, code);
-				} else if (kind === 'fetch:reject') {
-					const requestID = getString(data, 'requestID');
-
-					if (requestID) {
-						promises.fetch[requestID]?.reject?.(data.error);
-					}
-				} else if (kind === 'fetch:resolve') {
-					const requestID = getString(data, 'requestID');
-
-					if (requestID) {
-						promises.fetch[requestID]?.resolve?.({
-							blob() {
-								postMessage({
-									command: 'fetch:response:blob',
-									requestID,
-								});
-
-								return new Promise((resolve, reject) => {
-									promises['fetch:response:blob'][
-										requestID
-									] = {
-										resolve,
-										reject,
-									};
-								});
-							},
-
-							// TODO: consider also propagating trailer
-							/**
-							 * Partial proxy for Headers object.
-							 *
-							 * @see https://developer.mozilla.org/en-US/docs/Web/API/Headers
-							 */
-							headers: {
-								get(name: string): string | null {
-									const headers = getArray(
-										data,
-										'headers',
-										[]
-									);
-
-									for (let i = 0; i < headers.length; i++) {
-										const tuple = headers[i];
+								for (let i = 0; i < headers.length; i++) {
+									const tuple = headers[i];
+									if (isArray(tuple) && isString(tuple[0])) {
 										if (
-											isArray(tuple) &&
-											isString(tuple[0])
+											tuple[0].toLowerCase() ===
+											name.toLowerCase()
 										) {
-											if (
-												tuple[0].toLowerCase() ===
-												name.toLowerCase()
-											) {
-												const value = tuple[1];
+											const value = tuple[1];
 
-												if (typeof value === 'string') {
-													return value;
-												}
-
-												break;
+											if (typeof value === 'string') {
+												return value;
 											}
+
+											break;
 										}
 									}
+								}
 
-									return null;
-								},
+								return null;
+							},
 
-								has(name: string): boolean {
-									const headers = getArray(
-										data,
-										'headers',
-										[]
+							has(name: string): boolean {
+								const headers = getArray(data, 'headers', []);
+
+								return headers.some((tuple) => {
+									return (
+										isArray(tuple) &&
+										isString(tuple[0]) &&
+										tuple[0].toLowerCase() ===
+											name.toLowerCase() &&
+										typeof tuple[1] === 'string'
 									);
-
-									return headers.some((tuple) => {
-										return (
-											isArray(tuple) &&
-											isString(tuple[0]) &&
-											tuple[0].toLowerCase() ===
-												name.toLowerCase() &&
-											typeof tuple[1] === 'string'
-										);
-									});
-								},
-							},
-
-							json() {
-								postMessage({
-									command: 'fetch:response:json',
-									requestID,
-								});
-
-								return new Promise((resolve, reject) => {
-									promises['fetch:response:json'][
-										requestID
-									] = {
-										resolve,
-										reject,
-									};
 								});
 							},
+						},
 
-							ok: getBoolean(data, 'ok', false),
-							redirected: getBoolean(data, 'redirected', false),
-							status: getNumber(data, 'status', 0),
-							statusText: getString(data, 'statusText', ''),
+						json() {
+							postMessage({
+								command: 'fetch:response:json',
+								requestID,
+							});
 
-							text() {
-								postMessage({
-									command: 'fetch:response:text',
-									requestID,
-								});
+							return new Promise((resolve, reject) => {
+								promises['fetch:response:json'][requestID] = {
+									reject,
+									resolve,
+								};
+							});
+						},
 
-								return new Promise((resolve, reject) => {
-									promises['fetch:response:text'][
-										requestID
-									] = {
-										resolve,
-										reject,
-									};
-								});
-							},
+						ok: getBoolean(data, 'ok', false),
+						redirected: getBoolean(data, 'redirected', false),
+						status: getNumber(data, 'status', 0),
+						statusText: getString(data, 'statusText', ''),
 
-							url: getString(data, 'url', ''),
-						});
+						text() {
+							postMessage({
+								command: 'fetch:response:text',
+								requestID,
+							});
+
+							return new Promise((resolve, reject) => {
+								promises['fetch:response:text'][requestID] = {
+									reject,
+									resolve,
+								};
+							});
+						},
+
+						url: getString(data, 'url', ''),
+					});
+				}
+			}
+			else if (kind === 'fetch:response:blob:reject') {
+				const requestID = getString(data, 'requestID');
+
+				if (requestID) {
+					promises['fetch:response:blob'][requestID]?.reject?.(
+						data.error
+					);
+				}
+			}
+			else if (kind === 'fetch:response:blob:resolve') {
+				const requestID = getString(data, 'requestID');
+
+				if (requestID) {
+					promises['fetch:response:blob'][requestID]?.resolve?.(
+						data.blob
+					);
+				}
+			}
+			else if (kind === 'fetch:response:json:reject') {
+				const requestID = getString(data, 'requestID');
+
+				if (requestID) {
+					promises['fetch:response:json'][requestID]?.reject?.(
+						data.error
+					);
+				}
+			}
+			else if (kind === 'fetch:response:json:resolve') {
+				const requestID = getString(data, 'requestID');
+
+				if (requestID) {
+					promises['fetch:response:json'][requestID]?.resolve?.(
+						data.json
+					);
+				}
+			}
+			else if (kind === 'fetch:response:text:reject') {
+				const requestID = getString(data, 'requestID');
+
+				if (requestID) {
+					promises['fetch:response:text'][requestID]?.reject?.(
+						data.error
+					);
+				}
+			}
+			else if (kind === 'fetch:response:text:resolve') {
+				const requestID = getString(data, 'requestID');
+
+				if (requestID) {
+					promises['fetch:response:text'][requestID]?.resolve?.(
+						data.text
+					);
+				}
+			}
+			else if (kind === 'get:reject') {
+				const requestID = getString(data, 'requestID');
+
+				if (requestID) {
+					promises.get[requestID]?.reject?.(data.error);
+				}
+			}
+			else if (kind === 'get:resolve') {
+				const requestID = getString(data, 'requestID');
+
+				if (requestID) {
+					promises.get[requestID]?.resolve?.(data.value);
+				}
+			}
+			else if (kind === 'registered') {
+
+				// TODO replace with actual reducer
+
+				state = 'registered';
+
+				log('registered');
+
+				// Replay messages.
+
+				while (true) {
+					const data = messageQueue.shift();
+
+					if (data) {
+						postMessage(data);
+
+						continue;
 					}
-				} else if (kind === 'fetch:response:blob:reject') {
-					const requestID = getString(data, 'requestID');
 
-					if (requestID) {
-						promises['fetch:response:blob'][requestID]?.reject?.(
-							data.error
-						);
-					}
-				} else if (kind === 'fetch:response:blob:resolve') {
-					const requestID = getString(data, 'requestID');
-
-					if (requestID) {
-						promises['fetch:response:blob'][requestID]?.resolve?.(
-							data.blob
-						);
-					}
-				} else if (kind === 'fetch:response:json:reject') {
-					const requestID = getString(data, 'requestID');
-
-					if (requestID) {
-						promises['fetch:response:json'][requestID]?.reject?.(
-							data.error
-						);
-					}
-				} else if (kind === 'fetch:response:json:resolve') {
-					const requestID = getString(data, 'requestID');
-
-					if (requestID) {
-						promises['fetch:response:json'][requestID]?.resolve?.(
-							data.json
-						);
-					}
-				} else if (kind === 'fetch:response:text:reject') {
-					const requestID = getString(data, 'requestID');
-
-					if (requestID) {
-						promises['fetch:response:text'][requestID]?.reject?.(
-							data.error
-						);
-					}
-				} else if (kind === 'fetch:response:text:resolve') {
-					const requestID = getString(data, 'requestID');
-
-					if (requestID) {
-						promises['fetch:response:text'][requestID]?.resolve?.(
-							data.text
-						);
-					}
-				} else if (kind === 'get:reject') {
-					const requestID = getString(data, 'requestID');
-
-					if (requestID) {
-						promises.get[requestID]?.reject?.(data.error);
-					}
-				} else if (kind === 'get:resolve') {
-					const requestID = getString(data, 'requestID');
-
-					if (requestID) {
-						promises.get[requestID]?.resolve?.(data.value);
-					}
-				} else if (kind === 'registered') {
-					// TODO replace with actual reducer
-					state = 'registered';
-
-					log('registered');
-
-					// Replay messages.
-
-					while (true) {
-						const data = messageQueue.shift();
-
-						if (data) {
-							postMessage(data);
-
-							continue;
-						}
-
-						break;
-					}
+					break;
 				}
 			}
 		}
+	}
 
-		function register() {
-			state = 'registering';
+	function register() {
+		state = 'registering';
 
-			window.addEventListener('message', receiveMessage);
+		window.addEventListener('message', receiveMessage);
 
-			retry({
-				callback() {
-					postMessage({command: 'register'}, {force: true});
-				},
+		retry({
+			callback() {
+				postMessage({command: 'register'}, {force: true});
+			},
 
-				until() {
-					return state !== 'registering';
-				},
+			until() {
+				return state !== 'registering';
+			},
+		});
+	}
+
+	const Public = {
+		get debug() {
+			return debug;
+		},
+
+		set debug(value) {
+			debug = value;
+		},
+
+		dispose() {
+			if (state !== 'disposed' && state !== 'invalid') {
+				if (state === 'registered' || state === 'registering') {
+					postMessage({command: 'unregister'});
+				}
+
+				state = 'disposed';
+			}
+		},
+
+		fetch(
+			resource: RequestInfo,
+			init: RequestInit = {}
+		): Promise<BasicResponse> {
+
+			// TODO: if Array.from Headers etc exist (ie. IE with polyfill
+			// or evergreen), try to extract headers from resource and merge
+			// them into init instead.
+
+			const requestID = getUUID();
+
+			postMessage({
+				command: 'fetch',
+				init: serializeRequestInit(init),
+				requestID,
+				resource: serializeRequestInfo(resource),
 			});
-		}
 
-		const Public = {
-			get debug() {
-				return debug;
-			},
-
-			get state() {
-				return state;
-			},
-
-			set debug(value) {
-				debug = value;
-			},
-
-			dispose() {
-				if (state !== 'disposed' && state !== 'invalid') {
-					if (state === 'registered' || state === 'registering') {
-						postMessage({command: 'unregister'});
-					}
-
-					state = 'disposed';
-				}
-			},
-
-			fetch(
-				resource: RequestInfo,
-				init: RequestInit = {}
-			): Promise<BasicResponse> {
-				// TODO: if Array.from Headers etc exist (ie. IE with polyfill
-				// or evergreen), try to extract headers from resource and merge
-				// them into init instead.
-				const requestID = getUUID();
-
-				postMessage({
-					command: 'fetch',
-					init: serializeRequestInit(init),
-					requestID,
-					resource: serializeRequestInfo(resource),
-				});
-
-				return new Promise<BasicResponse>((resolve, reject) => {
-					promises.fetch[requestID] = {
-						resolve,
-						reject,
-					};
-				});
-			},
-
-			get(property: 'css'): Promise<string> {
-				const requestID = getUUID();
-
-				postMessage({
-					command: 'get',
-					requestID,
-					property,
-				});
-
-				return new Promise<string>((resolve, reject) => {
-					promises.get[requestID] = {
-						resolve,
-						reject,
-					};
-				});
-			},
-
-			/**
-			 * @see https://github.com/prisma-labs/graphql-request
-			 */
-			graphql(
-				query: string,
-				variables?: {[key: string]: JSONValue}
-			): Promise<JSONValue | string> {
-				return Public.fetch('/o/graphql', {
-					body: JSON.stringify({
-						query,
-						variables,
-					}),
-					headers: {
-						'Content-Type': 'application/json',
-					},
-					method: 'POST',
-				}).then((response) => {
-					const contentType = response.headers.get('Content-Type');
-
-					if (
-						contentType &&
-						startsWith(contentType, 'application/json')
-					) {
-						return response.json();
-					} else {
-						return response.text();
-					}
-				});
-			},
-
-			log(...messages: Array<unknown>) {
-				log(...messages);
-			},
-
-			navigate(url: string) {
-				postMessage({
-					command: 'navigate',
-					url,
-				});
-			},
-
-			on(
-				event: string,
-				subscriber: (event: SDKEvent) => void
-			): Subscription {
-				if (!listeners[event]) {
-					listeners[event] = {};
-				}
-
-				const id = listenerID++;
-
-				listeners[event][id] = subscriber;
-
-				return {
-					release() {
-						delete listeners[event][id];
-					},
+			return new Promise<BasicResponse>((resolve, reject) => {
+				promises.fetch[requestID] = {
+					reject,
+					resolve,
 				};
-			},
+			});
+		},
 
-			openToast({message = '', type = 'info'} = {}) {
-				postMessage({
-					command: 'openToast',
-					message,
-					type,
-				});
-			},
-		};
+		get(property: GettableProperties): Promise<string> {
+			const requestID = getUUID();
 
-		return Public;
-	},
+			postMessage({
+				command: 'get',
+				property,
+				requestID,
+			});
+
+			return new Promise<string>((resolve, reject) => {
+				promises.get[requestID] = {
+					reject,
+					resolve,
+				};
+			});
+		},
+
+		/**
+		 * @see https://github.com/prisma-labs/graphql-request
+		 */
+		graphql(
+			query: string,
+			variables?: {[key: string]: JSONValue}
+		): Promise<JSONValue | string> {
+			return Public.fetch('/o/graphql', {
+				body: JSON.stringify({
+					query,
+					variables,
+				}),
+				headers: {
+					'Content-Type': 'application/json',
+				},
+				method: 'POST',
+			}).then((response) => {
+				const contentType = response.headers.get('Content-Type');
+
+				if (
+					contentType &&
+					startsWith(contentType, 'application/json')
+				) {
+					return response.json();
+				}
+				else {
+					return response.text();
+				}
+			});
+		},
+
+		log(...messages: Array<unknown>) {
+			log(...messages);
+		},
+
+		navigate(url: string) {
+			postMessage({
+				command: 'navigate',
+				url,
+			});
+		},
+
+		on(event: string, subscriber: (event: SDKEvent) => void): Subscription {
+			if (!listeners[event]) {
+				listeners[event] = {};
+			}
+
+			const id = listenerID++;
+
+			listeners[event][id] = subscriber;
+
+			return {
+				release() {
+					delete listeners[event][id];
+				},
+			};
+		},
+
+		openToast({message = '', type = 'info'} = {}) {
+			postMessage({
+				command: 'openToast',
+				message,
+				type,
+			});
+		},
+
+		get state() {
+			return state;
+		},
+	};
+
+	return Public;
+}
+
+const SDK = Object.freeze({
+	Client,
+	VERSION,
 });
 
 /**

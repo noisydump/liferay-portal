@@ -79,7 +79,7 @@ JSONArray availableDefinitionsJSONArray = JSONFactoryUtil.createJSONArray();
 
 		searchContainer.setTotal(total);
 
-		results = DDMStructureServiceUtil.search(company.getCompanyId(), PortalUtil.getCurrentAndAncestorSiteGroupIds(scopeGroupId), scopeClassNameId, displayTerms.getKeywords(), WorkflowConstants.STATUS_ANY, searchContainer.getStart(), searchContainer.getEnd(), null);
+		results = DDMStructureServiceUtil.search(company.getCompanyId(), PortalUtil.getCurrentAndAncestorSiteGroupIds(scopeGroupId), scopeClassNameId, displayTerms.getKeywords(), WorkflowConstants.STATUS_ANY, searchContainer.getStart(), searchContainer.getEnd(), new StructureModifiedDateComparator(true));
 
 		searchContainer.setResults(results);
 		%>
@@ -120,15 +120,14 @@ JSONArray availableDefinitionsJSONArray = JSONFactoryUtil.createJSONArray();
 			<%
 			JSONArray definitionFieldsJSONArray = DDMUtil.getDDMFormFieldsJSONArray(structure, structure.getDefinition());
 
-			JSONObject definitionJSONObject = JSONUtil.put(
-				"definitionFields", definitionFieldsJSONArray
-			).put(
-				"definitionId", structure.getStructureId()
-			).put(
-				"definitionName", structure.getName(locale)
-			);
-
-			availableDefinitionsJSONArray.put(definitionJSONObject);
+			availableDefinitionsJSONArray.put(
+				JSONUtil.put(
+					"definitionFields", definitionFieldsJSONArray
+				).put(
+					"definitionId", structure.getStructureId()
+				).put(
+					"definitionName", structure.getName(locale)
+				));
 			%>
 
 			(<aui:a cssClass="kaleo-process-preview-definition" data-definition-id="<%= structure.getStructureId() %>" href="javascript:;" label="view-fields" />)
@@ -177,7 +176,7 @@ JSONArray availableDefinitionsJSONArray = JSONFactoryUtil.createJSONArray();
 			A.one('#<portlet:namespace />ddmStructureName').val(ddmStructureName);
 
 			var kaleoFormsAdmin = Liferay.component(
-				'<portlet:namespace/>KaleoFormsAdmin'
+				'<portlet:namespace />KaleoFormsAdmin'
 			);
 
 			kaleoFormsAdmin.saveInPortletSession(

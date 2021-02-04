@@ -142,6 +142,7 @@ const MillerColumnsItem = ({
 	items,
 	actionHandlers = {},
 	namespace,
+	onDragEnd,
 	onItemDrop = noop,
 	onItemStayHover = noop,
 	rtl,
@@ -163,7 +164,12 @@ const MillerColumnsItem = ({
 				dropdownActions.push({
 					...action,
 					handler: () =>
-						onClick && onClick({actionURL: action.url, namespace}),
+						onClick &&
+						onClick({
+							actionURL: action.url,
+							hasChildren: action.hasChildren,
+							namespace,
+						}),
 					href: onClick ? null : action.url,
 				});
 			}
@@ -196,6 +202,7 @@ const MillerColumnsItem = ({
 		collect: (monitor) => ({
 			isDragging: !!monitor.isDragging(),
 		}),
+		end: onDragEnd,
 		isDragging: (monitor) => {
 			const movedItems = monitor.getItem().items;
 

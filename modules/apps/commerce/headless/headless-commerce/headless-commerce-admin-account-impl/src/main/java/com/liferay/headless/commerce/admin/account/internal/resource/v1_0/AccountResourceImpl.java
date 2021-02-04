@@ -14,6 +14,7 @@
 
 package com.liferay.headless.commerce.admin.account.internal.resource.v1_0;
 
+import com.liferay.account.model.AccountEntry;
 import com.liferay.commerce.account.constants.CommerceAccountConstants;
 import com.liferay.commerce.account.exception.NoSuchAccountException;
 import com.liferay.commerce.account.exception.NoSuchAccountGroupException;
@@ -72,8 +73,6 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
-import javax.validation.constraints.NotNull;
-
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 
@@ -126,8 +125,7 @@ public class AccountResourceImpl
 
 	@Override
 	public Response deleteAccountGroupByExternalReferenceCodeAccount(
-			@NotNull String accountExternalReferenceCode,
-			@NotNull String externalReferenceCode)
+			String accountExternalReferenceCode, String externalReferenceCode)
 		throws Exception {
 
 		CommerceAccountGroup commerceAccountGroup =
@@ -278,7 +276,7 @@ public class AccountResourceImpl
 
 		if ((customFields != null) && !customFields.isEmpty()) {
 			ExpandoUtil.updateExpando(
-				contextCompany.getCompanyId(), CommerceAccount.class,
+				contextCompany.getCompanyId(), AccountEntry.class,
 				commerceAccount.getPrimaryKey(), customFields);
 		}
 
@@ -318,7 +316,7 @@ public class AccountResourceImpl
 
 	@Override
 	public Response postAccountGroupByExternalReferenceCodeAccount(
-			@NotNull String externalReferenceCode, Account account)
+			String externalReferenceCode, Account account)
 		throws Exception {
 
 		CommerceAccountGroup commerceAccountGroup =
@@ -461,7 +459,7 @@ public class AccountResourceImpl
 
 		if ((customFields != null) && !customFields.isEmpty()) {
 			ExpandoUtil.updateExpando(
-				serviceContext.getCompanyId(), CommerceAccount.class,
+				serviceContext.getCompanyId(), AccountEntry.class,
 				commerceAccount.getPrimaryKey(), customFields);
 		}
 

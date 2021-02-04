@@ -42,6 +42,7 @@ import com.liferay.portal.kernel.servlet.HttpHeaders;
 import com.liferay.portal.kernel.util.CookieKeys;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.Http;
+import com.liferay.portal.kernel.util.HttpUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.PropsKeys;
 import com.liferay.portal.kernel.util.StringUtil;
@@ -89,7 +90,7 @@ public class AuthenticatedSessionManagerImpl
 		httpServletRequest = PortalUtil.getOriginalServletRequest(
 			httpServletRequest);
 
-		String queryString = httpServletRequest.getQueryString();
+		String queryString = HttpUtil.getQueryString(httpServletRequest);
 
 		if (Validator.isNotNull(queryString) &&
 			queryString.contains("password=")) {
@@ -353,6 +354,9 @@ public class AuthenticatedSessionManagerImpl
 			session.invalidate();
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception, exception);
+			}
 		}
 
 		EventsProcessorUtil.process(

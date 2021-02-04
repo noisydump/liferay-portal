@@ -45,19 +45,27 @@ import org.osgi.util.tracker.ServiceTrackerCustomizer;
 @Component(immediate = true, service = TableReferenceDefinitionManager.class)
 public class TableReferenceDefinitionManager {
 
-	public long getClassNameId(Table<?> table) {
+	public long getClassNameId(String tableName) {
+		_ensureOpened();
+
 		TableReferenceInfo<?> tableReferenceInfo = _tableReferenceInfos.get(
-			table);
+			tableName);
 
 		if (tableReferenceInfo == null) {
 			throw new IllegalStateException(
-				"No table reference definition for " + table);
+				"No table reference definition for " + tableName);
 		}
 
 		return tableReferenceInfo.getClassNameId();
 	}
 
+	public long getClassNameId(Table<?> table) {
+		return getClassNameId(table.getTableName());
+	}
+
 	public Map<Long, TableReferenceInfo<?>> getCombinedTableReferenceInfos() {
+		_ensureOpened();
+
 		Map<Long, TableReferenceInfo<?>> combinedTableReferenceInfos =
 			_combinedTableReferenceInfos;
 
@@ -140,8 +148,6 @@ public class TableReferenceDefinitionManager {
 				(Class<?>)TableReferenceDefinition.class,
 			new TableReferenceDefinitionServiceTrackerCustomizer(
 				bundleContext));
-
-		_serviceTracker.open();
 	}
 
 	@Deactivate
@@ -163,6 +169,22 @@ public class TableReferenceDefinitionManager {
 		return copy;
 	}
 
+	private void _ensureOpened() {
+		if (_opened) {
+			return;
+		}
+
+		synchronized (this) {
+			if (_opened) {
+				return;
+			}
+
+			_serviceTracker.open();
+
+			_opened = true;
+		}
+	}
+
 	private <T extends Table<T>> TableReferenceInfo<T>
 		_getCombinedTableReferenceInfo(
 			TableReferenceInfo<T> tableReferenceInfo) {
@@ -182,10 +204,6 @@ public class TableReferenceDefinitionManager {
 
 		for (TableReferenceInfo<?> currentTableReferenceInfo :
 				_tableReferenceInfos.values()) {
-
-			if (tableReferenceInfo == currentTableReferenceInfo) {
-				continue;
-			}
 
 			TableReferenceDefinition<?> currentTableReferenceDefinition =
 				currentTableReferenceInfo.getTableReferenceDefinition();
@@ -234,9 +252,9 @@ public class TableReferenceDefinitionManager {
 		}
 
 		return new TableReferenceInfo<>(
-			tableReferenceDefinition, tableReferenceInfo.getClassNameId(),
-			combinedParentTableJoinHoldersMap,
-			combinedChildTableJoinHoldersMap);
+			combinedChildTableJoinHoldersMap,
+			tableReferenceInfo.getClassNameId(),
+			combinedParentTableJoinHoldersMap, tableReferenceDefinition);
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(
@@ -247,8 +265,9 @@ public class TableReferenceDefinitionManager {
 
 	private volatile Map<Long, TableReferenceInfo<?>>
 		_combinedTableReferenceInfos;
+	private volatile boolean _opened;
 	private ServiceTracker<?, ?> _serviceTracker;
-	private final Map<Table<?>, TableReferenceInfo<?>> _tableReferenceInfos =
+	private final Map<String, TableReferenceInfo<?>> _tableReferenceInfos =
 		new ConcurrentHashMap<>();
 
 	private class TableReferenceDefinitionServiceTrackerCustomizer
@@ -276,12 +295,13 @@ public class TableReferenceDefinitionManager {
 			ServiceReference<TableReferenceDefinition<?>> serviceReference,
 			TableReferenceInfo<?> tableReferenceInfo) {
 
-			synchronized (TableReferenceDefinitionManager.this) {
-				TableReferenceDefinition<?> tableReferenceDefinition =
-					tableReferenceInfo.getTableReferenceDefinition();
+			TableReferenceDefinition<?> tableReferenceDefinition =
+				tableReferenceInfo.getTableReferenceDefinition();
 
-				_tableReferenceInfos.remove(
-					tableReferenceDefinition.getTable());
+			Table<?> table = tableReferenceDefinition.getTable();
+
+			synchronized (TableReferenceDefinitionManager.this) {
+				_tableReferenceInfos.remove(table.getTableName());
 
 				_combinedTableReferenceInfos = null;
 			}
@@ -318,11 +338,13 @@ public class TableReferenceDefinitionManager {
 
 			TableReferenceInfo<T> tableReferenceInfo =
 				TableReferenceInfoFactory.create(
-					tableReferenceDefinition, classNameId, primaryKeyColumn);
+					classNameId, primaryKeyColumn, tableReferenceDefinition);
+
+			Table<?> table = tableReferenceDefinition.getTable();
 
 			synchronized (TableReferenceDefinitionManager.this) {
 				_tableReferenceInfos.put(
-					tableReferenceDefinition.getTable(), tableReferenceInfo);
+					table.getTableName(), tableReferenceInfo);
 
 				_combinedTableReferenceInfos = null;
 			}

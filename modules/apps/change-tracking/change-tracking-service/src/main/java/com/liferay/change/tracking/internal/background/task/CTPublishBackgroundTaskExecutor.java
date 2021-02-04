@@ -25,6 +25,7 @@ import com.liferay.change.tracking.service.CTCollectionLocalService;
 import com.liferay.change.tracking.service.CTEntryLocalService;
 import com.liferay.change.tracking.service.CTMessageLocalService;
 import com.liferay.change.tracking.service.CTProcessLocalService;
+import com.liferay.change.tracking.service.CTSchemaVersionLocalService;
 import com.liferay.petra.lang.SafeClosable;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.aop.AopService;
@@ -37,17 +38,15 @@ import com.liferay.portal.kernel.backgroundtask.display.BackgroundTaskDisplay;
 import com.liferay.portal.kernel.cache.MultiVMPool;
 import com.liferay.portal.kernel.change.tracking.CTCollectionThreadLocal;
 import com.liferay.portal.kernel.exception.SystemException;
-import com.liferay.portal.kernel.model.ClassName;
-import com.liferay.portal.kernel.service.ClassNameLocalService;
 import com.liferay.portal.kernel.service.change.tracking.CTService;
 import com.liferay.portal.kernel.transaction.Propagation;
 import com.liferay.portal.kernel.transaction.Transactional;
 import com.liferay.portal.kernel.util.GetterUtil;
-import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 
 import java.io.Serializable;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -90,45 +89,53 @@ public class CTPublishBackgroundTaskExecutor
 		long ctCollectionId = GetterUtil.getLong(
 			taskContextMap.get("ctCollectionId"));
 
+		CTCollection ctCollection = _ctCollectionLocalService.getCTCollection(
+			ctCollectionId);
+
+		if (!_ctSchemaVersionLocalService.isLatestCTSchemaVersion(
+				ctCollection.getSchemaVersionId())) {
+
+			throw new IllegalArgumentException(
+				StringBundler.concat(
+					"Unable to publish ", ctCollection.getName(),
+					" because it is out of date with the current release"));
+		}
+
 		try (SafeClosable safeClosable =
 				CTCollectionThreadLocal.setCTCollectionId(ctCollectionId)) {
 
 			_ctServiceRegistry.onBeforePublish(ctCollectionId);
 		}
 
-		CTCollection ctCollection = _ctCollectionLocalService.getCTCollection(
-			ctCollectionId);
-
 		Map<Long, List<ConflictInfo>> conflictInfosMap =
 			_ctCollectionLocalService.checkConflicts(ctCollection);
 
-		for (Map.Entry<Long, List<ConflictInfo>> entry :
-				conflictInfosMap.entrySet()) {
+		if (!conflictInfosMap.isEmpty()) {
+			List<ConflictInfo> unresolvedConflictInfos = new ArrayList<>();
 
-			for (ConflictInfo conflictInfo : entry.getValue()) {
-				if (conflictInfo.isResolved()) {
-					continue;
+			for (Map.Entry<Long, List<ConflictInfo>> entry :
+					conflictInfosMap.entrySet()) {
+
+				for (ConflictInfo conflictInfo : entry.getValue()) {
+					if (!conflictInfo.isResolved()) {
+						unresolvedConflictInfos.add(conflictInfo);
+					}
 				}
+			}
 
-				ClassName className = _classNameLocalService.fetchClassName(
-					entry.getKey());
-
+			if (!unresolvedConflictInfos.isEmpty()) {
 				throw new SystemException(
 					StringBundler.concat(
-						"Unable to publish ", ctCollection, " for class name ",
-						className, " with primary keys ",
-						conflictInfo.getSourcePrimaryKey(), " and ",
-						conflictInfo.getTargetPrimaryKey(), ": ",
-						conflictInfo.getConflictDescription(
-							conflictInfo.getResourceBundle(
-								LocaleUtil.ENGLISH))));
+						"Unable to publish ", ctCollection.getName(),
+						" because of unresolved conflicts: ",
+						unresolvedConflictInfos));
 			}
 		}
 
 		List<CTEntry> ctEntries = _ctEntryLocalService.getCTCollectionCTEntries(
 			ctCollectionId);
 
-		Map<Long, CTServicePublisher> ctServicePublishers = new HashMap<>();
+		Map<Long, CTServicePublisher<?>> ctServicePublishers = new HashMap<>();
 
 		for (CTEntry ctEntry : ctEntries) {
 			CTServicePublisher<?> ctServicePublisher =
@@ -147,7 +154,7 @@ public class CTPublishBackgroundTaskExecutor
 
 						throw new SystemException(
 							StringBundler.concat(
-								"Unable to publish ", ctCollectionId,
+								"Unable to publish ", ctCollection.getName(),
 								" because service for ", modelClassNameId,
 								" is missing"));
 					});
@@ -203,9 +210,6 @@ public class CTPublishBackgroundTaskExecutor
 	private BackgroundTaskExecutor _backgroundTaskExecutor;
 
 	@Reference
-	private ClassNameLocalService _classNameLocalService;
-
-	@Reference
 	private CTCollectionLocalService _ctCollectionLocalService;
 
 	@Reference
@@ -216,6 +220,9 @@ public class CTPublishBackgroundTaskExecutor
 
 	@Reference
 	private CTProcessLocalService _ctProcessLocalService;
+
+	@Reference
+	private CTSchemaVersionLocalService _ctSchemaVersionLocalService;
 
 	@Reference
 	private CTServiceRegistry _ctServiceRegistry;

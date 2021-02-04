@@ -14,6 +14,7 @@
 
 package com.liferay.style.book.model;
 
+import com.liferay.exportimport.kernel.lar.StagedModelType;
 import com.liferay.portal.kernel.model.ModelWrapper;
 import com.liferay.portal.kernel.model.wrapper.BaseModelWrapper;
 
@@ -43,6 +44,7 @@ public class StyleBookEntryWrapper
 		Map<String, Object> attributes = new HashMap<String, Object>();
 
 		attributes.put("mvccVersion", getMvccVersion());
+		attributes.put("uuid", getUuid());
 		attributes.put("headId", getHeadId());
 		attributes.put("styleBookEntryId", getStyleBookEntryId());
 		attributes.put("groupId", getGroupId());
@@ -50,6 +52,7 @@ public class StyleBookEntryWrapper
 		attributes.put("userId", getUserId());
 		attributes.put("userName", getUserName());
 		attributes.put("createDate", getCreateDate());
+		attributes.put("modifiedDate", getModifiedDate());
 		attributes.put("defaultStyleBookEntry", isDefaultStyleBookEntry());
 		attributes.put("frontendTokensValues", getFrontendTokensValues());
 		attributes.put("name", getName());
@@ -65,6 +68,12 @@ public class StyleBookEntryWrapper
 
 		if (mvccVersion != null) {
 			setMvccVersion(mvccVersion);
+		}
+
+		String uuid = (String)attributes.get("uuid");
+
+		if (uuid != null) {
+			setUuid(uuid);
 		}
 
 		Long headId = (Long)attributes.get("headId");
@@ -107,6 +116,12 @@ public class StyleBookEntryWrapper
 
 		if (createDate != null) {
 			setCreateDate(createDate);
+		}
+
+		Date modifiedDate = (Date)attributes.get("modifiedDate");
+
+		if (modifiedDate != null) {
+			setModifiedDate(modifiedDate);
 		}
 
 		Boolean defaultStyleBookEntry = (Boolean)attributes.get(
@@ -210,6 +225,16 @@ public class StyleBookEntryWrapper
 	}
 
 	/**
+	 * Returns the modified date of this style book entry.
+	 *
+	 * @return the modified date of this style book entry
+	 */
+	@Override
+	public Date getModifiedDate() {
+		return model.getModifiedDate();
+	}
+
+	/**
 	 * Returns the mvcc version of this style book entry.
 	 *
 	 * @return the mvcc version of this style book entry
@@ -300,6 +325,16 @@ public class StyleBookEntryWrapper
 	}
 
 	/**
+	 * Returns the uuid of this style book entry.
+	 *
+	 * @return the uuid of this style book entry
+	 */
+	@Override
+	public String getUuid() {
+		return model.getUuid();
+	}
+
+	/**
 	 * Returns <code>true</code> if this style book entry is default style book entry.
 	 *
 	 * @return <code>true</code> if this style book entry is default style book entry; <code>false</code> otherwise
@@ -380,6 +415,16 @@ public class StyleBookEntryWrapper
 	@Override
 	public void setHeadId(long headId) {
 		model.setHeadId(headId);
+	}
+
+	/**
+	 * Sets the modified date of this style book entry.
+	 *
+	 * @param modifiedDate the modified date of this style book entry
+	 */
+	@Override
+	public void setModifiedDate(Date modifiedDate) {
+		model.setModifiedDate(modifiedDate);
 	}
 
 	/**
@@ -470,6 +515,21 @@ public class StyleBookEntryWrapper
 	@Override
 	public void setUserUuid(String userUuid) {
 		model.setUserUuid(userUuid);
+	}
+
+	/**
+	 * Sets the uuid of this style book entry.
+	 *
+	 * @param uuid the uuid of this style book entry
+	 */
+	@Override
+	public void setUuid(String uuid) {
+		model.setUuid(uuid);
+	}
+
+	@Override
+	public StagedModelType getStagedModelType() {
+		return model.getStagedModelType();
 	}
 
 	@Override

@@ -14,45 +14,42 @@
 
 import classNames from 'classnames';
 import PropTypes from 'prop-types';
-import React, {useContext, useEffect, useMemo, useState} from 'react';
+import React, {useEffect, useMemo} from 'react';
+
+import {
+	useSetSidebarPanelId,
+	useSidebarPanelId,
+} from '../contexts/SidebarPanelIdContext';
 
 const DEFAULT_SIDEBAR_PANELS = [];
 
-const SetSidebarPanelIdContext = React.createContext(() => {});
-
-export const useSetSidebarPanelId = () => {
-	return useContext(SetSidebarPanelIdContext);
-};
-
 export const AppLayout = ({
 	contentChildren,
-	initialSidebarPanelId = null,
 	sidebarPanels = DEFAULT_SIDEBAR_PANELS,
 	toolbarChildren,
 }) => {
-	const [sidebarPanelId, setSidebarPanelId] = useState(initialSidebarPanelId);
+	const setSidebarPanelId = useSetSidebarPanelId();
+	const sidebarPanelId = useSidebarPanelId();
 
 	const SidebarPanel = useMemo(
 		() =>
 			sidebarPanels?.find(
 				(sidebarPanel) => sidebarPanel.sidebarPanelId === sidebarPanelId
 			)?.component,
-		[sidebarPanels, sidebarPanelId]
+		[sidebarPanelId, sidebarPanels]
 	);
 
 	useEffect(() => {
-		const {removeListener} = onProductMenuOpen(() => {
-			setSidebarPanelId(null);
-		});
+		const handler = onProductMenuOpen(() => setSidebarPanelId(null));
 
 		return () => {
-			removeListener();
+			handler.removeListener();
 		};
-	}, []);
+	}, [setSidebarPanelId]);
 
 	useEffect(() => {
 		setSidebarPanelId(null);
-	}, [sidebarPanels]);
+	}, [setSidebarPanelId, sidebarPanels]);
 
 	useEffect(() => {
 		if (SidebarPanel) {
@@ -61,7 +58,7 @@ export const AppLayout = ({
 	}, [SidebarPanel]);
 
 	return (
-		<SetSidebarPanelIdContext.Provider value={setSidebarPanelId}>
+		<>
 			<div className="bg-white component-tbar tbar">
 				<div className="container-fluid container-fluid-max-xl">
 					<div className="px-1 tbar-nav">{toolbarChildren}</div>
@@ -89,7 +86,7 @@ export const AppLayout = ({
 					{SidebarPanel && <SidebarPanel />}
 				</div>
 			</div>
-		</SetSidebarPanelIdContext.Provider>
+		</>
 	);
 };
 

@@ -17,6 +17,8 @@ package com.liferay.headless.commerce.admin.pricing.client.dto.v2_0;
 import com.liferay.headless.commerce.admin.pricing.client.function.UnsafeSupplier;
 import com.liferay.headless.commerce.admin.pricing.client.serdes.v2_0.PriceListChannelSerDes;
 
+import java.io.Serializable;
+
 import java.util.Map;
 import java.util.Objects;
 
@@ -27,7 +29,7 @@ import javax.annotation.Generated;
  * @generated
  */
 @Generated("")
-public class PriceListChannel implements Cloneable {
+public class PriceListChannel implements Cloneable, Serializable {
 
 	public static PriceListChannel toDTO(String json) {
 		return PriceListChannelSerDes.toDTO(json);
@@ -122,25 +124,6 @@ public class PriceListChannel implements Cloneable {
 
 	protected Long channelId;
 
-	public Long getId() {
-		return id;
-	}
-
-	public void setId(Long id) {
-		this.id = id;
-	}
-
-	public void setId(UnsafeSupplier<Long, Exception> idUnsafeSupplier) {
-		try {
-			id = idUnsafeSupplier.get();
-		}
-		catch (Exception e) {
-			throw new RuntimeException(e);
-		}
-	}
-
-	protected Long id;
-
 	public Integer getOrder() {
 		return order;
 	}
@@ -161,6 +144,27 @@ public class PriceListChannel implements Cloneable {
 	}
 
 	protected Integer order;
+
+	public Long getPriceListChannelId() {
+		return priceListChannelId;
+	}
+
+	public void setPriceListChannelId(Long priceListChannelId) {
+		this.priceListChannelId = priceListChannelId;
+	}
+
+	public void setPriceListChannelId(
+		UnsafeSupplier<Long, Exception> priceListChannelIdUnsafeSupplier) {
+
+		try {
+			priceListChannelId = priceListChannelIdUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected Long priceListChannelId;
 
 	public String getPriceListExternalReferenceCode() {
 		return priceListExternalReferenceCode;

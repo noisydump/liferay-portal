@@ -347,6 +347,7 @@ public abstract class BaseKnowledgeBaseFolderResourceTestCase {
 		KnowledgeBaseFolder randomPatchKnowledgeBaseFolder =
 			randomPatchKnowledgeBaseFolder();
 
+		@SuppressWarnings("PMD.UnusedLocalVariable")
 		KnowledgeBaseFolder patchKnowledgeBaseFolder =
 			knowledgeBaseFolderResource.patchKnowledgeBaseFolder(
 				postKnowledgeBaseFolder.getId(),
@@ -1360,9 +1361,11 @@ public abstract class BaseKnowledgeBaseFolderResourceTestCase {
 					return false;
 				}
 			}
+
+			return true;
 		}
 
-		return true;
+		return false;
 	}
 
 	protected java.util.Collection<EntityField> getEntityFields()

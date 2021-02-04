@@ -26,6 +26,7 @@ import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.Validator;
+import com.liferay.portal.kernel.uuid.PortalUUIDUtil;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -34,7 +35,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.UUID;
 
 /**
  * @author Víctor Galán
@@ -335,6 +335,10 @@ public class LayoutStructure {
 		return false;
 	}
 
+	public int getColumnSize(int size, int column) {
+		return _COLUMN_SIZES[size][column];
+	}
+
 	public List<DeletedLayoutStructureItem> getDeletedLayoutStructureItems() {
 		return ListUtil.fromCollection(_deletedLayoutStructureItems.values());
 	}
@@ -599,12 +603,12 @@ public class LayoutStructure {
 						childrenItemId);
 
 				columnLayoutStructureItem.setSize(
-					_COLUMN_SIZES[numberOfColumns - 1][i]);
+					getColumnSize(numberOfColumns - 1, i));
 			}
 
 			for (int i = oldNumberOfColumns; i < numberOfColumns; i++) {
 				_addColumnLayoutStructureItem(
-					itemId, i, _COLUMN_SIZES[numberOfColumns - 1][i]);
+					itemId, i, getColumnSize(numberOfColumns - 1, i));
 			}
 
 			return Collections.emptyList();
@@ -618,7 +622,7 @@ public class LayoutStructure {
 					childrenItemId);
 
 			columnLayoutStructureItem.setSize(
-				_COLUMN_SIZES[numberOfColumns - 1][i]);
+				getColumnSize(numberOfColumns - 1, i));
 		}
 
 		List<LayoutStructureItem> deletedLayoutStructureItems =
@@ -670,7 +674,7 @@ public class LayoutStructure {
 		List<LayoutStructureItem> duplicatedLayoutStructureItems =
 			new ArrayList<>();
 
-		newLayoutStructureItem.setItemId(String.valueOf(UUID.randomUUID()));
+		newLayoutStructureItem.setItemId(PortalUUIDUtil.generate());
 
 		newLayoutStructureItem.updateItemConfig(
 			layoutStructureItem.getItemConfigJSONObject());

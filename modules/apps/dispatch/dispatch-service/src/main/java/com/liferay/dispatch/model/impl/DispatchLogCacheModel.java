@@ -30,7 +30,7 @@ import java.util.Date;
 /**
  * The cache model class for representing DispatchLog in entity cache.
  *
- * @author Alessio Antonio Rendina
+ * @author Matija Petanjek
  * @generated
  */
 public class DispatchLogCacheModel
@@ -149,19 +149,8 @@ public class DispatchLogCacheModel
 			dispatchLogImpl.setEndDate(new Date(endDate));
 		}
 
-		if (error == null) {
-			dispatchLogImpl.setError("");
-		}
-		else {
-			dispatchLogImpl.setError(error);
-		}
-
-		if (output == null) {
-			dispatchLogImpl.setOutput("");
-		}
-		else {
-			dispatchLogImpl.setOutput(output);
-		}
+		dispatchLogImpl.setError(error);
+		dispatchLogImpl.setOutput(output);
 
 		if (startDate == Long.MIN_VALUE) {
 			dispatchLogImpl.setStartDate(null);

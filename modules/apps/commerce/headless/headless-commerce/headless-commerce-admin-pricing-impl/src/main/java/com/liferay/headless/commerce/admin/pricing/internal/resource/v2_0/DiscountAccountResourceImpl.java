@@ -20,6 +20,7 @@ import com.liferay.commerce.discount.model.CommerceDiscount;
 import com.liferay.commerce.discount.model.CommerceDiscountAccountRel;
 import com.liferay.commerce.discount.service.CommerceDiscountAccountRelService;
 import com.liferay.commerce.discount.service.CommerceDiscountService;
+import com.liferay.headless.commerce.admin.pricing.dto.v2_0.Discount;
 import com.liferay.headless.commerce.admin.pricing.dto.v2_0.DiscountAccount;
 import com.liferay.headless.commerce.admin.pricing.internal.dto.v2_0.converter.DiscountAccountDTOConverter;
 import com.liferay.headless.commerce.admin.pricing.internal.util.v2_0.DiscountAccountUtil;
@@ -27,10 +28,12 @@ import com.liferay.headless.commerce.admin.pricing.resource.v2_0.DiscountAccount
 import com.liferay.headless.commerce.core.util.ServiceContextHelper;
 import com.liferay.portal.kernel.search.Sort;
 import com.liferay.portal.kernel.search.filter.Filter;
-import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.vulcan.dto.converter.DTOConverterRegistry;
 import com.liferay.portal.vulcan.dto.converter.DefaultDTOConverterContext;
+import com.liferay.portal.vulcan.fields.NestedField;
+import com.liferay.portal.vulcan.fields.NestedFieldSupport;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 
@@ -48,10 +51,11 @@ import org.osgi.service.component.annotations.ServiceScope;
 @Component(
 	enabled = false,
 	properties = "OSGI-INF/liferay/rest/v2_0/discount-account.properties",
-	scope = ServiceScope.PROTOTYPE, service = DiscountAccountResource.class
+	scope = ServiceScope.PROTOTYPE,
+	service = {DiscountAccountResource.class, NestedFieldSupport.class}
 )
 public class DiscountAccountResourceImpl
-	extends BaseDiscountAccountResourceImpl {
+	extends BaseDiscountAccountResourceImpl implements NestedFieldSupport {
 
 	@Override
 	public void deleteDiscountAccount(Long id) throws Exception {
@@ -66,7 +70,7 @@ public class DiscountAccountResourceImpl
 
 		CommerceDiscount commerceDiscount =
 			_commerceDiscountService.fetchByExternalReferenceCode(
-				contextCompany.getCompanyId(), externalReferenceCode);
+				externalReferenceCode, contextCompany.getCompanyId());
 
 		if (commerceDiscount == null) {
 			throw new NoSuchDiscountException(
@@ -90,6 +94,7 @@ public class DiscountAccountResourceImpl
 			totalItems);
 	}
 
+	@NestedField(parentClass = Discount.class, value = "discountAccounts")
 	@Override
 	public Page<DiscountAccount> getDiscountIdDiscountAccountsPage(
 			Long id, String search, Filter filter, Pagination pagination,
@@ -117,7 +122,7 @@ public class DiscountAccountResourceImpl
 
 		CommerceDiscount commerceDiscount =
 			_commerceDiscountService.fetchByExternalReferenceCode(
-				contextCompany.getCompanyId(), externalReferenceCode);
+				externalReferenceCode, contextCompany.getCompanyId());
 
 		if (commerceDiscount == null) {
 			throw new NoSuchDiscountException(
@@ -154,22 +159,13 @@ public class DiscountAccountResourceImpl
 			CommerceDiscountAccountRel commerceDiscountAccountRel)
 		throws Exception {
 
-		ServiceContext serviceContext =
-			_serviceContextHelper.getServiceContext();
-
 		return HashMapBuilder.<String, Map<String, String>>put(
 			"delete",
-			() -> {
-				CommerceDiscount commerceDiscount =
-					commerceDiscountAccountRel.getCommerceDiscount();
-
-				return addAction(
-					"UPDATE", commerceDiscount.getCommerceDiscountId(),
-					"deleteDiscountAccount",
-					commerceDiscountAccountRel.getUserId(),
-					"com.liferay.commerce.discount.model.CommerceDiscount",
-					serviceContext.getScopeGroupId());
-			}
+			addAction(
+				"UPDATE",
+				commerceDiscountAccountRel.getCommerceDiscountAccountRelId(),
+				"deleteDiscountAccount",
+				_commerceDiscountAccountRelModelResourcePermission)
 		).build();
 	}
 
@@ -210,6 +206,12 @@ public class DiscountAccountResourceImpl
 
 	@Reference
 	private CommerceAccountService _commerceAccountService;
+
+	@Reference(
+		target = "(model.class.name=com.liferay.commerce.discount.model.CommerceDiscountAccountRel)"
+	)
+	private ModelResourcePermission<CommerceDiscountAccountRel>
+		_commerceDiscountAccountRelModelResourcePermission;
 
 	@Reference
 	private CommerceDiscountAccountRelService

@@ -167,6 +167,9 @@ public class AssetLinksTag extends IncludeTag {
 			assetLinkEntries = _getAssetLinkEntries();
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception, exception);
+			}
 		}
 
 		if (ListUtil.isEmpty(assetLinkEntries)) {
@@ -296,6 +299,7 @@ public class AssetLinksTag extends IncludeTag {
 
 		viewAssetURL.setParameter(
 			"assetEntryId", String.valueOf(assetLinkEntry.getEntryId()));
+		viewAssetURL.setParameter("showRelatedAssets", Boolean.TRUE.toString());
 		viewAssetURL.setParameter("type", type);
 
 		String urlTitle = assetRenderer.getUrlTitle(themeDisplay.getLocale());

@@ -26,6 +26,7 @@ import com.liferay.data.engine.rest.client.resource.v2_0.DataRecordCollectionRes
 import com.liferay.data.engine.rest.resource.v2_0.test.util.DataDefinitionTestUtil;
 import com.liferay.data.engine.rest.resource.v2_0.test.util.DataRecordCollectionTestUtil;
 import com.liferay.dynamic.data.lists.model.DDLRecordSet;
+import com.liferay.dynamic.data.mapping.model.DDMStructure;
 import com.liferay.portal.kernel.service.ResourceLocalService;
 import com.liferay.portal.kernel.test.rule.DataGuard;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
@@ -54,10 +55,32 @@ public class DataRecordResourceTest extends BaseDataRecordResourceTestCase {
 	public void setUp() throws Exception {
 		super.setUp();
 
-		_dataDefinition = DataDefinitionTestUtil.addDataDefinition(
-			DataDefinition.toDTO(
-				DataDefinitionTestUtil.read("data-definition.json")),
-			testGroup.getGroupId());
+		DDMStructure ddmStructure = DataDefinitionTestUtil.addDDMStructure(
+			testGroup);
+
+		_dataDefinitionId = ddmStructure.getStructureId();
+
+		DDLRecordSet ddlRecordSet = DataRecordCollectionTestUtil.addRecordSet(
+			ddmStructure, testGroup, _resourceLocalService);
+
+		_dataRecordCollectionId = ddlRecordSet.getRecordSetId();
+
+		_irrelevantDDLRecordSet = DataRecordCollectionTestUtil.addRecordSet(
+			ddmStructure, irrelevantGroup, _resourceLocalService);
+	}
+
+	@Override
+	@Test
+	public void testGetDataDefinitionDataRecordsPageWithSortInteger()
+		throws Exception {
+
+		super.testGetDataDefinitionDataRecordsPageWithSortInteger();
+
+		DataDefinition dataDefinition =
+			DataDefinitionTestUtil.addDataDefinition(
+				DataDefinition.toDTO(
+					DataDefinitionTestUtil.read("data-definition.json")),
+				testGroup.getGroupId());
 
 		DataRecordCollectionResource.Builder builder =
 			DataRecordCollectionResource.builder();
@@ -69,12 +92,64 @@ public class DataRecordResourceTest extends BaseDataRecordResourceTestCase {
 				LocaleUtil.getDefault()
 			).build();
 
-		_dataRecordCollection =
+		DataRecordCollection dataDefinitionDataRecordCollection =
 			dataRecordCollectionResource.getDataDefinitionDataRecordCollection(
-				_dataDefinition.getId());
+				dataDefinition.getId());
 
-		_irrelevantDDLRecordSet = DataRecordCollectionTestUtil.addRecordSet(
-			_dataDefinition, irrelevantGroup, _resourceLocalService);
+		_dataRecordCollectionId = dataDefinitionDataRecordCollection.getId();
+
+		Long dataRecordCollectionId =
+			testGetDataRecordCollectionDataRecordsPage_getDataRecordCollectionId();
+
+		DataRecord dataRecord1 =
+			testGetDataRecordCollectionDataRecordsPage_addDataRecord(
+				dataRecordCollectionId,
+				new DataRecord() {
+					{
+						dataRecordCollectionId = _dataRecordCollectionId;
+						dataRecordValues = HashMapBuilder.<String, Object>put(
+							"Numeric",
+							HashMapBuilder.put(
+								"en_US", new String[] {"10"}
+							).build()
+						).build();
+					}
+				});
+
+		DataRecord dataRecord2 =
+			testGetDataRecordCollectionDataRecordsPage_addDataRecord(
+				dataRecordCollectionId,
+				new DataRecord() {
+					{
+						dataRecordCollectionId = _dataRecordCollectionId;
+						dataRecordValues = HashMapBuilder.<String, Object>put(
+							"Numeric",
+							HashMapBuilder.put(
+								"en_US", new String[] {"20"}
+							).build()
+						).build();
+					}
+				});
+
+		// Sort by numeric
+
+		Page<DataRecord> sortByNumericAscPage =
+			dataRecordResource.getDataRecordCollectionDataRecordsPage(
+				dataRecordCollectionId, null, null, Pagination.of(1, 2),
+				"dataRecordValues/Numeric:asc");
+
+		assertEquals(
+			Arrays.asList(dataRecord1, dataRecord2),
+			(List<DataRecord>)sortByNumericAscPage.getItems());
+
+		Page<DataRecord> sortByNumericDescPage =
+			dataRecordResource.getDataRecordCollectionDataRecordsPage(
+				dataRecordCollectionId, null, null, Pagination.of(1, 2),
+				"dataRecordValues/Numeric:desc");
+
+		assertEquals(
+			Arrays.asList(dataRecord2, dataRecord1),
+			(List<DataRecord>)sortByNumericDescPage.getItems());
 	}
 
 	@Override
@@ -93,27 +168,54 @@ public class DataRecordResourceTest extends BaseDataRecordResourceTestCase {
 	@Override
 	@Test
 	public void testGetDataRecordCollectionDataRecordsPage() throws Exception {
+		DataDefinition dataDefinition =
+			DataDefinitionTestUtil.addDataDefinition(
+				DataDefinition.toDTO(
+					DataDefinitionTestUtil.read("data-definition.json")),
+				testGroup.getGroupId());
+
+		_dataDefinitionId = dataDefinition.getId();
+
+		DataRecordCollectionResource.Builder
+			dataRecordCollectionResourceBuilder =
+				DataRecordCollectionResource.builder();
+
+		DataRecordCollectionResource dataRecordCollectionResource =
+			dataRecordCollectionResourceBuilder.authentication(
+				"test@liferay.com", "test"
+			).locale(
+				LocaleUtil.getDefault()
+			).build();
+
+		DataRecordCollection dataDefinitionDataRecordCollection =
+			dataRecordCollectionResource.getDataDefinitionDataRecordCollection(
+				_dataDefinitionId);
+
+		_dataRecordCollectionId = dataDefinitionDataRecordCollection.getId();
+
 		super.testGetDataRecordCollectionDataRecordsPage();
 
 		// Retrieve data records according to fixed filters
 
-		DataListViewResource.Builder builder = DataListViewResource.builder();
+		DataListViewResource.Builder dataListViewResourceBuilder =
+			DataListViewResource.builder();
 
-		DataListViewResource dataListViewResource = builder.authentication(
-			"test@liferay.com", "test"
-		).locale(
-			LocaleUtil.getDefault()
-		).build();
+		DataListViewResource dataListViewResource =
+			dataListViewResourceBuilder.authentication(
+				"test@liferay.com", "test"
+			).locale(
+				LocaleUtil.getDefault()
+			).build();
 
 		Long dataRecordCollectionId =
 			testGetDataRecordCollectionDataRecordsPage_getDataRecordCollectionId();
 
-		DataRecord dataRecord =
+		DataRecord dataRecord1 =
 			testGetDataRecordCollectionDataRecordsPage_addDataRecord(
 				dataRecordCollectionId,
 				new DataRecord() {
 					{
-						dataRecordCollectionId = _dataRecordCollection.getId();
+						dataRecordCollectionId = _dataRecordCollectionId;
 						dataRecordValues = HashMapBuilder.<String, Object>put(
 							"SingleSelection",
 							HashMapBuilder.put(
@@ -123,47 +225,95 @@ public class DataRecordResourceTest extends BaseDataRecordResourceTestCase {
 					}
 				});
 
-		testGetDataRecordCollectionDataRecordsPage_addDataRecord(
-			dataRecordCollectionId,
-			new DataRecord() {
-				{
-					dataRecordCollectionId = _dataRecordCollection.getId();
-					dataRecordValues = HashMapBuilder.<String, Object>put(
-						"SingleSelection",
-						HashMapBuilder.put(
-							"en_US", new String[] {"Boat"}
-						).build()
-					).build();
-				}
-			});
+		DataRecord dataRecord2 =
+			testGetDataRecordCollectionDataRecordsPage_addDataRecord(
+				dataRecordCollectionId,
+				new DataRecord() {
+					{
+						dataRecordCollectionId = _dataRecordCollectionId;
+						dataRecordValues = HashMapBuilder.<String, Object>put(
+							"SingleSelection",
+							HashMapBuilder.put(
+								"en_US", new String[] {"Boat"}
+							).build()
+						).build();
+					}
+				});
 
 		DataListView dataListView =
 			dataListViewResource.postDataDefinitionDataListView(
-				_dataDefinition.getId(),
+				_dataDefinitionId,
 				new DataListView() {
 					{
 						appliedFilters =
 							LinkedHashMapBuilder.<String, Object>put(
 								"SingleSelection", new String[] {"Car"}
 							).build();
-						dataDefinitionId = _dataDefinition.getId();
+						dataDefinitionId = _dataDefinitionId;
 						fieldNames = new String[] {"SingleSelection"};
 					}
 				});
 
-		Page<DataRecord> page =
+		Page<DataRecord> singleSelectionFixedFilterPage =
 			dataRecordResource.getDataRecordCollectionDataRecordsPage(
 				testGetDataRecordCollectionDataRecordsPage_getDataRecordCollectionId(),
 				dataListView.getId(), null, Pagination.of(1, 2), null);
 
 		assertEqualsIgnoringOrder(
-			Arrays.asList(dataRecord), (List<DataRecord>)page.getItems());
+			Arrays.asList(dataRecord1),
+			(List<DataRecord>)singleSelectionFixedFilterPage.getItems());
+
+		// Retrieve data records according to full term
+
+		Page<DataRecord> searchFullTermPage =
+			dataRecordResource.getDataRecordCollectionDataRecordsPage(
+				testGetDataRecordCollectionDataRecordsPage_getDataRecordCollectionId(),
+				null, "Boat", Pagination.of(1, 2), null);
+
+		assertEqualsIgnoringOrder(
+			Arrays.asList(dataRecord2),
+			(List<DataRecord>)searchFullTermPage.getItems());
+
+		// Retrieve data records according to partial term
+
+		Page<DataRecord> searchPartialTermPage =
+			dataRecordResource.getDataRecordCollectionDataRecordsPage(
+				testGetDataRecordCollectionDataRecordsPage_getDataRecordCollectionId(),
+				null, "Bo", Pagination.of(1, 2), null);
+
+		assertEqualsIgnoringOrder(
+			Arrays.asList(dataRecord2),
+			(List<DataRecord>)searchPartialTermPage.getItems());
 	}
 
 	@Override
 	@Test
 	public void testGetDataRecordCollectionDataRecordsPageWithSortString()
 		throws Exception {
+
+		DataDefinition dataDefinition =
+			DataDefinitionTestUtil.addDataDefinition(
+				DataDefinition.toDTO(
+					DataDefinitionTestUtil.read("data-definition.json")),
+				testGroup.getGroupId());
+
+		_dataDefinitionId = dataDefinition.getId();
+
+		DataRecordCollectionResource.Builder builder =
+			DataRecordCollectionResource.builder();
+
+		DataRecordCollectionResource dataRecordCollectionResource =
+			builder.authentication(
+				"test@liferay.com", "test"
+			).locale(
+				LocaleUtil.getDefault()
+			).build();
+
+		DataRecordCollection dataDefinitionDataRecordCollection =
+			dataRecordCollectionResource.getDataDefinitionDataRecordCollection(
+				_dataDefinitionId);
+
+		_dataRecordCollectionId = dataDefinitionDataRecordCollection.getId();
 
 		super.testGetDataRecordCollectionDataRecordsPageWithSortString();
 
@@ -175,7 +325,7 @@ public class DataRecordResourceTest extends BaseDataRecordResourceTestCase {
 				dataRecordCollectionId,
 				new DataRecord() {
 					{
-						dataRecordCollectionId = _dataRecordCollection.getId();
+						dataRecordCollectionId = _dataRecordCollectionId;
 						dataRecordValues = HashMapBuilder.<String, Object>put(
 							"MultipleSelection",
 							HashMapBuilder.put(
@@ -204,7 +354,7 @@ public class DataRecordResourceTest extends BaseDataRecordResourceTestCase {
 				dataRecordCollectionId,
 				new DataRecord() {
 					{
-						dataRecordCollectionId = _dataRecordCollection.getId();
+						dataRecordCollectionId = _dataRecordCollectionId;
 						dataRecordValues = HashMapBuilder.<String, Object>put(
 							"MultipleSelection",
 							HashMapBuilder.put(
@@ -345,20 +495,20 @@ public class DataRecordResourceTest extends BaseDataRecordResourceTestCase {
 	@Override
 	protected DataRecord testDeleteDataRecord_addDataRecord() throws Exception {
 		return dataRecordResource.postDataRecordCollectionDataRecord(
-			_dataRecordCollection.getId(), randomDataRecord());
+			_dataRecordCollectionId, randomDataRecord());
 	}
 
 	@Override
 	protected Long testGetDataDefinitionDataRecordsPage_getDataDefinitionId()
 		throws Exception {
 
-		return _dataDefinition.getId();
+		return _dataDefinitionId;
 	}
 
 	@Override
 	protected DataRecord testGetDataRecord_addDataRecord() throws Exception {
 		return dataRecordResource.postDataRecordCollectionDataRecord(
-			_dataRecordCollection.getId(), randomDataRecord());
+			_dataRecordCollectionId, randomDataRecord());
 	}
 
 	@Override
@@ -376,7 +526,7 @@ public class DataRecordResourceTest extends BaseDataRecordResourceTestCase {
 			testGetDataRecordCollectionDataRecordsPage_getDataRecordCollectionId()
 		throws Exception {
 
-		return _dataRecordCollection.getId();
+		return _dataRecordCollectionId;
 	}
 
 	@Override
@@ -384,7 +534,13 @@ public class DataRecordResourceTest extends BaseDataRecordResourceTestCase {
 		throws Exception {
 
 		return dataRecordResource.postDataRecordCollectionDataRecord(
-			_dataRecordCollection.getId(), randomDataRecord());
+			_dataRecordCollectionId, randomDataRecord());
+	}
+
+	@Override
+	protected DataRecord testPatchDataRecord_addDataRecord() throws Exception {
+		return dataRecordResource.postDataRecordCollectionDataRecord(
+			_dataRecordCollectionId, randomDataRecord());
 	}
 
 	@Override
@@ -399,13 +555,13 @@ public class DataRecordResourceTest extends BaseDataRecordResourceTestCase {
 	@Override
 	protected DataRecord testPutDataRecord_addDataRecord() throws Exception {
 		return dataRecordResource.postDataRecordCollectionDataRecord(
-			_dataRecordCollection.getId(), randomDataRecord());
+			_dataRecordCollectionId, randomDataRecord());
 	}
 
 	private DataRecord _createDataRecord(String fieldName) {
 		return new DataRecord() {
 			{
-				dataRecordCollectionId = _dataRecordCollection.getId();
+				dataRecordCollectionId = _dataRecordCollectionId;
 				dataRecordValues = HashMapBuilder.<String, Object>put(
 					fieldName,
 					HashMapBuilder.put(
@@ -420,8 +576,8 @@ public class DataRecordResourceTest extends BaseDataRecordResourceTestCase {
 		};
 	}
 
-	private DataDefinition _dataDefinition;
-	private DataRecordCollection _dataRecordCollection;
+	private long _dataDefinitionId;
+	private long _dataRecordCollectionId;
 	private DDLRecordSet _irrelevantDDLRecordSet;
 
 	@Inject

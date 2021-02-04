@@ -25,6 +25,7 @@ import com.liferay.trash.constants.TrashPortletKeys;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Stream;
@@ -38,7 +39,7 @@ import org.osgi.service.component.annotations.Reference;
 /**
  * @author Alejandro Tardín
  */
-@Component(immediate = true, service = DepotApplicationController.class)
+@Component(service = DepotApplicationController.class)
 public class DepotApplicationController {
 
 	public Collection<DepotApplication> getCustomizableDepotApplications() {
@@ -142,7 +143,9 @@ public class DepotApplicationController {
 	}
 
 	@Activate
-	protected void activate(BundleContext bundleContext) {
+	protected void activate(
+		BundleContext bundleContext, Map<String, Object> properties) {
+
 		_serviceTrackerMap = ServiceTrackerMapFactory.openSingleValueMap(
 			bundleContext, DepotApplication.class, null,
 			(serviceReference, emitter) -> {

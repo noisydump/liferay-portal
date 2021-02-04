@@ -45,7 +45,6 @@ import com.liferay.taglib.aui.AUIUtil;
 import com.liferay.taglib.util.IncludeTag;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -246,6 +245,9 @@ public class AssetCategoriesSelectorTag extends IncludeTag {
 			}
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception, exception);
+			}
 		}
 
 		return categoryIdsTitles;
@@ -271,6 +273,9 @@ public class AssetCategoriesSelectorTag extends IncludeTag {
 			return PortalUtil.getCurrentAndAncestorSiteGroupIds(_groupIds);
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception, exception);
+			}
 		}
 
 		return new long[0];
@@ -302,6 +307,9 @@ public class AssetCategoriesSelectorTag extends IncludeTag {
 			return portletURL;
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception, exception);
+			}
 		}
 
 		return null;
@@ -471,8 +479,7 @@ public class AssetCategoriesSelectorTag extends IncludeTag {
 		ThemeDisplay themeDisplay = (ThemeDisplay)request.getAttribute(
 			WebKeys.THEME_DISPLAY);
 
-		Collections.sort(
-			vocabularies,
+		vocabularies.sort(
 			new AssetVocabularyGroupLocalizedTitleComparator(
 				themeDisplay.getScopeGroupId(), themeDisplay.getLocale(),
 				true));

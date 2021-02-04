@@ -32,7 +32,9 @@ else {
 	currentLayoutRevisionId = recentLayoutRevision.getLayoutRevisionId();
 }
 
-List<LayoutRevision> rootLayoutRevisions = LayoutRevisionLocalServiceUtil.getChildLayoutRevisions(layoutSetBranchId, LayoutRevisionConstants.DEFAULT_PARENT_LAYOUT_REVISION_ID, plid, QueryUtil.ALL_POS, QueryUtil.ALL_POS, new LayoutRevisionIdComparator(true));
+Long liveLayoutRevisionId = null;
+
+List<LayoutRevision> rootLayoutRevisions = LayoutRevisionLocalServiceUtil.getChildLayoutRevisions(layoutSetBranchId, LayoutRevisionConstants.DEFAULT_PARENT_LAYOUT_REVISION_ID, plid, QueryUtil.ALL_POS, QueryUtil.ALL_POS, new LayoutRevisionCreateDateComparator(true));
 %>
 
 <liferay-util:include page="/navigation.jsp" servletContext="<%= application %>">
@@ -79,7 +81,7 @@ List<LayoutRevision> rootLayoutRevisions = LayoutRevisionLocalServiceUtil.getChi
 						total="<%= LayoutRevisionLocalServiceUtil.getLayoutRevisionsCount(rootLayoutRevision.getLayoutSetBranchId(), rootLayoutRevision.getLayoutBranchId(), rootLayoutRevision.getPlid()) %>"
 					>
 						<liferay-ui:search-container-results
-							results="<%= LayoutRevisionLocalServiceUtil.getLayoutRevisions(rootLayoutRevision.getLayoutSetBranchId(), rootLayoutRevision.getLayoutBranchId(), rootLayoutRevision.getPlid(), QueryUtil.ALL_POS, QueryUtil.ALL_POS, new LayoutRevisionIdComparator(false)) %>"
+							results="<%= LayoutRevisionLocalServiceUtil.getLayoutRevisions(rootLayoutRevision.getLayoutSetBranchId(), rootLayoutRevision.getLayoutBranchId(), rootLayoutRevision.getPlid(), QueryUtil.ALL_POS, QueryUtil.ALL_POS, new LayoutRevisionCreateDateComparator(false)) %>"
 						/>
 
 						<liferay-ui:search-container-row
@@ -98,7 +100,13 @@ List<LayoutRevision> rootLayoutRevisions = LayoutRevisionLocalServiceUtil.getChi
 							>
 								<aui:model-context bean="<%= curLayoutRevision %>" model="<%= LayoutRevision.class %>" />
 
-								<aui:workflow-status showIcon="<%= false %>" showLabel="<%= false %>" status="<%= curLayoutRevision.getStatus() %>" statusMessage="<%= _getStatusMessage(curLayoutRevision, group, layout) %>" />
+								<%
+								if ((liveLayoutRevisionId == null) && curLayoutRevision.isApproved()) {
+									liveLayoutRevisionId = _getLastImportLayoutRevisionId(group, layout, themeDisplay.getUser());
+								}
+								%>
+
+								<aui:workflow-status showIcon="<%= false %>" showLabel="<%= false %>" status="<%= curLayoutRevision.getStatus() %>" statusMessage="<%= _getStatusMessage(curLayoutRevision, GetterUtil.getLong(liveLayoutRevisionId)) %>" />
 							</liferay-ui:search-container-column-text>
 
 							<liferay-ui:search-container-column-text

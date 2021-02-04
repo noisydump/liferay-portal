@@ -1,5 +1,64 @@
 # Poshi Runner Change Log
 
+## 1.0.291
+
+### Backend
+
+* [LRCI-1752](https://issues.liferay.com/browse/LRCI-1752) - Split Poshi Test Cases into lists so that it can be used in Jenkins Results Parser
+* [LRCI-1756](https://issues.liferay.com/browse/LRCI-1756) - Use Poshi Core within Jenkins Results Parser
+
+### Gradle
+
+* [POSHI-122](https://issues.liferay.com/browse/POSHI-122) - Use compile group for poshi-core in poshi-runner
+
+### PQL
+
+* [POSHI-120](https://issues.liferay.com/browse/POSHI-120) - Avoid unnecessary validation for poshi properties
+
+### Utils
+
+* [POSHI-131](https://issues.liferay.com/browse/POSHI-131) - Lower the timeout for JSONCurlUtil to 10 minutes
+
+### WebDriver
+
+* [POSHI-110](https://issues.liferay.com/browse/POSHI-110) - As a Tester writer, I should be able to use Ocular to compare images
+* [POSHI-119](https://issues.liferay.com/browse/POSHI-119) - Make StringUtil.randomString generate the same random string with backend
+* [POSHI-124](https://issues.liferay.com/browse/POSHI-124) - Update poshi runner to 'org.seleniumhq.selenium:selenium-java:3.141.59'
+* [POSHI-128](https://issues.liferay.com/browse/POSHI-128) - Additionally catch InvalidSelectorException for invalid arguments in javascript methods
+* [POSHI-133](https://issues.liferay.com/browse/POSHI-133) - Add triple click method to Poshi
+
+## 1.0.283
+
+### PQL
+
+* [POSHI-117](https://issues.liferay.com/browse/POSHI-117) - Ignore errors for Util classes to find Test Cases using PQL
+
+### Runner
+
+* [POSHI-107](https://issues.liferay.com/browse/POSHI-107) - Split Poshi Runner into 2 different modules
+* [POSHI-118](https://issues.liferay.com/browse/POSHI-118) - Path locators are not parsed correctly
+
+## 1.0.280
+
+### Runner
+
+* [POSHI-104](https://issues.liferay.com/browse/POSHI-104) - Throw Poshi Script syntax errors before running a test
+* [POSHI-105](https://issues.liferay.com/browse/POSHI-105) - Clean up Poshi dependencies
+
+### Script
+
+* [POSHI-99](https://issues.liferay.com/browse/POSHI-99) - Update Poshi Runner to use dom4j 2.1.3
+
+### Utils
+
+* [POSHI-103](https://issues.liferay.com/browse/POSHI-103) - As a test engineer, I should be able to generate a TOTP to test MFA
+
+### WebDriver
+
+* [POSHI-106](https://issues.liferay.com/browse/POSHI-106) - Code Clean Up: Appium & Mobile Driver stuff
+* [POSHI-91](https://issues.liferay.com/browse/POSHI-91) - As an Edge browser tester, I would like to use the new built-in webdriver
+* [POSHI-108](https://issues.liferay.com/browse/POSHI-108) - Modify clickat to make it friendly
+
 ## 1.0.274
 
 ### Utils

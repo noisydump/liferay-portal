@@ -7,12 +7,6 @@ $miniumSidebarWidth: 70px;
 $portalControlMenuHeight: 56px;
 $miniumTopbar: 70px;
 
-ul,
-li {
-	margin: 0;
-	padding: 0;
-}
-
 .org-chart-container {
 	box-sizing: border-box;
 	left: 0;
@@ -49,25 +43,6 @@ li {
 	width: 100%;
 }
 
-.commerce-organization-view-modes {
-	box-sizing: border-box;
-	margin-bottom: 12px;
-	padding-left: calc(100% - 185px);
-
-	&.chart {
-		padding-left: calc(100% - #{$membersPaneWidth} - 185px);
-	}
-
-	.btn-default {
-		background-color: transparent;
-		border: 0;
-
-		&.active {
-			background-color: transparent !important;
-		}
-	}
-}
-
 .orgchart-module {
 	background-color: transparent;
 	box-sizing: border-box;
@@ -75,7 +50,6 @@ li {
 	margin: 0;
 	padding: 0;
 	position: relative;
-	user-select: none;
 
 	// ---------- BEGIN boilerplate css ----------
 
@@ -228,10 +202,7 @@ li {
 		$openClose: transform 0.5s cubic-bezier(0, 0.92, 0.86, 0.98);
 
 		background-color: #fff;
-
 		height: 100%;
-
-		margin-top: -45px;
 		overflow: hidden;
 		-webkit-overflow-scrolling: touch;
 		overflow-y: auto;

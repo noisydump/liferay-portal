@@ -16,6 +16,8 @@ package com.liferay.portal.remote.cors.internal.servlet.filter;
 
 import com.liferay.oauth2.provider.scope.liferay.OAuth2ProviderScopeLiferayAccessControlContext;
 import com.liferay.petra.string.StringPool;
+import com.liferay.petra.url.pattern.mapper.URLPatternMapper;
+import com.liferay.petra.url.pattern.mapper.URLPatternMapperFactory;
 import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
 import com.liferay.portal.configuration.persistence.listener.ConfigurationModelListener;
 import com.liferay.portal.kernel.log.Log;
@@ -36,8 +38,7 @@ import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.remote.cors.configuration.PortalCORSConfiguration;
 import com.liferay.portal.remote.cors.internal.CORSSupport;
 import com.liferay.portal.remote.cors.internal.configuration.persistence.listener.PortalCORSConfigurationModelListener;
-import com.liferay.portal.remote.cors.internal.url.pattern.mapper.URLPatternMapper;
-import com.liferay.portal.remote.cors.internal.url.pattern.mapper.URLPatternMapperFactory;
+import com.liferay.portal.util.PropsValues;
 
 import java.util.Collections;
 import java.util.Dictionary;
@@ -156,8 +157,6 @@ public class PortalCORSServletFilter
 	protected void activate(
 		BundleContext bundleContext, Map<String, Object> properties) {
 
-		_defaultURLPatternMapper = _createDefaultURLPatternMapper();
-
 		_serviceRegistration = bundleContext.registerService(
 			ConfigurationModelListener.class,
 			new PortalCORSConfigurationModelListener(
@@ -199,49 +198,41 @@ public class PortalCORSServletFilter
 		URLPatternMapper<CORSSupport> urlPatternMapper = _getURLPatternMapper(
 			companyId);
 
-		CORSSupport corsSupport = urlPatternMapper.getValue(
-			_getURI(httpServletRequest));
+		if (urlPatternMapper != null) {
+			CORSSupport corsSupport = urlPatternMapper.getValue(
+				_getURI(httpServletRequest));
 
-		if (corsSupport != null) {
-			if (StringUtil.equals(
-					HttpMethods.OPTIONS, httpServletRequest.getMethod())) {
+			if (corsSupport != null) {
+				if (StringUtil.equals(
+						HttpMethods.OPTIONS, httpServletRequest.getMethod())) {
 
-				if (corsSupport.isValidCORSPreflightRequest(
-						httpServletRequest::getHeader)) {
+					if (corsSupport.isValidCORSPreflightRequest(
+							httpServletRequest::getHeader)) {
+
+						corsSupport.writeResponseHeaders(
+							httpServletRequest::getHeader,
+							httpServletResponse::setHeader);
+					}
+
+					return;
+				}
+
+				if (corsSupport.isValidCORSRequest(
+						httpServletRequest.getMethod(),
+						httpServletRequest::getHeader) &&
+					(PropsValues.CORS_DISABLE_AUTHORIZATION_CONTEXT_CHECK ||
+					 OAuth2ProviderScopeLiferayAccessControlContext.
+						 isOAuth2AuthVerified() ||
+					 _isGuest())) {
 
 					corsSupport.writeResponseHeaders(
 						httpServletRequest::getHeader,
 						httpServletResponse::setHeader);
 				}
-
-				return;
-			}
-
-			if (corsSupport.isValidCORSRequest(
-					httpServletRequest.getMethod(),
-					httpServletRequest::getHeader) &&
-				(OAuth2ProviderScopeLiferayAccessControlContext.
-					isOAuth2AuthVerified() ||
-				 _isGuest())) {
-
-				corsSupport.writeResponseHeaders(
-					httpServletRequest::getHeader,
-					httpServletResponse::setHeader);
 			}
 		}
 
 		filterChain.doFilter(httpServletRequest, httpServletResponse);
-	}
-
-	private URLPatternMapper<CORSSupport> _createDefaultURLPatternMapper() {
-		Map<String, CORSSupport> corsSupports = new HashMap<>();
-
-		_populateCORSSupports(
-			corsSupports,
-			ConfigurableUtil.createConfigurable(
-				PortalCORSConfiguration.class, new HashMapDictionary<>()));
-
-		return URLPatternMapperFactory.create(corsSupports);
 	}
 
 	private String _getURI(HttpServletRequest httpServletRequest) {
@@ -271,7 +262,7 @@ public class PortalCORSServletFilter
 			return urlPatternMapper;
 		}
 
-		return _defaultURLPatternMapper;
+		return null;
 	}
 
 	private boolean _isGuest() {
@@ -368,7 +359,6 @@ public class PortalCORSServletFilter
 		_configurationPidsProperties = Collections.synchronizedMap(
 			new LinkedHashMap<>());
 	private String _contextPath;
-	private URLPatternMapper<CORSSupport> _defaultURLPatternMapper;
 
 	@Reference
 	private Http _http;

@@ -22,4 +22,14 @@ describe('utils', () => {
 			);
 		});
 	});
+
+	describe('stringToSlug', () => {
+		it('return a text with hyphens instead of spaces', () => {
+			expect(
+				Utils.stringToSlug(
+					'lorem ipsum dolor sit amet consectetur adipiscing elit'
+				)
+			).toEqual('lorem-ipsum-dolor-sit-amet-consectetur-adipiscing-elit');
+		});
+	});
 });

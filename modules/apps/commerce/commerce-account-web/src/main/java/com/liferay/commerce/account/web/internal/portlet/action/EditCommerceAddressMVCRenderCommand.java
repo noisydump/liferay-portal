@@ -42,7 +42,7 @@ import org.osgi.service.component.annotations.Reference;
 	enabled = false, immediate = true,
 	property = {
 		"javax.portlet.name=" + CommerceAccountPortletKeys.COMMERCE_ACCOUNT,
-		"mvc.command.name=editCommerceAddress"
+		"mvc.command.name=/commerce_account/edit_commerce_address"
 	},
 	service = MVCRenderCommand.class
 )
@@ -64,7 +64,7 @@ public class EditCommerceAddressMVCRenderCommand implements MVCRenderCommand {
 		renderRequest.setAttribute(
 			WebKeys.PORTLET_DISPLAY_CONTEXT, commerceAccountDisplayContext);
 
-		return "/edit_address.jsp";
+		return "/edit_commerce_address.jsp";
 	}
 
 	@Reference

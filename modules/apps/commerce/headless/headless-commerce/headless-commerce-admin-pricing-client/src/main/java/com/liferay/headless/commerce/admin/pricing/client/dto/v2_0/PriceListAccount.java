@@ -17,6 +17,8 @@ package com.liferay.headless.commerce.admin.pricing.client.dto.v2_0;
 import com.liferay.headless.commerce.admin.pricing.client.function.UnsafeSupplier;
 import com.liferay.headless.commerce.admin.pricing.client.serdes.v2_0.PriceListAccountSerDes;
 
+import java.io.Serializable;
+
 import java.util.Map;
 import java.util.Objects;
 
@@ -27,7 +29,7 @@ import javax.annotation.Generated;
  * @generated
  */
 @Generated("")
-public class PriceListAccount implements Cloneable {
+public class PriceListAccount implements Cloneable, Serializable {
 
 	public static PriceListAccount toDTO(String json) {
 		return PriceListAccountSerDes.toDTO(json);
@@ -122,25 +124,6 @@ public class PriceListAccount implements Cloneable {
 
 	protected Map<String, Map<String, String>> actions;
 
-	public Long getId() {
-		return id;
-	}
-
-	public void setId(Long id) {
-		this.id = id;
-	}
-
-	public void setId(UnsafeSupplier<Long, Exception> idUnsafeSupplier) {
-		try {
-			id = idUnsafeSupplier.get();
-		}
-		catch (Exception e) {
-			throw new RuntimeException(e);
-		}
-	}
-
-	protected Long id;
-
 	public Integer getOrder() {
 		return order;
 	}
@@ -161,6 +144,27 @@ public class PriceListAccount implements Cloneable {
 	}
 
 	protected Integer order;
+
+	public Long getPriceListAccountId() {
+		return priceListAccountId;
+	}
+
+	public void setPriceListAccountId(Long priceListAccountId) {
+		this.priceListAccountId = priceListAccountId;
+	}
+
+	public void setPriceListAccountId(
+		UnsafeSupplier<Long, Exception> priceListAccountIdUnsafeSupplier) {
+
+		try {
+			priceListAccountId = priceListAccountIdUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected Long priceListAccountId;
 
 	public String getPriceListExternalReferenceCode() {
 		return priceListExternalReferenceCode;

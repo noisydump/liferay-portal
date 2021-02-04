@@ -20,7 +20,7 @@
 SelectLayoutCollectionDisplayContext selectLayoutCollectionDisplayContext = (SelectLayoutCollectionDisplayContext)request.getAttribute(LayoutAdminWebKeys.SELECT_LAYOUT_COLLECTION_DISPLAY_CONTEXT);
 %>
 
-<div class="lfr-search-container-wrapper" id="<portlet:namespace/>collectionProviders">
+<div class="lfr-search-container-wrapper" id="<portlet:namespace />collectionProviders">
 	<liferay-ui:search-container
 		id="entries"
 		searchContainer="<%= selectLayoutCollectionDisplayContext.getCollectionProvidersSearchContainer() %>"
@@ -28,14 +28,8 @@ SelectLayoutCollectionDisplayContext selectLayoutCollectionDisplayContext = (Sel
 	>
 		<liferay-ui:search-container-row
 			className="com.liferay.info.list.provider.InfoListProvider"
-			cssClass="entry"
 			modelVar="infoListProvider"
 		>
-
-			<%
-			row.setCssClass("entry-card entry-display-style lfr-asset-item " + row.getCssClass());
-			%>
-
 			<liferay-ui:search-container-column-text>
 				<clay:vertical-card
 					verticalCard="<%= new CollectionProvidersVerticalCard(selectLayoutCollectionDisplayContext.getSelGroupId(), infoListProvider, renderRequest, renderResponse) %>"

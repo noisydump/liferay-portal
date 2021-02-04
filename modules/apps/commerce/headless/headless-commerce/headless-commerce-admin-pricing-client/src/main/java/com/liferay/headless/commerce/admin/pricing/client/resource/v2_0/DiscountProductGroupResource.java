@@ -40,18 +40,19 @@ public interface DiscountProductGroupResource {
 		return new Builder();
 	}
 
-	public void deleteDiscountProductGroup(Long id) throws Exception;
+	public void deleteDiscountProductGroup(Long discountProductGroupId)
+		throws Exception;
 
 	public HttpInvoker.HttpResponse deleteDiscountProductGroupHttpResponse(
-			Long id)
+			Long discountProductGroupId)
 		throws Exception;
 
 	public void deleteDiscountProductGroupBatch(
-			Long id, String callbackURL, Object object)
+			String callbackURL, Object object)
 		throws Exception;
 
 	public HttpInvoker.HttpResponse deleteDiscountProductGroupBatchHttpResponse(
-			Long id, String callbackURL, Object object)
+			String callbackURL, Object object)
 		throws Exception;
 
 	public Page<DiscountProductGroup>
@@ -161,9 +162,11 @@ public interface DiscountProductGroupResource {
 	public static class DiscountProductGroupResourceImpl
 		implements DiscountProductGroupResource {
 
-		public void deleteDiscountProductGroup(Long id) throws Exception {
+		public void deleteDiscountProductGroup(Long discountProductGroupId)
+			throws Exception {
+
 			HttpInvoker.HttpResponse httpResponse =
-				deleteDiscountProductGroupHttpResponse(id);
+				deleteDiscountProductGroupHttpResponse(discountProductGroupId);
 
 			String content = httpResponse.getContent();
 
@@ -186,7 +189,7 @@ public interface DiscountProductGroupResource {
 		}
 
 		public HttpInvoker.HttpResponse deleteDiscountProductGroupHttpResponse(
-				Long id)
+				Long discountProductGroupId)
 			throws Exception {
 
 			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
@@ -213,8 +216,9 @@ public interface DiscountProductGroupResource {
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port +
-						"/o/headless-commerce-admin-pricing/v2.0/discount-product-groups/{id}",
-				id);
+						"/o/headless-commerce-admin-pricing/v2.0/discount-product-groups/{discountProductGroupId}");
+
+			httpInvoker.path("discountProductGroupId", discountProductGroupId);
 
 			httpInvoker.userNameAndPassword(
 				_builder._login + ":" + _builder._password);
@@ -223,12 +227,12 @@ public interface DiscountProductGroupResource {
 		}
 
 		public void deleteDiscountProductGroupBatch(
-				Long id, String callbackURL, Object object)
+				String callbackURL, Object object)
 			throws Exception {
 
 			HttpInvoker.HttpResponse httpResponse =
 				deleteDiscountProductGroupBatchHttpResponse(
-					id, callbackURL, object);
+					callbackURL, object);
 
 			String content = httpResponse.getContent();
 
@@ -241,7 +245,7 @@ public interface DiscountProductGroupResource {
 
 		public HttpInvoker.HttpResponse
 				deleteDiscountProductGroupBatchHttpResponse(
-					Long id, String callbackURL, Object object)
+					String callbackURL, Object object)
 			throws Exception {
 
 			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
@@ -273,8 +277,7 @@ public interface DiscountProductGroupResource {
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port +
-						"/o/headless-commerce-admin-pricing/v2.0/discount-product-groups/batch",
-				id);
+						"/o/headless-commerce-admin-pricing/v2.0/discount-product-groups/batch");
 
 			httpInvoker.userNameAndPassword(
 				_builder._login + ":" + _builder._password);
@@ -347,8 +350,9 @@ public interface DiscountProductGroupResource {
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port +
-						"/o/headless-commerce-admin-pricing/v2.0/discounts/by-externalReferenceCode/{externalReferenceCode}/discount-product-groups",
-				externalReferenceCode);
+						"/o/headless-commerce-admin-pricing/v2.0/discounts/by-externalReferenceCode/{externalReferenceCode}/discount-product-groups");
+
+			httpInvoker.path("externalReferenceCode", externalReferenceCode);
 
 			httpInvoker.userNameAndPassword(
 				_builder._login + ":" + _builder._password);
@@ -419,8 +423,9 @@ public interface DiscountProductGroupResource {
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port +
-						"/o/headless-commerce-admin-pricing/v2.0/discounts/by-externalReferenceCode/{externalReferenceCode}/discount-product-groups",
-				externalReferenceCode);
+						"/o/headless-commerce-admin-pricing/v2.0/discounts/by-externalReferenceCode/{externalReferenceCode}/discount-product-groups");
+
+			httpInvoker.path("externalReferenceCode", externalReferenceCode);
 
 			httpInvoker.userNameAndPassword(
 				_builder._login + ":" + _builder._password);
@@ -507,8 +512,9 @@ public interface DiscountProductGroupResource {
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port +
-						"/o/headless-commerce-admin-pricing/v2.0/discounts/{id}/discount-product-groups",
-				id);
+						"/o/headless-commerce-admin-pricing/v2.0/discounts/{id}/discount-product-groups");
+
+			httpInvoker.path("id", id);
 
 			httpInvoker.userNameAndPassword(
 				_builder._login + ":" + _builder._password);
@@ -576,8 +582,9 @@ public interface DiscountProductGroupResource {
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port +
-						"/o/headless-commerce-admin-pricing/v2.0/discounts/{id}/discount-product-groups",
-				id);
+						"/o/headless-commerce-admin-pricing/v2.0/discounts/{id}/discount-product-groups");
+
+			httpInvoker.path("id", id);
 
 			httpInvoker.userNameAndPassword(
 				_builder._login + ":" + _builder._password);
@@ -638,8 +645,9 @@ public interface DiscountProductGroupResource {
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port +
-						"/o/headless-commerce-admin-pricing/v2.0/discounts/discount-product-groups/batch",
-				id);
+						"/o/headless-commerce-admin-pricing/v2.0/discounts/discount-product-groups/batch");
+
+			httpInvoker.path("id", id);
 
 			httpInvoker.userNameAndPassword(
 				_builder._login + ":" + _builder._password);

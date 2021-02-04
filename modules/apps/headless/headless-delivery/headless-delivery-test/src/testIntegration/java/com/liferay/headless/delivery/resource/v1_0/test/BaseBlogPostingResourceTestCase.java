@@ -342,6 +342,7 @@ public abstract class BaseBlogPostingResourceTestCase {
 
 		BlogPosting randomPatchBlogPosting = randomPatchBlogPosting();
 
+		@SuppressWarnings("PMD.UnusedLocalVariable")
 		BlogPosting patchBlogPosting = blogPostingResource.patchBlogPosting(
 			postBlogPosting.getId(), randomPatchBlogPosting);
 
@@ -1634,9 +1635,11 @@ public abstract class BaseBlogPostingResourceTestCase {
 					return false;
 				}
 			}
+
+			return true;
 		}
 
-		return true;
+		return false;
 	}
 
 	protected boolean equals(Rating rating1, Rating rating2) {

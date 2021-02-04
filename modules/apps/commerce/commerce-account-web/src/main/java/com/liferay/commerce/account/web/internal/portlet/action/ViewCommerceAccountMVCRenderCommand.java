@@ -42,7 +42,7 @@ import org.osgi.service.component.annotations.Reference;
 	enabled = false, immediate = true,
 	property = {
 		"javax.portlet.name=" + CommerceAccountPortletKeys.COMMERCE_ACCOUNT,
-		"mvc.command.name=viewCommerceAccount"
+		"mvc.command.name=/commerce_account/view_commerce_account"
 	},
 	service = MVCRenderCommand.class
 )
@@ -64,7 +64,7 @@ public class ViewCommerceAccountMVCRenderCommand implements MVCRenderCommand {
 		renderRequest.setAttribute(
 			WebKeys.PORTLET_DISPLAY_CONTEXT, commerceAccountDisplayContext);
 
-		return "/view_account.jsp";
+		return "/view_commerce_account.jsp";
 	}
 
 	@Reference

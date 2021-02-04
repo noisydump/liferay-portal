@@ -38,12 +38,14 @@ public class StyleBookEntryVersionSoap implements Serializable {
 		soapModel.setStyleBookEntryVersionId(
 			model.getStyleBookEntryVersionId());
 		soapModel.setVersion(model.getVersion());
+		soapModel.setUuid(model.getUuid());
 		soapModel.setStyleBookEntryId(model.getStyleBookEntryId());
 		soapModel.setGroupId(model.getGroupId());
 		soapModel.setCompanyId(model.getCompanyId());
 		soapModel.setUserId(model.getUserId());
 		soapModel.setUserName(model.getUserName());
 		soapModel.setCreateDate(model.getCreateDate());
+		soapModel.setModifiedDate(model.getModifiedDate());
 		soapModel.setDefaultStyleBookEntry(model.isDefaultStyleBookEntry());
 		soapModel.setFrontendTokensValues(model.getFrontendTokensValues());
 		soapModel.setName(model.getName());
@@ -127,6 +129,14 @@ public class StyleBookEntryVersionSoap implements Serializable {
 		_version = version;
 	}
 
+	public String getUuid() {
+		return _uuid;
+	}
+
+	public void setUuid(String uuid) {
+		_uuid = uuid;
+	}
+
 	public long getStyleBookEntryId() {
 		return _styleBookEntryId;
 	}
@@ -175,6 +185,14 @@ public class StyleBookEntryVersionSoap implements Serializable {
 		_createDate = createDate;
 	}
 
+	public Date getModifiedDate() {
+		return _modifiedDate;
+	}
+
+	public void setModifiedDate(Date modifiedDate) {
+		_modifiedDate = modifiedDate;
+	}
+
 	public boolean getDefaultStyleBookEntry() {
 		return _defaultStyleBookEntry;
 	}
@@ -221,12 +239,14 @@ public class StyleBookEntryVersionSoap implements Serializable {
 
 	private long _styleBookEntryVersionId;
 	private int _version;
+	private String _uuid;
 	private long _styleBookEntryId;
 	private long _groupId;
 	private long _companyId;
 	private long _userId;
 	private String _userName;
 	private Date _createDate;
+	private Date _modifiedDate;
 	private boolean _defaultStyleBookEntry;
 	private String _frontendTokensValues;
 	private String _name;

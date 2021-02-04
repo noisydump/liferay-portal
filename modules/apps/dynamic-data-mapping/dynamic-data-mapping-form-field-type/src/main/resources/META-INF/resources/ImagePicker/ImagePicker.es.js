@@ -44,8 +44,8 @@ const ImagePicker = ({
 	const dispatchValue = ({clear, value}, callback = () => {}) =>
 		setImageValues((oldValues) => {
 			let mergedValues = {...oldValues, ...value};
-
 			mergedValues = clear ? {} : mergedValues;
+			mergedValues.alt = mergedValues.description || '';
 
 			callback(mergedValues);
 
@@ -113,10 +113,11 @@ const ImagePicker = ({
 					<ClayInput.GroupItem className="d-none d-sm-block" prepend>
 						<ClayInput
 							className="field"
-							disabled
-							id={id ? id : name}
+							disabled={readOnly}
+							id={id}
+							onClick={handleItemSelectorTriggerClick}
 							type="text"
-							value={imageValues.title}
+							value={imageValues.title || ''}
 						/>
 					</ClayInput.GroupItem>
 

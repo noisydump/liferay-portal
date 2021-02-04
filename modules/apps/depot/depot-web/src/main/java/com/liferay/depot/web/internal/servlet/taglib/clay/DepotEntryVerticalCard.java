@@ -15,13 +15,17 @@
 package com.liferay.depot.web.internal.servlet.taglib.clay;
 
 import com.liferay.depot.model.DepotEntry;
+import com.liferay.depot.service.DepotEntryGroupRelServiceUtil;
 import com.liferay.depot.web.internal.constants.DepotAdminWebKeys;
+import com.liferay.depot.web.internal.constants.DepotPortletKeys;
 import com.liferay.depot.web.internal.servlet.taglib.util.DepotActionDropdownItemsProvider;
 import com.liferay.frontend.taglib.clay.servlet.taglib.soy.BaseBaseClayCard;
 import com.liferay.frontend.taglib.clay.servlet.taglib.soy.VerticalCard;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem;
+import com.liferay.petra.reflect.ReflectionUtil;
 import com.liferay.portal.kernel.dao.search.RowChecker;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Group;
@@ -29,12 +33,14 @@ import com.liferay.portal.kernel.portlet.LiferayPortletRequest;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.HtmlUtil;
+import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 
 import java.util.List;
 
-import javax.portlet.RenderURL;
+import javax.portlet.PortletRequest;
+import javax.portlet.PortletURL;
 
 /**
  * @author Alejandro Tardín
@@ -76,14 +82,22 @@ public class DepotEntryVerticalCard
 
 	@Override
 	public String getHref() {
-		RenderURL renderURL = _liferayPortletResponse.createRenderURL();
+		try {
+			PortletURL portletURL = PortalUtil.getControlPanelPortletURL(
+				_liferayPortletRequest, _depotEntry.getGroup(),
+				DepotPortletKeys.DEPOT_ADMIN, 0, 0,
+				PortletRequest.RENDER_PHASE);
 
-		renderURL.setParameter(
-			"mvcRenderCommandName", "/depot/view_depot_dashboard");
-		renderURL.setParameter(
-			"depotEntryId", String.valueOf(_depotEntry.getDepotEntryId()));
+			portletURL.setParameter(
+				"mvcRenderCommandName", "/depot/view_depot_dashboard");
+			portletURL.setParameter(
+				"depotEntryId", String.valueOf(_depotEntry.getDepotEntryId()));
 
-		return renderURL.toString();
+			return portletURL.toString();
+		}
+		catch (PortalException portalException) {
+			return ReflectionUtil.throwException(portalException);
+		}
 	}
 
 	@Override
@@ -98,6 +112,28 @@ public class DepotEntryVerticalCard
 		}
 
 		return String.valueOf(_depotEntry.getDepotEntryId());
+	}
+
+	@Override
+	public String getSubtitle() {
+		try {
+			int count =
+				DepotEntryGroupRelServiceUtil.getDepotEntryGroupRelsCount(
+					_depotEntry);
+
+			if (count != 1) {
+				return LanguageUtil.format(
+					_liferayPortletRequest.getHttpServletRequest(),
+					"x-connected-sites", count);
+			}
+
+			return LanguageUtil.format(
+				_liferayPortletRequest.getHttpServletRequest(),
+				"x-connected-site", count);
+		}
+		catch (PortalException portalException) {
+			return ReflectionUtil.throwException(portalException);
+		}
 	}
 
 	@Override

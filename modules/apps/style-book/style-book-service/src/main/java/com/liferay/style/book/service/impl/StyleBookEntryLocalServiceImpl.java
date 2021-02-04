@@ -184,6 +184,21 @@ public class StyleBookEntryLocalServiceImpl
 	}
 
 	@Override
+	public StyleBookEntry fetchStyleBookEntryByUuidAndGroupId(
+		String uuid, long groupId) {
+
+		StyleBookEntry styleBookEntry =
+			styleBookEntryPersistence.fetchByUUID_G_Head(uuid, groupId, true);
+
+		if (styleBookEntry != null) {
+			return styleBookEntry;
+		}
+
+		return styleBookEntryPersistence.fetchByUUID_G_Head(
+			uuid, groupId, false);
+	}
+
+	@Override
 	public String generateStyleBookEntryKey(long groupId, String name) {
 		String styleBookEntryKey = _getStyleBookEntryKey(name);
 
@@ -223,6 +238,13 @@ public class StyleBookEntryLocalServiceImpl
 		return styleBookEntryPersistence.findByG_LikeN_Head(
 			groupId, _customSQL.keywords(name, false, WildcardMode.SURROUND)[0],
 			true, start, end, orderByComparator);
+	}
+
+	@Override
+	public List<StyleBookEntry> getStyleBookEntriesByUuidAndCompanyId(
+		String uuid, long companyId) {
+
+		return styleBookEntryPersistence.findByUuid_C(uuid, companyId);
 	}
 
 	@Override
@@ -271,6 +293,7 @@ public class StyleBookEntryLocalServiceImpl
 			styleBookEntryPersistence.update(oldDefaultStyleBookEntry);
 		}
 
+		styleBookEntry.setModifiedDate(new Date());
 		styleBookEntry.setDefaultStyleBookEntry(defaultStyleBookEntry);
 
 		StyleBookEntry draftStyleBookEntry = fetchDraft(styleBookEntry);
@@ -292,11 +315,13 @@ public class StyleBookEntryLocalServiceImpl
 		StyleBookEntry styleBookEntry =
 			styleBookEntryPersistence.findByPrimaryKey(styleBookEntryId);
 
+		styleBookEntry.setModifiedDate(new Date());
 		styleBookEntry.setFrontendTokensValues(frontendTokensValues);
 
 		StyleBookEntry draftStyleBookEntry = fetchDraft(styleBookEntry);
 
 		if (draftStyleBookEntry != null) {
+			draftStyleBookEntry.setModifiedDate(new Date());
 			draftStyleBookEntry.setFrontendTokensValues(frontendTokensValues);
 
 			updateDraft(draftStyleBookEntry);
@@ -314,11 +339,13 @@ public class StyleBookEntryLocalServiceImpl
 
 		_validate(name);
 
+		styleBookEntry.setModifiedDate(new Date());
 		styleBookEntry.setName(name);
 
 		StyleBookEntry draftStyleBookEntry = fetchDraft(styleBookEntry);
 
 		if (draftStyleBookEntry != null) {
+			draftStyleBookEntry.setModifiedDate(new Date());
 			draftStyleBookEntry.setName(name);
 
 			updateDraft(draftStyleBookEntry);
@@ -335,15 +362,49 @@ public class StyleBookEntryLocalServiceImpl
 		StyleBookEntry styleBookEntry =
 			styleBookEntryPersistence.findByPrimaryKey(styleBookEntryId);
 
+		styleBookEntry.setModifiedDate(new Date());
 		styleBookEntry.setPreviewFileEntryId(previewFileEntryId);
 
 		StyleBookEntry draftStyleBookEntry = fetchDraft(styleBookEntry);
 
 		if (draftStyleBookEntry != null) {
+			draftStyleBookEntry.setModifiedDate(new Date());
 			draftStyleBookEntry.setPreviewFileEntryId(previewFileEntryId);
 
 			updateDraft(draftStyleBookEntry);
 		}
+
+		return styleBookEntryPersistence.update(styleBookEntry);
+	}
+
+	@Override
+	public StyleBookEntry updateStyleBookEntry(
+			long userId, long styleBookEntryId, boolean defaultStylebookEntry,
+			String frontendTokensValues, String name, String styleBookEntryKey,
+			long previewFileEntryId)
+		throws PortalException {
+
+		StyleBookEntry styleBookEntry =
+			styleBookEntryPersistence.findByPrimaryKey(styleBookEntryId);
+
+		_validate(name);
+
+		if (Validator.isNull(styleBookEntryKey)) {
+			styleBookEntryKey = generateStyleBookEntryKey(
+				styleBookEntry.getGroupId(), name);
+		}
+
+		styleBookEntryKey = _getStyleBookEntryKey(styleBookEntryKey);
+
+		_validateStyleBookEntryKey(
+			styleBookEntry.getGroupId(), styleBookEntryKey);
+
+		styleBookEntry.setUserId(userId);
+		styleBookEntry.setDefaultStyleBookEntry(defaultStylebookEntry);
+		styleBookEntry.setFrontendTokensValues(frontendTokensValues);
+		styleBookEntry.setName(name);
+		styleBookEntry.setPreviewFileEntryId(previewFileEntryId);
+		styleBookEntry.setStyleBookEntryKey(styleBookEntryKey);
 
 		return styleBookEntryPersistence.update(styleBookEntry);
 	}
@@ -358,12 +419,14 @@ public class StyleBookEntryLocalServiceImpl
 
 		_validate(name);
 
+		styleBookEntry.setModifiedDate(new Date());
 		styleBookEntry.setFrontendTokensValues(frontendTokensValues);
 		styleBookEntry.setName(name);
 
 		StyleBookEntry draftStyleBookEntry = fetchDraft(styleBookEntry);
 
 		if (draftStyleBookEntry != null) {
+			draftStyleBookEntry.setModifiedDate(new Date());
 			draftStyleBookEntry.setFrontendTokensValues(frontendTokensValues);
 			draftStyleBookEntry.setName(name);
 

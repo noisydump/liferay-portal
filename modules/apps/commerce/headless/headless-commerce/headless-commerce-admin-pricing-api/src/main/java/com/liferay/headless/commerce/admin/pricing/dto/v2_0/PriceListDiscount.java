@@ -26,6 +26,8 @@ import com.liferay.portal.vulcan.util.ObjectMapperUtil;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
+import java.io.Serializable;
+
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Objects;
@@ -47,7 +49,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 @JsonFilter("Liferay.Vulcan")
 @Schema(requiredProperties = {"discountId", "priceListId"})
 @XmlRootElement(name = "PriceListDiscount")
-public class PriceListDiscount {
+public class PriceListDiscount implements Serializable {
 
 	public static PriceListDiscount toDTO(String json) {
 		return ObjectMapperUtil.readValue(PriceListDiscount.class, json);
@@ -145,33 +147,6 @@ public class PriceListDiscount {
 
 	@DecimalMin("0")
 	@Schema
-	public Long getId() {
-		return id;
-	}
-
-	public void setId(Long id) {
-		this.id = id;
-	}
-
-	@JsonIgnore
-	public void setId(UnsafeSupplier<Long, Exception> idUnsafeSupplier) {
-		try {
-			id = idUnsafeSupplier.get();
-		}
-		catch (RuntimeException re) {
-			throw re;
-		}
-		catch (Exception e) {
-			throw new RuntimeException(e);
-		}
-	}
-
-	@GraphQLField
-	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
-	protected Long id;
-
-	@DecimalMin("0")
-	@Schema
 	public Integer getOrder() {
 		return order;
 	}
@@ -198,6 +173,35 @@ public class PriceListDiscount {
 	@GraphQLField
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected Integer order;
+
+	@DecimalMin("0")
+	@Schema
+	public Long getPriceListDiscountId() {
+		return priceListDiscountId;
+	}
+
+	public void setPriceListDiscountId(Long priceListDiscountId) {
+		this.priceListDiscountId = priceListDiscountId;
+	}
+
+	@JsonIgnore
+	public void setPriceListDiscountId(
+		UnsafeSupplier<Long, Exception> priceListDiscountIdUnsafeSupplier) {
+
+		try {
+			priceListDiscountId = priceListDiscountIdUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
+	protected Long priceListDiscountId;
 
 	@Schema
 	public String getPriceListExternalReferenceCode() {
@@ -326,16 +330,6 @@ public class PriceListDiscount {
 			sb.append("\"");
 		}
 
-		if (id != null) {
-			if (sb.length() > 1) {
-				sb.append(", ");
-			}
-
-			sb.append("\"id\": ");
-
-			sb.append(id);
-		}
-
 		if (order != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -344,6 +338,16 @@ public class PriceListDiscount {
 			sb.append("\"order\": ");
 
 			sb.append(order);
+		}
+
+		if (priceListDiscountId != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"priceListDiscountId\": ");
+
+			sb.append(priceListDiscountId);
 		}
 
 		if (priceListExternalReferenceCode != null) {

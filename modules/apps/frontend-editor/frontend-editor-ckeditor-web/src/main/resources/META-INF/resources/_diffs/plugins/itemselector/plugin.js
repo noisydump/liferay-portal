@@ -18,6 +18,9 @@
 	var STR_FILE_ENTRY_RETURN_TYPE =
 		'com.liferay.item.selector.criteria.FileEntryItemSelectorReturnType';
 
+	var STR_VIDEO_HTML_RETURN_TYPE =
+		'com.liferay.item.selector.criteria.VideoEmbeddableHTMLItemSelectorReturnType';
+
 	var TPL_AUDIO_SCRIPT =
 		'boundingBox: "#" + mediaId,' + 'oggUrl: "{oggUrl}",' + 'url: "{url}"';
 
@@ -102,6 +105,17 @@
 					type
 				);
 			}
+		},
+
+		_commitVideoHtmlValue(editor, html) {
+			const parsedHTML = new DOMParser().parseFromString(
+				html,
+				'text/html'
+			);
+			const iFrame = parsedHTML.getElementsByTagName('iframe');
+			const url = iFrame[0].src;
+
+			editor.plugins.videoembed.onOkVideoHtml(editor, html, url);
 		},
 
 		_commitVideoValue(value, node, extraStyles) {
@@ -236,18 +250,15 @@
 						callback(imageSrc, selectedItem);
 					}
 					else {
-						var elementOuterHtml = '<img src="' + imageSrc + '">';
+						var imageElement = new CKEDITOR.dom.element.createFromHtml(
+							'<img src="' + imageSrc + '">'
+						);
 
-						editor.insertHtml(elementOuterHtml);
+						editor.insertElement(imageElement);
 
 						if (IE9AndLater) {
 							if (!editor.window.$.AlloyEditor) {
-								var emptySelectionMarkup = '&nbsp;';
-
-								emptySelectionMarkup =
-									elementOuterHtml + emptySelectionMarkup;
-
-								editor.insertHtml(emptySelectionMarkup);
+								editor.insertHtml('&nbsp;');
 							}
 
 							var element = new CKEDITOR.dom.element('br');
@@ -294,7 +305,18 @@
 						callback(videoSrc);
 					}
 					else {
-						instance._commitMediaValue(videoSrc, editor, 'video');
+						if (
+							selectedItem.returnType ===
+							STR_VIDEO_HTML_RETURN_TYPE
+						) {
+							instance._commitVideoHtmlValue(editor, videoSrc);
+						}
+						else {
+							editor.plugins.videoembed.onOkVideo(editor, {
+								type: 'video',
+								url: videoSrc,
+							});
+						}
 					}
 				}
 			}
@@ -445,7 +467,7 @@
 						dialogDefinition,
 						'info',
 						'imageselector',
-						'txtUrl'
+						'src'
 					);
 				}
 				else if (dialogName === 'video') {

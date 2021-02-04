@@ -24,12 +24,14 @@ import com.liferay.commerce.discount.service.CommerceDiscountCommerceAccountGrou
 import com.liferay.commerce.discount.service.CommerceDiscountLocalService;
 import com.liferay.commerce.discount.service.CommerceDiscountLocalServiceUtil;
 import com.liferay.headless.commerce.admin.pricing.client.dto.v2_0.DiscountAccountGroup;
+import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.kernel.util.CalendarFactoryUtil;
+import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.test.rule.Inject;
 
@@ -41,6 +43,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -98,7 +101,7 @@ public class DiscountAccountGroupResourceTest
 
 		CommerceDiscount commerceDiscount =
 			_commerceDiscountLocalService.fetchByExternalReferenceCode(
-				testCompany.getCompanyId(), "external-reference-code-test");
+				"external-reference-code-test", testCompany.getCompanyId());
 
 		if (commerceDiscount != null) {
 			_commerceDiscountLocalService.deleteCommerceDiscount(
@@ -146,12 +149,24 @@ public class DiscountAccountGroupResourceTest
 
 		CommerceDiscount commerceDiscount =
 			_commerceDiscountLocalService.fetchByExternalReferenceCode(
-				testCompany.getCompanyId(), "external-reference-code-test");
+				"external-reference-code-test", testCompany.getCompanyId());
 
 		if (commerceDiscount != null) {
 			_commerceDiscountLocalService.deleteCommerceDiscount(
 				commerceDiscount.getCommerceDiscountId());
 		}
+	}
+
+	@Override
+	@Test
+	public void testDeleteDiscountAccountGroup() throws Exception {
+		DiscountAccountGroup discountAccountGroup = _addDiscountAccountGroup(
+			randomDiscountAccountGroup());
+
+		assertHttpResponseStatusCode(
+			204,
+			discountAccountGroupResource.deleteDiscountAccountGroupHttpResponse(
+				discountAccountGroup.getDiscountAccountGroupId()));
 	}
 
 	@Override
@@ -185,6 +200,24 @@ public class DiscountAccountGroupResourceTest
 	}
 
 	@Override
+	@Test
+	public void testGraphQLDeleteDiscountAccountGroup() throws Exception {
+		DiscountAccountGroup discountAccountGroup = _addDiscountAccountGroup(
+			randomDiscountAccountGroup());
+
+		Assert.assertTrue(
+			JSONUtil.getValueAsBoolean(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"deleteDiscountAccountGroup",
+						HashMapBuilder.<String, Object>put(
+							"discountAccountGroupId",
+							discountAccountGroup.getDiscountAccountGroupId()
+						).build())),
+				"JSONObject/data", "Object/deleteDiscountAccountGroup"));
+	}
+
+	@Override
 	protected String[] getAdditionalAssertFieldNames() {
 		return new String[] {"accountGroupId", "discountId"};
 	}
@@ -198,7 +231,8 @@ public class DiscountAccountGroupResourceTest
 
 		CommerceDiscount commerceDiscount =
 			_commerceDiscountLocalService.upsertCommerceDiscount(
-				_user.getUserId(), 0, RandomTestUtil.randomString(),
+				RandomTestUtil.randomString(), _user.getUserId(), 0,
+				RandomTestUtil.randomString(),
 				CommerceDiscountConstants.TARGET_PRODUCTS, false, null, false,
 				BigDecimal.ZERO, BigDecimal.ONE, BigDecimal.ZERO,
 				BigDecimal.ZERO, BigDecimal.ZERO,
@@ -209,8 +243,7 @@ public class DiscountAccountGroupResourceTest
 				calendar.get(Calendar.MINUTE), calendar.get(Calendar.MONTH),
 				calendar.get(Calendar.DAY_OF_MONTH),
 				calendar.get(Calendar.YEAR), calendar.get(Calendar.HOUR_OF_DAY),
-				calendar.get(Calendar.MINUTE), RandomTestUtil.randomString(),
-				true, _serviceContext);
+				calendar.get(Calendar.MINUTE), true, _serviceContext);
 
 		CommerceAccountGroup commerceAccountGroup =
 			CommerceAccountGroupLocalServiceUtil.addCommerceAccountGroup(
@@ -232,14 +265,6 @@ public class DiscountAccountGroupResourceTest
 
 	@Override
 	protected DiscountAccountGroup
-			testDeleteDiscountAccountGroup_addDiscountAccountGroup()
-		throws Exception {
-
-		return _addDiscountAccountGroup(randomDiscountAccountGroup());
-	}
-
-	@Override
-	protected DiscountAccountGroup
 			testGetDiscountByExternalReferenceCodeDiscountAccountGroupsPage_addDiscountAccountGroup(
 				String externalReferenceCode,
 				DiscountAccountGroup discountAccountGroup)
@@ -247,7 +272,7 @@ public class DiscountAccountGroupResourceTest
 
 		CommerceDiscount commerceDiscount =
 			_commerceDiscountLocalService.fetchByExternalReferenceCode(
-				testCompany.getCompanyId(), externalReferenceCode);
+				externalReferenceCode, testCompany.getCompanyId());
 
 		CommerceDiscountCommerceAccountGroupRel
 			commerceDiscountCommerceAccountGroupRel =
@@ -274,7 +299,8 @@ public class DiscountAccountGroupResourceTest
 
 			_commerceDiscount =
 				_commerceDiscountLocalService.upsertCommerceDiscount(
-					_user.getUserId(), 0, RandomTestUtil.randomString(),
+					"external-reference-code-test", _user.getUserId(), 0,
+					RandomTestUtil.randomString(),
 					CommerceDiscountConstants.TARGET_PRODUCTS, false, null,
 					false, BigDecimal.ZERO, BigDecimal.ONE, BigDecimal.ZERO,
 					BigDecimal.ZERO, BigDecimal.ZERO,
@@ -287,8 +313,7 @@ public class DiscountAccountGroupResourceTest
 					calendar.get(Calendar.DAY_OF_MONTH),
 					calendar.get(Calendar.YEAR),
 					calendar.get(Calendar.HOUR_OF_DAY),
-					calendar.get(Calendar.MINUTE),
-					"external-reference-code-test", true, _serviceContext);
+					calendar.get(Calendar.MINUTE), true, _serviceContext);
 		}
 
 		return _commerceDiscount.getExternalReferenceCode();
@@ -323,7 +348,8 @@ public class DiscountAccountGroupResourceTest
 
 			_commerceDiscount =
 				_commerceDiscountLocalService.upsertCommerceDiscount(
-					_user.getUserId(), 0, RandomTestUtil.randomString(),
+					"external-reference-code-test", _user.getUserId(), 0,
+					RandomTestUtil.randomString(),
 					CommerceDiscountConstants.TARGET_PRODUCTS, false, null,
 					false, BigDecimal.ZERO, BigDecimal.ONE, BigDecimal.ZERO,
 					BigDecimal.ZERO, BigDecimal.ZERO,
@@ -336,8 +362,7 @@ public class DiscountAccountGroupResourceTest
 					calendar.get(Calendar.DAY_OF_MONTH),
 					calendar.get(Calendar.YEAR),
 					calendar.get(Calendar.HOUR_OF_DAY),
-					calendar.get(Calendar.MINUTE),
-					"external-reference-code-test", true, _serviceContext);
+					calendar.get(Calendar.MINUTE), true, _serviceContext);
 		}
 
 		return _commerceDiscount.getCommerceDiscountId();
@@ -349,14 +374,6 @@ public class DiscountAccountGroupResourceTest
 
 		return super.
 			testGetDiscountIdDiscountAccountGroupsPage_getIrrelevantId();
-	}
-
-	@Override
-	protected DiscountAccountGroup
-			testGraphQLDiscountAccountGroup_addDiscountAccountGroup()
-		throws Exception {
-
-		return _addDiscountAccountGroup(randomDiscountAccountGroup());
 	}
 
 	@Override
@@ -411,12 +428,12 @@ public class DiscountAccountGroupResourceTest
 					commerceAccountGroup.getExternalReferenceCode();
 				accountGroupId =
 					commerceAccountGroup.getCommerceAccountGroupId();
+				discountAccountGroupId =
+					commerceDiscountCommerceAccountGroupRel.
+						getCommerceDiscountCommerceAccountGroupRelId();
 				discountExternalReferenceCode =
 					commerceDiscount.getExternalReferenceCode();
 				discountId = commerceDiscount.getCommerceDiscountId();
-				id =
-					commerceDiscountCommerceAccountGroupRel.
-						getCommerceDiscountCommerceAccountGroupRelId();
 			}
 		};
 	}

@@ -58,7 +58,7 @@ public class OSGiLogServiceExtenderBundleActivator implements BundleActivator {
 	}
 
 	@Override
-	public void stop(BundleContext context) {
+	public void stop(BundleContext bundleContext) {
 		_serviceTracker.close();
 	}
 
@@ -112,7 +112,8 @@ public class OSGiLogServiceExtenderBundleActivator implements BundleActivator {
 									"Bundle ", bundle, ", resource ",
 									resourcePath, ", and logger ", name,
 									" contains an invalid log level \"", value,
-									"\""));
+									"\""),
+								illegalArgumentException);
 						}
 					}
 				}

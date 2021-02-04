@@ -968,19 +968,6 @@ public class LiferayOAuthDataProvider
 		return dateCreated.getTime() / 1000;
 	}
 
-	private static void _invokeTransactionally(Runnable runnable)
-		throws Throwable {
-
-		TransactionInvokerUtil.invoke(
-			TransactionConfig.Factory.create(
-				Propagation.REQUIRED, new Class<?>[] {Exception.class}),
-			() -> {
-				runnable.run();
-
-				return null;
-			});
-	}
-
 	private Collection<LiferayOAuth2Scope> _getLiferayOAuth2Scopes(
 		long oAuth2ApplicationScopeAliasesId, List<String> scopeAliases) {
 
@@ -1028,6 +1015,17 @@ public class LiferayOAuthDataProvider
 
 		return httpServletRequest.getRemoteAddr() + " - " +
 			httpServletRequest.getRemoteHost();
+	}
+
+	private void _invokeTransactionally(Runnable runnable) throws Throwable {
+		TransactionInvokerUtil.invoke(
+			TransactionConfig.Factory.create(
+				Propagation.REQUIRED, new Class<?>[] {Exception.class}),
+			() -> {
+				runnable.run();
+
+				return null;
+			});
 	}
 
 	private void _transactionalSaveServerAccessToken(
@@ -1115,7 +1113,7 @@ public class LiferayOAuthDataProvider
 		}
 	}
 
-	private static Log _log = LogFactoryUtil.getLog(
+	private static final Log _log = LogFactoryUtil.getLog(
 		LiferayOAuthDataProvider.class);
 
 	@Reference(

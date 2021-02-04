@@ -14,7 +14,10 @@
 
 package com.liferay.dynamic.data.mapping.form.field.type.internal.numeric;
 
+import com.liferay.dynamic.data.mapping.form.field.type.DDMFormFieldValueEditingAware;
 import com.liferay.dynamic.data.mapping.form.field.type.DDMFormFieldValueLocalizer;
+import com.liferay.dynamic.data.mapping.form.field.type.constants.DDMFormFieldTypeConstants;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
@@ -31,11 +34,17 @@ import org.osgi.service.component.annotations.Component;
  * @author Rodrigo Paulino
  */
 @Component(
-	immediate = true, property = "ddm.form.field.type.name=numeric",
+	immediate = true,
+	property = "ddm.form.field.type.name=" + DDMFormFieldTypeConstants.NUMERIC,
 	service = DDMFormFieldValueLocalizer.class
 )
 public class NumericDDMFormFieldValueLocalizer
-	implements DDMFormFieldValueLocalizer {
+	implements DDMFormFieldValueEditingAware, DDMFormFieldValueLocalizer {
+
+	@Override
+	public boolean isEditingFieldValue() {
+		return _editingFieldValue;
+	}
 
 	@Override
 	public String localize(String value, Locale locale) {
@@ -54,6 +63,16 @@ public class NumericDDMFormFieldValueLocalizer
 				number = defaultDecimalFormat.parse(value);
 
 				formattedNumber = decimalFormat.format(number);
+
+				String lastChar = String.valueOf(
+					value.charAt(value.length() - 1));
+
+				if (isEditingFieldValue() &&
+					(lastChar.equals(StringPool.COMMA) ||
+					 lastChar.equals(StringPool.PERIOD))) {
+
+					formattedNumber = formattedNumber.concat(lastChar);
+				}
 			}
 
 			return formattedNumber;
@@ -69,7 +88,14 @@ public class NumericDDMFormFieldValueLocalizer
 		return value;
 	}
 
+	@Override
+	public void setEditingFieldValue(boolean editingFieldValue) {
+		_editingFieldValue = editingFieldValue;
+	}
+
 	private static final Log _log = LogFactoryUtil.getLog(
 		NumericDDMFormFieldValueLocalizer.class);
+
+	private boolean _editingFieldValue;
 
 }

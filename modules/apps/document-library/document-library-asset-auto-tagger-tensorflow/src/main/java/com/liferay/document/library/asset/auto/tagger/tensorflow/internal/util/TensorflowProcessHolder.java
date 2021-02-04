@@ -15,11 +15,11 @@
 package com.liferay.document.library.asset.auto.tagger.tensorflow.internal.util;
 
 import com.liferay.document.library.asset.auto.tagger.tensorflow.internal.osgi.commands.TensorflowAssetAutoTagProviderOSGiCommands;
+import com.liferay.document.library.asset.auto.tagger.tensorflow.internal.petra.process.InitializeProcessCallable;
 import com.liferay.document.library.asset.auto.tagger.tensorflow.internal.petra.process.TensorFlowDaemonProcessCallable;
 import com.liferay.petra.process.ProcessCallable;
 import com.liferay.petra.process.ProcessChannel;
 import com.liferay.petra.process.ProcessConfig;
-import com.liferay.petra.process.ProcessException;
 import com.liferay.petra.process.ProcessExecutor;
 import com.liferay.petra.process.ProcessLog;
 import com.liferay.petra.reflect.ReflectionUtil;
@@ -106,7 +106,7 @@ public class TensorflowProcessHolder {
 		}
 	}
 
-	private static String _createClassPath(Bundle bundle, Path tempPath)
+	private String _createClassPath(Bundle bundle, Path tempPath)
 		throws IOException {
 
 		StringBundler sb = new StringBundler();
@@ -157,8 +157,7 @@ public class TensorflowProcessHolder {
 		return sb.toString();
 	}
 
-	private static ProcessConfig _createProcessConfig(
-			Bundle bundle, Path tempPath)
+	private ProcessConfig _createProcessConfig(Bundle bundle, Path tempPath)
 		throws IOException {
 
 		ProcessConfig.Builder builder = new ProcessConfig.Builder();
@@ -227,9 +226,15 @@ public class TensorflowProcessHolder {
 					_processConfig, new TensorFlowDaemonProcessCallable());
 
 				_lastLaunchTime = System.currentTimeMillis();
+
+				Future<String> future = _processChannel.write(
+					new InitializeProcessCallable(
+						InceptionModelUtil.getGraphBytes()));
+
+				future.get();
 			}
-			catch (ProcessException processException) {
-				ReflectionUtil.throwException(processException);
+			catch (Exception exception) {
+				ReflectionUtil.throwException(exception);
 			}
 		}
 

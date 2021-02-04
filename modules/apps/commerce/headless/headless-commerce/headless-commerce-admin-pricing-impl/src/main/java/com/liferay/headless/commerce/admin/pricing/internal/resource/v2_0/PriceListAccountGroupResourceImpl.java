@@ -20,6 +20,7 @@ import com.liferay.commerce.price.list.model.CommercePriceList;
 import com.liferay.commerce.price.list.model.CommercePriceListCommerceAccountGroupRel;
 import com.liferay.commerce.price.list.service.CommercePriceListCommerceAccountGroupRelService;
 import com.liferay.commerce.price.list.service.CommercePriceListService;
+import com.liferay.headless.commerce.admin.pricing.dto.v2_0.PriceList;
 import com.liferay.headless.commerce.admin.pricing.dto.v2_0.PriceListAccountGroup;
 import com.liferay.headless.commerce.admin.pricing.internal.dto.v2_0.converter.PriceListAccountGroupDTOConverter;
 import com.liferay.headless.commerce.admin.pricing.internal.util.v2_0.PriceListAccountGroupUtil;
@@ -27,9 +28,12 @@ import com.liferay.headless.commerce.admin.pricing.resource.v2_0.PriceListAccoun
 import com.liferay.headless.commerce.core.util.ServiceContextHelper;
 import com.liferay.portal.kernel.search.Sort;
 import com.liferay.portal.kernel.search.filter.Filter;
+import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.vulcan.dto.converter.DTOConverterRegistry;
 import com.liferay.portal.vulcan.dto.converter.DefaultDTOConverterContext;
+import com.liferay.portal.vulcan.fields.NestedField;
+import com.liferay.portal.vulcan.fields.NestedFieldSupport;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 
@@ -48,10 +52,11 @@ import org.osgi.service.component.annotations.ServiceScope;
 	enabled = false,
 	properties = "OSGI-INF/liferay/rest/v2_0/price-list-account-group.properties",
 	scope = ServiceScope.PROTOTYPE,
-	service = PriceListAccountGroupResource.class
+	service = {NestedFieldSupport.class, PriceListAccountGroupResource.class}
 )
 public class PriceListAccountGroupResourceImpl
-	extends BasePriceListAccountGroupResourceImpl {
+	extends BasePriceListAccountGroupResourceImpl
+	implements NestedFieldSupport {
 
 	@Override
 	public void deletePriceListAccountGroup(Long id) throws Exception {
@@ -94,6 +99,9 @@ public class PriceListAccountGroupResourceImpl
 			pagination, totalItems);
 	}
 
+	@NestedField(
+		parentClass = PriceList.class, value = "priceListAccountGroups"
+	)
 	@Override
 	public Page<PriceListAccountGroup> getPriceListIdPriceListAccountGroupsPage(
 			Long id, String search, Filter filter, Pagination pagination,
@@ -161,16 +169,14 @@ public class PriceListAccountGroupResourceImpl
 			Long id, PriceListAccountGroup priceListAccountGroup)
 		throws Exception {
 
-		CommercePriceList commercePriceList =
-			_commercePriceListService.getCommercePriceList(id);
-
 		CommercePriceListCommerceAccountGroupRel
 			commercePriceListCommerceAccountGroupRel =
 				PriceListAccountGroupUtil.
 					addCommercePriceListCommerceAccountGroupRel(
 						_commerceAccountGroupService,
 						_commercePriceListCommerceAccountGroupRelService,
-						priceListAccountGroup, commercePriceList,
+						priceListAccountGroup,
+						_commercePriceListService.getCommercePriceList(id),
 						_serviceContextHelper);
 
 		return _toPriceListAccountGroup(
@@ -185,18 +191,12 @@ public class PriceListAccountGroupResourceImpl
 
 		return HashMapBuilder.<String, Map<String, String>>put(
 			"delete",
-			() -> {
-				CommercePriceList commercePriceList =
-					commercePriceListCommerceAccountGroupRel.
-						getCommercePriceList();
-
-				return addAction(
-					"UPDATE", commercePriceList.getCommercePriceListId(),
-					"deletePriceListAccountGroup",
-					commercePriceList.getUserId(),
-					"com.liferay.commerce.price.list.model.CommercePriceList",
-					commercePriceList.getGroupId());
-			}
+			addAction(
+				"UPDATE",
+				commercePriceListCommerceAccountGroupRel.
+					getCommercePriceListCommerceAccountGroupRelId(),
+				"deletePriceListAccountGroup",
+				_commercePriceListAccountGroupRelModelResourcePermission)
 		).build();
 	}
 
@@ -242,6 +242,12 @@ public class PriceListAccountGroupResourceImpl
 
 	@Reference
 	private CommerceAccountGroupService _commerceAccountGroupService;
+
+	@Reference(
+		target = "(model.class.name=com.liferay.commerce.price.list.model.CommercePriceListCommerceAccountGroupRel)"
+	)
+	private ModelResourcePermission<CommercePriceListCommerceAccountGroupRel>
+		_commercePriceListAccountGroupRelModelResourcePermission;
 
 	@Reference
 	private CommercePriceListCommerceAccountGroupRelService

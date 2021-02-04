@@ -31,6 +31,7 @@ import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.spring.extender.service.ServiceReference;
 
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
@@ -55,6 +56,10 @@ public class CommerceChannelRelFinderImpl
 	@Override
 	public int countByC_C(
 		String className, long classPK, String name, boolean inlineSQLHelper) {
+
+		if (!_isValidClassName(className)) {
+			return 0;
+		}
 
 		Session session = null;
 
@@ -86,7 +91,7 @@ public class CommerceChannelRelFinderImpl
 
 			SQLQuery sqlQuery = session.createSynchronizedSQLQuery(sql);
 
-			sqlQuery.addScalar(_COUNT_VALUE, Type.LONG);
+			sqlQuery.addScalar(COUNT_COLUMN_NAME, Type.LONG);
 
 			QueryPos queryPos = QueryPos.getInstance(sqlQuery);
 
@@ -140,6 +145,10 @@ public class CommerceChannelRelFinderImpl
 	public List<CommerceChannelRel> findByC_C(
 		String className, long classPK, String name, int start, int end,
 		boolean inlineSQLHelper) {
+
+		if (!_isValidClassName(className)) {
+			return Collections.emptyList();
+		}
 
 		Session session = null;
 
@@ -207,7 +216,39 @@ public class CommerceChannelRelFinderImpl
 		throw new UnsupportedOperationException();
 	}
 
-	private static final String _COUNT_VALUE = "COUNT_VALUE";
+	private List<Long> _findClassNameIds() {
+		Session session = null;
+
+		try {
+			session = openSession();
+
+			String sql = _customSQL.get(getClass(), _FIND_CLASS_NAME_IDS);
+
+			SQLQuery sqlQuery = session.createSynchronizedSQLQuery(sql);
+
+			sqlQuery.addScalar("classNameId", Type.LONG);
+
+			return (List<Long>)QueryUtil.list(
+				sqlQuery, getDialect(), QueryUtil.ALL_POS, QueryUtil.ALL_POS);
+		}
+		catch (Exception exception) {
+			throw new SystemException(exception);
+		}
+		finally {
+			closeSession(session);
+		}
+	}
+
+	private boolean _isValidClassName(String className) {
+		long classNameId = PortalUtil.getClassNameId(className);
+
+		List<Long> validClassNameIds = _findClassNameIds();
+
+		return validClassNameIds.contains(classNameId);
+	}
+
+	private static final String _FIND_CLASS_NAME_IDS =
+		CommerceChannelRelFinder.class.getName() + ".findClassNameIds";
 
 	@ServiceReference(type = CustomSQL.class)
 	private CustomSQL _customSQL;

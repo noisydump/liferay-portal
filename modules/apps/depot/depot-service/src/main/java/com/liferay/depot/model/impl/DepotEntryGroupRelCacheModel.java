@@ -25,6 +25,8 @@ import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
 
+import java.util.Date;
+
 /**
  * The cache model class for representing DepotEntryGroupRel in entity cache.
  *
@@ -76,14 +78,26 @@ public class DepotEntryGroupRelCacheModel
 
 	@Override
 	public String toString() {
-		StringBundler sb = new StringBundler(15);
+		StringBundler sb = new StringBundler(29);
 
 		sb.append("{mvccVersion=");
 		sb.append(mvccVersion);
+		sb.append(", uuid=");
+		sb.append(uuid);
 		sb.append(", depotEntryGroupRelId=");
 		sb.append(depotEntryGroupRelId);
+		sb.append(", groupId=");
+		sb.append(groupId);
 		sb.append(", companyId=");
 		sb.append(companyId);
+		sb.append(", userId=");
+		sb.append(userId);
+		sb.append(", userName=");
+		sb.append(userName);
+		sb.append(", createDate=");
+		sb.append(createDate);
+		sb.append(", modifiedDate=");
+		sb.append(modifiedDate);
 		sb.append(", ddmStructuresAvailable=");
 		sb.append(ddmStructuresAvailable);
 		sb.append(", depotEntryId=");
@@ -92,6 +106,8 @@ public class DepotEntryGroupRelCacheModel
 		sb.append(searchable);
 		sb.append(", toGroupId=");
 		sb.append(toGroupId);
+		sb.append(", lastPublishDate=");
+		sb.append(lastPublishDate);
 		sb.append("}");
 
 		return sb.toString();
@@ -103,13 +119,53 @@ public class DepotEntryGroupRelCacheModel
 			new DepotEntryGroupRelImpl();
 
 		depotEntryGroupRelImpl.setMvccVersion(mvccVersion);
+
+		if (uuid == null) {
+			depotEntryGroupRelImpl.setUuid("");
+		}
+		else {
+			depotEntryGroupRelImpl.setUuid(uuid);
+		}
+
 		depotEntryGroupRelImpl.setDepotEntryGroupRelId(depotEntryGroupRelId);
+		depotEntryGroupRelImpl.setGroupId(groupId);
 		depotEntryGroupRelImpl.setCompanyId(companyId);
+		depotEntryGroupRelImpl.setUserId(userId);
+
+		if (userName == null) {
+			depotEntryGroupRelImpl.setUserName("");
+		}
+		else {
+			depotEntryGroupRelImpl.setUserName(userName);
+		}
+
+		if (createDate == Long.MIN_VALUE) {
+			depotEntryGroupRelImpl.setCreateDate(null);
+		}
+		else {
+			depotEntryGroupRelImpl.setCreateDate(new Date(createDate));
+		}
+
+		if (modifiedDate == Long.MIN_VALUE) {
+			depotEntryGroupRelImpl.setModifiedDate(null);
+		}
+		else {
+			depotEntryGroupRelImpl.setModifiedDate(new Date(modifiedDate));
+		}
+
 		depotEntryGroupRelImpl.setDdmStructuresAvailable(
 			ddmStructuresAvailable);
 		depotEntryGroupRelImpl.setDepotEntryId(depotEntryId);
 		depotEntryGroupRelImpl.setSearchable(searchable);
 		depotEntryGroupRelImpl.setToGroupId(toGroupId);
+
+		if (lastPublishDate == Long.MIN_VALUE) {
+			depotEntryGroupRelImpl.setLastPublishDate(null);
+		}
+		else {
+			depotEntryGroupRelImpl.setLastPublishDate(
+				new Date(lastPublishDate));
+		}
 
 		depotEntryGroupRelImpl.resetOriginalValues();
 
@@ -119,10 +175,18 @@ public class DepotEntryGroupRelCacheModel
 	@Override
 	public void readExternal(ObjectInput objectInput) throws IOException {
 		mvccVersion = objectInput.readLong();
+		uuid = objectInput.readUTF();
 
 		depotEntryGroupRelId = objectInput.readLong();
 
+		groupId = objectInput.readLong();
+
 		companyId = objectInput.readLong();
+
+		userId = objectInput.readLong();
+		userName = objectInput.readUTF();
+		createDate = objectInput.readLong();
+		modifiedDate = objectInput.readLong();
 
 		ddmStructuresAvailable = objectInput.readBoolean();
 
@@ -131,15 +195,37 @@ public class DepotEntryGroupRelCacheModel
 		searchable = objectInput.readBoolean();
 
 		toGroupId = objectInput.readLong();
+		lastPublishDate = objectInput.readLong();
 	}
 
 	@Override
 	public void writeExternal(ObjectOutput objectOutput) throws IOException {
 		objectOutput.writeLong(mvccVersion);
 
+		if (uuid == null) {
+			objectOutput.writeUTF("");
+		}
+		else {
+			objectOutput.writeUTF(uuid);
+		}
+
 		objectOutput.writeLong(depotEntryGroupRelId);
 
+		objectOutput.writeLong(groupId);
+
 		objectOutput.writeLong(companyId);
+
+		objectOutput.writeLong(userId);
+
+		if (userName == null) {
+			objectOutput.writeUTF("");
+		}
+		else {
+			objectOutput.writeUTF(userName);
+		}
+
+		objectOutput.writeLong(createDate);
+		objectOutput.writeLong(modifiedDate);
 
 		objectOutput.writeBoolean(ddmStructuresAvailable);
 
@@ -148,14 +234,22 @@ public class DepotEntryGroupRelCacheModel
 		objectOutput.writeBoolean(searchable);
 
 		objectOutput.writeLong(toGroupId);
+		objectOutput.writeLong(lastPublishDate);
 	}
 
 	public long mvccVersion;
+	public String uuid;
 	public long depotEntryGroupRelId;
+	public long groupId;
 	public long companyId;
+	public long userId;
+	public String userName;
+	public long createDate;
+	public long modifiedDate;
 	public boolean ddmStructuresAvailable;
 	public long depotEntryId;
 	public boolean searchable;
 	public long toGroupId;
+	public long lastPublishDate;
 
 }

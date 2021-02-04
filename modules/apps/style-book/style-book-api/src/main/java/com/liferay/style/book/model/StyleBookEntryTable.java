@@ -36,6 +36,8 @@ public class StyleBookEntryTable extends BaseTable<StyleBookEntryTable> {
 
 	public final Column<StyleBookEntryTable, Long> mvccVersion = createColumn(
 		"mvccVersion", Long.class, Types.BIGINT, Column.FLAG_NULLITY);
+	public final Column<StyleBookEntryTable, String> uuid = createColumn(
+		"uuid_", String.class, Types.VARCHAR, Column.FLAG_DEFAULT);
 	public final Column<StyleBookEntryTable, Long> headId = createColumn(
 		"headId", Long.class, Types.BIGINT, Column.FLAG_DEFAULT);
 	public final Column<StyleBookEntryTable, Boolean> head = createColumn(
@@ -53,6 +55,8 @@ public class StyleBookEntryTable extends BaseTable<StyleBookEntryTable> {
 		"userName", String.class, Types.VARCHAR, Column.FLAG_DEFAULT);
 	public final Column<StyleBookEntryTable, Date> createDate = createColumn(
 		"createDate", Date.class, Types.TIMESTAMP, Column.FLAG_DEFAULT);
+	public final Column<StyleBookEntryTable, Date> modifiedDate = createColumn(
+		"modifiedDate", Date.class, Types.TIMESTAMP, Column.FLAG_DEFAULT);
 	public final Column<StyleBookEntryTable, Boolean> defaultStyleBookEntry =
 		createColumn(
 			"defaultStyleBookEntry", Boolean.class, Types.BOOLEAN,

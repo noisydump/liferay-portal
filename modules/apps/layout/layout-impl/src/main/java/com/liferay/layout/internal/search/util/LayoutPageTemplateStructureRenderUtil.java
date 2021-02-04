@@ -18,6 +18,7 @@ import com.liferay.fragment.model.FragmentEntryLink;
 import com.liferay.fragment.renderer.DefaultFragmentRendererContext;
 import com.liferay.fragment.renderer.FragmentRendererController;
 import com.liferay.fragment.service.FragmentEntryLinkLocalServiceUtil;
+import com.liferay.layout.adaptive.media.LayoutAdaptiveMediaProcessor;
 import com.liferay.layout.page.template.model.LayoutPageTemplateStructure;
 import com.liferay.layout.util.structure.FragmentStyledLayoutStructureItem;
 import com.liferay.layout.util.structure.LayoutStructure;
@@ -42,6 +43,7 @@ public class LayoutPageTemplateStructureRenderUtil {
 			FragmentRendererController fragmentRendererController,
 			HttpServletRequest httpServletRequest,
 			HttpServletResponse httpServletResponse,
+			LayoutAdaptiveMediaProcessor layoutAdaptiveMediaProcessor,
 			LayoutPageTemplateStructure layoutPageTemplateStructure,
 			String mode, Map<String, Object> parameterMap, Locale locale,
 			long[] segmentsExperienceIds)
@@ -58,9 +60,31 @@ public class LayoutPageTemplateStructureRenderUtil {
 			return StringPool.BLANK;
 		}
 
-		return _renderLayoutData(
+		String content = _renderLayoutData(
 			data, fragmentRendererController, httpServletRequest,
 			httpServletResponse, mode, parameterMap, locale,
+			segmentsExperienceIds);
+
+		if (layoutAdaptiveMediaProcessor == null) {
+			return content;
+		}
+
+		return layoutAdaptiveMediaProcessor.processAdaptiveMediaContent(
+			content);
+	}
+
+	public static String renderLayoutContent(
+			FragmentRendererController fragmentRendererController,
+			HttpServletRequest httpServletRequest,
+			HttpServletResponse httpServletResponse,
+			LayoutPageTemplateStructure layoutPageTemplateStructure,
+			String mode, Map<String, Object> parameterMap, Locale locale,
+			long[] segmentsExperienceIds)
+		throws PortalException {
+
+		return renderLayoutContent(
+			fragmentRendererController, httpServletRequest, httpServletResponse,
+			null, layoutPageTemplateStructure, mode, parameterMap, locale,
 			segmentsExperienceIds);
 	}
 

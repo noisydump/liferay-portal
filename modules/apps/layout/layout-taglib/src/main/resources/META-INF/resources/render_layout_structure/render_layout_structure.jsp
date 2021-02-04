@@ -46,36 +46,58 @@ for (String childrenItemId : childrenItemIds) {
 
 					</c:when>
 					<c:otherwise>
-						<clay:row>
 
-							<%
-							LayoutDisplayPageProvider<?> currentLayoutDisplayPageProvider = (LayoutDisplayPageProvider<?>)request.getAttribute(LayoutDisplayPageWebKeys.LAYOUT_DISPLAY_PAGE_PROVIDER);
+						<%
+						LayoutDisplayPageProvider<?> currentLayoutDisplayPageProvider = (LayoutDisplayPageProvider<?>)request.getAttribute(LayoutDisplayPageWebKeys.LAYOUT_DISPLAY_PAGE_PROVIDER);
 
-							try {
-								request.setAttribute(LayoutDisplayPageWebKeys.LAYOUT_DISPLAY_PAGE_PROVIDER, renderLayoutStructureDisplayContext.getCollectionLayoutDisplayPageProvider(collectionStyledLayoutStructureItem));
+						try {
+							request.setAttribute(LayoutDisplayPageWebKeys.LAYOUT_DISPLAY_PAGE_PROVIDER, renderLayoutStructureDisplayContext.getCollectionLayoutDisplayPageProvider(collectionStyledLayoutStructureItem));
 
-								for (Object collectionObject : renderLayoutStructureDisplayContext.getCollection(collectionStyledLayoutStructureItem)) {
-									request.setAttribute(InfoDisplayWebKeys.INFO_LIST_DISPLAY_OBJECT, collectionObject);
+							List<Object> collection = renderLayoutStructureDisplayContext.getCollection(collectionStyledLayoutStructureItem);
+
+							int maxNumberOfItems = Math.min(collection.size(), collectionStyledLayoutStructureItem.getNumberOfItems());
+
+							int numberOfRows = (int)Math.ceil((double)maxNumberOfItems / collectionStyledLayoutStructureItem.getNumberOfColumns());
+
+							for (int i = 0; i < numberOfRows; i++) {
+						%>
+
+							<clay:row>
+
+								<%
+								for (int j = 0; j < collectionStyledLayoutStructureItem.getNumberOfColumns(); j++) {
+									int index = (i * collectionStyledLayoutStructureItem.getNumberOfColumns()) + j;
+
+									if (index >= maxNumberOfItems) {
+										break;
+									}
+
+									request.setAttribute(InfoDisplayWebKeys.INFO_LIST_DISPLAY_OBJECT, collection.get(index));
 									request.setAttribute("render_layout_structure.jsp-childrenItemIds", layoutStructureItem.getChildrenItemIds());
-							%>
+								%>
 
 									<clay:col
-										md="<%= String.valueOf(12 / collectionStyledLayoutStructureItem.getNumberOfColumns()) %>"
+										md="<%= String.valueOf(layoutStructure.getColumnSize(collectionStyledLayoutStructureItem.getNumberOfColumns() - 1, j)) %>"
 									>
 										<liferay-util:include page="/render_layout_structure/render_layout_structure.jsp" servletContext="<%= application %>" />
 									</clay:col>
 
-							<%
+								<%
 								}
-							}
-							finally {
-								request.removeAttribute(InfoDisplayWebKeys.INFO_LIST_DISPLAY_OBJECT);
+								%>
 
-								request.setAttribute(LayoutDisplayPageWebKeys.LAYOUT_DISPLAY_PAGE_PROVIDER, currentLayoutDisplayPageProvider);
-							}
-							%>
+							</clay:row>
 
-						</clay:row>
+						<%
+							}
+						}
+						finally {
+							request.removeAttribute(InfoDisplayWebKeys.INFO_LIST_DISPLAY_OBJECT);
+
+							request.setAttribute(LayoutDisplayPageWebKeys.LAYOUT_DISPLAY_PAGE_PROVIDER, currentLayoutDisplayPageProvider);
+						}
+						%>
+
 					</c:otherwise>
 				</c:choose>
 			</div>
@@ -102,11 +124,11 @@ for (String childrenItemId : childrenItemIds) {
 			<%
 			ContainerStyledLayoutStructureItem containerStyledLayoutStructureItem = (ContainerStyledLayoutStructureItem)layoutStructureItem;
 
-			String containerLinkHref = renderLayoutStructureDisplayContext.getContainerLinkHref(containerStyledLayoutStructureItem, request.getAttribute(InfoDisplayWebKeys.INFO_LIST_DISPLAY_OBJECT));
+			String containerLinkHref = renderLayoutStructureDisplayContext.getContainerLinkHref(containerStyledLayoutStructureItem, request.getAttribute(InfoDisplayWebKeys.INFO_LIST_DISPLAY_OBJECT), locale);
 			%>
 
 			<c:if test="<%= Validator.isNotNull(containerLinkHref) %>">
-				<a href="<%= containerLinkHref %>" style="color: inherit; text-decoration: none;" target="<%= renderLayoutStructureDisplayContext.getContainerLinkTarget(containerStyledLayoutStructureItem) %>">
+				<a href="<%= containerLinkHref %>" style="color: inherit; text-decoration: none;" target="<%= renderLayoutStructureDisplayContext.getContainerLinkTarget(containerStyledLayoutStructureItem, locale) %>">
 			</c:if>
 
 			<div class="<%= renderLayoutStructureDisplayContext.getCssClass(containerStyledLayoutStructureItem) %>" style="<%= renderLayoutStructureDisplayContext.getStyle(containerStyledLayoutStructureItem) %>">

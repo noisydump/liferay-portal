@@ -29,6 +29,7 @@ import com.liferay.portal.kernel.portlet.LiferayPortletURL;
 import com.liferay.portal.kernel.portlet.PortletURLFactory;
 import com.liferay.portal.kernel.portlet.bridges.mvc.BaseMVCActionCommand;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
+import com.liferay.portal.kernel.resource.bundle.ResourceBundleLoader;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextFactory;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
@@ -38,7 +39,6 @@ import com.liferay.portal.kernel.transaction.TransactionInvokerUtil;
 import com.liferay.portal.kernel.util.Constants;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
-import com.liferay.portal.kernel.util.ResourceBundleLoader;
 import com.liferay.portal.kernel.util.WebKeys;
 
 import java.util.Locale;
@@ -59,7 +59,7 @@ import org.osgi.service.component.annotations.Reference;
 		"auth.token.ignore.mvc.action=true",
 		"javax.portlet.name=" + DLPortletKeys.DOCUMENT_LIBRARY,
 		"javax.portlet.name=" + DLPortletKeys.DOCUMENT_LIBRARY_ADMIN,
-		"mvc.command.name=/document_library/edit_in_office365"
+		"mvc.command.name=/document_library/edit_in_one_drive"
 	},
 	service = MVCActionCommand.class
 )
@@ -195,7 +195,7 @@ public class EditInOneDriveMVCActionCommand extends BaseMVCActionCommand {
 
 		liferayPortletURL.setParameter(
 			ActionRequest.ACTION_NAME,
-			"/document_library/edit_in_office365_and_redirect");
+			"/document_library/edit_in_one_drive_and_redirect");
 
 		return liferayPortletURL.toString();
 	}

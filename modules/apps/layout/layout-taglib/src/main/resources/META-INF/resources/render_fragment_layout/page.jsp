@@ -26,22 +26,26 @@ boolean showPreview = GetterUtil.getBoolean(request.getAttribute("liferay-layout
 RenderFragmentLayoutDisplayContext renderFragmentLayoutDisplayContext = new RenderFragmentLayoutDisplayContext(request, response);
 %>
 
-<liferay-util:html-top>
-	<%= renderFragmentLayoutDisplayContext.getPortletHeaderPaths() %>
-</liferay-util:html-top>
+<liferay-util:dynamic-include key="com.liferay.layout,taglib#/render_fragment_layout/page.jsp#pre" />
 
 <%
 try {
 	request.setAttribute(WebKeys.SHOW_PORTLET_TOPPER, Boolean.TRUE);
 %>
 
-	<liferay-layout:render-layout-structure
-		fieldValues="<%= fieldValues %>"
-		layoutStructure="<%= layoutStructure %>"
-		mainItemId="<%= mainItemId %>"
-		mode="<%= mode %>"
-		showPreview="<%= showPreview %>"
-	/>
+	<liferay-util:buffer
+		var="content"
+	>
+		<liferay-layout:render-layout-structure
+			fieldValues="<%= fieldValues %>"
+			layoutStructure="<%= layoutStructure %>"
+			mainItemId="<%= mainItemId %>"
+			mode="<%= mode %>"
+			showPreview="<%= showPreview %>"
+		/>
+	</liferay-util:buffer>
+
+	<%= renderFragmentLayoutDisplayContext.processAMImages(content) %>
 
 <%
 }
@@ -50,6 +54,4 @@ finally {
 }
 %>
 
-<liferay-util:html-bottom>
-	<%= renderFragmentLayoutDisplayContext.getPortletFooterPaths() %>
-</liferay-util:html-bottom>
+<liferay-util:dynamic-include key="com.liferay.layout,taglib#/render_fragment_layout/page.jsp#post" />

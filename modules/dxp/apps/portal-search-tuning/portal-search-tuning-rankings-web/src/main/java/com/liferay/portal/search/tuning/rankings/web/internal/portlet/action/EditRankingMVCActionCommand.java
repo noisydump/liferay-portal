@@ -72,7 +72,7 @@ import org.osgi.service.component.annotations.Reference;
 	immediate = true,
 	property = {
 		"javax.portlet.name=" + ResultRankingsPortletKeys.RESULT_RANKINGS,
-		"mvc.command.name=/results_ranking/edit"
+		"mvc.command.name=/result_rankings/edit_ranking"
 	},
 	service = MVCActionCommand.class
 )
@@ -134,7 +134,8 @@ public class EditRankingMVCActionCommand extends BaseMVCActionCommand {
 			PortletURL renderURL = liferayPortletResponse.createRenderURL();
 
 			renderURL.setParameter(
-				"mvcRenderCommandName", "addResultsRankingEntry");
+				"mvcRenderCommandName",
+				"/result_rankings/add_results_rankings");
 			renderURL.setParameter(
 				"redirect", editRankingMVCActionRequest.getRedirect());
 
@@ -353,7 +354,7 @@ public class EditRankingMVCActionCommand extends BaseMVCActionCommand {
 			PortletRequest.RENDER_PHASE);
 
 		portletURL.setParameter(
-			"mvcRenderCommandName", "editResultsRankingEntry");
+			"mvcRenderCommandName", "/result_rankings/edit_results_rankings");
 		portletURL.setParameter(Constants.CMD, Constants.UPDATE, false);
 		portletURL.setParameter("redirect", redirect, false);
 		portletURL.setParameter("resultsRankingUid", ranking.getId(), false);
@@ -385,7 +386,8 @@ public class EditRankingMVCActionCommand extends BaseMVCActionCommand {
 				SessionErrors.add(actionRequest, Exception.class);
 
 				actionResponse.setRenderParameter(
-					"mvcRenderCommandName", "editResultsRankingEntry");
+					"mvcRenderCommandName",
+					"/result_rankings/edit_results_rankings");
 			}
 			else {
 				SessionErrors.add(actionRequest, Exception.class);
@@ -412,25 +414,6 @@ public class EditRankingMVCActionCommand extends BaseMVCActionCommand {
 
 	@Reference
 	protected RankingIndexWriter rankingIndexWriter;
-
-	private static List<String> _update(
-		List<String> strings, String[] addStrings, String[] removeStrings) {
-
-		List<String> newStrings;
-
-		if (ListUtil.isEmpty(strings)) {
-			newStrings = Arrays.asList(addStrings);
-		}
-		else {
-			newStrings = new ArrayList<>(strings);
-
-			Collections.addAll(newStrings, addStrings);
-		}
-
-		newStrings.removeAll(Arrays.asList(removeStrings));
-
-		return newStrings;
-	}
 
 	private boolean _detectedDuplicateQueryStrings(
 		Ranking ranking, Collection<String> queryStrings) {
@@ -601,6 +584,25 @@ public class EditRankingMVCActionCommand extends BaseMVCActionCommand {
 
 	private String _stripUpdateSpecial(String string) {
 		return string.substring(_UPDATE_SPECIAL.length());
+	}
+
+	private List<String> _update(
+		List<String> strings, String[] addStrings, String[] removeStrings) {
+
+		List<String> newStrings;
+
+		if (ListUtil.isEmpty(strings)) {
+			newStrings = Arrays.asList(addStrings);
+		}
+		else {
+			newStrings = new ArrayList<>(strings);
+
+			Collections.addAll(newStrings, addStrings);
+		}
+
+		newStrings.removeAll(Arrays.asList(removeStrings));
+
+		return newStrings;
 	}
 
 	private static final String _UPDATE_SPECIAL = StringPool.GREATER_THAN;

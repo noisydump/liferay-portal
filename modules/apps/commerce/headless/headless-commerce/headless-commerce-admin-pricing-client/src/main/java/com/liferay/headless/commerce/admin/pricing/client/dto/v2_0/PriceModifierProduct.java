@@ -17,6 +17,8 @@ package com.liferay.headless.commerce.admin.pricing.client.dto.v2_0;
 import com.liferay.headless.commerce.admin.pricing.client.function.UnsafeSupplier;
 import com.liferay.headless.commerce.admin.pricing.client.serdes.v2_0.PriceModifierProductSerDes;
 
+import java.io.Serializable;
+
 import java.util.Map;
 import java.util.Objects;
 
@@ -27,7 +29,7 @@ import javax.annotation.Generated;
  * @generated
  */
 @Generated("")
-public class PriceModifierProduct implements Cloneable {
+public class PriceModifierProduct implements Cloneable, Serializable {
 
 	public static PriceModifierProduct toDTO(String json) {
 		return PriceModifierProductSerDes.toDTO(json);
@@ -54,25 +56,6 @@ public class PriceModifierProduct implements Cloneable {
 	}
 
 	protected Map<String, Map<String, String>> actions;
-
-	public Long getId() {
-		return id;
-	}
-
-	public void setId(Long id) {
-		this.id = id;
-	}
-
-	public void setId(UnsafeSupplier<Long, Exception> idUnsafeSupplier) {
-		try {
-			id = idUnsafeSupplier.get();
-		}
-		catch (Exception e) {
-			throw new RuntimeException(e);
-		}
-	}
-
-	protected Long id;
 
 	public String getPriceModifierExternalReferenceCode() {
 		return priceModifierExternalReferenceCode;
@@ -120,6 +103,27 @@ public class PriceModifierProduct implements Cloneable {
 	}
 
 	protected Long priceModifierId;
+
+	public Long getPriceModifierProductId() {
+		return priceModifierProductId;
+	}
+
+	public void setPriceModifierProductId(Long priceModifierProductId) {
+		this.priceModifierProductId = priceModifierProductId;
+	}
+
+	public void setPriceModifierProductId(
+		UnsafeSupplier<Long, Exception> priceModifierProductIdUnsafeSupplier) {
+
+		try {
+			priceModifierProductId = priceModifierProductIdUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected Long priceModifierProductId;
 
 	public Product getProduct() {
 		return product;

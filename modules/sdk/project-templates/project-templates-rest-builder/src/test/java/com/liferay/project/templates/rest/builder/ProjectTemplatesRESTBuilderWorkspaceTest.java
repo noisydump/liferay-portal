@@ -58,13 +58,13 @@ public class ProjectTemplatesRESTBuilderWorkspaceTest
 			new Object[][] {
 				{"guestbook", "com.liferay.docs.guestbook", "7.1.3"},
 				{"guestbook", "com.liferay.docs.guestbook", "7.2.1"},
-				{"guestbook", "com.liferay.docs.guestbook", "7.3.4"},
+				{"guestbook", "com.liferay.docs.guestbook", "7.3.5"},
 				{"backend-integration", "com.liferay.docs.guestbook", "7.1.3"},
 				{"backend-integration", "com.liferay.docs.guestbook", "7.2.1"},
-				{"backend-integration", "com.liferay.docs.guestbook", "7.3.4"},
+				{"backend-integration", "com.liferay.docs.guestbook", "7.3.5"},
 				{"sample", "com.test.sample", "7.1.3"},
 				{"sample", "com.test.sample", "7.2.1"},
-				{"sample", "com.test.sample", "7.3.4"}
+				{"sample", "com.test.sample", "7.3.5"}
 			});
 	}
 
@@ -117,8 +117,7 @@ public class ProjectTemplatesRESTBuilderWorkspaceTest
 		if (_name.contains("sample")) {
 			testContains(
 				gradleProjectDir, "sample-impl/build.gradle",
-				"compileOnly project(\":modules:nested:path:sample:" +
-					"sample-api\")");
+				"compile project(\":modules:nested:path:sample:sample-api\")");
 		}
 
 		if (_liferayVersion.startsWith("7.1")) {

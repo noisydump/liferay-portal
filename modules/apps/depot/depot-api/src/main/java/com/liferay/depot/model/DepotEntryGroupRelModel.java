@@ -14,9 +14,13 @@
 
 package com.liferay.depot.model;
 
+import com.liferay.portal.kernel.bean.AutoEscape;
 import com.liferay.portal.kernel.model.BaseModel;
 import com.liferay.portal.kernel.model.MVCCModel;
 import com.liferay.portal.kernel.model.ShardedModel;
+import com.liferay.portal.kernel.model.StagedGroupedModel;
+
+import java.util.Date;
 
 import org.osgi.annotation.versioning.ProviderType;
 
@@ -33,7 +37,8 @@ import org.osgi.annotation.versioning.ProviderType;
  */
 @ProviderType
 public interface DepotEntryGroupRelModel
-	extends BaseModel<DepotEntryGroupRel>, MVCCModel, ShardedModel {
+	extends BaseModel<DepotEntryGroupRel>, MVCCModel, ShardedModel,
+			StagedGroupedModel {
 
 	/*
 	 * NOTE FOR DEVELOPERS:
@@ -72,6 +77,23 @@ public interface DepotEntryGroupRelModel
 	public void setMvccVersion(long mvccVersion);
 
 	/**
+	 * Returns the uuid of this depot entry group rel.
+	 *
+	 * @return the uuid of this depot entry group rel
+	 */
+	@AutoEscape
+	@Override
+	public String getUuid();
+
+	/**
+	 * Sets the uuid of this depot entry group rel.
+	 *
+	 * @param uuid the uuid of this depot entry group rel
+	 */
+	@Override
+	public void setUuid(String uuid);
+
+	/**
 	 * Returns the depot entry group rel ID of this depot entry group rel.
 	 *
 	 * @return the depot entry group rel ID of this depot entry group rel
@@ -84,6 +106,22 @@ public interface DepotEntryGroupRelModel
 	 * @param depotEntryGroupRelId the depot entry group rel ID of this depot entry group rel
 	 */
 	public void setDepotEntryGroupRelId(long depotEntryGroupRelId);
+
+	/**
+	 * Returns the group ID of this depot entry group rel.
+	 *
+	 * @return the group ID of this depot entry group rel
+	 */
+	@Override
+	public long getGroupId();
+
+	/**
+	 * Sets the group ID of this depot entry group rel.
+	 *
+	 * @param groupId the group ID of this depot entry group rel
+	 */
+	@Override
+	public void setGroupId(long groupId);
 
 	/**
 	 * Returns the company ID of this depot entry group rel.
@@ -100,6 +138,87 @@ public interface DepotEntryGroupRelModel
 	 */
 	@Override
 	public void setCompanyId(long companyId);
+
+	/**
+	 * Returns the user ID of this depot entry group rel.
+	 *
+	 * @return the user ID of this depot entry group rel
+	 */
+	@Override
+	public long getUserId();
+
+	/**
+	 * Sets the user ID of this depot entry group rel.
+	 *
+	 * @param userId the user ID of this depot entry group rel
+	 */
+	@Override
+	public void setUserId(long userId);
+
+	/**
+	 * Returns the user uuid of this depot entry group rel.
+	 *
+	 * @return the user uuid of this depot entry group rel
+	 */
+	@Override
+	public String getUserUuid();
+
+	/**
+	 * Sets the user uuid of this depot entry group rel.
+	 *
+	 * @param userUuid the user uuid of this depot entry group rel
+	 */
+	@Override
+	public void setUserUuid(String userUuid);
+
+	/**
+	 * Returns the user name of this depot entry group rel.
+	 *
+	 * @return the user name of this depot entry group rel
+	 */
+	@AutoEscape
+	@Override
+	public String getUserName();
+
+	/**
+	 * Sets the user name of this depot entry group rel.
+	 *
+	 * @param userName the user name of this depot entry group rel
+	 */
+	@Override
+	public void setUserName(String userName);
+
+	/**
+	 * Returns the create date of this depot entry group rel.
+	 *
+	 * @return the create date of this depot entry group rel
+	 */
+	@Override
+	public Date getCreateDate();
+
+	/**
+	 * Sets the create date of this depot entry group rel.
+	 *
+	 * @param createDate the create date of this depot entry group rel
+	 */
+	@Override
+	public void setCreateDate(Date createDate);
+
+	/**
+	 * Returns the modified date of this depot entry group rel.
+	 *
+	 * @return the modified date of this depot entry group rel
+	 */
+	@Override
+	public Date getModifiedDate();
+
+	/**
+	 * Sets the modified date of this depot entry group rel.
+	 *
+	 * @param modifiedDate the modified date of this depot entry group rel
+	 */
+	@Override
+	public void setModifiedDate(Date modifiedDate);
 
 	/**
 	 * Returns the ddm structures available of this depot entry group rel.
@@ -170,5 +289,21 @@ public interface DepotEntryGroupRelModel
 	 * @param toGroupId the to group ID of this depot entry group rel
 	 */
 	public void setToGroupId(long toGroupId);
+
+	/**
+	 * Returns the last publish date of this depot entry group rel.
+	 *
+	 * @return the last publish date of this depot entry group rel
+	 */
+	@Override
+	public Date getLastPublishDate();
+
+	/**
+	 * Sets the last publish date of this depot entry group rel.
+	 *
+	 * @param lastPublishDate the last publish date of this depot entry group rel
+	 */
+	@Override
+	public void setLastPublishDate(Date lastPublishDate);
 
 }

@@ -18,8 +18,8 @@ import com.liferay.asset.kernel.model.BaseJSPAssetRenderer;
 import com.liferay.commerce.constants.CommerceOrderConstants;
 import com.liferay.commerce.model.CommerceOrder;
 import com.liferay.commerce.order.web.internal.security.permission.resource.CommerceOrderPermission;
+import com.liferay.commerce.product.constants.CommerceChannelConstants;
 import com.liferay.commerce.product.model.CommerceChannel;
-import com.liferay.commerce.product.model.CommerceChannelConstants;
 import com.liferay.commerce.product.service.CommerceChannelLocalService;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -30,11 +30,11 @@ import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
 import com.liferay.portal.kernel.portlet.PortletProvider;
 import com.liferay.portal.kernel.portlet.PortletProviderUtil;
 import com.liferay.portal.kernel.portlet.PortletQName;
+import com.liferay.portal.kernel.resource.bundle.ResourceBundleLoader;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.service.GroupLocalServiceUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
-import com.liferay.portal.kernel.util.ResourceBundleLoader;
 
 import java.util.Locale;
 import java.util.ResourceBundle;
@@ -97,7 +97,8 @@ public class CommerceOrderAssetRenderer
 
 	@Override
 	public String getTitle(Locale locale) {
-		ResourceBundleLoader resourceBundleLoader = getResourceBundleLoader();
+		ResourceBundleLoader resourceBundleLoader =
+			acquireResourceBundleLoader();
 
 		ResourceBundle resourceBundle = resourceBundleLoader.loadResourceBundle(
 			locale);
@@ -132,14 +133,15 @@ public class CommerceOrderAssetRenderer
 			liferayPortletRequest, group, CommerceOrder.class.getName(),
 			PortletProvider.Action.VIEW);
 
-		String orderRenderCommand = "viewCommerceOrderDetails";
+		String orderRenderCommand =
+			"/commerce_order_content/view_commerce_order_details";
 
 		if (_commerceOrder.isOpen()) {
 			portletURL = PortletProviderUtil.getPortletURL(
 				liferayPortletRequest, group, CommerceOrder.class.getName(),
 				PortletProvider.Action.EDIT);
 
-			orderRenderCommand = "editCommerceOrder";
+			orderRenderCommand = "/commerce_order/edit_commerce_order";
 		}
 
 		portletURL.setParameter("mvcRenderCommandName", orderRenderCommand);

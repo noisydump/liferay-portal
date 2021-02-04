@@ -15,6 +15,7 @@
 package com.liferay.depot.service.impl;
 
 import com.liferay.depot.constants.DepotRolesConstants;
+import com.liferay.depot.exception.DepotEntryGroupException;
 import com.liferay.depot.exception.DepotEntryNameException;
 import com.liferay.depot.model.DepotEntry;
 import com.liferay.depot.model.DepotEntryGroupRel;
@@ -41,6 +42,7 @@ import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.MapUtil;
+import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.PropsKeys;
 import com.liferay.portal.kernel.util.ResourceBundleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
@@ -65,6 +67,38 @@ import org.osgi.service.component.annotations.Reference;
 	service = AopService.class
 )
 public class DepotEntryLocalServiceImpl extends DepotEntryLocalServiceBaseImpl {
+
+	@Override
+	public DepotEntry addDepotEntry(Group group, ServiceContext serviceContext)
+		throws PortalException {
+
+		if (!group.isDepot() ||
+			!ParamUtil.getBoolean(serviceContext, "staging")) {
+
+			throw new DepotEntryGroupException(
+				"Unable to create staged depot entry for group " +
+					group.getGroupId());
+		}
+
+		_validateNameMap(group.getNameMap(), LocaleUtil.getDefault());
+
+		DepotEntry depotEntry = depotEntryPersistence.create(
+			counterLocalService.increment());
+
+		depotEntry.setUuid(serviceContext.getUuid());
+		depotEntry.setGroupId(group.getGroupId());
+		depotEntry.setCompanyId(serviceContext.getCompanyId());
+		depotEntry.setUserId(serviceContext.getUserId());
+
+		depotEntry = depotEntryPersistence.update(depotEntry);
+
+		resourceLocalService.addResources(
+			serviceContext.getCompanyId(), 0, serviceContext.getUserId(),
+			DepotEntry.class.getName(), depotEntry.getDepotEntryId(), false,
+			false, false);
+
+		return depotEntry;
+	}
 
 	@Override
 	public DepotEntry addDepotEntry(
@@ -123,6 +157,17 @@ public class DepotEntryLocalServiceImpl extends DepotEntryLocalServiceBaseImpl {
 	@Override
 	public DepotEntry fetchGroupDepotEntry(long groupId) {
 		return depotEntryPersistence.fetchByGroupId(groupId);
+	}
+
+	/**
+	 * @deprecated As of Cavanaugh (7.4.x)
+	 */
+	@Deprecated
+	@Override
+	public List<DepotEntry> getDepotEntryGroupRelsByUuidAndCompanyId(
+		String uuid, long companyId) {
+
+		return depotEntryPersistence.findByUuid_C(uuid, companyId);
 	}
 
 	@Override

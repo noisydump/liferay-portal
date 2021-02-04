@@ -75,10 +75,6 @@ const Filter = ({
 	);
 
 	const filteredItems = useMemo(() => {
-		items.sort((current, next) =>
-			current[labelPropertyName]?.localeCompare(next[labelPropertyName])
-		);
-
 		return searchTerm
 			? items.filter((item) =>
 					item[labelPropertyName]
@@ -87,6 +83,8 @@ const Filter = ({
 			  )
 			: items;
 	}, [items, labelPropertyName, searchTerm]);
+
+	const getSelectedItems = (items) => items.filter((item) => item.active);
 
 	const applyFilterChanges = useCallback(() => {
 		if (!withoutRouteParams) {
@@ -108,8 +106,6 @@ const Filter = ({
 		setExpanded(false);
 		setSearchTerm('');
 	};
-
-	const getSelectedItems = (items) => items.filter((item) => item.active);
 
 	const onClick = (item) => (onClickFilter ? onClickFilter(item) : true);
 

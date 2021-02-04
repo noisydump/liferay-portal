@@ -36,9 +36,11 @@ import com.liferay.journal.model.JournalArticle;
 import com.liferay.journal.service.JournalArticleLocalServiceUtil;
 import com.liferay.journal.test.util.JournalTestUtil;
 import com.liferay.layout.test.util.LayoutTestUtil;
+import com.liferay.petra.reflect.ReflectionUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.model.Group;
+import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.LayoutSet;
 import com.liferay.portal.kernel.model.LayoutSetBranch;
 import com.liferay.portal.kernel.model.LayoutSetBranchConstants;
@@ -49,6 +51,7 @@ import com.liferay.portal.kernel.service.LayoutSetBranchLocalServiceUtil;
 import com.liferay.portal.kernel.service.LayoutSetLocalServiceUtil;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
+import com.liferay.portal.kernel.service.persistence.GroupUtil;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
 import com.liferay.portal.kernel.test.rule.Sync;
@@ -61,6 +64,7 @@ import com.liferay.portal.kernel.util.FileUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.MapUtil;
+import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.SystemProperties;
 import com.liferay.portal.kernel.util.UnicodeProperties;
 import com.liferay.portal.kernel.xml.Document;
@@ -69,9 +73,13 @@ import com.liferay.portal.kernel.xml.SAXReaderUtil;
 import com.liferay.portal.kernel.zip.ZipReaderFactoryUtil;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
+import com.liferay.portal.util.PropsValues;
 
 import java.io.File;
 import java.io.Serializable;
+
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -111,6 +119,65 @@ public class StagingImplTest {
 		UserTestUtil.setUser(TestPropsValues.getUser());
 
 		_group = GroupTestUtil.addGroup();
+		_remoteLiveGroup = GroupTestUtil.addGroup();
+		_remoteStagingGroup = GroupTestUtil.addGroup();
+	}
+
+	@Test
+	public void testGetRemoteLayout() throws Exception {
+		enableRemoteStaging(false);
+
+		Layout remoteStagingGroupLayout = LayoutTestUtil.addLayout(
+			_remoteStagingGroup);
+
+		Map<String, String[]> parameters =
+			ExportImportConfigurationParameterMapFactoryUtil.
+				buildFullPublishParameterMap();
+
+		StagingUtil.publishLayouts(
+			TestPropsValues.getUserId(), _remoteStagingGroup.getGroupId(),
+			_remoteLiveGroup.getGroupId(), false, parameters);
+
+		Layout remoteLiveGroupLayout = StagingUtil.getRemoteLayout(
+			TestPropsValues.getUserId(), remoteStagingGroupLayout.getGroupId(),
+			remoteStagingGroupLayout.getPlid());
+
+		Assert.assertNotNull(remoteLiveGroupLayout);
+
+		Assert.assertEquals(
+			remoteStagingGroupLayout.getUuid(),
+			remoteLiveGroupLayout.getUuid());
+		Assert.assertEquals(
+			remoteStagingGroupLayout.getTitle(),
+			remoteLiveGroupLayout.getTitle());
+	}
+
+	@Test
+	public void testHasRemoteLayout() throws Exception {
+		enableRemoteStaging(false);
+
+		Layout remoteStagingGroupLayout = LayoutTestUtil.addLayout(
+			_remoteStagingGroup);
+
+		Assert.assertFalse(
+			StagingUtil.hasRemoteLayout(
+				TestPropsValues.getUserId(),
+				remoteStagingGroupLayout.getGroupId(),
+				remoteStagingGroupLayout.getPlid()));
+
+		Map<String, String[]> parameters =
+			ExportImportConfigurationParameterMapFactoryUtil.
+				buildFullPublishParameterMap();
+
+		StagingUtil.publishLayouts(
+			TestPropsValues.getUserId(), _remoteStagingGroup.getGroupId(),
+			_remoteLiveGroup.getGroupId(), false, parameters);
+
+		Assert.assertTrue(
+			StagingUtil.hasRemoteLayout(
+				TestPropsValues.getUserId(),
+				remoteStagingGroupLayout.getGroupId(),
+				remoteStagingGroupLayout.getPlid()));
 	}
 
 	@Test
@@ -207,6 +274,16 @@ public class StagingImplTest {
 	@Test
 	public void testLocalStagingWithLayoutVersioningJournal() throws Exception {
 		enableLocalStagingWithContent(true, false, true);
+	}
+
+	@Test
+	public void testRemoteStaging() throws Exception {
+		enableRemoteStaging(false);
+	}
+
+	@Test
+	public void testRemoteStagingWithLayoutVersioning() throws Exception {
+		enableRemoteStaging(true);
 	}
 
 	protected AssetCategory addAssetCategory(
@@ -457,6 +534,65 @@ public class StagingImplTest {
 		}
 	}
 
+	protected void enableRemoteStaging(boolean branching) throws Exception {
+		_setPortalProperty(
+			"TUNNELING_SERVLET_SHARED_SECRET",
+			"F0E1D2C3B4A5968778695A4B3C2D1E0F");
+
+		_setPortalProperty("TUNNELING_SERVLET_SHARED_SECRET_HEX", true);
+
+		ServiceContext serviceContext =
+			ServiceContextTestUtil.getServiceContext(
+				_remoteStagingGroup.getGroupId());
+
+		Map<String, Serializable> attributes = serviceContext.getAttributes();
+
+		attributes.putAll(
+			ExportImportConfigurationParameterMapFactoryUtil.
+				buildParameterMap());
+
+		if (branching) {
+			serviceContext.setSignedIn(true);
+		}
+
+		UserTestUtil.setUser(TestPropsValues.getUser());
+
+		StagingLocalServiceUtil.enableRemoteStaging(
+			TestPropsValues.getUserId(), _remoteStagingGroup, branching,
+			branching, "localhost", PortalUtil.getPortalServerPort(false),
+			PortalUtil.getPathContext(), false, _remoteLiveGroup.getGroupId(),
+			serviceContext);
+
+		GroupUtil.clearCache();
+
+		if (!branching) {
+			return;
+		}
+
+		UnicodeProperties typeSettingsUnicodeProperties =
+			_remoteStagingGroup.getTypeSettingsProperties();
+
+		Assert.assertTrue(
+			GetterUtil.getBoolean(
+				typeSettingsUnicodeProperties.getProperty("branchingPrivate")));
+		Assert.assertTrue(
+			GetterUtil.getBoolean(
+				typeSettingsUnicodeProperties.getProperty("branchingPublic")));
+
+		LayoutSetBranch layoutSetBranch =
+			LayoutSetBranchLocalServiceUtil.fetchLayoutSetBranch(
+				_remoteStagingGroup.getGroupId(), false,
+				LayoutSetBranchConstants.MASTER_BRANCH_NAME);
+
+		Assert.assertNotNull(layoutSetBranch);
+
+		layoutSetBranch = LayoutSetBranchLocalServiceUtil.fetchLayoutSetBranch(
+			_remoteStagingGroup.getGroupId(), true,
+			LayoutSetBranchConstants.MASTER_BRANCH_NAME);
+
+		Assert.assertNotNull(layoutSetBranch);
+	}
+
 	protected AssetCategory updateAssetCategory(
 			AssetCategory category, String name)
 		throws Exception {
@@ -474,11 +610,33 @@ public class StagingImplTest {
 			ServiceContextTestUtil.getServiceContext());
 	}
 
+	private void _setPortalProperty(String propertyName, Object value)
+		throws Exception {
+
+		Field field = ReflectionUtil.getDeclaredField(
+			PropsValues.class, propertyName);
+
+		field.setAccessible(true);
+
+		Field modifiersField = Field.class.getDeclaredField("modifiers");
+
+		modifiersField.setAccessible(true);
+		modifiersField.setInt(field, field.getModifiers() & ~Modifier.FINAL);
+
+		field.set(null, value);
+	}
+
 	private static final Locale[] _locales = {
 		LocaleUtil.GERMANY, LocaleUtil.SPAIN, LocaleUtil.US
 	};
 
 	@DeleteAfterTestRun
 	private Group _group;
+
+	@DeleteAfterTestRun
+	private Group _remoteLiveGroup;
+
+	@DeleteAfterTestRun
+	private Group _remoteStagingGroup;
 
 }

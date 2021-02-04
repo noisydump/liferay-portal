@@ -74,7 +74,7 @@ public class SoyComponentRendererHelper {
 		}
 	}
 
-	private static String _generateWrapperId(String id, String componentId) {
+	private String _generateWrapperId(String id, String componentId) {
 		String wrapperId = id;
 
 		if (Validator.isNull(wrapperId)) {
@@ -88,9 +88,7 @@ public class SoyComponentRendererHelper {
 		return wrapperId;
 	}
 
-	private static String _getElementSelector(
-		String wrapperId, boolean wrapper) {
-
+	private String _getElementSelector(String wrapperId, boolean wrapper) {
 		String selector = StringPool.POUND.concat(wrapperId);
 
 		if (wrapper) {
@@ -100,7 +98,7 @@ public class SoyComponentRendererHelper {
 		return selector;
 	}
 
-	private static String _getModuleName(String module) {
+	private String _getModuleName(String module) {
 		String moduleName = StringUtil.extractLast(
 			module, CharPool.FORWARD_SLASH);
 
@@ -188,9 +186,16 @@ public class SoyComponentRendererHelper {
 			writer.append("\">");
 		}
 
-		_soyRenderer.renderSoy(
-			_httpServletRequest, writer,
-			_componentDescriptor.getTemplateNamespace(), _context);
+		String placeholder = (String)_context.get("__placeholder__");
+
+		if (Validator.isNotNull(placeholder)) {
+			writer.append(placeholder);
+		}
+		else {
+			writer.append("<div id=\"");
+			writer.append((String)_context.get("id"));
+			writer.append("\"></div>");
+		}
 
 		if (wrapper) {
 			writer.append("</div>");

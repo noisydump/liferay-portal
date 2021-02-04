@@ -3,6 +3,7 @@
 <model-hints>
 	<model name="com.liferay.style.book.model.StyleBookEntry">
 		<field name="mvccVersion" type="long" />
+		<field name="uuid" type="String" />
 		<field name="headId" type="long" />
 		<field name="styleBookEntryId" type="long" />
 		<field name="groupId" type="long" />
@@ -10,6 +11,7 @@
 		<field name="userId" type="long" />
 		<field name="userName" type="String" />
 		<field name="createDate" type="Date" />
+		<field name="modifiedDate" type="Date" />
 		<field name="defaultStyleBookEntry" type="boolean" />
 		<field name="frontendTokensValues" type="String">
 			<hint-collection name="CLOB" />
@@ -21,12 +23,14 @@
 	<model name="com.liferay.style.book.model.StyleBookEntryVersion">
 		<field name="styleBookEntryVersionId" type="long" />
 		<field name="version" type="int" />
+		<field name="uuid" type="String" />
 		<field name="styleBookEntryId" type="long" />
 		<field name="groupId" type="long" />
 		<field name="companyId" type="long" />
 		<field name="userId" type="long" />
 		<field name="userName" type="String" />
 		<field name="createDate" type="Date" />
+		<field name="modifiedDate" type="Date" />
 		<field name="defaultStyleBookEntry" type="boolean" />
 		<field name="frontendTokensValues" type="String">
 			<hint-collection name="CLOB" />

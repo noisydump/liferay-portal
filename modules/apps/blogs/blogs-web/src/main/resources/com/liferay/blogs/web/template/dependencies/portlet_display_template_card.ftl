@@ -9,13 +9,11 @@
 
 			<div class="col-lg-4">
 				<div class="card">
-					<#if cardImage>
-						<div class="card-header">
-							<div class="aspect-ratio aspect-ratio-8-to-3">
-								<img alt="thumbnail" class="aspect-ratio-item-center-middle aspect-ratio-item-fluid" src="${curBlogEntry.getCoverImageURL(themeDisplay)}">
-							</div>
+					<div class="card-header">
+						<div class="aspect-ratio aspect-ratio-8-to-3">
+							<img alt="thumbnail" class="aspect-ratio-item-center-middle aspect-ratio-item-fluid" src="${cardImage?then(curBlogEntry.getCoverImageURL(themeDisplay), portalUtil.getPathContext(renderRequest) + "/images/cover_image_placeholder.jpg")}">
 						</div>
-					</#if>
+					</div>
 
 					<div class="card-body widget-topbar">
 						<div class="autofit-row card-title">
@@ -23,6 +21,7 @@
 									<#assign viewEntryPortletURL = renderResponse.createRenderURL() />
 
 									${viewEntryPortletURL.setParameter("mvcRenderCommandName", "/blogs/view_entry")}
+									${viewEntryPortletURL.setParameter("redirect", currentURL)}
 
 									<#if validator.isNotNull(curBlogEntry.getUrlTitle())>
 										${viewEntryPortletURL.setParameter("urlTitle", curBlogEntry.getUrlTitle())}
@@ -179,7 +178,7 @@
 
 							<#if blogsPortletInstanceConfiguration.enableRatings()>
 								<div class="autofit-col">
-									<@liferay_ui["ratings"]
+									<@liferay_ratings["ratings"]
 										className="com.liferay.blogs.model.BlogsEntry"
 										classPK=curBlogEntry.getEntryId()
 									/>

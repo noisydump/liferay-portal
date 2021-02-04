@@ -22,15 +22,9 @@ CommerceOrganizationDisplayContext commerceOrganizationDisplayContext = (Commerc
 String viewMode = commerceOrganizationDisplayContext.getViewMode();
 
 request.setAttribute("view.jsp-filterPerOrganization", false);
-
-NPMResolver npmResolver = NPMResolverProvider.getNPMResolver();
-
-String wrapperCssClass = "commerce-organization-view-modes row text-right";
-
-wrapperCssClass = viewMode + " " + wrapperCssClass;
 %>
 
-<div class="<%= wrapperCssClass %>">
+<div class="<%= "commerce-organization-view-modes mb-3 text-right" %>">
 
 	<%
 	for (String curViewMode : CommerceOrganizationConstants.VIEW_MODES) {
@@ -40,10 +34,13 @@ wrapperCssClass = viewMode + " " + wrapperCssClass;
 			icon = "organizations";
 		}
 
-		String cssClass = "btn btn-default lfr-portal-tooltip";
+		String cssClass = "btn lfr-portal-tooltip btn-monospaced ml-3";
 
 		if (curViewMode.equals(viewMode)) {
-			cssClass = "active " + cssClass;
+			cssClass = "btn-primary " + cssClass;
+		}
+		else {
+			cssClass = "btn-secondary " + cssClass;
 		}
 
 		Map<String, Object> data = HashMapBuilder.<String, Object>put(
@@ -57,7 +54,7 @@ wrapperCssClass = viewMode + " " + wrapperCssClass;
 
 		<aui:a cssClass="<%= cssClass %>" data="<%= data %>" href="<%= portletURL.toString() %>" id="<%= liferayPortletResponse.getNamespace() + curViewMode %>">
 			<c:if test="<%= Validator.isNotNull(icon) %>">
-				<aui:icon cssClass="icon-monospaced" image="<%= icon %>" markupView="lexicon" />
+				<aui:icon image="<%= icon %>" markupView="lexicon" />
 			</c:if>
 
 			<span class="sr-only"><liferay-ui:message key="<%= curViewMode %>" /></span>
@@ -71,7 +68,7 @@ wrapperCssClass = viewMode + " " + wrapperCssClass;
 
 <c:choose>
 	<c:when test="<%= viewMode.equals(CommerceOrganizationConstants.LIST_VIEW_MODE) %>">
-		<div class="commerce-organization-container container container-fluid" id="<portlet:namespace />entriesContainer">
+		<div class="commerce-organization-container" id="<portlet:namespace />entriesContainer">
 			<clay:data-set-display
 				dataProviderKey="<%= CommerceOrganizationClayTableDataSetDisplayView.NAME %>"
 				id="<%= CommerceOrganizationClayTableDataSetDisplayView.NAME %>"
@@ -86,7 +83,7 @@ wrapperCssClass = viewMode + " " + wrapperCssClass;
 	<c:when test="<%= viewMode.equals(CommerceOrganizationConstants.CHART_VIEW_MODE) %>">
 
 		<%
-		String segmentEditRootElementId = liferayPortletResponse.getNamespace() + "-org-chart-root";
+		String segmentEditRootElementId = liferayPortletResponse.getNamespace() + "org-chart-root";
 		%>
 
 		<div class="orgchart-module" id="<%= segmentEditRootElementId %>">
@@ -95,30 +92,26 @@ wrapperCssClass = viewMode + " " + wrapperCssClass;
 			</div>
 		</div>
 
-		<aui:script require='<%= npmResolver.resolveModuleName("commerce-organization-web/js/index.es") + " as OrgChart" %>'>
-			OrgChart.default(
-				'<%= segmentEditRootElementId %>',
-				'<%= segmentEditRootElementId %>',
-				{
-					assetsPath: '<%= PortalUtil.getPathContext(request) + "/assets" %>',
-					namespace: '<portlet:namespace/>',
-					spritemap:
-						'<%= themeDisplay.getPathThemeImages() + "/lexicon/icons.svg" %>',
-					imagesPath: '<%= themeDisplay.getPathThemeImages() %>',
-					apiURL:
-						'<%= PortalUtil.getPortalURL(request) + "/o/commerce-organization" %>',
-				}
-			);
+		<aui:script require="commerce-organization-web/js/index as OrgChart">
+			OrgChart.default('<%= segmentEditRootElementId %>', {
+				assetsPath: '<%= PortalUtil.getPathContext(request) + "/assets" %>',
+				namespace: '<portlet:namespace />',
+				spritemap:
+					'<%= themeDisplay.getPathThemeImages() + "/lexicon/icons.svg" %>',
+				imagesPath: '<%= themeDisplay.getPathThemeImages() %>',
+				apiURL:
+					'<%= PortalUtil.getPortalURL(request) + "/o/commerce-organization" %>',
+			});
 		</aui:script>
 	</c:when>
 </c:choose>
 
 <c:if test="<%= commerceOrganizationDisplayContext.hasAddOrganizationPermissions() %>">
 	<div class="commerce-cta is-visible">
-		<aui:button cssClass="btn-lg btn-primary" name="addOrganizationButton" value="add-organization" />
+		<aui:button cssClass="btn-lg" name="addOrganizationButton" primary="<%= true %>" value="add-organization" />
 	</div>
 
-	<portlet:actionURL name="editCommerceOrganization" var="editCommerceOrganizationActionURL">
+	<portlet:actionURL name="/commerce_organization/edit_commerce_organization" var="editCommerceOrganizationActionURL">
 		<portlet:param name="redirect" value="<%= currentURL %>" />
 	</portlet:actionURL>
 
@@ -127,7 +120,7 @@ wrapperCssClass = viewMode + " " + wrapperCssClass;
 		<aui:input name="organizationId" type="hidden" value="<%= String.valueOf(commerceOrganizationDisplayContext.getOrganizationId()) %>" />
 	</aui:form>
 
-	<aui:script require="metal-dom/src/all/dom as dom,frontend-js-web/liferay/modal/commands/OpenSimpleInputModal.es as modalCommands">
+	<aui:script require="frontend-js-web/liferay/modal/commands/OpenSimpleInputModal.es as modalCommands">
 		Liferay.provide(
 			window,
 			'handleAddOrganizationButtonClick',

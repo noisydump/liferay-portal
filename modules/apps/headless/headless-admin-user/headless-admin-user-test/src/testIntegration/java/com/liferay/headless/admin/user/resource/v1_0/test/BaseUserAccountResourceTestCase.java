@@ -1294,6 +1294,7 @@ public abstract class BaseUserAccountResourceTestCase {
 
 		UserAccount randomPatchUserAccount = randomPatchUserAccount();
 
+		@SuppressWarnings("PMD.UnusedLocalVariable")
 		UserAccount patchUserAccount = userAccountResource.patchUserAccount(
 			postUserAccount.getId(), randomPatchUserAccount);
 
@@ -1957,9 +1958,11 @@ public abstract class BaseUserAccountResourceTestCase {
 					return false;
 				}
 			}
+
+			return true;
 		}
 
-		return true;
+		return false;
 	}
 
 	protected java.util.Collection<EntityField> getEntityFields()

@@ -38,7 +38,6 @@ import com.liferay.dynamic.data.lists.service.DDLRecordSetLocalService;
 import com.liferay.dynamic.data.mapping.model.DDMForm;
 import com.liferay.dynamic.data.mapping.model.DDMStructure;
 import com.liferay.dynamic.data.mapping.model.DDMTemplate;
-import com.liferay.dynamic.data.mapping.storage.DDMFormFieldValue;
 import com.liferay.dynamic.data.mapping.storage.DDMFormValues;
 import com.liferay.dynamic.data.mapping.storage.StorageType;
 import com.liferay.dynamic.data.mapping.test.util.DDMFormTestUtil;
@@ -111,6 +110,8 @@ import com.liferay.portal.kernel.workflow.WorkflowInstance;
 import com.liferay.portal.kernel.workflow.WorkflowInstanceManager;
 import com.liferay.portal.kernel.workflow.WorkflowTask;
 import com.liferay.portal.kernel.workflow.WorkflowTaskManager;
+import com.liferay.portal.kernel.workflow.comparator.WorkflowComparatorFactoryUtil;
+import com.liferay.portal.kernel.workflow.search.WorkflowModelSearchResult;
 import com.liferay.portal.search.test.util.SearchTestRule;
 import com.liferay.portal.security.permission.SimplePermissionChecker;
 import com.liferay.portal.test.log.CaptureAppender;
@@ -121,6 +122,7 @@ import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 import com.liferay.portal.test.rule.SynchronousMailTestRule;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.Dictionary;
 import java.util.HashMap;
@@ -762,7 +764,20 @@ public class WorkflowTaskManagerImplTest {
 		_activateSingleApproverWorkflow(
 			DDLRecordSet.class.getName(), recordSet.getRecordSetId(), 0);
 
-		DDLRecord record = _addRecord(recordSet);
+		String fieldName = RandomTestUtil.randomString();
+
+		DDMFormValues ddmFormValues = DDMFormValuesTestUtil.createDDMFormValues(
+			DDMFormTestUtil.createDDMForm(fieldName));
+
+		ddmFormValues.addDDMFormFieldValue(
+			DDMFormValuesTestUtil.createLocalizedDDMFormFieldValue(
+				fieldName, StringPool.BLANK));
+
+		DDLRecord record = _ddlRecordLocalService.addRecord(
+			_adminUser.getUserId(), _group.getGroupId(),
+			recordSet.getRecordSetId(),
+			DDLRecordConstants.DISPLAY_INDEX_DEFAULT, ddmFormValues,
+			_serviceContext);
 
 		_checkUserNotificationEventsByUsers(
 			_adminUser, _portalContentReviewerUser, _siteAdminUser);
@@ -1061,6 +1076,71 @@ public class WorkflowTaskManagerImplTest {
 	}
 
 	@Test
+	public void testSearchWorkflowTasksOrderByModifiedDate() throws Exception {
+		_activateSingleApproverWorkflow(BlogsEntry.class.getName(), 0, 0);
+
+		BlogsEntry blogsEntry1 = _addBlogsEntry();
+
+		_assignWorkflowTaskToUser(
+			_adminUser, _adminUser, _REVIEW, BlogsEntry.class.getName(),
+			blogsEntry1.getEntryId());
+
+		BlogsEntry blogsEntry2 = _addBlogsEntry();
+
+		_assignWorkflowTaskToUser(
+			_adminUser, _adminUser, _REVIEW, BlogsEntry.class.getName(),
+			blogsEntry2.getEntryId());
+
+		List<WorkflowTask> workflowTasks = new ArrayList<>();
+
+		workflowTasks.add(
+			_completeWorkflowTask(
+				_adminUser, Constants.REJECT, _REVIEW,
+				BlogsEntry.class.getName(), blogsEntry1.getEntryId()));
+
+		workflowTasks.add(
+			_completeWorkflowTask(
+				_adminUser, Constants.REJECT, _REVIEW,
+				BlogsEntry.class.getName(), blogsEntry2.getEntryId()));
+
+		workflowTasks.add(
+			_completeWorkflowTask(
+				_adminUser, "resubmit", "update", BlogsEntry.class.getName(),
+				blogsEntry2.getEntryId()));
+
+		workflowTasks.add(
+			_completeWorkflowTask(
+				_adminUser, "resubmit", "update", BlogsEntry.class.getName(),
+				blogsEntry1.getEntryId()));
+
+		WorkflowModelSearchResult<WorkflowTask> workflowModelSearchResult =
+			_workflowTaskManager.searchWorkflowTasks(
+				_adminUser.getCompanyId(), _adminUser.getUserId(), null, null,
+				null, null, User.class.getName(),
+				new Long[] {_adminUser.getUserId()}, null, null, true, false,
+				null, null, false, QueryUtil.ALL_POS, QueryUtil.ALL_POS,
+				WorkflowComparatorFactoryUtil.getTaskModifiedDateComparator(
+					true));
+
+		_assertEquals(
+			workflowTasks, workflowModelSearchResult.getWorkflowModels());
+
+		workflowModelSearchResult = _workflowTaskManager.searchWorkflowTasks(
+			_adminUser.getCompanyId(), _adminUser.getUserId(), null, null, null,
+			null, User.class.getName(), new Long[] {_adminUser.getUserId()},
+			null, null, true, false, null, null, false, QueryUtil.ALL_POS,
+			QueryUtil.ALL_POS,
+			WorkflowComparatorFactoryUtil.getTaskModifiedDateComparator(false));
+
+		Collections.reverse(workflowTasks);
+
+		_assertEquals(
+			workflowTasks, workflowModelSearchResult.getWorkflowModels());
+
+		_deactivateWorkflow(BlogsEntry.class.getName(), 0, 0);
+	}
+
+	@Test
 	public void testUpdateDueDate() throws Exception {
 		_activateSingleApproverWorkflow(BlogsEntry.class.getName(), 0, 0);
 
@@ -1233,19 +1313,6 @@ public class WorkflowTaskManagerImplTest {
 			ddmStructureIds, restrictionType, false, _serviceContext);
 	}
 
-	private DDLRecord _addRecord(DDLRecordSet recordSet) throws Exception {
-		DDMForm ddmForm = DDMFormTestUtil.createDDMForm(
-			RandomTestUtil.randomString());
-
-		DDMFormValues ddmFormValues = _createDDMFormValues(ddmForm);
-
-		return _ddlRecordLocalService.addRecord(
-			_adminUser.getUserId(), _group.getGroupId(),
-			recordSet.getRecordSetId(),
-			DDLRecordConstants.DISPLAY_INDEX_DEFAULT, ddmFormValues,
-			_serviceContext);
-	}
-
 	private DDLRecordSet _addRecordSet() throws Exception {
 		DDMForm ddmForm = DDMFormTestUtil.createDDMForm(
 			RandomTestUtil.randomString());
@@ -1255,7 +1322,7 @@ public class WorkflowTaskManagerImplTest {
 				_portal.getClassNameId(DDLRecordSet.class), _group);
 
 		DDMStructure ddmStructure = ddmStructureTestHelper.addStructure(
-			ddmForm, StorageType.JSON.toString());
+			ddmForm, StorageType.DEFAULT.toString());
 
 		return _ddlRecordSetLocalService.addRecordSet(
 			_adminUser.getUserId(), _group.getGroupId(),
@@ -1265,6 +1332,26 @@ public class WorkflowTaskManagerImplTest {
 			).build(),
 			null, DDLRecordSetConstants.MIN_DISPLAY_ROWS_DEFAULT,
 			DDLRecordSetConstants.SCOPE_DYNAMIC_DATA_LISTS, _serviceContext);
+	}
+
+	private void _assertEquals(
+		List<WorkflowTask> workflowTasks1, List<WorkflowTask> workflowTasks2) {
+
+		Assert.assertEquals(
+			workflowTasks1.toString() + " does not equal " +
+				workflowTasks2.toString(),
+			workflowTasks1.size(), workflowTasks2.size());
+
+		for (int i = 0; i < workflowTasks1.size(); i++) {
+			WorkflowTask workflowTask1 = workflowTasks1.get(i);
+			WorkflowTask workflowTask2 = workflowTasks2.get(i);
+
+			Assert.assertEquals(
+				workflowTask1.getWorkflowTaskId() + " does not equal " +
+					workflowTask2.getWorkflowTaskId(),
+				workflowTask1.getWorkflowTaskId(),
+				workflowTask2.getWorkflowTaskId());
+		}
 	}
 
 	private void _assignWorkflowTaskToUser(User user, User assigneeUser)
@@ -1334,7 +1421,7 @@ public class WorkflowTaskManagerImplTest {
 		_completeWorkflowTask(user, transition, taskName, null, 0);
 	}
 
-	private void _completeWorkflowTask(
+	private WorkflowTask _completeWorkflowTask(
 			User user, String transition, String taskName, String className,
 			long classPK)
 		throws Exception {
@@ -1347,29 +1434,16 @@ public class WorkflowTaskManagerImplTest {
 
 		PermissionThreadLocal.setPermissionChecker(userPermissionChecker);
 
-		_workflowTaskManager.completeWorkflowTask(
+		return _workflowTaskManager.completeWorkflowTask(
 			_group.getCompanyId(), user.getUserId(),
 			workflowTask.getWorkflowTaskId(), transition, StringPool.BLANK,
 			null);
 	}
 
-	private DDMFormValues _createDDMFormValues(DDMForm ddmForm) {
-		DDMFormValues ddmFormValues = DDMFormValuesTestUtil.createDDMFormValues(
-			ddmForm);
-
-		DDMFormFieldValue ddmFormFieldValue =
-			DDMFormValuesTestUtil.createLocalizedDDMFormFieldValue(
-				RandomTestUtil.randomString(), StringPool.BLANK);
-
-		ddmFormValues.addDDMFormFieldValue(ddmFormFieldValue);
-
-		return ddmFormValues;
-	}
-
 	private void _createJoinXorWorkflow() throws Exception {
 		try (CaptureAppender captureAppender =
 				Log4JLoggerTestUtil.configureLog4JLogger(
-					_PROXY_MESSAGE_LISTENER_CLASS_NAME, Level.OFF)) {
+					_CLASS_NAME_PROXY_MESSAGE_LISTENER, Level.OFF)) {
 
 			_workflowDefinitionManager.getWorkflowDefinition(
 				_adminUser.getCompanyId(), _JOIN_XOR, 1);
@@ -1400,7 +1474,7 @@ public class WorkflowTaskManagerImplTest {
 	private void _createScriptedAssignmentWorkflow() throws Exception {
 		try (CaptureAppender captureAppender =
 				Log4JLoggerTestUtil.configureLog4JLogger(
-					_PROXY_MESSAGE_LISTENER_CLASS_NAME, Level.OFF)) {
+					_CLASS_NAME_PROXY_MESSAGE_LISTENER, Level.OFF)) {
 
 			_workflowDefinitionManager.getWorkflowDefinition(
 				_adminUser.getCompanyId(), _SCRIPTED_SINGLE_APPROVER, 1);
@@ -1419,7 +1493,7 @@ public class WorkflowTaskManagerImplTest {
 	private void _createSiteMemberWorkflow() throws Exception {
 		try (CaptureAppender captureAppender =
 				Log4JLoggerTestUtil.configureLog4JLogger(
-					_PROXY_MESSAGE_LISTENER_CLASS_NAME, Level.OFF)) {
+					_CLASS_NAME_PROXY_MESSAGE_LISTENER, Level.OFF)) {
 
 			_workflowDefinitionManager.getWorkflowDefinition(
 				_adminUser.getCompanyId(), _SITE_MEMBER_SINGLE_APPROVER, 1);
@@ -1721,13 +1795,13 @@ public class WorkflowTaskManagerImplTest {
 		return _updateFolder(folder, restrictionType, -1, dlFileEntryTypeMap);
 	}
 
+	private static final String _CLASS_NAME_PROXY_MESSAGE_LISTENER =
+		"com.liferay.portal.kernel.messaging.proxy.ProxyMessageListener";
+
 	private static final String _JOIN_XOR = "Join Xor";
 
 	private static final String _ORGANIZATION_CONTENT_REVIEWER =
 		"Organization Content Reviewer";
-
-	private static final String _PROXY_MESSAGE_LISTENER_CLASS_NAME =
-		"com.liferay.portal.kernel.messaging.proxy.ProxyMessageListener";
 
 	private static final String _REVIEW = "review";
 

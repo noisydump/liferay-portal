@@ -100,7 +100,7 @@ if (vocabulary != null) {
 						for (ClassType classType : classTypes) {
 						%>
 
-							<aui:option label="<%= classType.getName() %>" selected="<%= (classNameId == assetRendererFactory.getClassNameId()) && (classTypePK == classType.getClassTypeId()) %>" value="<%= classType.getClassTypeId() %>" />
+							<aui:option label="<%= HtmlUtil.escape(classType.getName()) %>" selected="<%= (classNameId == assetRendererFactory.getClassNameId()) && (classTypePK == classType.getClassTypeId()) %>" value="<%= classType.getClassTypeId() %>" />
 
 						<%
 						}
@@ -120,7 +120,7 @@ if (vocabulary != null) {
 					</div>
 				</c:if>
 
-				<aui:input label="required" name='<%= "required" + index %>' type="toggle-switch" value="<%= (vocabulary != null) ? vocabulary.isRequired(classNameId, classTypePK) : false %>" />
+				<aui:input inlineLabel="right" label="required" labelCssClass="simple-toggle-switch" name='<%= "required" + index %>' type="toggle-switch" value="<%= (vocabulary != null) ? vocabulary.isRequired(classNameId, classTypePK) : false %>" />
 			</div>
 		</div>
 

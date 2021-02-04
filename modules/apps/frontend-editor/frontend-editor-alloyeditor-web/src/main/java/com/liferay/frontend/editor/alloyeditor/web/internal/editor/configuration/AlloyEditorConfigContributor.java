@@ -21,10 +21,10 @@ import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.portlet.RequestBackedPortletURLFactory;
+import com.liferay.portal.kernel.resource.bundle.AggregateResourceBundleLoader;
+import com.liferay.portal.kernel.resource.bundle.ResourceBundleLoader;
+import com.liferay.portal.kernel.resource.bundle.ResourceBundleLoaderUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
-import com.liferay.portal.kernel.util.AggregateResourceBundleLoader;
-import com.liferay.portal.kernel.util.ResourceBundleLoader;
-import com.liferay.portal.kernel.util.ResourceBundleLoaderUtil;
 import com.liferay.portal.kernel.util.ResourceBundleUtil;
 import com.liferay.portal.kernel.util.Validator;
 
@@ -65,10 +65,10 @@ public class AlloyEditorConfigContributor
 		String extraPlugins = jsonObject.getString("extraPlugins");
 
 		if (Validator.isNotNull(extraPlugins)) {
-			extraPlugins += ",itemselector,media,embedurl";
+			extraPlugins += ",itemselector,media,videoembed";
 		}
 		else {
-			extraPlugins = "itemselector,media,embedurl";
+			extraPlugins = "itemselector,media,videoembed";
 		}
 
 		jsonObject.put(
@@ -175,7 +175,7 @@ public class AlloyEditorConfigContributor
 
 	protected JSONObject getToolbarsAddJSONObject() {
 		return JSONUtil.put(
-			"buttons", toJSONArray("['image', 'embedVideo', 'table', 'hline']")
+			"buttons", toJSONArray("['image', 'video', 'table', 'hline']")
 		).put(
 			"tabIndex", 2
 		);

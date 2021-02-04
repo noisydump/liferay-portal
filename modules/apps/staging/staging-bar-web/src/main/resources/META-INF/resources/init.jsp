@@ -73,7 +73,6 @@ page import="com.liferay.portal.kernel.util.UnicodeProperties" %><%@
 page import="com.liferay.portal.kernel.util.Validator" %><%@
 page import="com.liferay.portal.kernel.util.WebKeys" %><%@
 page import="com.liferay.portal.kernel.util.comparator.LayoutRevisionCreateDateComparator" %><%@
-page import="com.liferay.portal.kernel.util.comparator.LayoutRevisionIdComparator" %><%@
 page import="com.liferay.portal.kernel.workflow.WorkflowConstants" %><%@
 page import="com.liferay.portal.kernel.workflow.WorkflowTask" %><%@
 page import="com.liferay.portal.util.PropsValues" %><%@
@@ -107,13 +106,22 @@ LayoutSetBranchDisplayContext layoutSetBranchDisplayContext = new LayoutSetBranc
 %>
 
 <%!
-private long _getLastImportLayoutRevisionId(Group group, Layout layout) {
+private long _getLastImportLayoutRevisionId(Group group, Layout layout, User user) {
 	long lastImportLayoutRevisionId = 0;
 
 	try {
-		if (group.isStagingGroup()) {
-			Layout liveLayout = LayoutLocalServiceUtil.fetchLayoutByUuidAndGroupId(layout.getUuid(), group.getLiveGroupId(), layout.isPrivateLayout());
+		Layout liveLayout = null;
 
+		if (group.isStagedRemotely() &&
+			StagingUtil.hasRemoteLayout(user.getUserId(), group.getGroupId(), layout.getPlid())) {
+
+			liveLayout = StagingUtil.getRemoteLayout(user.getUserId(), group.getGroupId(), layout.getPlid());
+		}
+		else if (group.isStagingGroup()) {
+			liveLayout = LayoutLocalServiceUtil.fetchLayoutByUuidAndGroupId(layout.getUuid(), group.getLiveGroupId(), layout.isPrivateLayout());
+		}
+
+		if (liveLayout != null) {
 			UnicodeProperties typeSettingsProperties = liveLayout.getTypeSettingsProperties();
 
 			lastImportLayoutRevisionId = GetterUtil.getLong(typeSettingsProperties.getProperty("last-import-layout-revision-id"));
@@ -125,14 +133,14 @@ private long _getLastImportLayoutRevisionId(Group group, Layout layout) {
 	return lastImportLayoutRevisionId;
 }
 
-private String _getStatusMessage(LayoutRevision layoutRevision, Group group, Layout layout) {
+private String _getStatusMessage(LayoutRevision layoutRevision, long liveLayoutRevisionId) {
 	String statusMessage = null;
 
 	if (layoutRevision.isHead()) {
-		statusMessage = "ready-for-publication";
+		statusMessage = "ready-for-publish-process";
 	}
 
-	if (layoutRevision.getLayoutRevisionId() == _getLastImportLayoutRevisionId(group, layout)) {
+	if (layoutRevision.getLayoutRevisionId() == liveLayoutRevisionId) {
 		statusMessage = "in-live";
 	}
 

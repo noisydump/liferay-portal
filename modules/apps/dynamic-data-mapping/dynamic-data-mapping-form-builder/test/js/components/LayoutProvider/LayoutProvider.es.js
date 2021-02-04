@@ -16,13 +16,12 @@ import {PagesVisitor} from 'dynamic-data-mapping-form-renderer';
 import {JSXComponent} from 'metal-jsx';
 
 import LayoutProvider from '../../../../src/main/resources/META-INF/resources/js/components/LayoutProvider/LayoutProvider.es';
+import {DEFAULT_FIELD_NAME_REGEX} from '../../../../src/main/resources/META-INF/resources/js/util/regex.es';
 import mockFieldType from '../../__mock__/mockFieldType.es';
 import mockPages from '../../__mock__/mockPages.es';
 
 let component;
 let liferayLanguageSpy;
-
-const DEFAULT_FIELD_NAME_REGEX = /^Field[0-9]{8}$/;
 
 const changeField = ({settingsContext}, fieldName, value) => {
 	const visitor = new PagesVisitor(settingsContext.pages);
@@ -94,7 +93,8 @@ class Parent extends JSXComponent {
 	render() {
 		return (
 			<LayoutProvider
-				defaultLanguageIdd="en_US"
+				availableLanguageIds={['en_US']}
+				defaultLanguageId="en_US"
 				editingLanguageId="en_US"
 				initialPages={[...mockPages]}
 				pages={[...mockPages]}
@@ -405,6 +405,32 @@ describe('LayoutProvider', () => {
 				unmockLiferayLanguage();
 			});
 
+			it('listen the fieldAdded event and check if field reference has the same value as field name', () => {
+				component = new Parent();
+
+				const {child, provider} = component.refs;
+				const mockEvent = {
+					data: {
+						parentFieldName: undefined,
+					},
+					fieldType: mockFieldType,
+					indexes: {
+						columnIndex: 0,
+						pageIndex: 0,
+						rowIndex: 0,
+					},
+				};
+
+				const {dispatch} = child.context;
+
+				dispatch('fieldAdded', mockEvent);
+
+				const field =
+					provider.state.pages[0].rows[0].columns[0].fields[0];
+
+				expect(field.fieldName).toEqual(field.fieldReference);
+			});
+
 			it('updates the focusedField with the location of the new field when adding to the pages', () => {
 				component = new Parent();
 
@@ -449,6 +475,29 @@ describe('LayoutProvider', () => {
 
 				const mockEvent = {
 					activePage: 0,
+					fieldName: 'text2',
+				};
+
+				const {dispatch} = child.context;
+
+				dispatch('fieldDeleted', mockEvent);
+
+				expect(
+					provider.state.pages[0].rows[1].columns[0].fields.length
+				).toEqual(1);
+			});
+
+			it('does not delete field that belongs to rules', () => {
+				component = new Parent();
+
+				const {child, provider} = component.refs;
+
+				expect(
+					provider.state.pages[0].rows[1].columns[0].fields.length
+				).toEqual(2);
+
+				const mockEvent = {
+					activePage: 0,
 					fieldName: 'text1',
 				};
 
@@ -456,12 +505,9 @@ describe('LayoutProvider', () => {
 
 				dispatch('fieldDeleted', mockEvent);
 
-				jest.runAllTimers();
-
 				expect(
 					provider.state.pages[0].rows[1].columns[0].fields.length
-				).toEqual(1);
-				expect(provider.state.pages).toMatchSnapshot();
+				).toEqual(2);
 			});
 		});
 
@@ -539,6 +585,7 @@ describe('LayoutProvider', () => {
 							pageIndex
 						) => {
 							const {pages} = field.settingsContext;
+							let newPages = [];
 
 							if (pages.length) {
 								pages[0].rows[0].columns[0].fields[1].value =
@@ -556,11 +603,43 @@ describe('LayoutProvider', () => {
 
 									validation.fieldName = 'Any<String>';
 								}
+
+								const visitor = new PagesVisitor(pages);
+
+								newPages = visitor.mapFields((field) => {
+									const newField = {
+										...field,
+
+										// Overrides the fieldName because it is generated when a field is duplicated,
+										// toMatchSnapshot has problems with deep arrays so we override it here to
+										// avoid this.
+
+										instanceId: 'Any<String>',
+									};
+
+									const {
+										defaultLanguageId,
+										localizedValue,
+									} = newField;
+
+									if (
+										defaultLanguageId &&
+										newField.fieldName !== 'label'
+									) {
+										localizedValue[defaultLanguageId] =
+											'Any<String>';
+									}
+
+									return newField;
+								});
 							}
+
+							const name = `name${fieldIndex}${columnIndex}${rowIndex}${pageIndex}`;
 
 							return {
 								...field,
-								fieldName: `name${fieldIndex}${columnIndex}${rowIndex}${pageIndex}`,
+								fieldName: name,
+								fieldReference: name,
 
 								// Overrides the instanceId because it is generated when a field is duplicated,
 								// toMatchSnapshot has problems with deep arrays so we override it here to
@@ -568,6 +647,10 @@ describe('LayoutProvider', () => {
 
 								instanceId: 'Any<String>',
 								name: `name${fieldIndex}${columnIndex}${rowIndex}${pageIndex}`,
+								settingsContext: {
+									...field.settingsContext,
+									pages: newPages,
+								},
 							};
 						}
 					)
@@ -630,6 +713,7 @@ describe('LayoutProvider', () => {
 
 				const changedFocusedField = {
 					...mockFieldType,
+					fieldName: 'text1',
 					settingsContext: {
 						...mockFieldType.settingsContext,
 						pages: changeField(mockFieldType, 'required', false),

@@ -20,7 +20,9 @@ describe('SDK.Client()', () => {
 	let client: ReturnType<typeof Client>;
 
 	beforeEach(() => {
+
 		// Cast to avoid TS7009 (TS wants `new` used only with `class` values).
+
 		client = new (SDK.Client as any)();
 	});
 

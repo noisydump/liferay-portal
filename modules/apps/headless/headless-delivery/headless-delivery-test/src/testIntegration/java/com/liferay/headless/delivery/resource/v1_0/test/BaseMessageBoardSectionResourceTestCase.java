@@ -353,6 +353,7 @@ public abstract class BaseMessageBoardSectionResourceTestCase {
 		MessageBoardSection randomPatchMessageBoardSection =
 			randomPatchMessageBoardSection();
 
+		@SuppressWarnings("PMD.UnusedLocalVariable")
 		MessageBoardSection patchMessageBoardSection =
 			messageBoardSectionResource.patchMessageBoardSection(
 				postMessageBoardSection.getId(),
@@ -1828,9 +1829,11 @@ public abstract class BaseMessageBoardSectionResourceTestCase {
 					return false;
 				}
 			}
+
+			return true;
 		}
 
-		return true;
+		return false;
 	}
 
 	protected java.util.Collection<EntityField> getEntityFields()

@@ -84,7 +84,7 @@ public class GitHubDevSyncUtil {
 		return _createCacheLocalGitBranch(
 			localGitRepository, pullRequest.getReceiverUsername(),
 			pullRequest.getSenderBranchName(), pullRequest.getSenderUsername(),
-			pullRequest.getSenderSHA(), pullRequest.getLiferayRemoteBranchSHA(),
+			pullRequest.getSenderSHA(), pullRequest.getUpstreamBranchSHA(),
 			synchronize);
 	}
 
@@ -161,8 +161,7 @@ public class GitHubDevSyncUtil {
 	public static String getCacheBranchName(PullRequest pullRequest) {
 		return getCacheBranchName(
 			pullRequest.getReceiverUsername(), pullRequest.getSenderUsername(),
-			pullRequest.getSenderSHA(),
-			pullRequest.getLiferayRemoteBranchSHA());
+			pullRequest.getSenderSHA(), pullRequest.getUpstreamBranchSHA());
 	}
 
 	public static String getCacheBranchName(RemoteGitRef remoteGitRef) {
@@ -210,6 +209,15 @@ public class GitHubDevSyncUtil {
 		return synchronizeToGitHubDev(
 			gitWorkingDirectory, receiverUsername, 0, senderBranchName,
 			senderUsername, senderBranchSHA, upstreamBranchSHA);
+	}
+
+	public static boolean synchronizeUpstreamBranchToGitHubDev(
+			GitWorkingDirectory gitWorkingDirectory,
+			LocalGitBranch localGitBranch)
+		throws IOException {
+
+		return synchronizeUpstreamBranchToGitHubDev(
+			gitWorkingDirectory, localGitBranch, 0);
 	}
 
 	protected static void cacheBranch(
@@ -758,9 +766,7 @@ public class GitHubDevSyncUtil {
 
 		StringBuilder sb = new StringBuilder();
 
-		sb.append(
-			JenkinsResultsParserUtil.toDateString(
-				new Date(), "America/Los_Angeles"));
+		sb.append(JenkinsResultsParserUtil.toDateString(new Date()));
 		sb.append("\n\n");
 
 		JenkinsSlave jenkinsSlave = new JenkinsSlave();
@@ -1200,8 +1206,61 @@ public class GitHubDevSyncUtil {
 
 			System.out.println(
 				"Synchronization with local Git completed in " +
+					durationString + ".");
+		}
+	}
+
+	protected static boolean synchronizeUpstreamBranchToGitHubDev(
+		GitWorkingDirectory gitWorkingDirectory, LocalGitBranch localGitBranch,
+		int retryCount) {
+
+		long start = System.currentTimeMillis();
+
+		File gitRepositoryDirectory = gitWorkingDirectory.getWorkingDirectory();
+
+		gitWorkingDirectory.checkoutLocalGitBranch(localGitBranch);
+
+		String upstreamBranchName = gitWorkingDirectory.getUpstreamBranchName();
+
+		System.out.println(
+			JenkinsResultsParserUtil.combine(
+				"Starting synchronization with local-git. Current repository ",
+				"directory is ", gitRepositoryDirectory.getPath(), ". Current ",
+				"branch is ", localGitBranch.getName(), " at hash ",
+				localGitBranch.getSHA(), ". Synchronization target upstream ",
+				"branch is ", upstreamBranchName, "."));
+
+		try {
+			List<GitRemote> gitHubDevGitRemotes = getGitHubDevGitRemotes(
+				gitWorkingDirectory);
+
+			try {
+				pushToAllRemotes(
+					true, localGitBranch, upstreamBranchName,
+					gitHubDevGitRemotes);
+			}
+			finally {
+				if (gitHubDevGitRemotes != null) {
+					try {
+						gitWorkingDirectory.removeGitRemotes(
+							gitHubDevGitRemotes);
+					}
+					catch (Exception exception) {
+						exception.printStackTrace();
+					}
+				}
+			}
+		}
+		finally {
+			String durationString = JenkinsResultsParserUtil.toDurationString(
+				System.currentTimeMillis() - start);
+
+			System.out.println(
+				"Synchronization with local Git completed in " +
 					durationString);
 		}
+
+		return true;
 	}
 
 	protected static void updateCacheRemoteGitBranchTimestamp(

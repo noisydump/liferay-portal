@@ -26,6 +26,8 @@ import com.liferay.portal.vulcan.util.ObjectMapperUtil;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
+import java.io.Serializable;
+
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Objects;
@@ -48,7 +50,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 @JsonFilter("Liferay.Vulcan")
 @Schema(requiredProperties = {"accountGroupId", "discountId"})
 @XmlRootElement(name = "DiscountAccountGroup")
-public class DiscountAccountGroup {
+public class DiscountAccountGroup implements Serializable {
 
 	public static DiscountAccountGroup toDTO(String json) {
 		return ObjectMapperUtil.readValue(DiscountAccountGroup.class, json);
@@ -176,6 +178,35 @@ public class DiscountAccountGroup {
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected Map<String, Map<String, String>> actions;
 
+	@DecimalMin("0")
+	@Schema
+	public Long getDiscountAccountGroupId() {
+		return discountAccountGroupId;
+	}
+
+	public void setDiscountAccountGroupId(Long discountAccountGroupId) {
+		this.discountAccountGroupId = discountAccountGroupId;
+	}
+
+	@JsonIgnore
+	public void setDiscountAccountGroupId(
+		UnsafeSupplier<Long, Exception> discountAccountGroupIdUnsafeSupplier) {
+
+		try {
+			discountAccountGroupId = discountAccountGroupIdUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
+	protected Long discountAccountGroupId;
+
 	@Schema
 	public String getDiscountExternalReferenceCode() {
 		return discountExternalReferenceCode;
@@ -237,33 +268,6 @@ public class DiscountAccountGroup {
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	@NotNull
 	protected Long discountId;
-
-	@DecimalMin("0")
-	@Schema
-	public Long getId() {
-		return id;
-	}
-
-	public void setId(Long id) {
-		this.id = id;
-	}
-
-	@JsonIgnore
-	public void setId(UnsafeSupplier<Long, Exception> idUnsafeSupplier) {
-		try {
-			id = idUnsafeSupplier.get();
-		}
-		catch (RuntimeException re) {
-			throw re;
-		}
-		catch (Exception e) {
-			throw new RuntimeException(e);
-		}
-	}
-
-	@GraphQLField
-	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
-	protected Long id;
 
 	@Override
 	public boolean equals(Object object) {
@@ -337,6 +341,16 @@ public class DiscountAccountGroup {
 			sb.append(_toJSON(actions));
 		}
 
+		if (discountAccountGroupId != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"discountAccountGroupId\": ");
+
+			sb.append(discountAccountGroupId);
+		}
+
 		if (discountExternalReferenceCode != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -359,16 +373,6 @@ public class DiscountAccountGroup {
 			sb.append("\"discountId\": ");
 
 			sb.append(discountId);
-		}
-
-		if (id != null) {
-			if (sb.length() > 1) {
-				sb.append(", ");
-			}
-
-			sb.append("\"id\": ");
-
-			sb.append(id);
 		}
 
 		sb.append("}");

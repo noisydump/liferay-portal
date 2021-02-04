@@ -51,7 +51,7 @@ import org.osgi.service.component.annotations.Reference;
 	immediate = true,
 	property = {
 		"javax.portlet.name=" + DDMPortletKeys.DYNAMIC_DATA_MAPPING_FORM_ADMIN,
-		"mvc.command.name=copyFormInstance"
+		"mvc.command.name=/dynamic_data_mapping_form/copy_form_instance"
 	},
 	service = MVCActionCommand.class
 )
@@ -94,11 +94,9 @@ public class CopyFormInstanceMVCActionCommand
 		ServiceContext serviceContext = ServiceContextFactory.getInstance(
 			DDMFormInstance.class.getName(), actionRequest);
 
-		ddmFormInstanceService.addFormInstance(
-			groupId, getNameMap(formInstance, defaultLocale),
-			formInstance.getDescriptionMap(), ddmStructure.getDDMForm(),
-			ddmStructure.getDDMFormLayout(), settingsDDMFormValues,
-			serviceContext);
+		ddmFormInstanceService.copyFormInstance(
+			groupId, getNameMap(formInstance, defaultLocale), formInstance,
+			settingsDDMFormValues, serviceContext);
 	}
 
 	protected Map<Locale, String> getNameMap(

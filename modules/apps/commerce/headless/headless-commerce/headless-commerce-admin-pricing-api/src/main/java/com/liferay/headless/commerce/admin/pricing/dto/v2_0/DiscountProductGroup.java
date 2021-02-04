@@ -26,6 +26,8 @@ import com.liferay.portal.vulcan.util.ObjectMapperUtil;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
+import java.io.Serializable;
+
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Objects;
@@ -48,7 +50,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 @JsonFilter("Liferay.Vulcan")
 @Schema(requiredProperties = {"discountId", "productGroupId"})
 @XmlRootElement(name = "DiscountProductGroup")
-public class DiscountProductGroup {
+public class DiscountProductGroup implements Serializable {
 
 	public static DiscountProductGroup toDTO(String json) {
 		return ObjectMapperUtil.readValue(DiscountProductGroup.class, json);
@@ -148,18 +150,20 @@ public class DiscountProductGroup {
 
 	@DecimalMin("0")
 	@Schema
-	public Long getId() {
-		return id;
+	public Long getDiscountProductGroupId() {
+		return discountProductGroupId;
 	}
 
-	public void setId(Long id) {
-		this.id = id;
+	public void setDiscountProductGroupId(Long discountProductGroupId) {
+		this.discountProductGroupId = discountProductGroupId;
 	}
 
 	@JsonIgnore
-	public void setId(UnsafeSupplier<Long, Exception> idUnsafeSupplier) {
+	public void setDiscountProductGroupId(
+		UnsafeSupplier<Long, Exception> discountProductGroupIdUnsafeSupplier) {
+
 		try {
-			id = idUnsafeSupplier.get();
+			discountProductGroupId = discountProductGroupIdUnsafeSupplier.get();
 		}
 		catch (RuntimeException re) {
 			throw re;
@@ -171,7 +175,7 @@ public class DiscountProductGroup {
 
 	@GraphQLField
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
-	protected Long id;
+	protected Long discountProductGroupId;
 
 	@Schema
 	@Valid
@@ -327,14 +331,14 @@ public class DiscountProductGroup {
 			sb.append(discountId);
 		}
 
-		if (id != null) {
+		if (discountProductGroupId != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
 			}
 
-			sb.append("\"id\": ");
+			sb.append("\"discountProductGroupId\": ");
 
-			sb.append(id);
+			sb.append(discountProductGroupId);
 		}
 
 		if (productGroup != null) {
